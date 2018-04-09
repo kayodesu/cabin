@@ -1,4 +1,7 @@
 #include <string>
+#include <iostream>
+
+#include <cstring>
 
 #include "jvm.h"
 #include "native/registry.h"
@@ -17,8 +20,49 @@ string extensionClasspath = JRE8_LIB_PATH + "/ext";
 // 用户类路径（user classpath）我们自己实现的类，以及第三方类库位于用户类路径
 string userClasspath = "D:\\code\\jvm\\testclasses\\out"; // todo
 
+int printLevel = 1;
+static string mainClass = "";
+
+
+static bool parseArgs(int argc, char* argv[]) {
+    // 可执行程序的名字为 argv[0]，跳过。
+    for (int i = 1; i < argc; i++) {
+        if (argv[i][0] == '-') {
+            const char *name = argv[i];
+            if (++i >= argc) {
+                cout << "缺少参数：" << name << endl;
+                return false;
+            }
+            const char *value = argv[i];
+
+            if (strcmp(name, "-printlevel") == 0) {
+                printLevel = atoi(value);
+            } else {
+                cout << "不认识的参数：" << name << endl;
+                return false;
+            }
+        } else {
+            mainClass = argv[i];
+        }
+    }
+    if (printLevel < 1 /*or printLevel > 4*/) {
+        cout << "printLevel不合法：" << printLevel << endl;
+        return false;
+    }
+
+    if (mainClass.empty()) {
+        cout << "无main class" << endl;
+        return false;
+    }
+
+    return true;
+}
 
 int main(int argc, char* argv[]) {
+    if (!parseArgs(argc, argv)) {
+       // return -1;
+    }
+
     registerAllNativeMethods();
 
 //    printRegisteredNativeMethods();
