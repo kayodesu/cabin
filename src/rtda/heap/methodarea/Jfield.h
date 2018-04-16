@@ -30,11 +30,14 @@ class Jfield: public Jmember {
     JclassObj *type;
 public:
     int id;
-    void *extra;
+    //void *extra;
+
+    int constantValueIndex;
+    const static int INVALID_CONSTANT_VALUE_INDEX = -1;
 
     Jfield() = default;
 
-    Jfield(Jclass *jclass, const MemberInfo &methodInfo);
+    Jfield(Jclass *jclass, const MemberInfo &memberInfo);
 
     JclassObj* getType();
 

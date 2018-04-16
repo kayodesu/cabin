@@ -3,7 +3,7 @@
  */
 
 #include <algorithm>
-#include "../methodarea/ClassLoader.h"
+#include "../../../loader/ClassLoader.h"
 #include "Jobject.h"
 #include "../methodarea/Jfield.h"
 

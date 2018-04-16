@@ -6,7 +6,7 @@
 #define JVM_LOADS_H
 
 #include <functional>
-#include "../jvmdef.h"
+#include "../jvm.h"
 #include "../interpreter/StackFrame.h"
 #include "../rtda/heap/objectarea/Jobject.h"
 #include "../rtda/heap/objectarea/JarrayObj.h"

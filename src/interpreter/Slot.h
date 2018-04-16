@@ -5,8 +5,7 @@
 #ifndef JVM_SLOT_H
 #define JVM_SLOT_H
 
-#include "../jvmdef.h"
-#include "../jvmtype.h"
+#include "../jvm.h"
 
 
 //template<typename T>

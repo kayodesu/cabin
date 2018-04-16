@@ -9,11 +9,11 @@
 
 using namespace std;
 
-Jfield::Jfield(Jclass *jclass, const MemberInfo &methodInfo): extra(nullptr), type(nullptr) {
+Jfield::Jfield(Jclass *jclass, const MemberInfo &memberInfo): constantValueIndex(INVALID_CONSTANT_VALUE_INDEX), type(nullptr) {
     this->jclass = jclass;
-    accessFlags = methodInfo.accessFlags;
-    name = jclass->rtcp->getStr(methodInfo.nameIndex);
-    descriptor = jclass->rtcp->getStr(methodInfo.descriptorIndex);
+    accessFlags = memberInfo.accessFlags;
+    name = jclass->rtcp->getStr(memberInfo.nameIndex);
+    descriptor = jclass->rtcp->getStr(memberInfo.descriptorIndex);
 
     if (descriptor[0] == 'B') {
         typeName = "java/lang/Byte";
@@ -50,8 +50,8 @@ Jfield::Jfield(Jclass *jclass, const MemberInfo &methodInfo): extra(nullptr), ty
         jvmAbort("%s\n", descriptor);
     }
 
-    for (int j = 0; j < methodInfo.attributesCount; j++) {
-        Attribute *attr = methodInfo.attributes[j];
+    for (int j = 0; j < memberInfo.attributesCount; j++) {
+        Attribute *attr = memberInfo.attributes[j];
         string attrName = jclass->rtcp->getStr(attr->attributeNameIndex);
 
         // todo fields Attributes
@@ -62,37 +62,38 @@ Jfield::Jfield(Jclass *jclass, const MemberInfo &methodInfo): extra(nullptr), ty
             // 非静态字段包含了ConstantValue属性，那么这个属性必须被虚拟机所忽略。
             if (isStatic()) {  // todo
 //                    constant_value_attr *a = attr;
-                int index = ((ConstantValueAttr *)attr)->constantvalueIndex;
-
-                auto v = new Jvalue;
-                switch (descriptor[0]) {
-                    case 'B':
-                    case 'C':
-                    case 'I':
-                    case 'S':
-                    case 'Z':
-                        v->i = jclass->rtcp->getInt(index);
-                        break;
-                    case 'F':
-                        v->f = jclass->rtcp->getFloat(index);
-                        break;
-                    case 'J':
-                        v->l = jclass->rtcp->getLong(index);
-                        break;
-                    case 'D':
-                        v->d = jclass->rtcp->getDouble(index);
-                        break;
-                    default:
-                        if (descriptor == "Ljava/lang/String;") {
-                            // todo
-                            string str = jclass->rtcp->getStr(index);
-                            v->r = new JstringObj(jclass->loader, strToJstr(str));
-                        } else {
-                            jvmAbort("error. ConstantValue: %s\n", descriptor.c_str());
-                        }
-                        break;
-                }
-                extra = v;
+                constantValueIndex = ((ConstantValueAttr *)attr)->constantvalueIndex;
+//                int index = ((ConstantValueAttr *)attr)->constantvalueIndex;
+//
+//                auto v = new Jvalue;
+//                switch (descriptor[0]) {
+//                    case 'B':
+//                    case 'C':
+//                    case 'I':
+//                    case 'S':
+//                    case 'Z':
+//                        v->i = jclass->rtcp->getInt(index);
+//                        break;
+//                    case 'F':
+//                        v->f = jclass->rtcp->getFloat(index);
+//                        break;
+//                    case 'J':
+//                        v->l = jclass->rtcp->getLong(index);
+//                        break;
+//                    case 'D':
+//                        v->d = jclass->rtcp->getDouble(index);
+//                        break;
+//                    default:
+//                        if (descriptor == "Ljava/lang/String;") {
+//                            // todo
+//                            string str = jclass->rtcp->getStr(index);
+//                            v->r = new JstringObj(jclass->loader, strToJstr(str));
+//                        } else {
+//                            jvmAbort("error. ConstantValue: %s\n", descriptor.c_str());
+//                        }
+//                        break;
+//                }
+//                extra = v;
             }
         } else if (attrName == Synthetic) {
             setSynthetic();  // todo

@@ -5,7 +5,7 @@
 #ifndef JVM_ACCESSPERMISSION_H
 #define JVM_ACCESSPERMISSION_H
 
-#include "../../../jvmdef.h"
+#include "../../../jvm.h"
 
 
 #define ACC_PUBLIC       0x0001 // class field method

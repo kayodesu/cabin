@@ -6,7 +6,7 @@
 #define JVM_CLASSREADER_H
 
 #include <string>
-#include "../jvmtype.h"
+#include "../jvm.h"
 
 class ClassReader {
 public:

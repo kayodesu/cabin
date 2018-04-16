@@ -6,7 +6,7 @@
 #define JVM_ATTRIBUTE_H
 
 
-#include "../../jvmtype.h"
+#include "../../jvm.h"
 #include "../../BytecodeReader.h"
 #include "../Constant.h"
 

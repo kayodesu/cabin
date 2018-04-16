@@ -21,9 +21,6 @@ ClassFile::ClassFile(const s1 *bytecode, size_t len) {
     BytecodeReader reader(bytecode, len);
 
     magic = reader.readu4();
-    if (magic != 0xcafebabe) {
-        jvmAbort("error. magic = %u(0x%x)\n",magic, magic);
-    }
     minorVersion = reader.readu2();
     majorVersion = reader.readu2();
 

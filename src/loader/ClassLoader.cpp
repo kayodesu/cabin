@@ -5,11 +5,13 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <algorithm>
-#include "Jclass.h"
-#include "../objectarea/JclassObj.h"
-#include "../../../../lib/zlib/minizip/unzip.h"
-#include "PrimitiveType.h"
-#include "../../../classpath/ClassReader.h"
+#include "../rtda/heap/methodarea/Jclass.h"
+#include "../rtda/heap/objectarea/JclassObj.h"
+#include "../rtda/heap/methodarea/Jfield.h"
+#include "../../lib/zlib/minizip/unzip.h"
+#include "../rtda/heap/methodarea/PrimitiveType.h"
+#include "../classpath/ClassReader.h"
+#include "../rtda/heap/objectarea/JstringObj.h"
 
 using namespace std;
 
@@ -25,6 +27,86 @@ JclassObj* ClassLoader::getJclassObjFromPool(const std::string &className) {
     auto o = new JclassObj(jclassClass, className);
     jclassObjPool.insert(o);
     return o;
+}
+
+Jclass* ClassLoader::loading(const std::string &className) {
+    ClassReader classReader;
+    ClassReader::Content c = classReader.readClass(className);
+    if (c.tag == ClassReader::Content::INVALID) {
+        // todo ClassNotFoundException
+        jvmAbort("Don't find class: %s\n", className.c_str());// todo
+    }
+
+    ClassFile *cf = nullptr;
+    if (c.tag == ClassReader::Content::PATH) {
+        cf = new ClassFile(c.classFilePath);
+    } else if (c.tag == ClassReader::Content::BYTECODE) {
+        cf = new ClassFile(c.bytecode, c.bytecodeLen);
+    }
+
+    if (cf == nullptr) {
+        // todo
+        jvmAbort("error");
+//        return nullptr;
+    }
+
+    return new Jclass(this, cf);
+}
+
+Jclass* ClassLoader::verification(Jclass *jclass) {
+    auto &c = *jclass;
+    if (c.magic != 0xcafebabe) {
+        jvmAbort("error. magic = %u(0x%x)\n", c.magic, c.magic);
+    }
+    // todo 验证版本号
+    return jclass;
+}
+
+Jclass* ClassLoader::preparation(Jclass *jclass) {
+    auto &c = *jclass;
+    c.staticFieldValues = new Jvalue[c.staticFieldCount]();
+//    memset(staticFieldValues, 0, sizeof(Jvalue) * staticFieldCount);
+
+//    for (int i = 0; i < c.fieldsCount; i++) {
+//        if (c.fields[i].extra != nullptr) {
+//            memcpy(c.staticFieldValues + i, c.fields[i].extra, sizeof(Jvalue));
+//            delete c.fields[i].extra;
+//        }
+//    }
+    Jvalue *v = c.staticFieldValues;
+    for (int i = 0; i < c.fieldsCount; i++) {
+        const auto &index = c.fields[i].constantValueIndex;
+        const auto &d = c.fields[i].descriptor;
+        if (index != Jfield::INVALID_CONSTANT_VALUE_INDEX) {
+            if (d[0] == 'B' or d[0] == 'C' or d[0] == 'I' or d[0] == 'S' or d[0] == 'Z') {
+                v->i = jclass->rtcp->getInt(index);
+            } else if (d[0] == 'F') {
+                v->f = jclass->rtcp->getFloat(index);
+            } else if (d[0] == 'J') {
+                v->l = jclass->rtcp->getLong(index);
+            } else if (d[0] == 'D') {
+                v->d = jclass->rtcp->getDouble(index);
+            } else if (d == "Ljava/lang/String;") {
+                // todo
+                string str = jclass->rtcp->getStr(index);
+                v->r = new JstringObj(jclass->loader, strToJstr(str));
+            } else {
+                jvmAbort("error. ConstantValue: %s\n", d.c_str());
+            }
+
+            v++; // todo static变量的顺序是怎样
+        }
+    }
+
+    return jclass;
+}
+
+Jclass* ClassLoader::resolution(Jclass *jclass) {
+    return jclass;
+}
+
+Jclass* ClassLoader::initialization(Jclass *jclass) {
+    return jclass;
 }
 
 ClassLoader::ClassLoader(): jclassClass(nullptr) {
@@ -290,33 +372,15 @@ Jclass* ClassLoader::loadArrClass(const std::string &className) {
 }
 
 Jclass* ClassLoader::loadNonArrClass(const std::string &className) {
-    ClassReader classReader;
-    ClassReader::Content c = classReader.readClass(className);
-    if (c.tag == ClassReader::Content::INVALID) {
-        // todo ClassNotFoundException
-        jvmAbort("Don't find class: %s\n", className.c_str());// todo
-    }
-
-    ClassFile *cf = nullptr;
-    if (c.tag == ClassReader::Content::PATH) {
-        cf = new ClassFile(c.classFilePath);
-    } else if (c.tag == ClassReader::Content::BYTECODE) {
-        cf = new ClassFile(c.bytecode, c.bytecodeLen);
-    }
-
-    if (cf == nullptr) {
-        // todo
-        jvmAbort("error");
-//        return nullptr;
-    }
-
-    Jclass *jclass = new Jclass(this, cf);
-    return jclass;
+//    return preparation(verification(loading(className)));
+    // todo 解析，初始化是在这里进行，还是待使用的时候再进行
+    return initialization(resolution(preparation(verification(loading(className)))));
 }
 
 // class_name: class全路径名，不能有.class后缀。例如 java/lang/Object
 Jclass* ClassLoader::loadClass(const string &className) {
-    auto iter = find_if(loadedClasses.begin(), loadedClasses.end(), [&](Jclass *c) { return c->className == className; });
+    auto iter = find_if(loadedClasses.begin(), loadedClasses.end(),
+                        [&](Jclass *c) { return c->className == className; });
     if (iter != loadedClasses.end()) {
         return *iter;
     }

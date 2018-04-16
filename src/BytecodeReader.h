@@ -8,9 +8,9 @@
 
 #include <cstdio>
 #include <cstdlib>
-#include "jvmdef.h"
+#include <cstring>
 #include "util/convert.h"
-#include "jvmtype.h"
+#include "jvm.h"
 
 class BytecodeReader {
 public:

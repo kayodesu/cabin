@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 #include "../../../classfile/ClassFile.h"
-#include "ClassLoader.h"
+#include "../../../loader/ClassLoader.h"
 #include "../../../interpreter/Slot.h"
 #include "../../../classfile/Constant.h"
 #include "../../../BytecodeReader.h"
@@ -25,10 +25,18 @@ class Jfield;
 class Jmethod;
 class StackFrame;
 
+class JclassHead {
+
+};
+
 class Jclass: public AccessPermission {
     void calcStaticFieldId();
     void calcInstanceFieldId();
 public:
+    u4 magic;
+    u2 minorVersion;
+    u2 majorVersion;
+
     // object of java/lang/Class of this class
     JclassObj *classObj;
 

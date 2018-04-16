@@ -43,6 +43,9 @@ void Jclass::calcStaticFieldId() {
 }
 
 Jclass::Jclass(ClassLoader *loader, ClassFile *cf): sourcefileName("unknown") {
+    magic = cf->magic;
+    minorVersion = cf->minorVersion;
+    majorVersion = cf->majorVersion;
     accessFlags = cf->accessFlags;
     isInited = false;
     this->loader = loader;
@@ -95,32 +98,32 @@ Jclass::Jclass(ClassLoader *loader, ClassFile *cf): sourcefileName("unknown") {
     calcStaticFieldId();
     calcInstanceFieldId();
 
-    /*
-     * Java要求类成员变量必须用默认值初始化！
-     *
-     * Java的类成员变量默认值
-     * boolean: false
-     * byte: 0
-     * short: 0
-     * char:'\u0000' 数值为0 ???? todo
-     * int: 0
-     * long: 0
-     * float: 0.0
-     * double: 0.0
-     * 数组: null
-     * 引用: null
-     *
-     * 如果静态变量属于基本类型或String类型，有final修饰符，且它的值在编译期已知，则该值存储在class文件常量池中。
-     */
-    staticFieldValues = new Jvalue[staticFieldCount]();
-//    memset(staticFieldValues, 0, sizeof(Jvalue) * staticFieldCount);
-
-    for (int i = 0; i < fieldsCount; i++) {
-        if (fields[i].extra != nullptr) {
-            memcpy(staticFieldValues + i, fields[i].extra, sizeof(Jvalue));
-            delete fields[i].extra;
-        }
-    }
+//    /*
+//     * Java要求类成员变量必须用默认值初始化！
+//     *
+//     * Java的类成员变量默认值
+//     * boolean: false
+//     * byte: 0
+//     * short: 0
+//     * char:'\u0000' 数值为0 ???? todo
+//     * int: 0
+//     * long: 0
+//     * float: 0.0
+//     * double: 0.0
+//     * 数组: null
+//     * 引用: null
+//     *
+//     * 如果静态变量属于基本类型或String类型，有final修饰符，且它的值在编译期已知，则该值存储在class文件常量池中。
+//     */
+//    staticFieldValues = new Jvalue[staticFieldCount]();
+////    memset(staticFieldValues, 0, sizeof(Jvalue) * staticFieldCount);
+//
+//    for (int i = 0; i < fieldsCount; i++) {
+//        if (fields[i].extra != nullptr) {
+//            memcpy(staticFieldValues + i, fields[i].extra, sizeof(Jvalue));
+//            delete fields[i].extra;
+//        }
+//    }
 
     methodsCount = cf->methodsCount;
     methods = new Jmethod[methodsCount];//malloc(sizeof(*methods) * methods_count);

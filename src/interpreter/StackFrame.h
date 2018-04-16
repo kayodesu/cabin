@@ -19,11 +19,11 @@ private:
     std::stack<Slot> s;
 
 public:
-#ifdef JVM_DEBUG
+//#ifdef JVM_DEBUG
     auto size() {
         return s.size();
     }
-#endif
+//#endif
     void clear() {
         while(!s.empty())
             s.pop();

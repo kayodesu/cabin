@@ -6,7 +6,7 @@
 #define JVM_JMEMBER_H
 
 
-#include "../../../jvmdef.h"
+#include "../../../jvm.h"
 #include "../../../BytecodeReader.h"
 #include "RTCP.h"
 #include "AccessPermission.h"

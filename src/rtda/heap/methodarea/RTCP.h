@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "Jmember.h"
-#include "../../../jvmtype.h"
+#include "../../../jvm.h"
 #include "../../../classfile/Constant.h"
 #include "../../../util/encoding.h"
 

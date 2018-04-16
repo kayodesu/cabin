@@ -17,17 +17,17 @@ void interpret(Jthread *thread) {
 
         BytecodeReader *reader = frame->reader;
 
-#ifdef VM_STACK_TRACE
+//#ifdef VM_STACK_TRACE
         jprintf("executing frame: %s, pc = %lu\n", frame->toString().c_str(), reader->pc);
-#endif
+//#endif
 
         while (reader->hasMore()) {
             frame->thread->pc = reader->pc;
             u1 opcode = reader->readu1();
 
-#ifdef INSTRUCTION_TRACE
+//#ifdef INSTRUCTION_TRACE
             jprintf("%d(0x%x), %s, pc = %lu\n", opcode, opcode, get<1>(instructions[opcode]), reader->pc);
-#endif
+//#endif
 
             assert(get<0>(instructions[opcode]) == opcode);
             assert(get<2>(instructions[opcode]) != nullptr);

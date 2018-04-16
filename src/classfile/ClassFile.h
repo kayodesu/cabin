@@ -6,8 +6,7 @@
 #define JVM_CLASSFILE_H
 
 #include <vector>
-#include "../jvmdef.h"
-#include "../jvmtype.h"
+#include "../jvm.h"
 #include "attribute/Attribute.h"
 
 struct MemberInfo {

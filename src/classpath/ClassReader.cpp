@@ -6,9 +6,10 @@
 #include <dirent.h>  // todo 平台适配问题
 #include <sys/stat.h>// todo 平台适配问题
 #include <algorithm>
+#include <cstring>
 #include "ClassReader.h"
 #include "../../lib/zlib/minizip/unzip.h"
-#include "../jvmdef.h"
+#include "../jvm.h"
 
 using namespace std;
 
@@ -47,9 +48,9 @@ ClassReader::Content ClassReader::readClassFromJar(const string &jarPath, const 
         }
 
         char *p = strrchr(file_name, '.');
-        if (p != NULL && streq(p, ".class")) {
+        if (p != NULL && strcmp(p, ".class") == 0) {
             *p = 0; // 去掉后缀
-            if (streq(file_name, className.c_str())) {
+            if (strcmp(file_name, className.c_str()) == 0) {
                 // find out!
                 if (unzOpenCurrentFile(jarFile) != UNZ_OK) {
                     // todo error
@@ -87,7 +88,8 @@ ClassReader::Content ClassReader::readClassFromJar(const string &jarPath, const 
 
 ClassReader::Content ClassReader::readClassFromDir(const string &__dir, const string &className) {
     stack<string> dirs;
-    dirs.push(__dir);
+    if (!__dir.empty())
+        dirs.push(__dir);
 
     while (!dirs.empty()) {
         const string path = dirs.top();
@@ -100,7 +102,7 @@ ClassReader::Content ClassReader::readClassFromDir(const string &__dir, const st
         struct dirent *entry;
         struct stat statbuf;
         while ((entry = readdir(dir)) != NULL) {
-            if (streq(entry->d_name, ".") || streq(entry->d_name, "..")) {
+            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
                 continue;
             }
 
@@ -139,15 +141,15 @@ ClassReader::Content ClassReader::readClassFromDir(const string &__dir, const st
 }
 
 ClassReader::Content ClassReader::readClass(const string &class_name) {
-    Content c = readClassFromDir(bootstrapClasspath, class_name);
+    Content c = readClassFromDir(JvmEnv::bootstrapClasspath, class_name);
     if (c.tag != Content::INVALID) {
         return c;
     }
 
-    Content c1 = readClassFromDir(extensionClasspath, class_name);
+    Content c1 = readClassFromDir(JvmEnv::extensionClasspath, class_name);
     if (c1.tag != Content::INVALID) {
         return c1;
     }
 
-    return readClassFromDir(userClasspath, class_name);
+    return readClassFromDir(JvmEnv::userClasspath, class_name);
 }

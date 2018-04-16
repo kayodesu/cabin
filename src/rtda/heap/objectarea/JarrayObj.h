@@ -5,7 +5,7 @@
 #ifndef JVM_JARRAY_H
 #define JVM_JARRAY_H
 
-#include "../../../jvmdef.h"
+#include "../../../jvm.h"
 #include "Jobject.h"
 
 class JarrayObj: public Jobject {

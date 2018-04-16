@@ -6,7 +6,7 @@
 #define JVM_CONVERT_H
 
 #include <cstdint>
-#include "../jvmtype.h"
+#include "../jvm.h"
 
 namespace jvm {
     namespace convert {

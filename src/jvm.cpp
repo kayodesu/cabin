@@ -7,6 +7,10 @@
 
 using namespace std;
 
+string JvmEnv::bootstrapClasspath;
+string JvmEnv::extensionClasspath;
+string JvmEnv::userClasspath = "D:\\code\\jvm\\testclasses\\out"; // todo;
+
 static void initJVM(ClassLoader *&loader, Jthread *&mainThread) {
     Jclass *vmClass = loader->loadClass("sun/misc/VM");
     if (vmClass == nullptr) {

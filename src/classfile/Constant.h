@@ -5,7 +5,7 @@
 #ifndef JVM_CONSTANT_H
 #define JVM_CONSTANT_H
 
-#include "../jvmdef.h"
+#include "../jvm.h"
 #include "../BytecodeReader.h"
 
 #define CLASS_CONSTANT					7

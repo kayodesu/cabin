@@ -10,7 +10,7 @@
 #include <codecvt>
 #include <locale>
 
-#include "../jvmtype.h"
+#include "../jvm.h"
 
 static inline std::string decodeMUTF8(uint8_t *bytes, size_t len) {
     // todo 此函数的实现是错的，先这么做

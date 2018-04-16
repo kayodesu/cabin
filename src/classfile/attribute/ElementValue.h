@@ -5,7 +5,7 @@
 #ifndef JVM_ELEMENTVALUE_H
 #define JVM_ELEMENTVALUE_H
 
-#include "../../jvmtype.h"
+#include "../../jvm.h"
 #include "Annotation.h"
 #include "../../BytecodeReader.h"
 
