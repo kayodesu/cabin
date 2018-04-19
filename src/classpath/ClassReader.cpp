@@ -9,84 +9,85 @@
 #include <cstring>
 #include "ClassReader.h"
 #include "../../lib/zlib/minizip/unzip.h"
-#include "../jvm.h"
 
 using namespace std;
 
-ClassReader::Content ClassReader::invalidContent;
 
-ClassReader::Content ClassReader::readClassFromJar(const string &jarPath, const string &className) {
+ClassReader::Content ClassReader::readClassFromJar(
+        const string &jarPath, const string &className) throw(IoException, ClassNotFindException) {
     unz_global_info64 globalInfo;
     unz_file_info64 fileInfo;
 
     unzFile jarFile = unzOpen64(jarPath.c_str());
     if (jarFile == NULL) {
         // todo error
-        jprintf("error. unzOpen64\n");
-        return invalidContent;
+        jprintf("unzOpen64 failed: %s\n", jarPath);
+        throw IoException("unzOpen64 failed: " + jarPath);
     }
     if (unzGetGlobalInfo64(jarFile, &globalInfo) != UNZ_OK) {
         // todo throw “文件错误”;
         unzClose(jarFile);
-        jprintf("error. unzGetGlobalInfo64\n");
-        return invalidContent;
+        throw IoException("unzGetGlobalInfo64 failed: " + jarPath);
     }
 
     if (unzGoToFirstFile(jarFile) != UNZ_OK) {
         // todo throw “文件错误”;
         unzClose(jarFile);
-        jprintf("error. unzGoToFirstFile\n");
-        return invalidContent;
+        jprintf("unzGoToFirstFile failed: %s\n", jarPath);
+        throw IoException("unzGoToFirstFile failed: " + jarPath);
     }
 
     for (int i = 0; i < globalInfo.number_entry; i++) {
-        char file_name[PATH_MAX];
-        if (unzGetCurrentFileInfo64(jarFile, &fileInfo, file_name, sizeof(file_name), NULL, 0, NULL, 0) != UNZ_OK) {
-            //throw “文件错误”;
+        char fileName[PATH_MAX];
+        if (unzGetCurrentFileInfo64(jarFile, &fileInfo, fileName, sizeof(fileName), NULL, 0, NULL, 0) != UNZ_OK) {
             unzClose(jarFile);
-            return invalidContent;
+            throw IoException(string("unzGetCurrentFileInfo64 failed: ") + fileName);
         }
 
-        char *p = strrchr(file_name, '.');
+        char *p = strrchr(fileName, '.');
         if (p != NULL && strcmp(p, ".class") == 0) {
             *p = 0; // 去掉后缀
-            if (strcmp(file_name, className.c_str()) == 0) {
+            if (strcmp(fileName, className.c_str()) == 0) {
                 // find out!
                 if (unzOpenCurrentFile(jarFile) != UNZ_OK) {
                     // todo error
-                    jprintf("error. unzOpenCurrentFile\n");
                     unzClose(jarFile);
-                    return invalidContent;
+                    throw IoException("unzOpenCurrentFile failed: " + jarPath);
                 }
-                Content c;
-                c.tag = Content::BYTECODE;
-                c.bytecodeLen = fileInfo.uncompressed_size;
-                c.bytecode = new s1[c.bytecodeLen];//malloc(sizeof(char) * c.bytecode_len);
-                int len = unzReadCurrentFile(jarFile, c.bytecode, c.bytecodeLen);
-                if (len != c.bytecodeLen) {
+
+                unsigned int uncompressedSize = static_cast<unsigned int>(fileInfo.uncompressed_size);
+                auto bytecode = new s1[uncompressedSize];//malloc(sizeof(char) * c.bytecode_len);
+//                int len = unzReadCurrentFile(jarFile, bytecode, uncompressedSize);
+                if (unzReadCurrentFile(jarFile, bytecode, uncompressedSize) != uncompressedSize) {
                     // todo error
                     jprintf("error. unzReadCurrentFile\n");
                     unzCloseCurrentFile(jarFile);
                     unzClose(jarFile);
-                    return invalidContent;
+                    throw IoException("unzReadCurrentFile failed: " + jarPath);
                 }
                 unzCloseCurrentFile(jarFile);
                 unzClose(jarFile);
-                return c;
+                return Content(bytecode, uncompressedSize);
             }
         }
-        if (unzGoToNextFile(jarFile) != UNZ_OK) {
+        int t = unzGoToNextFile(jarFile);
+        if (t == UNZ_END_OF_LIST_OF_FILE) {
+            break;
+        }
+        if (t != UNZ_OK) {
             // todo error
-//            jprintf("error. unzGoToNextFile\n");
             unzClose(jarFile);
-            return invalidContent;
+            string msg = "unzGoToNextFile failed: " + jarPath;
+            jprintf(msg.c_str());
+            throw IoException(msg);
         }
     }
 
-    return invalidContent;
+    throw ClassNotFindException(className);
 }
 
-ClassReader::Content ClassReader::readClassFromDir(const string &__dir, const string &className) {
+ClassReader::Content ClassReader::readClassFromDir(const string &__dir, const string &className)
+                                                    throw(IoException, ClassNotFindException) {
     stack<string> dirs;
     if (!__dir.empty())
         dirs.push(__dir);
@@ -117,18 +118,17 @@ ClassReader::Content ClassReader::readClassFromDir(const string &__dir, const st
                 auto index = abspath.rfind('.');
                 if (index != string::npos) {
                     if (abspath.compare(index, string::npos, ".jar") == 0) {
-                        Content c = readClassFromJar(abspath, className);
-                        if (c.tag != Content::INVALID) {
-                            return c;
+                        try {
+                            return readClassFromJar(abspath, className);
+                        } catch (ClassNotFindException &e) {
+                            // need not do any thing
+                            // 在此jar包内没找到，再其他jar包继续寻找即可
                         }
                     } else if (abspath.compare(index, string::npos, ".class") == 0) {
                         // className不带.class后缀，而abspath有.class后缀
                         auto i = abspath.rfind(className + ".class");
                         if (i != string::npos) {
-                            Content c;
-                            c.tag = Content::PATH;
-                            strcpy(c.classFilePath, abspath.c_str());
-                            return c;
+                            return Content(abspath.c_str());
                         }
                     }
                 }
@@ -137,19 +137,17 @@ ClassReader::Content ClassReader::readClassFromDir(const string &__dir, const st
         closedir(dir);
     }
 
-    return invalidContent;
+    throw ClassNotFindException(className);
 }
 
-ClassReader::Content ClassReader::readClass(const string &class_name) {
-    Content c = readClassFromDir(JvmEnv::bootstrapClasspath, class_name);
-    if (c.tag != Content::INVALID) {
-        return c;
+ClassReader::Content ClassReader::readClass(const string &className) throw(IoException, ClassNotFindException) {
+    try {
+        return readClassFromDir(JvmEnv::bootstrapClasspath, className);
+    } catch (ClassNotFindException &e) {
+        try {
+            return readClassFromDir(JvmEnv::extensionClasspath, className);
+        } catch (ClassNotFindException &e) {
+            return readClassFromDir(JvmEnv::userClasspath, className);
+        }
     }
-
-    Content c1 = readClassFromDir(JvmEnv::extensionClasspath, class_name);
-    if (c1.tag != Content::INVALID) {
-        return c1;
-    }
-
-    return readClassFromDir(JvmEnv::userClasspath, class_name);
 }

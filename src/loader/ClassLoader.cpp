@@ -5,6 +5,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <algorithm>
+#include <iostream>
 #include "../rtda/heap/methodarea/Jclass.h"
 #include "../rtda/heap/objectarea/JclassObj.h"
 #include "../rtda/heap/methodarea/Jfield.h"
@@ -12,6 +13,8 @@
 #include "../rtda/heap/methodarea/PrimitiveType.h"
 #include "../classpath/ClassReader.h"
 #include "../rtda/heap/objectarea/JstringObj.h"
+#include "../exception/IoException.h"
+#include "../exception/ClassNotFindException.h"
 
 using namespace std;
 
@@ -31,26 +34,27 @@ JclassObj* ClassLoader::getJclassObjFromPool(const std::string &className) {
 
 Jclass* ClassLoader::loading(const std::string &className) {
     ClassReader classReader;
-    ClassReader::Content c = classReader.readClass(className);
-    if (c.tag == ClassReader::Content::INVALID) {
-        // todo ClassNotFoundException
-        jvmAbort("Don't find class: %s\n", className.c_str());// todo
-    }
+    try {
+        ClassReader::Content c = classReader.readClass(className);
 
-    ClassFile *cf = nullptr;
-    if (c.tag == ClassReader::Content::PATH) {
-        cf = new ClassFile(c.classFilePath);
-    } else if (c.tag == ClassReader::Content::BYTECODE) {
-        cf = new ClassFile(c.bytecode, c.bytecodeLen);
-    }
+        ClassFile *cf = nullptr;
+        if (c.tag == ClassReader::Content::PATH) {
+            cf = new ClassFile(c.classFilePath);
+        } else if (c.tag == ClassReader::Content::BYTECODE) {
+            cf = new ClassFile(c.bytecode, c.bytecodeLen);
+        }
 
-    if (cf == nullptr) {
-        // todo
-        jvmAbort("error");
-//        return nullptr;
-    }
+        if (cf == nullptr) {
+            // todo
+            jvmAbort("never goes here");
+        }
 
-    return new Jclass(this, cf);
+        return new Jclass(this, cf);
+    } catch (IoException &e) {
+        jvmAbort(e.what());
+    } catch (ClassNotFindException &e) {
+        jvmAbort(e.what());
+    }
 }
 
 Jclass* ClassLoader::verification(Jclass *jclass) {
