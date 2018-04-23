@@ -46,10 +46,10 @@ static void __taload(StackFrame *frame) {
         /* todo throw new ArrayIndexOutOfBoundsException(String.valueOf(index)); */
     }
 
-    if (!(a->getClass()->*checkType)()) {
-        jvmAbort("error\n");
-        /* todo  */
-    }
+//    if (!(a->getClass()->*checkType)()) {
+//        jvmAbort("error. %s\n", a->toString().c_str());
+//        /* todo  */
+//    }
 
     SaveType v = a->get<SaveType>(index);
 

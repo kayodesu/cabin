@@ -60,7 +60,7 @@ public:
     jreference getReference() {
         if (type != REFERENCE) {
             // todo
-            jvmAbort("error. %d, %d\n", type, value.l);
+            jvmAbort("error. want reference, but get %s\n", jtypeNames[type]);
         }
         return value.r;
     }

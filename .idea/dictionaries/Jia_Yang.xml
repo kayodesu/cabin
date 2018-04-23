@@ -2,8 +2,13 @@
   <dictionary name="Jia Yang">
     <words>
       <w>bootstrapclassloader</w>
+      <w>invokeinterface</w>
+      <w>invokespecial</w>
+      <w>invokestatic</w>
+      <w>invokevirtual</w>
       <w>jiayanggo</w>
       <w>ljava</w>
+      <w>newarray</w>
     </words>
   </dictionary>
 </component>

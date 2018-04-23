@@ -115,7 +115,7 @@ tuple<int, const char *, void (*)(StackFrame *)> instructions[] = {
         make_tuple(0x2f, "laload", __taload<&Jclass::isPrimitiveLongArray, jlong>),
         make_tuple(0x30, "faload", __taload<&Jclass::isPrimitiveFloatArray, jfloat>),
         make_tuple(0x31, "daload", __taload<&Jclass::isPrimitiveDoubleArray, jdouble>),
-        make_tuple(0x32, "aaload", __taload<&Jclass::isOneDimensionReferenceArray, jreference>),
+        make_tuple(0x32, "aaload", __taload<&Jclass::isOneDimensionReferenceArray, jreference>), // todo 这里的isOneDimensionReferenceArray貌似没有考虑多维的情况
         make_tuple(0x33, "baload", __taload<&Jclass::isPrimitiveBoolOrByteArray, jbyte>),
         make_tuple(0x34, "caload", __taload<&Jclass::isPrimitiveCharArray, jchar>),
         make_tuple(0x35, "saload", __taload<&Jclass::isPrimitiveShortArray, jshort>),

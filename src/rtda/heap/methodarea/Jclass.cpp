@@ -54,8 +54,8 @@ Jclass::Jclass(ClassLoader *loader, ClassFile *cf): sourcefileName("unknown") {
 //    buildRtcp(cf->constant_pool, cf->constant_pool_count);
     rtcp = new RTCP(cf->constantPool, cf->constantPoolCount);
 
-//    class_name = get_rtc_class(class, cf->this_class);//rtcp[cf->this_class].u.class_name;
-    className = rtcp->getClassName(cf->thisClass);//rtcp[cf->this_class]->getValue();
+//    class_name = get_rtc_class(class, cf->this_class);//RTCP[cf->this_class].u.class_name;
+    className = rtcp->getClassName(cf->thisClass);//RTCP[cf->this_class]->getValue();
     unsigned long index = className.rfind('/');//strrchr(className, '/');
     if (index == -1) { // todo 是 -1 吗
         pkgName = ""; // 包名可以为空
@@ -325,9 +325,9 @@ Jclass* Jclass::arrayClass() {
 //void print_rtcp(const jclass *class)
 //{
 //    printf("\n");
-//    jprintf("The rtcp of class %s(%d)\n", class->class_name, class->constants_count);
+//    jprintf("The RTCP of class %s(%d)\n", class->class_name, class->constants_count);
 //    for (int i = 1; i < class->constants_count; i++) {
-//        rtc c = class->rtcp[i];
+//        rtc c = class->RTCP[i];
 //        if (c.tag == INTEGER_CONSTANT) {
 //            jprintf("INTEGER_CONSTANT. %d\n", c.u.i);
 //        } else if (c.tag == LONG_CONSTANT) {

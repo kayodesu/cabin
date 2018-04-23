@@ -72,7 +72,7 @@ int main(int argc, char* argv[]) {
     if (JvmEnv::bootstrapClasspath.empty()) {
         char *javaHome = getenv("JAVA_HOME");
         if (javaHome == nullptr) {
-            // todo errro
+            // todo error
             jprintf("no javaHome");
             return -1;
         }
@@ -91,19 +91,21 @@ int main(int argc, char* argv[]) {
 //    testEncoding();
 //    return 0;
 
-//    startJVM("com/github/jiayanggo/HelloWorld");
-//    startJVM("com/github/jiayanggo/string/StringTest");
-//    startJVM("com/github/jiayanggo/field/FieldsTest0");
+//    startJVM("io/github/jiayanggo/HelloWorld");
+//    startJVM("io/github/jiayanggo/string/StringTest");
+//    startJVM("io/github/jiayanggo/ObjectTest");
+//    startJVM("io/github/jiayanggo/field/FieldsTest");
 
-//    startJVM("com/github/jiayanggo/exception/CatchTest");
-//    startJVM("com/github/jiayanggo/exception/UncaughtTest");
+//    startJVM("io/github/jiayanggo/exception/CatchTest");
+//    startJVM("io/github/jiayanggo/exception/UncaughtTest");
 
-//    startJVM("com/github/jiayanggo/array/BubbleSort");
+//    startJVM("io/github/jiayanggo/array/BubbleSort");
 
-//    startJVM("com/github/jiayanggo/reflection/GetClassTest");
-//    startJVM("com/github/jiayanggo/reflection/FieldTest");
+//    startJVM("io/github/jiayanggo/reflection/GetClassTest");
+//    startJVM("io/github/jiayanggo/reflection/FieldTest");
 
+//    startJVM("io/github/jiayanggo/nio/ByteBufferTest");
 
-    startJVM("com/github/jiayanggo/instructions/ANewArray");
+    startJVM("io/github/jiayanggo/instructions/ANewArray"); // todo 三维数组实现不正确。
     return 0;
 }

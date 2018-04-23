@@ -86,6 +86,7 @@ enum Jtype {
 };
 
 // 不要改变顺序
+// 与 Jtype 顺序对应
 static const char *jtypeNames[] {
         "boolean", "byte", "char", "short", "int", "float", "reference", "long", "double", "invalid jvm type"
 };

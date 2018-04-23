@@ -72,21 +72,21 @@ Jfield::Jfield(Jclass *jclass, const MemberInfo &memberInfo): constantValueIndex
 //                    case 'I':
 //                    case 'S':
 //                    case 'Z':
-//                        v->i = jclass->rtcp->getInt(index);
+//                        v->i = jclass->RTCP->getInt(index);
 //                        break;
 //                    case 'F':
-//                        v->f = jclass->rtcp->getFloat(index);
+//                        v->f = jclass->RTCP->getFloat(index);
 //                        break;
 //                    case 'J':
-//                        v->l = jclass->rtcp->getLong(index);
+//                        v->l = jclass->RTCP->getLong(index);
 //                        break;
 //                    case 'D':
-//                        v->d = jclass->rtcp->getDouble(index);
+//                        v->d = jclass->RTCP->getDouble(index);
 //                        break;
 //                    default:
 //                        if (descriptor == "Ljava/lang/String;") {
 //                            // todo
-//                            string str = jclass->rtcp->getStr(index);
+//                            string str = jclass->RTCP->getStr(index);
 //                            v->r = new JstringObj(jclass->loader, strToJstr(str));
 //                        } else {
 //                            jvmAbort("error. ConstantValue: %s\n", descriptor.c_str());
