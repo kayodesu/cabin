@@ -9,7 +9,7 @@
 #include <vector>
 #include "../../../classfile/ClassFile.h"
 #include "../../../loader/ClassLoader.h"
-#include "../../../interpreter/Slot.h"
+#include "../../../interpreter/slot/Slot.h"
 #include "../../../classfile/Constant.h"
 #include "../../../BytecodeReader.h"
 #include "Jmember.h"

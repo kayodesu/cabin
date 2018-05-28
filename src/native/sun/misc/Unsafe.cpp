@@ -27,7 +27,7 @@ static void objectFieldOffset(StackFrame *frame) {
 	stack := frame.OperandStack()
 	stack.PushLong(int64(offset))
      */
-    Jobject *jlrFieldObj = static_cast<Jobject *>(frame->getLocalVars(1).value.r);
+    Jobject *jlrFieldObj = static_cast<Jobject *>(frame->getLocalVars(1)->getReference());
     jint offset = jlrFieldObj->getInstanceFieldValue("slot", "I").i;
     frame->operandStack.push((jlong)offset);
 }
@@ -56,11 +56,11 @@ static void addressSize(StackFrame *frame) {
  * public final native boolean compareAndSwapInt(Object o, long offset, int expected, int x);
  */
 static void compareAndSwapInt(StackFrame *frame) {
-    Jobject *thisObj = static_cast<Jobject *>(frame->getLocalVars(0).value.r);
-    Jobject *o = static_cast<Jobject *>(frame->getLocalVars(1).value.r);
-    jlong offset = frame->getLocalVars(2).value.l; // long 占两个Slot
-    jint expected = frame->getLocalVars(4).value.i;
-    jint x = frame->getLocalVars(5).value.i;
+    Jobject *thisObj = static_cast<Jobject *>(frame->getLocalVars(0)->getReference());
+    Jobject *o = static_cast<Jobject *>(frame->getLocalVars(1)->getReference());
+    jlong offset = frame->getLocalVars(2)->getLong(); // long 占两个Slot
+    jint expected = frame->getLocalVars(4)->getInt();
+    jint x = frame->getLocalVars(5)->getInt();
 
     jint value = o->getInstanceFieldValue(offset).i;
     if (value == expected) {
@@ -75,11 +75,11 @@ static void compareAndSwapInt(StackFrame *frame) {
 
 // public final native boolean compareAndSwapLong(Object o, long offset, long expected, long x);
 static void compareAndSwapLong(StackFrame *frame) {
-    Jobject *thisObj = static_cast<Jobject *>(frame->getLocalVars(0).value.r);
-    Jobject *o = static_cast<Jobject *>(frame->getLocalVars(1).value.r);
-    jlong offset = frame->getLocalVars(2).value.l; // long 占两个Slot
-    jlong expected = frame->getLocalVars(4).value.l;
-    jlong x = frame->getLocalVars(6).value.l;
+    Jobject *thisObj = static_cast<Jobject *>(frame->getLocalVars(0)->getReference());
+    Jobject *o = static_cast<Jobject *>(frame->getLocalVars(1)->getReference());
+    jlong offset = frame->getLocalVars(2)->getLong(); // long 占两个Slot
+    jlong expected = frame->getLocalVars(4)->getLong();
+    jlong x = frame->getLocalVars(6)->getLong();
 
     jlong value = o->getInstanceFieldValue(offset).l;
     if (value == expected) {
@@ -94,11 +94,11 @@ static void compareAndSwapLong(StackFrame *frame) {
 
 // public final native boolean compareAndSwapObject(Object o, long offset, Object expected, Object x)
 static void compareAndSwapObject(StackFrame *frame) {
-    Jobject *thisObj = static_cast<Jobject *>(frame->getLocalVars(0).value.r);
-    Jobject *o = static_cast<Jobject *>(frame->getLocalVars(1).value.r);
-    jlong offset = frame->getLocalVars(2).value.l; // long 占两个Slot
-    jreference expected = frame->getLocalVars(4).value.r;
-    jreference x = frame->getLocalVars(5).value.r;
+    Jobject *thisObj = static_cast<Jobject *>(frame->getLocalVars(0)->getReference());
+    Jobject *o = static_cast<Jobject *>(frame->getLocalVars(1)->getReference());
+    jlong offset = frame->getLocalVars(2)->getLong(); // long 占两个Slot
+    jreference expected = frame->getLocalVars(4)->getReference();
+    jreference x = frame->getLocalVars(5)->getReference();
 
     jreference value = o->getInstanceFieldValue(offset).r;
     if (value == expected) {
@@ -113,9 +113,9 @@ static void compareAndSwapObject(StackFrame *frame) {
 
 // public native int getIntVolatile(Object o, long offset);
 static void getIntVolatile(StackFrame *frame) {
-    Jobject *thisObj = static_cast<Jobject *>(frame->getLocalVars(0).value.r);
-    Jobject *o = static_cast<Jobject *>(frame->getLocalVars(1).value.r);
-    jlong offset = frame->getLocalVars(2).value.l;
+    Jobject *thisObj = static_cast<Jobject *>(frame->getLocalVars(0)->getReference());
+    Jobject *o = static_cast<Jobject *>(frame->getLocalVars(1)->getReference());
+    jlong offset = frame->getLocalVars(2)->getLong();
 
     if (o->getClass()->isArray()) {
         JarrayObj *arr = dynamic_cast<JarrayObj *>(o);

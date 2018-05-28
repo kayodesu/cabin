@@ -17,12 +17,14 @@ static void __tload(StackFrame *frame) {
     if (i < 0) {
         i = frame->reader->readu1();
     }
-    const Slot &s = frame->getLocalVars(i);
-    if (s.type != type) {
+
+    Slot *s = frame->getLocalVars(i);
+    if (s->type != type) {
         /* todo throw new BytecodeFormatError("类型不匹配");*/
-        jvmAbort("error. %d, %d\n", s.type, type);
+        jvmAbort("error. %d, %d\n", s->type, type);
     }
 
+    jprintf("ffffffffffffffffffffffff                      %s\n", s->toString().c_str());
     frame->operandStack.push(s);
 }
 

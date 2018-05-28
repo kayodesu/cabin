@@ -11,6 +11,7 @@
 #include "stacks.h"
 #include "stores.h"
 #include "extended.h"
+#include "conversions.h"
 
 #include "../native/registry.h"
 
@@ -47,7 +48,7 @@ template <typename T> static bool __le(T v1, T v2) { return v1 <= v2; }
 tuple<int, const char *, void (*)(StackFrame *)> instructions[] = {
         make_tuple(0x00, "nop", [](StackFrame *){}),
 
-        make_tuple(0x01, "aconst_null", [](StackFrame *frame){ frame->operandStack.push(nullptr); }),
+        make_tuple(0x01, "aconst_null", [](StackFrame *frame){ frame->operandStack.push((jreference)nullptr); }),
 		
         make_tuple(0x02, "iconst_ml", [](StackFrame *frame){ frame->operandStack.push((jint) -1); }),
         make_tuple(0x03, "iconst_0", [](StackFrame *frame){ frame->operandStack.push((jint) 0); }),
@@ -233,25 +234,25 @@ tuple<int, const char *, void (*)(StackFrame *)> instructions[] = {
         make_tuple(0x84, "iinc", __iinc),
 
         // Conversions // todo 指令实现完全有问题！！！！！ 只改变数据类型不行，还需进行数据的转换！！！！！！！！！！！！！！！！
-        make_tuple(0x85, "i2l", [](StackFrame *frame){ frame->operandStack.peek().x2x(PRIMITIVE_INT, PRIMITIVE_LONG); }),
-        make_tuple(0x86, "i2f", [](StackFrame *frame){ frame->operandStack.peek().x2x(PRIMITIVE_INT, PRIMITIVE_FLOAT); }),
-        make_tuple(0x87, "i2d", [](StackFrame *frame){ frame->operandStack.peek().x2x(PRIMITIVE_INT, PRIMITIVE_DOUBLE); }),
+        make_tuple(0x85, "i2l", x2x<IntSlot, &IntSlot::convertToLong>),
+        make_tuple(0x86, "i2f", x2x<IntSlot, &IntSlot::convertToFloat>),
+        make_tuple(0x87, "i2d", x2x<IntSlot, &IntSlot::convertToDouble>),
 
-        make_tuple(0x88, "l2i", [](StackFrame *frame){ frame->operandStack.peek().x2x(PRIMITIVE_LONG, PRIMITIVE_INT); }),
-        make_tuple(0x89, "l2f", [](StackFrame *frame){ frame->operandStack.peek().x2x(PRIMITIVE_LONG, PRIMITIVE_FLOAT); }),
-        make_tuple(0x8a, "l2d", [](StackFrame *frame){ frame->operandStack.peek().x2x(PRIMITIVE_LONG, PRIMITIVE_DOUBLE); }), 
+        make_tuple(0x88, "l2i", x2x<LongSlot, &LongSlot::convertToInt>),
+        make_tuple(0x89, "l2f", x2x<LongSlot, &LongSlot::convertToFloat>),
+        make_tuple(0x8a, "l2d", x2x<LongSlot, &LongSlot::convertToDouble>),
 
-        make_tuple(0x8b, "f2i", [](StackFrame *frame){ frame->operandStack.peek().x2x(PRIMITIVE_FLOAT, PRIMITIVE_INT); }),
-        make_tuple(0x8c, "f2l", [](StackFrame *frame){ frame->operandStack.peek().x2x(PRIMITIVE_FLOAT, PRIMITIVE_LONG); }),
-        make_tuple(0x8d, "f2d", [](StackFrame *frame){ frame->operandStack.peek().x2x(PRIMITIVE_FLOAT, PRIMITIVE_DOUBLE); }),
+        make_tuple(0x8b, "f2i", x2x<FloatSlot, &FloatSlot::convertToInt>),
+        make_tuple(0x8c, "f2l", x2x<FloatSlot, &FloatSlot::convertToLong>),
+        make_tuple(0x8d, "f2d", x2x<FloatSlot, &FloatSlot::convertToDouble>),
 
-        make_tuple(0x8e, "d2i", [](StackFrame *frame){ frame->operandStack.peek().x2x(PRIMITIVE_DOUBLE, PRIMITIVE_INT); }),
-        make_tuple(0x8f, "d2l", [](StackFrame *frame){ frame->operandStack.peek().x2x(PRIMITIVE_DOUBLE, PRIMITIVE_LONG); }),
-        make_tuple(0x90, "d2f", [](StackFrame *frame){ frame->operandStack.peek().x2x(PRIMITIVE_DOUBLE, PRIMITIVE_FLOAT); }),
+        make_tuple(0x8e, "d2i", x2x<DoubleSlot, &DoubleSlot::convertToInt>),
+        make_tuple(0x8f, "d2l", x2x<DoubleSlot, &DoubleSlot::convertToLong>),
+        make_tuple(0x90, "d2f", x2x<DoubleSlot, &DoubleSlot::convertToFloat>),
 
         make_tuple(0x91, "i2b", nullptr),  // todo byte or boolean?????
-        make_tuple(0x92, "i2c", [](StackFrame *frame){ frame->operandStack.peek().x2x(PRIMITIVE_INT, PRIMITIVE_CHAR); }),
-        make_tuple(0x93, "i2s", [](StackFrame *frame){ frame->operandStack.peek().x2x(PRIMITIVE_INT, PRIMITIVE_SHORT); }),
+        make_tuple(0x92, "i2c", x2x<IntSlot, &IntSlot::convertToChar>),
+        make_tuple(0x93, "i2s", x2x<IntSlot, &IntSlot::convertToShort>),
 
         // Comparisons
         make_tuple(0x94, "lcmp", __cmp<jlong, &OperandStack::popLong>),

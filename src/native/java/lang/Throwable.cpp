@@ -18,7 +18,7 @@ struct StackTraceElement {
 static void fillInStackTrace(StackFrame *frame) {
     // todo
     jprintf("error  fillInStackTrace.................................................................................\n");
-    Jobject *throwable = static_cast<Jobject *>(frame->getLocalVars(0).getReference());
+    Jobject *throwable = static_cast<Jobject *>(frame->getLocalVars(0)->getReference());
     // todo
     frame->operandStack.push(throwable);
 }

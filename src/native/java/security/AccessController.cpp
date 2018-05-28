@@ -8,7 +8,7 @@
 // public static native <T> T doPrivileged(PrivilegedAction<T> action);
 static void doPrivileged(StackFrame *frame) {
     // todo 这个函数干什么用的。。。。
-    Jobject *privilegedAction = static_cast<Jobject *>(frame->getLocalVars(0).getReference());
+    Jobject *privilegedAction = static_cast<Jobject *>(frame->getLocalVars(0)->getReference());
 
     /*
      * run 函数返回 T类型 的对象
@@ -48,7 +48,7 @@ static void doPrivileged3(StackFrame *frame) {
 //
 static void getStackAccessControlContext(StackFrame *frame) {
     // todo
-    frame->operandStack.push(nullptr);
+    frame->operandStack.push((jreference)nullptr);
 }
 
 void java_security_AccessController_registerNatives() {

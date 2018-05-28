@@ -11,7 +11,7 @@
 
 // public static native void arraycopy(Object src, int srcPos, Object dest, int destPos, int length)
 static void arraycopy(StackFrame *frame) {
-    jreference r = frame->getLocalVars(0).getReference();//slot_get_reference(frame->local_vars + 0);
+    jreference r = frame->getLocalVars(0)->getReference();//slot_get_reference(frame->local_vars + 0);
     if (r == nullptr) {
         // todo "java.lang.NullPointerException"
         jvmAbort("java.lang.NullPointerException\n");
@@ -21,9 +21,9 @@ static void arraycopy(StackFrame *frame) {
         jvmAbort("error\n");
     }
 
-    int srcPos = frame->getLocalVars(1).getInt();
+    int srcPos = frame->getLocalVars(1)->getInt();
 
-    r = frame->getLocalVars(2).getReference();
+    r = frame->getLocalVars(2)->getReference();
     if (r == nullptr) {
         // todo "java.lang.NullPointerException"
         jvmAbort("java.lang.NullPointerException\n");
@@ -33,14 +33,14 @@ static void arraycopy(StackFrame *frame) {
         jvmAbort("error\n");
     }
 
-    int destPos = frame->getLocalVars(3).getInt();
-    int length = frame->getLocalVars(4).getInt();
+    int destPos = frame->getLocalVars(3)->getInt();
+    int length = frame->getLocalVars(4)->getInt();
     JarrayObj::copy(*dest, destPos, *src, srcPos, length);
 }
 
 // private static native Properties initProperties(Properties props);
 static void initProperties(StackFrame *frame) {
-    Jobject *props = static_cast<Jobject *>(frame->getLocalVars(0).getReference());
+    Jobject *props = static_cast<Jobject *>(frame->getLocalVars(0)->getReference());
     // todo init
     // public synchronized Object setProperty(String key, String value)
     auto m = props->getClass()->lookupInstanceMethod("setProperty", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;");
@@ -57,7 +57,7 @@ static void initProperties(StackFrame *frame) {
 
 // private static native void setIn0(InputStream in);
 static void setIn0(StackFrame *frame) {
-    jreference in = frame->getLocalVars(0).getReference();
+    jreference in = frame->getLocalVars(0)->getReference();
     Jclass *sysClass = frame->method->jclass;
 
     Jvalue v;
@@ -67,7 +67,7 @@ static void setIn0(StackFrame *frame) {
 
 // private static native void setOut0(PrintStream out);
 static void setOut0(StackFrame *frame) {
-    jreference out = frame->getLocalVars(0).getReference();
+    jreference out = frame->getLocalVars(0)->getReference();
     Jclass *sysClass = frame->method->jclass;
 
     Jvalue v;
@@ -77,7 +77,7 @@ static void setOut0(StackFrame *frame) {
 
 // private static native void setErr0(PrintStream err);
 static void setErr0(StackFrame *frame) {
-    jreference err = frame->getLocalVars(0).getReference();
+    jreference err = frame->getLocalVars(0)->getReference();
     Jclass *sysClass = frame->method->jclass;
 
     Jvalue v;

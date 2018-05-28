@@ -44,9 +44,9 @@ void Jthread::joinToMainThreadGroup() {
     JstringObj *o = new JstringObj(classLoader, strToJstr("main"));
 //    frame->operandStack.push(o);
 
-    frame->setLocalVars(0, Slot::referenceSlot(jlThreadObj));
-    frame->setLocalVars(1, Slot::referenceSlot(mainThreadGroup));
-    frame->setLocalVars(2, Slot::referenceSlot(o));
+    frame->setLocalVars(0, new ReferenceSlot(jlThreadObj));
+    frame->setLocalVars(1, new ReferenceSlot(mainThreadGroup));
+    frame->setLocalVars(2, new ReferenceSlot(o));
 
     pushFrame(frame);
     interpret(this);

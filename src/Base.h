@@ -9,6 +9,7 @@
 #include <sstream>
 
 class Base {
+public:
     virtual std::string toString() const {
         std::stringstream ss;
         ss << this;

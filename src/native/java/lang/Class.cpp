@@ -14,6 +14,7 @@
 #include "../../../rtda/thread/Jthread.h"
 #include "../../../rtda/heap/objectarea/JclassObj.h"
 #include "../../../rtda/heap/objectarea/strpool.h"
+#include "../../../interpreter/slot/IntSlot.h"
 
 using namespace std;
 
@@ -24,12 +25,12 @@ using namespace std;
  *  (String name, boolean initialize, ClassLoader loader, Class<?> caller) throws ClassNotFoundException;
  */
 static void forName0(StackFrame *frame) {
-    JstringObj *jstrObj = static_cast<JstringObj *>(frame->getLocalVars(0).getReference());
+    JstringObj *jstrObj = static_cast<JstringObj *>(frame->getLocalVars(0)->getReference());
     string name = jstrToStr(jstrObj->value());
     replace(name.begin(), name.end(), '.', '/');
     Jclass *c = classLoader->loadClass(name);
 
-    int initialize = frame->getLocalVars(1).getInt();
+    int initialize = frame->getLocalVars(1)->getInt();
 
     if (initialize && !c->isInited) {
         // todo do init
@@ -46,7 +47,7 @@ static void forName0(StackFrame *frame) {
  */
 // static native Class<?> getPrimitiveClass(String name);
 static void getPrimitiveClass(StackFrame *frame) {
-    auto className = static_cast<JstringObj *>(frame->getLocalVars(0).getReference());
+    auto className = static_cast<JstringObj *>(frame->getLocalVars(0)->getReference());
     // 这里得到的className是诸如 "int", "float" 之类的值
     Jclass *c = frame->method->jclass->loader->loadClass(jstrToStr(className->value()));
     frame->operandStack.push(c->getClassObj());
@@ -105,7 +106,7 @@ static void getPrimitiveClass(StackFrame *frame) {
  */
 // private native String getName0();
 static void getName0(StackFrame *frame) {
-    auto thisObj = static_cast<JclassObj *>(frame->getLocalVars(0).getReference());
+    auto thisObj = static_cast<JclassObj *>(frame->getLocalVars(0)->getReference());
     string className = thisObj->getClassName();
     // 这里需要的是 java.lang.Object 这样的类名，而非 java/lang/Object
     // 所以需要进行一下替换
@@ -227,7 +228,7 @@ static void isInstance(StackFrame *frame) {
  * public native boolean isAssignableFrom(Class<?> cls);
  */
 static void isAssignableFrom(StackFrame *frame) {
-    jvmAbort("");
+    jvmAbort("没有实现   isAssignableFrom");
 }
 
 /**
@@ -287,7 +288,7 @@ static void isArray(StackFrame *frame) {
  * public native boolean isPrimitive();
  */
 static void isPrimitive(StackFrame *frame) {
-    JclassObj *thisObj = static_cast<JclassObj *>(frame->getLocalVars(0).getReference());
+    JclassObj *thisObj = static_cast<JclassObj *>(frame->getLocalVars(0)->getReference());
     bool b = isPrimitiveByClassName(thisObj->getClassName());
     frame->operandStack.push(b ? 1 : 0); // todo
 }
@@ -520,8 +521,8 @@ static void getConstantPool(StackFrame *frame) {
 
 // private native Field[] getDeclaredFields0(boolean publicOnly);
 static void getDeclaredFields0(StackFrame *frame) {
-    JclassObj *thisObj = static_cast<JclassObj *>(frame->getLocalVars(0).getReference());
-    bool publicOnly = frame->getLocalVars(1).getInt() != 0;  // todo
+    JclassObj *thisObj = static_cast<JclassObj *>(frame->getLocalVars(0)->getReference());
+    bool publicOnly = frame->getLocalVars(1)->getInt() != 0;  // todo
 
 
     Jclass *cls = classLoader->loadClass(thisObj->getClassName());
@@ -562,15 +563,15 @@ static void getDeclaredFields0(StackFrame *frame) {
         jprintf("%s   **************************************************************\n", jstrToStr(name->value()).c_str());
         bool ee = jlrFieldObj->getClass()->isVolatile();
         jprintf("oooooooooooooooooooooooo                  %d\n", ee);
-        Slot args[] = {
-            Slot::referenceSlot(jlrFieldObj), // this
-            Slot::referenceSlot(thisObj), // declaringClass
-            Slot::referenceSlot(name), // name
-            Slot::referenceSlot(jfield.getType()), // type   todo
-            Slot::intSlot(jfield.accessFlags), // modifiers
-            Slot::intSlot(jfield.id), // slot   todo
-            Slot::referenceSlot(nullptr), // signature  todo
-            Slot::referenceSlot(nullptr), // annotations  todo
+        Slot *args[] = {
+            new ReferenceSlot(jlrFieldObj), // this
+            new ReferenceSlot(thisObj), // declaringClass
+            new ReferenceSlot(name), // name
+            new ReferenceSlot(jfield.getType()), // type   todo
+            new IntSlot(jfield.accessFlags), // modifiers
+            new IntSlot(jfield.id), // slot   todo
+            new ReferenceSlot(nullptr), // signature  todo
+            new ReferenceSlot(nullptr), // annotations  todo
         };
         frame->invokeMethod(fieldConstructor, args);
 

@@ -9,14 +9,20 @@
 #include <stack>
 #include <cassert>
 #include "../rtda/heap/methodarea/Jclass.h"
-#include "Slot.h"
 #include "../rtda/heap/objectarea/Jobject.h"
+#include "slot/Slot.h"
+#include "slot/IntSlot.h"
+#include "slot/FloatSlot.h"
+#include "slot/ReferenceSlot.h"
+#include "slot/InvalidSlot.h"
+#include "slot/DoubleSlot.h"
+#include "slot/LongSlot.h"
 
 class Jobject;
 
 class OperandStack {
 private:
-    std::stack<Slot> s;
+    std::stack<Slot *> s;
 
 public:
 //#ifdef JVM_DEBUG
@@ -30,35 +36,35 @@ public:
     }
 
     void push(jint v) {
-        s.push(Slot::intSlot(v));
+        s.push(new IntSlot(v));
     }
 
     void push(jfloat v) {
-        s.push(Slot::floatSlot(v));
+        s.push(new FloatSlot(v));
     }
 
     void push(jreference v) {
-        s.push(Slot::referenceSlot(v));
+        s.push(new ReferenceSlot(v));
     }
 
     void push(jlong v) {
-        s.push(Slot::longSlot(v));
-        s.push(Slot::invalidSlot());  // todo 这样对吗
+        s.push(new LongSlot(v));
+        s.push(new InvalidSlot());  // todo 这样对吗
     }
 
     void push(jdouble v) {
-        s.push(Slot::doubleSlot(v));
-        s.push(Slot::invalidSlot());  // todo 这样对吗
+        s.push(new DoubleSlot(v));
+        s.push(new InvalidSlot());  // todo 这样对吗
     }
 
-    void push(const Slot &v) {
+    void push(Slot *v) {
         s.push(v);
-        if (v.isClassificationTwo()) {
-            s.push(Slot::invalidSlot());
+        if (v->isClassificationTwo()) {
+            s.push(new InvalidSlot());
         }
     }
 
-    void directPush(const Slot &v) {
+    void directPush(Slot *v) {
         s.push(v);
     }
 
@@ -78,7 +84,7 @@ public:
             jvmAbort("operand stack is empty.\n");
         }
 
-        jint v = s.top().getInt();
+        jint v = s.top()->getInt();
         s.pop();
         return v;
     }
@@ -88,7 +94,7 @@ public:
             jvmAbort("operand stack is empty.\n");
         }
 
-        jfloat v = s.top().getFloat();
+        jfloat v = s.top()->getFloat();
         s.pop();
         return v;
     }
@@ -99,7 +105,7 @@ public:
         }
 
         // long 使用两个Slot表示，第一个是Long的Slot，第二个是无效Slot
-        if (s.top().type == INVALID_JVM_TYPE) {
+        if (s.top()->type == INVALID_JVM_TYPE) {
             s.pop();   // todo
         }
 
@@ -107,7 +113,7 @@ public:
             jvmAbort("operand stack is empty.\n");
         }
 
-        jlong v = s.top().getLong();
+        jlong v = s.top()->getLong();
         s.pop();
         return v;
     }
@@ -118,7 +124,7 @@ public:
         }
 
         // double 使用两个Slot表示，第一个是Long的Slot，第二个是无效Slot
-        if (s.top().type == INVALID_JVM_TYPE) {
+        if (s.top()->type == INVALID_JVM_TYPE) {
             s.pop();        // todo
         }
 
@@ -126,7 +132,7 @@ public:
             jvmAbort("operand stack is empty.\n");
         }
 
-        jdouble v = s.top().getDouble();
+        jdouble v = s.top()->getDouble();
         s.pop();
         return v;
     }
@@ -136,34 +142,34 @@ public:
             jvmAbort("operand stack is empty.\n");
         }
 
-        jreference v = s.top().getReference();
+        jreference v = s.top()->getReference();
         s.pop();
         return v;
     }
 
-    Slot popSlot() {
+    Slot* popSlot() {
         if (s.empty()) {
             jvmAbort("error. operand stack is empty.\n");
         }
 
-        Slot slot = s.top();
+        auto slot = s.top();
         s.pop();
         return slot;
     }
 
-    Slot popSlotJumpInvalid() {
+    Slot* popSlotJumpInvalid() {
         if (s.empty()) {
             jvmAbort("error. operand stack is empty.\n");
         }
 
-        Slot slot = popSlot();
-        if (slot.type == INVALID_JVM_TYPE) {
+        auto slot = popSlot();
+        if (slot->type == INVALID_JVM_TYPE) {
             return popSlotJumpInvalid();
         }
         return slot;
     }
 
-    Slot &peek() {
+    Slot* peek() {
         if (s.empty()) {
             jvmAbort("operand stack is empty.\n");
         }
@@ -181,7 +187,7 @@ public:
 struct Jthread;
 
 class StackFrame {
-    Slot *localVars; // 局部变量表
+    Slot **localVars; // 局部变量表
     int maxLocals;  // todo
 
     bool interruptedStatus;
@@ -237,21 +243,21 @@ public:
 //}
 
 
-    /*todo const */Slot& getLocalVars(int index) {
+    /*todo const */Slot* getLocalVars(int index) {
         assert(index >= 0 and index < maxLocals);
         return localVars[index];
     }
 
-    void setLocalVars(int index, const Slot &s) {
+    void setLocalVars(int index, Slot *s) {
         assert(index >= 0 and index < maxLocals);
         localVars[index] = s;
-        if (s.isClassificationTwo()) {
+        if (s->isClassificationTwo()) {
             assert(index + 1 < maxLocals);
-            localVars[index + 1] = Slot::invalidSlot();
+            localVars[index + 1] = new InvalidSlot;
         }
     }
 
-    void invokeMethod(Jmethod *method, Slot *args = nullptr);
+    void invokeMethod(Jmethod *method, Slot **args = nullptr);
 
     /*
      * Interrupts the function of this stack_frame.

@@ -13,10 +13,10 @@
 template <Jtype type, int index = -1>
 static void __tstore(StackFrame *frame) {
     OperandStack &os = frame->operandStack;
-    Slot s = os.popSlotJumpInvalid();
-    if (s.type != type) {
+    Slot *s = os.popSlotJumpInvalid();
+    if (s->type != type) {
         /* todo */
-        jvmAbort("error, type mismatch. %d, %d\n", s.type, type);
+        jvmAbort("error, type mismatch. %d, %d\n", s->type, type);
     }
 
     int i = index;

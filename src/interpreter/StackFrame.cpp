@@ -14,12 +14,12 @@ StackFrame::StackFrame(Jthread *thread, Jmethod *method)
     assert(thread != nullptr);
     assert(method != nullptr);
 
-    localVars = new Slot[method->getMaxLocals()];
+    localVars = new Slot*[method->getMaxLocals()];
     maxLocals = method->getMaxLocals();
 
-    for (int i = 0; i < maxLocals; i++) {
-        localVars[i].type = INVALID_JVM_TYPE;  // todo
-    }
+//    for (int i = 0; i < maxLocals; i++) {
+//        localVars[i]->type = INVALID_JVM_TYPE;  // todo
+//    }
 
 //    // 准备参数
 //    for (int i = method->getArgSlotCount() - 1; i >= 0; i--) {
@@ -32,7 +32,7 @@ StackFrame::StackFrame(Jthread *thread, Jmethod *method)
     reader = new BytecodeReader(method->code, method->codeLength);
 }
 
-void StackFrame::invokeMethod(Jmethod *method, Slot *args) {
+void StackFrame::invokeMethod(Jmethod *method, Slot **args) {
     assert(method != nullptr);
 //    if (method->isNative()) {  //todo
 //        auto nativeMethod = findNativeMethod(method->jclass->className, method->name, method->descriptor);

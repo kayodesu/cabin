@@ -86,13 +86,28 @@ int main(int argc, char* argv[]) {
 
 //    printRegisteredNativeMethods();
 
+    void test();
+    test();
 
-//    testClassLoader();
-//    testEncoding();
-//    return 0;
+    return 0;
+}
+
+void test() {
+    /* ---------------- passed -------------------------*/
+
+
+    /* ---------------- NOT passed -------------------------*/
+     // array
+//    startJVM("io/github/jiayanggo/array/ArrayDemo");
+//    startJVM("io/github/jiayanggo/array/ArrayTest");
+//    startJVM("io/github/jiayanggo/array/BubbleSort");
+
+    // string
+    startJVM("io/github/jiayanggo/string/StringTest");
 
 //    startJVM("io/github/jiayanggo/HelloWorld");
-//    startJVM("io/github/jiayanggo/string/StringTest");
+
+//    startJVM("io/github/jiayanggo/string/StringOut");
 //    startJVM("io/github/jiayanggo/ObjectTest");
 //    startJVM("io/github/jiayanggo/field/FieldsTest");
 
@@ -104,8 +119,7 @@ int main(int argc, char* argv[]) {
 //    startJVM("io/github/jiayanggo/reflection/GetClassTest");
 //    startJVM("io/github/jiayanggo/reflection/FieldTest");
 
-//    startJVM("io/github/jiayanggo/nio/ByteBufferTest");
+//    startJVM("io/github/jiayanggo/nio/ByteBufferTest");  // todo 没有实现的native方法。
 
-    startJVM("io/github/jiayanggo/instructions/ANewArray"); // todo 三维数组实现不正确。
-    return 0;
+//    startJVM("io/github/jiayanggo/instructions/ANewArray"); // todo 三维数组实现不正确。
 }

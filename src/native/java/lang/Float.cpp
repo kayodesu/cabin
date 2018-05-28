@@ -10,13 +10,13 @@
 
 // public static native int floatToRawIntBits(float value);
 static void floatToRawIntBits(StackFrame *frame) {
-    jfloat f = frame->getLocalVars(0).getFloat();
+    jfloat f = frame->getLocalVars(0)->getFloat();
     frame->operandStack.push(jvm::convert::floatToRawIntBits(f));
 }
 
 // public static native float intBitsToFloat(int value);
 static void intBitsToFloat(StackFrame *frame) {
-    jint i = frame->getLocalVars(0).getInt();
+    jint i = frame->getLocalVars(0)->getInt();
     frame->operandStack.push(jvm::convert::intBitsToFloat(i));
 }
 

@@ -43,7 +43,7 @@ void createMainThreadGroup() {
     auto *frame = new StackFrame(mainThread, constructor);
 //    threadGroupClass->clinit(frame);  todo
 //    frame.operandStack.push(mainThreadGroup);
-    frame->setLocalVars(0, Slot::referenceSlot(mainThreadGroup));
+    frame->setLocalVars(0, new ReferenceSlot(mainThreadGroup));
 
     mainThread->pushFrame(frame);
     interpret(mainThread);

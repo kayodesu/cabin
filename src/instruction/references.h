@@ -188,7 +188,7 @@ static void putfield(StackFrame *frame) {
         }
     }
 
-    Slot s = frame->operandStack.popSlotJumpInvalid();
+    Slot *s = frame->operandStack.popSlotJumpInvalid();
     jreference r = frame->operandStack.popReference();
     if (r == nullptr) {
         // todo
@@ -200,16 +200,16 @@ static void putfield(StackFrame *frame) {
 //    obj->setInstanceField(field->id, s.value);
 
     Jvalue v;
-    if (strchr("BCISZ", field->descriptor[0]) != NULL) {
-        v.i = s.getInt();
+    if (strchr("BCISZ", field->descriptor[0]) != nullptr) {
+        v.i = s->getInt();
     } else if (field->descriptor[0] == 'F') {
-        v.f = s.getFloat();
+        v.f = s->getFloat();
     } else if (field->descriptor[0] == 'J') {
-        v.l = s.getLong();
+        v.l = s->getLong();
     } else if (field->descriptor[0] == 'D') {
-        v.d = s.getDouble();
+        v.d = s->getDouble();
     } else if (field->descriptor[0] == 'L' || field->descriptor[0] == '[') {
-        v.r = s.getReference();
+        v.r = s->getReference();
     } else {
         // todo error
         jvmAbort("error\n");
@@ -340,7 +340,7 @@ static void instanceof(StackFrame *frame) {
  * checkcast则不改变操作数栈（如果判断失败，直接抛出ClassCastException异常）
  */
 static void checkcast(StackFrame *frame) {
-    jreference r = frame->operandStack.peek().getReference();
+    jreference r = frame->operandStack.peek()->getReference();
     int index = frame->reader->readu2();
     if (r == nullptr) {
         // 如果引用是null，则指令执行结束。也就是说，null 引用可以转换成任何类型
@@ -435,12 +435,12 @@ static void invokespecial(StackFrame *frame) {
         jvmAbort("error\n");
     }
 
-    Slot args[method->getArgSlotCount()];
+    Slot* args[method->getArgSlotCount()];
     for (int i = method->getArgSlotCount() - 1; i >= 0; i--) {
         args[i] = frame->operandStack.popSlot();
     }
 
-    jreference r = args[0].getReference();
+    jreference r = args[0]->getReference();
     if (r == nullptr) {
         // todo  java.lang.NullPointerException
         jvmAbort("java.lang.NullPointerException\n");
@@ -475,21 +475,21 @@ static void invokevirtual(StackFrame *frame) {
         jvmAbort("error\n");
     }
 
-    Slot args[method->getArgSlotCount()];
+    Slot *args[method->getArgSlotCount()];
     for (int i = method->getArgSlotCount() - 1; i >= 0; i--) {
         args[i] = frame->operandStack.popSlot();
     }
 
-    jreference r = args[0].getReference();
+    jreference r = args[0]->getReference();
     if (r == nullptr) {
-        if (method->name == "println") {
-            // todo   println  暂时先这么搞
-            JstringObj *aaa = static_cast<JstringObj *>(args[1].getReference());
-            jstring sss = aaa->value();
-            jprintf("%s\n", jstrToStr(sss).c_str());
-
-            return;
-        }
+//        if (method->name == "println") {
+//            // todo   println  暂时先这么搞
+//            JstringObj *aaa = static_cast<JstringObj *>(args[1].getReference());
+//            jstring sss = aaa->value();
+//            jprintf("%s\n", jstrToStr(sss).c_str());
+//
+//            return;
+//        }
         // todo  java.lang.NullPointerException
         jvmAbort("java.lang.NullPointerException         %s\n", method->toString().c_str());
     }
@@ -542,12 +542,12 @@ static void invokeinterface(StackFrame *frame) {
         jvmAbort("error\n");
     }
 
-    Slot args[method->getArgSlotCount()];
+    Slot *args[method->getArgSlotCount()];
     for (int i = method->getArgSlotCount() - 1; i >= 0; i--) {
         args[i] = frame->operandStack.popSlot();
     }
 
-    jreference r = args[0].getReference();
+    jreference r = args[0]->getReference();
     if (r == nullptr) {
         // todo  java.lang.NullPointerException
         jvmAbort("java.lang.NullPointerException\n");

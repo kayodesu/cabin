@@ -12,13 +12,13 @@
 
 // public native int hashCode();
 static void hashCode(StackFrame *frame) {
-    Jobject *thisObj = static_cast<Jobject *>(frame->getLocalVars(0).getReference());
+    Jobject *thisObj = static_cast<Jobject *>(frame->getLocalVars(0)->getReference());
     frame->operandStack.push((jint)((jlong)thisObj)); // todo
 }
 
 // protected native Object clone() throws CloneNotSupportedException;
 static void clone0(StackFrame *frame) {
-    Jobject *thisObj = static_cast<Jobject *>(frame->getLocalVars(0).getReference());
+    Jobject *thisObj = static_cast<Jobject *>(frame->getLocalVars(0)->getReference());
     Jclass *cloneable = frame->method->jclass->loader->loadClass("java/lang/Cloneable");
 
     if (!(thisObj->getClass()->isSubclassOf(cloneable))) {  // todo
@@ -31,7 +31,7 @@ static void clone0(StackFrame *frame) {
 // public final native Class<?> getClass();
 static void getClass(StackFrame *frame) {
     // todo
-    Jobject *thisObj = static_cast<Jobject *>(frame->getLocalVars(0).getReference());
+    Jobject *thisObj = static_cast<Jobject *>(frame->getLocalVars(0)->getReference());
     JclassObj *classObj = thisObj->getClass()->getClassObj();
     frame->operandStack.push(classObj);
 }

@@ -36,11 +36,11 @@
  */
 // private native void writeBytes(byte b[], int off, int len, boolean append) throws IOException;
 static void writeBytes(StackFrame *frame) {
-    auto thisObj = static_cast<Jobject *>(frame->getLocalVars(0).getReference());
-    auto b = static_cast<JarrayObj *>(frame->getLocalVars(1).getReference());
-    jint off = frame->getLocalVars(2).getInt();
-    jint len = frame->getLocalVars(3).getInt();
-    jbool append = frame->getLocalVars(4).getInt();  // todo
+    auto thisObj = static_cast<Jobject *>(frame->getLocalVars(0)->getReference());
+    auto b = static_cast<JarrayObj *>(frame->getLocalVars(1)->getReference());
+    jint off = frame->getLocalVars(2)->getInt();
+    jint len = frame->getLocalVars(3)->getInt();
+    jbool append = frame->getLocalVars(4)->getInt();  // todo
 
     jvmAbort("error\n");
     // todo

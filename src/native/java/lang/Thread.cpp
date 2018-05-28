@@ -53,7 +53,7 @@ static void isInterrupted(StackFrame *frame) {
 // public final native boolean isAlive();
 static void isAlive(StackFrame *frame) {
     // todo
-    Jobject *thisObj = static_cast<Jobject *>(frame->getLocalVars(0).value.r);
+    Jobject *thisObj = static_cast<Jobject *>(frame->getLocalVars(0)->getReference());
     frame->operandStack.push(0);  // todo wtf?
 }
 

@@ -2,6 +2,7 @@
   <dictionary name="Jia Yang">
     <words>
       <w>bootstrapclassloader</w>
+      <w>iinc</w>
       <w>invokeinterface</w>
       <w>invokespecial</w>
       <w>invokestatic</w>

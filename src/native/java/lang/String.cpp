@@ -14,7 +14,7 @@
 // public native String intern();
 static void intern(StackFrame *frame) {
     // todo
-    auto thisStr = static_cast<JstringObj *>(frame->getLocalVars(0).getReference());
+    auto thisStr = static_cast<JstringObj *>(frame->getLocalVars(0)->getReference());
     JstringObj *inPoolStr = putStrToPool(frame->method->jclass->loader, thisStr->value());
     frame->operandStack.push(inPoolStr);
 }

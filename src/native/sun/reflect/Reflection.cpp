@@ -41,7 +41,7 @@ static void getCallerClass(StackFrame *frame) {
 
 // public static native int getClassAccessFlags(Class<?> type)
 static void getClassAccessFlags(StackFrame *frame) {
-    JclassObj *type = static_cast<JclassObj *>(frame->getLocalVars(0).getReference());
+    JclassObj *type = static_cast<JclassObj *>(frame->getLocalVars(0)->getReference());
     jint flags = type->getClass()->accessFlags;
     frame->operandStack.push(flags);
 }

@@ -1,4 +1,0 @@
-/*
- * Author: Jia Yang
- */
-

@@ -90,25 +90,27 @@ MATH_INS(__lcmp, Long, jint, t1 > t2 ? 1 : (t1 == t2 ? 0 : -1));
 
 template <Jtype jtype>
 static void __neg(StackFrame *frame) {
-    Slot &s = frame->operandStack.peek();
-    if (s.type != jtype) {
+    Slot *s = frame->operandStack.peek();
+    if (s->type != jtype) {
         /* todo error*/
         jvmAbort("error.\n");
         return;
     }
-    s.negValue();
+    s->negValue();
 }
 
 static void __iinc(StackFrame *frame) {
     int index = frame->reader->readu1();
     int value = frame->reader->reads1();
 
-    Slot s = frame->getLocalVars(index);
-    if (s.type != PRIMITIVE_INT) {
-        jvmAbort("error. slot's type is \n", s.type);  // todo
+    Slot *s = frame->getLocalVars(index);
+    if (s->type != PRIMITIVE_INT) {
+        jvmAbort("error. slot's type is \n", s->type);  // todo
     }
 
-    s.value.i += value;
+    auto is = dynamic_cast<IntSlot *>(s);
+    is->setValue(is->getValue() + value);
+
     frame->setLocalVars(index, s);
 }
 
