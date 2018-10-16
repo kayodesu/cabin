@@ -5,65 +5,104 @@
 #ifndef JVM_LOADS_H
 #define JVM_LOADS_H
 
-#include <functional>
-#include "../jvm.h"
-#include "../interpreter/StackFrame.h"
-#include "../rtda/heap/objectarea/Jobject.h"
-#include "../rtda/heap/objectarea/JarrayObj.h"
+#include "../interpreter/stack_frame.h"
+#include "../rtda/heap/jarrobj.h"
 
-template <Jtype type, int index = -1>
-static void __tload(StackFrame *frame) {
-    int i = index;
-    if (i < 0) {
-        i = frame->reader->readu1();
-    }
+jint fetch_index(struct stack_frame *frame);
 
-    Slot *s = frame->getLocalVars(i);
-    if (s->type != type) {
-        /* todo throw new BytecodeFormatError("类型不匹配");*/
-        jvmAbort("error. %d, %d\n", s->type, type);
-    }
+/////////////////////////////
 
-    jprintf("ffffffffffffffffffffffff                      %s\n", s->toString().c_str());
-    frame->operandStack.push(s);
+static inline void __iload(struct stack_frame *frame, int index)
+{
+    os_pushi(frame->operand_stack, slot_geti(frame->local_vars + index));
 }
 
-template <bool (Jclass::*checkType)() const, typename SaveType>
-static void __taload(StackFrame *frame) {
-    jint index = frame->operandStack.popInt();
-    jreference r = frame->operandStack.popReference();
+static void iload(struct stack_frame *frame)   { __iload(frame, fetch_index(frame)); }
+static void iload_0(struct stack_frame *frame) { __iload(frame, 0); }
+static void iload_1(struct stack_frame *frame) { __iload(frame, 1); }
+static void iload_2(struct stack_frame *frame) { __iload(frame, 2); }
+static void iload_3(struct stack_frame *frame) { __iload(frame, 3); }
 
-    if (r == nullptr) {
-        jvmAbort("error NULL Point Exception\n"); // todo
-    }
+/////////////////////////////
 
-    auto a = static_cast<JarrayObj *>(r);
-
-    if (!a->getClass()->isArray()) {
-        jvmAbort("error. %s\n", a->getClass()->className.c_str()); // todo
-    }
-
-    if (!a->checkBounds(index)) {
-        jvmAbort("ArrayIndexOutOfBoundsException, index = %d out of [0, %d)\n", index, a->length());
-        /* todo throw new ArrayIndexOutOfBoundsException(String.valueOf(index)); */
-    }
-
-//    if (!(a->getClass()->*checkType)()) {
-//        jvmAbort("error. %s\n", a->toString().c_str());
-//        /* todo  */
-//    }
-
-    SaveType v = a->get<SaveType>(index);
-
-    frame->operandStack.push(a->get<SaveType>(index));  // todo
-
-//    if (is_one_dimension_reference_array(arr->class)) {
-//        operand_stack_push_reference(frame, JARRAY_DATA(arr, void *)[index]);
-//    } else if (is_multi_array(arr->class)) {
-//        operand_stack_push_reference(frame, JMULTIARRAY_DATA(arr, void *)[index]); // todo JMULTIARRAY_DATA
-//    } else {
-//        jprintf("error\n");
-//    }
+static inline void __lload(struct stack_frame *frame, int index)
+{
+    os_pushl(frame->operand_stack, slot_getl(frame->local_vars + index));
 }
 
-#endif
+static void lload(struct stack_frame *frame)   { __lload(frame, fetch_index(frame)); }
+static void lload_0(struct stack_frame *frame) { __lload(frame, 0); }
+static void lload_1(struct stack_frame *frame) { __lload(frame, 1); }
+static void lload_2(struct stack_frame *frame) { __lload(frame, 2); }
+static void lload_3(struct stack_frame *frame) { __lload(frame, 3); }
+
+/////////////////////////////
+
+static inline void __fload(struct stack_frame *frame, int index)
+{
+    os_pushf(frame->operand_stack, slot_getf(frame->local_vars + index));
+}
+
+static void fload(struct stack_frame *frame)   { __fload(frame, fetch_index(frame)); }
+static void fload_0(struct stack_frame *frame) { __fload(frame, 0); }
+static void fload_1(struct stack_frame *frame) { __fload(frame, 1); }
+static void fload_2(struct stack_frame *frame) { __fload(frame, 2); }
+static void fload_3(struct stack_frame *frame) { __fload(frame, 3); }
+
+/////////////////////////////
+
+static inline void __dload(struct stack_frame *frame, int index)
+{
+    os_pushd(frame->operand_stack, slot_getd(frame->local_vars + index));
+}
+
+static void dload(struct stack_frame *frame)   { __dload(frame, fetch_index(frame)); }
+static void dload_0(struct stack_frame *frame) { __dload(frame, 0); }
+static void dload_1(struct stack_frame *frame) { __dload(frame, 1); }
+static void dload_2(struct stack_frame *frame) { __dload(frame, 2); }
+static void dload_3(struct stack_frame *frame) { __dload(frame, 3); }
+
+
+/////////////////////////////
+
+static inline void __aload(struct stack_frame *frame, int index)
+{
+    os_pushr(frame->operand_stack, slot_getr(frame->local_vars + index));
+}
+
+static void aload(struct stack_frame *frame)   { __aload(frame, fetch_index(frame)); }
+static void aload_0(struct stack_frame *frame) { __aload(frame, 0); }
+static void aload_1(struct stack_frame *frame) { __aload(frame, 1); }
+static void aload_2(struct stack_frame *frame) { __aload(frame, 2); }
+static void aload_3(struct stack_frame *frame) { __aload(frame, 3); }
+
+#define __taload(func_name, check_type, raw_type) \
+static void func_name(struct stack_frame *frame) \
+{ \
+    jint index = os_popi(frame->operand_stack); \
+    struct jarrobj *ao = (struct jarrobj *) os_popr(frame->operand_stack); \
+    if (ao == NULL) { \
+        jvm_abort("error NULL Point Exception\n"); /* todo */ \
+    } \
+ \
+    if (!check_type(ao->obj->jclass)) { \
+        jvm_abort("error\n"); \
+    } \
+ \
+    if (!jarrobj_check_bounds(ao, index)) { \
+        jvm_abort("ArrayIndexOutOfBoundsException\n"); \
+        /* todo throw new ArrayIndexOutOfBoundsException(String.valueOf(index)); */ \
+    } \
+    os_push(frame->operand_stack, *(raw_type *)jarrobj_index(ao, index)); \
+}
+
+__taload(iaload, is_int_array, jint)
+__taload(laload, is_long_array, jlong)
+__taload(faload, is_float_array, jfloat)
+__taload(daload, is_double_array, jdouble)
+__taload(aaload, is_ref_array, jref)
+__taload(baload, is_bool_or_byte_array, jbyte)
+__taload(caload, is_char_array, jchar)
+__taload(saload, is_short_array, jshort)
+
+#endif //JVM_LOADS_H

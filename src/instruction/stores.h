@@ -5,50 +5,153 @@
 #ifndef JVM_STORES_H
 #define JVM_STORES_H
 
-#include "../interpreter/StackFrame.h"
-#include "../rtda/heap/objectarea/Jobject.h"
-#include "../rtda/heap/objectarea/JarrayObj.h"
+#include "../interpreter/stack_frame.h"
 
+jint fetch_index(struct stack_frame *frame);
 
-template <Jtype type, int index = -1>
-static void __tstore(StackFrame *frame) {
-    OperandStack &os = frame->operandStack;
-    Slot *s = os.popSlotJumpInvalid();
-    if (s->type != type) {
-        /* todo */
-        jvmAbort("error, type mismatch. %d, %d\n", s->type, type);
+/////////////////////////////
+
+static inline void __istore(struct stack_frame *frame, int index)
+{
+    struct slot *s = os_pops(frame->operand_stack);
+    if (s != NULL && s->t == JINT) {
+        sf_set_local_var(frame, index, s);
+        return;
     }
 
-    int i = index;
-    if (i < 0) {
-        i = frame->reader->readu1();
-    }
-    frame->setLocalVars(i, s);
+    // todo error
+    jvm_abort("error\n");
 }
 
-template <typename T, T (OperandStack::*popValue)(), bool (Jclass::*checkType)() const, typename SaveType>
-static void __tastore(StackFrame *frame) {
-    OperandStack &os = frame->operandStack;
-    T value = (os.*popValue)();
+static void istore(struct stack_frame *frame)   { __istore(frame, fetch_index(frame)); }
+static void istore_0(struct stack_frame *frame) { __istore(frame, 0); }
+static void istore_1(struct stack_frame *frame) { __istore(frame, 1); }
+static void istore_2(struct stack_frame *frame) { __istore(frame, 2); }
+static void istore_3(struct stack_frame *frame) { __istore(frame, 3); }
 
-    jint index = os.popInt();
-    jreference r = os.popReference();
-    if (r == nullptr) {
-        jvmAbort("error NULL Point Exception\n"); // todo
+/////////////////////////////
+
+static inline void __fstore(struct stack_frame *frame, int index)
+{
+    struct slot *s = os_pops(frame->operand_stack);
+    if (s != NULL && s->t == JFLOAT) {
+        sf_set_local_var(frame, index, s);
+        return;
     }
 
-    JarrayObj *a = static_cast<JarrayObj *>(r);
-
-    if (!a->checkBounds(index)) {
-        jvmAbort("ArrayIndexOutOfBoundsException\n");
-        /* todo throw new ArrayIndexOutOfBoundsException(String.valueOf(index)); */
-    }
-
-    if (!(a->getClass()->*checkType)()) {
-        jvmAbort("error\n");
-    }
-
-    a->set<SaveType>(index, (SaveType)value); // todo
+    // todo error
+    jvm_abort("error\n");
 }
 
-#endif
+static void fstore(struct stack_frame *frame)   { __fstore(frame, fetch_index(frame)); }
+static void fstore_0(struct stack_frame *frame) { __fstore(frame, 0); }
+static void fstore_1(struct stack_frame *frame) { __fstore(frame, 1); }
+static void fstore_2(struct stack_frame *frame) { __fstore(frame, 2); }
+static void fstore_3(struct stack_frame *frame) { __fstore(frame, 3); }
+
+/////////////////////////////
+
+static inline void __astore(struct stack_frame *frame, int index)
+{
+    struct slot *s = os_pops(frame->operand_stack);
+    if (s != NULL && s->t == REFERENCE) {
+        sf_set_local_var(frame, index, s);
+        return;
+    }
+
+    // todo error
+    jvm_abort("error\n");
+}
+
+static void astore(struct stack_frame *frame)   { __astore(frame, fetch_index(frame)); }
+static void astore_0(struct stack_frame *frame) { __astore(frame, 0); }
+static void astore_1(struct stack_frame *frame) { __astore(frame, 1); }
+static void astore_2(struct stack_frame *frame) { __astore(frame, 2); }
+static void astore_3(struct stack_frame *frame) { __astore(frame, 3); }
+
+/////////////////////////////
+
+static void __lstore(struct stack_frame *frame, int index)
+{
+    struct slot *s = os_pops(frame->operand_stack);
+    if (s == NULL || s->t != PH) {
+        // todo error
+        jvm_abort("error");
+    }
+
+    s = os_pops(frame->operand_stack);
+    if (s == NULL || s->t != JLONG) {
+        // todo error
+        jvm_abort("error");
+    }
+
+    sf_set_local_var(frame, index, s);
+    // todo error
+    jvm_abort("error\n");
+}
+
+static void lstore(struct stack_frame *frame)   { __lstore(frame, fetch_index(frame)); }
+static void lstore_0(struct stack_frame *frame) { __lstore(frame, 0); }
+static void lstore_1(struct stack_frame *frame) { __lstore(frame, 1); }
+static void lstore_2(struct stack_frame *frame) { __lstore(frame, 2); }
+static void lstore_3(struct stack_frame *frame) { __lstore(frame, 3); }
+
+/////////////////////////////
+
+static void __dstore(struct stack_frame *frame, int index)
+{
+    struct slot *s = os_pops(frame->operand_stack);
+    if (s == NULL || s->t != PH) {
+        // todo error
+        jvm_abort("error");
+    }
+
+    s = os_pops(frame->operand_stack);
+    if (s == NULL || s->t != JDOUBLE) {
+        // todo error
+        jvm_abort("error");
+    }
+
+    sf_set_local_var(frame, index, s);
+    // todo error
+    jvm_abort("error\n");
+}
+
+static void dstore(struct stack_frame *frame)   { __dstore(frame, fetch_index(frame)); }
+static void dstore_0(struct stack_frame *frame) { __dstore(frame, 0); }
+static void dstore_1(struct stack_frame *frame) { __dstore(frame, 1); }
+static void dstore_2(struct stack_frame *frame) { __dstore(frame, 2); }
+static void dstore_3(struct stack_frame *frame) { __dstore(frame, 3); }
+
+//////////////////////////////////////////////////////////////////
+
+#define __tstore(func_name, os_pop, check_type, raw_type) \
+static void func_name(struct stack_frame *frame) \
+{ \
+    raw_type value = os_pop(frame->operand_stack); \
+    jint index = os_popi(frame->operand_stack); \
+    struct jarrobj *ao = (struct jarrobj *) os_popr(frame->operand_stack); \
+    if (ao == NULL) { \
+        jvm_abort("error NULL Point Exception\n"); /* todo */ \
+    } \
+     \
+    if (!check_type(ao->obj->jclass)) { \
+        jvm_abort("error\n"); \
+    } \
+    if (!jarrobj_check_bounds(ao, index)) { \
+        jvm_abort("ArrayIndexOutOfBoundsException\n"); \
+        /* todo throw new ArrayIndexOutOfBoundsException(String.valueOf(index)); */ \
+    } \
+    *(raw_type *)jarrobj_index(ao, index) = value; \
+}
+
+__tstore(iastore, os_popi, is_int_array, jint)
+__tstore(lastore, os_popl, is_long_array, jlong)
+__tstore(fastore, os_popf, is_float_array, jfloat)
+__tstore(dastore, os_popd, is_double_array, jdouble)
+__tstore(aastore, os_popr, is_ref_array, jref)
+__tstore(bastore, os_popi, is_bool_or_byte_array, jbyte)
+__tstore(castore, os_popi, is_char_array, jchar)
+__tstore(sastore, os_popi, is_short_array, jshort)
+
+#endif //JVM_STORES_H

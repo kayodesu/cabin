@@ -2,51 +2,118 @@
  * Author: Jia Yang
  */
 
+#include "../interpreter/operand_stack.h"
+#include "../interpreter/stack_frame.h"
+#include "../rtda/ma/rtcp.h"
+#include "../classfile/constant.h"
+#include "../rtda/heap/strpool.h"
+
 #ifndef JVM_CONSTANTS_H
 #define JVM_CONSTANTS_H
 
-#include "../interpreter/StackFrame.h"
-#include "../rtda/heap/objectarea/Jobject.h"
-#include "../rtda/heap/objectarea/strpool.h"
+#define tconst(func_name, value) \
+static void func_name(struct stack_frame *frame) \
+{ \
+    os_push(frame->operand_stack, value); \
+}
 
-template <int indexBytes = 1, bool width = false>
-static void __ldc(StackFrame *frame) {
+tconst(aconst_null, (jref) NULL)
+
+tconst(iconst_m1, (jint) -1)
+tconst(iconst_0, (jint) 0)
+tconst(iconst_1, (jint) 1)
+tconst(iconst_2, (jint) 2)
+tconst(iconst_3, (jint) 3)
+tconst(iconst_4, (jint) 4)
+tconst(iconst_5, (jint) 5)
+
+tconst(lconst_0, (jlong) 0)
+tconst(lconst_1, (jlong) 1)
+
+tconst(fconst_0, (jfloat) 0)
+tconst(fconst_1, (jfloat) 1)
+tconst(fconst_2, (jfloat) 2)
+
+tconst(dconst_0, (jdouble) 0)
+tconst(dconst_1, (jdouble) 1)
+
+static void bipush(struct stack_frame *frame)
+{
+    jint i = bcr_reads1(frame->reader);
+    os_pushi(frame->operand_stack, i);
+}
+
+static void sipush(struct stack_frame *frame)
+{
+    jint i = bcr_reads2(frame->reader);
+    os_pushi(frame->operand_stack, i);
+}
+
+static void __ldc(struct stack_frame *frame, int index_bytes)
+{
     int index;
-    if (indexBytes == 1) {
-        index = frame->reader->readu1();
+    if (index_bytes == 1) {
+        index = bcr_readu1(frame->reader);
     } else {
-        index = frame->reader->readu2();
+        index = bcr_readu2(frame->reader);
     }
 
-    RTCP *rtcp = frame->method->jclass->rtcp;
-    const auto &c = rtcp->get(index);
+    struct rtcp *rtcp = frame->method->jclass->rtcp;
+    u1 type = rtcp_get_type(rtcp, index);
 
-    OperandStack &os = frame->operandStack;
-    if (!width) {
-        if (c.first == INTEGER_CONSTANT) {
-            os.push(rtcp->getInt(index));
-        } else if (c.first == FLOAT_CONSTANT) {
-            os.push(rtcp->getFloat(index));
-        } else if (c.first == STRING_CONSTANT) {
-            JstringObj *o = getStrFromPool(frame->method->jclass->loader, strToJstr(rtcp->getStr(index)));
-            os.push(o);
-        } else if (c.first == CLASS_CONSTANT) {
-            auto className = rtcp->getClassName(index);
-   //         jprintf("ldc the object of class %s\n", className.c_str()); // todo
-            Jclass *clazz = frame->method->jclass->loader->loadClass(className);
-            os.push(clazz->classObj);
-        } else {
-            jvmAbort("error. %d\n", c.first);
+    struct operand_stack *os = frame->operand_stack;
+    if (type == INTEGER_CONSTANT) {
+        os_pushi(os, rtcp_get_int(rtcp, index));
+    } else if (type == FLOAT_CONSTANT) {
+        os_pushf(os, rtcp_get_float(rtcp, index));
+    } else if (type == STRING_CONSTANT) {
+        printvm("ldc string\n");
+        const char *str = rtcp_get_str(rtcp, index);
+        printvm("%s\n", str);
+        struct jstrobj *so = get_str_from_pool(frame->method->jclass->loader, str);
+        if (so == NULL) {
+            jvm_abort("never goes here!\n");
         }
+        os_pushr(os, (jref) so);
+//        JStringObj *o = getStrFromPool(frame->method->jclass->loader, strToJstr(rtcp->getStr(index)));
+//        os.push(o);  todo
+    } else if (type == CLASS_CONSTANT) {
+        printvm("ldc class\n");
+        const char *class_name = rtcp_get_class_name(rtcp, index);
+        struct jclass *c = classloader_load_class(frame->method->jclass->loader, class_name);
+        os_pushr(os, (jref) c->clsobj);
+//        auto className = rtcp->getClassName(index);  todo
+////         jprintf("ldc the object of class %s\n", className.c_str()); // todo
+//        JClass *clazz = frame->method->jclass->loader->loadClass(className);
+//        os.push(clazz->classObj);
     } else {
-        if (c.first == LONG_CONSTANT) {
-            os.push(rtcp->getLong(index));
-        } else if (c.first == DOUBLE_CONSTANT) {
-            os.push(rtcp->getDouble(index));
-        } else {
-            jvmAbort("error. %d\n", c.first);
-        }
+        jvm_abort("error. %d\n", type);
     }
 }
 
-#endif
+static void ldc(struct stack_frame *frame)
+{
+    __ldc(frame, 1);
+}
+
+static void ldc_w(struct stack_frame *frame)
+{
+    __ldc(frame, 2);
+}
+
+static void ldc2_w(struct stack_frame *frame)
+{
+    int index = bcr_readu2(frame->reader);
+    struct rtcp *rtcp = frame->method->jclass->rtcp;
+    u1 type = rtcp_get_type(rtcp, index);
+
+    if (type == LONG_CONSTANT) {
+        os_pushd(frame->operand_stack, rtcp_get_long(rtcp, index));
+    } else if (type == DOUBLE_CONSTANT) {
+        os_pushd(frame->operand_stack, rtcp_get_double(rtcp, index));
+    } else {
+        jvm_abort("error. %d\n", type);
+    }
+}
+
+#endif //JVM_CONSTANTS_H

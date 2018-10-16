@@ -5,136 +5,85 @@
 #ifndef JVM_CONSTANT_H
 #define JVM_CONSTANT_H
 
-#include "../jvm.h"
-#include "../BytecodeReader.h"
+#include "../jtypes.h"
+#include "../util/bytecode_reader.h"
 
 #define CLASS_CONSTANT					7
 #define FIELD_REF_CONSTANT				9
-#define METHOD_REF_CONSTANT				10
-#define INTERFACE_METHOD_REF_CONSTANT	11
+#define DOUBLE_CONSTANT					6
+#define METHOD_REF_CONSTANT             10
+#define INTERFACE_METHOD_REF_CONSTANT   11
 #define STRING_CONSTANT					8
-#define INTEGER_CONSTANT				3
+#define INTEGER_CONSTANT                3
 #define FLOAT_CONSTANT					4
 #define LONG_CONSTANT					5
-#define DOUBLE_CONSTANT					6
-#define NAME_AND_TYPE_CONSTANT			12
+#define NAME_AND_TYPE_CONSTANT          12
 #define UTF8_CONSTANT					1
-#define METHOD_HANDLE_CONSTANT			15
-#define METHOD_TYPE_CONSTANT			16
-#define INVOKE_DYNAMIC_CONSTANT			18
+#define METHOD_HANDLE_CONSTANT          15
+#define METHOD_TYPE_CONSTANT            16
+#define INVOKE_DYNAMIC_CONSTANT         18
 
-struct Constant {
+/*
+ * 常量池中的每一项都具备相同的格式特征——第一个字节作为类型标记用于识别该项是哪种类型的常量，称为“tag byte”。
+ * 常量池的索引范围是1至constant_pool_count−1。
+ */
+struct class_constant {
     u1 tag;
-
-//    Constant(BytecodeReader &reader) {
-//        tag = reader.readu1();
-//    }
-    static Constant* parseConstant(BytecodeReader &reader);
+    u2 name_index;
 };
 
-struct ClassConstant: Constant {
-    u2 nameIndex;
+struct member_ref_constant {
+    u1 tag;
+    u2 class_index;
+    u2 name_and_type_index;
+};//, field_ref_constant, method_ref_constant, interface_method_ref_constant;
 
-    explicit ClassConstant(BytecodeReader &reader) {
-        nameIndex = reader.readu2();
-    }
-} ;
+struct string_constant {
+    u1 tag;
+    u2 string_index;
+};
 
-struct MemberRefConstant: Constant {
-    u2 classIndex;
-    u2 nameAndTypeIndex;
-
-    explicit MemberRefConstant(BytecodeReader &reader) {
-        classIndex = reader.readu2();
-        nameAndTypeIndex = reader.readu2();
-    }
-} ;//, field_ref_constant, method_ref_constant, interface_method_ref_constant;
-
-struct StringConstant: Constant {
-    u2 stringIndex;
-
-    explicit StringConstant(BytecodeReader &reader) {
-        stringIndex = reader.readu2();
-    }
-} ;
-
-struct FourBytesNumConstant: Constant {
+struct four_bytes_num_constant {
+    u1 tag;
     u1 bytes[4];
+};//, integer_constant, float_constant;
 
-    explicit FourBytesNumConstant(BytecodeReader &reader) {
-        reader.readbytes(bytes, 4);
-    }
-} ;//, integer_constant, float_constant;
-
-typedef FourBytesNumConstant IntegerConstant;
-typedef FourBytesNumConstant FloatConstant;
-
-struct EightBytesNumConstant: Constant {
+struct eight_bytes_num_constant {
+    u1 tag;
     u1 bytes[8];
-    explicit EightBytesNumConstant(BytecodeReader &reader) {
-        reader.readbytes(bytes, 8);
-    }
 }; //, long_constant, double_constant;
 
-typedef EightBytesNumConstant LongConstant;
-typedef EightBytesNumConstant DoubleConstant;
-
-struct NameAndTypeConstant: Constant {
-    u2 nameIndex;
-    u2 descriptorIndex;
-
-    explicit NameAndTypeConstant(BytecodeReader &reader) {
-        nameIndex = reader.readu2();
-        descriptorIndex = reader.readu2();
-    }
-} ;
-
-struct Utf8Constant: Constant {
-    u2 length;
-    u1 *bytes; // [length];
-
-    explicit Utf8Constant(BytecodeReader &reader) {
-        length = reader.readu2();
-        bytes = new u1[length];
-        reader.readbytes(bytes, length);
-    }
-
-    ~Utf8Constant() {
-        delete[] bytes;
-    }
+struct name_and_type_constant {
+    u1 tag;
+    u2 name_index;
+    u2 descriptor_index;
 };
 
-struct MethodHandleConstant: Constant {
-    u1 referenceKind;
-    u2 referenceIndex;
+struct utf8_constant {
+    u1 tag;
+    u2 length;
+    u1 bytes[];
+};
 
-    explicit MethodHandleConstant(BytecodeReader &reader) {
-        referenceKind = reader.readu1();
-        referenceIndex = reader.readu2();
-    }
-} ;
+struct method_handle_constant {
+    u1 tag;
+    u1 reference_kind;
+    u2 reference_index;
+};
 
-struct MethodTypeConstant: Constant {
-    u2 descriptorIndex;
+struct method_type_constant {
+    u1 tag;
+    u2 descriptor_index;
+};
 
-    explicit MethodTypeConstant(BytecodeReader &reader) {
-        descriptorIndex = reader.readu2();
-    }
-} ;
+struct invoke_dynamic_constant {
+    u1 tag;
+    u2 bootstrap_method_attr_index;
+    u2 name_and_type_index;
+};
 
-struct InvokeDynamicConstant: Constant {
-    u2 bootstrapMethodAttrIndex;
-    u2 nameAndTypeIndex;
+#define CONSTANT_TAG(constant_point) (*(u1 *)(constant_point))
 
-    explicit InvokeDynamicConstant(BytecodeReader &reader) {
-        bootstrapMethodAttrIndex = reader.readu2();
-        nameAndTypeIndex = reader.readu2();
-    }
-} ;
-
-
-//#define CONSTANT_TAG(constant_point) *(u1 *)constant_point
-
-//void* parse_constant(bytecode_reader *reader);
+void* parse_constant(struct bytecode_reader *reader);
 
 #endif //JVM_CONSTANT_H

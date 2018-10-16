@@ -5,33 +5,27 @@
 #ifndef JVM_ENCODING_H
 #define JVM_ENCODING_H
 
-#include <cstring>
-#include <string>
-#include <codecvt>
-#include <locale>
+#include <stdint.h>
+#include <limits.h>
+#include <string.h>
 
-#include "../jvm.h"
-
-static inline std::string decodeMUTF8(uint8_t *bytes, size_t len) {
+static inline void* decode_mutf8(uint8_t *src_bytes, size_t len, char dest[len + 1]) {
     // todo 此函数的实现是错的，先这么做
-    char *p = new char[len + 1];
-    memcpy(p, bytes, len);
-    p[len] = 0;
-    return std::string(p);
+    memcpy(dest, src_bytes, len);
+    dest[len] = 0;
+    return dest;
 }
 
-// todo 实现对不对
-static inline jstring strToJstr(const std::string &src) {
-    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
-    std::u16string utf16 = utf16conv.from_bytes(src);
-    return utf16;
+static inline jchar* utf8_to_unicode(const char *src)
+{
+    // todo
+    return NULL;
 }
 
-// todo 实现对不对
-static inline std::string jstrToStr(const jstring &src) {
-    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> utf16conv;
-    std::string str = utf16conv.to_bytes(src);
-    return str;
+static inline char * unicode_to_utf8(const jchar* src)
+{
+    // todo
+    return NULL;
 }
 
 #endif //JVM_ENCODING_H

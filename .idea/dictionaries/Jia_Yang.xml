@@ -1,15 +1,16 @@
 <component name="ProjectDictionaryState">
   <dictionary name="Jia Yang">
     <words>
-      <w>bootstrapclassloader</w>
-      <w>iinc</w>
-      <w>invokeinterface</w>
-      <w>invokespecial</w>
-      <w>invokestatic</w>
-      <w>invokevirtual</w>
-      <w>jiayanggo</w>
-      <w>ljava</w>
-      <w>newarray</w>
+      <w>allocs</w>
+      <w>fieldvalues</w>
+      <w>hfree</w>
+      <w>jarrobj</w>
+      <w>jstrobj</w>
+      <w>mallocs</w>
+      <w>oper</w>
+      <w>printvm</w>
+      <w>statbuf</w>
+      <w>treturn</w>
     </words>
   </dictionary>
 </component>

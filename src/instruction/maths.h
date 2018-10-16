@@ -1,6 +1,4 @@
 /*
- * 数学指令
- *
  * Author: Jia Yang
  */
 
@@ -8,110 +6,169 @@
 #define JVM_MATHS_H
 
 #include <math.h>
+#include "../interpreter/stack_frame.h"
+#include "../slot.h"
 
-#include "../interpreter/StackFrame.h"
+#define ICAL(func_name, oper) \
+    static void func_name(struct stack_frame *frame) \
+    { \
+        jint v2 = os_popi(frame->operand_stack); \
+        jint v1 = os_popi(frame->operand_stack); \
+        os_pushi(frame->operand_stack, v1 oper v2); /* todo 相加溢出的问题 */ \
+    }
 
-#define MATH_INS(fun_name, pop_type, push_type, operation)\
-static void fun_name(StackFrame *frame) {\
-    auto t2 = frame->operandStack.pop##pop_type();\
-    auto t1 = frame->operandStack.pop##pop_type();\
-    frame->operandStack.push((push_type)(operation));\
+ICAL(__iadd, +)
+ICAL(__isub, -)
+ICAL(__imul, *)
+ICAL(__idiv, /)
+ICAL(__irem, %)
+ICAL(__iand, &)
+ICAL(__ior,  |)
+ICAL(__ixor, ^)
+
+////////////////////////////
+
+#define LCAL(func_name, oper) \
+    static void func_name(struct stack_frame *frame) \
+    { \
+        jlong v2 = os_popl(frame->operand_stack); \
+        jlong v1 = os_popl(frame->operand_stack); \
+        os_pushl(frame->operand_stack, v1 oper v2); /* todo 相加溢出的问题 */ \
+    }
+
+LCAL(__ladd, +)
+LCAL(__lsub, -)
+LCAL(__lmul, *)
+LCAL(__ldiv, /)
+LCAL(__lrem, %)
+LCAL(__land, &)
+LCAL(__lor,  |)
+LCAL(__lxor, ^)
+
+////////////////////////////
+
+#define FCAL(func_name, oper) \
+    static void func_name(struct stack_frame *frame) \
+    { \
+        jfloat v2 = os_popf(frame->operand_stack); \
+        jfloat v1 = os_popf(frame->operand_stack); \
+        os_pushf(frame->operand_stack, v1 oper v2); /* todo 相加溢出的问题 */ \
+    }
+
+FCAL(__fadd, +)
+FCAL(__fsub, -)
+FCAL(__fmul, *)
+FCAL(__fdiv, /)
+
+static void __frem(struct stack_frame *frame)
+{
+    jfloat v2 = os_popf(frame->operand_stack);
+    jfloat v1 = os_popf(frame->operand_stack);
+    os_pushf(frame->operand_stack, dremf(v1, v2)); /* todo 相加溢出的问题 */
 }
 
-template <typename T, T (OperandStack::*popValue)(), T (*cal)(T, T)>
-static void mathcal(StackFrame *frame) {
-    T v2 = (frame->operandStack.*popValue)();
-    T v1 = (frame->operandStack.*popValue)();
-    frame->operandStack.push(cal(v1, v2));
+////////////////////////////
+
+#define DCAL(func_name, oper) \
+    static void func_name(struct stack_frame *frame) \
+    { \
+        jdouble v2 = os_popd(frame->operand_stack); \
+        jdouble v1 = os_popd(frame->operand_stack); \
+        os_pushd(frame->operand_stack, v1 oper v2); /* todo 相加溢出的问题 */ \
+    }
+
+DCAL(__dadd, +)
+DCAL(__dsub, -)
+DCAL(__dmul, *)
+DCAL(__ddiv, /)
+
+static void __drem(struct stack_frame *frame)
+{
+    jdouble v2 = os_popd(frame->operand_stack);
+    jdouble v1 = os_popd(frame->operand_stack);
+    os_pushd(frame->operand_stack, drem(v1, v2)); /* todo 相加溢出的问题 */
 }
 
-/*
- * NAN 与正常的的浮点数无法比较，即即不大于也不小于也不等于。
- * 两个NAN之间也无法比较，即即不大于也不小于也不等于。
- */
-template <typename T, T (OperandStack::*popValue)(), jint defaultValue = -1>
-static void __cmp(StackFrame *frame) {
-    T v2 = (frame->operandStack.*popValue)();
-    T v1 = (frame->operandStack.*popValue)();
-    frame->operandStack.push((jint)(v1 > v2 ? 1 : (v1 == v2 ? 0 : (v1 < v2 ? -1 : defaultValue))));
+#define NEG(T) \
+    static void T##neg(struct stack_frame *frame) \
+    { \
+        os_push##T(frame->operand_stack, -os_pop##T(frame->operand_stack)); \
+    }
+
+NEG(i)
+NEG(l)
+NEG(f)
+NEG(d)
+
+static void ishl(struct stack_frame *frame)
+{
+    // 与0x1f是因为低5位表示位移距离，位移距离实际上被限制在0到31之间。
+    jint shift = os_popi(frame->operand_stack) & 0x1f;
+    jint value = os_popi(frame->operand_stack);
+    os_pushi(frame->operand_stack, value << shift);
 }
 
-//template <typename T, T (OperandStack::*popValue)(), T (*cal)(T, T)>
-//static void mathcal(StackFrame *frame) {
-//    T v2 = (frame->operandStack.*popValue)();
-//    T v1 = (frame->operandStack.*popValue)();
-//    frame->operandStack.push(cal(v1, v2));
-//}
-
-MATH_INS(__irem, Int, jint, t1 % t2)
-MATH_INS(__frem, Float, jfloat, fmodf(t1, t2))
-MATH_INS(__lrem, Long, jlong, t1 % t2)
-MATH_INS(__drem_, Double, jdouble, fmod(t1, t2))  // todo  fmod or drem  ???????!!!!!!!!
-
-// 左移
-//template <typename T, T (OperandStack::*pop)()>
-//void __shl(StackFrame *frame) {
-//    T t2 = (frame->operandStack.*pop)();
-//    T t1 = (frame->operandStack.*pop)();
-//
-//    if (sizeof(t1) == 4) {
-//        t2 = t2 & 0x1f; // t2低5位表示位移距离，位移的距离实际上被限制在0到31之间。
-//    } else if (sizeof(t1) == 8) {
-//        t2 = t2 & 0x3f; // t2低6位表示位移距离，位移的距离实际上被限制在0到63之间。
-//    } else {
-//        jvmAbort("error, %d\n", sizeof(t2));
-//    }
-//
-//    frame->operandStack.push((T)(t1 << t2));
-//}
+static void lshl(struct stack_frame *frame)
+{
+    // 与0x3f是因为低6位表示位移距离，位移距离实际上被限制在0到63之间。
+    jint shift = os_popi(frame->operand_stack) & 0x3f;
+    jlong value = os_popl(frame->operand_stack);
+    os_pushl(frame->operand_stack, value << shift);
+}
 
 // 逻辑右移 shift logical right
-template <typename T, T (OperandStack::*pop)(), bool logical>
-void __shr(StackFrame *frame) {
-    jint t2 = frame->operandStack.popInt();
-    T t1 = (frame->operandStack.*pop)();
+static void ishr(struct stack_frame *frame)
+{
+    jint shift = os_popi(frame->operand_stack) & 0x1f;
+    jint value = os_popi(frame->operand_stack);
+    os_pushi(frame->operand_stack, (~(((jint)1) >> shift)) & (value >> shift));
+}
 
-    if (sizeof(t1) == 4) {
-        t2 = t2 & 0x1f; // t2低5位表示位移距离，位移的距离实际上被限制在0到31之间。
-    } else if (sizeof(t1) == 8) {
-        t2 = t2 & 0x3f; // t2低6位表示位移距离，位移的距离实际上被限制在0到63之间。
+static void lshr(struct stack_frame *frame)
+{
+    jint shift = os_popi(frame->operand_stack) & 0x3f;
+    jlong value = os_popl(frame->operand_stack);
+    os_pushl(frame->operand_stack, (~(((jlong)1) >> shift)) & (value >> shift));
+}
+
+// 算术右移 shift arithmetic right
+static void iushr(struct stack_frame *frame)
+{
+    jint shift = os_popi(frame->operand_stack) & 0x1f;
+    jint value = os_popi(frame->operand_stack);
+    os_pushi(frame->operand_stack, value >> shift);
+}
+
+static void lushr(struct stack_frame *frame)
+{
+    jint shift = os_popi(frame->operand_stack) & 0x3f;
+    jlong value = os_popl(frame->operand_stack);
+    os_pushl(frame->operand_stack, value >> shift);
+}
+
+extern bool wide_extending;
+
+static void iinc(struct stack_frame *frame)
+{
+    jint index, value;
+
+    if (wide_extending) {
+        index = bcr_readu2(frame->reader);//frame->reader->readu2();
+        value = bcr_readu2(frame->reader);//frame->reader->reads2();
+        wide_extending = false;
     } else {
-        jvmAbort("error, %d\n", sizeof(t2));
+        index = bcr_readu1(frame->reader);//frame->reader->readu1();
+        value = bcr_readu1(frame->reader);//frame->reader->reads1();
     }
 
-    if (logical) { // 逻辑右移 shift logical right
-        frame->operandStack.push((~(((T)1) >> t2)) & (t1 >> t2));
-    } else { // 算术右移 shift arithmetic right
-        frame->operandStack.push(t1 >> t2);
+    struct slot *s = frame->local_vars + index;
+    if (s->t != JINT) {
+        // todo error
+        jvm_abort("error\n");
     }
+
+    s->v.i += value;
+//    frame->setLocalVar(index, Slot(frame->getLocalVar(index).getInt() + value));
 }
 
-MATH_INS(__lcmp, Long, jint, t1 > t2 ? 1 : (t1 == t2 ? 0 : -1));
-
-template <Jtype jtype>
-static void __neg(StackFrame *frame) {
-    Slot *s = frame->operandStack.peek();
-    if (s->type != jtype) {
-        /* todo error*/
-        jvmAbort("error.\n");
-        return;
-    }
-    s->negValue();
-}
-
-static void __iinc(StackFrame *frame) {
-    int index = frame->reader->readu1();
-    int value = frame->reader->reads1();
-
-    Slot *s = frame->getLocalVars(index);
-    if (s->type != PRIMITIVE_INT) {
-        jvmAbort("error. slot's type is \n", s->type);  // todo
-    }
-
-    auto is = dynamic_cast<IntSlot *>(s);
-    is->setValue(is->getValue() + value);
-
-    frame->setLocalVars(index, s);
-}
-
-#endif
+#endif //JVM_MATHS_H
