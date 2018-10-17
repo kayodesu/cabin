@@ -227,3 +227,13 @@ int jmethod_find_exception_handler(struct jmethod *method, struct jclass *except
 
     return -1;
 }
+
+void jmethod_print(const struct jmethod *method)
+{
+    if (method == NULL) {
+        printvm("NULL\n");
+        return;
+    }
+
+    printvm("method: %s~%s~%s\n", method->jclass->class_name, method->name, method->descriptor);
+}

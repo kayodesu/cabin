@@ -63,15 +63,12 @@ struct jclass {
     // instance_field_count 有可能大于 fields_count，因为 instance_field_count 包含了继承过来的 field.
     // 类型二统计为两个数量
     int instance_fields_count;
-//    std::type_info *infos;  // todo 保存instanceFields的类型。
 
     /*
      * 类型二统计为两个数量
      */
     int static_fields_count;
     struct fieldvalues *static_field_values; // 保存所有类变量的值
-//    struct slot *static_fields_values; // 保存所有类变量的值
-//    struct field_value_group static_fields_values;  // 保存所有类变量的值
 
     char *source_file_name;
 };
@@ -100,6 +97,8 @@ struct jmethod* jclass_lookup_instance_method(struct jclass *c, const char *name
 bool jclass_is_subclass_of(const struct jclass *c, const struct jclass *father);
 
 bool jclass_is_accessible_to(const struct jclass *c, const struct jclass *visitor);
+
+void jclass_print(const struct jclass *c);
 
 /*
  * 需要调用者释放返回值(free())

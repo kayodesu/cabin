@@ -211,6 +211,7 @@ struct jclassobj* get_jclass_obj_from_pool(struct classloader *loader, const cha
     struct jclassobj *clsobj;
     HASH_FIND_STR(loader->classobj_pool, class_name, clsobj);
     if (clsobj != NULL) {
+        printvm("find out class obj: %s\n", class_name);  /////////////////////////////////////
         return clsobj;
     }
 
@@ -223,8 +224,8 @@ struct classloader* classloader_create()
 {
     VM_MALLOC(struct classloader, loader);
 
-    loader->loaded_class_pool = NULL;
-    loader->classobj_pool = NULL;
+    loader->loaded_class_pool = NULL; // hash must be declared as a NULL-initialized pointer
+    loader->classobj_pool = NULL;     // hash must be declared as a NULL-initialized pointer
 
     /*
      * 先加载java.lang.Class类，
@@ -341,7 +342,6 @@ struct jclass* classloader_load_class(struct classloader *loader, const char *cl
 {
     struct jclass *c;
     HASH_FIND_STR(loader->loaded_class_pool, class_name, c);
-//    struct jclass *c = array_find(&loader->loaded_classes, class_name, cmp);
     if (c != NULL) {
         return c;
     }
@@ -358,10 +358,9 @@ struct jclass* classloader_load_class(struct classloader *loader, const char *cl
 
     if (loader->jclass_class != NULL) {
         c->clsobj = get_jclass_obj_from_pool(loader, class_name);
-//        c->classObj = getJclassObjFromPool(c->className);
     }
 
-    HASH_ADD_KEYPTR( hh, loader->loaded_class_pool, class_name, strlen(class_name), c);
+    HASH_ADD_KEYPTR(hh, loader->loaded_class_pool, class_name, strlen(class_name), c);
     return c;
 }
 

@@ -17,7 +17,6 @@ struct jfield* jfield_create(const struct jclass *c, const struct member_info *i
     assert(c != NULL && info != NULL);
 
     VM_MALLOC(struct jfield, field);
-
     field->constant_value_index = INVALID_CONSTANT_VALUE_INDEX;
     field->jclass = c;
     field->access_flags = info->access_flags;
@@ -46,6 +45,10 @@ struct jfield* jfield_create(const struct jclass *c, const struct member_info *i
     }  else if (field->descriptor[0] == '[') {
         field->type_name = field->descriptor;
     } else if (field->descriptor[0] == 'L' && strend(field->descriptor, ";")) {
+        // todo
+        char *tmp = strdup(field->descriptor + 1); // jump 'L'
+        tmp[strlen(tmp) - 1] = 0; // set last char(';') is 0
+        field->type_name = tmp;
 //        string className = descriptor.substr(1, descriptor.size() - 2);  todo
 //        field->type_name = className;
     } else {
@@ -112,6 +115,9 @@ bool jfield_is_accessible_to(const struct jfield *field, const struct jclass *vi
 
 struct jclassobj* jfield_get_type(struct jfield *field)
 {
+    printvm("未实现的功能\n");
+    jfield_print(field);
+//    jvm_abort("\n"); // todo
 #if 0
     if (type != nullptr) {
         return type;
@@ -140,3 +146,14 @@ struct jclassobj* jfield_get_type(struct jfield *field)
 //        return REFERENCE;
 //    jvmAbort("error\n");
 }
+
+void jfield_print(const struct jfield *field)
+{
+    if (field == NULL) {
+        printvm("NULL\n");
+        return;
+    }
+
+    printvm("field: %s~%s~%s\n", field->jclass->class_name, field->name, field->descriptor);
+}
+

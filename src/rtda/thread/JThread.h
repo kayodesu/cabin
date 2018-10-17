@@ -21,7 +21,6 @@ struct stack_frame;
  */
 struct jthread {
     UT_array *vm_stack; // 虚拟机栈，一个线程只有一个虚拟机栈
-//    struct array *vm_stack;  // 虚拟机栈，一个线程只有一个虚拟机栈
     struct jobject *jlt_obj; // object of java.lang.Thread   todo 干嘛用的
 
     size_t pc;
@@ -38,14 +37,14 @@ static inline bool jthread_is_stack_empty(const struct jthread *thread)
 static inline struct stack_frame* jthread_top_frame(struct jthread *thread)
 {
     assert(thread != NULL);
-    void *p = utarray_back(thread->vm_stack);//array_top(thread->vm_stack);
+    void *p = utarray_back(thread->vm_stack);
     return p == NULL ? NULL : *(struct stack_frame **)p;
 }
 
 static inline void jthread_pop_frame(struct jthread *thread)
 {
     assert(thread != NULL);
-    utarray_pop_back(thread->vm_stack);//array_pop(thread->vm_stack);
+    utarray_pop_back(thread->vm_stack);
 }
 
 void jthread_push_frame(struct jthread *thread, struct stack_frame *frame);

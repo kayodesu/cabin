@@ -361,39 +361,6 @@ static void checkcast(struct stack_frame *frame)
     }
 }
 
-//static struct jmethod* fetch_method(struct stack_frame *frame, bool is_static, bool extra_read)
-//{
-//    struct jclass *curr_class = frame->method->jclass;
-//
-//    int index = bcr_readu2(frame->reader);
-//    if (extra_read) { // todo 干嘛的
-//        bcr_readu1(frame->reader);
-//        bcr_readu1(frame->reader);
-//    }
-//    struct method_ref *ref = rtcp_get_method_ref(curr_class->rtcp, index);
-//
-//    /* todo 本地方法 */
-//
-//    struct jclass *resolved_class = resolve_class(curr_class, ref->class_name);
-//    if (!resolved_class->inited) {
-//        jclass_clinit(resolved_class, frame);
-//        /* 将pc指向本条指令之前，初始化完类后，继续执行本条指令。*/
-//        bcr_set_pc(frame->reader, frame->thread->pc);
-//        return NULL;
-//    }
-//
-//    struct jmethod *resolved_method = resolve_method(curr_class, ref, is_static);
-//    if (resolved_method == NULL) {
-//        jvm_abort("error\n"); /* todo */
-//    }
-//
-//    // todo c 和 method->jclass 是不是一样的
-//    // 解析出的类为 resolved_class，方法为 resolved_method
-//    // 则 resolved_class == method->jclass，或 resolved_class 是 resolved_method->jclass 的子类。
-//
-//    return resolved_method;
-//}
-
 /*
  * 方法调用系列：
  * invokestatic指令用来调用静态方法。
@@ -404,7 +371,6 @@ static void checkcast(struct stack_frame *frame)
  */
 static void invokestatic(struct stack_frame *frame)
 {
-//    struct jmethod *method = fetch_method(frame, true, false);
     struct jclass *curr_class = frame->method->jclass;
 
     int index = bcr_readu2(frame->reader);
@@ -431,7 +397,6 @@ static void invokestatic(struct stack_frame *frame)
  */
 static void invokespecial(struct stack_frame *frame)
 {
-//    struct jmethod *method = fetch_method(frame, false, false);
     struct jclass *curr_class = frame->method->jclass;
 
     int index = bcr_readu2(frame->reader);
@@ -487,7 +452,6 @@ static void invokespecial(struct stack_frame *frame)
  */
 static void invokevirtual(struct stack_frame *frame)
 {
-//    struct jmethod *method = fetch_method(frame, false, false);
     struct jclass *curr_class = frame->method->jclass;
 
     int index = bcr_readu2(frame->reader);
@@ -495,6 +459,7 @@ static void invokevirtual(struct stack_frame *frame)
     resolve_non_static_method_ref(curr_class, ref);
 
     if (ref->resolved_method->arg_slot_count < 1) {
+        jmethod_print(ref->resolved_method);
         jvm_abort("error\n");
     }
 
@@ -507,8 +472,15 @@ static void invokevirtual(struct stack_frame *frame)
     if (obj == NULL) {
         if (strcmp(ref->resolved_method->name, "println") == 0) {
             // todo   println  暂时先这么搞
-            struct jstrobj *so = (struct jstrobj *) slot_getr(args + 1);
-            printvm("%s\n", so->str);
+            const struct slot *arg = args + 1; // println 的参数
+            if (arg->t == REFERENCE) {
+                struct jstrobj *so = (struct jstrobj *) slot_getr(arg);
+                printvm("%s\n", so->str);
+            } else if (arg->t == JINT) {
+                printvm("%d\n", slot_geti(arg));
+            } else {
+                jvm_abort("println 找不到类型\n");
+            }
             return;
         }
         // todo  java.lang.NullPointerException

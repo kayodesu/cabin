@@ -57,7 +57,8 @@ enum jtype {
 static const char *get_jtype_name(enum jtype t)
 {
     static const char* names[] = {
-        "byte", "bool", "char", "short", "int", "long", "float", "double", "reference", "placeholder", "not a tpe"
+        "jbyte", "jbool", "jchar", "jshort", "jint",
+        "jlong", "jfloat", "jdouble", "reference", "placeholder", "not a tpe"
     };
     return names[t];
 }

@@ -20,7 +20,8 @@ extern char extension_classpath[PATH_MAX];
 extern char *user_classpath; // todo
 
 #define VM_MALLOC_EXT(type, count, extra_len, var_name) type *(var_name) = malloc(sizeof(type) * (count) + (extra_len))
-#define VM_MALLOC(type, var_name) VM_MALLOC_EXT(type, 1, 0, var_name)
+#define VM_MALLOCS(type, count, var_name) VM_MALLOC_EXT(type, count, 0, var_name)
+#define VM_MALLOC(type, var_name) VM_MALLOCS(type, 1, var_name)
 
 /*
  * 用来表示字段和方法。
@@ -38,21 +39,5 @@ void start_jvm(const char *main_class_name);
 
 // 出现异常，退出jvm
 #define jvm_abort(...) do { printvm("fatal error. "); printf(__VA_ARGS__); exit(-1); } while(false)
-
-//
-//struct JvmEnv {
-//    // 启动类路径（bootstrap classpath）默认对应 jre/lib 目录，Java标准库（大部分在rt.jar里）位于该路径
-//    static std::string bootstrapClasspath;
-//
-//    // 扩展类路径（extension classpath）默认对应 jre/lib/ext 目录，使用Java扩展机制的类位于这个路径。
-//    static std::string extensionClasspath;
-//
-//    // 用户类路径（user classpath）我们自己实现的类，以及第三方类库位于用户类路径
-//    static std::string userClasspath;
-//
-//private:
-//    JvmEnv() = default;
-//};
-
 
 #endif //JVM_JVM_H

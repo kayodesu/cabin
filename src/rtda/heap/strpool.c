@@ -15,7 +15,7 @@ struct jstrobj* put_str_to_pool(struct classloader *loader, const char *str0)
     }
 
     so = jstrobj_create(loader, str0);
-    HASH_ADD(hh, pool, str, strlen(so->str), so);
+    HASH_ADD_KEYPTR(hh, pool, str0, strlen(str0), so);
     return so;
 }
 

@@ -6,9 +6,8 @@
 
 struct jarrobj *jarrobj_create(struct jclass *arr_class, size_t arr_len)
 {
-    if (arr_class == NULL) {
-        jvm_abort("eeeeeeeeeeee\n"); // todo
-    }
+    assert(arr_class != NULL);
+
     if (!is_array(arr_class)) {
         jvm_abort("error. is not array. %s\n", arr_class->class_name); // todo
     }
@@ -37,6 +36,8 @@ struct jarrobj *jarrobj_create(struct jclass *arr_class, size_t arr_len)
 
 struct jarrobj *jarrobj_create_mutil(struct jclass *arr_class, size_t arr_dim, const size_t *arr_lens)
 {
+    assert(arr_class != NULL);
+    assert(arr_lens != NULL);
     /*
      * 多维数组是数组的数组
      * 先创建其第一维，第一维的每个元素也是一数组
@@ -58,7 +59,13 @@ struct jarrobj *jarrobj_create_mutil(struct jclass *arr_class, size_t arr_dim, c
 
 void* jarrobj_index(struct jarrobj *ao, jint index)
 {
-    // todo 判断范围
+    assert(ao != NULL);
+
+    if (index < 0 || index >= ao->len) {
+        jvm_abort("len = %zd, index = %d\n", ao->len, index);
+        return NULL;
+    }
+
     return ao->data + ao->ele_size * index;
 }
 
@@ -79,7 +86,7 @@ void jarrobj_copy(struct jarrobj *dst, jint dst_pos, const struct jarrobj *src, 
         || src_pos + len > src->len
         || dst_pos + len > dst->len) {
         // todo "java.lang.IndexOutOfBoundsException"
-        printvm("java.lang.IndexOutOfBoundsException\n");
+        jvm_abort("java.lang.IndexOutOfBoundsException\n");
     }
 
     s1 *d = dst->data;

@@ -11,7 +11,7 @@
 #include "jvm.h"
 
 /*
- * 在 Slot 中，jbool, jbyte, jchar, jshort 统统用 jint 表示。
+ * 在 slot 中，jbool, jbyte, jchar, jshort 统统用 jint 表示。
  *
  * todo   增加注释： slot 应用在哪里
  */
@@ -55,8 +55,7 @@ static inline jint slot_geti(const struct slot *s)
     if (s->t == JINT) {
         return s->v.i;
     }
-    // todo error
-    jvm_abort("fff");
+    jvm_abort("type mismatch. wants jint, gets %s\n", get_jtype_name(s->t));
 }
 
 static inline jfloat slot_getf(const struct slot *s)
@@ -65,8 +64,7 @@ static inline jfloat slot_getf(const struct slot *s)
     if (s->t == JFLOAT) {
         return s->v.f;
     }
-    // todo error
-    jvm_abort("fff");
+    jvm_abort("type mismatch. wants jfloat, gets %s\n", get_jtype_name(s->t));
 }
 
 static inline jlong slot_getl(const struct slot *s)
@@ -75,8 +73,7 @@ static inline jlong slot_getl(const struct slot *s)
     if (s->t == JLONG) {
         return s->v.l;
     }
-    // todo error
-    jvm_abort("fff");
+    jvm_abort("type mismatch. wants jlong, gets %s\n", get_jtype_name(s->t));
 }
 
 static inline jdouble slot_getd(const struct slot *s)
@@ -85,8 +82,7 @@ static inline jdouble slot_getd(const struct slot *s)
     if (s->t == JDOUBLE) {
         return s->v.d;
     }
-    // todo error
-    jvm_abort("fff");
+    jvm_abort("type mismatch. wants jdouble, gets %s\n", get_jtype_name(s->t));
 }
 
 static inline jref slot_getr(const struct slot *s)
@@ -95,23 +91,22 @@ static inline jref slot_getr(const struct slot *s)
     if (s->t == REFERENCE) {
         return s->v.r;
     }
-    // todo error
-    jvm_abort("fff");
+    jvm_abort("type mismatch. wants reference, gets %s\n", get_jtype_name(s->t));
 }
 
-static bool slot_is_ph(const struct slot *s)
+static inline bool slot_is_ph(const struct slot *s)
 {
     assert(s != NULL);
     return s->t == PH;
 }
 
-static bool slot_is_category_two(const struct slot *s)
+static inline bool slot_is_category_two(const struct slot *s)
 {
     assert(s != NULL);
     return s->t == JLONG || s->t == JDOUBLE;
 }
 
-static bool slot_is_category_one(const struct slot *s)
+static inline bool slot_is_category_one(const struct slot *s)
 {
     assert(s != NULL);
     return !slot_is_ph(s) && !slot_is_category_two(s);

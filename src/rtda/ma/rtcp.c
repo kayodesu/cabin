@@ -14,7 +14,7 @@
 static void build_utf8_constant(struct rtcp *rtcp, void **cfcp, size_t index)
 {
     struct utf8_constant *c = cfcp[index];
-    char *utf8 = malloc(sizeof(*utf8) * (c->length + 1)); // todo NULL
+    VM_MALLOCS(char, c->length + 1, utf8);
     rtcp->pool[index] = (struct rtc) { UTF8_CONSTANT, .v.p = decode_mutf8(c->bytes, c->length, utf8) };
 }
 

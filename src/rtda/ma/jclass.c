@@ -357,7 +357,7 @@ char* get_arr_class_name(const char *class_name)
 {
     assert(class_name != NULL);
 
-    VM_MALLOC_EXT(char, strlen(class_name) + 8 /* big enough */, 0, array_class_name);
+    VM_MALLOCS(char, strlen(class_name) + 8 /* big enough */, array_class_name);
 
     if (class_name[0] == '[') {
         sprintf(array_class_name, "[%s\0", class_name);
@@ -417,4 +417,15 @@ bool jclass_is_accessible_to(const struct jclass *c, const struct jclass *visito
     // 字段有默认访问权限（非public，非protected，也非private），则只有同一个包下的类可以访问
     return strcmp(c->pkg_name, visitor->pkg_name) == 0;
 }
+
+void jclass_print(const struct jclass *c)
+{
+    if (c == NULL) {
+        printvm("NULL\n");
+        return;
+    }
+
+    printvm("class: %s\n", c->class_name);
+}
+
 

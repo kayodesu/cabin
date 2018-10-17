@@ -89,21 +89,22 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-void test() {
+void test()
+{
     /* ---------------- passed -------------------------*/
 
 
     /* ---------------- NOT passed -------------------------*/
     // array
 //    start_jvm("io/github/jiayanggo/array/ArrayDemo");
-    start_jvm("io/github/jiayanggo/array/ArrayTest");
+//    start_jvm("io/github/jiayanggo/array/ArrayTest");
 //    start_jvm("io/github/jiayanggo/array/BubbleSort");
 
     // string
 //    start_jvm("io/github/jiayanggo/string/StringTest");
 //    start_jvm("io/github/jiayanggo/string/Mutf8Test");
 
-//    start_jvm("io/github/jiayanggo/HelloWorld");
+    start_jvm("io/github/jiayanggo/HelloWorld");
 
 //    start_jvm("io/github/jiayanggo/string/StringOut");
 //    start_jvm("io/github/jiayanggo/ObjectTest");
@@ -111,8 +112,6 @@ void test() {
 
 //    start_jvm("io/github/jiayanggo/exception/CatchTest");
 //    start_jvm("io/github/jiayanggo/exception/UncaughtTest");
-
-//    start_jvm("io/github/jiayanggo/array/BubbleSort");
 
 //    start_jvm("io/github/jiayanggo/reflection/GetClassTest");
 //    start_jvm("io/github/jiayanggo/reflection/FieldTest");

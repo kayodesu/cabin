@@ -4,7 +4,6 @@
 
 #include "jstrobj.h"
 #include "mm/halloc.h"
-#include "jarrobj.h"
 
 struct jstrobj* jstrobj_create0(struct classloader *loader, const char *str)
 {
@@ -25,21 +24,3 @@ struct jstrobj* jstrobj_create1(struct classloader *loader, const jchar *wstr)
     so->wstr = wstr;
     return so;
 }
-
-//const jchar* jstrobj_value(struct jstrobj *so)
-//{
-//    assert(so != NULL);
-//    return so->wstr;
-//
-////    struct slot *slot = jobject_instance_field_value_nt(so->obj, "value", "[C");
-////    struct jarrobj *ao = (struct jarrobj *) slot_getr(slot);
-////    return ao->data;
-//
-////    auto v = static_cast<JArrayObj *>(getFieldValue("value", "[C").getRef());
-////    jstring s;
-////    for (int i = 0; i < v->length(); i++) {
-////        s.push_back(v->get<jchar>(i));
-////    }
-////    return s;
-//}
-

@@ -11,7 +11,7 @@
 struct jclass* resolve_class(const struct jclass *visitor, const char *class_name)
 {
     if (class_name == NULL || strlen(class_name) == 0) {
-        jvm_abort("error. class name is empty\n");
+        jvm_abort("class name is empty\n");
     }
 
     struct jclass *jclass = classloader_load_class(visitor->loader, class_name);
@@ -46,6 +46,8 @@ static struct jmethod* resolve_method_ref(const struct jclass *visitor, struct m
 
     if (!jmethod_is_accessible_to(ref->resolved_method, visitor)) {
         // java.lang.IllegalAccessError   todo
+        jmethod_print(ref->resolved_method);
+        jclass_print(visitor);
         jvm_abort("java.lang.IllegalAccessError\n");
     }
 

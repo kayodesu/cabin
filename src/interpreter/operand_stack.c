@@ -42,14 +42,16 @@ struct slot* os_pops(struct operand_stack *os)
     return os->slots + --os->size;
 }
 
+#define TYPE_MISMATCH_ERROR(s, wants_type) \
+    jvm_abort("type mismatch. wants %s, gets %s", wants_type, (s) == NULL ? "NULL" : get_jtype_name((s)->t))
+
 jint os_popi(struct operand_stack *os)
 {
     assert(os != NULL);
 
     struct slot *s = os_pops(os);
     if (s == NULL || s->t != JINT) {
-        // todo error
-        jvm_abort("error");
+        TYPE_MISMATCH_ERROR(s, "jint");
     }
     return s->v.i;
 }
@@ -60,8 +62,7 @@ jfloat os_popf(struct operand_stack *os)
 
     struct slot *s = os_pops(os);
     if (s == NULL || s->t != JFLOAT) {
-        // todo error
-        jvm_abort("error");
+        TYPE_MISMATCH_ERROR(s, "jfloat");
     }
     return s->v.f;
 }
@@ -72,13 +73,11 @@ jlong os_popl(struct operand_stack *os)
 
     struct slot *s = os_pops(os);
     if (s == NULL || s->t != PH) {
-        // todo error
-        jvm_abort("error");
+        TYPE_MISMATCH_ERROR(s, "placeholder");
     }
     s = os_pops(os);
     if (s == NULL || s->t != JLONG) {
-        // todo error
-        jvm_abort("error");
+        TYPE_MISMATCH_ERROR(s, "jlong");
     }
     return s->v.l;
 }
@@ -89,13 +88,11 @@ jdouble os_popd(struct operand_stack *os)
 
     struct slot *s = os_pops(os);
     if (s == NULL || s->t != PH) {
-        // todo error
-        jvm_abort("error");
+        TYPE_MISMATCH_ERROR(s, "placeholder");
     }
     s = os_pops(os);
     if (s == NULL || s->t != JDOUBLE) {
-        // todo error
-        jvm_abort("error");
+        TYPE_MISMATCH_ERROR(s, "jdouble");
     }
     return s->v.d;
 }
@@ -106,8 +103,7 @@ jref os_popr(struct operand_stack *os)
 
     struct slot *s = os_pops(os);
     if (s == NULL || s->t != REFERENCE) {
-        // todo error
-        jvm_abort("error");
+        TYPE_MISMATCH_ERROR(s, "reference");
     }
     return s->v.r;
 }
