@@ -9,25 +9,22 @@
 
 struct jobject* jobject_create(struct jclass *c)
 {
-    if (c == NULL) {
-        jvm_abort("jclass is null");  // todo
-        return NULL;
-    }
+    assert(c != NULL);
 
-    if (is_array(c)) {
-        // todo
-        return NULL;
-    }
-
-//    struct jobject *o = halloc(sizeof(*o));
     HEAP_ALLOC(struct jobject, o);
     if (o == NULL) {
         // todo 堆内存分配失败
         jvm_abort("堆溢出");
     }
     o->jclass = c;
-    o->instance_fields_count = c->instance_fields_count;
-    o->instance_field_values = fv_create(o->jclass, o->instance_fields_count);//malloc(sizeof(struct slot) * o->instance_fields_count);
+
+    if (is_array(c)) {  // todo
+        o->instance_fields_count = 0;
+        o->instance_field_values = NULL;
+    } else {
+        o->instance_fields_count = c->instance_fields_count;
+        o->instance_field_values = fv_create(o->jclass, o->instance_fields_count);
+    }
 
     return o;
 }

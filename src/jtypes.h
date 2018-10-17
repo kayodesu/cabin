@@ -54,12 +54,13 @@ enum jtype {
     NAT, // Not A Type
 };
 
-//static const char *getTypeName(enum jtype t) {
-//    static const char* names[] = {
-//        "byte", "bool", "char", "short", "int", "long", "float", "double", "reference", "placeholder", "not a tpe"
-//    };
-//    return names[t];
-//}
+static const char *get_jtype_name(enum jtype t)
+{
+    static const char* names[] = {
+        "byte", "bool", "char", "short", "int", "long", "float", "double", "reference", "placeholder", "not a tpe"
+    };
+    return names[t];
+}
 
 static inline jlong i2l(jint i)
 {  // todo

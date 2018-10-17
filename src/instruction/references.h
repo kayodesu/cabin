@@ -542,15 +542,13 @@ static void invokevirtual(struct stack_frame *frame)
  */
 static void invokeinterface(struct stack_frame *frame)
 {
-//    struct jmethod *method = fetch_method(frame, false, true);
     struct jclass *curr_class = frame->method->jclass;
-
     int index = bcr_readu2(frame->reader);
 
     /*
      * 此字节的值是给方法传递参数需要的slot数，
-     * 其含义和给Method结构体定义的argSlotCount字段相同。
-     * 正如我们所知，这个数是可以根据方法描述符计算出来的，它的存在仅仅是因为历史原因。
+     * 其含义和给method结构体定义的arg_slot_count字段相同。
+     * 这个数是可以根据方法描述符计算出来的，它的存在仅仅是因为历史原因。
      */
     bcr_readu1(frame->reader);
     /*
@@ -596,10 +594,14 @@ static void invokeinterface(struct stack_frame *frame)
     sf_invoke_method(frame, method, args); //  frame->invokeMethod(method, args);
 }
 
-
+/*
+ * 创建一维基本类型数组。包括 boolean[], byte[], char[], short[], int[], long[], float[] 和 double[] 8种。
+ * 显然基本类型数组肯定都是一维数组，
+ * 如果引用类型数组的元素也是数组，那么它就是多维数组。
+ */
 static void newarray(struct stack_frame *frame)
 {
-    jint arr_len = os_popi(frame->operand_stack);//frame->operandStack.popInt();
+    jint arr_len = os_popi(frame->operand_stack);
     if (arr_len < 0) {
         // todo  java.lang.NegativeArraySizeException
         jvm_abort("error. java.lang.NegativeArraySizeException. %d \n", arr_len);
@@ -618,8 +620,8 @@ static void newarray(struct stack_frame *frame)
      * AT_INT = 10
      * AT_LONG = 11
      */
-    int arr_type = bcr_readu1(frame->reader);//frame->reader->readu1();
-    char *arr_name = NULL;
+    int arr_type = bcr_readu1(frame->reader);
+    char *arr_name;
     switch (arr_type) {
         case 4: arr_name = "[Z"; break;
         case 5: arr_name = "[C"; break;
@@ -629,51 +631,45 @@ static void newarray(struct stack_frame *frame)
         case 9: arr_name = "[S"; break;
         case 10: arr_name = "[I"; break;
         case 11: arr_name = "[J"; break;
-        default: arr_name = ""; break;
-    }
-
-    if (arr_name == NULL) {
-        // todo
-        jvm_abort("error. Invalid array type: %d.\n", arr_type);
-        return;
+        default:  // todo
+            jvm_abort("error. Invalid array type: %d.\n", arr_type);
+            return;
     }
 
     struct jclass *c = classloader_load_class(frame->method->jclass->loader, arr_name);
     // 因为前面已经判断了 arr_len >= 0，所以 arr_len 转型为 size_t 是安全的
     os_pushr(frame->operand_stack, (jref) jarrobj_create(c, (size_t) arr_len));
-    //frame->method->jclass->loader->loadClass(arrName);
-    //frame->operandStack.push(JArrayObj::newJArrayObj(c, arrLen));
 }
 
 /*
  * todo
  * 这函数是干嘛的，
  * 实现完全错误
+ * 创建一维引用类型数组
  */
 static void anewarray(struct stack_frame *frame)
 {
-#if 0
+    struct jclass *curr_class = frame->method->jclass;
     jint arr_len = os_popi(frame->operand_stack);
     if (arr_len < 0) {
         // todo  java.lang.NegativeArraySizeException
-        jvm_abort("error. java.lang.NegativeArraySizeException \n");
+        jvm_abort("error. java.lang.NegativeArraySizeException. %d \n", arr_len);
         return;
     }
 
     // todo arrLen == 0 的情况
 
-    int index = bcr_readu2(frame->reader);//frame->reader->readu2();
-    const char *className = rtcp_get_class_name(frame->method->jclass->rtcp, index);
-    struct jclass *componentClass = resolve_class(frame->method->jclass, className);
-    struct jclass *arrClass = jclass_array_class(componentClass);//componentClass->arrayClass();
-
-    frame->operandStack.push(JArrayObj::newJArrayObj(arrClass, arrLen));
-#endif
+    int index = bcr_readu2(frame->reader);
+    const char *class_name = rtcp_get_class_name(frame->method->jclass->rtcp, index); // 数组元素的类
+    char *arr_class_name = get_arr_class_name(class_name);
+    struct jclass *arr_class = classloader_load_class(curr_class->loader, arr_class_name);
+    free(arr_class_name);
+    os_pushr(frame->operand_stack, (jref) jarrobj_create(arr_class, (size_t) arr_len));
 }
 
 static void arraylength(struct stack_frame *frame)
 {
-    jref obj = os_popr(frame->operand_stack);//frame->operandStack.popRef();
+    jref obj = os_popr(frame->operand_stack);
     if (obj == NULL) {
         // todo java.lang.NullPointerException
         jvm_abort("error. java.lang.NullPointerException\n");
@@ -685,7 +681,7 @@ static void arraylength(struct stack_frame *frame)
 //        jprintf("error.\n"); // todo 一维数组?
 //    }
 
-    os_pushi(frame->operand_stack, arr->len); // frame->operandStack.push(arr->len);
+    os_pushi(frame->operand_stack, arr->len);
 }
 
 static void monitorenter(struct stack_frame *frame)

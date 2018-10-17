@@ -60,7 +60,11 @@ static inline void __astore(struct stack_frame *frame, int index)
     }
 
     // todo error
-    jvm_abort("error\n");
+    if (s == NULL) {
+        jvm_abort("operand stack is empty.\n");
+    } else {
+        jvm_abort("slot's type is mismatch, wants \'reference\', gets \'%s\'.\n", get_jtype_name(s->t));
+    }
 }
 
 static void astore(struct stack_frame *frame)   { __astore(frame, fetch_index(frame)); }

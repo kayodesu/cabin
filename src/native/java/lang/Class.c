@@ -557,7 +557,9 @@ static void getDeclaredFields0(struct stack_frame *frame)
     }
 
     struct jclass *jlrf_cls = classloader_load_class(loader, "java/lang/reflect/Field");
-    struct jarrobj *jlrfs = jarrobj_create(jclass_array_class(jlrf_cls), fields_count);
+    char *arr_cls_name = get_arr_class_name(jlrf_cls->class_name);
+    struct jarrobj *jlrfs = jarrobj_create(classloader_load_class(loader, arr_cls_name), fields_count);
+    free(arr_cls_name);
 
     /*
      * Field(Class<?> declaringClass,

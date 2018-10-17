@@ -12,6 +12,7 @@
 #include "../../classfile/attribute.h"
 #include "jmethod.h"
 #include "access.h"
+#include "primitive_types.h"
 
 // 计算实例字段的个数，同时给它们编号
 static void calc_instance_field_id(struct jclass *c)
@@ -156,8 +157,6 @@ struct jclass* jclass_create_arr_class(struct classloader *loader, const char *c
 {
     struct jclass *c = malloc(sizeof(*c)); // todo NULL
     c->access_flags = ACC_PUBLIC;
-//    static jclass *c = new JClass(ACC_PUBLIC);  // todo
-////        c->accessPermission.accessFlags = ACC_PUBLIC;
     c->pkg_name = ""; // todo 包名
     c->class_name = strdup(class_name);  // todo NULL
     c->loader = loader;
@@ -167,7 +166,7 @@ struct jclass* jclass_create_arr_class(struct classloader *loader, const char *c
     c->interfaces_count = 2;
     c->interfaces = malloc(sizeof(struct jclass *) * 2);//new JClass* [2];
     c->interfaces[0] = classloader_load_class(loader, "java/lang/Cloneable");//loader->loadClass("java/lang/Cloneable");
-    c->interfaces[1] = classloader_load_class(loader, "java/lang/Serializable");//loader->loadClass("java/io/Serializable");
+    c->interfaces[1] = classloader_load_class(loader, "java/io/Serializable");//loader->loadClass("java/io/Serializable");
 //
 ////    if (jclassClass != nullptr) {
 ////        c->classObj = new JClassObj(jclassClass, className);
@@ -354,13 +353,49 @@ bool jclass_is_subclass_of(const struct jclass *c, const struct jclass *father)
     return false;
 }
 
-struct jclass* jclass_array_class(struct jclass *c)
+char* get_arr_class_name(const char *class_name)
 {
-    // todo 好像不对，没有考虑基本类型的类
-    char array_class_name[strlen(c->class_name) + 4];
-    sprintf(array_class_name, "[L%s;\0", c->class_name);
-    return classloader_load_class(c->loader, array_class_name);
+    assert(class_name != NULL);
+
+    VM_MALLOC_EXT(char, strlen(class_name) + 8 /* big enough */, 0, array_class_name);
+
+    if (class_name[0] == '[') {
+        sprintf(array_class_name, "[%s\0", class_name);
+        return array_class_name;
+    }
+
+    for (int i = 0; i < PRIMITIVE_TYPE_COUNT; i++) {
+        if (strcmp(primitive_types[i].name, class_name) == 0) {
+            return strcpy(array_class_name, primitive_types[i].array_class_name);
+        }
+    }
+
+    sprintf(array_class_name, "[L%s;\0", class_name);
+    return array_class_name;
 }
+
+//struct jclass* jclass_array_class(struct jclass *c)
+//{
+//    assert(c != NULL);
+//
+//    // todo 好像不对，没有考虑基本类型的类，多维怎么搞
+//    char array_class_name[strlen(c->class_name) + 8]; // big enough
+//    sprintf(array_class_name, "[L%s;\0", c->class_name);
+//
+//    if (c->class_name[0] == '[') {
+//        sprintf(array_class_name, "[%s\0", c->class_name);
+//        return classloader_load_class(c->loader, array_class_name);
+//    }
+//
+//    for (int i = 0; i < PRIMITIVE_TYPE_COUNT; i++) {
+//        if (strcmp(primitive_types[i].name, c->class_name) == 0) {
+//            return classloader_load_class(c->loader, primitive_types[i].array_class_name);
+//        }
+//    }
+//
+//    sprintf(array_class_name, "[L%s;\0", c->class_name);
+//    return classloader_load_class(c->loader, array_class_name);
+//}
 
 bool jclass_is_accessible_to(const struct jclass *c, const struct jclass *visitor)
 {

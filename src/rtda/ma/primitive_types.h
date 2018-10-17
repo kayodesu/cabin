@@ -29,9 +29,11 @@ static const struct {
     { "double",  "D", "[D", "java/lang/Double" },
 };
 
+#define PRIMITIVE_TYPE_COUNT (sizeof(primitive_types) / sizeof(*primitive_types))
+
 static bool is_primitive_by_class_name(const char *class_name)
 {
-    for (int i = 0; i < sizeof(primitive_types)/sizeof(*primitive_types); i++) {
+    for (int i = 0; i < PRIMITIVE_TYPE_COUNT; i++) {
         if (strcmp(primitive_types[i].wrapper_class_name, class_name) == 0) {
             return true;
         }

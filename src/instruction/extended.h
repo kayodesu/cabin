@@ -7,27 +7,31 @@
 
 #include "../interpreter/stack_frame.h"
 
+/*
+ * 创建多维数组
+ * todo 注意这种情况，基本类型的多维数组 int[][][]
+ */
 static void multianewarray(struct stack_frame *frame)
 {
-#if 0
-    // todo
-    int index = frame->reader->readu2();
-    const string &className = frame->method->jclass->rtcp->getClassName(index);
-    JClass *arrClass = resolveClass(frame->method->jclass, className);
+    struct jclass *curr_class = frame->method->jclass;
+    int index = bcr_readu2(frame->reader);
+    const char *class_name = rtcp_get_class_name(curr_class->rtcp, index); // 这里解析出来的直接就是数组类。
+    printvm("multi array class name: %s\n", class_name);  ////////////////////////////////////////////
 
-    jint arrDim = frame->reader->readu1();
-    jint arrLens[arrDim];
-    for (jint i = arrDim - 1; i >= 0; i--) {
-        arrLens[i] = frame->operandStack.popInt();
-        if (arrLens[i] < 0) {
-            // todo  java.lang.NegativeArraySizeException
-            jvmAbort("error. java.lang.NegativeArraySizeException \n");
+    int arr_dim = bcr_readu1(frame->reader); // 多维数组的维度
+    size_t arr_lens[arr_dim]; // 每一维数组的长度
+    for (int i = arr_dim - 1; i >= 0; i--) {
+        int len = os_popi(frame->operand_stack);
+        if (len < 0) {  // todo 等于0的情况
+            jvm_abort("error. java.lang.NegativeArraySizeException. %d \n", len); // todo
             return;
         }
+        arr_lens[i] = (size_t) len;
     }
 
-    frame->operandStack.push(JArrayObj::newJArrayObj(arrClass, arrDim, arrLens));
-#endif
+    struct jclass *arr_class = classloader_load_class(curr_class->loader, class_name);
+    struct jarrobj *arr = jarrobj_create_mutil(arr_class, arr_dim, arr_lens);
+    os_pushr(frame->operand_stack, (jref) arr);
 }
 
 static void ifnull(struct stack_frame *frame)

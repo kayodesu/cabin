@@ -101,7 +101,12 @@ bool jclass_is_subclass_of(const struct jclass *c, const struct jclass *father);
 
 bool jclass_is_accessible_to(const struct jclass *c, const struct jclass *visitor);
 
-struct jclass* jclass_array_class(struct jclass *c);
+/*
+ * 需要调用者释放返回值(free())
+ */
+char* get_arr_class_name(const char *class_name);
+
+//struct jclass* jclass_array_class(struct jclass *c);
 
 static inline bool is_array(const struct jclass *c) { return c != NULL && c->class_name[0] == '['; }
 

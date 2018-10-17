@@ -11,7 +11,7 @@
 struct jclass* resolve_class(const struct jclass *visitor, const char *class_name)
 {
     if (class_name == NULL || strlen(class_name) == 0) {
-        jvm_abort("error. className is empty\n");
+        jvm_abort("error. class name is empty\n");
     }
 
     struct jclass *jclass = classloader_load_class(visitor->loader, class_name);

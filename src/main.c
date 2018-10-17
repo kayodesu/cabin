@@ -95,29 +95,29 @@ void test() {
 
     /* ---------------- NOT passed -------------------------*/
     // array
-//    startJVM("io/github/jiayanggo/array/ArrayDemo");
-//    startJVM("io/github/jiayanggo/array/ArrayTest");
-//    startJVM("io/github/jiayanggo/array/BubbleSort");
+//    start_jvm("io/github/jiayanggo/array/ArrayDemo");
+    start_jvm("io/github/jiayanggo/array/ArrayTest");
+//    start_jvm("io/github/jiayanggo/array/BubbleSort");
 
     // string
-    start_jvm("io/github/jiayanggo/string/StringTest");
+//    start_jvm("io/github/jiayanggo/string/StringTest");
 //    start_jvm("io/github/jiayanggo/string/Mutf8Test");
 
-//    startJVM("io/github/jiayanggo/HelloWorld");
+//    start_jvm("io/github/jiayanggo/HelloWorld");
 
-//    startJVM("io/github/jiayanggo/string/StringOut");
-//    startJVM("io/github/jiayanggo/ObjectTest");
-//    startJVM("io/github/jiayanggo/field/FieldsTest");
+//    start_jvm("io/github/jiayanggo/string/StringOut");
+//    start_jvm("io/github/jiayanggo/ObjectTest");
+//    start_jvm("io/github/jiayanggo/field/FieldsTest");
 
-//    startJVM("io/github/jiayanggo/exception/CatchTest");
-//    startJVM("io/github/jiayanggo/exception/UncaughtTest");
+//    start_jvm("io/github/jiayanggo/exception/CatchTest");
+//    start_jvm("io/github/jiayanggo/exception/UncaughtTest");
 
-//    startJVM("io/github/jiayanggo/array/BubbleSort");
+//    start_jvm("io/github/jiayanggo/array/BubbleSort");
 
-//    startJVM("io/github/jiayanggo/reflection/GetClassTest");
-//    startJVM("io/github/jiayanggo/reflection/FieldTest");
+//    start_jvm("io/github/jiayanggo/reflection/GetClassTest");
+//    start_jvm("io/github/jiayanggo/reflection/FieldTest");
 
-//    startJVM("io/github/jiayanggo/nio/ByteBufferTest");  // todo 没有实现的native方法。
+//    start_jvm("io/github/jiayanggo/nio/ByteBufferTest");  // todo 没有实现的native方法。
 
-//    startJVM("io/github/jiayanggo/instructions/ANewArray"); // todo 三维数组实现不正确。
+//    start_jvm("io/github/jiayanggo/instructions/ANewArray"); // todo 三维数组实现不正确。
 }

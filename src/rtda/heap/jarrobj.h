@@ -8,7 +8,14 @@
 #include "jobject.h"
 
 /*
- * 数组对象
+ * 数组对象。
+ * 数组类和普通的类是不同的。普通的类从class文件中加载，但是数组类由Java虚拟机在运行时生成。
+ * 数组的类名是左方括号（[）+ 数组元素的类型描述符；数组的类型描述符就是类名本身。
+ * 例如：
+ * int[]的类名是[I
+ * int[][]的类名是[[I
+ * Object[]的类名是[Ljava/lang/Object;
+ * String[][]的类名是[[Ljava/lang/String;
  */
 struct jarrobj {
     struct jobject *obj;
@@ -20,13 +27,15 @@ struct jarrobj {
 
 /*
  * 创建一维数组
+ * todo 说明 c 是什么东西
  */
-struct jarrobj *jarrobj_create(struct jclass *c, size_t arr_len);
+struct jarrobj *jarrobj_create(struct jclass *arr_class, size_t arr_len);
 
 /*
  * 创建多维数组
+ * todo 说明 c 是什么东西
  */
-struct jarrobj *jarrobj_create_mutil(struct jclass *c, size_t arr_dim, const size_t *arr_lens);
+struct jarrobj *jarrobj_create_mutil(struct jclass *arr_class, size_t arr_dim, const size_t *arr_lens);
 
 /*
  * 判断两个数组是否是同一类型的数组
