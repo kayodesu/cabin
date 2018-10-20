@@ -30,8 +30,8 @@ static void multianewarray(struct stack_frame *frame)
     }
 
     struct jclass *arr_class = classloader_load_class(curr_class->loader, class_name);
-    struct jarrobj *arr = jarrobj_create_mutil(arr_class, arr_dim, arr_lens);
-    os_pushr(frame->operand_stack, (jref) arr);
+    struct jobject *arr = jarrobj_create_multi(arr_class, arr_dim, arr_lens);
+    os_pushr(frame->operand_stack, arr);
 }
 
 static void ifnull(struct stack_frame *frame)

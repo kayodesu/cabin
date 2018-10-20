@@ -14,6 +14,9 @@ struct fieldvalues* fv_create(struct jclass *jclass, int fields_count)
     VM_MALLOC_EXT(struct fieldvalues, 1, fields_count * sizeof(struct slot), fv);
     fv->jclass = jclass;
     fv->fields_count = fields_count;
+    for (int i = 0; i < fields_count; i++) {
+        fv->values[i] = natslot();
+    }
 
     return fv;
 }
@@ -51,6 +54,7 @@ const struct slot* fv_get_by_id(const struct fieldvalues *fv, int id)
 {
     assert(fv != NULL);
     assert(id >= 0 && id < fv->fields_count);
+    assert(fv->values[id].t != NAT); // 此变量未初始化
     return fv->values + id;
 }
 

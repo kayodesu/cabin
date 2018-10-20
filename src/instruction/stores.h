@@ -134,12 +134,15 @@ static void func_name(struct stack_frame *frame) \
 { \
     raw_type value = os_pop(frame->operand_stack); \
     jint index = os_popi(frame->operand_stack); \
-    struct jarrobj *ao = (struct jarrobj *) os_popr(frame->operand_stack); \
+    struct jobject *ao = os_popr(frame->operand_stack); \
     if (ao == NULL) { \
         jvm_abort("error NULL Point Exception\n"); /* todo */ \
     } \
+    if (ao->t != ARRAY_OBJECT) { \
+        jvm_abort("error\n"); /* todo */ \
+    } \
      \
-    if (!check_type(ao->obj->jclass)) { \
+    if (!check_type(ao->jclass)) { \
         jvm_abort("error\n"); \
     } \
     if (!jarrobj_check_bounds(ao, index)) { \

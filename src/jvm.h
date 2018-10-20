@@ -9,6 +9,13 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <limits.h>
+#include <windef.h>
+
+extern bool verbose;
+
+#ifndef PATH_MAX
+#define PATH_MAX 260
+#endif
 
 // 启动类路径（bootstrap classpath）默认对应 jre/lib 目录，Java标准库（大部分在rt.jar里）位于该路径
 extern char bootstrap_classpath[PATH_MAX];

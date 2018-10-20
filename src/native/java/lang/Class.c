@@ -3,10 +3,8 @@
  */
 
 #include "../../registry.h"
-#include "../../../rtda/heap/jstrobj.h"
 #include "../../../util/encoding.h"
-#include "../../../rtda/heap/jclassobj.h"
-#include "../../../rtda/heap/jarrobj.h"
+#include "../../../rtda/heap/jobject.h"
 #include "../../../rtda/ma/jfield.h"
 #include "../../../rtda/heap/strpool.h"
 #include "../../../rtda/ma/primitive_types.h"
@@ -19,8 +17,9 @@
  */
 static void forName0(struct stack_frame *frame)
 {
-    struct jstrobj *so = (struct jstrobj *) slot_getr(frame->local_vars); // frame->local_vars[0]
-    const char *class_name = so->str;//unicode_to_utf8(jstrobj_value(so));
+    struct jobject *so = slot_getr(frame->local_vars); // frame->local_vars[0]
+    // todo 判断是不是 string Object
+    const char *class_name = so->s.str;//unicode_to_utf8(jstrobj_value(so));
 
 //    replace(name.begin(), name.end(), '.', '/'); // todo
 
@@ -44,8 +43,9 @@ static void forName0(struct stack_frame *frame)
 // static native Class<?> getPrimitiveClass(String name);
 static void getPrimitiveClass(struct stack_frame *frame)
 {
-    struct jstrobj *so = (struct jstrobj *) slot_getr(frame->local_vars); // frame->local_vars[0]
-    const char *class_name = so->str;// todo // unicode_to_utf8(jstrobj_value(so)); // 这里得到的 class_name 是诸如 "int", "float" 之类的值
+    struct jobject *so = slot_getr(frame->local_vars); // frame->local_vars[0]
+    // todo 判断是不是 string Object
+    const char *class_name = so->s.str;// todo // unicode_to_utf8(jstrobj_value(so)); // 这里得到的 class_name 是诸如 "int", "float" 之类的值
     struct jclass *c = classloader_load_class(frame->method->jclass->loader, class_name);
     os_pushr(frame->operand_stack, (jref) c->clsobj); //frame->operandStack.push(c->getClassObj());
 }
@@ -104,8 +104,9 @@ static void getPrimitiveClass(struct stack_frame *frame)
 // private native String getName0();
 static void getName0(struct stack_frame *frame)
 {
-    struct jclassobj *this_obj = (struct jclassobj *) slot_getr(frame->local_vars); // frame->local_vars[0]
-    const char *class_name = this_obj->class_name;
+    struct jobject *this_obj = slot_getr(frame->local_vars); // frame->local_vars[0]
+    // todo 判断是不是 class Object
+    const char *class_name = this_obj->c.class_name;
     // 这里需要的是 java.lang.Object 这样的类名，而非 java/lang/Object
     // 所以需要进行一下替换
 //    replace(class_name.begin(), class_name.end(), '/', '.'); todo
@@ -292,8 +293,9 @@ static void isArray(struct stack_frame *frame)
  */
 static void isPrimitive(struct stack_frame *frame)
 {
-    struct jclassobj *this_obj = (struct jclassobj *) slot_getr(frame->local_vars);
-    bool b = is_primitive_by_class_name(this_obj->class_name);  // todo
+    struct jobject *this_obj = slot_getr(frame->local_vars);
+    // todo 判断是不是 class Object
+    bool b = is_primitive_by_class_name(this_obj->c.class_name);  // todo
     os_pushi(frame->operand_stack, b ? 1 : 0); // todo
 }
 
@@ -539,11 +541,12 @@ static void getConstantPool(struct stack_frame *frame)
 // private native Field[] getDeclaredFields0(boolean publicOnly);
 static void getDeclaredFields0(struct stack_frame *frame)
 {
-    struct jclassobj *this_obj = (struct jclassobj *) slot_getr(frame->local_vars);
+    struct jobject *this_obj = slot_getr(frame->local_vars);
+    // todo 判断是不是 class Object
     bool public_only = slot_geti(frame->local_vars + 1) != 0;  // todo
 
     struct classloader *loader = frame->method->jclass->loader;
-    struct jclass *cls = classloader_load_class(loader, this_obj->class_name);
+    struct jclass *cls = classloader_load_class(loader, this_obj->c.class_name);
 
     struct jfield **fields;
     struct jfield *tmp[cls->fields_count];
@@ -558,7 +561,7 @@ static void getDeclaredFields0(struct stack_frame *frame)
 
     struct jclass *jlrf_cls = classloader_load_class(loader, "java/lang/reflect/Field");
     char *arr_cls_name = get_arr_class_name(jlrf_cls->class_name);
-    struct jarrobj *jlrfs = jarrobj_create(classloader_load_class(loader, arr_cls_name), fields_count);
+    struct jobject *jlrfs = jarrobj_create(classloader_load_class(loader, arr_cls_name), fields_count);
     free(arr_cls_name);
 
     /*
@@ -586,7 +589,7 @@ static void getDeclaredFields0(struct stack_frame *frame)
          * 名称比较用的 ‘==’ 来比较两个字符串而不是 equals，
          * 所以必须保证是从字符串池中拿到的同一个字符串。
          */
-        struct jstrobj *name = put_str_to_pool(frame->method->jclass->loader, fields[i]->name);
+        struct jobject *name = put_str_to_pool(frame->method->jclass->loader, fields[i]->name);
 
 //        printvm("%s   ********************************************************\n", unicode_to_utf8(jstrobj_value(name)));
         bool ee = IS_VOLATILE(jlrf_obj->jclass->access_flags);

@@ -11,10 +11,7 @@
 
 char bootstrap_classpath[PATH_MAX] = { 0 };
 char extension_classpath[PATH_MAX] = { 0 };
-char *user_classpath = "D:\\code\\jvm\\testclasses\\out"; // todo;
-
-//static const string JRE8_LIB_PATH = R"(C:\Program Files\Java\jre1.8.0_162\lib)";  // todo
-
+char *user_classpath = "D:\\code\\jvm\\test"; // todo;
 
 void start_jvm(const char *main_class_name)
 {
@@ -40,7 +37,6 @@ void start_jvm(const char *main_class_name)
 
     struct jmethod *main_method = jclass_lookup_static_method(main_class, "main", "([Ljava/lang/String;)V");
     if (main_method == NULL) {
-        // todo
         jvm_abort("没有找到main方法\n");  // todo
     } else {
         if (!IS_PUBLIC(main_method->access_flags)) {

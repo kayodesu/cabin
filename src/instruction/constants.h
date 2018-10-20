@@ -70,7 +70,7 @@ static void __ldc(struct stack_frame *frame, int index_bytes)
         printvm("ldc string\n");
         const char *str = rtcp_get_str(rtcp, index);
         printvm("%s\n", str);
-        struct jstrobj *so = get_str_from_pool(frame->method->jclass->loader, str);
+        struct jobject *so = get_str_from_pool(frame->method->jclass->loader, str);
         if (so == NULL) {
             jvm_abort("never goes here!\n");
         }
@@ -78,12 +78,11 @@ static void __ldc(struct stack_frame *frame, int index_bytes)
 //        JStringObj *o = getStrFromPool(frame->method->jclass->loader, strToJstr(rtcp->getStr(index)));
 //        os.push(o);  todo
     } else if (type == CLASS_CONSTANT) {
-        printvm("ldc class\n");
         const char *class_name = rtcp_get_class_name(rtcp, index);
+        printvm("ldc class, %s\n", class_name);  //////////////////////////////////////////////////
         struct jclass *c = classloader_load_class(frame->method->jclass->loader, class_name);
         os_pushr(os, (jref) c->clsobj);
 //        auto className = rtcp->getClassName(index);  todo
-////         jprintf("ldc the object of class %s\n", className.c_str()); // todo
 //        JClass *clazz = frame->method->jclass->loader->loadClass(className);
 //        os.push(clazz->classObj);
     } else {

@@ -18,7 +18,7 @@ struct fieldvalues {
     struct jclass *jclass;
 
     int fields_count;
-    struct slot values[11];
+    struct slot values[];
 };
 
 struct fieldvalues* fv_create(struct jclass *jclass, int fields_count);

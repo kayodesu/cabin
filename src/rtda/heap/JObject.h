@@ -20,14 +20,69 @@ struct jobject {
     // 保存所有实例变量的值
     // 包括此Object中定义的和从父类继承来的。
     struct fieldvalues *instance_field_values;
-//    struct slot *instance_fields_values;
     int instance_fields_count;
 
     struct jclass *jclass;
 
+    union {
+        struct { // array object
+            jint len; // len of array
+            size_t ele_size;  // size of single element
+            s1 *data;
+        } a;
+
+        struct { // string object
+            const char *str; // key in hash table
+            const jchar *wstr;
+        } s;
+
+        struct { // class object
+            char class_name[FILENAME_MAX]; // 必须是全限定类名，用作 hash 表中的 key
+        } c;
+    };
+
+    enum {
+        NORMAL_OBJECT,
+        ARRAY_OBJECT,
+        STRING_OBJECT,
+        CLASS_OBJECT
+    } t;
+
+    UT_hash_handle hh; // makes this structure hashable
 };
 
 struct jobject* jobject_create(struct jclass *c);
+
+struct jobject* jstrobj_create(struct classloader *loader, const char *str);
+
+/*
+ * @jclass_class: class of java/lang/Class
+ */
+struct jobject* jclassobj_create(struct jclass *jclass_class, const char *class_name);
+
+/*
+ * 创建一维数组
+ * todo 说明 c 是什么东西
+ */
+struct jobject *jarrobj_create(struct jclass *arr_class, jint arr_len);
+
+/*
+ * 创建多维数组
+ * todo 说明 c 是什么东西
+ */
+struct jobject *jarrobj_create_multi(struct jclass *arr_class, size_t arr_dim, const size_t *arr_lens);
+
+/*
+ * 判断两个数组是否是同一类型的数组
+ * todo 这里的判断略简陋
+ */
+bool jarrobj_is_same_type(const struct jobject *one, const struct jobject *other);
+
+bool jarrobj_check_bounds(const struct jobject *o, jint index);
+
+void jarrobj_copy(struct jobject *dst, jint dst_pos, const struct jobject *src, jint src_pos, jint len);
+
+void* jarrobj_index(struct jobject *ao, jint index);
 
 void jobject_destroy(struct jobject *o);
 

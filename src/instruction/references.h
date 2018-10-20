@@ -8,9 +8,8 @@
 #include "../interpreter/stack_frame.h"
 #include "../rtda/ma/jmethod.h"
 #include "../rtda/ma/jfield.h"
-#include "../rtda/heap/jarrobj.h"
-#include "../rtda/heap/jstrobj.h"
 #include "../util/encoding.h"
+#include "../rtda/heap/jobject.h"
 
 /*
  * 类的初始化在下列情况下触发：
@@ -262,7 +261,9 @@ static void getfield(struct stack_frame *frame)
         jvm_abort("error\n");
     }
 
-    os_pushs(frame->operand_stack, fv_get_by_id(obj->instance_field_values, ref->resolved_field->id));
+    const struct slot *s = fv_get_by_id(obj->instance_field_values, ref->resolved_field->id);
+//    slot_print(s); /////////////////////////////  todo ///////////////////////////////////////////////////////////////////
+    os_pushs(frame->operand_stack, s);
 //    os_pushs(frame->operand_stack, obj->instance_fields_values + field->id);
 //    auto value = obj->getFieldValue(field->id);
 //    frame->operandStack.push(value);
@@ -306,9 +307,8 @@ static void athrow(struct stack_frame *frame)
     }
 
     // todo UncaughtException
-    struct jstrobj *so = (struct jstrobj *)
-            slot_getr(fv_get_by_nt(exception->instance_field_values, "detailMessage", "Ljava/lang/String;"));
-    jvm_abort("UncaughtException. %s. %s\n", exception->jclass->class_name, so->str);  // todo
+    struct jobject *so = slot_getr(fv_get_by_nt(exception->instance_field_values, "detailMessage", "Ljava/lang/String;"));
+    jvm_abort("UncaughtException. %s. %s\n", exception->jclass->class_name, so->s.str);  // todo
 //    auto ref = (exception->getFieldValue("detailMessage", "Ljava/lang/String;")).getRef();
 //    JStringObj *o = dynamic_cast<JStringObj *>(ref);
 //    jvm_abort("UncaughtException. %s. %s\n", exception->jclass->class_name, jstrToStr(o->value()).c_str());
@@ -468,14 +468,15 @@ static void invokevirtual(struct stack_frame *frame)
         args[i] = *os_pops(frame->operand_stack);
     }
 
-    jref obj = slot_getr(args); // args[0]
+    struct jobject *obj = slot_getr(args); // args[0]
     if (obj == NULL) {
         if (strcmp(ref->resolved_method->name, "println") == 0) {
             // todo   println  暂时先这么搞
             const struct slot *arg = args + 1; // println 的参数
             if (arg->t == REFERENCE) {
-                struct jstrobj *so = (struct jstrobj *) slot_getr(arg);
-                printvm("%s\n", so->str);
+                struct jobject *so = slot_getr(arg);
+                // todo 判断 是不是 string object
+                printvm("%s\n", so->s.str);
             } else if (arg->t == JINT) {
                 printvm("%d\n", slot_geti(arg));
             } else {
@@ -494,6 +495,7 @@ static void invokevirtual(struct stack_frame *frame)
 //    }
 
 //    jprintf("RRRRRRRRRRRRRRRRRR, %s, %s\n", obj->getClass()->className.c_str(), ref.className.c_str());
+
 
     // 从对象的类中查找真正要调用的方法
     struct jmethod *method = jclass_lookup_method(obj->jclass, ref->name, ref->descriptor);
@@ -641,19 +643,19 @@ static void anewarray(struct stack_frame *frame)
 
 static void arraylength(struct stack_frame *frame)
 {
-    jref obj = os_popr(frame->operand_stack);
-    if (obj == NULL) {
+    struct jobject *arr = os_popr(frame->operand_stack);
+    if (arr == NULL) {
         // todo java.lang.NullPointerException
         jvm_abort("error. java.lang.NullPointerException\n");
     }
-    struct jarrobj *arr = (struct jarrobj *) obj;
+    // todo 判断是不是 array object
 
     // todo 多维数组也可以？？？？？
 //    if (!is_one_dimension_array(arr->class)) {
 //        jprintf("error.\n"); // todo 一维数组?
 //    }
 
-    os_pushi(frame->operand_stack, arr->len);
+    os_pushi(frame->operand_stack, arr->a.len);
 }
 
 static void monitorenter(struct stack_frame *frame)

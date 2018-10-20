@@ -3,7 +3,7 @@
  */
 
 #include "../../registry.h"
-#include "../../../rtda/heap/jclassobj.h"
+#include "../../../rtda/heap/jobject.h"
 
 //// public static native Class<?> getCallerClass(int level)
 //static void getCallerClass(StackFrame *frame) {
@@ -44,8 +44,9 @@ static void getCallerClass(struct stack_frame *frame)
 // public static native int getClassAccessFlags(Class<?> type)
 static void getClassAccessFlags(struct stack_frame *frame)
 {
-    struct jclassobj *type = (struct jclassobj *) slot_getr(frame->local_vars);
-    os_pushi(frame->operand_stack, type->obj->jclass->access_flags);
+    struct jobject *type = slot_getr(frame->local_vars);
+    // todo 判断是不是 class object
+    os_pushi(frame->operand_stack, type->jclass->access_flags);
 }
 
 void sun_reflect_Reflection_registerNatives(struct stack_frame *frame)

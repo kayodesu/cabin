@@ -116,13 +116,15 @@ static void func_name(struct stack_frame *frame) \
     /* frame->method->reset(); */ \
     jthread_pop_frame(frame->thread); \
     \
-    struct stack_frame *invokeFrame = jthread_top_frame(frame->thread); \
+    struct stack_frame *invoke_frame = jthread_top_frame(frame->thread); \
     /* todo invokeFrame 会不会为null */ \
-    if (invokeFrame == NULL) { \
+    if (invoke_frame == NULL) { \
         jvm_abort("never goes here."); \
     } \
-    os_push##T(invokeFrame->operand_stack, os_pop##T(frame->operand_stack)); \
     \
+    os_push##T(invoke_frame->operand_stack, os_pop##T(frame->operand_stack)); \
+    \
+    printvm("fffffffffffffff\n");\
     sf_exe_over(frame); \
 }
 

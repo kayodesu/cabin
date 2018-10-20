@@ -14,7 +14,7 @@
 
 // key 的组成为 "class_name~method_name~method_descriptor" 的形式，
 // key 的长度要足够存储上述格式的字符和外加字符串结尾的'\0'
-#define KEY_LEN (3 * NAME_MAX + 3)
+#define KEY_LEN (3 * PATH_MAX + 3)  // todo PATH_MAX 对不对
 
 static struct native_method {
     char key[KEY_LEN];

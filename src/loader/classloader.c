@@ -7,12 +7,12 @@
 #include <sys/stat.h>
 #include "classloader.h"
 #include "../util/util.h"
-#include "../../lib/zlib/minizip/unzip.h"
+#include "minizip/unzip.h"
 #include "../rtda/ma/jclass.h"
 #include "../rtda/ma/access.h"
 #include "../rtda/ma/jfield.h"
 #include "../../lib/uthash/utarray.h"
-#include "../rtda/heap/jclassobj.h"
+#include "../rtda/heap/jobject.h"
 
 struct bytecode_content {
     s1 *bytecode;
@@ -118,7 +118,7 @@ static struct bytecode_content read_class_from_dir(const char *__dir, const char
 
         DIR *dir = opendir(path);
         if (dir == NULL) {
-            printvm("error. %s\n", path);
+            printvm("open dir failed. %s\n", path);
         }
 
         struct dirent *entry;
@@ -136,7 +136,7 @@ static struct bytecode_content read_class_from_dir(const char *__dir, const char
                 *tmp = '/';
             }
 
-            lstat(abspath, &statbuf);
+            stat(abspath, &statbuf);
             if (S_ISDIR(statbuf.st_mode)) {
                 tmp = abspath;
                 // 新路径，插入头部。
@@ -206,9 +206,9 @@ static struct bytecode_content read_class(const char *class_name)
    return read_class_from_dir(user_classpath, class_name);
 }
 
-struct jclassobj* get_jclass_obj_from_pool(struct classloader *loader, const char *class_name)
+static struct jobject* get_jclass_obj_from_pool(struct classloader *loader, const char *class_name)
 {
-    struct jclassobj *clsobj;
+    struct jobject *clsobj;
     HASH_FIND_STR(loader->classobj_pool, class_name, clsobj);
     if (clsobj != NULL) {
         printvm("find out class obj: %s\n", class_name);  /////////////////////////////////////

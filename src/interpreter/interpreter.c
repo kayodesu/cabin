@@ -13,17 +13,15 @@ void interpret(struct jthread *thread)
         struct stack_frame *frame = jthread_top_frame(thread);
         struct bytecode_reader *reader = frame->reader;
 
-//#ifdef VM_STACK_TRACE
-        printvm("executing frame: %s, pc = %lu\n", sf_to_string(frame), reader->pc);
-//#endif
+        if (verbose)
+            printvm("executing frame: %s, pc = %lu\n", sf_to_string(frame), reader->pc);
 
         while (bcr_has_more(reader)) {
             frame->thread->pc = reader->pc;
             u1 opcode = bcr_readu1(reader);//reader->readu1();
 
-//#ifdef INSTRUCTION_TRACE
-            printvm("%d(0x%x), %s, pc = %lu\n", opcode, opcode, instructions[opcode].name, reader->pc);
-//#endif
+            if (verbose)
+                printvm("%d(0x%x), %s, pc = %lu\n", opcode, opcode, instructions[opcode].name, reader->pc);
 
             assert(instructions[opcode].code == opcode);
             assert(instructions[opcode].exec != NULL);

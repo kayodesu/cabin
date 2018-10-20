@@ -28,7 +28,7 @@ struct jclass {
     u2 major_version;
 
     // object of java/lang/Class of this class
-    struct jclassobj *clsobj;
+    struct jobject *clsobj;
 
     char *pkg_name;
 
@@ -107,7 +107,16 @@ char* get_arr_class_name(const char *class_name);
 
 //struct jclass* jclass_array_class(struct jclass *c);
 
-static inline bool is_array(const struct jclass *c) { return c != NULL && c->class_name[0] == '['; }
+static inline bool is_array(const struct jclass *c)
+{
+    return c != NULL && c->class_name[0] == '[';
+}
+
+static inline bool is_string(const struct jclass *c)
+{
+    return c != NULL && strcmp(c->class_name, "java/lang/String") == 0;  // todo 对不对
+}
+
 
 /*
   * 是否是基本类型的数组（当然是一维的）。

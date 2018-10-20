@@ -6,6 +6,7 @@
 #define JVM_JTYPES_H
 
 #include <stdint.h>
+#include "jvm.h"
 
 typedef int8_t s1;  // s: signed
 typedef int16_t s2;
@@ -60,6 +61,12 @@ static const char *get_jtype_name(enum jtype t)
         "jbyte", "jbool", "jchar", "jshort", "jint",
         "jlong", "jfloat", "jdouble", "reference", "placeholder", "not a tpe"
     };
+
+    if (t < 0 || t >= sizeof(names) / sizeof(*names)) {
+        printvm("访问越界, %d\n", t);
+        return "unknown";
+    }
+
     return names[t];
 }
 

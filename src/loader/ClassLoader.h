@@ -24,7 +24,7 @@ struct classloader {
 
     struct jclass *loaded_class_pool;
 
-    struct jclassobj *classobj_pool; // java.lang.Class 类的对象池     std::set<JClassObj *>
+    struct jobject *classobj_pool; // java.lang.Class 类的对象池     std::set<JClassObj *>
 };
 
 struct classloader* classloader_create();

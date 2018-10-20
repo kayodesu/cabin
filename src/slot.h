@@ -27,12 +27,13 @@ struct slot {
     } v;
 };
 
-#define islot(i0) ((struct slot) { JINT, .v.i = (i0) })
-#define fslot(f0) ((struct slot) { JFLOAT, .v.f = (f0) })
-#define lslot(l0) ((struct slot) { JLONG, .v.l = (l0) })
-#define dslot(d0) ((struct slot) { JDOUBLE, .v.d = (d0) })
-#define rslot(r0) ((struct slot) { REFERENCE, .v.r = (r0) })
-#define phslot() ((struct slot) { PH })
+#define islot(i0) ((struct slot) { .t = JINT, .v.i = (i0) })
+#define fslot(f0) ((struct slot) { .t = JFLOAT, .v.f = (f0) })
+#define lslot(l0) ((struct slot) { .t = JLONG, .v.l = (l0) })
+#define dslot(d0) ((struct slot) { .t = JDOUBLE, .v.d = (d0) })
+#define rslot(r0) ((struct slot) { .t = REFERENCE, .v.r = (r0) })
+#define phslot() ((struct slot)  { .t = PH })
+#define natslot() ((struct slot) { .t = NAT })
 
 // 设置 slot 的值
 // s: 要设置值的 slot 的地址
@@ -112,39 +113,49 @@ static inline bool slot_is_category_one(const struct slot *s)
     return !slot_is_ph(s) && !slot_is_category_two(s);
 }
 
-//static inline void slot_seti(struct slot *s, jint i)
-//{
-//    assert(s);
-//    s->t = JINT;
-//    s->v.i = i;
-//}
-//
-//static inline void slot_setf(struct slot *s, jfloat f)
-//{
-//    assert(s);
-//    s->t = JFLOAT;
-//    s->v.f = f;
-//}
-//
-//static inline void slot_setl(struct slot *s, jlong l)
-//{
-//    assert(s);
-//    s->t = JLONG;
-//    s->v.l = l;
-//}
-//
-//static inline void slot_setd(struct slot *s, jdouble d)
-//{
-//    assert(s);
-//    s->t = JDOUBLE;
-//    s->v.d = d;
-//}
-//
-//static inline void slot_setr(struct slot *s, jref r)
-//{
-//    assert(s);
-//    s->t = REFERENCE;
-//    s->v.r = r;
-//}
+static inline void slot_print(const struct slot *s)
+{
+    if (s == NULL) {
+        printvm("slot: NULL");
+        return;
+    }
+
+    switch (s->t) {
+        case JINT:
+            printvm("slot: JINT, %d\n", s->v.i);
+            break;
+        case JBYTE:
+            printvm("slot: JBYTE, %d\n", s->v.i);
+            break;
+        case JBOOL:
+            printvm("slot: JBOOL, %s\n", s->v.i == 0 ? "false" : "true");
+            break;
+        case JCHAR:
+            printvm("slot: JCHAR, %c\n", s->v.i);
+            break;
+        case JSHORT:
+            printvm("slot: JSHORT, %d\n", s->v.i);
+            break;
+        case JLONG:
+            printvm("slot: JLONG, %ld\n", s->v.l);
+            break;
+        case JFLOAT:
+            printvm("slot: JFLOAT, %f\n", s->v.f);
+            break;
+        case JDOUBLE:
+            printvm("slot: JDOUBLE, %f\n", s->v.d);
+            break;
+        case REFERENCE:
+            printvm("slot: REFERENCE, %p\n", s->v.r);
+            break;
+        case PH:
+        case NAT:
+            printvm("slot: NAT\n", get_jtype_name(s->t));
+            break;
+        default:
+            printvm("slot: error. t = %d\n", s->t);
+            break;
+    }
+}
 
 #endif //JVM_SLOT_H

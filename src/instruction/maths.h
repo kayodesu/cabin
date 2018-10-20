@@ -64,7 +64,8 @@ static void __frem(struct stack_frame *frame)
 {
     jfloat v2 = os_popf(frame->operand_stack);
     jfloat v1 = os_popf(frame->operand_stack);
-    os_pushf(frame->operand_stack, dremf(v1, v2)); /* todo 相加溢出的问题 */
+    jvm_abort("not implement\n");
+//    os_pushf(frame->operand_stack, dremf(v1, v2)); /* todo 相加溢出的问题 */
 }
 
 ////////////////////////////
@@ -86,7 +87,8 @@ static void __drem(struct stack_frame *frame)
 {
     jdouble v2 = os_popd(frame->operand_stack);
     jdouble v1 = os_popd(frame->operand_stack);
-    os_pushd(frame->operand_stack, drem(v1, v2)); /* todo 相加溢出的问题 */
+    jvm_abort("未实现\n");
+//    os_pushd(frame->operand_stack, drem(v1, v2)); /* todo 相加溢出的问题 */
 }
 
 #define NEG(T) \

@@ -29,7 +29,7 @@ static inline void os_clear(struct operand_stack *os)
 
 void os_destroy(struct operand_stack *os);
 
-struct slot* os_top(struct operand_stack *os);
+const struct slot* os_top(struct operand_stack *os);
 
 struct slot* os_pops(struct operand_stack *os);
 
@@ -65,96 +65,5 @@ void os_pushs(struct operand_stack *os, const struct slot *s);
         jref: os_pushr, \
         const struct slot *: os_pushs \
     )(os, v)
-
-
-#if 0
-public:
-    explicit OperandStack(u2 capacity): capacity(capacity), slots(new Slot[capacity]) { }
-
-    ~OperandStack() {
-        delete[] slots;
-    }
-
-    void push(jint v) {
-        slots[size++].set(v);
-    }
-
-    void push(jfloat v) {
-        slots[size++].set(v);
-    }
-
-    void push(jref v) {
-        slots[size++].set(v);
-    }
-
-    // long consumes two slots
-    void push(jlong v) {
-        slots[size++].set(v);
-        slots[size++].ph();
-    }
-
-    // double consumes two slots
-    void push(jdouble v) {
-        slots[size++].set(v);
-        slots[size++].ph();
-    }
-
-    void push(const Slot& s) {
-        slots[size] = s;
-        size += (s.isCategoryTwo() ? 2 : 1);
-    }
-
-//    void directPush(const Slot& s) {
-//        slots[size++] = s;
-//    }
-
-
-    jbyte popByte() {
-        return jtypes::i2b(slots[--size].getInt());
-    }
-
-    jchar popChar() {
-        return jtypes::i2c(slots[--size].getInt());
-    }
-
-    jshort popShort() {
-        return jtypes::i2s(slots[--size].getInt());
-    }
-
-    jint popInt() {
-        return slots[--size].getInt();
-    }
-
-    jfloat popFloat() {
-        return slots[--size].getFloat();
-    }
-
-    jref popRef() {
-        return slots[--size].getRef();
-    }
-
-    jlong popLong() {
-        size -= 2;
-        return slots[size].getLong();
-    }
-
-    jdouble popDouble() {
-        size -= 2;
-        return slots[size].getDouble();
-    }
-
-    Slot popSlot() {
-        return slots[--size];
-    }
-
-    const Slot& top() const {
-        return slots[size - 1];
-    }
-
-    void clear() {
-        size = 0;
-    }
-
-#endif
 
 #endif //JVM_OPERAND_STACK_H
