@@ -1,3 +1,4 @@
+package thread;
 
 public class WaitTest {
     

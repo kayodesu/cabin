@@ -40,6 +40,6 @@ bool jfield_is_accessible_to(const struct jfield *field, const struct jclass *vi
 
 struct jclassobj* jfield_get_type(struct jfield *field);
 
-void jfield_print(const struct jfield *field);
+char* jfield_to_string(const struct jfield *field);
 
 #endif //JVM_JFIELD_H

@@ -1,3 +1,5 @@
+package network;
+
 import java.net.URL;
 
 public class UrlTest {

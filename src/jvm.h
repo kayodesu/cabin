@@ -40,6 +40,11 @@ struct name_and_type {
     const char *descriptor;
 };
 
+// 一个全局的buf，代码中任何地方皆可使用，
+// 控制好多线程访问冲突即可。
+#define GLOBAL_BUF_LEN 10240  // big enough?
+char global_buf[GLOBAL_BUF_LEN];
+
 void start_jvm(const char *main_class_name);
 
 #define printvm(...) do { printf("%s: %d: ", __FILE__, __LINE__); printf(__VA_ARGS__); } while(false)

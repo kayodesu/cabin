@@ -48,6 +48,12 @@ void os_pushf(struct operand_stack *os, jfloat f);
 void os_pushl(struct operand_stack *os, jlong l);
 void os_pushd(struct operand_stack *os, jdouble d);
 void os_pushr(struct operand_stack *os, jref r);
+
+/*
+ * 不判断 slot 的类型直接 push
+ */
+void os_push_slot_directly(struct operand_stack *os, const struct slot *s);
+
 void os_pushs(struct operand_stack *os, const struct slot *s);
 
 // 将一个值推入操作栈中

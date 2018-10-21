@@ -1,3 +1,4 @@
+package reflection;
 
 public class GenericTest {
     

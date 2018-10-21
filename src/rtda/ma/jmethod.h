@@ -45,7 +45,7 @@ bool jmethod_is_accessible_to(const struct jmethod *method, const struct jclass 
 
 int jmethod_find_exception_handler(struct jmethod *method, struct jclass *exception_type, size_t pc);
 
-void jmethod_print(const struct jmethod *method);
+char *jmethod_to_string(const struct jmethod *method);
 
 void jmethod_destroy(struct jmethod *m);
 

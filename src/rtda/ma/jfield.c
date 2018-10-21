@@ -115,8 +115,7 @@ bool jfield_is_accessible_to(const struct jfield *field, const struct jclass *vi
 
 struct jclassobj* jfield_get_type(struct jfield *field)
 {
-    printvm("未实现的功能\n");
-    jfield_print(field);
+    printvm("未实现的功能   %s\n", jfield_to_string(field));
 //    jvm_abort("\n"); // todo
 #if 0
     if (type != nullptr) {
@@ -147,13 +146,13 @@ struct jclassobj* jfield_get_type(struct jfield *field)
 //    jvmAbort("error\n");
 }
 
-void jfield_print(const struct jfield *field)
+char* jfield_to_string(const struct jfield *field)
 {
     if (field == NULL) {
-        printvm("NULL\n");
-        return;
+        return "jfield: NULL";
     }
 
-    printvm("field: %s~%s~%s\n", field->jclass->class_name, field->name, field->descriptor);
+    snprintf(global_buf, GLOBAL_BUF_LEN, "field: %s~%s~%s\n", field->jclass->class_name, field->name, field->descriptor);
+    return global_buf;
 }
 

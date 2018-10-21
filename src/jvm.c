@@ -27,7 +27,8 @@ void start_jvm(const char *main_class_name)
     initJVM(classLoader, mainThread);
 #endif
 
-    printvm("LOADING main class!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+    if (verbose)
+        printvm("loading main class: %s !!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", main_class_name);
 
     struct jclass *main_class = classloader_load_class(loader, main_class_name);
     if (main_class == NULL) {

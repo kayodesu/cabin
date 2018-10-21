@@ -9,6 +9,13 @@
 #include "../fieldvalues.h"
 #include "../ma/jclass.h"
 
+enum jobject_type {
+    NORMAL_OBJECT,
+    ARRAY_OBJECT,
+    STRING_OBJECT,
+    CLASS_OBJECT
+};
+
 struct jobject {
     /*
      * 对象头
@@ -41,12 +48,7 @@ struct jobject {
         } c;
     };
 
-    enum {
-        NORMAL_OBJECT,
-        ARRAY_OBJECT,
-        STRING_OBJECT,
-        CLASS_OBJECT
-    } t;
+    enum jobject_type t;
 
     UT_hash_handle hh; // makes this structure hashable
 };
@@ -71,6 +73,36 @@ struct jobject *jarrobj_create(struct jclass *arr_class, jint arr_len);
  * todo 说明 c 是什么东西
  */
 struct jobject *jarrobj_create_multi(struct jclass *arr_class, size_t arr_dim, const size_t *arr_lens);
+
+#define STROBJ_CHECK(so) \
+    do { \
+        if ((so) == NULL) { \
+            jvm_abort("NULL point\n"); \
+        } \
+        if ((so)->t != STRING_OBJECT) { \
+            jvm_abort("is not string object. %d\n", (so)->t); \
+        } \
+    } while (false)
+
+#define ARROBJ_CHECK(ao) \
+    do { \
+        if ((ao) == NULL) { \
+            jvm_abort("NULL point\n"); \
+        } \
+        if ((ao)->t != ARRAY_OBJECT) { \
+            jvm_abort("is not array object. %d\n", (ao)->t); \
+        } \
+    } while (false)
+
+#define CLSOBJ_CHECK(co) \
+    do { \
+        if ((co) == NULL) { \
+            jvm_abort("NULL point\n"); \
+        } \
+        if ((co)->t != CLASS_OBJECT) { \
+            jvm_abort("is not class object. %d\n", (co)->t); \
+        } \
+    } while (false)
 
 /*
  * 判断两个数组是否是同一类型的数组

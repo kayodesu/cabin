@@ -9,9 +9,6 @@
 static void cal_arg_slot_count(struct jmethod *method)
 {
     method->arg_slot_count = 0;
-    if (strcmp(method->name, "println") == 0) {
-        int i = 3;
-    }
 
     const char *b = strchr(method->descriptor, '(');
     const char *e = strchr(method->descriptor, ')');
@@ -143,9 +140,8 @@ struct jmethod* jmethod_create(const struct jclass *c, const struct member_info 
         method->max_locals = method->arg_slot_count; // todo 因为本地方法帧的局部变量表只用来存放参数值，所以把argSlotCount赋给maxLocals字段刚好。
 
         size_t code_len = 2;
-//        s1 *code = malloc(sizeof(s1) * code_len);
         VM_MALLOC(s1, code);
-        code[0] = (s1) 0xfe;
+        code[0] = (s1) 0xfe;  // todo  0xfe 是啥
         const char *t = strchr(method->descriptor, ')'); // find return  todo how?????
         if (t == NULL) {
             //todo error
@@ -228,12 +224,12 @@ int jmethod_find_exception_handler(struct jmethod *method, struct jclass *except
     return -1;
 }
 
-void jmethod_print(const struct jmethod *method)
+char *jmethod_to_string(const struct jmethod *method)
 {
     if (method == NULL) {
-        printvm("NULL\n");
-        return;
+        return "method: NULL";
     }
-
-    printvm("method: %s~%s~%s\n", method->jclass->class_name, method->name, method->descriptor);
+    snprintf(global_buf, GLOBAL_BUF_LEN,
+             "method: %s~%s~%s\0", method->jclass->class_name, method->name, method->descriptor);
+    return global_buf;
 }

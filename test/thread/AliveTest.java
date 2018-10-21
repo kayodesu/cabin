@@ -1,4 +1,4 @@
-package io.github.jiayanggo.thread;
+package thread;
 
 public class AliveTest {
     

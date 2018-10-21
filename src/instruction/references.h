@@ -24,11 +24,9 @@
 static void __new(struct stack_frame *frame)
 {
     struct bytecode_reader *reader = frame->reader;
-
     const char *class_name = rtcp_get_class_name(frame->method->jclass->rtcp, bcr_readu2(reader)); // todo reads2  ?????
-//    const string className = frame->method->jclass->rtcp->getClassName(s);
     if (class_name == NULL || strlen(class_name) == 0) {
-        jvm_abort("error. className is empty\n");
+        jvm_abort("error. class name is empty\n");
     }
 
     struct jclass *c = resolve_class(frame->method->jclass, class_name);  // todo
@@ -40,63 +38,20 @@ static void __new(struct stack_frame *frame)
 
     if (IS_INTERFACE(c->access_flags) || IS_ABSTRACT(c->access_flags)) {
 //        // todo 抛出 InstantiationError 异常
-        jvm_abort("error\n");
+        jvm_abort("java.lang.InstantiationError\n");
     }
 
     struct jobject *o;
     if (strcmp(c->class_name, "java/lang/String") == 0) {
 //        o = new JStringObj(classLoader); // todo 在哪里找字符串的内容？
-        jvm_abort("fffffffffffffff");
+        o = jstrobj_create(c->loader, "");
+//        jvm_abort("fffffffffffffff");
     } else {
         o = jobject_create(c); //JObject::newJobject(c);
     }
 
     os_pushr(frame->operand_stack, o); // frame->operandStack.push(o);
 }
-
-//#define RESOLVE_FIELD_REF_CODE_BLOCK(is_static) \
-//    struct jclass *curr_class = frame->method->jclass; \
-//     \
-//    int index = bcr_readu2(frame->reader); \
-//    struct field_ref *ref = rtcp_get_field_ref(curr_class->rtcp, index); \
-//     \
-//    struct jclass *c = resolve_class(curr_class, ref->class_name); \
-//    if (!c->inited) { \
-//        jclass_clinit(c, frame);  \
-//        /* 将pc指向本条指令之前，初始化完类后，继续执行本条指令。*/ \
-//        bcr_set_pc(frame->reader, frame->thread->pc); \
-//        return; \
-//    } \
-//    struct jfield *field = resolve_field(curr_class, ref, is_static); \
-//    if (field == NULL) { \
-//        /* todo */ \
-//        jvm_abort("error\n"); \
-//    }
-
-//static struct jfield* fetch_field(struct stack_frame *frame, bool is_static)
-//{
-//    struct jclass *curr_class = frame->method->jclass;
-//
-//    int index = bcr_readu2(frame->reader);
-//    struct field_ref *ref = rtcp_get_field_ref(curr_class->rtcp, index);
-//
-//    struct jclass *c = resolve_class(curr_class, ref->class_name);
-//    if (!c->inited) {
-//        jclass_clinit(c, frame);
-//        /* 将pc指向本条指令之前，初始化完类后，继续执行本条指令。*/
-//        bcr_set_pc(frame->reader, frame->thread->pc);
-//        return NULL;
-//    }
-//    struct jfield *field = resolve_field(curr_class, ref, is_static);
-//    if (field == NULL) {
-//        /* todo */
-//        jvm_abort("error\n");
-//    }
-//
-//    // todo c 和 field->jclass 是不是一样的
-//
-//    return field;
-//}
 
 /*
  * putstatic指令给类的某个静态变量赋值，它需要两个操作数。
@@ -202,16 +157,8 @@ static void putfield(struct stack_frame *frame)
     if (IS_FINAL(ref->resolved_field->access_flags)) {
         // todo
         if (frame->method->jclass != ref->resolved_class || frame->method->name != "<init>") {
-            // panic("java.lang.IllegalAccessError")
-            jvm_abort("error\n");
+            jvm_abort("java.lang.IllegalAccessError\n"); // todo
         }
-    }
-
-    jref obj = os_popr(frame->operand_stack);//frame->operandStack.popRef();
-    if (obj == NULL) {
-        // todo
-        // java.lang.NullPointerException
-        jvm_abort("error\n");
     }
 
     // todo
@@ -238,6 +185,11 @@ static void putfield(struct stack_frame *frame)
         jvm_abort("error, %s\n", ref->resolved_field->descriptor);
     }
 
+    jref obj = os_popr(frame->operand_stack);
+    if (obj == NULL) {
+        jvm_abort("java.lang.NullPointerException\n"); // todo
+    }
+
     fv_set_by_id(obj->instance_field_values, ref->resolved_field->id, &s);
 }
 
@@ -256,26 +208,19 @@ static void getfield(struct stack_frame *frame)
 
     jref obj = os_popr(frame->operand_stack);
     if (obj == NULL) {
-        // todo
-        // java.lang.NullPointerException
-        jvm_abort("error\n");
+        jvm_abort("java.lang.NullPointerException\n");  // todo
     }
 
+    printvm("fffffffffffffff       %s\n", jfield_to_string(ref->resolved_field));
     const struct slot *s = fv_get_by_id(obj->instance_field_values, ref->resolved_field->id);
-//    slot_print(s); /////////////////////////////  todo ///////////////////////////////////////////////////////////////////
     os_pushs(frame->operand_stack, s);
-//    os_pushs(frame->operand_stack, obj->instance_fields_values + field->id);
-//    auto value = obj->getFieldValue(field->id);
-//    frame->operandStack.push(value);
 }
 
 static void athrow(struct stack_frame *frame)
 {
-    jref exception = os_popr(frame->operand_stack);//frame->operandStack.popRef();
+    jref exception = os_popr(frame->operand_stack);
     if (exception == NULL) {
-        // todo
-        // java.lang.NullPointerException
-        jvm_abort("error\n");
+        jvm_abort("java.lang.NullPointerException\n");  // todo
     }
 
     struct jthread *curr_thread = frame->thread;
@@ -459,8 +404,7 @@ static void invokevirtual(struct stack_frame *frame)
     resolve_non_static_method_ref(curr_class, ref);
 
     if (ref->resolved_method->arg_slot_count < 1) {
-        jmethod_print(ref->resolved_method);
-        jvm_abort("error\n");
+        jvm_abort("%d, %s\n", ref->resolved_method->arg_slot_count, jmethod_to_string(ref->resolved_method));
     }
 
     struct slot args[ref->resolved_method->arg_slot_count];
@@ -485,6 +429,7 @@ static void invokevirtual(struct stack_frame *frame)
             return;
         }
         // todo  java.lang.NullPointerException
+        printvm("%s~%s~%s\n", ref->class_name, ref->resolved_method->name, ref->resolved_method->descriptor);
         jvm_abort("java.lang.NullPointerException\n");
     }
 

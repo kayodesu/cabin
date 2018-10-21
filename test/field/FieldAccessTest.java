@@ -1,3 +1,4 @@
+package field;
 
 public class FieldAccessTest {
     

@@ -13,6 +13,7 @@
 #include "../rtda/ma/jfield.h"
 #include "../../lib/uthash/utarray.h"
 #include "../rtda/heap/jobject.h"
+#include "../rtda/ma/primitive_types.h"
 
 struct bytecode_content {
     s1 *bytecode;
@@ -230,14 +231,15 @@ struct classloader* classloader_create()
     /*
      * 先加载java.lang.Class类，
      * 这又会触发java.lang.Object等类和接口的加载。
-     * 然后遍历classMap，给已经加载的每一个类关联类对象。
      */
-    loader->jclass_class = NULL;
+    loader->jclass_class = NULL; // 不要胡乱删除这句。因为classloader_load_class中要判断loader->jclass_class是否为NULL。
     loader->jclass_class = classloader_load_class(loader, "java/lang/Class");
 
-    struct jclass *c;
-    for (c = loader->loaded_class_pool; c != NULL; c = c->hh.next) {
-        c->clsobj = get_jclass_obj_from_pool(loader, c->class_name);
+    // 加载基本类型（int, float, etc.）的 class
+    for (int i = 0; i < PRIMITIVE_TYPE_COUNT; i++) {
+        struct jclass *pc = jclass_create_primitive_class(loader, primitive_types[i].name);
+        // c->classObj = getJclassObjFromPool(c->className);//new JClassObj(jclassClass, className);
+        HASH_ADD_KEYPTR(hh, loader->loaded_class_pool, primitive_types[i].name, strlen(primitive_types[i].name), pc);
     }
 
     // todo
@@ -247,17 +249,11 @@ struct classloader* classloader_create()
 //        loadClass(primitiveType.wrapperClassName);
 //    }
 
-//    loader->jclass_class = load_class("java/lang/Class");
-//
-//    for_each(loadedClasses.begin(), loadedClasses.end(), [=](JClass *c) {
-//        c->classObj = getJclassObjFromPool(c->className);//new JClassObj(jclassClass, c->className);
-//    });
-//
-//    for (auto &primitiveType : primitiveTypes) {
-//        loadPrimitiveClasses(primitiveType.name);
-//        loadClass(primitiveType.arrayClassName);
-//        loadClass(primitiveType.wrapperClassName);
-//    }
+    // 给已经加载的每一个类关联类对象。
+    struct jclass *c;
+    for (c = loader->loaded_class_pool; c != NULL; c = c->hh.next) {
+        c->clsobj = get_jclass_obj_from_pool(loader, c->class_name);
+    }
 
     return loader;
 }
@@ -289,7 +285,8 @@ static struct jclass* preparation(struct jclass *c)
     // 且它的值在编译期已知，则该值存储在class文件常量池中。
     for (int i = 0; i < c->fields_count; i++) {
 //        JField &field = c->fields[i];
-        if (!IS_STATIC(c->fields[i]->access_flags)) {
+        struct jfield *field = c->fields[i];
+        if (!IS_STATIC(field->access_flags)) {
             continue;
         }
 
@@ -343,6 +340,10 @@ struct jclass* classloader_load_class(struct classloader *loader, const char *cl
     struct jclass *c;
     HASH_FIND_STR(loader->loaded_class_pool, class_name, c);
     if (c != NULL) {
+//        if (verbose)
+//            printvm("find class %s\n", c->class_name);
+
+        assert(strcmp(c->class_name, class_name) == 0);
         return c;
     }
 
@@ -353,8 +354,13 @@ struct jclass* classloader_load_class(struct classloader *loader, const char *cl
     }
 
     if (c == NULL) {
-        jvm_abort("error");
+        jvm_abort("error"); // todo
     }
+
+//    if (verbose)
+//        printvm("load class %s\n", c->class_name);
+
+    assert(strcmp(c->class_name, class_name) == 0);
 
     if (loader->jclass_class != NULL) {
         c->clsobj = get_jclass_obj_from_pool(loader, class_name);

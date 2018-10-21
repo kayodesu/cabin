@@ -2,22 +2,39 @@
 public class ObjectInitTest {
 
     char x;
-    static long a;
+    int y = 2;
+    static double a;
+    static double b = 5.7;
 
     public static void main(String[] args) {
         ObjectInitTest o = new ObjectInitTest();
-        char y = o.x;
-        if (y == 0) {
-            System.out.println("OK!");
+        
+        char t0 = o.x;
+        if (t0 == 0) {
+            System.out.println("OK0!");
         } else {
-            System.out.println("Fail1!");
+            System.out.println("Fail10!");
+        }
+        
+        int t2 = o.y;
+        if (t2 == 2) {
+            System.out.println("OK1!");
+        } else {
+            System.out.println("Fail11!");
         }
 
-        long b = a;
-        if (b == 0) {
-            System.out.println("OK2!");
+        double t = a;
+        if (t == 0) {
+           System.out.println("OK2!");
         } else {
             System.out.println("Fail2!");
+        }
+        
+        double t1 = b;
+        if (t1 == 5.7) {
+            System.out.println("OK3!");
+        } else {
+            System.out.println("Fail3!");
         }
     }
 

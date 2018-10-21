@@ -2,6 +2,7 @@
   <dictionary name="Jia Yang">
     <words>
       <w>allocs</w>
+      <w>arrobj</w>
       <w>fieldvalues</w>
       <w>hfree</w>
       <w>jarrobj</w>
@@ -10,6 +11,7 @@
       <w>oper</w>
       <w>printvm</w>
       <w>statbuf</w>
+      <w>strobj</w>
       <w>treturn</w>
     </words>
   </dictionary>

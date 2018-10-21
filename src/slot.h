@@ -35,21 +35,6 @@ struct slot {
 #define phslot() ((struct slot)  { .t = PH })
 #define natslot() ((struct slot) { .t = NAT })
 
-// 设置 slot 的值
-// s: 要设置值的 slot 的地址
-// v: 值
-//#define slot_set(s, v0) \
-//do { \
-//    assert((s) != NULL); \
-//    _Generic((v0), \
-//        jint: *(s) = islot(v0), \
-//        jfloat: *(s) = fslot(v0), \
-//        jlong: *(s) = lslot(v0), \
-//        jdouble: *(s) = dslot(v0), \
-//        jref: *(s) = rslot(v0) \
-//    );\
-//} while (false)
-
 static inline jint slot_geti(const struct slot *s)
 {
     assert(s != NULL);
@@ -113,49 +98,50 @@ static inline bool slot_is_category_one(const struct slot *s)
     return !slot_is_ph(s) && !slot_is_category_two(s);
 }
 
-static inline void slot_print(const struct slot *s)
+static inline char* slot_to_string(const struct slot *s)
 {
     if (s == NULL) {
-        printvm("slot: NULL");
-        return;
+        return "slot: NULL";
     }
 
     switch (s->t) {
         case JINT:
-            printvm("slot: JINT, %d\n", s->v.i);
+            snprintf(global_buf, GLOBAL_BUF_LEN, "slot: jint, %d\n", s->v.i);
             break;
         case JBYTE:
-            printvm("slot: JBYTE, %d\n", s->v.i);
+            snprintf(global_buf, GLOBAL_BUF_LEN, "slot: jbyte, %d\n", s->v.i);
             break;
         case JBOOL:
-            printvm("slot: JBOOL, %s\n", s->v.i == 0 ? "false" : "true");
+            snprintf(global_buf, GLOBAL_BUF_LEN, "slot: jbool, %s\n", s->v.i == 0 ? "false" : "true");
             break;
         case JCHAR:
-            printvm("slot: JCHAR, %c\n", s->v.i);
+            snprintf(global_buf, GLOBAL_BUF_LEN, "slot: jchar, %c\n", s->v.i);
             break;
         case JSHORT:
-            printvm("slot: JSHORT, %d\n", s->v.i);
+            snprintf(global_buf, GLOBAL_BUF_LEN, "slot: jshort, %d\n", s->v.i);
             break;
         case JLONG:
-            printvm("slot: JLONG, %ld\n", s->v.l);
+            snprintf(global_buf, GLOBAL_BUF_LEN, "slot: jlong, %ld\n", (long) s->v.l);
             break;
         case JFLOAT:
-            printvm("slot: JFLOAT, %f\n", s->v.f);
+            snprintf(global_buf, GLOBAL_BUF_LEN, "slot: jfloat, %f\n", s->v.f);
             break;
         case JDOUBLE:
-            printvm("slot: JDOUBLE, %f\n", s->v.d);
+            snprintf(global_buf, GLOBAL_BUF_LEN, "slot: jdouble, %f\n", s->v.d);
             break;
         case REFERENCE:
-            printvm("slot: REFERENCE, %p\n", s->v.r);
+            snprintf(global_buf, GLOBAL_BUF_LEN, "slot: reference, %p\n", s->v.r);
             break;
         case PH:
         case NAT:
-            printvm("slot: NAT\n", get_jtype_name(s->t));
+            snprintf(global_buf, GLOBAL_BUF_LEN, "slot: %s\n", get_jtype_name(s->t));
             break;
         default:
-            printvm("slot: error. t = %d\n", s->t);
+            snprintf(global_buf, GLOBAL_BUF_LEN, "slot: error. t = %d\n", s->t);
             break;
     }
+
+    return global_buf;
 }
 
 #endif //JVM_SLOT_H

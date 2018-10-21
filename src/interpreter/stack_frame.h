@@ -87,10 +87,7 @@ static inline bool sf_interrupted(struct stack_frame *frame)
     return tmp;
 }
 
-static inline char* sf_to_string(struct stack_frame *frame)
-{
-    return ""; // todo
-}
+char* sf_to_string(const struct stack_frame *frame);
 
 
 #endif //JVM_STACK_FRAME_H

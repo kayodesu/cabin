@@ -1,43 +1,14 @@
-import java.nio.file.FileSystems;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileDescriptor;
-import java.io.FileOutputStream;
+package file;
+
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
-public class FileTest {
-    
-    public static void main(String[] args) throws Exception {        
-        File file = new File("test.txt");
-        String p = file.getAbsolutePath();
-        System.out.println(p);
-        FileSystems.getDefault();
-        
-        fileNotFoundException();
-        
-        FileOutputStream fos = new FileOutputStream(FileDescriptor.out);
-        fos.write("OK!\n".getBytes());   
-
-        new RandomAccessFileTest().test();
-        
-        System.out.println("pass.");
-    }
-    
-    private static void fileNotFoundException() {
-        try {
-            FileInputStream fis = new FileInputStream("a/b/foo.txt");
-        } catch (FileNotFoundException e) {
-            
-//            assertEquals("a/b/foo.txt (No such file or directory)", e.getMessage());
-        }
-    }
-    
-}
-
-
 /**
+ * Created with IntelliJ IDEA.
+ * User: beyond
+ * Email: beyondblog@outlook.com
+ * Date: 15/3/19
+ * Time: 上午7:01
  * Description:
  * java/io/RandomAccessFile#open(Ljava/lang/String;I)V
  * java/io/RandomAccessFile#read0()I
@@ -51,13 +22,14 @@ public class FileTest {
  * java/io/RandomAccessFile.initIDs()V
  * java/io/RandomAccessFile#close0()V
  */
-class RandomAccessFileTest {
+public class RandomAccessFileTest {
 
-    public void test() throws Exception {
-        writeTest();
-        lengthTest();
-        readTest();
-        seekTest();
+    public static void main(String[] args) throws Exception {
+        RandomAccessFileTest test = new RandomAccessFileTest();
+        test.writeTest();
+        test.lengthTest();
+        test.readTest();
+        test.seekTest();
     }
 
     public void writeTest() throws IOException {

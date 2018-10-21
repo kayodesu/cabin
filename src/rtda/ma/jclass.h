@@ -75,11 +75,19 @@ struct jclass {
 
 struct jclass *jclass_create_by_classfile(struct classloader *loader, struct classfile *cf);
 
+/*
+ * 创建基本类型（int, float etc.）的 class.
+ */
+struct jclass* jclass_create_primitive_class(struct classloader *loader, const char *class_name);
 
 struct jclass* jclass_create_arr_class(struct classloader *loader, const char *class_name);
 
 void jclass_destroy(struct jclass *c);
 
+/*
+ * 调用类的类初始化方法。
+ * clinit are the static initialization blocks for the class, and static field initialization.
+ */
 void jclass_clinit(struct jclass *c, struct stack_frame *invoke_frame);
 
 void jclass_get_public_fields(struct jclass *c, struct jfield* fields[], int *count);
@@ -98,7 +106,7 @@ bool jclass_is_subclass_of(const struct jclass *c, const struct jclass *father);
 
 bool jclass_is_accessible_to(const struct jclass *c, const struct jclass *visitor);
 
-void jclass_print(const struct jclass *c);
+char *jclass_to_string(const struct jclass *c);
 
 /*
  * 需要调用者释放返回值(free())

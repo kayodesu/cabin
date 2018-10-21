@@ -1,4 +1,4 @@
-package io.github.jiayanggo.reflection;
+package reflection;
 
 public class ArrayGetTest {
 

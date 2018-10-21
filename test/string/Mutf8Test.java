@@ -1,3 +1,4 @@
+package string;
 
 // http://www.oracle.com/technetwork/articles/javase/supplementary-142654.html
 public class Mutf8Test {

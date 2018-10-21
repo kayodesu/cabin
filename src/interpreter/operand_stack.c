@@ -150,12 +150,21 @@ void os_pushr(struct operand_stack *os, jref r)
     os->slots[os->size++] = rslot(r);
 }
 
-void os_pushs(struct operand_stack *os, const struct slot *s)
+void os_push_slot_directly(struct operand_stack *os, const struct slot *s)
 {
     assert(os != NULL);
     assert(s != NULL);
     CHECK_FULL(os);
     os->slots[os->size++] = *s;
+}
+
+void os_pushs(struct operand_stack *os, const struct slot *s)
+{
+    os_push_slot_directly(os, s);
+    if (slot_is_category_two(s)) {
+        struct slot phs = phslot();
+        os_push_slot_directly(os, &phs);
+    }
 }
 
 

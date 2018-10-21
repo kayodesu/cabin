@@ -47,11 +47,6 @@ void register_native_method(const char *class_name, const char *method_name,
     HASH_ADD_STR(native_methods, key, nm);
 }
 
-static bool cmp(const void *native_method, const void *key)
-{
-    return strcmp(((struct native_method *)native_method)->key, key) == 0;
-}
-
 native_method_f find_native_method(const char *class_name, const char *method_name, const char *method_descriptor)
 {
     char key[KEY_LEN];

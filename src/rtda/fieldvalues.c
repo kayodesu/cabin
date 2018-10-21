@@ -6,16 +6,49 @@
 #include "ma/jfield.h"
 #include "ma/jclass.h"
 
-struct fieldvalues* fv_create(struct jclass *jclass, int fields_count)
+struct fieldvalues* fv_create(struct jclass *jclass, bool static_fields)
 {
     assert(jclass != NULL);
-    assert(fields_count >= 0);// todo == 0 ???
+
+    int fields_count = static_fields ? jclass->static_fields_count : jclass->instance_fields_count; // todo == 0 ???
 
     VM_MALLOC_EXT(struct fieldvalues, 1, fields_count * sizeof(struct slot), fv);
     fv->jclass = jclass;
     fv->fields_count = fields_count;
-    for (int i = 0; i < fields_count; i++) {
-        fv->values[i] = natslot();
+
+    int index = 0;
+
+    // 给个变量赋予默认值           todo 说明默认值
+    for (int i = 0; i < jclass->fields_count; i++) {
+        struct jfield *field = jclass->fields[i];
+        if (static_fields == IS_STATIC(field->access_flags)) {
+            assert(index < fields_count);
+            switch (field->descriptor[0]) {
+                case 'B':
+                case 'C':
+                case 'I':
+                case 'S':
+                case 'Z':
+                    fv->values[index] = islot(0);
+                    break;
+                case 'F':
+                    fv->values[index] = fslot(0.0f);
+                    break;
+                case 'J':
+                    fv->values[index] = lslot(0L);
+                    assert(index + 1 < fields_count);
+                    fv->values[++index] = phslot();
+                    break;
+                case 'D':
+                    fv->values[index] = dslot(0.0);
+                    assert(index + 1 < fields_count);
+                    fv->values[++index] = phslot();
+                    break;
+                default:
+                    fv->values[index] = rslot(NULL);
+                    break;
+            }
+        }
     }
 
     return fv;
@@ -54,7 +87,6 @@ const struct slot* fv_get_by_id(const struct fieldvalues *fv, int id)
 {
     assert(fv != NULL);
     assert(id >= 0 && id < fv->fields_count);
-    assert(fv->values[id].t != NAT); // 此变量未初始化
     return fv->values + id;
 }
 

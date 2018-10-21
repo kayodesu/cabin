@@ -84,20 +84,22 @@ int main(int argc, char* argv[])
 
 void test()
 {
-    /* ---------------- passed -------------------------*/
+    // 未分类
+    // start_jvm("HelloWorld"); // pass
+    start_jvm("ObjectInitTest"); // pass
 
-
-    /* ---------------- NOT passed -------------------------*/
     // array
-//    start_jvm("io/github/jiayanggo/array/ArrayDemo");
-//    start_jvm("io/github/jiayanggo/array/ArrayTest");
-//    start_jvm("io/github/jiayanggo/array/BubbleSort");
+//    start_jvm("array/BubbleSort"); // pass
+//    start_jvm("array/ArrayTest");
 
     // string
 //    start_jvm("io/github/jiayanggo/string/StringTest");
 //    start_jvm("io/github/jiayanggo/string/Mutf8Test");
 
-    start_jvm("TimeZoneTest");
+//    start_jvm("TimeZoneTest");
+//    start_jvm("ObjectTest");
+//    start_jvm("string/StringTest");
+
 
 //    start_jvm("io/github/jiayanggo/string/StringOut");
 //    start_jvm("io/github/jiayanggo/ObjectTest");

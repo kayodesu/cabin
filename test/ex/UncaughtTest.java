@@ -1,3 +1,4 @@
+package ex;
 
 public class UncaughtTest {
     

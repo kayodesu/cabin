@@ -1,3 +1,4 @@
+package field;
 
 // A constant variable is a final variable of primitive type or type String
 // that is initialized with a constant expression (§15.28).

@@ -1,3 +1,5 @@
+package sunmisc;
+
 import sun.misc.Unsafe;
 
 public class UnsafeObjectTest {

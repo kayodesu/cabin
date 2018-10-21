@@ -17,13 +17,14 @@ struct jobject* jobject_create(struct jclass *c)
         jvm_abort("堆溢出");
     }
     o->jclass = c;
+    o->t = NORMAL_OBJECT;
 
     if (is_array(c)) {  // todo
         o->instance_fields_count = 0;
         o->instance_field_values = NULL;
     } else {
         o->instance_fields_count = c->instance_fields_count;
-        o->instance_field_values = fv_create(o->jclass, o->instance_fields_count);
+        o->instance_field_values = fv_create(o->jclass, false);
     }
 
     return o;
@@ -34,7 +35,7 @@ struct jobject* jclassobj_create(struct jclass *jclass_class, const char *class_
     // todo 判断jclass_class.class_name == "java/lang/Class"
     struct jobject *o = jobject_create(jclass_class);
     strcpy(o->c.class_name, class_name);
-//    o->t = CLASS_OBJECT; // todo
+    o->t = CLASS_OBJECT;
 
     return o;
 }
@@ -44,6 +45,7 @@ struct jobject* jstrobj_create(struct classloader *loader, const char *str)
     struct jobject *so = jobject_create(classloader_load_class(loader, "java/lang/String"));
     so->s.str = str;
     so->s.wstr = NULL; // todo
+    so->t = STRING_OBJECT;
     return so;
 }
 
@@ -72,6 +74,7 @@ struct jobject *jarrobj_create(struct jclass *arr_class, jint arr_len)
     o->a.data = malloc(arr_len * ele_size);  // todo NULL
     o->a.ele_size = ele_size;
     o->a.len = arr_len;
+    o->t = ARRAY_OBJECT;
 
     return o;
 }
@@ -86,7 +89,7 @@ struct jobject *jarrobj_create_multi(struct jclass *arr_class, size_t arr_dim, c
      * 先创建其第一维，第一维的每个元素也是一数组
      */
     size_t len = arr_lens[0];
-    struct jobject * o = jarrobj_create(arr_class, len);
+    struct jobject *o = jarrobj_create(arr_class, len);
     if (arr_dim == 1) {
         return o;
     }
@@ -102,32 +105,20 @@ struct jobject *jarrobj_create_multi(struct jclass *arr_class, size_t arr_dim, c
 
 bool jarrobj_is_same_type(const struct jobject *one, const struct jobject *other)
 {
-    if (one == NULL || one->t != ARRAY_OBJECT) {
-        jvm_abort("eeeeeeeeeeeee\n");
-    }
-
-    if (other == NULL || other->t != ARRAY_OBJECT) {
-        jvm_abort("eeeeeeeeeeeee\n");
-    }
-
+    ARROBJ_CHECK(one);
+    ARROBJ_CHECK(other);
     return one->a.ele_size == other->a.ele_size;
 }
 
 bool jarrobj_check_bounds(const struct jobject *o, jint index)
 {
-    if (o == NULL || o->t != ARRAY_OBJECT) {
-        jvm_abort("eeeeeeeeeeeee\n");
-    }
-
+    ARROBJ_CHECK(o);
     return index >= 0 && index < o->a.len;
 }
 
 void* jarrobj_index(struct jobject *o, jint index)
 {
-    if (o == NULL || o->t != ARRAY_OBJECT) {
-        jvm_abort("eeeeeeeeeeeee\n");
-    }
-
+    ARROBJ_CHECK(o);
     if (index < 0 || index >= o->a.len) {
         jvm_abort("len = %zd, index = %d\n", o->a.len, index);
         return NULL;
@@ -138,10 +129,9 @@ void* jarrobj_index(struct jobject *o, jint index)
 
 void jarrobj_copy(struct jobject *dst, jint dst_pos, const struct jobject *src, jint src_pos, jint len)
 {
-    if (dst == NULL || dst->t != ARRAY_OBJECT
-        || src == NULL || src->t != ARRAY_OBJECT) {
-        jvm_abort("eeeeeeeeeeeee\n");
-    }
+    ARROBJ_CHECK(dst);
+    ARROBJ_CHECK(src);
+
     /*
      * 首先确保src和dst都是数组，然后检查数组类型。
      * 如果两者都是引用数组，则可以拷贝，否则两者必须是相同类型的基本类型数组

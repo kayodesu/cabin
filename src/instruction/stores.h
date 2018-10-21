@@ -80,18 +80,16 @@ static void __lstore(struct stack_frame *frame, int index)
     struct slot *s = os_pops(frame->operand_stack);
     if (s == NULL || s->t != PH) {
         // todo error
-        jvm_abort("error");
+        jvm_abort("wants placeholder, gets %s.", slot_to_string(s));
     }
 
     s = os_pops(frame->operand_stack);
     if (s == NULL || s->t != JLONG) {
         // todo error
-        jvm_abort("error");
+        jvm_abort("wants jlong, gets %s.", slot_to_string(s));
     }
 
     sf_set_local_var(frame, index, s);
-    // todo error
-    jvm_abort("error\n");
 }
 
 static void lstore(struct stack_frame *frame)   { __lstore(frame, fetch_index(frame)); }
@@ -117,8 +115,6 @@ static void __dstore(struct stack_frame *frame, int index)
     }
 
     sf_set_local_var(frame, index, s);
-    // todo error
-    jvm_abort("error\n");
 }
 
 static void dstore(struct stack_frame *frame)   { __dstore(frame, fetch_index(frame)); }

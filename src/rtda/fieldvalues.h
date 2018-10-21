@@ -21,7 +21,7 @@ struct fieldvalues {
     struct slot values[];
 };
 
-struct fieldvalues* fv_create(struct jclass *jclass, int fields_count);
+struct fieldvalues* fv_create(struct jclass *jclass, bool static_fields);
 
 void fv_set_by_id(struct fieldvalues *fv, int id, const struct slot *value);
 

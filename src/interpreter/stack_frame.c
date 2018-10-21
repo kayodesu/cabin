@@ -86,3 +86,8 @@ void sf_destroy(struct stack_frame *frame)
 
     // free(frame);
 }
+
+char* sf_to_string(const struct stack_frame *frame)
+{
+    return jmethod_to_string(frame->method); // todo
+}

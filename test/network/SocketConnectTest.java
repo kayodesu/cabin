@@ -1,3 +1,5 @@
+package network;
+
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.Socket;

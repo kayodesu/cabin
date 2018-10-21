@@ -1,4 +1,4 @@
-import java.nio.ByteBuffer;
+package nio;
 
 public class ByteBufferTest {
     

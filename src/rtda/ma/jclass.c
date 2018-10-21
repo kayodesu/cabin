@@ -149,13 +149,26 @@ struct jclass *jclass_create_by_classfile(struct classloader *loader, struct cla
         }
     }
 
-    c->static_field_values = fv_create(c, c->static_fields_count);//malloc(sizeof(struct slot) * c->static_fields_count);
+    c->static_field_values = fv_create(c, true);
+    return c;
+}
+
+struct jclass* jclass_create_primitive_class(struct classloader *loader, const char *class_name)
+{
+    // todo class_name 是不是基本类型
+    VM_MALLOC(struct jclass, c);
+    c->access_flags = ACC_PUBLIC;
+    c->pkg_name = ""; // todo 包名
+    c->class_name = strdup(class_name);  // todo
+    c->loader = loader;
+    c->inited = true;
     return c;
 }
 
 struct jclass* jclass_create_arr_class(struct classloader *loader, const char *class_name)
 {
-    struct jclass *c = malloc(sizeof(*c)); // todo NULL
+    // todo class_name 是不是 array
+    VM_MALLOC(struct jclass, c);
     c->access_flags = ACC_PUBLIC;
     c->pkg_name = ""; // todo 包名
     c->class_name = strdup(class_name);  // todo NULL
@@ -201,7 +214,7 @@ void jclass_clinit(struct jclass *c, struct stack_frame *invoke_frame)
             printvm("error\n");
         }
 
-        sf_invoke_method(invoke_frame, method, NULL); // invoke_frame->invokeMethod(method);
+        sf_invoke_method(invoke_frame, method, NULL);
     }
 
     c->inited = true;
@@ -418,14 +431,11 @@ bool jclass_is_accessible_to(const struct jclass *c, const struct jclass *visito
     return strcmp(c->pkg_name, visitor->pkg_name) == 0;
 }
 
-void jclass_print(const struct jclass *c)
+char *jclass_to_string(const struct jclass *c)
 {
-    if (c == NULL) {
-        printvm("NULL\n");
-        return;
-    }
-
-    printvm("class: %s\n", c->class_name);
+    snprintf(global_buf, GLOBAL_BUF_LEN, "class: %s\0", c == NULL ? "NULL" : c->class_name);
+    return global_buf;
 }
+
 
 
