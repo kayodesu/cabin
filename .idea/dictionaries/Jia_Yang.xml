@@ -6,6 +6,7 @@
       <w>fieldvalues</w>
       <w>hfree</w>
       <w>jarrobj</w>
+      <w>jchars</w>
       <w>jstrobj</w>
       <w>mallocs</w>
       <w>oper</w>
@@ -13,6 +14,7 @@
       <w>statbuf</w>
       <w>strobj</w>
       <w>treturn</w>
+      <w>wcscpy</w>
     </words>
   </dictionary>
 </component>

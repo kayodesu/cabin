@@ -39,7 +39,7 @@ static void dup(struct stack_frame *frame)
     if (slot_is_category_one(s)) {
         os_push_slot_directly(frame->operand_stack, s);
     } else {
-        jvm_abort("ff"); // todo
+        jvm_abort("fttttttttttf"); // todo
     }
 }
 

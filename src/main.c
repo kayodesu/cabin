@@ -86,14 +86,14 @@ void test()
 {
     // 未分类
     // start_jvm("HelloWorld"); // pass
-    start_jvm("ObjectInitTest"); // pass
+//    start_jvm("ObjectInitTest"); // pass
 
     // array
 //    start_jvm("array/BubbleSort"); // pass
-//    start_jvm("array/ArrayTest");
+//    start_jvm("array/ArrayTest");  // todo 三维数组实现不正确
 
     // string
-//    start_jvm("io/github/jiayanggo/string/StringTest");
+    start_jvm("string/StringTest");
 //    start_jvm("io/github/jiayanggo/string/Mutf8Test");
 
 //    start_jvm("TimeZoneTest");
@@ -112,6 +112,4 @@ void test()
 //    start_jvm("io/github/jiayanggo/reflection/FieldTest");
 
 //    start_jvm("io/github/jiayanggo/nio/ByteBufferTest");  // todo 没有实现的native方法。
-
-//    start_jvm("io/github/jiayanggo/instructions/ANewArray"); // todo 三维数组实现不正确。
 }

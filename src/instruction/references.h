@@ -156,7 +156,7 @@ static void putfield(struct stack_frame *frame)
      */
     if (IS_FINAL(ref->resolved_field->access_flags)) {
         // todo
-        if (frame->method->jclass != ref->resolved_class || frame->method->name != "<init>") {
+        if (frame->method->jclass != ref->resolved_class || strcmp(frame->method->name, "<init>") != 0) {
             jvm_abort("java.lang.IllegalAccessError\n"); // todo
         }
     }
@@ -190,7 +190,12 @@ static void putfield(struct stack_frame *frame)
         jvm_abort("java.lang.NullPointerException\n"); // todo
     }
 
+    printvm("putfield, obj = %p\n", obj); /////////////////////////////////////////////////////////////////////////
+
     fv_set_by_id(obj->instance_field_values, ref->resolved_field->id, &s);
+
+    const char *sss = jstrobj_value(obj);
+    printvm("%s\n", sss); /////////////////////////////////////////////////////////////////////////
 }
 
 /*
@@ -211,8 +216,27 @@ static void getfield(struct stack_frame *frame)
         jvm_abort("java.lang.NullPointerException\n");  // todo
     }
 
-    printvm("fffffffffffffff       %s\n", jfield_to_string(ref->resolved_field));
+    printvm("1111111111111       %s\n", jfield_to_string(ref->resolved_field));
     const struct slot *s = fv_get_by_id(obj->instance_field_values, ref->resolved_field->id);
+    printvm("22222222222       %s\n", slot_to_string(s));
+
+    // 检查 slot 的类型与 field 的类型是否匹配  todo
+    char d = *ref->resolved_field->descriptor;
+    if (d == 'B' || d == 'C' || d == 'I' || d == 'S' || d == 'Z') {
+        if (s->t != JINT) { jvm_abort("field is, slot: %s\n", slot_to_string(s)); }
+    } else if (d == 'F') {
+        if (s->t != JFLOAT) { jvm_abort("error\n"); }
+    } else if (d == 'J') {
+        if (s->t != JLONG) { jvm_abort("error\n"); }
+    } else if (d == 'D') {
+        if (s->t != JDOUBLE) { jvm_abort("error\n"); }
+    } else if (d  == 'L' || d  == '[') {
+        if (s->t != REFERENCE) { jvm_abort("error\n"); }
+    } else {
+        // todo error
+        jvm_abort("error, %s\n", ref->resolved_field->descriptor);
+    }
+
     os_pushs(frame->operand_stack, s);
 }
 
@@ -253,7 +277,7 @@ static void athrow(struct stack_frame *frame)
 
     // todo UncaughtException
     struct jobject *so = slot_getr(fv_get_by_nt(exception->instance_field_values, "detailMessage", "Ljava/lang/String;"));
-    jvm_abort("UncaughtException. %s. %s\n", exception->jclass->class_name, so->s.str);  // todo
+    jvm_abort("UncaughtException. %s. %s\n", exception->jclass->class_name, jstrobj_value(so));  // todo
 //    auto ref = (exception->getFieldValue("detailMessage", "Ljava/lang/String;")).getRef();
 //    JStringObj *o = dynamic_cast<JStringObj *>(ref);
 //    jvm_abort("UncaughtException. %s. %s\n", exception->jclass->class_name, jstrToStr(o->value()).c_str());
@@ -419,8 +443,8 @@ static void invokevirtual(struct stack_frame *frame)
             const struct slot *arg = args + 1; // println 的参数
             if (arg->t == REFERENCE) {
                 struct jobject *so = slot_getr(arg);
-                // todo 判断 是不是 string object
-                printvm("%s\n", so->s.str);
+                STROBJ_CHECK(so);
+                printvm("%p, %s\n", so, jstrobj_value(so));
             } else if (arg->t == JINT) {
                 printvm("%d\n", slot_geti(arg));
             } else {

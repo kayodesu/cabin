@@ -56,6 +56,7 @@ struct jobject {
 struct jobject* jobject_create(struct jclass *c);
 
 struct jobject* jstrobj_create(struct classloader *loader, const char *str);
+const char* jstrobj_value(struct jobject *so);
 
 /*
  * @jclass_class: class of java/lang/Class

@@ -38,7 +38,7 @@ struct jfield* jfield_create(const struct jclass *c, const struct member_info *i
 
 bool jfield_is_accessible_to(const struct jfield *field, const struct jclass *visitor);
 
-struct jclassobj* jfield_get_type(struct jfield *field);
+struct jobject* jfield_get_type(struct jfield *field);
 
 char* jfield_to_string(const struct jfield *field);
 

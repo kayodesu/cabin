@@ -113,7 +113,7 @@ bool jfield_is_accessible_to(const struct jfield *field, const struct jclass *vi
     return strcmp(field->jclass->pkg_name, visitor->pkg_name) == 0;
 }
 
-struct jclassobj* jfield_get_type(struct jfield *field)
+struct jobject* jfield_get_type(struct jfield *field)
 {
     printvm("未实现的功能   %s\n", jfield_to_string(field));
 //    jvm_abort("\n"); // todo

@@ -7,6 +7,7 @@
 #include "../rtda/ma/rtcp.h"
 #include "../classfile/constant.h"
 #include "../rtda/heap/strpool.h"
+#include "../rtda/heap/jobject.h"
 
 #ifndef JVM_CONSTANTS_H
 #define JVM_CONSTANTS_H
@@ -71,9 +72,8 @@ static void __ldc(struct stack_frame *frame, int index_bytes)
         const char *str = rtcp_get_str(rtcp, index);
         printvm("%s\n", str);
         struct jobject *so = get_str_from_pool(frame->method->jclass->loader, str);
-        if (so == NULL) {
-            jvm_abort("never goes here!\n");
-        }
+        STROBJ_CHECK(so);
+        printvm("%p, %s\n", so, jstrobj_value(so));
         os_pushr(os, so);
     } else if (type == CLASS_CONSTANT) {
         const char *class_name = rtcp_get_class_name(rtcp, index);

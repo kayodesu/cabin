@@ -19,7 +19,7 @@ static void forName0(struct stack_frame *frame)
 {
     struct jobject *so = slot_getr(frame->local_vars); // frame->local_vars[0]
     // todo 判断是不是 string Object
-    const char *class_name = so->s.str;//unicode_to_utf8(jstrobj_value(so));
+    const char *class_name = jstrobj_value(so);//so->s.str;//unicode_to_utf8(jstrobj_value(so));
 
 //    replace(name.begin(), name.end(), '.', '/'); // todo
 
@@ -44,7 +44,7 @@ static void getPrimitiveClass(struct stack_frame *frame)
 {
     struct jobject *so = slot_getr(frame->local_vars); // frame->local_vars[0]
     STROBJ_CHECK(so);
-    const char *class_name = so->s.str;// 这里得到的 class_name 是诸如 "int", "float" 之类的值
+    const char *class_name = jstrobj_value(so);//so->s.str;// 这里得到的 class_name 是诸如 "int", "float" 之类的值
     struct jclass *c = classloader_load_class(frame->method->jclass->loader, class_name);
     os_pushr(frame->operand_stack, c->clsobj); //frame->operandStack.push(c->getClassObj());
 }

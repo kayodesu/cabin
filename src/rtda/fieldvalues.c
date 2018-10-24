@@ -16,36 +16,31 @@ struct fieldvalues* fv_create(struct jclass *jclass, bool static_fields)
     fv->jclass = jclass;
     fv->fields_count = fields_count;
 
-    int index = 0;
-
     // 给个变量赋予默认值           todo 说明默认值
     for (int i = 0; i < jclass->fields_count; i++) {
         struct jfield *field = jclass->fields[i];
         if (static_fields == IS_STATIC(field->access_flags)) {
-            assert(index < fields_count);
             switch (field->descriptor[0]) {
                 case 'B':
                 case 'C':
                 case 'I':
                 case 'S':
                 case 'Z':
-                    fv->values[index] = islot(0);
+                    fv->values[field->id] = islot(0);
                     break;
                 case 'F':
-                    fv->values[index] = fslot(0.0f);
+                    fv->values[field->id] = fslot(0.0f);
                     break;
                 case 'J':
-                    fv->values[index] = lslot(0L);
-                    assert(index + 1 < fields_count);
-                    fv->values[++index] = phslot();
+                    fv->values[field->id] = lslot(0L);
+                    fv->values[field->id + 1] = phslot();
                     break;
                 case 'D':
-                    fv->values[index] = dslot(0.0);
-                    assert(index + 1 < fields_count);
-                    fv->values[++index] = phslot();
+                    fv->values[field->id] = dslot(0.0);
+                    fv->values[field->id + 1] = phslot();
                     break;
                 default:
-                    fv->values[index] = rslot(NULL);
+                    fv->values[field->id] = rslot(NULL);
                     break;
             }
         }
