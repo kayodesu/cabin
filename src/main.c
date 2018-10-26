@@ -72,7 +72,8 @@ int main(int argc, char* argv[])
     printvm("extension_classpath: %s\n", extension_classpath);
     printvm("user_classpath: %s\n", user_classpath);
 
-    // todo 测试 JAVA_HOME 是不是  java8  版本
+    // todo 测试 JAVA_HOME 是不是  java11  版本
+//    jvm_abort("just support java11. 因为时安装jvms11编码的\n");
 
     register_all_native_methods();
 

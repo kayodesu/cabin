@@ -125,21 +125,29 @@ struct annotation_default_attribute {
 
 
 /*****************************************************/
-//struct bootstrap_method {
-//    u2 bootstrap_method_ref;
-//    u2 num_bootstrap_arguments;
-//    u2 *bootstrap_arguments; // num_bootstrap_arguments
-//};
+struct bootstrap_method {
+    /*
+     * bootstrap_method_ref 项的值必须是一个对常量池的有效索引。
+     * 常量池在该索引处的值必须是一个CONSTANT_MethodHandle_info结构。
+     * 注意：此CONSTANT_MethodHandle_info结构的reference_kind项应为值6（REF_invokeStatic）或8（REF_newInvokeSpecial），
+     * 否则在invokedynamic指令解析调用点限定符时，引导方法会执行失败。
+     */
+    u2 bootstrap_method_ref;
+    u2 num_bootstrap_arguments;
+    /*
+     * bootstrap_arguments 数组的每个成员必须是一个对常量池的有效索引。
+     * 常量池在该索引出必须是下列结构之一：
+     * CONSTANT_String_info, CONSTANT_Class_info, CONSTANT_Integer_info, CONSTANT_Long_info,
+     * CONSTANT_Float_info, CONSTANT_Double_info, CONSTANT_MethodHandle_info, CONSTANT_MethodType_info。
+     */
+    u2 *bootstrap_arguments; // num_bootstrap_arguments
+};
 
 struct bootstrap_methods_attribute {
     struct attribute_common common;
 
     u2 num_bootstrap_methods;
-    struct bootstrap_method {
-        u2 bootstrap_method_ref;
-        u2 num_bootstrap_arguments;
-        u2 *bootstrap_arguments; // num_bootstrap_arguments
-    } *bootstrap_methods;
+    struct bootstrap_method *bootstrap_methods; // num_bootstrap_methods
 };
 /*****************************************************/
 struct code_attribute_exception_table {

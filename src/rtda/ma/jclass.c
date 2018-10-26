@@ -70,8 +70,38 @@ struct jclass *jclass_create_by_classfile(struct classloader *loader, struct cla
     c->inited = false;
     c->access_flags = cf->access_flags;
 
+    // 先解析属性，因为下面建立 Runtime Constant Pool 时需要用到属性中的值。
+    for (int i = 0; i < cf->attributes_count; i++) {
+        struct attribute_common *attr = cf->attributes[i];
+
+        // todo class attributes
+        if (strcmp(attr->name, InnerClasses) == 0) {
+            //          printvm("not parse attr: InnerClasses\n");
+        } else if (strcmp(attr->name, EnclosingMethod) == 0) {  // 可选属性
+            //           printvm("not parse attr: EnclosingMethod\n");
+        } else if (strcmp(attr->name, Synthetic) == 0) {
+            set_synthetic(&c->access_flags);  // todo
+        } else if (strcmp(attr->name, Signature) == 0) {  // 可选属性
+            //            printvm("not parse attr: Signature\n");
+        } else if (strcmp(attr->name, SourceFile) == 0) {  // 可选属性
+//            SourceFileAttr *a = static_cast<SourceFileAttr *>(attr);
+//            sourcefileName = rtcp->getStr(a->sourcefileIndex);
+            //            printvm("not parse attr: SourceFile\n");  // todo
+        } else if (strcmp(attr->name, SourceDebugExtension) == 0) {  // 可选属性
+            //      printvm("not parse attr: SourceDebugExtension\n");
+        } else if (strcmp(attr->name, Deprecated) == 0) {  // 可选属性
+            //        printvm("not parse attr: Deprecated\n");
+        } else if (strcmp(attr->name, RuntimeVisibleAnnotations) == 0) {
+            //         printvm("not parse attr: RuntimeVisibleAnnotations\n");
+        } else if (strcmp(attr->name, RuntimeInvisibleAnnotations) == 0) {
+            //        printvm("not parse attr: RuntimeInvisibleAnnotations\n");
+        } else if (strcmp(attr->name, BootstrapMethods) == 0) {
+            c->bootstrap_methods_attribute = (struct bootstrap_methods_attribute *) attr; // todo
+        }
+    }
+
     c->constants_count = cf->constant_pool_count;
-    c->rtcp = rtcp_create(cf->constant_pool, cf->constant_pool_count);
+    c->rtcp = rtcp_create(cf->constant_pool, cf->constant_pool_count, c->bootstrap_methods_attribute);
 
     c->class_name = rtcp_get_class_name(c->rtcp, cf->this_class);
     c->pkg_name = strdup(c->class_name);
@@ -118,35 +148,6 @@ struct jclass *jclass_create_by_classfile(struct classloader *loader, struct cla
     c->methods = malloc(sizeof(struct jmethod *) * c->methods_count);
     for (int i = 0; i < c->methods_count; i++) {
         c->methods[i] = jmethod_create(c, cf->methods + i);
-    }
-
-    for (int i = 0; i < cf->attributes_count; i++) {
-        struct attribute_common *attr = cf->attributes[i];
-
-        // todo class attributes
-        if (strcmp(attr->name, InnerClasses) == 0) {
-            //          printvm("not parse attr: InnerClasses\n");
-        } else if (strcmp(attr->name, EnclosingMethod) == 0) {  // 可选属性
-            //           printvm("not parse attr: EnclosingMethod\n");
-        } else if (strcmp(attr->name, Synthetic) == 0) {
-            set_synthetic(&c->access_flags);  // todo
-        } else if (strcmp(attr->name, Signature) == 0) {  // 可选属性
-            //            printvm("not parse attr: Signature\n");
-        } else if (strcmp(attr->name, SourceFile) == 0) {  // 可选属性
-//            SourceFileAttr *a = static_cast<SourceFileAttr *>(attr);
-//            sourcefileName = rtcp->getStr(a->sourcefileIndex);
-            //            printvm("not parse attr: SourceFile\n");  // todo
-        } else if (strcmp(attr->name, SourceDebugExtension) == 0) {  // 可选属性
-            //      printvm("not parse attr: SourceDebugExtension\n");
-        } else if (strcmp(attr->name, Deprecated) == 0) {  // 可选属性
-            //        printvm("not parse attr: Deprecated\n");
-        } else if (strcmp(attr->name, RuntimeVisibleAnnotations) == 0) {
-            //         printvm("not parse attr: RuntimeVisibleAnnotations\n");
-        } else if (strcmp(attr->name, RuntimeInvisibleAnnotations) == 0) {
-            //        printvm("not parse attr: RuntimeInvisibleAnnotations\n");
-        } else if (strcmp(attr->name, BootstrapMethods) == 0) {
-            //        printvm("not parse attr: BootstrapMethods\n");
-        }
     }
 
     c->static_field_values = fv_create(c, true);

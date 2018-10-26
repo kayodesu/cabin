@@ -290,7 +290,7 @@ struct instruction instructions[] = {
         { 0xb7, "invokespecial", invokespecial },
         { 0xb8, "invokestatic", invokestatic },
         { 0xb9, "invokeinterface", invokeinterface },
-        { 0xba, "invokedynamic", NULL },
+        { 0xba, "invokedynamic", invokedynamic },
 
         { 0xbb, "new", __new },
 

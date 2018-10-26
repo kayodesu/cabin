@@ -7,9 +7,9 @@
 #include <assert.h>
 #include "classfile.h"
 #include "../util/bytecode_reader.h"
-#include "attribute.h"
 #include "../jvm.h"
 #include "constant.h"
+#include "attribute.h"
 
 static void parse_member_info(struct bytecode_reader *reader,
                             void **constant_pool, u2 constant_pool_count, struct member_info *info)

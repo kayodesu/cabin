@@ -25,7 +25,8 @@ bool bcr_set_pc(struct bytecode_reader *reader, size_t new_pc)
 {
     assert(reader != NULL);
     if (new_pc >= reader->len) {
-        jvm_abort("访问越界. new_pc = %zu, len = %zu\n", new_pc, reader->len);
+        printvm("访问越界. new_pc = %zu, len = %zu\n", new_pc, reader->len);
+        return false;
     }
     reader->pc = new_pc;
     return true;
@@ -40,7 +41,7 @@ bool bcr_skip(struct bytecode_reader *reader, int offset)
 bool bcr_skip_padding(struct bytecode_reader *reader)
 {
     assert(reader != NULL);
-    if (reader->pc % 4 != 0)
+    if (reader->pc % 4 != 0)  // todo
         reader->pc++;
 }
 

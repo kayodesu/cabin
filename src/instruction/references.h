@@ -10,6 +10,7 @@
 #include "../rtda/ma/jfield.h"
 #include "../util/encoding.h"
 #include "../rtda/heap/jobject.h"
+#include "../rtda/ma/symref.h"
 
 /*
  * 类的初始化在下列情况下触发：
@@ -296,9 +297,9 @@ static void instanceof(struct stack_frame *frame)
 
     struct jclass *jclass = classloader_load_class(frame->method->jclass->loader, class_name); // todo resolve_class ???
 
-    jref obj = os_popr(frame->operand_stack);//frame->operandStack.popRef();
+    jref obj = os_popr(frame->operand_stack);
     if (obj == NULL) {
-        os_pushi(frame->operand_stack, 0); //frame->operandStack.push((jint)0);
+        os_pushi(frame->operand_stack, 0);
         return;
     }
 
@@ -312,18 +313,16 @@ static void instanceof(struct stack_frame *frame)
  */
 static void checkcast(struct stack_frame *frame)
 {
-    jref obj = os_popr(frame->operand_stack);//frame->operandStack.top().getRef();
-    int index = bcr_readu2(frame->reader);//frame->reader->readu2();
+    jref obj = os_top(frame->operand_stack)->v.r;
+    int index = bcr_readu2(frame->reader);
     if (obj == NULL) {
         // 如果引用是null，则指令执行结束。也就是说，null 引用可以转换成任何类型
         return;
     }
 
     const char *class_name = rtcp_get_class_name(frame->method->jclass->rtcp, index);
-//    const string &className = frame->method->jclass->rtcp->getClassName(index);
 
     struct jclass *jclass = classloader_load_class(frame->method->jclass->loader, class_name); // todo resolve_class ???
-//    struct jclass *jclass = frame->method->jclass->loader->loadClass(className);// todo resolve_class ???
     if (!jobject_is_instance_of(obj, jclass)) {
         // java.lang.ClassCastException   todo
         jvm_abort("java.lang.ClassCastException. %s can not cast to %s\n", obj->jclass->class_name, jclass->class_name);
@@ -499,11 +498,11 @@ static void invokeinterface(struct stack_frame *frame)
      * 该字节的存在是为了保证Java虚拟机可以向后兼容。
      */
     bcr_readu1(frame->reader);
-    struct method_ref *ref = rtcp_get_method_ref(curr_class->rtcp, index);
+
+    struct method_ref *ref = rtcp_get_interface_method_ref(curr_class->rtcp, index);
     resolve_non_static_method_ref(curr_class, ref);
 
     /* todo 本地方法 */
-
 
     if (ref->resolved_method->arg_slot_count < 1) {
         jvm_abort("error\n");
@@ -535,6 +534,16 @@ static void invokeinterface(struct stack_frame *frame)
     }
 
     sf_invoke_method(frame, method, args); //  frame->invokeMethod(method, args);
+}
+
+static void invokedynamic(struct stack_frame *frame)
+{
+    struct jclass *curr_class = frame->method->jclass;
+    int index = bcr_readu2(frame->reader);
+    bcr_readu1(frame->reader); // 此字节固定为 0
+    bcr_readu1(frame->reader); // 此字节固定为 0
+
+    jvm_abort("not implement\n");  // todo
 }
 
 /*

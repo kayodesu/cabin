@@ -80,22 +80,19 @@ static void aload_3(struct stack_frame *frame) { __aload(frame, 3); }
 static void func_name(struct stack_frame *frame) \
 { \
     jint index = os_popi(frame->operand_stack); \
+    printvm("index = %d\n", index);\
     struct jobject *ao = os_popr(frame->operand_stack); \
-    if (ao == NULL) { \
-        jvm_abort("error NULL Point Exception\n"); /* todo */ \
-    } \
-    if (ao->t != ARRAY_OBJECT) { \
-        jvm_abort("error\n"); /* todo */ \
-    } \
- \
+    ARROBJ_CHECK(ao); \
+    \
     if (!check_type(ao->jclass)) { \
         jvm_abort("error\n"); \
     } \
- \
+    \
     if (!jarrobj_check_bounds(ao, index)) { \
-        jvm_abort("ArrayIndexOutOfBoundsException\n"); \
+        jvm_abort("ArrayIndexOutOfBoundsException. %p\n", ao); \
         /* todo throw new ArrayIndexOutOfBoundsException(String.valueOf(index)); */ \
     } \
+    wprintf(L"---------------------------- %c\n", *(jchar *)jarrobj_index(ao, index));\
     os_push(frame->operand_stack, *(raw_type *)jarrobj_index(ao, index)); \
 }
 

@@ -7,6 +7,7 @@
 
 #include <stdbool.h>
 #include <limits.h>
+#include <stddef.h>
 #include "../jtypes.h"
 
 struct bytecode_reader {

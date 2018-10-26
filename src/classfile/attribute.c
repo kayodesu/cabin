@@ -2,10 +2,10 @@
  * Author: Jia Yang
  */
 
-#include "attribute.h"
 #include "../jvm.h"
 #include "constant.h"
 #include "../util/encoding.h"
+#include "attribute.h"
 
 static struct element_value* parse_element_value(struct bytecode_reader *reader);
 
@@ -509,8 +509,6 @@ parse_unknown_attribute(struct bytecode_reader *reader, u4 attribute_length)
 
 void* parse_attribute(struct bytecode_reader *reader, void **constant_pool, u2 constant_pool_count)
 {
-//    printvm("ffffffffffffffffffffffffffffffffffffffffffffff\n"); // ///////////////////////////////  todo
-
     u2 attribute_name_index = bcr_readu2(reader);
     u4 attribute_length = bcr_readu4(reader);
 

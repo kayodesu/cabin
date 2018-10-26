@@ -10,12 +10,21 @@ struct jobject* put_str_to_pool(struct classloader *loader, const char *str0)
 {
     struct jobject *so;
     HASH_FIND_STR(pool, str0, so);
-    if (so != NULL) {
-        return so;
+    if (so == NULL) {
+        so = jstrobj_create(loader, str0);
+        HASH_ADD_KEYPTR(hh, pool, str0, strlen(str0), so);
     }
+    return so;
+}
 
-    so = jstrobj_create(loader, str0);
-    HASH_ADD_KEYPTR(hh, pool, str0, strlen(str0), so);
+struct jobject* put_so_to_pool(struct classloader *loader, struct jobject *so)
+{
+    const char *str = jstrobj_value(so);
+    struct jobject *tmp;
+    HASH_FIND_STR(pool, str, tmp);
+    if (tmp == NULL) {
+        HASH_ADD_KEYPTR(hh, pool, str, strlen(str), so);
+    }
     return so;
 }
 

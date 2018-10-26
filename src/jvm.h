@@ -10,6 +10,7 @@
 #include <stdbool.h>
 #include <limits.h>
 #include <windef.h>
+#include "jtypes.h"
 
 extern bool verbose;
 

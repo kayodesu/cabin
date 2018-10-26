@@ -68,7 +68,7 @@ void java_lang_Float_registerNatives(struct stack_frame *);
 void java_lang_System_registerNatives(struct stack_frame *);
 void java_lang_Double_registerNatives(struct stack_frame *);
 void java_lang_Object_registerNatives(struct stack_frame *);
-void java_lang_String_registerNatives(struct stack_frame *);
+void java_lang_String_registerNatives(); // todo
 void java_lang_Throwable_registerNatives(struct stack_frame *);
 void java_lang_Thread_registerNatives(struct stack_frame *);
 
@@ -94,7 +94,10 @@ void register_all_native_methods() {
     register_native_method("java/lang/System", F, java_lang_System_registerNatives);
     register_native_method("java/lang/Double", F, java_lang_Double_registerNatives);
     register_native_method("java/lang/Object", F, java_lang_Object_registerNatives);
-    register_native_method("java/lang/String", F, java_lang_String_registerNatives);
+
+//    register_native_method("java/lang/String", F, java_lang_String_registerNatives);
+    java_lang_String_registerNatives();
+
     register_native_method("java/lang/Throwable", F, java_lang_Throwable_registerNatives);
     register_native_method("java/lang/Thread", F, java_lang_Thread_registerNatives);
 

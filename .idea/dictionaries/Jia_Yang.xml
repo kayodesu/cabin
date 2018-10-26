@@ -8,6 +8,7 @@
       <w>jarrobj</w>
       <w>jchars</w>
       <w>jstrobj</w>
+      <w>jvms</w>
       <w>mallocs</w>
       <w>oper</w>
       <w>printvm</w>

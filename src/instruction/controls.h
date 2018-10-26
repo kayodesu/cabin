@@ -10,7 +10,7 @@
 static void __goto(struct stack_frame *frame)
 {
     int offset = bcr_reads2(frame->reader);
-    bcr_skip(frame->reader, offset- 3);  // 减3？减去本条指令自身的长度 todo
+    bcr_skip(frame->reader, offset - 3);  // 减3？减去本条指令自身的长度 todo
 }
 
 /*

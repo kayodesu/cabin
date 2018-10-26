@@ -155,12 +155,12 @@ static void iinc(struct stack_frame *frame)
     jint index, value;
 
     if (wide_extending) {
-        index = bcr_readu2(frame->reader);//frame->reader->readu2();
-        value = bcr_readu2(frame->reader);//frame->reader->reads2();
+        index = bcr_readu2(frame->reader);
+        value = bcr_reads2(frame->reader);
         wide_extending = false;
     } else {
-        index = bcr_readu1(frame->reader);//frame->reader->readu1();
-        value = bcr_readu1(frame->reader);//frame->reader->reads1();
+        index = bcr_readu1(frame->reader);
+        value = bcr_reads1(frame->reader);
     }
 
     struct slot *s = frame->local_vars + index;
@@ -170,6 +170,7 @@ static void iinc(struct stack_frame *frame)
     }
 
     s->v.i += value;
+    printvm("iinc: index is %d, value is %d, result is %d\n", index, value, s->v.i);
 //    frame->setLocalVar(index, Slot(frame->getLocalVar(index).getInt() + value));
 }
 

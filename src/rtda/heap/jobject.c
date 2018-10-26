@@ -69,13 +69,13 @@ struct jobject* jstrobj_create(struct classloader *loader, const char *str)
 
     so->t = STRING_OBJECT;
 //    JArrayObj *jcharArr = JArrayObj::newJArrayObj(loader->loadClass("[C"), len);
-    jint len = strlen(str);
+    jint len = wcslen(so->s.wstr);
     struct jobject *jchars = jarrobj_create(classloader_load_class(loader, "[C"), len);
     // 不要使用 wcscpy 直接字符串拷贝，
     // 因为 wcscpy 函数会自动添加字符串结尾 L'\0'，
     // 但 jchars 没有空间容纳字符串结尾符，因为 jchar 是字符数组，不是字符串
     for (size_t i = 0; i < len; i++) {
-        *(jchar *)jarrobj_index(jchars, i) = so->s.wstr[i];
+        *(jchar *)jarrobj_index(jchars, i) = so->s.wstr[i]; // todo 可以使用 memcpy
     }
 
 // todo 要不要调用 <clinit>, <init>方法。
@@ -184,7 +184,11 @@ bool jarrobj_is_same_type(const struct jobject *one, const struct jobject *other
 bool jarrobj_check_bounds(const struct jobject *o, jint index)
 {
     ARROBJ_CHECK(o);
-    return index >= 0 && index < o->a.len;
+    bool b =  index >= 0 && index < o->a.len;
+    if (!b) {
+        printvm("array index out of bounds. index is %d, array length is %d\n", index, o->a.len);
+    }
+    return b;
 }
 
 void* jarrobj_index(struct jobject *o, jint index)

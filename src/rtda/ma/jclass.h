@@ -70,6 +70,8 @@ struct jclass {
     int static_fields_count;
     struct fieldvalues *static_field_values; // 保存所有类变量的值
 
+    struct bootstrap_methods_attribute *bootstrap_methods_attribute;
+
     char *source_file_name;
 };
 

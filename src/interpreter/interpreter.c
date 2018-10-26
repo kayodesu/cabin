@@ -18,7 +18,7 @@ void interpret(struct jthread *thread)
 
         while (bcr_has_more(reader)) {
             frame->thread->pc = reader->pc;
-            u1 opcode = bcr_readu1(reader);//reader->readu1();
+            u1 opcode = bcr_readu1(reader);
 
             if (verbose)
                 printvm("%d(0x%x), %s, pc = %lu\n", opcode, opcode, instructions[opcode].name, reader->pc);

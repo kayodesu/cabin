@@ -5,6 +5,9 @@
 #ifndef JVM_SYMREF_H
 #define JVM_SYMREF_H
 
+#include "../../classfile/constant.h"
+#include "rtcp.h"
+
 /*
  * 定义及解析类，字段，方法的符号引用
  */
@@ -25,6 +28,23 @@ struct method_ref {
 
     struct jclass *resolved_class;
     struct jmethod *resolved_method;
+};
+
+struct method_handle {
+    u1 kind;
+    union {
+        struct field_ref *fr;
+        struct method_ref *mr;
+    } ref;
+};
+
+struct invoke_dynamic_ref {
+    struct method_handle *handle;
+
+    const struct name_and_type *nt;
+
+    int argc;
+    struct rtc args[];
 };
 
 struct jclass* resolve_class(const struct jclass *visitor, const char *class_name);

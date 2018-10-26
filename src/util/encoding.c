@@ -5,6 +5,7 @@
 #include <afxres.h>
 #include <wchar.h>
 #include "encoding.h"
+#include "../jvm.h"
 
 void* decode_mutf8(uint8_t *src_bytes, size_t len, char dest[len + 1])
 {
