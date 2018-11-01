@@ -63,53 +63,45 @@ native_method_f find_native_method(const char *class_name, const char *method_na
     return NULL;
 }
 
-void java_lang_Class_registerNatives(struct stack_frame *);
-void java_lang_Float_registerNatives(struct stack_frame *);
-void java_lang_System_registerNatives(struct stack_frame *);
-void java_lang_Double_registerNatives(struct stack_frame *);
-void java_lang_Object_registerNatives(struct stack_frame *);
-void java_lang_String_registerNatives(); // todo
-void java_lang_Throwable_registerNatives(struct stack_frame *);
-void java_lang_Thread_registerNatives(struct stack_frame *);
+void java_lang_Class_registerNatives();
+void java_lang_Float_registerNatives();
+void java_lang_System_registerNatives();
+void java_lang_Double_registerNatives();
+void java_lang_Object_registerNatives();
+void java_lang_String_registerNatives();
+void java_lang_Throwable_registerNatives();
+void java_lang_Thread_registerNatives();
 
-void java_io_FileDescriptor_registerNatives(struct stack_frame *);
-void java_io_FileInputStream_registerNatives(struct stack_frame *);
-void java_io_FileOutputStream_registerNatives(struct stack_frame *);
+void java_io_FileDescriptor_registerNatives();
+void java_io_FileInputStream_registerNatives();
+void java_io_FileOutputStream_registerNatives();
 
-void sun_misc_VM_registerNatives(struct stack_frame *);
-void sun_misc_Unsafe_registerNatives(struct stack_frame *);
+void sun_misc_VM_registerNatives();
+void sun_misc_Unsafe_registerNatives();
 
-void sun_reflect_Reflection_registerNatives(struct stack_frame *);
+void sun_reflect_Reflection_registerNatives();
 
-void java_security_AccessController_registerNatives(struct stack_frame *);
+void java_security_AccessController_registerNatives();
 
-void register_all_native_methods() {
-#ifdef F
-#undef F
-#endif
-
-#define F "registerNatives", "()V"
-    register_native_method("java/lang/Class", F, java_lang_Class_registerNatives);
-    register_native_method("java/lang/Float", F, java_lang_Float_registerNatives);
-    register_native_method("java/lang/System", F, java_lang_System_registerNatives);
-    register_native_method("java/lang/Double", F, java_lang_Double_registerNatives);
-    register_native_method("java/lang/Object", F, java_lang_Object_registerNatives);
-
-//    register_native_method("java/lang/String", F, java_lang_String_registerNatives);
+void register_all_native_methods()
+{
+    java_lang_Class_registerNatives();
+    java_lang_Float_registerNatives();
+    java_lang_System_registerNatives();
+    java_lang_Double_registerNatives();
+    java_lang_Object_registerNatives();
     java_lang_String_registerNatives();
+    java_lang_Throwable_registerNatives();
+    java_lang_Thread_registerNatives();
 
-    register_native_method("java/lang/Throwable", F, java_lang_Throwable_registerNatives);
-    register_native_method("java/lang/Thread", F, java_lang_Thread_registerNatives);
+    java_io_FileDescriptor_registerNatives();
+    java_io_FileInputStream_registerNatives();
+    java_io_FileOutputStream_registerNatives();
 
-    register_native_method("java/io/FileDescriptor", F, java_io_FileDescriptor_registerNatives);
-    register_native_method("java/io/FileInputStream", F, java_io_FileInputStream_registerNatives);
-    register_native_method("java/io/FileOutputStream", F, java_io_FileOutputStream_registerNatives);
+    sun_misc_VM_registerNatives();
+    sun_misc_Unsafe_registerNatives();
 
-    register_native_method("sun/misc/Unsafe", F, sun_misc_Unsafe_registerNatives);
-    register_native_method("sun/misc/VM", F, sun_misc_VM_registerNatives);
+    sun_reflect_Reflection_registerNatives();
 
-    register_native_method("sun/reflect/Reflection", F, sun_reflect_Reflection_registerNatives);
-
-    register_native_method("java/security/AccessController", F, java_security_AccessController_registerNatives);
-#undef F
+    java_security_AccessController_registerNatives();
 }

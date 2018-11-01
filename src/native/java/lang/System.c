@@ -7,90 +7,71 @@
 // public static native void arraycopy(Object src, int srcPos, Object dest, int destPos, int length)
 static void arraycopy(struct stack_frame *frame)
 {
-#if 0
-    jref r = frame->getLocalVar(0).getRef();
-    if (r == nullptr) {
-        // todo "java.lang.NullPointerException"
-        jvmAbort("java.lang.NullPointerException\n");
-    }
-    auto src = static_cast<JArrayObj *>(r);
-    if (!src->getClass()->isArray()) {
-        jvmAbort("error\n");
-    }
+    struct jobject *src = slot_getr(frame->local_vars);
+    ARROBJ_CHECK(src);
+    jint src_pos = slot_geti(frame->local_vars + 1);
+    struct jobject *dest = slot_getr(frame->local_vars + 2);
+    ARROBJ_CHECK(dest);
+    jint dest_pos = slot_geti(frame->local_vars + 3);
+    jint length = slot_geti(frame->local_vars + 4);
 
-    jint srcPos = frame->getLocalVar(1).getInt();
-
-    r = frame->getLocalVar(2).getRef();
-    if (r == nullptr) {
-        // todo "java.lang.NullPointerException"
-        jvmAbort("java.lang.NullPointerException\n");
-    }
-    auto dest = static_cast<JArrayObj *>(r);
-    if (!dest->getClass()->isArray()) {
-        jvmAbort("error\n");
-    }
-
-    jint dstPos = frame->getLocalVar(3).getInt();
-    jint length = frame->getLocalVar(4).getInt();
-    JArrayObj::copy(*dest, dstPos, *src, srcPos, length);
-#endif
+    jarrobj_copy(dest, dest_pos, src, src_pos, length);
 }
 
 // private static native Properties initProperties(Properties props);
 static void initProperties(struct stack_frame *frame)
 {
-#if 0
-    std::string sysProps[][2] = {  // todo
-            { "java.version",          "1.8.0" },
-            {  "java.vendor",          "" },
-            { "java.vendor.url",      ""},
-            { "java.home",            "" }, // options.AbsJavaHome
-            { "java.class.version",   "52.0"},
-            { "java.class.path",      "" }, // heap.BootLoader().ClassPath().String()
-            { "java.awt.graphicsenv", "sun.awt.CGraphicsEnvironment"},
-            { "os.name",              "" },   // todo runtime.GOOS
-            { "os.arch",              "" }, // todo runtime.GOARCH
-            { "os.version",           "" },             // todo
-            { "file.separator",       "/" },            // todo os.PathSeparator
-            { "path.separator",       ":" },            // todo os.PathListSeparator
-            { "line.separator",       "\n" },           // todo
-            { "user.name",            "" },             // todo
-            { "user.home",            "" },             // todo
-            { "user.dir",             "." },            // todo
-            { "user.country",         "CN" },           // todo
-            { "file.encoding",        "UTF-8" },
-            { "sun.stdout.encoding",  "UTF-8" },
-            { "sun.stderr.encoding",  "UTF-8" },
+    char *sys_props[][2] = {  // todo
+            { "java.version",          "1.8.0" },  // todo
+//            {  "java.vendor",          "" },
+//            { "java.vendor.url",      ""},
+//            { "java.home",            "" }, // options.AbsJavaHome
+//            { "java.class.version",   "52.0"},
+//            { "java.class.path",      "" }, // heap.BootLoader().ClassPath().String()
+//            { "java.awt.graphicsenv", "sun.awt.CGraphicsEnvironment"},
+//            { "os.name",              "" },   // todo runtime.GOOS
+//            { "os.arch",              "" }, // todo runtime.GOARCH
+//            { "os.version",           "" },             // todo
+//            { "file.separator",       "/" },            // todo os.PathSeparator
+//            { "path.separator",       ":" },            // todo os.PathListSeparator
+//            { "line.separator",       "\n" },           // todo
+//            { "user.name",            "" },             // todo
+//            { "user.home",            "" },             // todo
+//            { "user.dir",             "." },            // todo
+//            { "user.country",         "CN" },           // todo
+//            { "file.encoding",        "UTF-8" },
+//            { "sun.stdout.encoding",  "UTF-8" },
+//            { "sun.stderr.encoding",  "UTF-8" },
     };
 
-    JObject *props = frame->getLocalVar(0).getRef();
-    // todo init
+    struct jobject *props = slot_getr(frame->local_vars);//frame->getLocalVar(0).getRef();
 
-    // public synchronized Object setProperty(String key, String value)
-    auto setProperty = props->getClass()->lookupInstanceMethod(
-            "setProperty", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;");
-    if (setProperty == nullptr) {
-        // todo
-        jvmAbort("error\n");
+    // todo init
+    struct jmethod *set_property = jclass_lookup_instance_method(
+            props->jclass, "setProperty", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;");
+    if (set_property == NULL) {
+        jvm_abort("error\n"); // todo
     }
 
-    ClassLoader *loader = props->getClass()->loader;
-    for (int i = 0; i < sizeof(sysProps) / sizeof(sysProps[0]); i++) {
-        Slot args[] = {
-                Slot(props),
-                Slot(JStringObj::newJStringObj(loader, strToJstr(sysProps[i][0]))),
-                Slot(JStringObj::newJStringObj(loader, strToJstr(sysProps[i][1]))),
+//    int props_count = sizeof(sys_props) / sizeof(*sys_props);
+
+    for (int i = 0; i < sizeof(sys_props) / sizeof(*sys_props); i++) {
+        struct slot args[] = {
+                rslot(props),
+                rslot(jstrobj_create(props->jclass->loader, sys_props[i][0])),
+                rslot(jstrobj_create(props->jclass->loader, sys_props[i][1]))
         };
-        frame->invokeMethod(setProperty, args);
+//        sf_invoke_method(frame, set_property, args);
+        jthread_invoke_method(frame->thread, set_property, args);
     }
 
     // 返回参数
-    frame->operandStack.push(props);
-#endif
+    os_pushr(frame->operand_stack, props);
 }
 
 // private static native void setIn0(InputStream in);
 static void setIn0(struct stack_frame *frame) {
+    jvm_abort("error\n");
 //    jref in = frame->getLocalVar(0).getRef();
 //    JClass *sysClass = frame->method->jclass;
 //
@@ -99,6 +80,7 @@ static void setIn0(struct stack_frame *frame) {
 
 // private static native void setOut0(PrintStream out);
 static void setOut0(struct stack_frame *frame) {
+    jvm_abort("error\n");
 //    jref out = frame->getLocalVar(0).getRef();
 //    JClass *sysClass = frame->method->jclass;
 //
@@ -107,6 +89,7 @@ static void setOut0(struct stack_frame *frame) {
 
 // private static native void setErr0(PrintStream err);
 static void setErr0(struct stack_frame *frame) {
+    jvm_abort("error\n");
 //    jref err = frame->getLocalVar(0).getRef();
 //    struct jclass *sysClass = frame->method->jclass;
 //
@@ -115,6 +98,7 @@ static void setErr0(struct stack_frame *frame) {
 
 // public static native long nanoTime();
 static void nanoTime(struct stack_frame *frame) {
+    jvm_abort("error\n");
     // todo
     /*
      * 	nanoTime := time.Now().UnixNano()
@@ -124,8 +108,9 @@ static void nanoTime(struct stack_frame *frame) {
     os_pushl(frame->operand_stack, (jlong)1);
 }
 
-void java_lang_System_registerNatives(struct stack_frame *frame)
+void java_lang_System_registerNatives()
 {
+    register_native_method("java/lang/System", "registerNatives", "()V", empty_method);
     register_native_method("java/lang/System", "arraycopy", "(Ljava/lang/Object;ILjava/lang/Object;II)V", arraycopy);
     register_native_method("java/lang/System", "initProperties",
                          "(Ljava/util/Properties;)Ljava/util/Properties;", initProperties);

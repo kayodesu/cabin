@@ -19,8 +19,9 @@ static void longBitsToDouble(struct stack_frame *frame)
     os_pushd(frame->operand_stack, long_bits_to_double(l));
 }
 
-void java_lang_Double_registerNatives(struct stack_frame *frame)
+void java_lang_Double_registerNatives()
 {
+    register_native_method("java/lang/Double", "registerNatives", "()V", empty_method);
     register_native_method("java/lang/Double", "doubleToRawLongBits", "(D)J", doubleToRawLongBits);
     register_native_method("java/lang/Double", "longBitsToDouble", "(J)D", longBitsToDouble);
 }

@@ -92,7 +92,6 @@ static void func_name(struct stack_frame *frame) \
         jvm_abort("ArrayIndexOutOfBoundsException. %p\n", ao); \
         /* todo throw new ArrayIndexOutOfBoundsException(String.valueOf(index)); */ \
     } \
-    wprintf(L"---------------------------- %c\n", *(jchar *)jarrobj_index(ao, index));\
     os_push(frame->operand_stack, *(raw_type *)jarrobj_index(ao, index)); \
 }
 

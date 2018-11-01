@@ -34,7 +34,7 @@ static void objectFieldOffset(struct stack_frame *frame)
 //    frame->operandStack.push((jlong)offset);
 
     jref field_obj = slot_getr(frame->local_vars + 1);
-    jint offset = slot_geti(fv_get_by_nt(field_obj->instance_field_values, "slot", "I"));
+    jint offset = slot_geti(get_instance_field_value_by_nt(field_obj, "slot", "I"));
     os_pushl(frame->operand_stack, offset);
 }
 
@@ -142,8 +142,9 @@ static void getIntVolatile(struct stack_frame *frame)
 #endif
 }
 
-void sun_misc_Unsafe_registerNatives(struct stack_frame *frame)
+void sun_misc_Unsafe_registerNatives()
 {
+    register_native_method("sun/misc/Unsafe", "registerNatives", "()V", empty_method);
     register_native_method("sun/misc/Unsafe", "arrayBaseOffset", "(Ljava/lang/Class;)I", arrayBaseOffset);
     register_native_method("sun/misc/Unsafe", "arrayIndexScale", "(Ljava/lang/Class;)I", arrayIndexScale);
     register_native_method("sun/misc/Unsafe", "objectFieldOffset", "(Ljava/lang/reflect/Field;)J", objectFieldOffset);

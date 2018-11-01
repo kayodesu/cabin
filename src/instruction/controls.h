@@ -113,6 +113,7 @@ control to the invoker.
 #define TRETURN(func_name, T) \
 static void func_name(struct stack_frame *frame) \
 { \
+    printvm("-----------------   frame = %p, top_frame = %p\n", frame, jthread_top_frame(frame->thread));\
     /* frame->method->reset(); */ \
     jthread_pop_frame(frame->thread); \
     \
@@ -121,10 +122,8 @@ static void func_name(struct stack_frame *frame) \
     if (invoke_frame == NULL) { \
         jvm_abort("never goes here."); \
     } \
-    \
+    printvm("frame = %p, invoke_frame(operand_stack) = %p(%p)\n", frame, invoke_frame, invoke_frame->operand_stack);\
     os_push##T(invoke_frame->operand_stack, os_pop##T(frame->operand_stack)); \
-    \
-    printvm("fffffffffffffff\n");\
     sf_exe_over(frame); \
 }
 

@@ -15,10 +15,12 @@ static void initialize(struct stack_frame *frame)
         jvm_abort("not find initializeSystemClass\n");
     }
     // todo m == nullptr
-    sf_invoke_method(frame, m, NULL); // frame->invokeMethod(m);
+//    sf_invoke_method(frame, m, NULL); // frame->invokeMethod(m);
+    jthread_invoke_method(frame->thread, m, NULL);
 }
 
-void sun_misc_VM_registerNatives(struct stack_frame *frame)
+void sun_misc_VM_registerNatives()
 {
+    register_native_method("sun/misc/VM", "registerNatives", "()V", empty_method);
     register_native_method("sun/misc/VM", "initialize", "()V", initialize);
 }

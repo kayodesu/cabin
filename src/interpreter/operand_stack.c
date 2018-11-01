@@ -3,21 +3,22 @@
  */
 
 #include "operand_stack.h"
-#include "../slot.h"
-
 
 struct operand_stack* os_create(u2 capacity)
 {
-    struct operand_stack *os = malloc(sizeof(*os)); // todo NULL
+    VM_MALLOC_EXT(struct operand_stack, 1, sizeof(struct slot) * capacity, os);
     os->capacity = capacity;
     os->size = 0;
-    os->slots = malloc(sizeof(struct slot) * capacity); // todo NULL
     return os;
 }
 
 void os_destroy(struct operand_stack *os)
 {
-    // todo
+    if (os == NULL) {
+        printvm("destroy a NULL operand stack.\n");
+        return;
+    }
+    free(os);
 }
 
 const struct slot* os_top(struct operand_stack *os)
@@ -109,7 +110,11 @@ jref os_popr(struct operand_stack *os)
     return s->v.r;
 }
 
-#define CHECK_FULL(os) do { if ((os)->size == (os)->capacity) jvm_abort("operand stack is full\n"); } while(false)
+#define CHECK_FULL(os) \
+    do { \
+        if ((os)->size == (os)->capacity) \
+            jvm_abort("operand stack is full, %d\n", (os)->size);\
+    } while(false)
 
 void os_pushi(struct operand_stack *os, jint i)
 {
@@ -131,7 +136,7 @@ void os_pushl(struct operand_stack *os, jlong l)
     assert(os != NULL);
     CHECK_FULL(os);
     os->slots[os->size++] = lslot(l);
-    os->slots[os->size++] = phslot();
+    os->slots[os->size++] = phslot;
 }
 
 // double consumes two slots
@@ -140,12 +145,13 @@ void os_pushd(struct operand_stack *os, jdouble d)
     assert(os != NULL);
     CHECK_FULL(os);
     os->slots[os->size++] = dslot(d);
-    os->slots[os->size++] = phslot();
+    os->slots[os->size++] = phslot;
 }
 
 void os_pushr(struct operand_stack *os, jref r)
 {
     assert(os != NULL);
+    printvm("operand stack(%p) push reference: %p\n", os, r); ////////////////////////////////////////////////////////////
     CHECK_FULL(os);
     os->slots[os->size++] = rslot(r);
 }
@@ -162,7 +168,7 @@ void os_pushs(struct operand_stack *os, const struct slot *s)
 {
     os_push_slot_directly(os, s);
     if (slot_is_category_two(s)) {
-        struct slot phs = phslot();
+        struct slot phs = phslot;
         os_push_slot_directly(os, &phs);
     }
 }

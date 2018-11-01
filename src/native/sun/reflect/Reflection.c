@@ -49,8 +49,9 @@ static void getClassAccessFlags(struct stack_frame *frame)
     os_pushi(frame->operand_stack, type->jclass->access_flags);
 }
 
-void sun_reflect_Reflection_registerNatives(struct stack_frame *frame)
+void sun_reflect_Reflection_registerNatives()
 {
+    register_native_method("sun/reflect/Reflection", "registerNatives", "()V", empty_method);
 //    register_native_method("sun/reflect/Reflection", "getCallerClass", "(I)Ljava/lang/Class;", getCallerClass);
     register_native_method("sun/reflect/Reflection", "getCallerClass", "()Ljava/lang/Class;", getCallerClass);
     register_native_method("sun/reflect/Reflection", "getClassAccessFlags", "(Ljava/lang/Class;)I", getClassAccessFlags);

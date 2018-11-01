@@ -14,7 +14,7 @@ void interpret(struct jthread *thread)
         struct bytecode_reader *reader = frame->reader;
 
         if (verbose)
-            printvm("executing frame: %s, pc = %lu\n", sf_to_string(frame), reader->pc);
+            printvm("executing frame(%p): %s, pc = %lu\n", frame, sf_to_string(frame), reader->pc);
 
         while (bcr_has_more(reader)) {
             frame->thread->pc = reader->pc;
@@ -30,11 +30,15 @@ void interpret(struct jthread *thread)
 
             if (sf_is_exe_over(frame)) {
                 sf_destroy(frame);
+                if (verbose)
+                    printvm("frame(%p) exe over, destroy.\n", frame);
                 break;
             }
 
             if (sf_interrupted(frame)) {
-                break; // 当前函数执行被中断。跳出循环，终止当前 Frame 的执行。
+                if (verbose)
+                    printvm("frame(%p) interrupted.\n", frame);
+                break; // 当前函数执行被中断。跳出循环，终止当前 frame 的执行。
             }
 
             /*

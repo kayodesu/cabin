@@ -32,8 +32,8 @@ struct slot {
 #define lslot(l0) ((struct slot) { .t = JLONG, .v.l = (l0) })
 #define dslot(d0) ((struct slot) { .t = JDOUBLE, .v.d = (d0) })
 #define rslot(r0) ((struct slot) { .t = REFERENCE, .v.r = (r0) })
-#define phslot() ((struct slot)  { .t = PH })
-#define natslot() ((struct slot) { .t = NAT })
+#define phslot    ((struct slot)  { .t = PH, .v.l = 0 }) // 将v中size最大的域赋0，相当于将v赋0。 todo 怎么直接将v赋0
+#define natslot   ((struct slot) { .t = NAT, .v.l = 0 }) // 将v中size最大的域赋0，相当于将v赋0。 todo 怎么直接将v赋0
 
 static inline jint slot_geti(const struct slot *s)
 {
@@ -53,7 +53,7 @@ static inline jfloat slot_getf(const struct slot *s)
     jvm_abort("type mismatch. wants jfloat, gets %s\n", get_jtype_name(s->t));
 }
 
-static inline jlong slot_getl(const struct slot *s)
+static inline long slot_getl(const struct slot *s)
 {
     assert(s != NULL);
     if (s->t == JLONG) {
@@ -137,7 +137,7 @@ static inline char* slot_to_string(const struct slot *s)
             snprintf(global_buf, GLOBAL_BUF_LEN, "slot: %s\n", get_jtype_name(s->t));
             break;
         default:
-            snprintf(global_buf, GLOBAL_BUF_LEN, "slot: error. t = %d\n", s->t);
+            snprintf(global_buf, GLOBAL_BUF_LEN, "slot: illegal slot. t = %d\n", s->t);
             break;
     }
 

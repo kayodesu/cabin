@@ -49,6 +49,8 @@ static inline void jthread_pop_frame(struct jthread *thread)
 
 void jthread_push_frame(struct jthread *thread, struct stack_frame *frame);
 
+void jthread_invoke_method(struct jthread *thread, struct jmethod *method, const struct slot *args);
+
 void jthread_destroy(struct jthread *thread);
 
 #endif //JVM_JTHREAD_H

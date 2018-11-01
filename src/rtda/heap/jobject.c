@@ -23,14 +23,62 @@ struct jobject* jobject_create(struct jclass *c)
 
     if (is_array(c)) {  // todo
         o->instance_fields_count = 0;
-        o->instance_field_values = NULL;
+        o->instance_fields_values = NULL;
     } else {
         o->instance_fields_count = c->instance_fields_count;
-        o->instance_field_values = fv_create(c, false);
+        o->instance_fields_values = copy_inited_instance_fields_values(c);
     }
 
+    printvm("create object: %s\n", jobject_to_string(o)); //////////////////////////////////////////////////
     return o;
 }
+
+void set_instance_field_value_by_id(const struct jobject *o, int id, const struct slot *value)
+{
+    assert(o != NULL && value != NULL);
+    assert(id >= 0 && id < o->instance_fields_count);
+    o->instance_fields_values[id] = *value;
+    if (slot_is_category_two(value)) {
+        assert(id + 1 < o->instance_fields_count);
+        o->instance_fields_values[id + 1] = phslot;
+    }
+}
+
+void set_instance_field_value_by_nt(const struct jobject *o,
+                                  const char *name, const char *descriptor, const struct slot *value)
+{
+    assert(o != NULL && name != NULL && descriptor != NULL && value != NULL);
+
+    struct jfield *f = jclass_lookup_field(o->jclass, name, descriptor);
+    if (f == NULL) {
+        jvm_abort("error\n"); // todo
+    }
+
+    set_instance_field_value_by_id(o, f->id, value);
+}
+
+const struct slot* get_instance_field_value_by_id(const struct jobject *o, int id)
+{
+    printvm("ddddddddddddddddd\n");
+    assert(o != NULL);
+    printvm("yyyyyyyyyyyyyyyyyy  %p\n", o);
+    assert(id >= 0 && id < o->instance_fields_count);
+    printvm("vvvvvvvvvvvvvvvvvvv\n");
+    return o->instance_fields_values + id;
+}
+
+const struct slot* get_instance_field_value_by_nt(const struct jobject *o, const char *name, const char *descriptor)
+{
+    assert(o != NULL && name != NULL && descriptor != NULL);
+
+    struct jfield *f = jclass_lookup_field(o->jclass, name, descriptor);
+    if (f == NULL) {
+        jvm_abort("error\n"); // todo
+    }
+
+    return get_instance_field_value_by_id(o, f->id);
+}
+
 
 struct jobject* jclassobj_create(struct jclass *jclass_class, const char *class_name)
 {
@@ -88,7 +136,7 @@ struct jobject* jstrobj_create(struct classloader *loader, const char *str)
             && strcmp(field->name, "value") == 0) {
 //            setFieldValue(jclass->fields[i].id, Slot(jcharArr));
             struct slot s = rslot(jchars);
-            fv_set_by_id(so->instance_field_values, field->id, &s);
+            set_instance_field_value_by_id(so, field->id, &s);
             break;
         }
     }
@@ -104,7 +152,7 @@ const char* jstrobj_value(struct jobject *so)
         return so->s.str;
     }
 
-    const struct slot *s = fv_get_by_nt(so->instance_field_values, "value", "[C");
+    const struct slot *s = get_instance_field_value_by_nt(so, "value", "[C");
     if (s == NULL || s->t != REFERENCE) {
         jvm_abort("error\n"); // todo
     }
@@ -142,7 +190,8 @@ struct jobject *jarrobj_create(struct jclass *arr_class, jint arr_len)
     else if (t == 'D') { ele_size = sizeof(jdouble); }
 
     struct jobject *o = jobject_create(arr_class);
-    o->a.data = malloc(arr_len * ele_size);  // todo NULL
+    // todo java new 一个数组会自动初始化为0吗?????????!!!!!!!!!!!!!!!!!!
+    o->a.data = calloc(arr_len, ele_size);  // todo NULL
     o->a.ele_size = ele_size;
     o->a.len = arr_len;
     o->t = ARRAY_OBJECT;
@@ -247,4 +296,23 @@ void jobject_destroy(struct jobject *o)
     // todo
 
     hfree(o);
+}
+
+const char* jobject_to_string(struct jobject *o)
+{
+    if (o == NULL) {
+        return "jobject is null";
+    }
+
+    if (o->t == STRING_OBJECT) {
+        snprintf(global_buf, GLOBAL_BUF_LEN, "string object(%p): %s", o, jstrobj_value(o));
+    } else if (o->t == ARRAY_OBJECT) {
+        snprintf(global_buf, GLOBAL_BUF_LEN, "array object(%p): %d", o, o->a.len);
+    } else if (o->t == CLASS_OBJECT) {
+        snprintf(global_buf, GLOBAL_BUF_LEN, "class object(%p)", o);
+    } else {
+        snprintf(global_buf, GLOBAL_BUF_LEN, "normal object(%p), %s", o, o->jclass->class_name);
+    }
+
+    return global_buf;
 }

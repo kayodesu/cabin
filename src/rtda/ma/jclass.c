@@ -21,7 +21,7 @@ static void calc_instance_field_id(struct jclass *c)
 
     int id = 0;
     if (c->super_class != NULL) {
-        id = c->super_class->instance_fields_count;
+        id = c->super_class->instance_fields_count; // todo 父类的私有变量是不是也算在了里面，不过问题不大，浪费点空间吧了
         assert(id >= 0);
     }
 
@@ -36,6 +36,47 @@ static void calc_instance_field_id(struct jclass *c)
 
     assert(id >= 0);
     c->instance_fields_count = id;
+
+    VM_MALLOCS(struct slot, c->instance_fields_count, values);
+    c->inited_instance_fields_values = values;
+
+    // 将父类中的变量拷贝过来
+    if (c->super_class != NULL) {
+        memcpy(values, c->super_class->inited_instance_fields_values,
+               c->super_class->instance_fields_count * sizeof(struct slot));
+    }
+    // 初始化本类中的实例变量
+    for (int i = 0; i < c->fields_count; i++) {
+        struct jfield *field = c->fields[i];
+        if (!IS_STATIC(field->access_flags)) {
+            assert(field->id < c->instance_fields_count);
+            switch (field->descriptor[0]) {
+                case 'B':
+                case 'C':
+                case 'I':
+                case 'S':
+                case 'Z':
+                    values[field->id] = islot(0);
+                    break;
+                case 'F':
+                    values[field->id] = fslot(0.0f);
+                    break;
+                case 'J':
+                    values[field->id] = lslot(0L);
+                    values[field->id + 1] = phslot;
+                    break;
+                case 'D':
+                    values[field->id] = dslot(0.0);
+                    values[field->id + 1] = phslot;
+                    break;
+                default:
+                    values[field->id] = rslot(NULL);
+                    break;
+            }
+        }
+    }
+
+    // todo 保证 values 的每一项都被初始化了
 }
 
 // 计算静态字段的个数，同时给它们编号
@@ -53,6 +94,41 @@ static void calc_static_field_id(struct jclass *c)
         }
     }
     c->static_fields_count = id;
+
+    VM_MALLOCS(struct slot, c->static_fields_count, values);
+    c->static_fields_values = values;
+    // 初始化本类中的静态变量
+    for (int i = 0; i < c->fields_count; i++) {
+        struct jfield *field = c->fields[i];
+        if (IS_STATIC(field->access_flags)) {
+            assert(field->id < c->static_fields_count);
+            switch (field->descriptor[0]) {
+                case 'B':
+                case 'C':
+                case 'I':
+                case 'S':
+                case 'Z':
+                    values[field->id] = islot(0);
+                    break;
+                case 'F':
+                    values[field->id] = fslot(0.0f);
+                    break;
+                case 'J':
+                    values[field->id] = lslot(0L);
+                    values[field->id + 1] = phslot;
+                    break;
+                case 'D':
+                    values[field->id] = dslot(0.0);
+                    values[field->id + 1] = phslot;
+                    break;
+                default:
+                    values[field->id] = rslot(NULL);
+                    break;
+            }
+        }
+    }
+
+    // todo 保证 values 的每一项都被初始化了
 }
 
 struct jclass *jclass_create_by_classfile(struct classloader *loader, struct classfile *cf)
@@ -150,7 +226,7 @@ struct jclass *jclass_create_by_classfile(struct classloader *loader, struct cla
         c->methods[i] = jmethod_create(c, cf->methods + i);
     }
 
-    c->static_field_values = fv_create(c, true);
+//    c->static_field_values = fv_create(c, true);
     return c;
 }
 
@@ -215,7 +291,8 @@ void jclass_clinit(struct jclass *c, struct stack_frame *invoke_frame)
             printvm("error\n");
         }
 
-        sf_invoke_method(invoke_frame, method, NULL);
+//        sf_invoke_method(invoke_frame, method, NULL);
+        jthread_invoke_method(invoke_frame->thread, method, NULL);
     }
 
     c->inited = true;
@@ -365,6 +442,57 @@ bool jclass_is_subclass_of(const struct jclass *c, const struct jclass *father)
     }
 
     return false;
+}
+
+struct slot* copy_inited_instance_fields_values(const struct jclass *c)
+{
+    assert(c != NULL);
+    VM_MALLOCS(struct slot, c->instance_fields_count, copy);
+    memcpy(copy, c->inited_instance_fields_values, c->instance_fields_count * sizeof(struct slot));
+    return copy;
+}
+
+void set_static_field_value_by_id(const struct jclass *c, int id, const struct slot *value)
+{
+    assert(c != NULL && value != NULL);
+    assert(id >= 0 && id < c->static_fields_count);
+    c->static_fields_values[id] = *value;
+    if (slot_is_category_two(value)) {
+        assert(id + 1 < c->static_fields_count);
+        c->static_fields_values[id + 1] = phslot;
+    }
+}
+
+void set_static_field_value_by_nt(const struct jclass *c,
+                  const char *name, const char *descriptor, const struct slot *value)
+{
+    assert(c != NULL && name != NULL && descriptor != NULL && value != NULL);
+
+    struct jfield *f = jclass_lookup_field(c, name, descriptor);
+    if (f == NULL) {
+        jvm_abort("error\n"); // todo
+    }
+
+    set_static_field_value_by_id(c, f->id, value);
+}
+
+const struct slot* get_static_field_value_by_id(const struct jclass *c, int id)
+{
+    assert(c != NULL);
+    assert(id >= 0 && id < c->static_fields_count);
+    return c->static_fields_values + id;
+}
+
+const struct slot* get_static_field_value_by_nt(const struct jclass *c, const char *name, const char *descriptor)
+{
+    assert(c != NULL && name != NULL && descriptor != NULL);
+
+    struct jfield *f = jclass_lookup_field(c, name, descriptor);
+    if (f == NULL) {
+        jvm_abort("error\n"); // todo
+    }
+
+    return get_static_field_value_by_id(c, f->id);
 }
 
 char* get_arr_class_name(const char *class_name)

@@ -7,9 +7,8 @@ public class StringTest {
         System.out.println(s1);
         String s2 = "abc1";
 
-        int x = 1;
-        // String s3 = "abc" + x;
-        String s3 = "abc" + 1;
+        Integer x = 1;
+        String s3 = "abc" + x;
         System.out.println(s3);
         if (s1.equals(s3)) {
             System.out.println("true");

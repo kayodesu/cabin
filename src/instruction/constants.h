@@ -105,7 +105,7 @@ static void ldc2_w(struct stack_frame *frame)
     u1 type = rtcp_get_type(rtcp, index);
 
     if (type == LONG_CONSTANT) {
-        os_pushd(frame->operand_stack, rtcp_get_long(rtcp, index));
+        os_pushl(frame->operand_stack, rtcp_get_long(rtcp, index));
     } else if (type == DOUBLE_CONSTANT) {
         os_pushd(frame->operand_stack, rtcp_get_double(rtcp, index));
     } else {

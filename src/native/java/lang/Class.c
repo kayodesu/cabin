@@ -9,6 +9,12 @@
 #include "../../../rtda/heap/strpool.h"
 #include "../../../rtda/ma/primitive_types.h"
 
+// native ClassLoader getClassLoader0();
+static void getClassLoader0(struct stack_frame *frame)
+{
+    jvm_abort("error\n");
+}
+
 /*
  * Called after security check for system loader access checks have been made.
  *
@@ -395,7 +401,7 @@ static void getInterfaces0(struct stack_frame *frame)
 //public native Class<?> getComponentType();
 static void getComponentType(struct stack_frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("error\n");
 }
 
 /**
@@ -604,11 +610,12 @@ static void getDeclaredFields0(struct stack_frame *frame)
                 rslot(NULL), // annotations  todo
         };
 
-        sf_invoke_method(frame, field_constructor, args); // frame->invokeMethod(fieldConstructor, args);
+//        sf_invoke_method(frame, field_constructor, args); // frame->invokeMethod(fieldConstructor, args);
+        jthread_invoke_method(frame->thread, field_constructor, args);
 
         struct slot s = rslot((jref) name);
 //        jobject_set_field_value_nt(jlrf_obj, "name", "Ljava/lang/String;", &s);
-        fv_set_by_nt(jlrf_obj->instance_field_values, "name", "Ljava/lang/String;", &s);
+        set_instance_field_value_by_nt(jlrf_obj, "name", "Ljava/lang/String;", &s);
 
         *(struct jobject **)jarrobj_index(jlrfs, i) = jlrf_obj; // jlrFields->set(i, jlrFieldObj);
     }
@@ -635,8 +642,10 @@ static void getDeclaredClasses0(struct stack_frame *frame)
 }
 
 
-void java_lang_Class_registerNatives(struct stack_frame *frame)
+void java_lang_Class_registerNatives()
 {
+    register_native_method("java/lang/Class", "registerNatives", "()V", empty_method);
+    register_native_method("java/lang/Class", "getClassLoader0", "()Ljava/lang/ClassLoader;", getClassLoader0);
     register_native_method("java/lang/Class", "getPrimitiveClass", "(Ljava/lang/String;)Ljava/lang/Class;", getPrimitiveClass);
     register_native_method("java/lang/Class", "getName0", "()Ljava/lang/String;", getName0);
     register_native_method("java/lang/Class", "forName0",

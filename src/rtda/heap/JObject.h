@@ -6,7 +6,6 @@
 #define JVM_JOBJECT_H
 
 #include "../../slot.h"
-#include "../fieldvalues.h"
 #include "../ma/jclass.h"
 
 enum jobject_type {
@@ -26,8 +25,9 @@ struct jobject {
 
     // 保存所有实例变量的值
     // 包括此Object中定义的和从父类继承来的。
-    struct fieldvalues *instance_field_values;
+//    struct fieldvalues *instance_field_values;
     int instance_fields_count;
+    struct slot *instance_fields_values;
 
     struct jclass *jclass;
 
@@ -54,6 +54,13 @@ struct jobject {
 };
 
 struct jobject* jobject_create(struct jclass *c);
+
+void set_instance_field_value_by_id(const struct jobject *o, int id, const struct slot *value);
+void set_instance_field_value_by_nt(const struct jobject *o,
+                                    const char *name, const char *descriptor, const struct slot *value);
+
+const struct slot* get_instance_field_value_by_id(const struct jobject *o, int id);
+const struct slot* get_instance_field_value_by_nt(const struct jobject *o, const char *name, const char *descriptor);
 
 struct jobject* jstrobj_create(struct classloader *loader, const char *str);
 const char* jstrobj_value(struct jobject *so);
@@ -121,6 +128,9 @@ void jobject_destroy(struct jobject *o);
 
 
 bool jobject_is_instance_of(const struct jobject *o, const struct jclass *c);
+
+
+const char* jobject_to_string(struct jobject *o);
 
 //void jobject_set_field_value(struct jobject *o, int id, const struct slot *v);
 

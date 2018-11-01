@@ -14,12 +14,15 @@ public class InvokeFuncTest implements Runnable {
     }
 
     public static void staticMethod() {
+        System.out.println("staticMethod\n");
     }
 
     private void instanceMethod() {
+        System.out.println("instanceMethod\n");
     }
 
     @Override
     public void run() {
+        System.out.println("run\n");
     }
 }

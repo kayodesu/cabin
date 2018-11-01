@@ -55,8 +55,9 @@ static void initIDs(struct stack_frame *frame)
     // todo
 }
 
-void java_io_FileOutputStream_registerNatives(struct stack_frame *frame)
+void java_io_FileOutputStream_registerNatives()
 {
+    register_native_method("java/io/FileOutputStream", "registerNatives", "()V", empty_method);
     register_native_method("java/io/FileOutputStream", "writeBytes", "([BIIZ)V", writeBytes);
     register_native_method("java/io/FileOutputStream", "initIDs", "()V", initIDs);
 }

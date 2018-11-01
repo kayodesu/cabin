@@ -71,15 +71,16 @@ static struct bytecode_content read_class_from_jar (const char *jar_path, const 
                 }
 
                 size_t uncompressed_size = file_info.uncompressed_size;
-                s1 *bytecode = malloc(sizeof(s1) * uncompressed_size);
+//                s1 *bytecode = malloc(sizeof(s1) * uncompressed_size);
+                VM_MALLOCS(s1, uncompressed_size, bytecode);
                 if (unzReadCurrentFile(jar_file, bytecode, (unsigned int) uncompressed_size) != uncompressed_size) {
                     // todo error
-                    unzCloseCurrentFile(jar_file);
+                    unzCloseCurrentFile(jar_file);  // todo 干嘛的
                     unzClose(jar_file);
                     printvm("unzReadCurrentFile failed: %s\n", jar_path);
                     return invalid_bytecode_content;
                 }
-                unzCloseCurrentFile(jar_file);
+                unzCloseCurrentFile(jar_file); // todo 干嘛的
                 unzClose(jar_file);
                 return (struct bytecode_content) { bytecode, uncompressed_size };
             }
@@ -97,6 +98,7 @@ static struct bytecode_content read_class_from_jar (const char *jar_path, const 
         }
     }
 
+    unzClose(jar_file);
     return invalid_bytecode_content;
 }
 

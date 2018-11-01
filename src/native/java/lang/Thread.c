@@ -7,6 +7,7 @@
 // public static native Thread currentThread();
 static void currentThread(struct stack_frame *frame)
 {
+    jvm_abort("error\n");
     // push 一个 java/lang/Thread 对象
 //    frame->operandStack.push(frame->thread->getJavaLangThreadObj());
 }
@@ -14,6 +15,7 @@ static void currentThread(struct stack_frame *frame)
 // public static native void sleep(long millis) throws InterruptedException;
 static void sleep(struct stack_frame *frame)
 {
+    jvm_abort("error\n");
     // todo
 //    vars := frame.LocalVars()
 //    millis := vars.GetLong(0)
@@ -36,12 +38,13 @@ static void sleep(struct stack_frame *frame)
 // private native void interrupt0();
 static void interrupt0(struct stack_frame *frame)
 {
-
+    jvm_abort("error\n");
 }
 
 // private native boolean isInterrupted(boolean ClearInterrupted);
 static void isInterrupted(struct stack_frame *frame)
 {
+    jvm_abort("error\n");
 //    frame->operandStack.push(0);
 }
 
@@ -55,6 +58,7 @@ static void isInterrupted(struct stack_frame *frame)
 // public final native boolean isAlive();
 static void isAlive(struct stack_frame *frame)
 {
+    jvm_abort("error\n");
     // todo
 //    JObject *thisObj = frame->getLocalVar(0).getRef();
 //    frame->operandStack.push(0);  // todo wtf?
@@ -63,17 +67,18 @@ static void isAlive(struct stack_frame *frame)
 // private native void setPriority0(int newPriority);
 static void setPriority0(struct stack_frame *frame)
 {
-
+    jvm_abort("error\n");
 }
 
 // private native void start0();
 static void start0(struct stack_frame *frame)
 {
-
+    jvm_abort("error\n");
 }
 
-void java_lang_Thread_registerNatives(struct stack_frame *frame)
+void java_lang_Thread_registerNatives()
 {
+    register_native_method("java/lang/Thread", "registerNatives", "()V", empty_method);
     register_native_method("java/lang/Thread", "currentThread", "()Ljava/lang/Thread;", currentThread);
     register_native_method("java/lang/Thread", "sleep", "(J)V", sleep);
     register_native_method("java/lang/Thread", "interrupt0", "()V", interrupt0);

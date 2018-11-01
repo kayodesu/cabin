@@ -89,13 +89,6 @@ static void putstatic(struct stack_frame *frame)
     }
 
     // todo
-//    jclass->setFieldValue(field->id, field->descriptor,
-//    [&] { return frame->operandStack.popInt(); },
-//    [&] { return frame->operandStack.popFloat(); },
-//    [&] { return frame->operandStack.popLong(); },
-//    [&] { return frame->operandStack.popDouble(); },
-//    [&] { return frame->operandStack.popRef(); });
-
     char d = *ref->resolved_field->descriptor;
     struct slot s;
     if (d == 'B' || d == 'C' || d == 'I' || d == 'S' || d == 'Z') {
@@ -113,7 +106,7 @@ static void putstatic(struct stack_frame *frame)
         jvm_abort("error, %s\n", ref->resolved_field->descriptor);
     }
 
-    fv_set_by_id(ref->resolved_class->static_field_values, ref->resolved_field->id, &s);
+    set_static_field_value_by_id(ref->resolved_class, ref->resolved_field->id, &s);
 }
 
 static void getstatic(struct stack_frame *frame)
@@ -133,7 +126,7 @@ static void getstatic(struct stack_frame *frame)
 
     // todo 如果声明字段的类还没有初始化好，也需要先初始化。
 
-    os_pushs(frame->operand_stack, fv_get_by_id(ref->resolved_class->static_field_values, ref->resolved_field->id));
+    os_pushs(frame->operand_stack, get_static_field_value_by_id(ref->resolved_class, ref->resolved_field->id));
 //    os_pushs(frame->operand_stack, c->static_fields_values + field->id);
 //    auto value = c->getFieldValue(field->id);
 //    frame->operandStack.push(value);
@@ -162,25 +155,26 @@ static void putfield(struct stack_frame *frame)
         }
     }
 
+    printvm("aaaaaaa       %s\n", jfield_to_string(ref->resolved_field));  /////////////////////////////////////////////////////////////////////////
+
     // todo
-//    obj->setFieldValue(field->id, field->descriptor,
-//    [&] { return frame->operandStack.popInt(); },
-//    [&] { return frame->operandStack.popFloat(); },
-//    [&] { return frame->operandStack.popLong(); },
-//    [&] { return frame->operandStack.popDouble(); },
-//    [&] { return frame->operandStack.popRef(); });
     char d = *ref->resolved_field->descriptor;
     struct slot s;
     if (d == 'B' || d == 'C' || d == 'I' || d == 'S' || d == 'Z') {
         s = islot(os_popi(frame->operand_stack));
+        printvm("bbbbbbbbb       %s\n", slot_to_string(&s)); /////////////////////////////////////////////////////////////////////////
     } else if (d == 'F') {
         s = fslot(os_popf(frame->operand_stack));
+        printvm("bbbbbbbbb       %s\n", slot_to_string(&s)); /////////////////////////////////////////////////////////////////////////
     } else if (d == 'J') {
         s = lslot(os_popl(frame->operand_stack));
+        printvm("bbbbbbbbb       %s\n", slot_to_string(&s)); /////////////////////////////////////////////////////////////////////////
     } else if (d == 'D') {
         s = dslot(os_popd(frame->operand_stack));
+        printvm("bbbbbbbbb       %s\n", slot_to_string(&s)); /////////////////////////////////////////////////////////////////////////
     } else if (d  == 'L' || d  == '[') {
         s = rslot(os_popr(frame->operand_stack));
+        printvm("bbbbbbbbb       %s\n", slot_to_string(&s)); /////////////////////////////////////////////////////////////////////////
     } else {
         // todo error
         jvm_abort("error, %s\n", ref->resolved_field->descriptor);
@@ -191,12 +185,9 @@ static void putfield(struct stack_frame *frame)
         jvm_abort("java.lang.NullPointerException\n"); // todo
     }
 
-    printvm("putfield, obj = %p\n", obj); /////////////////////////////////////////////////////////////////////////
+    printvm("putfield, obj = %p, %d\n", obj, obj->t); /////////////////////////////////////////////////////////////////////////
 
-    fv_set_by_id(obj->instance_field_values, ref->resolved_field->id, &s);
-
-    const char *sss = jstrobj_value(obj);
-    printvm("%s\n", sss); /////////////////////////////////////////////////////////////////////////
+    set_instance_field_value_by_id(obj, ref->resolved_field->id, &s);
 }
 
 /*
@@ -218,7 +209,7 @@ static void getfield(struct stack_frame *frame)
     }
 
     printvm("1111111111111       %s\n", jfield_to_string(ref->resolved_field));
-    const struct slot *s = fv_get_by_id(obj->instance_field_values, ref->resolved_field->id);
+    const struct slot *s = get_instance_field_value_by_id(obj, ref->resolved_field->id);
     printvm("22222222222       %s\n", slot_to_string(s));
 
     // 检查 slot 的类型与 field 的类型是否匹配  todo
@@ -277,7 +268,7 @@ static void athrow(struct stack_frame *frame)
     }
 
     // todo UncaughtException
-    struct jobject *so = slot_getr(fv_get_by_nt(exception->instance_field_values, "detailMessage", "Ljava/lang/String;"));
+    struct jobject *so = slot_getr(get_instance_field_value_by_nt(exception, "detailMessage", "Ljava/lang/String;"));
     jvm_abort("UncaughtException. %s. %s\n", exception->jclass->class_name, jstrobj_value(so));  // todo
 //    auto ref = (exception->getFieldValue("detailMessage", "Ljava/lang/String;")).getRef();
 //    JStringObj *o = dynamic_cast<JStringObj *>(ref);
@@ -357,7 +348,8 @@ static void invokestatic(struct stack_frame *frame)
         return;
     }
 
-    sf_invoke_method(frame, ref->resolved_method, NULL); //  frame->invokeMethod(method);
+//    sf_invoke_method(frame, ref->resolved_method, NULL); //  frame->invokeMethod(method);
+    jthread_invoke_method(frame->thread, ref->resolved_method, NULL);
 }
 
 /*
@@ -412,7 +404,8 @@ static void invokespecial(struct stack_frame *frame)
         jvm_abort("java.lang.NullPointerException\n");
     }
 
-    sf_invoke_method(frame, method, args); //  frame->invokeMethod(method, args);
+//    sf_invoke_method(frame, method, args); //  frame->invokeMethod(method, args);
+    jthread_invoke_method(frame->thread, method, args);
 }
 
 /*
@@ -446,6 +439,12 @@ static void invokevirtual(struct stack_frame *frame)
                 printvm("%p, %s\n", so, jstrobj_value(so));
             } else if (arg->t == JINT) {
                 printvm("%d\n", slot_geti(arg));
+            } else if (arg->t == JFLOAT) {
+                printvm("%f\n", slot_getf(arg));
+            } else if (arg->t == JLONG) {
+                printvm("%ld\n", slot_getl(arg));
+            } else if (arg->t == JDOUBLE) {
+                printvm("%f\n", slot_getd(arg));
             } else {
                 jvm_abort("println 找不到类型\n");
             }
@@ -476,7 +475,8 @@ static void invokevirtual(struct stack_frame *frame)
         jvm_abort("java.lang.AbstractMethodError\n");
     }
 
-    sf_invoke_method(frame, method, args); //  frame->invokeMethod(method, args);
+//    sf_invoke_method(frame, method, args); //  frame->invokeMethod(method, args);
+    jthread_invoke_method(frame->thread, method, args);
 }
 
 /*
@@ -533,7 +533,8 @@ static void invokeinterface(struct stack_frame *frame)
         jvm_abort("java.lang.IllegalAccessError\n");
     }
 
-    sf_invoke_method(frame, method, args); //  frame->invokeMethod(method, args);
+//    sf_invoke_method(frame, method, args); //  frame->invokeMethod(method, args);
+    jthread_invoke_method(frame->thread, method, args);
 }
 
 static void invokedynamic(struct stack_frame *frame)

@@ -7,7 +7,7 @@
 // private native void initIDs();
 static void initIDs(struct stack_frame *frame)
 {
-    jvm_abort("error\n");
+    //jvm_abort("error\n");
     // todo
 }
 
@@ -92,7 +92,8 @@ static void initIDs(struct stack_frame *frame)
  * private native void close0() throws IOException;
  */
 
-void java_io_FileInputStream_registerNatives(struct stack_frame *frame)
+void java_io_FileInputStream_registerNatives()
 {
+    register_native_method("java/io/FileInputStream", "registerNatives", "()V", empty_method);
     register_native_method("java/io/FileInputStream", "initIDs", "()V", initIDs);
 }

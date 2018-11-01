@@ -16,7 +16,7 @@
 struct operand_stack {
     u2 capacity; // 总容量
     u2 size;     // 当前大小
-    struct slot *slots;
+    struct slot slots[];
 };
 
 struct operand_stack* os_create(u2 capacity);

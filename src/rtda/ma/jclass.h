@@ -12,7 +12,6 @@
 #include "../../classfile/classfile.h"
 #include "../../interpreter/stack_frame.h"
 #include "../../../lib/uthash/uthash.h"
-#include "../fieldvalues.h"
 
 struct jclassobj;
 struct stack_frame;
@@ -52,10 +51,12 @@ struct jclass {
     int methods_count;
 
     /*
-     * 本类中所定义的变量
+     * 本类中所定义的变量（不包括继承而来的）
      * include both class variables and instance variables,
      * declared by this class or interface type.
      * 类型二统计为两个数量
+     *
+     * todo 接口中的变量怎么处理
      */
     int fields_count;
     struct jfield **fields; // length is fields_count
@@ -63,12 +64,15 @@ struct jclass {
     // instance_field_count 有可能大于 fields_count，因为 instance_field_count 包含了继承过来的 field.
     // 类型二统计为两个数量
     int instance_fields_count;
+    // 已经按变量类型初始化好的变量值，供创建此类的对象时使用。
+    struct slot *inited_instance_fields_values;
 
     /*
      * 类型二统计为两个数量
      */
     int static_fields_count;
-    struct fieldvalues *static_field_values; // 保存所有类变量的值
+    struct slot *static_fields_values; // 保存所有类变量的值
+    //struct fieldvalues *static_field_values; // 保存所有类变量的值
 
     struct bootstrap_methods_attribute *bootstrap_methods_attribute;
 
@@ -91,6 +95,15 @@ void jclass_destroy(struct jclass *c);
  * clinit are the static initialization blocks for the class, and static field initialization.
  */
 void jclass_clinit(struct jclass *c, struct stack_frame *invoke_frame);
+
+struct slot* copy_inited_instance_fields_values(const struct jclass *c);
+
+void set_static_field_value_by_id(const struct jclass *c, int id, const struct slot *value);
+void set_static_field_value_by_nt(const struct jclass *c,
+                                  const char *name, const char *descriptor, const struct slot *value);
+
+const struct slot* get_static_field_value_by_id(const struct jclass *c, int id);
+const struct slot* get_static_field_value_by_nt(const struct jclass *c, const char *name, const char *descriptor);
 
 void jclass_get_public_fields(struct jclass *c, struct jfield* fields[], int *count);
 struct jfield* jclass_lookup_field(struct jclass *c, const char *name, const char *descriptor);

@@ -72,8 +72,8 @@ int main(int argc, char* argv[])
     printvm("extension_classpath: %s\n", extension_classpath);
     printvm("user_classpath: %s\n", user_classpath);
 
-    // todo 测试 JAVA_HOME 是不是  java11  版本
-//    jvm_abort("just support java11. 因为时安装jvms11编码的\n");
+    // todo 测试 JAVA_HOME 是不是  java8  版本
+//    jvm_abort("just support java8.\n");
 
     register_all_native_methods();
 
@@ -88,18 +88,26 @@ void test()
     // 未分类
     // start_jvm("HelloWorld"); // pass
 //    start_jvm("ObjectInitTest"); // pass
+    start_jvm("InvokeFuncTest1");
 
     // array
 //    start_jvm("array/BubbleSort"); // pass
-//    start_jvm("array/ArrayTest");  // todo 三维数组实现不正确
+  //  start_jvm("array/ArrayTest"); // pass
 
     // string
-    start_jvm("string/StringTest");
+    //start_jvm("string/StringTest");
 //    start_jvm("io/github/jiayanggo/string/Mutf8Test");
 
 //    start_jvm("TimeZoneTest");
 //    start_jvm("ObjectTest");
 //    start_jvm("string/StringTest");
+
+    // wrapper
+//    start_jvm("wrapper/IntegerTest");
+//    start_jvm("wrapper/FloatTest");
+
+
+//    start_jvm("ObjectInitTest");
 
 
 //    start_jvm("io/github/jiayanggo/string/StringOut");

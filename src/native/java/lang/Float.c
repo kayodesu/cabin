@@ -19,8 +19,9 @@ static void intBitsToFloat(struct stack_frame *frame)
     os_pushf(frame->operand_stack, int_bits_to_float(i));
 }
 
-void java_lang_Float_registerNatives(struct stack_frame *frame)
+void java_lang_Float_registerNatives()
 {
+    register_native_method("java/lang/Float", "registerNatives", "()V", empty_method);
     register_native_method("java/lang/Float", "floatToRawIntBits", "(F)I", floatToRawIntBits);
     register_native_method("java/lang/Float", "intBitsToFloat", "(I)F", intBitsToFloat);
 }

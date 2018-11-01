@@ -56,8 +56,9 @@ static void getStackAccessControlContext(struct stack_frame *frame)
 //    frame->operandStack.push((jref)nullptr);
 }
 
-void java_security_AccessController_registerNatives(struct stack_frame *frame)
+void java_security_AccessController_registerNatives()
 {
+    register_native_method("java/security/AccessController", "registerNatives", "()V", empty_method);
     register_native_method("java/security/AccessController", "getStackAccessControlContext",
                          "()Ljava/security/AccessControlContext;", getStackAccessControlContext);
 
