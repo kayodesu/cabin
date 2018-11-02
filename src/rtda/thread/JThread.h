@@ -65,7 +65,7 @@ void jthread_push_frame(struct jthread *thread, struct stack_frame *frame);
  * 因为不是new frame 2调用的它，是top frame调用的。
  * 这种错误的压入会造成new frame 2的操作栈溢出（错误的压入new frame 3的返回值所致）。
  *
- * 综上：不支持在循环中调用 jthread_invoke_method 来执行带方法值的方法（@method）。
+ * 综上：不支持在循环中调用 jthread_invoke_method 来执行带返回值的方法（@method）。
  */
 void jthread_invoke_method(struct jthread *thread, struct jmethod *method, const struct slot *args);
 
