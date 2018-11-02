@@ -353,7 +353,7 @@ static void invokestatic(struct stack_frame *frame)
 }
 
 /*
- * invokespecial指令用于调用一些需要特殊处理的实例方法，包括实例初始化方法（§2.9）、私有方法和父类方法。
+ * invokespecial指令用于调用一些需要特殊处理的实例方法，包括实例初始化方法、私有方法和父类方法。
  */
 static void invokespecial(struct stack_frame *frame)
 {

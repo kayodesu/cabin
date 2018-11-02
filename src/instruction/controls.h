@@ -113,7 +113,7 @@ control to the invoker.
 #define TRETURN(func_name, T) \
 static void func_name(struct stack_frame *frame) \
 { \
-    printvm("-----------------   frame = %p, top_frame = %p\n", frame, jthread_top_frame(frame->thread));\
+    assert(frame == jthread_top_frame(frame->thread)); \
     /* frame->method->reset(); */ \
     jthread_pop_frame(frame->thread); \
     \

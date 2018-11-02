@@ -19,7 +19,7 @@ static void init_jvm(struct classloader *loader, struct jthread *main_thread)
     // 先加载sun.mis.VM类，然后执行其类初始化方法
     struct jclass *vm_class = classloader_load_class(loader, "sun/misc/VM");
     if (vm_class == NULL) {
-        jvm_abort("vmClass is null\n");  // todo throw exception
+        jvm_abort("vm_class is null\n");  // todo throw exception
         return;
     }
 
@@ -30,8 +30,10 @@ static void init_jvm(struct classloader *loader, struct jthread *main_thread)
     }
 
     struct stack_frame *init_frame = sf_create(main_thread, init);
-    jclass_clinit(vm_class, init_frame);  // todo clinit 方法到底在何时调用
     jthread_push_frame(main_thread, init_frame);
+    // vm_class 的 clinit 后于 init_frame加入到线程的执行栈中
+    // 保证vm_class 的 clinit方法先执行。
+    jclass_clinit(vm_class, init_frame);  // todo clinit 方法到底在何时调用
     interpret(main_thread);
 }
 
@@ -43,11 +45,11 @@ void create_main_thread_group(struct classloader *loader, struct jthread *main_t
 
     struct jmethod * constructor = jclass_get_constructor(thread_group_class, "()V");
     struct stack_frame *frame = sf_create(main_thread, constructor);
-//    jclass_clinit(thread_group_class, frame);  // todo
     struct slot arg = rslot(main_thread_group);
     sf_set_local_var(frame, 0, &arg);
 
     jthread_push_frame(main_thread, frame);
+//    jclass_clinit(thread_group_class, frame);  // todo
     interpret(main_thread);
 
     // 无需在这里 delete frame, interpret函数会delete调执行过的frame
@@ -65,7 +67,7 @@ void start_jvm(const char *main_class_name)
     mainThread->joinToMainThreadGroup();
 #endif
 
-//    init_jvm(loader, main_thread);
+    //init_jvm(loader, main_thread);
 
     if (verbose)
         printvm("loading main class: %s !!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", main_class_name);

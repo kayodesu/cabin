@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include "jthread.h"
+#include "../ma/access.h"
 //#include "../../interpreter/stack_frame.h"
 
 struct jthread* jthread_create()
@@ -24,15 +25,6 @@ void jthread_push_frame(struct jthread *thread, struct stack_frame *frame)
 void jthread_invoke_method(struct jthread *thread, struct jmethod *method, const struct slot *args)
 {
     assert(thread != NULL && method != NULL);
-//    if (method->isNative()) {  //todo
-//        auto nativeMethod = findNativeMethod(method->jclass->className, method->name, method->descriptor);
-//        if (nativeMethod == nullptr) {
-//            jvmAbort("error. not find native function: %s, %s, %s\n",
-//                       method->jclass->className.c_str(), method->name.c_str(), method->descriptor.c_str());    // todo
-//        }
-//        nativeMethod(this);
-//        return;
-//    }
 
     struct stack_frame *top_frame = jthread_top_frame(thread);
     if (top_frame == NULL) {

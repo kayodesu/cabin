@@ -23,25 +23,25 @@ static void initProperties(struct stack_frame *frame)
 {
     char *sys_props[][2] = {  // todo
             { "java.version",          "1.8.0" },  // todo
-//            {  "java.vendor",          "" },
-//            { "java.vendor.url",      ""},
-//            { "java.home",            "" }, // options.AbsJavaHome
-//            { "java.class.version",   "52.0"},
-//            { "java.class.path",      "" }, // heap.BootLoader().ClassPath().String()
-//            { "java.awt.graphicsenv", "sun.awt.CGraphicsEnvironment"},
-//            { "os.name",              "" },   // todo runtime.GOOS
-//            { "os.arch",              "" }, // todo runtime.GOARCH
-//            { "os.version",           "" },             // todo
-//            { "file.separator",       "/" },            // todo os.PathSeparator
-//            { "path.separator",       ":" },            // todo os.PathListSeparator
-//            { "line.separator",       "\n" },           // todo
-//            { "user.name",            "" },             // todo
-//            { "user.home",            "" },             // todo
-//            { "user.dir",             "." },            // todo
-//            { "user.country",         "CN" },           // todo
-//            { "file.encoding",        "UTF-8" },
-//            { "sun.stdout.encoding",  "UTF-8" },
-//            { "sun.stderr.encoding",  "UTF-8" },
+            {  "java.vendor",          "" },
+            { "java.vendor.url",      ""},
+            { "java.home",            "" }, // options.AbsJavaHome
+            { "java.class.version",   "52.0"},
+            { "java.class.path",      "" }, // heap.BootLoader().ClassPath().String()
+            { "java.awt.graphicsenv", "sun.awt.CGraphicsEnvironment"},
+            { "os.name",              "" },   // todo runtime.GOOS
+            { "os.arch",              "" }, // todo runtime.GOARCH
+            { "os.version",           "" },             // todo
+            { "file.separator",       "/" },            // todo os.PathSeparator
+            { "path.separator",       ":" },            // todo os.PathListSeparator
+            { "line.separator",       "\n" },           // todo
+            { "user.name",            "" },             // todo
+            { "user.home",            "" },             // todo
+            { "user.dir",             "." },            // todo
+            { "user.country",         "CN" },           // todo
+            { "file.encoding",        "UTF-8" },
+            { "sun.stdout.encoding",  "UTF-8" },
+            { "sun.stderr.encoding",  "UTF-8" },
     };
 
     struct jobject *props = slot_getr(frame->local_vars);//frame->getLocalVar(0).getRef();
@@ -61,7 +61,6 @@ static void initProperties(struct stack_frame *frame)
                 rslot(jstrobj_create(props->jclass->loader, sys_props[i][0])),
                 rslot(jstrobj_create(props->jclass->loader, sys_props[i][1]))
         };
-//        sf_invoke_method(frame, set_property, args);
         jthread_invoke_method(frame->thread, set_property, args);
     }
 

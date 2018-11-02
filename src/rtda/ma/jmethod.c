@@ -140,12 +140,12 @@ struct jmethod* jmethod_create(const struct jclass *c, const struct member_info 
         method->max_locals = method->arg_slot_count; // todo 因为本地方法帧的局部变量表只用来存放参数值，所以把argSlotCount赋给maxLocals字段刚好。
 
         size_t code_len = 2;
-        VM_MALLOC(s1, code);
-        code[0] = (s1) 0xfe;  // todo  0xfe 是啥
-        const char *t = strchr(method->descriptor, ')'); // find return  todo how?????
+        VM_MALLOCS(s1, code_len, code);
+        code[0] = (s1) 0xfe;  // 0xfe 是 "impdep1" 指令的代码，用这条指令来执行 native 方法。
+        const char *t = strchr(method->descriptor, ')'); // find return
         if (t == NULL) {
             //todo error
-            printvm("error\n");
+            printvm("method's descriptor 格式不对：%s\n", method->descriptor);
         }
 
         ++t;
@@ -168,7 +168,6 @@ struct jmethod* jmethod_create(const struct jclass *c, const struct member_info 
 
     return method;
 }
-
 
 void jmethod_destroy(struct jmethod *m)
 {
@@ -230,6 +229,10 @@ char *jmethod_to_string(const struct jmethod *method)
         return "method: NULL";
     }
     snprintf(global_buf, GLOBAL_BUF_LEN,
-             "method: %s~%s~%s\0", method->jclass->class_name, method->name, method->descriptor);
+             "method%s: %s~%s~%s\0",
+             IS_NATIVE(method->access_flags) ? "(native)" : "",
+             method->jclass->class_name,
+             method->name,
+             method->descriptor);
     return global_buf;
 }

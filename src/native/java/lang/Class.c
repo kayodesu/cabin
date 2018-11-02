@@ -48,11 +48,11 @@ static void forName0(struct stack_frame *frame)
 // static native Class<?> getPrimitiveClass(String name);
 static void getPrimitiveClass(struct stack_frame *frame)
 {
-    struct jobject *so = slot_getr(frame->local_vars); // frame->local_vars[0]
+    struct jobject *so = slot_getr(frame->local_vars);
     STROBJ_CHECK(so);
-    const char *class_name = jstrobj_value(so);//so->s.str;// 这里得到的 class_name 是诸如 "int", "float" 之类的值
+    const char *class_name = jstrobj_value(so); // 这里得到的 class_name 是诸如 "int", "float" 之类的值
     struct jclass *c = classloader_load_class(frame->method->jclass->loader, class_name);
-    os_pushr(frame->operand_stack, c->clsobj); //frame->operandStack.push(c->getClassObj());
+    os_pushr(frame->operand_stack, c->clsobj);
 }
 
 /**

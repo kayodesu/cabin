@@ -19,10 +19,10 @@ extern bool verbose;
 #endif
 
 // 启动类路径（bootstrap classpath）默认对应 jre/lib 目录，Java标准库（大部分在rt.jar里）位于该路径
-extern char bootstrap_classpath[PATH_MAX];
+extern char bootstrap_classpath[];
 
 // 扩展类路径（extension classpath）默认对应 jre/lib/ext 目录，使用Java扩展机制的类位于这个路径。
-extern char extension_classpath[PATH_MAX];
+extern char extension_classpath[];
 
 // 用户类路径（user classpath）我们自己实现的类，以及第三方类库位于用户类路径
 extern char *user_classpath; // todo
@@ -43,7 +43,7 @@ struct name_and_type {
 
 // 一个全局的buf，代码中任何地方皆可使用，
 // 控制好多线程访问冲突即可。
-#define GLOBAL_BUF_LEN 10240  // big enough?
+#define GLOBAL_BUF_LEN 10240  // I think this is big enough.
 char global_buf[GLOBAL_BUF_LEN];
 
 void start_jvm(const char *main_class_name);

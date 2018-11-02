@@ -8,14 +8,14 @@
 // public static native long doubleToRawLongBits(double value);
 static void doubleToRawLongBits(struct stack_frame *frame)
 {
-    jdouble d = slot_getd(frame->local_vars); // frame->local_vars[0]
+    jdouble d = slot_getd(frame->local_vars);
     os_pushl(frame->operand_stack, double_to_raw_long_bits(d));
 }
 
 // public static native double longBitsToDouble(long value);
 static void longBitsToDouble(struct stack_frame *frame)
 {
-    jlong l = slot_getl(frame->local_vars); // frame->local_vars[0]
+    jlong l = slot_getl(frame->local_vars);
     os_pushd(frame->operand_stack, long_bits_to_double(l));
 }
 
