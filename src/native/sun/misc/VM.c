@@ -3,6 +3,7 @@
  */
 
 #include "../../registry.h"
+#include "../../../interpreter/stack_frame.h"
 
 // private static native void initialize();
 static void initialize(struct stack_frame *frame)

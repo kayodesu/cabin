@@ -1,9 +1,11 @@
-#include <limits.h>
-#include <assert.h>
 #include "loader/classloader.h"
 #include "rtda/thread/jthread.h"
 #include "rtda/ma/access.h"
 #include "interpreter/interpreter.h"
+#include "rtda/heap/strpool.h"
+#include "jvm.h"
+#include "rtda/ma/jclass.h"
+#include "rtda/heap/jobject.h"
 
 /*
  * Author: Jia Yang
@@ -11,7 +13,7 @@
 
 char bootstrap_classpath[PATH_MAX] = { 0 };
 char extension_classpath[PATH_MAX] = { 0 };
-char *user_classpath = "D:\\code\\jvm\\test"; // todo;
+char *user_classpath = "D:\\code\\jvm\\testclasses"; // todo;
 
 
 static void init_jvm(struct classloader *loader, struct jthread *main_thread)
@@ -49,15 +51,15 @@ void create_main_thread_group(struct classloader *loader, struct jthread *main_t
     sf_set_local_var(frame, 0, &arg);
 
     jthread_push_frame(main_thread, frame);
-//    jclass_clinit(thread_group_class, frame);  // todo
+    jclass_clinit(thread_group_class, frame);  // todo
     interpret(main_thread);
-
-    // 无需在这里 delete frame, interpret函数会delete调执行过的frame
 }
 
 void start_jvm(const char *main_class_name)
 {
     assert(main_class_name != NULL);
+
+    build_str_pool();
 
     struct classloader *loader = classloader_create();
     struct jthread *main_thread = jthread_create();
@@ -67,10 +69,11 @@ void start_jvm(const char *main_class_name)
     mainThread->joinToMainThreadGroup();
 #endif
 
-    //init_jvm(loader, main_thread);
+//    init_jvm(loader, main_thread);
 
-    if (verbose)
-        printvm("loading main class: %s !!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", main_class_name);
+#ifdef JVM_DEBUG
+    printvm("loading main class: %s !!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", main_class_name);
+#endif
 
     struct jclass *main_class = classloader_load_class(loader, main_class_name);
     if (main_class == NULL) {
@@ -80,15 +83,13 @@ void start_jvm(const char *main_class_name)
 
     struct jmethod *main_method = jclass_lookup_static_method(main_class, "main", "([Ljava/lang/String;)V");
     if (main_method == NULL) {
-        jvm_abort("没有找到main方法\n");  // todo
+        jvm_abort("can't find method main.\n");
     } else {
         if (!IS_PUBLIC(main_method->access_flags)) {
-            // todo
-            jvm_abort("..................");
+            jvm_abort("method main must be public.\n");
         }
         if (!IS_STATIC(main_method->access_flags)) {
-            // todo
-            jvm_abort("...................");
+            jvm_abort("method main must be static.\n");
         }
     }
 

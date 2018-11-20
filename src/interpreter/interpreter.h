@@ -5,7 +5,7 @@
 #ifndef JVM_INTERPRETER_H
 #define JVM_INTERPRETER_H
 
-#include "../rtda/thread/jthread.h"
+struct jthread;
 
 void interpret(struct jthread *thread);
 

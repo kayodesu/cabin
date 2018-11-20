@@ -3,20 +3,50 @@
     <words>
       <w>allocs</w>
       <w>arrobj</w>
+      <w>cfcp</w>
+      <w>clsobj</w>
+      <w>dslot</w>
       <w>fieldvalues</w>
+      <w>fslot</w>
+      <w>getd</w>
+      <w>getf</w>
+      <w>geti</w>
+      <w>getl</w>
+      <w>getr</w>
       <w>graphicsenv</w>
+      <w>hashmap</w>
+      <w>hashtable</w>
       <w>hfree</w>
+      <w>islot</w>
       <w>jarrobj</w>
       <w>jchars</w>
       <w>jstrobj</w>
       <w>jvms</w>
+      <w>llen</w>
+      <w>lslot</w>
       <w>mallocs</w>
       <w>oper</w>
+      <w>phslot</w>
+      <w>popd</w>
+      <w>popf</w>
+      <w>popi</w>
+      <w>popl</w>
+      <w>popr</w>
       <w>printvm</w>
+      <w>pushd</w>
+      <w>pushf</w>
+      <w>pushi</w>
+      <w>pushl</w>
+      <w>pushr</w>
+      <w>rslot</w>
+      <w>slen</w>
       <w>statbuf</w>
+      <w>strend</w>
       <w>strobj</w>
+      <w>strpool</w>
       <w>treturn</w>
       <w>wcscpy</w>
+      <w>wstr</w>
     </words>
   </dictionary>
 </component>

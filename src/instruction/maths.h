@@ -170,8 +170,7 @@ static void iinc(struct stack_frame *frame)
     }
 
     s->v.i += value;
-    printvm("iinc: index is %d, value is %d, result is %d\n", index, value, s->v.i);
-//    frame->setLocalVar(index, Slot(frame->getLocalVar(index).getInt() + value));
+//    printvm("iinc: index is %d, value is %d, result is %d\n", index, value, s->v.i);
 }
 
 #endif //JVM_MATHS_H

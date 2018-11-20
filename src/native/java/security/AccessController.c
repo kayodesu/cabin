@@ -3,6 +3,7 @@
  */
 
 #include "../../registry.h"
+#include "../../../interpreter/stack_frame.h"
 
 // @CallerSensitive
 // public static native <T> T doPrivileged(PrivilegedAction<T> action);

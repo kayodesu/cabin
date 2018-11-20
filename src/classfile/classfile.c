@@ -24,6 +24,8 @@ static void parse_member_info(struct bytecode_reader *reader,
     }
 }
 
+static const struct placeholder_constant placeholder_constant = (struct placeholder_constant){ PLACEHOLDER_CONSTANT };
+
 struct classfile* classfile_create(s1 *bytecode, size_t len)
 {
     assert(bytecode != NULL);
@@ -48,7 +50,7 @@ struct classfile* classfile_create(s1 *bytecode, size_t len)
         u1 tag = CONSTANT_TAG(cf->constant_pool[i]);
         if (tag == LONG_CONSTANT || tag == DOUBLE_CONSTANT) {
             i++;
-            cf->constant_pool[i] = NULL;  // todo
+            cf->constant_pool[i] = (void *) &placeholder_constant;  // todo
         }
     }
 
@@ -83,7 +85,8 @@ struct classfile* classfile_create(s1 *bytecode, size_t len)
     for (int i = 0; i < cf->attributes_count; i++) {
         cf->attributes[i] = parse_attribute(reader, cf->constant_pool, cf->constant_pool_count);
     }
-//    printvm("aaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n"); // ///////////////////////////////  todo
+
+    bcr_destroy(reader);
     return cf;
 }
 

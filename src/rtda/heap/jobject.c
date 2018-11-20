@@ -4,6 +4,7 @@
 
 #include <string.h>
 #include <wchar.h>
+#include <stdlib.h>
 #include "jobject.h"
 #include "mm/halloc.h"
 #include "../ma/jfield.h"
@@ -123,7 +124,8 @@ struct jobject* jstrobj_create(struct classloader *loader, const char *str)
     // 因为 wcscpy 函数会自动添加字符串结尾 L'\0'，
     // 但 jchars 没有空间容纳字符串结尾符，因为 jchar 是字符数组，不是字符串
     for (size_t i = 0; i < len; i++) {
-        *(jchar *)jarrobj_index(jchars, i) = so->s.wstr[i]; // todo 可以使用 memcpy
+//        *(jchar *)jarrobj_index(jchars, i) = so->s.wstr[i];
+        memcpy(jchars->a.data, so->s.wstr, sizeof(jchar) * len);
     }
 
 // todo 要不要调用 <clinit>, <init>方法。
@@ -153,7 +155,7 @@ const char* jstrobj_value(struct jobject *so)
     }
 
     const struct slot *s = get_instance_field_value_by_nt(so, "value", "[C");
-    if (s == NULL || s->t != REFERENCE) {
+    if (s == NULL || s->t != JREF) {
         jvm_abort("error\n"); // todo
     }
 
@@ -164,7 +166,7 @@ const char* jstrobj_value(struct jobject *so)
     ARROBJ_CHECK(jchars);
 
     so->s.wstr = wcsdup(jchars->a.data);
-    so->s.str = unicode_to_utf8( so->s.wstr);
+    so->s.str = unicode_to_utf8(so->s.wstr);
     return so->s.str;  // todo
 }
 
@@ -305,13 +307,13 @@ const char* jobject_to_string(struct jobject *o)
     }
 
     if (o->t == STRING_OBJECT) {
-        snprintf(global_buf, GLOBAL_BUF_LEN, "string object(%p): %s", o, jstrobj_value(o));
+        snprintf(global_buf, GLOBAL_BUF_LEN, "string object(%p): %s\0", o, jstrobj_value(o));
     } else if (o->t == ARRAY_OBJECT) {
-        snprintf(global_buf, GLOBAL_BUF_LEN, "array object(%p): %d", o, o->a.len);
+        snprintf(global_buf, GLOBAL_BUF_LEN, "array object(%p): %d\0", o, o->a.len);
     } else if (o->t == CLASS_OBJECT) {
-        snprintf(global_buf, GLOBAL_BUF_LEN, "class object(%p)", o);
+        snprintf(global_buf, GLOBAL_BUF_LEN, "class object(%p)\0", o);
     } else {
-        snprintf(global_buf, GLOBAL_BUF_LEN, "normal object(%p), %s", o, o->jclass->class_name);
+        snprintf(global_buf, GLOBAL_BUF_LEN, "normal object(%p), %s\0", o, o->jclass->class_name);
     }
 
     return global_buf;

@@ -6,6 +6,7 @@
 #define JVM_STACK_FRAME_H
 
 #include <stdbool.h>
+#include <assert.h>
 #include "operand_stack.h"
 #include "../rtda/ma/jmethod.h"
 #include "../rtda/thread/jthread.h"
@@ -30,7 +31,6 @@ struct stack_frame {
 struct stack_frame* sf_create(struct jthread *thread, struct jmethod *method);
 
 void sf_set_local_var(struct stack_frame *frame, int index, const struct slot *value);
-//void sf_invoke_method(struct stack_frame *frame, struct jmethod *method, const struct slot *args);
 
 void sf_destroy(struct stack_frame *frame);
 

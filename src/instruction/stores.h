@@ -9,8 +9,6 @@
 
 jint fetch_index(struct stack_frame *frame);
 
-/////////////////////////////
-
 static inline void __istore(struct stack_frame *frame, int index)
 {
     struct slot *s = os_pops(frame->operand_stack);
@@ -54,7 +52,7 @@ static void fstore_3(struct stack_frame *frame) { __fstore(frame, 3); }
 static inline void __astore(struct stack_frame *frame, int index)
 {
     struct slot *s = os_pops(frame->operand_stack);
-    if (s != NULL && s->t == REFERENCE) {
+    if (s != NULL && s->t == JREF) {
         sf_set_local_var(frame, index, s);
         return;
     }
@@ -80,13 +78,15 @@ static void __lstore(struct stack_frame *frame, int index)
     struct slot *s = os_pops(frame->operand_stack);
     if (s == NULL || s->t != PH) {
         // todo error
-        jvm_abort("wants placeholder, gets %s.", slot_to_string(s));
+        SLOT_TO_STRING_WRAP(s, jvm_abort("wants placeholder, gets %s.", slot_str));
     }
 
     s = os_pops(frame->operand_stack);
     if (s == NULL || s->t != JLONG) {
         // todo error
-        jvm_abort("wants jlong, gets %s.", slot_to_string(s));
+        char *buf;
+        jvm_abort("wants jlong, gets %s.", slot_to_string(s, &buf));
+        free(buf);
     }
 
     sf_set_local_var(frame, index, s);

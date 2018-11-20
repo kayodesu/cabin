@@ -8,12 +8,13 @@
 #include <assert.h>
 #include "convert.h"
 #include "../jvm.h"
-
 #include "bytecode_reader.h"
 
-//    void reset() {
-//        pc = 0;
-//    }
+struct bytecode_reader {
+    const s1 *bytecode;
+    size_t len;  // bytecode len
+    size_t pc;   // program count
+};
 
 bool bcr_has_more(const struct bytecode_reader *reader)
 {
@@ -32,6 +33,12 @@ bool bcr_set_pc(struct bytecode_reader *reader, size_t new_pc)
     return true;
 }
 
+size_t bcr_get_pc(const struct bytecode_reader *reader)
+{
+    assert(reader != NULL);
+    return reader->pc;
+}
+
 bool bcr_skip(struct bytecode_reader *reader, int offset)
 {
     assert(reader != NULL);
@@ -41,8 +48,11 @@ bool bcr_skip(struct bytecode_reader *reader, int offset)
 bool bcr_skip_padding(struct bytecode_reader *reader)
 {
     assert(reader != NULL);
-    if (reader->pc % 4 != 0)  // todo
+    if (reader->pc % 4 != 0) { // todo
         reader->pc++;
+        return true;
+    }
+    return false;
 }
 
 void bcr_read_bytes(struct bytecode_reader *reader, u1 *buf, size_t len)
@@ -115,6 +125,8 @@ void bcr_reads4s(struct bytecode_reader *reader, int n, s4 *s4s)
 
 void bcr_destroy(struct bytecode_reader *reader)
 {
+    assert(reader != NULL);
+    // todo
     free(reader);
 }
 
@@ -126,21 +138,6 @@ struct bytecode_reader* bcr_create(const s1 *bytecode, size_t len)
     reader->bytecode = bytecode;
     reader->len = len;
     reader->pc = 0;
-
-//    reader->has_more = bytecode_reader_has_more;
-//    reader->set_pc = bytecode_reader_set_pc;
-//    reader->skip = bytecode_reader_skip;
-//    reader->skip_padding = bytecode_reader_skip_padding;
-//    reader->read_bytes = bytecode_reader_read_bytes;
-//    reader->reads1 = bytecode_reader_reads1;
-//    reader->readu1 = bytecode_reader_readu1;
-//    reader->readu2 = bytecode_reader_readu2;
-//    reader->reads2 = bytecode_reader_reads2;
-//    reader->readu4 = bytecode_reader_readu4;
-//    reader->reads4 = bytecode_reader_reads4;
-//    reader->reads4s = bytecode_reader_reads4s;
-//    reader->reads4s = bytecode_reader_reads4s;
-//    reader->destroy = bytecode_reader_destroy;
 
     return reader;
 }

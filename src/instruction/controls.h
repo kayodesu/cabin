@@ -13,6 +13,18 @@ static void __goto(struct stack_frame *frame)
     bcr_skip(frame->reader, offset - 3);  // 减3？减去本条指令自身的长度 todo
 }
 
+static void jsr(struct stack_frame *frame)
+{
+    jvm_abort("jsr 不支持");  // todo
+}
+
+static void ret(struct stack_frame *frame)
+{
+    // todo ret 有 wide 扩展
+    jvm_abort("ret 不支持");  // todo
+}
+
+
 /*
  * todo 指令说明  好像是实现 switch 语句
  */
@@ -69,13 +81,13 @@ static void lookupswitch(struct stack_frame *frame)
     jint key = os_popi(frame->operand_stack);//frame->operandStack.popInt();
     s4 offset = default_offset;
     for (int i = 0; i < npairs * 2; i += 2) {
-        if (match_offsets[i] == key) { // 找到case
+        if (match_offsets[i] == key) { // 找到 case
             offset = match_offsets[i + 1];
             break;
         }
     }
 
-    bcr_skip(reader, offset); //reader->skip(offset); // todo 要不要减去本条指令自身的长度
+    bcr_skip(reader, offset); // todo 要不要减去本条指令自身的长度
 }
 
 

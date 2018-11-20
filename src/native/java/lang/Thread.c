@@ -3,6 +3,7 @@
  */
 
 #include "../../registry.h"
+#include "../../../interpreter/stack_frame.h"
 
 // public static native Thread currentThread();
 static void currentThread(struct stack_frame *frame)

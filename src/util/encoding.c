@@ -2,12 +2,12 @@
  * Author: Jia Yang
  */
 
-#include <afxres.h>
 #include <wchar.h>
+#include <string.h>
 #include "encoding.h"
 #include "../jvm.h"
 
-void* decode_mutf8(uint8_t *src_bytes, size_t len, char dest[len + 1])
+void* decode_mutf8(const uint8_t *src_bytes, size_t len, char dest[len + 1])
 {
     // todo 此函数的实现是错的，先这么做
     memcpy(dest, src_bytes, len);
@@ -15,7 +15,7 @@ void* decode_mutf8(uint8_t *src_bytes, size_t len, char dest[len + 1])
     return dest;
 }
 
-jchar* utf8_to_unicode(const char *str)
+jchar* utf8_to_unicode(const const char *str)
 {
     size_t len = strlen(str);
     VM_MALLOCS(jchar, len + 1, wstr);
@@ -24,7 +24,7 @@ jchar* utf8_to_unicode(const char *str)
     return wstr;
 }
 
-char* unicode_to_utf8(const jchar *wstr)
+char* unicode_to_utf8(const const jchar *wstr)
 {
     size_t len = wcslen(wstr);
     VM_MALLOCS(char, len + 1, str);

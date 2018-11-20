@@ -52,7 +52,8 @@
 #define IS_ANNOTATION(access_flags) (((access_flags) & ACC_ANNOTATION) != 0)
 #define IS_ENUM(access_flags) (((access_flags) & ACC_ENUM) != 0)
 
-static void inline set_synthetic(u2 *access_flags) {
+static void inline set_synthetic(u2 *access_flags)
+{
     (*access_flags) |= ACC_SYNTHETIC;  // todo
 }
 

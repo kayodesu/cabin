@@ -27,58 +27,18 @@ struct slot {
     } v;
 };
 
-#define islot(i0) ((struct slot) { .t = JINT, .v.i = (i0) })
-#define fslot(f0) ((struct slot) { .t = JFLOAT, .v.f = (f0) })
-#define lslot(l0) ((struct slot) { .t = JLONG, .v.l = (l0) })
+#define islot(i0) ((struct slot) { .t = JINT,    .v.i = (i0) })
+#define fslot(f0) ((struct slot) { .t = JFLOAT,  .v.f = (f0) })
+#define lslot(l0) ((struct slot) { .t = JLONG,   .v.l = (l0) })
 #define dslot(d0) ((struct slot) { .t = JDOUBLE, .v.d = (d0) })
-#define rslot(r0) ((struct slot) { .t = REFERENCE, .v.r = (r0) })
-#define phslot    ((struct slot)  { .t = PH, .v.l = 0 }) // 将v中size最大的域赋0，相当于将v赋0。 todo 怎么直接将v赋0
-#define natslot   ((struct slot) { .t = NAT, .v.l = 0 }) // 将v中size最大的域赋0，相当于将v赋0。 todo 怎么直接将v赋0
+#define rslot(r0) ((struct slot) { .t = JREF,    .v.r = (r0) })
+#define phslot    ((struct slot) { .t = PH })
 
-static inline jint slot_geti(const struct slot *s)
-{
-    assert(s != NULL);
-    if (s->t == JINT) {
-        return s->v.i;
-    }
-    jvm_abort("type mismatch. wants jint, gets %s\n", get_jtype_name(s->t));
-}
-
-static inline jfloat slot_getf(const struct slot *s)
-{
-    assert(s != NULL);
-    if (s->t == JFLOAT) {
-        return s->v.f;
-    }
-    jvm_abort("type mismatch. wants jfloat, gets %s\n", get_jtype_name(s->t));
-}
-
-static inline long slot_getl(const struct slot *s)
-{
-    assert(s != NULL);
-    if (s->t == JLONG) {
-        return s->v.l;
-    }
-    jvm_abort("type mismatch. wants jlong, gets %s\n", get_jtype_name(s->t));
-}
-
-static inline jdouble slot_getd(const struct slot *s)
-{
-    assert(s != NULL);
-    if (s->t == JDOUBLE) {
-        return s->v.d;
-    }
-    jvm_abort("type mismatch. wants jdouble, gets %s\n", get_jtype_name(s->t));
-}
-
-static inline jref slot_getr(const struct slot *s)
-{
-    assert(s != NULL);
-    if (s->t == REFERENCE) {
-        return s->v.r;
-    }
-    jvm_abort("type mismatch. wants reference, gets %s\n", get_jtype_name(s->t));
-}
+jint    slot_geti(const struct slot *s);
+jfloat  slot_getf(const struct slot *s);
+jlong   slot_getl(const struct slot *s);
+jdouble slot_getd(const struct slot *s);
+jref    slot_getr(const struct slot *s);
 
 static inline bool slot_is_ph(const struct slot *s)
 {
@@ -98,50 +58,19 @@ static inline bool slot_is_category_one(const struct slot *s)
     return !slot_is_ph(s) && !slot_is_category_two(s);
 }
 
-static inline char* slot_to_string(const struct slot *s)
-{
-    if (s == NULL) {
-        return "slot: NULL";
-    }
 
-    switch (s->t) {
-        case JINT:
-            snprintf(global_buf, GLOBAL_BUF_LEN, "slot: jint, %d\n", s->v.i);
-            break;
-        case JBYTE:
-            snprintf(global_buf, GLOBAL_BUF_LEN, "slot: jbyte, %d\n", s->v.i);
-            break;
-        case JBOOL:
-            snprintf(global_buf, GLOBAL_BUF_LEN, "slot: jbool, %s\n", s->v.i == 0 ? "false" : "true");
-            break;
-        case JCHAR:
-            snprintf(global_buf, GLOBAL_BUF_LEN, "slot: jchar, %c\n", s->v.i);
-            break;
-        case JSHORT:
-            snprintf(global_buf, GLOBAL_BUF_LEN, "slot: jshort, %d\n", s->v.i);
-            break;
-        case JLONG:
-            snprintf(global_buf, GLOBAL_BUF_LEN, "slot: jlong, %ld\n", (long) s->v.l);
-            break;
-        case JFLOAT:
-            snprintf(global_buf, GLOBAL_BUF_LEN, "slot: jfloat, %f\n", s->v.f);
-            break;
-        case JDOUBLE:
-            snprintf(global_buf, GLOBAL_BUF_LEN, "slot: jdouble, %f\n", s->v.d);
-            break;
-        case REFERENCE:
-            snprintf(global_buf, GLOBAL_BUF_LEN, "slot: reference, %p\n", s->v.r);
-            break;
-        case PH:
-        case NAT:
-            snprintf(global_buf, GLOBAL_BUF_LEN, "slot: %s\n", get_jtype_name(s->t));
-            break;
-        default:
-            snprintf(global_buf, GLOBAL_BUF_LEN, "slot: illegal slot. t = %d\n", s->t);
-            break;
-    }
+/*
+ * 由调用者 free result
+ */
+char* slot_to_string(const struct slot *s, char **result);
 
-    return global_buf;
-}
+// 对 slot_to_string 函数提供一层包裹
+#define SLOT_TO_STRING_WRAP(slot_point, ues_slot_str) \
+    do { \
+        char *slot_str; \
+        slot_to_string(slot_point, &slot_str); \
+        ues_slot_str; \
+        free(slot_str); \
+    } while (false)
 
 #endif //JVM_SLOT_H

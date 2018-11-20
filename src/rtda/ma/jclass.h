@@ -6,12 +6,12 @@
 #define JVM_JCLASS_H
 
 #include <stdbool.h>
+#include <string.h>
 #include "../../jtypes.h"
 #include "rtcp.h"
 #include "../../loader/classloader.h"
 #include "../../classfile/classfile.h"
 #include "../../interpreter/stack_frame.h"
-#include "../../../lib/uthash/uthash.h"
 
 struct jclassobj;
 struct stack_frame;
@@ -33,7 +33,6 @@ struct jclass {
 
     // 必须是全限定类名，用作 hash 表中的 key
     const char *class_name;
-    UT_hash_handle hh;
 
     bool inited; // 此类是否被初始化过了（是否调用了<clinit>方法）。
 
@@ -45,7 +44,6 @@ struct jclass {
     int interfaces_count;
 
     struct rtcp *rtcp;
-    int constants_count;
 
     struct jmethod **methods;
     int methods_count;
@@ -72,7 +70,6 @@ struct jclass {
      */
     int static_fields_count;
     struct slot *static_fields_values; // 保存所有类变量的值
-    //struct fieldvalues *static_field_values; // 保存所有类变量的值
 
     struct bootstrap_methods_attribute *bootstrap_methods_attribute;
 

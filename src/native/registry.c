@@ -2,34 +2,26 @@
  * Author: Jia Yang
  */
 
-#include <limits.h>
 #include <stdio.h>
-#include <string.h>
 #include "registry.h"
-#include "../../lib/uthash/uthash.h"
 #include "../jvm.h"
-
-
-//static map<string, function<void(StackFrame *)>> nativeMethods;
+#include "../util/hashmap.h"
 
 // key 的组成为 "class_name~method_name~method_descriptor" 的形式，
 // key 的长度要足够存储上述格式的字符和外加字符串结尾的'\0'
-#define KEY_LEN (3 * PATH_MAX + 3)  // todo PATH_MAX 对不对
+#define KEY_LEN (3 * FILENAME_MAX + 3)  // big enough?
 
-static struct native_method {
+struct native_method {
     char key[KEY_LEN];
     void (* method)(struct stack_frame *);
-    UT_hash_handle hh; // makes this structure hashable
-} *native_methods = NULL;
+};
 
-//static set<NativeMethod, NativeMethod::Cmp> ssssss;
+static struct hashmap *native_methods;
 
-//void printRegisteredNativeMethods() {
-//    jprintf("\n");
-//    for (auto iter = nativeMethods.begin(); iter != nativeMethods.end(); iter++) {
-//        jprintf("%s, %s\n", iter->first.c_str(), iter->second.target_type().name());
-//    }
-//    jprintf("\n");
+//void print_registered_native_methods()
+//{
+//    printvm("\n");
+//    hashmap_print(native_methods);
 //}
 
 static char* gen_key(const char *class_name, const char *method_name, const char *method_descriptor, char key[])
@@ -44,22 +36,22 @@ void register_native_method(const char *class_name, const char *method_name,
     VM_MALLOC(struct native_method, nm);
     nm->method = method;
     gen_key(class_name, method_name, method_descriptor, nm->key);
-    HASH_ADD_STR(native_methods, key, nm);
+    hashmap_put(native_methods, nm->key, nm);
 }
 
-native_method_f find_native_method(const char *class_name, const char *method_name, const char *method_descriptor)
+void (* find_native_method(const char *class_name,
+                           const char *method_name, const char *method_descriptor))(struct stack_frame *)
 {
     char key[KEY_LEN];
     gen_key(class_name, method_name, method_descriptor, key);
 
-    struct native_method *nm;
-    HASH_FIND_STR(native_methods, key, nm);
+    struct native_method *nm = hashmap_find(native_methods, key);
     if (nm != NULL) {
         return nm->method;
     }
 
     // todo not find;   UnsatisfiedLinkError异常
-    jvm_abort("not find native function: %s\n", key);
+    jvm_abort("can't find native function: %s\n", key);
     return NULL;
 }
 
@@ -85,6 +77,8 @@ void java_security_AccessController_registerNatives();
 
 void register_all_native_methods()
 {
+    native_methods = hashmap_create_str_key();
+
     java_lang_Class_registerNatives();
     java_lang_Float_registerNatives();
     java_lang_System_registerNatives();

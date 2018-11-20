@@ -2,6 +2,7 @@
  * Author: Jia Yang
  */
 
+#include <string.h>
 #include "../jvm.h"
 #include "constant.h"
 #include "../util/encoding.h"

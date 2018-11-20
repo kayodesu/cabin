@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <mem.h>
 #include "jclass.h"
 #include "access.h"
 #include "../../jvm.h"
@@ -176,7 +177,6 @@ struct jclass *jclass_create_by_classfile(struct classloader *loader, struct cla
         }
     }
 
-    c->constants_count = cf->constant_pool_count;
     c->rtcp = rtcp_create(cf->constant_pool, cf->constant_pool_count, c->bootstrap_methods_attribute);
 
     c->class_name = rtcp_get_class_name(c->rtcp, cf->this_class);
@@ -226,7 +226,7 @@ struct jclass *jclass_create_by_classfile(struct classloader *loader, struct cla
         c->methods[i] = jmethod_create(c, cf->methods + i);
     }
 
-//    c->static_field_values = fv_create(c, true);
+    classfile_destroy(cf);
     return c;
 }
 
@@ -251,18 +251,13 @@ struct jclass* jclass_create_arr_class(struct classloader *loader, const char *c
     c->class_name = strdup(class_name);  // todo NULL
     c->loader = loader;
     c->inited = true; // 数组类不需要初始化
-    c->super_class = classloader_load_class(loader, "java/lang/Object");//loader->loadClass("java/lang/Object");
+    c->super_class = classloader_load_class(loader, "java/lang/Object");
 
     c->interfaces_count = 2;
-    c->interfaces = malloc(sizeof(struct jclass *) * 2);//new JClass* [2];
-    c->interfaces[0] = classloader_load_class(loader, "java/lang/Cloneable");//loader->loadClass("java/lang/Cloneable");
-    c->interfaces[1] = classloader_load_class(loader, "java/io/Serializable");//loader->loadClass("java/io/Serializable");
-//
-////    if (jclassClass != nullptr) {
-////        c->classObj = new JClassObj(jclassClass, className);
-////    }
-////
-////    loadedClasses.push_back(c);
+    c->interfaces = malloc(sizeof(struct jclass *) * 2);
+    c->interfaces[0] = classloader_load_class(loader, "java/lang/Cloneable");
+    c->interfaces[1] = classloader_load_class(loader, "java/io/Serializable");
+
     return c;
 }
 
@@ -272,6 +267,16 @@ void jclass_destroy(struct jclass *c)
         // todo
         return;
     }
+
+    for (int i = 0; i < c->methods_count; i++) {
+        jmethod_destroy(c->methods[i]);
+    }
+
+    for (int i = 0; i < c->fields_count; i++) {
+        jfield_destroy(c->fields[i]);
+    }
+
+    rtcp_destroy(c->rtcp);
 
     // todo
 
@@ -565,6 +570,3 @@ char *jclass_to_string(const struct jclass *c)
     snprintf(global_buf, GLOBAL_BUF_LEN, "class: %s\0", c == NULL ? "NULL" : c->class_name);
     return global_buf;
 }
-
-
-

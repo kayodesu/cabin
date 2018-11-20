@@ -5,7 +5,10 @@
 #ifndef JVM_STRPOOL_H
 #define JVM_STRPOOL_H
 
-#include "jobject.h"
+struct classloader;
+struct jobject;
+
+void build_str_pool();
 
 struct jobject* put_str_to_pool(struct classloader *loader, const char *str0);
 

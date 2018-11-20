@@ -21,7 +21,6 @@
  * 5. 执行某些反射操作时。
  */
 
-
 static void __new(struct stack_frame *frame)
 {
     struct bytecode_reader *reader = frame->reader;
@@ -33,25 +32,22 @@ static void __new(struct stack_frame *frame)
     struct jclass *c = resolve_class(frame->method->jclass, class_name);  // todo
     if (!c->inited) {
         jclass_clinit(c, frame);
-        bcr_set_pc(reader, frame->thread->pc); // 将pc指向本条指令之前，初始化完类后，继续执行本条指令。
+        bcr_set_pc(reader, jthread_get_pc(frame->thread)); // 将pc指向本条指令之前，初始化完类后，继续执行本条指令。
         return;
     }
 
     if (IS_INTERFACE(c->access_flags) || IS_ABSTRACT(c->access_flags)) {
-//        // todo 抛出 InstantiationError 异常
-        jvm_abort("java.lang.InstantiationError\n");
+        jvm_abort("java.lang.InstantiationError\n");  // todo 抛出 InstantiationError 异常
     }
 
     struct jobject *o;
     if (strcmp(c->class_name, "java/lang/String") == 0) {
-//        o = new JStringObj(classLoader); // todo 在哪里找字符串的内容？
-        o = jstrobj_create(c->loader, "");
-//        jvm_abort("fffffffffffffff");
+        o = jstrobj_create(c->loader, ""); // todo 在哪里找字符串的内容？
     } else {
-        o = jobject_create(c); //JObject::newJobject(c);
+        o = jobject_create(c);
     }
 
-    os_pushr(frame->operand_stack, o); // frame->operandStack.push(o);
+    os_pushr(frame->operand_stack, o);
 }
 
 /*
@@ -72,7 +68,7 @@ static void putstatic(struct stack_frame *frame)
     if (!ref->resolved_class->inited) {
         jclass_clinit(ref->resolved_class, frame);
         /* 将pc指向本条指令之前，初始化完类后，继续执行本条指令。*/
-        bcr_set_pc(frame->reader, frame->thread->pc);
+        bcr_set_pc(frame->reader, jthread_get_pc(frame->thread));
         return;
     }
 
@@ -120,16 +116,13 @@ static void getstatic(struct stack_frame *frame)
     if (!ref->resolved_class->inited) {
         jclass_clinit(ref->resolved_class, frame);
         /* 将pc指向本条指令之前，初始化完类后，继续执行本条指令。*/
-        bcr_set_pc(frame->reader, frame->thread->pc);
+        bcr_set_pc(frame->reader, jthread_get_pc(frame->thread));
         return;
     }
 
     // todo 如果声明字段的类还没有初始化好，也需要先初始化。
 
     os_pushs(frame->operand_stack, get_static_field_value_by_id(ref->resolved_class, ref->resolved_field->id));
-//    os_pushs(frame->operand_stack, c->static_fields_values + field->id);
-//    auto value = c->getFieldValue(field->id);
-//    frame->operandStack.push(value);
 }
 
 /*
@@ -155,26 +148,19 @@ static void putfield(struct stack_frame *frame)
         }
     }
 
-    printvm("aaaaaaa       %s\n", jfield_to_string(ref->resolved_field));  /////////////////////////////////////////////////////////////////////////
-
     // todo
     char d = *ref->resolved_field->descriptor;
     struct slot s;
     if (d == 'B' || d == 'C' || d == 'I' || d == 'S' || d == 'Z') {
         s = islot(os_popi(frame->operand_stack));
-        printvm("bbbbbbbbb       %s\n", slot_to_string(&s)); /////////////////////////////////////////////////////////////////////////
     } else if (d == 'F') {
         s = fslot(os_popf(frame->operand_stack));
-        printvm("bbbbbbbbb       %s\n", slot_to_string(&s)); /////////////////////////////////////////////////////////////////////////
     } else if (d == 'J') {
         s = lslot(os_popl(frame->operand_stack));
-        printvm("bbbbbbbbb       %s\n", slot_to_string(&s)); /////////////////////////////////////////////////////////////////////////
     } else if (d == 'D') {
         s = dslot(os_popd(frame->operand_stack));
-        printvm("bbbbbbbbb       %s\n", slot_to_string(&s)); /////////////////////////////////////////////////////////////////////////
     } else if (d  == 'L' || d  == '[') {
         s = rslot(os_popr(frame->operand_stack));
-        printvm("bbbbbbbbb       %s\n", slot_to_string(&s)); /////////////////////////////////////////////////////////////////////////
     } else {
         // todo error
         jvm_abort("error, %s\n", ref->resolved_field->descriptor);
@@ -185,7 +171,7 @@ static void putfield(struct stack_frame *frame)
         jvm_abort("java.lang.NullPointerException\n"); // todo
     }
 
-    printvm("putfield, obj = %p, %d\n", obj, obj->t); /////////////////////////////////////////////////////////////////////////
+    printvm("putfield, obj = %p, %d\n", obj, obj->t); ////////////////////////////
 
     set_instance_field_value_by_id(obj, ref->resolved_field->id, &s);
 }
@@ -208,28 +194,22 @@ static void getfield(struct stack_frame *frame)
         jvm_abort("java.lang.NullPointerException\n");  // todo
     }
 
-    printvm("1111111111111       %s\n", jfield_to_string(ref->resolved_field));
     const struct slot *s = get_instance_field_value_by_id(obj, ref->resolved_field->id);
-    printvm("22222222222       %s\n", slot_to_string(s));
 
     // 检查 slot 的类型与 field 的类型是否匹配  todo
     char d = *ref->resolved_field->descriptor;
-    if (d == 'B' || d == 'C' || d == 'I' || d == 'S' || d == 'Z') {
-        if (s->t != JINT) { jvm_abort("field is, slot: %s\n", slot_to_string(s)); }
-    } else if (d == 'F') {
-        if (s->t != JFLOAT) { jvm_abort("error\n"); }
-    } else if (d == 'J') {
-        if (s->t != JLONG) { jvm_abort("error\n"); }
-    } else if (d == 'D') {
-        if (s->t != JDOUBLE) { jvm_abort("error\n"); }
-    } else if (d  == 'L' || d  == '[') {
-        if (s->t != REFERENCE) { jvm_abort("error\n"); }
+    if (((d == 'B' || d == 'C' || d == 'I' || d == 'S' || d == 'Z') && s->t == JINT)
+        || (d == 'F' && s->t == JFLOAT)
+        || (d == 'J' && s->t == JLONG)
+        || (d == 'D' && s->t == JDOUBLE)
+        || ((d  == 'L' || d  == '[') && s->t == JREF)) {
+        os_pushs(frame->operand_stack, s);
     } else {
-        // todo error
-        jvm_abort("error, %s\n", ref->resolved_field->descriptor);
+        char *buf;
+        jvm_abort("type mismatch error. field's descriptor is %s, but slot is %s\n",
+                  ref->resolved_field->descriptor, slot_to_string(s, &buf));
+        free(buf);
     }
-
-    os_pushs(frame->operand_stack, s);
 }
 
 static void athrow(struct stack_frame *frame)
@@ -244,7 +224,7 @@ static void athrow(struct stack_frame *frame)
     // 遍历虚拟机栈找到可以处理此异常的方法
     while (!jthread_is_stack_empty(curr_thread)) {
         struct stack_frame *top = jthread_top_frame(curr_thread);
-        size_t pc = top->reader->pc - 1; // todo why -1 ???
+        size_t pc = bcr_get_pc(top->reader) - 1; // todo why -1 ???
         int handler_pc = jmethod_find_exception_handler(top->method, exception->jclass, pc);
         if (handler_pc >= 0) {  // todo 可以等于0吗
             /*
@@ -257,22 +237,15 @@ static void athrow(struct stack_frame *frame)
             os_pushr(top->operand_stack, exception);
             bcr_set_pc(top->reader, handler_pc);  // todo 是setPc还是skip
             sf_proc_exception(top);
-//            top->operandStack.clear();
-//            top->operandStack.push(exception);
-//            top->reader->setPc(handler_pc);  // todo 是setPc还是skip
-//            top->procException();
             return;
         }
 
-        jthread_pop_frame(curr_thread); // curr_thread->popFrame();
+        jthread_pop_frame(curr_thread);
     }
 
     // todo UncaughtException
     struct jobject *so = slot_getr(get_instance_field_value_by_nt(exception, "detailMessage", "Ljava/lang/String;"));
     jvm_abort("UncaughtException. %s. %s\n", exception->jclass->class_name, jstrobj_value(so));  // todo
-//    auto ref = (exception->getFieldValue("detailMessage", "Ljava/lang/String;")).getRef();
-//    JStringObj *o = dynamic_cast<JStringObj *>(ref);
-//    jvm_abort("UncaughtException. %s. %s\n", exception->jclass->class_name, jstrToStr(o->value()).c_str());
 }
 
 /*
@@ -282,8 +255,7 @@ static void athrow(struct stack_frame *frame)
  */
 static void instanceof(struct stack_frame *frame)
 {
-    int index = bcr_readu2(frame->reader);//frame->reader->readu2();
-//    const string &className = frame->method->jclass->rtcp->getClassName(index);
+    int index = bcr_readu2(frame->reader);
     const char *class_name = rtcp_get_class_name(frame->method->jclass->rtcp, index);
 
     struct jclass *jclass = classloader_load_class(frame->method->jclass->loader, class_name); // todo resolve_class ???
@@ -295,7 +267,6 @@ static void instanceof(struct stack_frame *frame)
     }
 
     os_pushi(frame->operand_stack, (jint)(jobject_is_instance_of(obj, jclass) ? 1 : 0));  // todo
-//    frame->operandStack.push((jint)(obj->isInstanceOf(jclass) ? 1 : 0));
 }
 
 /*
@@ -344,7 +315,7 @@ static void invokestatic(struct stack_frame *frame)
     if (!ref->resolved_class->inited) {
         jclass_clinit(ref->resolved_class, frame);
         /* 将pc指向本条指令之前，初始化完类后，继续执行本条指令。*/
-        bcr_set_pc(frame->reader, frame->thread->pc);
+        bcr_set_pc(frame->reader, jthread_get_pc(frame->thread));
         return;
     }
 
@@ -430,39 +401,29 @@ static void invokevirtual(struct stack_frame *frame)
 
     struct jobject *obj = slot_getr(args); // args[0]
     if (obj == NULL) {
-        if (strcmp(ref->resolved_method->name, "println") == 0) {
-            // todo   println  暂时先这么搞
-            const struct slot *arg = args + 1; // println 的参数
-            if (arg->t == REFERENCE) {
-                struct jobject *so = slot_getr(arg);
-                STROBJ_CHECK(so);
-                printvm("%p, %s\n", so, jstrobj_value(so));
-            } else if (arg->t == JINT) {
-                printvm("%d\n", slot_geti(arg));
-            } else if (arg->t == JFLOAT) {
-                printvm("%f\n", slot_getf(arg));
-            } else if (arg->t == JLONG) {
-                printvm("%ld\n", slot_getl(arg));
-            } else if (arg->t == JDOUBLE) {
-                printvm("%f\n", slot_getd(arg));
-            } else {
-                jvm_abort("println 找不到类型\n");
-            }
-            return;
-        }
-        // todo  java.lang.NullPointerException
+//        if (strcmp(ref->resolved_method->name, "println") == 0) {
+//            // todo   println  暂时先这么搞
+//            const struct slot *arg = args + 1; // println 的参数
+//            if (arg->t == REFERENCE) {
+//                struct jobject *so = slot_getr(arg);
+//                STROBJ_CHECK(so);
+//                printvm("%p, %s\n", so, jstrobj_value(so));
+//            } else if (arg->t == JINT) {
+//                printvm("%d\n", slot_geti(arg));
+//            } else if (arg->t == JFLOAT) {
+//                printvm("%f\n", slot_getf(arg));
+//            } else if (arg->t == JLONG) {
+//                printvm("%ld\n", slot_getl(arg));
+//            } else if (arg->t == JDOUBLE) {
+//                printvm("%f\n", slot_getd(arg));
+//            } else {
+//                jvm_abort("println 找不到类型\n");
+//            }
+//            return;
+//        }
         printvm("%s~%s~%s\n", ref->class_name, ref->resolved_method->name, ref->resolved_method->descriptor);
-        jvm_abort("java.lang.NullPointerException\n");
+        jvm_abort("java.lang.NullPointerException\n"); // todo  java.lang.NullPointerException
     }
-
-    // todo 返回的指针是不是jobject *   ？？？？？？？？
-//    char *s = obj;
-//    if (obj->getClass() != c) {
-//        jprintf("error, %s, %s\n", obj->getClass()->toString().c_str(), c->toString().c_str());
-//    }
-
-//    jprintf("RRRRRRRRRRRRRRRRRR, %s, %s\n", obj->getClass()->className.c_str(), ref.className.c_str());
-
 
     // 从对象的类中查找真正要调用的方法
     struct jmethod *method = jclass_lookup_method(obj->jclass, ref->name, ref->descriptor);
@@ -475,7 +436,6 @@ static void invokevirtual(struct stack_frame *frame)
         jvm_abort("java.lang.AbstractMethodError\n");
     }
 
-//    sf_invoke_method(frame, method, args); //  frame->invokeMethod(method, args);
     jthread_invoke_method(frame->thread, method, args);
 }
 
@@ -510,7 +470,7 @@ static void invokeinterface(struct stack_frame *frame)
 
     struct slot args[ref->resolved_method->arg_slot_count];
     for (int i = ref->resolved_method->arg_slot_count - 1; i >= 0; i--) {
-        args[i] = *os_pops(frame->operand_stack);//frame->operandStack.popSlot();
+        args[i] = *os_pops(frame->operand_stack);
     }
 
     jref obj = slot_getr(args); // args[0]
@@ -533,16 +493,35 @@ static void invokeinterface(struct stack_frame *frame)
         jvm_abort("java.lang.IllegalAccessError\n");
     }
 
-//    sf_invoke_method(frame, method, args); //  frame->invokeMethod(method, args);
     jthread_invoke_method(frame->thread, method, args);
 }
+
+/*
+ * todo 说明 invokedynamic!!!!!!!
+ */
+// Bytecode Behaviors and Method Descriptors for Method Handles
+//      Description        | Kind  | Interpretation                           | Method descriptor
+#define REF_getField         1    // getfield C.f:T                           | (C)T
+#define REF_getStatic        2    // getstatic C.f:T                          | ()T
+#define REF_putField         3    // putfield C.f:T                           | (C,T)V
+#define REF_putStatic        4    // putstatic C.f:T                          | (T)V
+#define REF_invokeVirtual    5    // invokevirtual C.m:(A*)T                  | (C,A*)T
+#define REF_invokeStatic     6    // invokestatic C.m:(A*)T                   | (A*)T
+#define REF_invokeSpecial    7    // invokespecial C.m:(A*)T                  | (C,A*)T
+#define REF_newInvokeSpecial 8    // new C; dup; invokespecial C.<init>:(A*)V | (A*)C
+#define REF_invokeInterface  9    // invokeinterface C.m:(A*)T                | (C,A*)T
 
 static void invokedynamic(struct stack_frame *frame)
 {
     struct jclass *curr_class = frame->method->jclass;
+
+    // The run-time constant pool item at that index must be a symbolic reference to a call site specifier.
     int index = bcr_readu2(frame->reader);
-    bcr_readu1(frame->reader); // 此字节固定为 0
-    bcr_readu1(frame->reader); // 此字节固定为 0
+
+    bcr_readu1(frame->reader); // this byte must always be zero.
+    bcr_readu1(frame->reader); // this byte must always be zero.
+
+    struct invoke_dynamic_ref *ref = rtcp_get_invoke_dynamic(curr_class->rtcp, index);
 
     jvm_abort("not implement\n");  // todo
 }
@@ -640,13 +619,13 @@ static void arraylength(struct stack_frame *frame)
 static void monitorenter(struct stack_frame *frame)
 {
     jref o = os_popr(frame->operand_stack);
-    // todo
+    jvm_abort("not implement\n");  // todo
 }
 
 static void monitorexit(struct stack_frame *frame)
 {
     jref o = os_popr(frame->operand_stack);
-    // todo
+    jvm_abort("not implement\n");  // todo
 }
 
 #endif //JVM_REFERENCES_H

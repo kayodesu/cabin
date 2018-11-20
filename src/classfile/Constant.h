@@ -8,20 +8,21 @@
 #include "../jtypes.h"
 #include "../util/bytecode_reader.h"
 
-#define CLASS_CONSTANT					7
-#define FIELD_REF_CONSTANT				9
-#define DOUBLE_CONSTANT					6
-#define METHOD_REF_CONSTANT             10
-#define INTERFACE_METHOD_REF_CONSTANT   11
-#define STRING_CONSTANT					8
+#define UTF8_CONSTANT					1
 #define INTEGER_CONSTANT                3
 #define FLOAT_CONSTANT					4
 #define LONG_CONSTANT					5
+#define DOUBLE_CONSTANT					6
+#define CLASS_CONSTANT					7
+#define STRING_CONSTANT					8
+#define FIELD_REF_CONSTANT				9
+#define METHOD_REF_CONSTANT             10
+#define INTERFACE_METHOD_REF_CONSTANT   11
 #define NAME_AND_TYPE_CONSTANT          12
-#define UTF8_CONSTANT					1
 #define METHOD_HANDLE_CONSTANT          15
 #define METHOD_TYPE_CONSTANT            16
 #define INVOKE_DYNAMIC_CONSTANT         18
+#define PLACEHOLDER_CONSTANT            INT8_MAX // long 和 double 的占位符，数值不同于以上定义的常量即可。
 
 /*
  * 常量池中的每一项都具备相同的格式特征——第一个字节作为类型标记用于识别该项是哪种类型的常量，称为“tag byte”。
@@ -52,6 +53,11 @@ struct eight_bytes_num_constant {
     u1 tag;
     u1 bytes[8];
 }; //, long_constant, double_constant;
+
+// placeholder of long_constant and double_constant
+struct placeholder_constant {
+    u1 tag;
+};
 
 struct name_and_type_constant {
     u1 tag;

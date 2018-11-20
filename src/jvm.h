@@ -9,14 +9,22 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <limits.h>
-#include <windef.h>
 #include "jtypes.h"
 
-extern bool verbose;
+/*
+ * 是否开启调试模式，
+ * 如不开启，可注释掉此define
+ */
+#define JVM_DEBUG
 
 #ifndef PATH_MAX
-#define PATH_MAX 260
+#define PATH_MAX 260 // todo
 #endif
+
+// todo
+//#define JVM_STRING_LEN_MAX (0xFFFF - 1)
+//#define JVM_PKT_NAME_LEN_MAX JVM_STRING_LEN_MAX
+//#define JVM_CLASS_NAME_LEN_MAX JVM_STRING_LEN_MAX
 
 // 启动类路径（bootstrap classpath）默认对应 jre/lib 目录，Java标准库（大部分在rt.jar里）位于该路径
 extern char bootstrap_classpath[];
@@ -46,6 +54,10 @@ struct name_and_type {
 #define GLOBAL_BUF_LEN 10240  // I think this is big enough.
 char global_buf[GLOBAL_BUF_LEN];
 
+/*
+ * start jvm.
+ * todo 说明 main_class_name 的格式，全路径名
+ */
 void start_jvm(const char *main_class_name);
 
 #define printvm(...) do { printf("%s: %d: ", __FILE__, __LINE__); printf(__VA_ARGS__); } while(false)

@@ -80,9 +80,6 @@ static void __ldc(struct stack_frame *frame, int index_bytes)
         printvm("ldc class, %s\n", class_name);  //////////////////////////////////////////////////
         struct jclass *c = classloader_load_class(frame->method->jclass->loader, class_name);
         os_pushr(os, c->clsobj);
-//        auto className = rtcp->getClassName(index);  todo
-//        JClass *clazz = frame->method->jclass->loader->loadClass(className);
-//        os.push(clazz->classObj);
     } else {
         jvm_abort("error. %d\n", type);
     }

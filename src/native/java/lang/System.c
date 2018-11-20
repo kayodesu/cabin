@@ -3,6 +3,8 @@
  */
 
 #include "../../registry.h"
+#include "../../../interpreter/stack_frame.h"
+#include "../../../rtda/heap/jobject.h"
 
 // public static native void arraycopy(Object src, int srcPos, Object dest, int destPos, int length)
 static void arraycopy(struct stack_frame *frame)
@@ -61,7 +63,8 @@ static void initProperties(struct stack_frame *frame)
                 rslot(jstrobj_create(props->jclass->loader, sys_props[i][0])),
                 rslot(jstrobj_create(props->jclass->loader, sys_props[i][1]))
         };
-        jthread_invoke_method(frame->thread, set_property, args);
+        // todo 不能再循环中调用jthread_invoke_method，参见jthread_invoke_method的注释.
+//        jthread_invoke_method(frame->thread, set_property, args);
     }
 
     // 返回参数

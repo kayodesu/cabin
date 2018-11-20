@@ -4,6 +4,8 @@
 
 #include "../../registry.h"
 #include "../../../rtda/heap/strpool.h"
+#include "../../../interpreter/stack_frame.h"
+#include "../../../rtda/heap/jobject.h"
 
 // todo 这函数是干嘛的
 // public native String intern();

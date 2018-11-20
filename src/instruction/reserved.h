@@ -11,13 +11,13 @@
 // 没有使用的指令
 static void notused(struct stack_frame *frame)
 {
-    jvm_abort("This instruction isn't used.\n");
+    jvm_abort("This instruction isn't used. %s\n", sf_to_string(frame));
 }
 
 static void breakpoint(struct stack_frame *frame)
 {
     // todo
-    jvm_abort("debugger used instructions.\n");
+    jvm_abort("debugger used instructions. %s\n", sf_to_string(frame));
 }
 
 // todo 此方法感觉实现的有毛病
@@ -28,13 +28,12 @@ static void invoke_native_method(struct stack_frame *frame)
     const char *method_descriptor = frame->method->descriptor;
 
     printvm("invoke native method: %s~%s~%s ----------------\n", class_name, method_name, method_descriptor);
+    find_native_method(class_name, method_name, method_descriptor)(frame);
+}
 
-    native_method_f native_method = find_native_method(class_name, method_name, method_descriptor);
-    if (native_method == NULL) {
-        // todo
-        jvm_abort("don't find native method：%s~%s~%s\n", class_name, method_name, method_descriptor);
-    }
-    native_method(frame);
+static void impdep2(struct stack_frame *frame)
+{
+    jvm_abort("jvm used instruction, not used in this jvm. %s", sf_to_string(frame));
 }
 
 #endif //JVM_RESERVED_H

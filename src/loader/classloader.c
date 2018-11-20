@@ -11,9 +11,16 @@
 #include "../rtda/ma/jclass.h"
 #include "../rtda/ma/access.h"
 #include "../rtda/ma/jfield.h"
-#include "../../lib/uthash/utarray.h"
-#include "../rtda/heap/jobject.h"
 #include "../rtda/ma/primitive_types.h"
+#include "../util/hashmap.h"
+#include "../rtda/heap/jobject.h"
+
+struct classloader {
+    struct jclass *jclass_class; // java.lang.Class 的类
+    struct hashmap *loaded_class_pool; // 保存 jclass *
+    struct hashmap *classobj_pool; // java.lang.Class 类的对象池，保存 jobject *
+};
+
 
 struct bytecode_content {
     s1 *bytecode;
@@ -102,97 +109,76 @@ static struct bytecode_content read_class_from_jar (const char *jar_path, const 
     return invalid_bytecode_content;
 }
 
-static struct bytecode_content read_class_from_dir(const char *__dir, const char *class_name)
+static struct bytecode_content read_class_from_dir(const char *dir_path, const char *class_name)
 {
-    UT_array *dirs;
-    utarray_new(dirs, &ut_str_icd);
-//    struct array dirs;
-//    array_init(&dirs, sizeof(char *));
-
-
-    if (__dir != NULL && strlen(__dir) > 0) {
-        utarray_push_back(dirs, &__dir);
-//        *(const char **)array_push(&dirs) = __dir;
+    if (dir_path == NULL || strlen(dir_path) == 0) {
+        return invalid_bytecode_content;
     }
 
-    while (utarray_len(dirs) > 0) {
-//        char *path = *(char **)array_pop(&dirs);
-        char *path = *(char **)utarray_back(dirs);
+    DIR *dir = opendir(dir_path);
+    if (dir == NULL) {
+        printvm("open dir failed. %s\n", dir_path);
+    }
 
-        DIR *dir = opendir(path);
-        if (dir == NULL) {
-            printvm("open dir failed. %s\n", path);
+    struct dirent *entry;
+    struct stat statbuf;
+    while ((entry = readdir(dir)) != NULL) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;
         }
 
-        struct dirent *entry;
-        struct stat statbuf;
-        while ((entry = readdir(dir)) != NULL) {
-            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
-                continue;
+        char abspath[PATH_MAX];
+        sprintf(abspath, "%s/%s\0", dir_path, entry->d_name); // 绝对路径
+        // 将路径中的 '\' 替换为 '/'
+        char *tmp = abspath;
+        while ((tmp = strchr(tmp, '\\')) != NULL) {
+            *tmp = '/';
+        }
+
+        stat(abspath, &statbuf);
+        if (S_ISDIR(statbuf.st_mode)) { // 目录
+            struct bytecode_content content = read_class_from_dir(abspath, class_name);
+            if (!IS_INVALID(content)) {
+                return content; // find out
             }
-
-            char abspath[PATH_MAX];
-            sprintf(abspath, "%s/%s\0", path, entry->d_name); // 绝对路径
-            // 将路径中的 '\' 替换为 '/'
-            char *tmp = abspath;
-            while ((tmp = strchr(tmp, '\\')) != NULL) {
-                *tmp = '/';
-            }
-
-            stat(abspath, &statbuf);
-            if (S_ISDIR(statbuf.st_mode)) {
-                tmp = abspath;
-                // 新路径，插入头部。
-                // 不能写 utarray_insert(dirs, &abspath, 0); 此句报错。
-                utarray_insert(dirs, &tmp, 0); // 新路径，插入头部。
-//                utarray_push_back(dirs, &abspath);
-//                *(char **)array_push(&dirs) = abspath;
-            } else if (S_ISREG(statbuf.st_mode)) { // 常规文件
-                char *suffix = strrchr(abspath, '.');
-                if (suffix != NULL) {
-                    if (strcmp(suffix, ".jar") == 0) {
-                        struct bytecode_content content = read_class_from_jar(abspath, class_name);
-                        if (!IS_INVALID(content)) {
-                            utarray_free(dirs);
-                            return content; // find out, return.
+        } else if (S_ISREG(statbuf.st_mode)) { // 常规文件
+            char *suffix = strrchr(abspath, '.');
+            if (suffix != NULL) {
+                if (strcmp(suffix, ".jar") == 0) {
+                    struct bytecode_content content = read_class_from_jar(abspath, class_name);
+                    if (!IS_INVALID(content)) {
+                        return content; // find out
+                    }
+                } else if (strcmp(suffix, ".class") == 0) {
+                    // class_name 不带 .class 后缀，而 abspath 有 .class 后缀
+                    *suffix = 0; // 去掉 abspath 的 .class 后缀
+                    if (strend(abspath, class_name)) {
+                        *suffix = '.'; // 加回 abspath 的 .class 后缀
+                        // 找到 class 文件了，读其内容。
+                        FILE *f = fopen(abspath, "rb");
+                        if (f == NULL) {
+                            jvm_abort("open file failed: %s\n", abspath);
                         }
-                    } else if (strcmp(suffix, ".class") == 0) {
-                        // class_name 不带 .class 后缀，而 abspath 有 .class 后缀
-                        *suffix = 0; // 去掉 abspath 的 .class 后缀
-                        if (strend(abspath, class_name)) {
-                            *suffix = '.'; // 加回 abspath 的 .class 后缀
-                            // 找到 class 文件了，读其内容。
-                            FILE *f = fopen(abspath, "rb");
-                            if (f == NULL) {
-                                printvm("open file failed: %s\n", abspath);
-                                break; // 打开失败，跳过此文件，继续检索下一个文件。
-                            }
 
-                            fseek(f, 0, SEEK_END); //定位到文件末
-                            size_t file_len = (size_t) ftell(f); //文件长度
-                            if (file_len == -1) {
-                                printvm("ftell error: %s\n", abspath);
-                                break; //取文件长度失败，跳过此文件，继续检索下一个文件。
-                            }
-
-                            s1 *bytecode = malloc(sizeof(s1) * file_len);
-                            fseek(f, 0, SEEK_SET);
-                            fread(bytecode, 1, file_len, f);
-                            fclose(f);
-                            utarray_free(dirs);
-                            return (struct bytecode_content) { bytecode, file_len };
+                        fseek(f, 0, SEEK_END); //定位到文件末
+                        size_t file_len = (size_t) ftell(f); //文件长度
+                        if (file_len == -1) {
+                            jvm_abort("ftell error: %s\n", abspath);
                         }
+
+                        VM_MALLOCS(s1, file_len, bytecode);
+                        fseek(f, 0, SEEK_SET);
+                        fread(bytecode, 1, file_len, f);
+                        fclose(f);
+                        return (struct bytecode_content) { bytecode, file_len };
                     }
                 }
             }
         }
-
-        closedir(dir);
-        utarray_pop_back(dirs);
     }
 
     // not find
-    utarray_free(dirs);
+    closedir(dir);
     return invalid_bytecode_content;
 }
 
@@ -211,24 +197,33 @@ static struct bytecode_content read_class(const char *class_name)
 
 static struct jobject* get_jclass_obj_from_pool(struct classloader *loader, const char *class_name)
 {
-    struct jobject *clsobj;
-    HASH_FIND_STR(loader->classobj_pool, class_name, clsobj);
+    struct jobject *clsobj = hashmap_find(loader->classobj_pool, class_name);
+//    HASH_FIND_STR(loader->classobj_pool, class_name, clsobj);
     if (clsobj != NULL) {
         printvm("find out class obj: %s\n", class_name);  /////////////////////////////////////
         return clsobj;
     }
 
     clsobj = jclassobj_create(loader->jclass_class, class_name);
-    HASH_ADD_KEYPTR(hh, loader->classobj_pool, class_name, strlen(class_name), clsobj);
+    hashmap_put(loader->classobj_pool, class_name, clsobj);
+//    HASH_ADD_KEYPTR(hh, loader->classobj_pool, class_name, strlen(class_name), clsobj);
     return clsobj;
 }
+
+//static void set_clsobj(struct classloader *loader, struct jclass *c)
+//{
+////    struct jclass *c = c0;
+//    c->clsobj = get_jclass_obj_from_pool(loader, c->class_name);
+//}
 
 struct classloader* classloader_create()
 {
     VM_MALLOC(struct classloader, loader);
 
-    loader->loaded_class_pool = NULL; // hash must be declared as a NULL-initialized pointer
-    loader->classobj_pool = NULL;     // hash must be declared as a NULL-initialized pointer
+//    loader->loaded_class_pool = NULL; // hash must be declared as a NULL-initialized pointer
+//    loader->classobj_pool = NULL;     // hash must be declared as a NULL-initialized pointer
+    loader->loaded_class_pool = hashmap_create_str_key();
+    loader->classobj_pool = hashmap_create_str_key();
 
     /*
      * 先加载java.lang.Class类，
@@ -240,8 +235,7 @@ struct classloader* classloader_create()
     // 加载基本类型（int, float, etc.）的 class
     for (int i = 0; i < PRIMITIVE_TYPE_COUNT; i++) {
         struct jclass *pc = jclass_create_primitive_class(loader, primitive_types[i].name);
-        // c->classObj = getJclassObjFromPool(c->className);//new JClassObj(jclassClass, className);
-        HASH_ADD_KEYPTR(hh, loader->loaded_class_pool, primitive_types[i].name, strlen(primitive_types[i].name), pc);
+        hashmap_put(loader->loaded_class_pool, primitive_types[i].name, pc);
     }
 
     // todo
@@ -252,8 +246,11 @@ struct classloader* classloader_create()
 //    }
 
     // 给已经加载的每一个类关联类对象。
-    struct jclass *c;
-    for (c = loader->loaded_class_pool; c != NULL; c = c->hh.next) {
+    int size = hashmap_size(loader->loaded_class_pool);
+    void *values[size];
+    hashmap_values(loader->loaded_class_pool, values);
+    for (int i = 0; i < size; i++) {
+        struct jclass *c = values[i];
         c->clsobj = get_jclass_obj_from_pool(loader, c->class_name);
     }
 
@@ -286,7 +283,6 @@ static struct jclass* preparation(struct jclass *c)
     // 如果静态变量属于基本类型或String类型，有final修饰符，
     // 且它的值在编译期已知，则该值存储在class文件常量池中。
     for (int i = 0; i < c->fields_count; i++) {
-//        JField &field = c->fields[i];
         struct jfield *field = c->fields[i];
         if (!IS_STATIC(field->access_flags)) {
             continue;
@@ -339,12 +335,8 @@ static struct jclass* load_non_arr_class(struct classloader *loader, const char 
 
 struct jclass* classloader_load_class(struct classloader *loader, const char *class_name)
 {
-    struct jclass *c;
-    HASH_FIND_STR(loader->loaded_class_pool, class_name, c);
+    struct jclass *c = hashmap_find(loader->loaded_class_pool, class_name);
     if (c != NULL) {
-//        if (verbose)
-//            printvm("find class %s\n", c->class_name);
-
         assert(strcmp(c->class_name, class_name) == 0);
         return c;
     }
@@ -368,11 +360,23 @@ struct jclass* classloader_load_class(struct classloader *loader, const char *cl
         c->clsobj = get_jclass_obj_from_pool(loader, class_name);
     }
 
-    HASH_ADD_KEYPTR(hh, loader->loaded_class_pool, class_name, strlen(class_name), c);
+    hashmap_put(loader->loaded_class_pool, class_name, c);
     return c;
 }
 
 void classloader_destroy(struct classloader *loader)
 {
-    // todo
+    assert(loader != NULL);
+
+    if (loader->loaded_class_pool != NULL) {
+        hashmap_destroy(loader->loaded_class_pool);
+    }
+    if (loader->classobj_pool != NULL) {
+        hashmap_destroy(loader->classobj_pool);
+    }
+    if (loader->jclass_class != NULL) {
+        jclass_destroy(loader->jclass_class);
+    }
+
+    free(loader);
 }

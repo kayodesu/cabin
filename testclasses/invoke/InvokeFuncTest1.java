@@ -1,3 +1,4 @@
+package invoke;
 
 public class InvokeFuncTest1 {
     public static void main(String[] args) {

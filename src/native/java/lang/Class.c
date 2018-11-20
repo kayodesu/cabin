@@ -8,6 +8,7 @@
 #include "../../../rtda/ma/jfield.h"
 #include "../../../rtda/heap/strpool.h"
 #include "../../../rtda/ma/primitive_types.h"
+#include "../../../interpreter/stack_frame.h"
 
 // native ClassLoader getClassLoader0();
 static void getClassLoader0(struct stack_frame *frame)
@@ -36,7 +37,7 @@ static void forName0(struct stack_frame *frame)
     if (initialize && !c->inited) {
         // todo do init
         jclass_clinit(c, frame); // c->clinit(frame);
-        bcr_set_pc(frame->reader, frame->thread->pc);//frame->reader->setPc(frame->thread->pc);
+        bcr_set_pc(frame->reader, jthread_get_pc(frame->thread));//frame->reader->setPc(frame->thread->pc);
     } else {
         os_pushr(frame->operand_stack, (jref) c->clsobj); //frame->operandStack.push(c->getClassObj());
     }

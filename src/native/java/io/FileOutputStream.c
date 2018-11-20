@@ -3,7 +3,8 @@
  */
 
 #include "../../registry.h"
-
+#include "../../../jvm.h"
+#include "../../../interpreter/stack_frame.h"
 
 /**
  * Opens a file, with the specified name, for overwriting or appending.

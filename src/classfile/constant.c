@@ -10,7 +10,6 @@
 void* parse_constant(struct bytecode_reader *reader)
 {
     u1 tag = bcr_readu1(reader);
-//    printvm("tag = %d\n", tag); /////////////////////////////////////////////       todo
     switch (tag) {
         case CLASS_CONSTANT: {
             VM_MALLOC(struct class_constant, c);
@@ -83,7 +82,7 @@ void* parse_constant(struct bytecode_reader *reader)
             return c;
         }
         default:
-            jvm_abort("error. unknown tag = %d\n", tag);  // todo
+            jvm_abort("error. unknown constant tag: %d\n", tag);
             return NULL;
     }
 }

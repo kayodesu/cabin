@@ -5,7 +5,6 @@
 #ifndef JVM_PRIMITIVETYPES_H
 #define JVM_PRIMITIVETYPES_H
 
-
 #include <stdbool.h>
 #include <string.h>
 

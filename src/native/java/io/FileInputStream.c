@@ -2,7 +2,8 @@
  * Author: Jia Yang
  */
 
- #include "../../registry.h"
+#include "../../registry.h"
+#include "../../../interpreter/stack_frame.h"
 
 // private native void initIDs();
 static void initIDs(struct stack_frame *frame)

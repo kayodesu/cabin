@@ -4,6 +4,8 @@
 
 #include "../../registry.h"
 #include "../../../util/convert.h"
+#include "../../../interpreter/stack_frame.h"
+#include "../../../slot.h"
 
 // public static native int floatToRawIntBits(float value);
 static void floatToRawIntBits(struct stack_frame *frame)

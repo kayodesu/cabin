@@ -3,6 +3,7 @@
  */
 
 #include "../../registry.h"
+#include "../../../interpreter/stack_frame.h"
 
 //struct StackTraceElement {
 //    string fileName;

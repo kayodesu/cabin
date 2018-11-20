@@ -13,7 +13,6 @@ struct member_info {
     u2 descriptor_index;
     u2 attributes_count;
     void **attributes; // [attributes_count];
-//    std::vector<Attribute *> attributes;
 };
 
 struct classfile {
@@ -30,15 +29,12 @@ struct classfile {
 
     u2 interfaces_count;
     u2 *interfaces; // [interfaces_count];
-//    std::vector<u2> interfaces;
 
     u2 fields_count, methods_count;
     struct member_info *fields, *methods;
 
     u2 attributes_count;
     struct attribute_common **attributes;
-
-//    ClassFile(const s1 *bytecode, size_t len);
 };
 
 struct classfile* classfile_create(s1 *bytecode, size_t len);

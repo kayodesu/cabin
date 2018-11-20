@@ -3,6 +3,8 @@
  */
 
 #include "../../registry.h"
+#include "../../../interpreter/stack_frame.h"
+#include "../../../rtda/heap/jobject.h"
 
 // public native int arrayBaseOffset(Class<?> type)
 static void arrayBaseOffset(struct stack_frame *frame)

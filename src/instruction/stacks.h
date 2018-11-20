@@ -11,7 +11,6 @@
 static void pop(struct stack_frame *frame)
 {
     struct slot *s = os_pops(frame->operand_stack);
-
     if (!slot_is_category_one(s)) {
         jvm_abort("ff"); // todo
     }

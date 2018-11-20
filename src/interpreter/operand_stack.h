@@ -6,26 +6,14 @@
 #define JVM_OPERAND_STACK_H
 
 #include <stdlib.h>
-#include "../slot.h"
 #include "../jtypes.h"
 
-/*
- * 操作栈。
- * 栈容量在编译期已确定，所以此栈不会存在溢出的问题。
- */
-struct operand_stack {
-    u2 capacity; // 总容量
-    u2 size;     // 当前大小
-    struct slot slots[];
-};
+struct operand_stack;
+struct slot;
 
 struct operand_stack* os_create(u2 capacity);
 
-static inline void os_clear(struct operand_stack *os)
-{
-    assert(os != NULL);
-    os->size = 0;
-}
+void os_clear(struct operand_stack *os);
 
 void os_destroy(struct operand_stack *os);
 
@@ -34,13 +22,9 @@ const struct slot* os_top(struct operand_stack *os);
 struct slot* os_pops(struct operand_stack *os);
 
 jint os_popi(struct operand_stack *os);
-
 jfloat os_popf(struct operand_stack *os);
-
 jlong os_popl(struct operand_stack *os);
-
 jdouble os_popd(struct operand_stack *os);
-
 jref os_popr(struct operand_stack *os);
 
 void os_pushi(struct operand_stack *os, jint i);

@@ -3,6 +3,8 @@
  */
 
 #include "../../registry.h"
+#include "../../../interpreter/stack_frame.h"
+#include "../../../rtda/heap/jobject.h"
 
 // public native int hashCode();
 static void hashCode(struct stack_frame *frame)

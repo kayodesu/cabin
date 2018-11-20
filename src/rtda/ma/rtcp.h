@@ -30,15 +30,10 @@ struct rtc {
     } v;
 };
 
-/*
- * RunTime Constant Pool
- */
-struct rtcp {
-    struct rtc *pool;
-    size_t count;
-};
+struct rtcp;
 
-struct rtcp* rtcp_create(void **cfcp, size_t count, const struct bootstrap_methods_attribute *bootstrap_methods_attribute);
+struct rtcp* rtcp_create(const void **cfcp, size_t count,
+                         const struct bootstrap_methods_attribute *bootstrap_methods_attribute);
 void rtcp_destroy(struct rtcp *rtcp);
 
 const u1 rtcp_get_type(const struct rtcp *rtcp, int index);
@@ -75,5 +70,9 @@ const char* rtcp_get_method_type(const struct rtcp *rtcp, int index);
 
 struct invoke_dynamic_ref* rtcp_get_invoke_dynamic(const struct rtcp *rtcp, int index);
 
+
+#ifdef JVM_DEBUG
+void print_rtcp(const struct rtcp *rtcp);
+#endif
 
 #endif //JVM_RTCP_H

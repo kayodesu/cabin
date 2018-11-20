@@ -3,6 +3,17 @@
  */
 
 #include "operand_stack.h"
+#include "../slot.h"
+
+/*
+ * 操作栈。
+ * 栈容量在编译期已确定，所以此栈不会存在溢出的问题。
+ */
+struct operand_stack {
+    u2 capacity; // 总容量
+    u2 size;     // 当前大小
+    struct slot slots[];
+};
 
 struct operand_stack* os_create(u2 capacity)
 {
@@ -12,12 +23,15 @@ struct operand_stack* os_create(u2 capacity)
     return os;
 }
 
+void os_clear(struct operand_stack *os)
+{
+    assert(os != NULL);
+    os->size = 0;
+}
+
 void os_destroy(struct operand_stack *os)
 {
-    if (os == NULL) {
-        printvm("destroy a NULL operand stack.\n");
-        return;
-    }
+    assert(os != NULL);
     free(os);
 }
 
@@ -103,7 +117,7 @@ jref os_popr(struct operand_stack *os)
     assert(os != NULL);
 
     struct slot *s = os_pops(os);
-    if (s == NULL || s->t != REFERENCE) {
+    if (s == NULL || s->t != JREF) {
         TYPE_MISMATCH_ERROR(s, "reference");
     }
 

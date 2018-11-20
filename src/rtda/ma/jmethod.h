@@ -5,7 +5,6 @@
 #ifndef JVM_JMETHOD_H
 #define JVM_JMETHOD_H
 
-#include "assert.h"
 #include "jclass.h"
 #include "../../classfile/attribute.h"
 

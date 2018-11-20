@@ -4,6 +4,7 @@
 
 #include "../../registry.h"
 #include "../../../rtda/heap/jobject.h"
+#include "../../../interpreter/stack_frame.h"
 
 //// public static native Class<?> getCallerClass(int level)
 //static void getCallerClass(StackFrame *frame) {

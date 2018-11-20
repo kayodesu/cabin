@@ -4,6 +4,8 @@
 
 #include "../../registry.h"
 #include "../../../util/convert.h"
+#include "../../../interpreter/stack_frame.h"
+#include "../../../slot.h"
 
 // public static native long doubleToRawLongBits(double value);
 static void doubleToRawLongBits(struct stack_frame *frame)

@@ -21,15 +21,12 @@ struct jfield {
 
     // todo type_name 是什么东西
     const char *type_name;
-//    JClassObj *type = nullptr;  todo
-    bool category_two;// = false;
-//    struct slot value; // value of this field.
+    bool category_two;
 
     int id;
 
     // 如果field的值已经在常量池中了，@constant_value_index 表示值在常量池中的索引。
     int constant_value_index;
-//    const static int INVALID_CONSTANT_VALUE_INDEX = -1;
 };
 
 #define INVALID_CONSTANT_VALUE_INDEX (-1)
@@ -39,6 +36,8 @@ struct jfield* jfield_create(const struct jclass *c, const struct member_info *i
 bool jfield_is_accessible_to(const struct jfield *field, const struct jclass *visitor);
 
 struct jobject* jfield_get_type(struct jfield *field);
+
+void jfield_destroy(struct jfield *field);
 
 char* jfield_to_string(const struct jfield *field);
 

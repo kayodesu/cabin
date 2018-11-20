@@ -49,8 +49,6 @@ struct jobject {
     };
 
     enum jobject_type t;
-
-    UT_hash_handle hh; // makes this structure hashable
 };
 
 struct jobject* jobject_create(struct jclass *c);

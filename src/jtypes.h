@@ -36,9 +36,6 @@ typedef float   jfloat;
 typedef double  jdouble;
 typedef struct jobject* jref; // JVM中的引用类型，只能指向一个jobject对象。
 
-//typedef std::u16string jstring;  // todo 为什么这样定义????
-
-
 // 各类型的代码
 enum jtype {
     JBYTE,
@@ -49,9 +46,9 @@ enum jtype {
     JLONG,
     JFLOAT,
     JDOUBLE,
-    REFERENCE,
-    PH,  // placeholder of long and double
-    NAT, // Not A Type
+    JREF, // reference
+    PH,   // placeholder of long and double
+    NAT,  // Not A Type
 };
 
 const char* get_jtype_name(enum jtype t);

@@ -199,7 +199,8 @@ bool jmethod_is_accessible_to(const struct jmethod *method, const struct jclass 
 
     // 字段是protected，则只有 子类 和 同一个包下的类 可以访问
     if (IS_PROTECTED(method->access_flags)) {
-        return jclass_is_subclass_of(visitor, method->jclass) || strcmp(method->jclass->pkg_name, visitor->pkg_name) == 0;
+        return jclass_is_subclass_of(visitor, method->jclass)
+               || strcmp(method->jclass->pkg_name, visitor->pkg_name) == 0;
     }
 
     // 字段有默认访问权限（非public，非protected，也非private），则只有同一个包下的类可以访问

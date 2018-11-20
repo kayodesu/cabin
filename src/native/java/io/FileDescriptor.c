@@ -3,6 +3,8 @@
  */
 
 #include "../../registry.h"
+#include "../../../interpreter/operand_stack.h"
+#include "../../../interpreter/stack_frame.h"
 
 /*
  * This routine initializes JNI field offsets for the class
@@ -12,7 +14,7 @@
 static void initIDs(struct stack_frame *frame)
 {
     // todo
-    jvm_abort("error\n");
+//    jvm_abort("error\n");
 }
 
 /*

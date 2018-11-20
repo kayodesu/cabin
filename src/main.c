@@ -4,13 +4,12 @@
 #include <string.h>
 #include "jvm.h"
 #include "native/registry.h"
+#include "../test/test.h"
 
-bool verbose = false;
 static char main_class[FILENAME_MAX] = { 0 };
 
 /*
- * -verbose: 打印所有执行的指令
- * -bootstrapclasspath path: JavaHome路径, 对应 jre/lib 目录
+ * -bcp path: Bootstrap Class Path, JavaHome路径, 对应 jre/lib 目录。
  */
 static bool parse_args(int argc, char* argv[])
 {
@@ -18,9 +17,7 @@ static bool parse_args(int argc, char* argv[])
     for (int i = 1; i < argc; i++) {
         if (argv[i][0] == '-') {
             const char *name = argv[i];
-            if (strcmp(name, "-verbose") == 0) {
-                verbose = true;
-            } else if (strcmp(name, "-bootstrapclasspath") == 0) {
+            if (strcmp(name, "-bcp") == 0) {
                 if (++i >= argc) {
                     printvm("缺少参数：%s\n", name);
                     return false;
@@ -67,7 +64,6 @@ int main(int argc, char* argv[])
         strcat(extension_classpath, "/ext");  // todo JDK9+ 的目录结构有变动！！！！！！！
     }
 
-    printvm("verbose: %s\n", verbose ? "true" : "false");
     printvm("bootstrap_classpath: %s\n", bootstrap_classpath);
     printvm("extension_classpath: %s\n", extension_classpath);
     printvm("user_classpath: %s\n", user_classpath);
@@ -76,6 +72,7 @@ int main(int argc, char* argv[])
 //    jvm_abort("just support java8.\n");
 
     register_all_native_methods();
+//    print_registered_native_methods();
 
     void test();
     test();
@@ -85,10 +82,18 @@ int main(int argc, char* argv[])
 
 void test()
 {
+//    test_vector();
+//    test_hashmap();
+
     // 未分类
-    // start_jvm("HelloWorld"); // pass
+//     start_jvm("HelloWorld"); // pass
 //    start_jvm("ObjectInitTest"); // pass
-    start_jvm("InvokeFuncTest1");
+
+    // lambda
+    start_jvm("lambda/LambdaTest");
+
+    // invoke
+//    start_jvm("invoke/InvokeFuncTest1");
 
     // array
 //    start_jvm("array/BubbleSort"); // pass

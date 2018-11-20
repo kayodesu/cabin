@@ -674,14 +674,7 @@ struct synthetic_attribute {
 // 不认识的attr，忽略之。
 struct unknown_attribute {
     struct attribute_common common;
-//    explicit UnknownAttr(BytecodeReader &reader): Attribute(reader) {
-//        reader.skip(attributeLength); // todo
-//    }
 };
-
-/*****************************************************/
-
-/*****************************************************/
 
 
 void* parse_attribute(struct bytecode_reader *reader, void **constant_pool, u2 constant_pool_count);

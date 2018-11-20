@@ -1,3 +1,4 @@
+package invoke;
 
 public class InvokeFuncTest implements Runnable {
     public static void main(String[] args) {

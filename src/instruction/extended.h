@@ -52,6 +52,16 @@ static void ifnonnull(struct stack_frame *frame)
     }
 }
 
+static void goto_w(struct stack_frame *frame)
+{
+    jvm_abort("goto_w 不支持"); // todo
+}
+
+static void jsr_w(struct stack_frame *frame)
+{
+    jvm_abort("jsr_w 不支持"); // todo
+}
+
 extern bool wide_extending;
 
 static void wide(struct stack_frame *frame)

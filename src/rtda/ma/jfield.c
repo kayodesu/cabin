@@ -49,8 +49,6 @@ struct jfield* jfield_create(const struct jclass *c, const struct member_info *i
         char *tmp = strdup(field->descriptor + 1); // jump 'L'
         tmp[strlen(tmp) - 1] = 0; // set last char(';') is 0
         field->type_name = tmp;
-//        string className = descriptor.substr(1, descriptor.size() - 2);  todo
-//        field->type_name = className;
     } else {
         jvm_abort("%s\n", field->descriptor); // todo
     }
@@ -116,7 +114,7 @@ bool jfield_is_accessible_to(const struct jfield *field, const struct jclass *vi
 struct jobject* jfield_get_type(struct jfield *field)
 {
     printvm("未实现的功能   %s\n", jfield_to_string(field));
-//    jvm_abort("\n"); // todo
+    jvm_abort("\n"); // todo
 #if 0
     if (type != nullptr) {
         return type;
@@ -146,13 +144,18 @@ struct jobject* jfield_get_type(struct jfield *field)
 //    jvmAbort("error\n");
 }
 
+void jfield_destroy(struct jfield *field)
+{
+    // todo
+}
+
 char* jfield_to_string(const struct jfield *field)
 {
     if (field == NULL) {
         return "jfield: NULL";
     }
 
-    snprintf(global_buf, GLOBAL_BUF_LEN, "field: %s~%s~%s\n", field->jclass->class_name, field->name, field->descriptor);
+    snprintf(global_buf, GLOBAL_BUF_LEN, "field: %s~%s~%s\0", field->jclass->class_name, field->name, field->descriptor);
     return global_buf;
 }
 
