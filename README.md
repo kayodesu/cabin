@@ -1,4 +1,4 @@
-# jvm
+# JVM
 A JVM written in C.
 
 Still working.
