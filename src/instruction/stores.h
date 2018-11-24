@@ -84,9 +84,7 @@ static void __lstore(struct stack_frame *frame, int index)
     s = os_pops(frame->operand_stack);
     if (s == NULL || s->t != JLONG) {
         // todo error
-        char *buf;
-        jvm_abort("wants jlong, gets %s.", slot_to_string(s, &buf));
-        free(buf);
+        SLOT_TO_STRING_WRAP(s, jvm_abort("wants jlong, gets %s.", slot_str));
     }
 
     sf_set_local_var(frame, index, s);
