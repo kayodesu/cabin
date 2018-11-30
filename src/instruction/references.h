@@ -132,11 +132,14 @@ static void getstatic(struct stack_frame *frame)
  */
 static void putfield(struct stack_frame *frame)
 {
+    printvm("putfield 111 , operand_stack. %s\n", os_to_string(frame->operand_stack));
     struct jclass *curr_class = frame->method->jclass;
 
     int index = bcr_readu2(frame->reader);
     struct field_ref *ref = rtcp_get_field_ref(curr_class->rtcp, index);
     resolve_non_static_field_ref(curr_class, ref);
+
+    printvm("putfield 222, operand_stack. %s\n", os_to_string(frame->operand_stack));
 
     /*
      * 如果是final字段，则只能在构造函数中初始化，否则抛出java.lang.IllegalAccessError。
@@ -174,6 +177,8 @@ static void putfield(struct stack_frame *frame)
     printvm("putfield, obj = %p, %d\n", obj, obj->t); ////////////////////////////
 
     set_instance_field_value_by_id(obj, ref->resolved_field->id, &s);
+
+    printvm("putfield 333, operand_stack. %s\n", os_to_string(frame->operand_stack));
 }
 
 /*
@@ -205,11 +210,11 @@ static void getfield(struct stack_frame *frame)
         || ((d  == 'L' || d  == '[') && s->t == JREF)) {
         os_pushs(frame->operand_stack, s);
     } else {
-        char *buf;
-        jvm_abort("type mismatch error. field's descriptor is %s, but slot is %s\n",
-                  ref->resolved_field->descriptor, slot_to_string(s, &buf));
-        free(buf);
+        SLOT_TO_STRING_WRAP(s, jvm_abort("type mismatch error. field's descriptor is %s, but slot is %s\n",
+                      ref->resolved_field->descriptor, slot_str));
     }
+
+    printvm("getfield, operand_stack. %s\n", os_to_string(frame->operand_stack));
 }
 
 static void athrow(struct stack_frame *frame)
@@ -285,9 +290,10 @@ static void checkcast(struct stack_frame *frame)
     const char *class_name = rtcp_get_class_name(frame->method->jclass->rtcp, index);
 
     struct jclass *jclass = classloader_load_class(frame->method->jclass->loader, class_name); // todo resolve_class ???
+    printvm("checkcast. %s, %s\n", obj->jclass->class_name, jclass->class_name);  //////////////////////////////////////////////
     if (!jobject_is_instance_of(obj, jclass)) {
         // java.lang.ClassCastException   todo
-        jvm_abort("java.lang.ClassCastException. %s can not cast to %s\n", obj->jclass->class_name, jclass->class_name);
+        printvm("java.lang.ClassCastException. %s can not cast to %s\n", obj->jclass->class_name, jclass->class_name);
     }
 }
 
@@ -319,7 +325,6 @@ static void invokestatic(struct stack_frame *frame)
         return;
     }
 
-//    sf_invoke_method(frame, ref->resolved_method, NULL); //  frame->invokeMethod(method);
     jthread_invoke_method(frame->thread, ref->resolved_method, NULL);
 }
 
@@ -375,7 +380,6 @@ static void invokespecial(struct stack_frame *frame)
         jvm_abort("java.lang.NullPointerException\n");
     }
 
-//    sf_invoke_method(frame, method, args); //  frame->invokeMethod(method, args);
     jthread_invoke_method(frame->thread, method, args);
 }
 
@@ -401,26 +405,26 @@ static void invokevirtual(struct stack_frame *frame)
 
     struct jobject *obj = slot_getr(args); // args[0]
     if (obj == NULL) {
-//        if (strcmp(ref->resolved_method->name, "println") == 0) {
-//            // todo   println  暂时先这么搞
-//            const struct slot *arg = args + 1; // println 的参数
-//            if (arg->t == REFERENCE) {
-//                struct jobject *so = slot_getr(arg);
-//                STROBJ_CHECK(so);
-//                printvm("%p, %s\n", so, jstrobj_value(so));
-//            } else if (arg->t == JINT) {
-//                printvm("%d\n", slot_geti(arg));
-//            } else if (arg->t == JFLOAT) {
-//                printvm("%f\n", slot_getf(arg));
-//            } else if (arg->t == JLONG) {
-//                printvm("%ld\n", slot_getl(arg));
-//            } else if (arg->t == JDOUBLE) {
-//                printvm("%f\n", slot_getd(arg));
-//            } else {
-//                jvm_abort("println 找不到类型\n");
-//            }
-//            return;
-//        }
+        if (strcmp(ref->resolved_method->name, "println") == 0) {
+            // todo   println  暂时先这么搞
+            const struct slot *arg = args + 1; // println 的参数
+            if (arg->t == JREF) {
+                struct jobject *so = slot_getr(arg);
+                STROBJ_CHECK(so);
+                printvm("%p, %s\n", so, jstrobj_value(so));
+            } else if (arg->t == JINT) {
+                printvm("%d\n", slot_geti(arg));
+            } else if (arg->t == JFLOAT) {
+                printvm("%f\n", slot_getf(arg));
+            } else if (arg->t == JLONG) {
+                printvm("%ld\n", slot_getl(arg));
+            } else if (arg->t == JDOUBLE) {
+                printvm("%f\n", slot_getd(arg));
+            } else {
+                jvm_abort("println 找不到类型\n");
+            }
+            return;
+        }
         printvm("%s~%s~%s\n", ref->class_name, ref->resolved_method->name, ref->resolved_method->descriptor);
         jvm_abort("java.lang.NullPointerException\n"); // todo  java.lang.NullPointerException
     }

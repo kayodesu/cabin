@@ -21,41 +21,43 @@ SLOT_GET(JLONG, jlong, l)
 SLOT_GET(JDOUBLE, jdouble, d)
 SLOT_GET(JREF, jref, r)
 
-char* slot_to_string(const struct slot *s, char **result)
+char* slot_to_string(const struct slot *s)
 {
 #define MAX_LEN 32  // 32 is big enough for all cases.
-    *result = malloc(sizeof(char) * MAX_LEN);   // todo NULL
-    int n = -1;
+    VM_MALLOCS(char, MAX_LEN, result);
+    int n;
 
     if (s == NULL) {
-        strcpy(*result, "slot: NULL");
+        n = sprintf(result, "slot: NULL");
     } else if (s->t == JINT || s->t == JBYTE || s->t == JCHAR || s->t == JSHORT) {
-        n = sprintf(*result, "slot: %s, %d\0", get_jtype_name(s->t), s->v.i);
+        n = sprintf(result, "slot: (%s, %d).", get_jtype_name(s->t), s->v.i);
     } else if (s->t == JBOOL) {
-        n = sprintf(*result, "slot: %s, %s\0", get_jtype_name(s->t), s->v.i == 0 ? "false" : "true");
+        n = sprintf(result, "slot: (%s, %s).", get_jtype_name(s->t), s->v.i == 0 ? "false" : "true");
     } else if (s->t == JLONG) {
-        n = sprintf(*result, "slot: %s, %ld\0", get_jtype_name(s->t), (long) s->v.l);
+        n = sprintf(result, "slot: (%s, %ld).", get_jtype_name(s->t), (long) s->v.l);
     } else if (s->t == JFLOAT) {
-        n = sprintf(*result, "slot: %s, %f\0", get_jtype_name(s->t), s->v.f);
+        n = sprintf(result, "slot: (%s, %f).", get_jtype_name(s->t), s->v.f);
     } else if (s->t == JDOUBLE) {
-        n = sprintf(*result, "slot: %s, %f\0", get_jtype_name(s->t), s->v.d);
+        n = sprintf(result, "slot: (%s, %f).", get_jtype_name(s->t), s->v.d);
     } else if (s->t == JREF) {
-        n = sprintf(*result, "slot: %s, %p\0", get_jtype_name(s->t), s->v.r);
+        n = sprintf(result, "slot: (%s, %p).", get_jtype_name(s->t), s->v.r);
     } else if (s->t == PH || s->t == NAT) {
-        n = sprintf(*result, "slot: %s\0", get_jtype_name(s->t));
+        n = sprintf(result, "slot: %s", get_jtype_name(s->t));
     } else {
         // Never goes here.
-        n = sprintf(*result, "slot: illegal slot. t = %d\0", s->t);
+        n = sprintf(result, "slot: illegal slot. t = %d\0", s->t);
     }
 
-    if (n >= MAX_LEN) {
+    if (n == -1) {
+        jvm_abort("sprintf 出错\n"); // todo
+    }
+
+    if (n >= MAX_LEN) { // 越界 todo
         jvm_abort("Never goes here. %d\n", n);
     }
 
-    if (n > 0) {
-        *result[n] = 0;
-    }
+    result[n] = 0;
 #undef MAX_LEN
 
-    return *result;
+    return result;
 }

@@ -69,7 +69,7 @@ void start_jvm(const char *main_class_name)
     mainThread->joinToMainThreadGroup();
 #endif
 
-//    init_jvm(loader, main_thread);
+    init_jvm(loader, main_thread);
 
 #ifdef JVM_DEBUG
     printvm("loading main class: %s !!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", main_class_name);

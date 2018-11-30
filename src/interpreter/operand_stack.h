@@ -56,4 +56,6 @@ void os_pushs(struct operand_stack *os, const struct slot *s);
         const struct slot *: os_pushs \
     )(os, v)
 
+char* os_to_string(const struct operand_stack *os);
+
 #endif //JVM_OPERAND_STACK_H

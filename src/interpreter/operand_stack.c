@@ -2,6 +2,7 @@
  * Author: Jia Yang
  */
 
+#include <string.h>
 #include "operand_stack.h"
 #include "../slot.h"
 
@@ -118,7 +119,7 @@ jref os_popr(struct operand_stack *os)
 
     struct slot *s = os_pops(os);
     if (s == NULL || s->t != JREF) {
-        TYPE_MISMATCH_ERROR(s, "reference");
+        TYPE_MISMATCH_ERROR(s, "jref");
     }
 
     return s->v.r;
@@ -187,4 +188,23 @@ void os_pushs(struct operand_stack *os, const struct slot *s)
     }
 }
 
+char* os_to_string(const struct operand_stack *os)
+{
+    assert(os != NULL);
 
+    VM_MALLOCS(char *, os->size, buf);
+    int len = 0;
+    for (int i = 0; i < os->size; i++) {
+        buf[i] = slot_to_string(os->slots + i);
+        len += strlen(buf[i]);
+    }
+
+    VM_MALLOCS(char, len + 1, result);
+    result[0] = 0; // for below strcat
+    for (int i = 0; i < os->size; i++) {
+        strcat(result, buf[i]);
+        free(buf[i]);
+    }
+    result[len] = 0;
+    return result;
+}

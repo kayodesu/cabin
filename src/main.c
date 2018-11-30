@@ -86,11 +86,11 @@ void test()
 //    test_hashmap();
 
     // 未分类
-//     start_jvm("HelloWorld"); // pass
-//    start_jvm("ObjectInitTest"); // pass
+     start_jvm("HelloWorld");
+//    start_jvm("ObjectInitTest");
 
     // lambda
-    start_jvm("lambda/LambdaTest");
+//    start_jvm("lambda/LambdaTest");
 
     // invoke
 //    start_jvm("invoke/InvokeFuncTest1");

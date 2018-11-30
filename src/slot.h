@@ -62,13 +62,12 @@ static inline bool slot_is_category_one(const struct slot *s)
 /*
  * 由调用者 free result
  */
-char* slot_to_string(const struct slot *s, char **result);
+char* slot_to_string(const struct slot *s);
 
 // 对 slot_to_string 函数提供一层包裹
 #define SLOT_TO_STRING_WRAP(slot_point, ues_slot_str) \
     do { \
-        char *slot_str; \
-        slot_to_string(slot_point, &slot_str); \
+        char *slot_str = slot_to_string(slot_point); \
         ues_slot_str; \
         free(slot_str); \
     } while (false)

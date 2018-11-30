@@ -10,13 +10,12 @@ static void initialize(struct stack_frame *frame)
 {
     // todo
     struct jclass *sys_class = classloader_load_class(frame->method->jclass->loader, "java/lang/System");
-//    sysClass->clinit(frame);
+//    sysClass->clinit(frame);  // todo
     struct jmethod *m = jclass_lookup_static_method(sys_class, "initializeSystemClass", "()V");
     if (m == NULL) {
-        jvm_abort("not find initializeSystemClass\n");
+        jvm_abort("not find initializeSystemClass\n");  // todo m == nullptr
     }
-    // todo m == nullptr
-//    sf_invoke_method(frame, m, NULL); // frame->invokeMethod(m);
+
     jthread_invoke_method(frame->thread, m, NULL);
 }
 
