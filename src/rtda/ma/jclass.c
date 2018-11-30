@@ -283,7 +283,7 @@ void jclass_destroy(struct jclass *c)
     free(c);
 }
 
-void jclass_clinit(struct jclass *c, struct stack_frame *invoke_frame)
+void jclass_clinit0(struct jclass *c, struct jthread *thread)
 {
     if (c->inited) {
         return;
@@ -297,7 +297,7 @@ void jclass_clinit(struct jclass *c, struct stack_frame *invoke_frame)
         }
 
 //        sf_invoke_method(invoke_frame, method, NULL);
-        jthread_invoke_method(invoke_frame->thread, method, NULL);
+        jthread_invoke_method(thread, method, NULL);
     }
 
     c->inited = true;
@@ -308,8 +308,38 @@ void jclass_clinit(struct jclass *c, struct stack_frame *invoke_frame)
      * 使超类初始化方法先于子类执行。
      */
     if (c->super_class != NULL) {
-        jclass_clinit(c->super_class, invoke_frame);
+        jclass_clinit0(c->super_class, thread);
     }
+}
+
+void jclass_clinit(struct jclass *c, struct stack_frame *invoke_frame)
+{
+    jclass_clinit0(c, invoke_frame->thread);
+//    if (c->inited) {
+//        return;
+//    }
+//
+//    struct jmethod *method = jclass_get_method(c, "<clinit>", "()V"); // todo 并不是每个类都有<clinit>方法？？？？？
+//    if (method != NULL) {
+//        if (!IS_STATIC(method->access_flags)) {
+//            // todo error
+//            printvm("error\n");
+//        }
+//
+////        sf_invoke_method(invoke_frame, method, NULL);
+//        jthread_invoke_method(invoke_frame->thread, method, NULL);
+//    }
+//
+//    c->inited = true;
+//
+//    /*
+//     * 超类放在最后判断，
+//     * 这样可以保证超类的初始化方法对应的帧在子类上面，
+//     * 使超类初始化方法先于子类执行。
+//     */
+//    if (c->super_class != NULL) {
+//        jclass_clinit(c->super_class, invoke_frame);
+//    }
 }
 
 void jclass_get_public_fields(struct jclass *c, struct jfield* fields[], int *count)

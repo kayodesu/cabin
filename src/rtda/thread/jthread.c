@@ -6,6 +6,7 @@
 #include "jthread.h"
 #include "../heap/jobject.h"
 #include "../../util/vector.h"
+#include "../../interpreter/interpreter.h"
 
 struct jthread {
     struct vector *vm_stack; // 虚拟机栈，一个线程只有一个虚拟机栈
@@ -22,8 +23,10 @@ struct jthread* jthread_create(struct classloader *loader)
 
     struct jclass *jlt_class = classloader_load_class(loader, "java/lang/Thread");
     thread->this_obj = jobject_create(jlt_class);
+
     struct slot value = islot(1);  // todo. why 1? I do not know. 参见 jvmgo/instructions/reserved/bootstrap.go
     set_instance_field_value_by_nt(thread->this_obj, "priority", "I", &value);
+
     /*
     auto jlThreadClass = classLoader->loadClass("java/lang/Thread");
     jlThreadObj = new Jobject(jlThreadClass);
@@ -51,6 +54,36 @@ struct jthread* jthread_create(struct classloader *loader)
 
     return thread;
 }
+
+
+#if 0
+
+static void JThread::joinToMainThreadGroup() {
+    assert(mainThreadGroup != nullptr);
+
+    auto jlThreadClass = classLoader->loadClass("java/lang/Thread");
+    auto constructor = jlThreadClass->getConstructor("(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");
+    auto frame = new StackFrame(this, constructor);
+
+//    frame->operandStack.push(jlThreadObj);
+//
+//    frame->operandStack.push(mainThreadGroup);
+    JStringObj *o = JStringObj::newJStringObj(classLoader, strToJstr("main"));
+//    frame->operandStack.push(o);
+
+    frame->setLocalVar(0, Slot(jlThreadObj));
+    frame->setLocalVar(1, Slot(mainThreadGroup));
+    frame->setLocalVar(2, Slot(o));
+
+    pushFrame(frame);
+    interpret(this);
+
+    // 无需在这里 delete frame, interpret函数会delete调执行过的frame
+
+    delete o;
+}
+
+#endif
 
 struct jobject* jthread_get_obj(struct jthread *thread)
 {
@@ -126,35 +159,6 @@ void jthread_invoke_method(struct jthread *thread, struct jmethod *method, const
 
     // todo
 }
-
-#if 0
-
-void JThread::joinToMainThreadGroup() {
-    assert(mainThreadGroup != nullptr);
-
-    auto jlThreadClass = classLoader->loadClass("java/lang/Thread");
-    auto constructor = jlThreadClass->getConstructor("(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");
-    auto frame = new StackFrame(this, constructor);
-
-//    frame->operandStack.push(jlThreadObj);
-//
-//    frame->operandStack.push(mainThreadGroup);
-    JStringObj *o = JStringObj::newJStringObj(classLoader, strToJstr("main"));
-//    frame->operandStack.push(o);
-
-    frame->setLocalVar(0, Slot(jlThreadObj));
-    frame->setLocalVar(1, Slot(mainThreadGroup));
-    frame->setLocalVar(2, Slot(o));
-
-    pushFrame(frame);
-    interpret(this);
-
-    // 无需在这里 delete frame, interpret函数会delete调执行过的frame
-
-    delete o;
-}
-
-#endif
 
 void jthread_destroy(struct jthread *thread)
 {

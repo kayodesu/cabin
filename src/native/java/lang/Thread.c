@@ -5,7 +5,11 @@
 #include "../../registry.h"
 #include "../../../interpreter/stack_frame.h"
 
-// public static native Thread currentThread();
+/*
+ * Returns a reference to the currently executing thread object.
+ *
+ * public static native Thread currentThread();
+ */
 static void currentThread(struct stack_frame *frame)
 {
     // push 一个 java/lang/Thread 对象

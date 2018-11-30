@@ -54,6 +54,12 @@ struct name_and_type {
 #define GLOBAL_BUF_LEN 10240  // I think this is big enough.
 char global_buf[GLOBAL_BUF_LEN];
 
+// The system Thread group.
+extern struct jobject *system_thread_group;
+
+// name of main thread
+#define MAIN_THREAD_NAME "main"
+
 /*
  * start jvm.
  * todo 说明 main_class_name 的格式，全路径名

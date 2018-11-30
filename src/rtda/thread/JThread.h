@@ -11,6 +11,7 @@
 struct classloader;
 struct stack_frame;
 struct jmethod;
+struct jobject;
 struct slot;
 
 /*
