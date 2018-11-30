@@ -53,6 +53,8 @@ static void addressSize(struct stack_frame *frame)
  */
     frame->operandStack.push((jint)8);  // todo
 #endif
+    // todo
+    os_pushi(frame->operand_stack, 8); // todo unsafe.Sizeof(int)
 }
 
 /*

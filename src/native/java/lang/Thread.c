@@ -8,8 +8,8 @@
 // public static native Thread currentThread();
 static void currentThread(struct stack_frame *frame)
 {
-    jvm_abort("error\n");
     // push 一个 java/lang/Thread 对象
+    os_pushr(frame->operand_stack, jthread_get_obj(frame->thread));
 //    frame->operandStack.push(frame->thread->getJavaLangThreadObj());
 }
 

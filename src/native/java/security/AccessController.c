@@ -4,24 +4,26 @@
 
 #include "../../registry.h"
 #include "../../../interpreter/stack_frame.h"
+#include "../../../slot.h"
+#include "../../../rtda/heap/JObject.h"
 
 // @CallerSensitive
 // public static native <T> T doPrivileged(PrivilegedAction<T> action);
 static void doPrivileged(struct stack_frame *frame)
 {
     // todo 这个函数干什么用的。。。。
-//    JObject *privilegedAction = frame->getLocalVar(0).getRef();
-//
-//    /*
-//     * run 函数返回 T类型 的对象
-//     *
-//     * public interface PrivilegedAction<T> {
-//     *     T run();
-//     * }
-//     */
-//    frame->operandStack.push(privilegedAction);  // push 'this' for invoke function 'run'.
-//    JMethod *m = privilegedAction->getClass()->getMethod("run", "()Ljava/lang/Object;"); // todo getInstanceMethod
-//    frame->invokeMethod(m);
+    struct jobject *privileged_action = slot_getr(frame->local_vars);
+
+    /*
+     * run 函数返回 T类型 的对象
+     *
+     * public interface PrivilegedAction<T> {
+     *     T run();
+     * }
+     */
+    os_pushr(frame->operand_stack, privileged_action); // push 'this' for invoke function 'run'.
+    struct jmethod *m = jclass_get_method(privileged_action->jclass, "run", "()Ljava/lang/Object;"); // todo getInstanceMethod
+    jthread_invoke_method(frame->thread, m, NULL);
 }
 
 // @CallerSensitive

@@ -6,6 +6,14 @@
 #include "../../../jvm.h"
 #include "../../../interpreter/stack_frame.h"
 
+
+// private static native void initIDs();
+static void initIDs(struct stack_frame *frame)
+{
+//    jvm_abort("error\n");
+    // todo
+}
+
 /**
  * Opens a file, with the specified name, for overwriting or appending.
  * @param name name of file to be opened
@@ -49,12 +57,6 @@ static void writeBytes(struct stack_frame *frame)
 
 // private native void close0() throws IOException;
 
-// private static native void initIDs();
-static void initIDs(struct stack_frame *frame)
-{
-    jvm_abort("error\n");
-    // todo
-}
 
 void java_io_FileOutputStream_registerNatives()
 {

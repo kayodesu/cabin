@@ -9,18 +9,53 @@
 
 struct jthread {
     struct vector *vm_stack; // 虚拟机栈，一个线程只有一个虚拟机栈
-    struct jobject *jlt_obj; // object of java.lang.Thread   todo 干嘛用的
+    struct jobject *this_obj; // object of java.lang.Thread   todo 干嘛用的
 
     size_t pc;
 };
 
-struct jthread* jthread_create()
+struct jthread* jthread_create(struct classloader *loader)
 {
     VM_MALLOC(struct jthread, thread);
 
     thread->vm_stack = vector_create();
 
+    struct jclass *jlt_class = classloader_load_class(loader, "java/lang/Thread");
+    thread->this_obj = jobject_create(jlt_class);
+    struct slot value = islot(1);  // todo. why 1? I do not know. 参见 jvmgo/instructions/reserved/bootstrap.go
+    set_instance_field_value_by_nt(thread->this_obj, "priority", "I", &value);
+    /*
+    auto jlThreadClass = classLoader->loadClass("java/lang/Thread");
+    jlThreadObj = new Jobject(jlThreadClass);
+    Jvalue v;
+    v.i = 1;  // todo. why 1? I do not know. 参见 jvmgo/instructions/reserved/bootstrap.go
+    jlThreadObj->setInstanceFieldValue("priority", "I", v);
+
+    // 置此线程的 ThreadGroup
+    if (mainThreadGroup != nullptr) {  // todo
+//        auto constructor = jlThreadClass->getConstructor("(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");
+//        auto frame = new StackFrame(this, constructor);
+//        frame->operandStack.push(jlThreadObj);
+//        assert(mainThreadGroup != nullptr);
+//        frame->operandStack.push(mainThreadGroup);
+//        JstringObj *o = new JstringObj(classLoader, strToJstr("main"));
+//        frame->operandStack.push(o);
+//
+//        pushFrame(frame);
+//        interpret(this);
+//
+//        delete o;
+        joinToMainThreadGroup();
+    }
+     */
+
     return thread;
+}
+
+struct jobject* jthread_get_obj(struct jthread *thread)
+{
+    assert(thread != NULL);
+    return thread->this_obj;
 }
 
 void jthread_set_pc(struct jthread *thread, size_t new_pc)

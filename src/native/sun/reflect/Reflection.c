@@ -18,8 +18,6 @@ static void getCallerClass(struct stack_frame *frame)
 //    JClassObj *co = frame->method->jclass->getClassObj();
 //    frame->operandStack.push(co);
 
-
-
     // top0 is sun/reflect/Reflection
     // top1 is the caller of getCallerClass()
     // top2 is the caller of method
@@ -27,19 +25,18 @@ static void getCallerClass(struct stack_frame *frame)
 //    callerClass := callerFrame.Method().Class().JClass()
 //    frame.OperandStack().PushRef(callerClass)
 
-#if 0
     // todo
-    auto &thread = frame->thread;
-    auto top0 = thread->topFrame();
-    thread->popFrame();
-    auto top1 = thread->topFrame();
-    thread->popFrame();
-    auto callerFrame = thread->topFrame();
-    frame->operandStack.push(callerFrame->method->jclass->getClassObj());
-
-    thread->pushFrame(top1);
-    thread->pushFrame(top0);
-#endif
+    // top0 is sun/reflect/Reflection
+    // top1 is the caller of getCallerClass()
+    // top2 is the caller of method
+    struct stack_frame *top0 = jthread_top_frame(frame->thread);
+    jthread_pop_frame(frame->thread);
+    struct stack_frame *top1 = jthread_top_frame(frame->thread);
+    jthread_pop_frame(frame->thread);
+    struct stack_frame *top2 = jthread_top_frame(frame->thread);
+    os_pushr(frame->operand_stack, top2->method->jclass->clsobj);
+    jthread_push_frame(frame->thread, top1);
+    jthread_push_frame(frame->thread, top0);
 }
 
 // public static native int getClassAccessFlags(Class<?> type)

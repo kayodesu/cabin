@@ -18,7 +18,7 @@ static void hashCode(struct stack_frame *frame)
 // protected native Object clone() throws CloneNotSupportedException;
 static void clone(struct stack_frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("error\n");
 //    JObject *thisObj = frame->getLocalVar(0).getRef();
 //    JClass *cloneable = frame->method->jclass->loader->loadClass("java/lang/Cloneable");
 //

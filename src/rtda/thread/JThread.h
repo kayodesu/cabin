@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+struct classloader;
 struct stack_frame;
 struct jmethod;
 struct slot;
@@ -22,7 +23,9 @@ struct slot;
 
 struct jthread;
 
-struct jthread* jthread_create();
+struct jthread* jthread_create(struct classloader *loader);
+
+struct jobject* jthread_get_obj(struct jthread *thread);
 
 void jthread_set_pc(struct jthread *thread, size_t new_pc);
 size_t jthread_get_pc(const struct jthread *thread);

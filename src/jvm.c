@@ -62,7 +62,7 @@ void start_jvm(const char *main_class_name)
     build_str_pool();
 
     struct classloader *loader = classloader_create();
-    struct jthread *main_thread = jthread_create();
+    struct jthread *main_thread = jthread_create(loader);
 
 #if 0
     createMainThreadGroup();

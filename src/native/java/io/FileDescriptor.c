@@ -22,7 +22,7 @@ static void initIDs(struct stack_frame *frame)
  */
 static void set(struct stack_frame *frame)
 {
-    jvm_abort("error\n");
+//    jvm_abort("error\n");
     // todo
     os_pushl(frame->operand_stack, 123);
 }

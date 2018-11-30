@@ -8,7 +8,7 @@
 // private native void initIDs();
 static void initIDs(struct stack_frame *frame)
 {
-    //jvm_abort("error\n");
+//    jvm_abort("error\n");
     // todo
 }
 
