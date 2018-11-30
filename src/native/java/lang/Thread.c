@@ -4,6 +4,7 @@
 
 #include "../../registry.h"
 #include "../../../interpreter/stack_frame.h"
+#include "../../../slot.h"
 
 /*
  * Returns a reference to the currently executing thread object.
@@ -63,16 +64,17 @@ static void isInterrupted(struct stack_frame *frame)
 // public final native boolean isAlive();
 static void isAlive(struct stack_frame *frame)
 {
-    jvm_abort("error\n");
     // todo
 //    JObject *thisObj = frame->getLocalVar(0).getRef();
 //    frame->operandStack.push(0);  // todo wtf?
+    struct jobject *this_obj = slot_getr(frame->local_vars);
+    os_pushi(frame->operand_stack, 1); // todo
 }
 
 // private native void setPriority0(int newPriority);
 static void setPriority0(struct stack_frame *frame)
 {
-    jvm_abort("error\n");
+    // todo
 }
 
 // private native void start0();

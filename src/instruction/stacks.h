@@ -11,9 +11,7 @@
 static void pop(struct stack_frame *frame)
 {
     struct slot *s = os_pops(frame->operand_stack);
-    if (!slot_is_category_one(s)) {
-        jvm_abort("ff"); // todo
-    }
+    assert(slot_is_category_one(s));
 }
 
 // 弹出两个类型一或一个类型二的数据
@@ -22,24 +20,15 @@ static void pop2(struct stack_frame *frame)
     struct slot *top1 = os_pops(frame->operand_stack);
     struct slot *top2 = os_pops(frame->operand_stack);
 
-    if ((slot_is_ph(top1) && slot_is_category_two(top2))  // 一个类型二的数据
-            || (slot_is_category_one(top1) && slot_is_category_one(top2))) /* 两个类型一的数据 */ {
-        return;
-    } else {
-        jvm_abort("ff"); // todo
-    }
+    assert(slots_are_category_two_and_ph(top2, top1) || slots_are_category_one(2, top1, top2));
 }
 
 // 复制栈顶数值（只支持分类一的数据）并将复制值压入栈顶。
 static void dup(struct stack_frame *frame)
 {
     const struct slot *s = os_top(frame->operand_stack);
-
-    if (slot_is_category_one(s)) {
-        os_push_slot_directly(frame->operand_stack, s);
-    } else {
-        jvm_abort("fttttttttttf"); // todo
-    }
+    assert(slot_is_category_one(s));
+    os_push_slot_directly(frame->operand_stack, s);
 }
 
 // 复制栈顶一个（分类二类型)或两个（分类一类型）数值并将复制值压入栈顶。
@@ -48,17 +37,12 @@ static void dup2(struct stack_frame *frame)
     const struct slot top1 = *os_pops(frame->operand_stack);
     const struct slot top2 = *os_pops(frame->operand_stack);
 
-    if (slot_is_ph(&top1) && slot_is_category_two(&top2)) { // 一个类型二的数据
-        os_push_slot_directly(frame->operand_stack, &top2);
-        os_push_slot_directly(frame->operand_stack, &top1);
-    } else if (slot_is_category_one(&top1) && slot_is_category_one(&top2)) {
-        os_push_slot_directly(frame->operand_stack, &top2);
-        os_push_slot_directly(frame->operand_stack, &top1);
-        os_push_slot_directly(frame->operand_stack, &top2);
-        os_push_slot_directly(frame->operand_stack, &top1);
-    } else {
-        jvm_abort("ff"); // todo
-    }
+    assert(slots_are_category_two_and_ph(&top2, &top1) || slots_are_category_one(2, &top1, &top2));
+
+    os_push_slot_directly(frame->operand_stack, &top2);
+    os_push_slot_directly(frame->operand_stack, &top1);
+    os_push_slot_directly(frame->operand_stack, &top2);
+    os_push_slot_directly(frame->operand_stack, &top1);
 }
 
 /*
@@ -72,13 +56,12 @@ static void dup_x1(struct stack_frame *frame)
 {
     const struct slot top1 = *os_pops(frame->operand_stack);
     const struct slot top2 = *os_pops(frame->operand_stack);
-    if (slot_is_category_one(&top1) && slot_is_category_one(&top2)) {
-        os_push_slot_directly(frame->operand_stack, &top1);
-        os_push_slot_directly(frame->operand_stack, &top2);
-        os_push_slot_directly(frame->operand_stack, &top1);
-    } else {
-        jvm_abort("ff"); // todo
-    }
+
+    assert(slots_are_category_one(2, &top1, &top2));
+
+    os_push_slot_directly(frame->operand_stack, &top1);
+    os_push_slot_directly(frame->operand_stack, &top2);
+    os_push_slot_directly(frame->operand_stack, &top1);
 }
 
 // 复制操作数栈栈顶的值（类型一），
@@ -89,19 +72,14 @@ static void dup_x2(struct stack_frame *frame)
     const struct slot top2 = *os_pops(frame->operand_stack);
     const struct slot top3 = *os_pops(frame->operand_stack);
 
-    if ((slot_is_category_one(&top1) && slot_is_ph(&top2) && slot_is_category_two(&top3)) // 栈顶类型一，栈顶下一个类型二
-        || (slot_is_category_one(&top1) && slot_is_category_one(&top2) && slot_is_category_one(&top3))) {
-        os_push_slot_directly(frame->operand_stack, &top1);
-        os_push_slot_directly(frame->operand_stack, &top3);
-        os_push_slot_directly(frame->operand_stack, &top1);
-    } else if (slot_is_category_one(&top1) && slot_is_category_one(&top2) && slot_is_category_one(&top3)) {
-        os_push_slot_directly(frame->operand_stack, &top1);
-        os_push_slot_directly(frame->operand_stack, &top3);
-        os_push_slot_directly(frame->operand_stack, &top2);
-        os_push_slot_directly(frame->operand_stack, &top1);
-    } else {
-        jvm_abort("ff"); // todo
-    }
+    bool f1 = slot_is_category_one(&top1) && slots_are_category_two_and_ph(&top3, &top2); // 栈顶类型一，栈顶下一个类型二
+    bool f2 = slots_are_category_one(3, &top1, &top2, &top3);
+    assert(f1 || f2);
+
+    os_push_slot_directly(frame->operand_stack, &top1);
+    os_push_slot_directly(frame->operand_stack, &top3);
+    os_push_slot_directly(frame->operand_stack, &top2);
+    os_push_slot_directly(frame->operand_stack, &top1);
 }
 
 /*
@@ -124,19 +102,15 @@ static void dup2_x1(struct stack_frame *frame)
     const struct slot top2 = *os_pops(frame->operand_stack);
     const struct slot top3 = *os_pops(frame->operand_stack);
 
-    if (slot_is_category_one(&top1) && slot_is_category_one(&top2) && slot_is_category_one(&top3)) { // Form 1
-        os_push_slot_directly(frame->operand_stack, &top2);
-        os_push_slot_directly(frame->operand_stack, &top1);
-        os_push_slot_directly(frame->operand_stack, &top3);
-        os_push_slot_directly(frame->operand_stack, &top2);
-        os_push_slot_directly(frame->operand_stack, &top1);
-    } else if (slot_is_ph(&top1) && slot_is_category_two(&top2) && slot_is_category_one(&top3)) { // Form 2
-        os_push_slot_directly(frame->operand_stack, &top2);
-        os_push_slot_directly(frame->operand_stack, &top3);
-        os_push_slot_directly(frame->operand_stack, &top2);
-    } else {
-        jvm_abort("ff"); // todo
-    }
+    bool f1 = slots_are_category_one(3, &top1, &top2, &top3); // Form 1
+    bool f2 = slots_are_category_two_and_ph(&top2, &top1) && slot_is_category_one(&top3);  // Form 2
+    assert(f1 || f2);
+
+    os_push_slot_directly(frame->operand_stack, &top2);
+    os_push_slot_directly(frame->operand_stack, &top1);
+    os_push_slot_directly(frame->operand_stack, &top3);
+    os_push_slot_directly(frame->operand_stack, &top2);
+    os_push_slot_directly(frame->operand_stack, &top1);
 }
 
 /*
@@ -171,35 +145,18 @@ static void dup2_x2(struct stack_frame *frame)
     const struct slot top3 = *os_pops(frame->operand_stack);
     const struct slot top4 = *os_pops(frame->operand_stack);
 
-    if (slot_is_category_one(&top1) && slot_is_category_one(&top2)
-        && slot_is_category_one(&top3) && slot_is_category_one(&top4)) { // Form 1
-        os_push_slot_directly(frame->operand_stack, &top2);
-        os_push_slot_directly(frame->operand_stack, &top1);
-        os_push_slot_directly(frame->operand_stack, &top4);
-        os_push_slot_directly(frame->operand_stack, &top3);
-        os_push_slot_directly(frame->operand_stack, &top2);
-        os_push_slot_directly(frame->operand_stack, &top1);
-    } else if (slot_is_ph(&top1) && slot_is_category_two(&top2)
-               && slot_is_category_one(&top3) && slot_is_category_one(&top4)) { // Form 2
-        os_push_slot_directly(frame->operand_stack, &top2);
-        os_push_slot_directly(frame->operand_stack, &top4);
-        os_push_slot_directly(frame->operand_stack, &top3);
-        os_push_slot_directly(frame->operand_stack, &top2);
-    } else if (slot_is_category_one(&top1) && slot_is_category_one(&top2)
-               && slot_is_ph(&top3) && slot_is_category_two(&top4)) { // Form 3
-        os_push_slot_directly(frame->operand_stack, &top2);
-        os_push_slot_directly(frame->operand_stack, &top1);
-        os_push_slot_directly(frame->operand_stack, &top4);
-        os_push_slot_directly(frame->operand_stack, &top2);
-        os_push_slot_directly(frame->operand_stack, &top1);
-    } else if (slot_is_ph(&top3) && slot_is_category_two(&top4)
-               && slot_is_ph(&top1) && slot_is_category_two(&top2)) { // Form 4
-        os_push_slot_directly(frame->operand_stack, &top2);
-        os_push_slot_directly(frame->operand_stack, &top4);
-        os_push_slot_directly(frame->operand_stack, &top2);
-    } else {
-        jvm_abort("ff"); // todo
-    }
+    bool f1 = slots_are_category_one(4, &top1, &top2, &top3, &top4);                                      // Form 1
+    bool f2 = slots_are_category_two_and_ph(&top2, &top1) && slots_are_category_one(2, &top3, &top4);     // Form 2
+    bool f3 = slots_are_category_one(2, &top1, &top2) && slots_are_category_two_and_ph(&top4, &top3);     // Form 3
+    bool f4 = slots_are_category_two_and_ph(&top4, &top3) && slots_are_category_two_and_ph(&top2, &top1); // Form 4
+    assert(f1 || f2 || f3 || f4);
+
+    os_push_slot_directly(frame->operand_stack, &top2);
+    os_push_slot_directly(frame->operand_stack, &top1);
+    os_push_slot_directly(frame->operand_stack, &top4);
+    os_push_slot_directly(frame->operand_stack, &top3);
+    os_push_slot_directly(frame->operand_stack, &top2);
+    os_push_slot_directly(frame->operand_stack, &top1);
 }
 
 /*
@@ -213,12 +170,10 @@ static void __swap(struct stack_frame *frame)
     const struct slot top1 = *os_pops(frame->operand_stack);
     const struct slot top2 = *os_pops(frame->operand_stack);
 
-    if (slot_is_category_one(&top1) && slot_is_category_one(&top2)) {
-        os_push_slot_directly(frame->operand_stack, &top2);
-        os_push_slot_directly(frame->operand_stack, &top1);
-    } else {
-        jvm_abort("ff"); // todo
-    }
+    assert(slots_are_category_one(2, &top1, &top2));
+
+    os_push_slot_directly(frame->operand_stack, &top1);
+    os_push_slot_directly(frame->operand_stack, &top2);
 }
 
 #endif //JVM_STACKS_H

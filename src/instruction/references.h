@@ -132,14 +132,11 @@ static void getstatic(struct stack_frame *frame)
  */
 static void putfield(struct stack_frame *frame)
 {
-    printvm("putfield 111 , operand_stack. %s\n", os_to_string(frame->operand_stack));
     struct jclass *curr_class = frame->method->jclass;
 
     int index = bcr_readu2(frame->reader);
     struct field_ref *ref = rtcp_get_field_ref(curr_class->rtcp, index);
     resolve_non_static_field_ref(curr_class, ref);
-
-    printvm("putfield 222, operand_stack. %s\n", os_to_string(frame->operand_stack));
 
     /*
      * 如果是final字段，则只能在构造函数中初始化，否则抛出java.lang.IllegalAccessError。
@@ -174,11 +171,7 @@ static void putfield(struct stack_frame *frame)
         jvm_abort("java.lang.NullPointerException\n"); // todo
     }
 
-    printvm("putfield, obj = %p, %d\n", obj, obj->t); ////////////////////////////
-
     set_instance_field_value_by_id(obj, ref->resolved_field->id, &s);
-
-    printvm("putfield 333, operand_stack. %s\n", os_to_string(frame->operand_stack));
 }
 
 /*
@@ -623,13 +616,31 @@ static void arraylength(struct stack_frame *frame)
 static void monitorenter(struct stack_frame *frame)
 {
     jref o = os_popr(frame->operand_stack);
-    jvm_abort("not implement\n");  // todo
+
+    // todo
+//    thread := frame.Thread()
+//    ref := frame.OperandStack().PopRef()
+//    if ref == nil {
+//        frame.RevertNextPC()
+//        thread.ThrowNPE()
+//    } else {
+//        ref.Monitor().Enter(thread)
+//    }
 }
 
 static void monitorexit(struct stack_frame *frame)
 {
     jref o = os_popr(frame->operand_stack);
-    jvm_abort("not implement\n");  // todo
+
+    // todo
+//    thread := frame.Thread()
+//    ref := frame.OperandStack().PopRef()
+//    if ref == nil {
+//        frame.RevertNextPC()
+//        thread.ThrowNPE()
+//    } else {
+//        ref.Monitor().Exit(thread)
+//    }
 }
 
 #endif //JVM_REFERENCES_H

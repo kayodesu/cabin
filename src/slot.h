@@ -7,6 +7,7 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include "jtypes.h"
 #include "jvm.h"
 
@@ -52,12 +53,30 @@ static inline bool slot_is_category_two(const struct slot *s)
     return s->t == JLONG || s->t == JDOUBLE;
 }
 
+static inline bool slots_are_category_two_and_ph(const struct slot *two, const struct slot *ph)
+{
+    return slot_is_category_two(two) && slot_is_ph(ph);
+}
+
 static inline bool slot_is_category_one(const struct slot *s)
 {
     assert(s != NULL);
     return !slot_is_ph(s) && !slot_is_category_two(s);
 }
 
+static inline bool slots_are_category_one(int num, ...)
+{
+    va_list valist;
+    va_start(valist, num);
+
+    for (int i = 0; i < num; i++) {
+       if (!slot_is_category_one(va_arg(valist, struct slot *)))
+            return false;
+    }
+
+    va_end(valist);
+    return true;
+}
 
 /*
  * 由调用者 free result

@@ -15,6 +15,7 @@
 
 struct jclassobj;
 struct stack_frame;
+struct jthread;
 
 struct jclass {
     struct clshead {

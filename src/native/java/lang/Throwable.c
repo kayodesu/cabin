@@ -4,6 +4,7 @@
 
 #include "../../registry.h"
 #include "../../../interpreter/stack_frame.h"
+#include "../../../slot.h"
 
 //struct StackTraceElement {
 //    string fileName;
@@ -15,12 +16,14 @@
 // private native Throwable fillInStackTrace(int dummy);
 static void fillInStackTrace(struct stack_frame *frame)
 {
-    jvm_abort("error\n");
+    jvm_abort("error");
     // todo
-    printvm("error  fillInStackTrace.................................................................................\n");
 //    JObject *throwable = frame->getLocalVar(0).getRef();
 //    // todo
 //    frame->operandStack.push(throwable);
+
+//    struct jobject *throwable = slot_getr(frame->local_vars);
+//    os_pushr(frame->operand_stack, throwable);
 }
 
 void java_lang_Throwable_registerNatives()

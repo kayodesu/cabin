@@ -52,11 +52,10 @@ static void doPrivileged3(struct stack_frame *frame)
 }
 
 // private static native AccessControlContext getStackAccessControlContext();
-//
 static void getStackAccessControlContext(struct stack_frame *frame)
 {
     // todo
-//    frame->operandStack.push((jref)nullptr);
+    os_pushr(frame->operand_stack, NULL);
 }
 
 void java_security_AccessController_registerNatives()

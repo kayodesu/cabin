@@ -46,6 +46,7 @@
       <w>strobj</w>
       <w>strpool</w>
       <w>treturn</w>
+      <w>valist</w>
       <w>wcscpy</w>
       <w>wstr</w>
     </words>
