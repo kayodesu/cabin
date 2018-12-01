@@ -35,7 +35,7 @@ jint fetch_index(struct stack_frame *frame)
     return bcr_readu1(frame->reader);
 }
 
-static void nop(struct stack_frame *frame) { }
+static void nop(struct stack_frame *frame) { /* do nothing */ }
 
 // 指令集
 void (* instructions[])(struct stack_frame *) = {
