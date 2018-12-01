@@ -18,7 +18,7 @@ struct jobject* put_str_to_pool(struct classloader *loader, const char *str0)
     struct jobject *so = hashmap_find(pool, str0);
     if (so == NULL) {
         so = jstrobj_create(loader, str0);
-        hashmap_put(pool, str0, so);
+        hashmap_put(pool, jstrobj_value(so), so);
     }
     return so;
 }

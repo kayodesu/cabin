@@ -8,6 +8,18 @@
 #include "jclass.h"
 #include "../../classfile/attribute.h"
 
+/*
+ * 异常处理表
+ * start_pc 给出的是try{}语句块的第一条指令，end_pc 给出的则是try{}语句块的下一条指令。
+ * 如果 catch_type 是 NULL（在class文件中是0），表示可以处理所有异常，这是用来实现finally子句的。
+ */
+struct exception_table {
+    u2 start_pc;
+    u2 end_pc;
+    u2 handler_pc;
+    struct jclass *catch_type;
+};
+
 struct jmethod {
     /*
      * jclass 表示定义此方法的类。
@@ -24,12 +36,11 @@ struct jmethod {
     u2 arg_slot_count;
 
     u2 exception_tables_count;
-    struct exception_table {
-        u2 start_pc;
-        u2 end_pc;
-        u2 handler_pc;
-        struct jclass *catch_type;
-    } *exception_tables;
+    /*
+     * start_pc 给出的是try{}语句块的第一条指令，end_pc 给出的则是try{}语句块的下一条指令。
+     * 如果 catch_type 是 NULL（在class文件中是0），表示可以处理所有异常，这是用来实现finally子句的。
+     */
+    struct exception_table *exception_tables;
 
     u4 line_number_table_count;
     struct line_number_table *line_number_tables;
@@ -42,6 +53,12 @@ struct jmethod* jmethod_create(const struct jclass *c, const struct member_info 
 
 bool jmethod_is_accessible_to(const struct jmethod *method, const struct jclass *visitor);
 
+// 查找 pc 所对应的行号
+int jmethod_get_line_number(const struct jmethod *method, int pc);
+
+/*
+ * @pc, 发生异常的位置
+ */
 int jmethod_find_exception_handler(struct jmethod *method, struct jclass *exception_type, size_t pc);
 
 char *jmethod_to_string(const struct jmethod *method);

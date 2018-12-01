@@ -1,4 +1,4 @@
-package ex;
+package exception;
 
 public class InstructionNpeTest {
     

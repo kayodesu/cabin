@@ -241,9 +241,7 @@ static void athrow(struct stack_frame *frame)
         jthread_pop_frame(curr_thread);
     }
 
-    // todo UncaughtException
-    struct jobject *so = slot_getr(get_instance_field_value_by_nt(exception, "detailMessage", "Ljava/lang/String;"));
-    jvm_abort("UncaughtException. %s. %s\n", exception->jclass->class_name, jstrobj_value(so));  // todo
+    jthread_handle_uncaught_exception(curr_thread, exception);
 }
 
 /*
@@ -400,6 +398,7 @@ static void invokevirtual(struct stack_frame *frame)
     if (obj == NULL) {
         if (strcmp(ref->resolved_method->name, "println") == 0) {
             // todo   println  暂时先这么搞
+            printvm("fake println!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
             const struct slot *arg = args + 1; // println 的参数
             if (arg->t == JREF) {
                 struct jobject *so = slot_getr(arg);

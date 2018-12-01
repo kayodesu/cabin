@@ -56,24 +56,34 @@ static void parse_code_attr(struct jmethod *method, struct code_attribute *a)
     method->code = a->code;
     method->code_length = a->code_length;
 
+    method->line_number_table_count = 0;
+    method->line_number_tables = NULL;
+
     method->exception_tables_count = a->exception_tables_length;
     // todo exceptionTableCount == 0
     method->exception_tables = malloc(sizeof(struct exception_table) * method->exception_tables_count);
     for (int i = 0; i < method->exception_tables_count; i++) {
-        method->exception_tables[i].start_pc = a->exception_tables[i].start_pc;
-        method->exception_tables[i].end_pc = a->exception_tables[i].end_pc;
-        method->exception_tables[i].handler_pc = a->exception_tables[i].handler_pc;
-        if (a->exception_tables[i].catch_type == 0) {
-            method->exception_tables[i].catch_type = NULL; // todo  表示 finally 字句？？？
+        const struct code_attribute_exception_table *t0 = a->exception_tables + i;
+        struct exception_table *t1 = method->exception_tables + i;
+        t1->start_pc = t0->start_pc;
+        t1->end_pc = t0->end_pc;
+        t1->handler_pc = t0->handler_pc;
+        if (t0->catch_type == 0) {
+            /*
+             * 异常处理项的 catch_type 有可能是 0。
+             * 0 是无效的常量池索引，但是在这里 0 并非表示 catch-none，而是表示 catch-all。
+             */
+            t1->catch_type = NULL;
         } else {
-            const char *class_name = rtcp_get_class_name(method->jclass->rtcp, a->exception_tables[i].catch_type);
-            method->exception_tables[i].catch_type = classloader_load_class(method->jclass->loader, class_name);
+            const char *class_name = rtcp_get_class_name(method->jclass->rtcp, t0->catch_type);
+            t1->catch_type = classloader_load_class(method->jclass->loader, class_name);
         }
     }
 
     // 解析 code 属性的属性
     for (int k = 0; k < a->attributes_count; k++) {
         if (strcmp(a->attributes[k]->name, StackMapTable) == 0) {
+            // todo
         } else if (strcmp(a->attributes[k]->name, LineNumberTable) == 0) {   // 可选属性
             struct line_number_table_attribute *tmp = (struct line_number_table_attribute *) a->attributes[k];
             method->line_number_table_count = tmp->line_number_table_length;
@@ -99,6 +109,12 @@ struct jmethod* jmethod_create(const struct jclass *c, const struct member_info 
     method->descriptor = rtcp_get_str(c->rtcp, info->descriptor_index);
     method->access_flags = info->access_flags;
     method->jclass = c;
+
+    method->max_stack = method->max_locals = method->exception_tables_count = 0;
+    method->line_number_table_count = method->code_length = 0;
+    method->exception_tables = NULL;
+    method->line_number_tables = NULL;
+    method->code = NULL;
 
     cal_arg_slot_count(method);
 
@@ -207,16 +223,42 @@ bool jmethod_is_accessible_to(const struct jmethod *method, const struct jclass 
     return strcmp(method->jclass->pkg_name, visitor->pkg_name) == 0;
 }
 
-int jmethod_find_exception_handler(struct jmethod *method, struct jclass *exception_type, size_t pc)   // todo pc 是什么？
+int jmethod_get_line_number(const struct jmethod *method, int pc)
+{
+    assert(method != NULL);
+
+    // native函数没有字节码
+    if (IS_NATIVE(method->access_flags)) {
+        return -2;
+    }
+
+    /*
+     * 和源文件名一样，并不是每个方法都有行号表。如果方法没有
+行号表，自然也就查不到pc对应的行号，这种情况下返回–1
+
+     todo
+     */
+    if (method->line_number_tables == NULL) {
+        return -1;
+    }
+
+    for (int i = method->line_number_table_count - 1; i >= 0; i--) {
+        if (pc >= method->line_number_tables[i].start_pc)
+            return method->line_number_tables[i].line_number;
+    }
+    return -1;
+}
+
+int jmethod_find_exception_handler(struct jmethod *method, struct jclass *exception_type, size_t pc)
 {
     for (int i = 0; i < method->exception_tables_count; i++) {
-//        struct exception_table *t = method->exception_tables[i];
-        if (method->exception_tables[i].start_pc <= pc && pc < method->exception_tables[i].end_pc) {
-            if (method->exception_tables[i].catch_type == NULL) {
-                return method->exception_tables[i].handler_pc;  // catch all  todo
+        const struct exception_table *t = method->exception_tables + i;
+        if (t->start_pc <= pc && pc < t->end_pc) {
+            if (t->catch_type == NULL) {
+                return t->handler_pc;  // catch all
             }
-            if (jclass_is_subclass_of(exception_type, method->exception_tables[i].catch_type)) {
-                return method->exception_tables[i].handler_pc;
+            if (jclass_is_subclass_of(exception_type, t->catch_type)) {
+                return t->handler_pc;
             }
         }
     }

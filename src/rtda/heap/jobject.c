@@ -30,6 +30,7 @@ struct jobject* jobject_create(struct jclass *c)
         o->instance_fields_values = copy_inited_instance_fields_values(c);
     }
 
+    o->extra = NULL;
     printvm("create object: %s\n", jobject_to_string(o)); //////////////////////////////////////////////////
     return o;
 }
@@ -60,11 +61,8 @@ void set_instance_field_value_by_nt(const struct jobject *o,
 
 const struct slot* get_instance_field_value_by_id(const struct jobject *o, int id)
 {
-    printvm("ddddddddddddddddd\n");
     assert(o != NULL);
-    printvm("yyyyyyyyyyyyyyyyyy  %p\n", o);
     assert(id >= 0 && id < o->instance_fields_count);
-    printvm("vvvvvvvvvvvvvvvvvvv\n");
     return o->instance_fields_values + id;
 }
 
@@ -79,7 +77,6 @@ const struct slot* get_instance_field_value_by_nt(const struct jobject *o, const
 
     return get_instance_field_value_by_id(o, f->id);
 }
-
 
 struct jobject* jclassobj_create(struct jclass *jclass_class, const char *class_name)
 {

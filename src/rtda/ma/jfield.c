@@ -10,6 +10,7 @@
 #include "jclass.h"
 #include "../../util/util.h"
 #include "../../classfile/attribute.h"
+#include "../heap/jobject.h"
 
 
 struct jfield* jfield_create(const struct jclass *c, const struct member_info *info)
@@ -23,35 +24,13 @@ struct jfield* jfield_create(const struct jclass *c, const struct member_info *i
     field->name = rtcp_get_str(c->rtcp, info->name_index);
     field->descriptor = rtcp_get_str(c->rtcp, info->descriptor_index);
 
+    char d = field->descriptor[0];
     field->category_two = false;
-    if (field->descriptor[0] == 'B') {
-        field->type_name = "java/lang/Byte";
-    } else if (field->descriptor[0] == 'C') {
-        field->type_name = "java/lang/Character";
-    }  else if (field->descriptor[0] == 'I') {
-        field->type_name = "java/lang/Integer";
-    } else if (field->descriptor[0] == 'S') {
-        field->type_name = "java/lang/Short";
-    } else if (field->descriptor[0] == 'Z') {
-        field->type_name = "java/lang/Boolean";
-    } else if (field->descriptor[0] == 'F') {
-        field->type_name = "java/lang/Float";
-    } else if (field->descriptor[0] == 'J') {
-        field->type_name = "java/lang/Long";
+    if (d == 'J' || d == 'D') {
         field->category_two = true;
-    } else if (field->descriptor[0] == 'D') {
-        field->type_name = "java/lang/Double";
-        field->category_two = true;
-    }  else if (field->descriptor[0] == '[') {
-        field->type_name = field->descriptor;
-    } else if (field->descriptor[0] == 'L' && strend(field->descriptor, ";")) {
-        // todo
-        char *tmp = strdup(field->descriptor + 1); // jump 'L'
-        tmp[strlen(tmp) - 1] = 0; // set last char(';') is 0
-        field->type_name = tmp;
-    } else {
-        jvm_abort("%s\n", field->descriptor); // todo
     }
+
+    field->type = NULL;
 
     // 解析 field 的属性
     for (int j = 0; j < info->attributes_count; j++) {
@@ -113,35 +92,32 @@ bool jfield_is_accessible_to(const struct jfield *field, const struct jclass *vi
 
 struct jobject* jfield_get_type(struct jfield *field)
 {
-    printvm("未实现的功能   %s\n", jfield_to_string(field));
-    jvm_abort("\n"); // todo
-#if 0
-    if (type != nullptr) {
-        return type;
+    assert(field != NULL);
+
+    if (field->type != NULL) {
+        return field->type;
     }
-    type = jclass->loader->getJclassObjFromPool(typeName);
-    return type;
-#endif
-//    char c = descriptor[0];
-//    if (c == 'B')
-//        return PRIMITIVE_BYTE;
-//    if (c == 'C')
-//        return PRIMITIVE_CHAR;
-//    if (c == 'D')
-//        return PRIMITIVE_DOUBLE;
-//    if (c == 'F')
-//        return PRIMITIVE_FLOAT;
-//    if (c == 'I')
-//        return PRIMITIVE_INT;
-//    if (c == 'J')
-//        return PRIMITIVE_LONG;
-//    if (c == 'S')
-//        return PRIMITIVE_SHORT;
-//    if (c == 'Z')
-//        return PRIMITIVE_BOOLEAN;
-//    if (c == '[' or c == 'L')
-//        return REFERENCE;
-//    jvmAbort("error\n");
+
+    char d = *field->descriptor;
+    if (d == '[') { // 变量类型为数组
+        field->type = classloader_load_class(field->jclass->loader, field->descriptor)->clsobj;
+    } else if (d == 'L' && strend(field->descriptor, ";")) { // 变量类型为非数组引用（类引用）
+        int len = strlen(field->descriptor);
+        char type_name[len];
+        strcpy(type_name, field->descriptor + 1); // jump 'L'
+        type_name[len - 2] = 0; // set last char(';') is 0
+        field->type = classloader_load_class(field->jclass->loader, type_name)->clsobj;
+    } else { // 变量类型为基本类型
+        const char *type_name = primitive_type_get_primitive_name_by_descriptor(field->descriptor);
+        if (type_name != NULL) {
+            field->type = classloader_load_class(field->jclass->loader, type_name)->clsobj;
+        }
+    }
+
+    if (field->type == NULL) {
+        jvm_abort("Never goes here. %s\n", field->descriptor); // todo
+    }
+    return field->type;
 }
 
 void jfield_destroy(struct jfield *field)

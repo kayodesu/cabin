@@ -7,8 +7,6 @@
 #include "../../../rtda/heap/jobject.h"
 #include "../../../rtda/ma/jfield.h"
 #include "../../../rtda/heap/strpool.h"
-#include "../../../rtda/ma/primitive_types.h"
-#include "../../../interpreter/stack_frame.h"
 
 // native ClassLoader getClassLoader0();
 static void getClassLoader0(struct stack_frame *frame)
@@ -52,7 +50,7 @@ static void getPrimitiveClass(struct stack_frame *frame)
     struct jobject *so = slot_getr(frame->local_vars);
     STROBJ_CHECK(so);
     const char *class_name = jstrobj_value(so); // 这里得到的 class_name 是诸如 "int", "float" 之类的值
-    struct jclass *c = classloader_load_class(frame->method->jclass->loader, class_name);
+    struct jclass *c = classloader_load_class(frame->method->jclass->loader, class_name); // todo
     os_pushr(frame->operand_stack, c->clsobj);
 }
 
@@ -604,14 +602,13 @@ static void getDeclaredFields0(struct stack_frame *frame)
                 rslot(jlrf_obj), // this
                 rslot((jref) this_obj), // declaring class
                 rslot((jref) name), // name
-                rslot((jref) jfield_get_type(fields[i])), // type   todo
+                rslot((jref) jfield_get_type(fields[i])), // type
                 islot(fields[i]->access_flags), // modifiers
                 islot(fields[i]->id), // slot   todo
                 rslot(NULL), // signature  todo
                 rslot(NULL), // annotations  todo
         };
 
-//        sf_invoke_method(frame, field_constructor, args); // frame->invokeMethod(fieldConstructor, args);
         jthread_invoke_method(frame->thread, field_constructor, args);
 
         struct slot s = rslot((jref) name);

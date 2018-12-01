@@ -13,7 +13,6 @@
 #include "../../classfile/attribute.h"
 #include "jmethod.h"
 #include "access.h"
-#include "primitive_types.h"
 
 // 计算实例字段的个数，同时给它们编号
 static void calc_instance_field_id(struct jclass *c)
@@ -134,9 +133,8 @@ static void calc_static_field_id(struct jclass *c)
 
 struct jclass *jclass_create_by_classfile(struct classloader *loader, struct classfile *cf)
 {
-    if (loader == NULL || cf == NULL) {
-        jvm_abort("%p, %p", loader, cf);
-    }
+    assert(loader != NULL);
+    assert(cf != NULL);
 
     VM_MALLOC(struct jclass, c);
 
@@ -146,6 +144,8 @@ struct jclass *jclass_create_by_classfile(struct classloader *loader, struct cla
     c->loader = loader;
     c->inited = false;
     c->access_flags = cf->access_flags;
+
+    int source_file_index = -1;
 
     // 先解析属性，因为下面建立 Runtime Constant Pool 时需要用到属性中的值。
     for (int i = 0; i < cf->attributes_count; i++) {
@@ -161,9 +161,8 @@ struct jclass *jclass_create_by_classfile(struct classloader *loader, struct cla
         } else if (strcmp(attr->name, Signature) == 0) {  // 可选属性
             //            printvm("not parse attr: Signature\n");
         } else if (strcmp(attr->name, SourceFile) == 0) {  // 可选属性
-//            SourceFileAttr *a = static_cast<SourceFileAttr *>(attr);
-//            sourcefileName = rtcp->getStr(a->sourcefileIndex);
-            //            printvm("not parse attr: SourceFile\n");  // todo
+            // 这里先不解析，只是记录下source_file_index，因为常量池还没有建立。
+            source_file_index = ((struct source_file_attribute *) attr)->source_file_index;
         } else if (strcmp(attr->name, SourceDebugExtension) == 0) {  // 可选属性
             //      printvm("not parse attr: SourceDebugExtension\n");
         } else if (strcmp(attr->name, Deprecated) == 0) {  // 可选属性
@@ -178,6 +177,15 @@ struct jclass *jclass_create_by_classfile(struct classloader *loader, struct cla
     }
 
     c->rtcp = rtcp_create(cf->constant_pool, cf->constant_pool_count, c->bootstrap_methods_attribute);
+    if (source_file_index >= 0) {
+        c->source_file_name = rtcp_get_str(c->rtcp, source_file_index);
+    } else {
+        /*
+         * 并不是每个class文件中都有源文件信息，这个因编译时的编译器选项而异。
+         * todo 什么编译选项
+         */
+        c->source_file_name = "Unknown";
+    }
 
     c->class_name = rtcp_get_class_name(c->rtcp, cf->this_class);
     c->pkg_name = strdup(c->class_name);
@@ -232,13 +240,30 @@ struct jclass *jclass_create_by_classfile(struct classloader *loader, struct cla
 
 struct jclass* jclass_create_primitive_class(struct classloader *loader, const char *class_name)
 {
+    assert(loader != NULL);
+    assert(class_name != NULL);
+
     // todo class_name 是不是基本类型
+
     VM_MALLOC(struct jclass, c);
     c->access_flags = ACC_PUBLIC;
     c->pkg_name = ""; // todo 包名
     c->class_name = strdup(class_name);  // todo
     c->loader = loader;
     c->inited = true;
+
+    c->clsobj = NULL;
+    c->rtcp = NULL;
+    c->super_class = NULL;
+    c->instance_fields_count = c->static_fields_count = 0;
+    c->inited_instance_fields_values = NULL;
+    c->static_fields_values = NULL;
+    c->interfaces_count = c->methods_count = c->fields_count = 0;
+    c->interfaces = NULL;
+    c->methods = NULL;
+    c->fields = NULL;
+    c->bootstrap_methods_attribute = NULL;
+    c->source_file_name = NULL;
     return c;
 }
 
@@ -258,6 +283,16 @@ struct jclass* jclass_create_arr_class(struct classloader *loader, const char *c
     c->interfaces[0] = classloader_load_class(loader, "java/lang/Cloneable");
     c->interfaces[1] = classloader_load_class(loader, "java/io/Serializable");
 
+    c->clsobj = NULL;
+    c->rtcp = NULL;
+    c->instance_fields_count = c->static_fields_count = 0;
+    c->inited_instance_fields_values = NULL;
+    c->static_fields_values = NULL;
+    c->methods_count = c->fields_count = 0;
+    c->methods = NULL;
+    c->fields = NULL;
+    c->bootstrap_methods_attribute = NULL;
+    c->source_file_name = NULL;
     return c;
 }
 
@@ -479,6 +514,17 @@ bool jclass_is_subclass_of(const struct jclass *c, const struct jclass *father)
     return false;
 }
 
+int jclass_inherited_depth(const struct jclass *c)
+{
+    assert(c != NULL);
+
+    int depth;
+    for (depth = 0; c->super_class != NULL; c = c->super_class) {
+        depth++;
+    }
+    return depth;
+}
+
 struct slot* copy_inited_instance_fields_values(const struct jclass *c)
 {
     assert(c != NULL);
@@ -536,17 +582,20 @@ char* get_arr_class_name(const char *class_name)
 
     VM_MALLOCS(char, strlen(class_name) + 8 /* big enough */, array_class_name);
 
+    // 数组
     if (class_name[0] == '[') {
         sprintf(array_class_name, "[%s\0", class_name);
         return array_class_name;
     }
 
-    for (int i = 0; i < PRIMITIVE_TYPE_COUNT; i++) {
-        if (strcmp(primitive_types[i].name, class_name) == 0) {
-            return strcpy(array_class_name, primitive_types[i].array_class_name);
-        }
+    // 基本类型
+    const char *arr_cls_name = primitive_type_get_array_class_name_by_class_name(class_name);
+    if (arr_cls_name != NULL) {
+        strcpy(array_class_name, arr_cls_name);
+        return array_class_name;
     }
 
+    // 类引用
     sprintf(array_class_name, "[L%s;\0", class_name);
     return array_class_name;
 }

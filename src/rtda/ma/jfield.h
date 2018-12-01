@@ -13,9 +13,13 @@
 struct jclass;
 
 struct jfield {
-    const struct jclass *jclass; // which class this member belongs to
+    const struct jclass *jclass; // which class this field belongs to
     const char *name;
     const char *descriptor;
+    /*
+     * the declared type(class object) of this field
+     */
+    struct jobject *type;
 
     u2 access_flags;
 

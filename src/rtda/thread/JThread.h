@@ -40,6 +40,12 @@ void jthread_pop_frame(struct jthread *thread);
 void jthread_push_frame(struct jthread *thread, struct stack_frame *frame);
 
 /*
+ * 返回完整的虚拟机栈
+ * 由调用者释放返回的array of struct stack_frame*
+ */
+struct stack_frame** jthread_get_frames(const struct jthread *thread, int *num);
+
+/*
  * 生成包含@method的栈帧，并将其压入@thread的虚拟机栈中，
  * 同时中断当前虚拟机栈栈顶的栈帧，以期执行@method所对应的新生成的栈帧。
  *
@@ -58,6 +64,9 @@ void jthread_push_frame(struct jthread *thread, struct stack_frame *frame);
  * 综上：不支持在循环中调用 jthread_invoke_method 来执行带返回值的方法（@method）。
  */
 void jthread_invoke_method(struct jthread *thread, struct jmethod *method, const struct slot *args);
+
+// todo UncaughtException
+void jthread_handle_uncaught_exception(struct jthread *thread, const struct jobject *exception);
 
 void jthread_destroy(struct jthread *thread);
 

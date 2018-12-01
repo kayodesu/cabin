@@ -111,6 +111,9 @@ void test()
 //    start_jvm("wrapper/IntegerTest");
 //    start_jvm("wrapper/FloatTest");
 
+    // exception
+//    start_jvm("exception/CatchTest");
+//    start_jvm("exception/UncaughtTest");
 
 //    start_jvm("ObjectInitTest");
 

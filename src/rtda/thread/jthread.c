@@ -127,6 +127,13 @@ void jthread_push_frame(struct jthread *thread, struct stack_frame *frame)
     vector_push_back(thread->vm_stack, frame);
 }
 
+struct stack_frame** jthread_get_frames(const struct jthread *thread, int *num)
+{
+    assert(thread != NULL);
+    assert(num != NULL);
+    return (struct stack_frame **) vector_to_array(thread->vm_stack, num);
+}
+
 void jthread_invoke_method(struct jthread *thread, struct jmethod *method, const struct slot *args)
 {
     assert(thread != NULL && method != NULL);
@@ -158,6 +165,31 @@ void jthread_invoke_method(struct jthread *thread, struct jmethod *method, const
     }
 
     // todo
+}
+
+void jthread_handle_uncaught_exception(struct jthread *thread, const struct jobject *exception)
+{
+    assert(thread != NULL);
+    assert(exception != NULL);
+    /*
+     正确的做法
+    self.stack.clear()
+	sysClass := heap.BootLoader().LoadClass("java/lang/System")
+	sysErr := sysClass.GetStaticValue("out", "Ljava/io/PrintStream;").(*heap.Object)
+	printStackTrace := ex.Class().GetInstanceMethod("printStackTrace", "(Ljava/io/PrintStream;)V")
+
+	// call ex.printStackTrace(System.err)
+	newFrame := self.NewFrame(printStackTrace)
+	vars := newFrame.localVars
+	vars.SetRef(0, ex)
+	vars.SetRef(1, sysErr)
+	self.PushFrame(newFrame)
+     */
+
+    // todo
+    struct jobject *so = slot_getr(get_instance_field_value_by_nt(exception, "detailMessage", "Ljava/lang/String;"));
+    // detailMessage 的值有可能为空，即 so 有可能为 NULL
+    jvm_abort("UncaughtException. %s. %s\n", exception->jclass->class_name, so != NULL ? jstrobj_value(so) : "NULL");
 }
 
 void jthread_destroy(struct jthread *thread)

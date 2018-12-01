@@ -45,7 +45,7 @@ void sf_destroy(struct stack_frame *frame)
     os_destroy(frame->operand_stack);
 
     // todo
-    free(frame);
+//    free(frame);
 }
 
 char* sf_to_string(const struct stack_frame *frame)

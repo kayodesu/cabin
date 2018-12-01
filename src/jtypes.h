@@ -6,6 +6,7 @@
 #define JVM_JTYPES_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 typedef int8_t s1;  // s: signed
 typedef int16_t s2;
@@ -126,5 +127,33 @@ static inline jfloat d2f(jdouble d)
 {  // todo
     return (jfloat) d;
 }
+
+
+/*
+ * 基本类型的名称，描述符，等等
+ */
+static const struct {
+    const char *name;
+    char descriptor;
+    const char *array_class_name;
+    const char *wrapper_class_name;
+} primitive_types[] = {
+        { "void",    'V', "[V", "java/lang/Void" },
+        { "boolean", 'Z', "[Z", "java/lang/Boolean" },
+        { "byte",    'B', "[B", "java/lang/Byte" },
+        { "char",    'C', "[C", "java/lang/Character" },
+        { "short",   'S', "[S", "java/lang/Short" },
+        { "int",     'I', "[I", "java/lang/Integer" },
+        { "long",    'J', "[J", "java/lang/Long" },
+        { "float",   'F', "[F", "java/lang/Float" },
+        { "double",  'D', "[D", "java/lang/Double" },
+};
+
+#define PRIMITIVE_TYPE_COUNT (sizeof(primitive_types) / sizeof(*primitive_types))
+
+bool is_primitive_by_class_name(const char *class_name);
+const char* primitive_type_get_array_class_name_by_class_name(const char *class_name);
+const char* primitive_type_get_primitive_name_by_descriptor(const char *descriptor);
+
 
 #endif //JVM_JTYPES_H

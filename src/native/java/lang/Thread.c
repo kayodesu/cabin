@@ -68,7 +68,7 @@ static void isAlive(struct stack_frame *frame)
 //    JObject *thisObj = frame->getLocalVar(0).getRef();
 //    frame->operandStack.push(0);  // todo wtf?
     struct jobject *this_obj = slot_getr(frame->local_vars);
-    os_pushi(frame->operand_stack, 1); // todo
+    os_pushi(frame->operand_stack, 0); // todo 为什么要设置成0，设置成1就状态错误
 }
 
 // private native void setPriority0(int newPriority);
@@ -80,7 +80,24 @@ static void setPriority0(struct stack_frame *frame)
 // private native void start0();
 static void start0(struct stack_frame *frame)
 {
-    jvm_abort("error\n");
+    // todo
+//    jvm_abort("error\n");
+    /*
+     * 	vars := frame.LocalVars()
+	this := vars.GetThis()
+
+	newThread := rtda.NewThread(this)
+	runMethod := this.Class().GetInstanceMethod("run", "()V")
+	newFrame := newThread.NewFrame(runMethod)
+	newFrame.LocalVars().SetRef(0, this)
+	newThread.PushFrame(newFrame)
+
+	this.LockState()
+	this.SetExtra(newThread)
+	this.UnlockState()
+
+	go interpreter.Loop(newThread)
+     */
 }
 
 void java_lang_Thread_registerNatives()

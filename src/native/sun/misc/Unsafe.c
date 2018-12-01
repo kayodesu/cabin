@@ -36,7 +36,7 @@ static void objectFieldOffset(struct stack_frame *frame)
 //    frame->operandStack.push((jlong)offset);
 
     jref field_obj = slot_getr(frame->local_vars + 1);
-    jint offset = slot_geti(get_instance_field_value_by_nt(field_obj, "slot", "I"));
+    jint offset = slot_geti(get_instance_field_value_by_nt(field_obj, "slot", "I")); // todo "slot", "I" 什么东西
     os_pushl(frame->operand_stack, offset);
 }
 
@@ -51,7 +51,6 @@ static void addressSize(struct stack_frame *frame)
 	stack := frame.OperandStack()
 	stack.PushInt(8) // todo unsafe.Sizeof(int)
  */
-    frame->operandStack.push((jint)8);  // todo
 #endif
     // todo
     os_pushi(frame->operand_stack, 8); // todo unsafe.Sizeof(int)
@@ -59,7 +58,7 @@ static void addressSize(struct stack_frame *frame)
 
 /*
  * 第一个参数为需要改变的对象，
- * 第二个为偏移量(即之前求出来的valueOffset的值)，
+ * 第二个为偏移量(参加函数 objectFieldOffset)，
  * 第三个参数为期待的值，
  * 第四个为更新后的值。
  *
@@ -70,6 +69,7 @@ static void addressSize(struct stack_frame *frame)
  */
 static void compareAndSwapInt(struct stack_frame *frame)
 {
+    jvm_abort("");
 #if 0
     JObject *thisObj = frame->getLocalVar(0).getRef();
     JObject *o = frame->getLocalVar(1).getRef();
@@ -90,6 +90,7 @@ static void compareAndSwapInt(struct stack_frame *frame)
 // public final native boolean compareAndSwapLong(Object o, long offset, long expected, long x);
 static void compareAndSwapLong(struct stack_frame *frame)
 {
+    jvm_abort("");
 #if 0
     JObject *thisObj = frame->getLocalVar(0).getRef();
     JObject *o = frame->getLocalVar(1).getRef();
@@ -110,6 +111,20 @@ static void compareAndSwapLong(struct stack_frame *frame)
 // public final native boolean compareAndSwapObject(Object o, long offset, Object expected, Object x)
 static void compareAndSwapObject(struct stack_frame *frame)
 {
+    struct jobject *this_obj = slot_getr(frame->local_vars);
+    struct jobject *o = slot_getr(frame->local_vars + 1); // first argument
+    jlong offset = slot_getl(frame->local_vars + 2); // long 占两个Slot
+    jref expected = slot_getr(frame->local_vars + 4);
+    jref x = slot_getr(frame->local_vars + 5);
+
+    jref value = slot_getr(get_instance_field_value_by_id(o, offset));
+    if (value == expected) {
+        struct slot s = rslot(x);
+        set_instance_field_value_by_id(o, offset, &s);
+        os_pushi(frame->operand_stack, 1); // todo
+    } else {
+        os_pushi(frame->operand_stack, 0); // todo
+    }
 #if 0
     JObject *thisObj = frame->getLocalVar(0).getRef();
     JObject *o = frame->getLocalVar(1).getRef();
@@ -130,6 +145,7 @@ static void compareAndSwapObject(struct stack_frame *frame)
 // public native int getIntVolatile(Object o, long offset);
 static void getIntVolatile(struct stack_frame *frame)
 {
+    jvm_abort("");
 #if 0
     JObject *thisObj = frame->getLocalVar(0).getRef();
     JObject *o = frame->getLocalVar(1).getRef();

@@ -6,6 +6,7 @@
       <w>cfcp</w>
       <w>clsobj</w>
       <w>dslot</w>
+      <w>eles</w>
       <w>fieldvalues</w>
       <w>fslot</w>
       <w>getd</w>
@@ -32,6 +33,7 @@
       <w>popi</w>
       <w>popl</w>
       <w>popr</w>
+      <w>primitivetypes</w>
       <w>printvm</w>
       <w>pushd</w>
       <w>pushf</w>

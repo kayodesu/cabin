@@ -49,6 +49,8 @@ struct jobject {
     };
 
     enum jobject_type t;
+
+    void *extra;
 };
 
 struct jobject* jobject_create(struct jclass *c);

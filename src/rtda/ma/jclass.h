@@ -74,7 +74,7 @@ struct jclass {
 
     struct bootstrap_methods_attribute *bootstrap_methods_attribute;
 
-    char *source_file_name;
+    const char *source_file_name;
 };
 
 struct jclass *jclass_create_by_classfile(struct classloader *loader, struct classfile *cf);
@@ -119,6 +119,13 @@ struct jmethod* jclass_lookup_instance_method(struct jclass *c, const char *name
 bool jclass_is_subclass_of(const struct jclass *c, const struct jclass *father);
 
 bool jclass_is_accessible_to(const struct jclass *c, const struct jclass *visitor);
+
+/*
+ * 计算一个类的继承深度。
+ * 如：java.lang.Object的继承的深度为0
+ * java.lang.Number继承自java.lang.Object, java.lang.Number的继承深度为1.
+ */
+int jclass_inherited_depth(const struct jclass *c);
 
 char *jclass_to_string(const struct jclass *c);
 

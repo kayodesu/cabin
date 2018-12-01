@@ -11,7 +11,6 @@
 #include "../rtda/ma/jclass.h"
 #include "../rtda/ma/access.h"
 #include "../rtda/ma/jfield.h"
-#include "../rtda/ma/primitive_types.h"
 #include "../util/hashmap.h"
 #include "../rtda/heap/jobject.h"
 
@@ -205,7 +204,7 @@ static struct jobject* get_jclass_obj_from_pool(struct classloader *loader, cons
     }
 
     clsobj = jclassobj_create(loader->jclass_class, class_name);
-    hashmap_put(loader->classobj_pool, class_name, clsobj);
+    hashmap_put(loader->classobj_pool, clsobj->c.class_name, clsobj);
 //    HASH_ADD_KEYPTR(hh, loader->classobj_pool, class_name, strlen(class_name), clsobj);
     return clsobj;
 }
@@ -220,8 +219,6 @@ struct classloader* classloader_create()
 {
     VM_MALLOC(struct classloader, loader);
 
-//    loader->loaded_class_pool = NULL; // hash must be declared as a NULL-initialized pointer
-//    loader->classobj_pool = NULL;     // hash must be declared as a NULL-initialized pointer
     loader->loaded_class_pool = hashmap_create_str_key();
     loader->classobj_pool = hashmap_create_str_key();
 
@@ -234,8 +231,8 @@ struct classloader* classloader_create()
 
     // 加载基本类型（int, float, etc.）的 class
     for (int i = 0; i < PRIMITIVE_TYPE_COUNT; i++) {
-        struct jclass *pc = jclass_create_primitive_class(loader, primitive_types[i].name);
-        hashmap_put(loader->loaded_class_pool, primitive_types[i].name, pc);
+        struct jclass *c = jclass_create_primitive_class(loader, primitive_types[i].name);
+        hashmap_put(loader->loaded_class_pool, primitive_types[i].name, c);
     }
 
     // todo
@@ -329,6 +326,7 @@ static struct jclass* initialization(struct jclass *c)
 static struct jclass* load_non_arr_class(struct classloader *loader, const char *class_name)
 {
 // todo 解析，初始化是在这里进行，还是待使用的时候再进行
+//    printvm("++++++++++        %s\n", class_name);
     struct jclass *c = loading(loader, class_name);
     return initialization(resolution(preparation(verification(c))));
 }
@@ -360,7 +358,8 @@ struct jclass* classloader_load_class(struct classloader *loader, const char *cl
         c->clsobj = get_jclass_obj_from_pool(loader, class_name);
     }
 
-    hashmap_put(loader->loaded_class_pool, class_name, c);
+//    printvm("put %s\n", c->class_name);
+    hashmap_put(loader->loaded_class_pool, c->class_name, c);
     return c;
 }
 

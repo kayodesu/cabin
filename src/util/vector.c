@@ -24,7 +24,7 @@ struct vector* vector_create()
     return vec;
 }
 
-int vector_len(struct vector *vec)
+int vector_len(const struct vector *vec)
 {
     assert(vec != NULL);
     return vec->len;
@@ -59,6 +59,21 @@ void* vector_pop_back(struct vector *vec)
     } else {
         return vec->data[--vec->len];
     }
+}
+
+void** vector_to_array(const struct vector *vec, int *len)
+{
+    assert(vec != NULL);
+    assert(len != NULL);
+
+    *len = vec->len;
+    if (*len <= 0) {
+        return NULL;
+    }
+
+    VM_MALLOCS(void *, vec->len, arr);
+    memcpy(arr, vec->data, vec->len * sizeof(void *));
+    return arr;
 }
 
 void vector_destroy(struct vector *vec)
