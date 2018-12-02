@@ -32,7 +32,8 @@ void os_clear(struct operand_stack *os)
 
 void os_destroy(struct operand_stack *os)
 {
-    assert(os != NULL);
+    if (os == NULL)
+        return;
     free(os);
 }
 

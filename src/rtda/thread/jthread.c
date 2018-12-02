@@ -146,18 +146,28 @@ void jthread_invoke_method(struct jthread *thread, struct jmethod *method, const
     struct stack_frame *new_frame = sf_create(thread, method);
     jthread_push_frame(thread, new_frame);
 
-    // 准备参数
-    if (args != NULL) {
-        for (int i = 0; i < method->arg_slot_count; i++) {
-            // 传递参数到被调用的函数。
-            sf_set_local_var(new_frame, i, &args[i]);
-        }
-    } else {
-        for (int i = method->arg_slot_count - 1; i >= 0; i--) {
-            assert(top_frame != NULL);
-            sf_set_local_var(new_frame, i, os_pops(top_frame->operand_stack));
-        }
+    if (method->arg_slot_count > 0 && args == NULL) {
+        jvm_abort("do not find args\n"); // todo
     }
+
+    // 准备参数
+    for (int i = 0; i < method->arg_slot_count; i++) {
+        // 传递参数到被调用的函数。
+        sf_set_local_var(new_frame, i, &args[i]);
+    }
+
+//    // 准备参数
+//    if (args != NULL) {
+//        for (int i = 0; i < method->arg_slot_count; i++) {
+//            // 传递参数到被调用的函数。
+//            sf_set_local_var(new_frame, i, &args[i]);
+//        }
+//    } else {
+//        for (int i = method->arg_slot_count - 1; i >= 0; i--) {
+//            assert(top_frame != NULL);
+//            sf_set_local_var(new_frame, i, os_pops(top_frame->operand_stack));
+//        }
+//    }
 
     // 中断 top_frame 的执行，执行 new_frame
     if (top_frame != NULL) {
@@ -165,6 +175,18 @@ void jthread_invoke_method(struct jthread *thread, struct jmethod *method, const
     }
 
     // todo
+}
+
+void jthread_invoke_method_with_shim(struct jthread *thread, struct jmethod *method, const struct slot *args)
+{
+    jthread_invoke_method(thread, method, args);
+
+    struct stack_frame *top = jthread_top_frame(thread);
+    jthread_pop_frame(thread);
+
+    // 创建一个 shim stack frame 来接受函数method的返回值
+    jthread_push_frame(thread, sf_create_shim(thread));
+    jthread_push_frame(thread, top);
 }
 
 void jthread_handle_uncaught_exception(struct jthread *thread, const struct jobject *exception)

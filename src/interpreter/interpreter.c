@@ -92,6 +92,15 @@ void interpret(struct jthread *thread)
     while (!jthread_is_stack_empty(thread)) {
         struct stack_frame *frame = jthread_top_frame(thread);
         struct bytecode_reader *reader = frame->reader;
+        if (reader == NULL) {
+            // a shim frame, just jump over it.
+            jthread_pop_frame(thread);
+            sf_destroy(frame);
+#ifdef JVM_DEBUG
+            printvm("shim frame(%p) exe over, destroy.\n", frame);
+#endif
+            continue;
+        }
 #ifdef JVM_DEBUG
         printvm("executing frame(%p): %s, pc = %lu\n", frame, sf_to_string(frame), bcr_get_pc(reader));
 #endif

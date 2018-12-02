@@ -125,7 +125,8 @@ void bcr_reads4s(struct bytecode_reader *reader, int n, s4 *s4s)
 
 void bcr_destroy(struct bytecode_reader *reader)
 {
-    assert(reader != NULL);
+    if (reader == NULL)
+        return;
     // todo
     free(reader);
 }

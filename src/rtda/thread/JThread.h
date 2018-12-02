@@ -65,6 +65,12 @@ struct stack_frame** jthread_get_frames(const struct jthread *thread, int *num);
  */
 void jthread_invoke_method(struct jthread *thread, struct jmethod *method, const struct slot *args);
 
+/*
+ * 这个函数存在的意义是为了解决函数jthread_invoke_method无法在循环中执行带返回值的方法的问题，
+ * 参加 jthread_invoke_method 的注释。
+ */
+void jthread_invoke_method_with_shim(struct jthread *thread, struct jmethod *method, const struct slot *args);
+
 // todo UncaughtException
 void jthread_handle_uncaught_exception(struct jthread *thread, const struct jobject *exception);
 

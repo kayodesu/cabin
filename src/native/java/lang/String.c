@@ -14,7 +14,7 @@ static void intern(struct stack_frame *frame)
     // todo
     jref so = slot_getr(frame->local_vars); // frame->local_vars[0]
     STROBJ_CHECK(so);
-    put_so_to_pool(frame->method->jclass->loader, so);
+    put_so_to_pool(so);
     os_pushr(frame->operand_stack, so);
 
 //    auto thisStr = dynamic_cast<JStringObj *>(frame->getLocalVar(0).getRef());

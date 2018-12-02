@@ -7,6 +7,23 @@
 #include "stack_frame.h"
 #include "../slot.h"
 
+struct stack_frame* sf_create_shim(struct jthread *thread)
+{
+    assert(thread != NULL);
+
+    VM_MALLOC(struct stack_frame, frame);
+
+    frame->thread = thread;
+    frame->method = NULL;
+    frame->operand_stack = os_create(8); // 8 is big enough, 只是用来接收函数返回值
+    frame->max_locals = NULL;
+    frame->local_vars = NULL;
+    frame->reader = NULL;
+    frame->interrupted_status = frame->exe_status = frame->proc_exception_status = false;
+
+    return frame;
+}
+
 struct stack_frame* sf_create(struct jthread *thread, struct jmethod *method)
 {
     assert(thread != NULL);
@@ -38,7 +55,8 @@ void sf_set_local_var(struct stack_frame *frame, int index, const struct slot *v
 
 void sf_destroy(struct stack_frame *frame)
 {
-    assert(frame != NULL);
+    if (frame == NULL)
+        return;
 
     free(frame->local_vars);
     bcr_destroy(frame->reader);

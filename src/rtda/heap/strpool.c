@@ -23,7 +23,7 @@ struct jobject* put_str_to_pool(struct classloader *loader, const char *str0)
     return so;
 }
 
-struct jobject* put_so_to_pool(struct classloader *loader, struct jobject *so)
+struct jobject* put_so_to_pool(struct jobject *so)
 {
     const char *str = jstrobj_value(so);
     struct jobject *tmp = hashmap_find(pool, str);

@@ -28,6 +28,11 @@ struct stack_frame {
     struct jthread *thread;
 };
 
+/*
+ * create a shim stack frame.
+ */
+struct stack_frame* sf_create_shim(struct jthread *thread);
+
 struct stack_frame* sf_create(struct jthread *thread, struct jmethod *method);
 
 void sf_set_local_var(struct stack_frame *frame, int index, const struct slot *value);

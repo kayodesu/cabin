@@ -220,18 +220,34 @@ struct jclass *jclass_create_by_classfile(struct classloader *loader, struct cla
     }
 
     c->fields_count = cf->fields_count;
+    c->public_fields_count = 0;
     c->fields = malloc(sizeof(struct jfield *) * c->fields_count);
-    for (int i = 0; i < c->fields_count; i++) {
-        c->fields[i] = jfield_create(c, cf->fields + i);
+    for (int i = 0, k = 0, t = c->fields_count - 1; i < c->fields_count; i++) {
+        struct jfield *f = jfield_create(c, cf->fields + i);
+        // 保证所有的 public fields 放在前面
+        if (IS_PUBLIC(f->access_flags)) {
+            c->fields[k++] = f;
+            c->public_fields_count++;
+        } else {
+            c->fields[t--] = f;
+        }
     }
 
     calc_static_field_id(c);
     calc_instance_field_id(c);
 
     c->methods_count = cf->methods_count;
+    c->public_methods_count = 0;
     c->methods = malloc(sizeof(struct jmethod *) * c->methods_count);
-    for (int i = 0; i < c->methods_count; i++) {
-        c->methods[i] = jmethod_create(c, cf->methods + i);
+    for (int i = 0, k = 0, t = c->methods_count - 1; i < c->methods_count; i++) {
+        struct jmethod *m = jmethod_create(c, cf->methods + i);
+        // 保证所有的 public functions 放在前面
+        if (IS_PUBLIC(m->access_flags)) {
+            c->methods[k++] = m;
+            c->public_methods_count++;
+        } else {
+            c->methods[t--] = m;
+        }
     }
 
     classfile_destroy(cf);
@@ -255,10 +271,10 @@ struct jclass* jclass_create_primitive_class(struct classloader *loader, const c
     c->clsobj = NULL;
     c->rtcp = NULL;
     c->super_class = NULL;
-    c->instance_fields_count = c->static_fields_count = 0;
     c->inited_instance_fields_values = NULL;
     c->static_fields_values = NULL;
-    c->interfaces_count = c->methods_count = c->fields_count = 0;
+    c->instance_fields_count = c->static_fields_count = c->fields_count = c->public_fields_count = 0;
+    c->interfaces_count = c->methods_count = c->public_methods_count = 0;
     c->interfaces = NULL;
     c->methods = NULL;
     c->fields = NULL;
@@ -285,10 +301,10 @@ struct jclass* jclass_create_arr_class(struct classloader *loader, const char *c
 
     c->clsobj = NULL;
     c->rtcp = NULL;
-    c->instance_fields_count = c->static_fields_count = 0;
     c->inited_instance_fields_values = NULL;
     c->static_fields_values = NULL;
-    c->methods_count = c->fields_count = 0;
+    c->instance_fields_count = c->static_fields_count = c->fields_count = c->public_fields_count = 0;
+    c->methods_count = c->public_methods_count = 0;
     c->methods = NULL;
     c->fields = NULL;
     c->bootstrap_methods_attribute = NULL;
@@ -331,7 +347,6 @@ void jclass_clinit0(struct jclass *c, struct jthread *thread)
             printvm("error\n");
         }
 
-//        sf_invoke_method(invoke_frame, method, NULL);
         jthread_invoke_method(thread, method, NULL);
     }
 
@@ -377,16 +392,30 @@ void jclass_clinit(struct jclass *c, struct stack_frame *invoke_frame)
 //    }
 }
 
-void jclass_get_public_fields(struct jclass *c, struct jfield* fields[], int *count)
-{
-    *count = 0;
-    for (int i = 0; i < c->fields_count; i++) {
-        if (IS_PUBLIC(c->fields[i]->access_flags)) {
-            fields[*count] = c->fields[i];
-            (*count)++;
-        }
-    }
-}
+//struct jfield* jclass_get_field(struct jclass *c, const char *name, const char *descriptor)
+//{
+//    for (int i = 0; i < c->fields_count; i++) {
+//        if (strcmp(c->fields[i]->name, name) == 0 && strcmp(c->fields[i]->descriptor, descriptor) == 0) {
+//            return c->fields[i];
+//        }
+//    }
+//    return NULL;
+//}
+//
+//struct jfield** jclass_get_fields(struct jclass *c, bool public_only)
+//{
+//    VM_MALLOCS(struct jfield *, c->fields_count + 1, fields);  // add 1 for NULL to end the array
+//
+//    struct jfield **f = fields;
+//    for (int i = 0; i < c->fields_count; i++) {
+//        if (!public_only || IS_PUBLIC(c->fields[i]->access_flags)) {
+//            *f++ = c->fields[i];
+//        }
+//    }
+//    *f = NULL; // end of this array
+//
+//    return fields;
+//}
 
 struct jfield* jclass_lookup_field(struct jclass *c, const char *name, const char *descriptor)
 {
@@ -436,7 +465,6 @@ struct jfield* jclass_lookup_instance_field(struct jclass *c, const char *name, 
     return field;
 }
 
-
 struct jmethod* jclass_get_method(struct jclass *c, const char *name, const char *descriptor)
 {
     for (int i = 0; i < c->methods_count; i++) {
@@ -447,9 +475,33 @@ struct jmethod* jclass_get_method(struct jclass *c, const char *name, const char
     return NULL;
 }
 
+struct jmethod** jclass_get_methods(struct jclass *c, const char *name, bool public_only, int *count)
+{
+    assert(c != NULL);
+    assert(name != NULL);
+    assert(count != NULL);
+
+    VM_MALLOCS(struct jmethod *, c->methods_count, methods);
+    *count = 0;
+
+    for (int i = 0; i < c->methods_count; i++) {
+        if ((!public_only || IS_PUBLIC(c->methods[i]->access_flags)) && (strcmp(c->methods[i]->name, name) == 0)) {
+            methods[*count] = c->methods[i];
+            (*count)++;
+        }
+    }
+
+    return methods;
+}
+
 struct jmethod* jclass_get_constructor(struct jclass *c, const char *descriptor)
 {
     return jclass_get_method(c, "<init>", descriptor);
+}
+
+struct jmethod** jclass_get_constructors(struct jclass *c, bool public_only, int *count)
+{
+    return jclass_get_methods(c, "<init>", public_only, count);
 }
 
 struct jmethod* jclass_lookup_method(struct jclass *c, const char *name, const char *descriptor)

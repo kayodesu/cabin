@@ -12,7 +12,7 @@
 static void doPrivileged(struct stack_frame *frame)
 {
     // todo 这个函数干什么用的。。。。
-    struct jobject *privileged_action = slot_getr(frame->local_vars);
+    struct jobject *this_obj = slot_getr(frame->local_vars);
 
     /*
      * run 函数返回 T类型 的对象
@@ -21,9 +21,9 @@ static void doPrivileged(struct stack_frame *frame)
      *     T run();
      * }
      */
-    os_pushr(frame->operand_stack, privileged_action); // push 'this' for invoke function 'run'.
-    struct jmethod *m = jclass_get_method(privileged_action->jclass, "run", "()Ljava/lang/Object;"); // todo getInstanceMethod
-    jthread_invoke_method(frame->thread, m, NULL);
+    struct jmethod *m = jclass_get_method(this_obj->jclass, "run", "()Ljava/lang/Object;"); // todo getInstanceMethod
+    struct slot args[] = { rslot(this_obj) };
+    jthread_invoke_method(frame->thread, m, args);
 }
 
 // @CallerSensitive

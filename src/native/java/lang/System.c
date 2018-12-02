@@ -26,10 +26,10 @@ static void initProperties(struct stack_frame *frame)
 {
     char *sys_props[][2] = {  // todo
             { "java.version",          "1.8.0" },  // todo
-            {  "java.vendor",          "" },
-            { "java.vendor.url",      ""},
+            { "java.vendor",          "" }, // todo
+            { "java.vendor.url",      ""}, // todo
             { "java.home",            "" }, // options.AbsJavaHome
-            { "java.class.version",   "52.0"},
+            { "java.class.version",   "52.0"}, // todo
             { "java.class.path",      "" }, // heap.BootLoader().ClassPath().String()
             { "java.awt.graphicsenv", "sun.awt.CGraphicsEnvironment"},
             { "os.name",              "" },   // todo runtime.GOOS
@@ -64,8 +64,8 @@ static void initProperties(struct stack_frame *frame)
                 rslot(jstrobj_create(props->jclass->loader, sys_props[i][0])),
                 rslot(jstrobj_create(props->jclass->loader, sys_props[i][1]))
         };
-        // todo 不能再循环中调用jthread_invoke_method，参见jthread_invoke_method的注释.
-//        jthread_invoke_method(frame->thread, set_property, args);
+
+        jthread_invoke_method_with_shim(frame->thread, set_property, args);
     }
 
     // 返回参数

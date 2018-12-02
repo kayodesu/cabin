@@ -316,7 +316,12 @@ static void invokestatic(struct stack_frame *frame)
         return;
     }
 
-    jthread_invoke_method(frame->thread, ref->resolved_method, NULL);
+    struct slot args[ref->resolved_method->arg_slot_count];
+    for (int i = ref->resolved_method->arg_slot_count - 1; i >= 0; i--) {
+        args[i] = *os_pops(frame->operand_stack);
+    }
+
+    jthread_invoke_method(frame->thread, ref->resolved_method, args);
 }
 
 /*
@@ -362,7 +367,7 @@ static void invokespecial(struct stack_frame *frame)
 
     struct slot args[method->arg_slot_count];
     for (int i = method->arg_slot_count - 1; i >= 0; i--) {
-        args[i] = *os_pops(frame->operand_stack);//frame->operandStack.popSlot();
+        args[i] = *os_pops(frame->operand_stack);
     }
 
     jref obj = slot_getr(args); // args[0]

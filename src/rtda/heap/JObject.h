@@ -43,7 +43,9 @@ struct jobject {
         } s;
 
         struct { // class object
-            char class_name[FILENAME_MAX]; // 必须是全限定类名，用作 hash 表中的 key
+            // 必须是全限定类名，用作 hash 表中的 key
+            // 形如 xxx/xxx/xxx 的形式
+            char class_name[FILENAME_MAX];
         } c;
     };
 

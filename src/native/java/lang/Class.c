@@ -7,6 +7,7 @@
 #include "../../../rtda/heap/jobject.h"
 #include "../../../rtda/ma/jfield.h"
 #include "../../../rtda/heap/strpool.h"
+#include "../../../util/util.h"
 
 // native ClassLoader getClassLoader0();
 static void getClassLoader0(struct stack_frame *frame)
@@ -22,22 +23,24 @@ static void getClassLoader0(struct stack_frame *frame)
  */
 static void forName0(struct stack_frame *frame)
 {
-    struct jobject *so = slot_getr(frame->local_vars); // frame->local_vars[0]
-    // todo 判断是不是 string Object
-    const char *class_name = jstrobj_value(so);//so->s.str;//unicode_to_utf8(jstrobj_value(so));
+    struct jobject *so = slot_getr(frame->local_vars);
+    STROBJ_CHECK(so);
 
-//    replace(name.begin(), name.end(), '.', '/'); // todo
+    const char *class_name0 = jstrobj_value(so);
+    char class_name[strlen(class_name0) + 1];
+    strcpy(class_name, class_name0);
+    // 这里class name 是形如 xxx.xx.xx的形式，将其替换为 xxx/xx/xx的形式
+    strreplace(class_name, '.', '/');
 
     struct jclass *c = classloader_load_class(frame->method->jclass->loader, class_name);
 
-    int initialize = slot_geti(frame->local_vars + 1);//frame->getLocalVar(1).getInt();
-
+    int initialize = slot_geti(frame->local_vars + 1);
     if (initialize && !c->inited) {
         // todo do init
-        jclass_clinit(c, frame); // c->clinit(frame);
-        bcr_set_pc(frame->reader, jthread_get_pc(frame->thread));//frame->reader->setPc(frame->thread->pc);
+        jclass_clinit(c, frame);
+        bcr_set_pc(frame->reader, jthread_get_pc(frame->thread));
     } else {
-        os_pushr(frame->operand_stack, (jref) c->clsobj); //frame->operandStack.push(c->getClassObj());
+        os_pushr(frame->operand_stack, (jref) c->clsobj);
     }
 }
 
@@ -108,12 +111,12 @@ static void getPrimitiveClass(struct stack_frame *frame)
 // private native String getName0();
 static void getName0(struct stack_frame *frame)
 {
-    struct jobject *this_obj = slot_getr(frame->local_vars); // frame->local_vars[0]
-    // todo 判断是不是 class Object
-    const char *class_name = this_obj->c.class_name;
+    struct jobject *this_obj = slot_getr(frame->local_vars);
+    char class_name[strlen(this_obj->c.class_name) + 1];
+    strcpy(class_name, this_obj->c.class_name);
     // 这里需要的是 java.lang.Object 这样的类名，而非 java/lang/Object
     // 所以需要进行一下替换
-//    replace(class_name.begin(), class_name.end(), '/', '.'); todo
+    strreplace(class_name, '/', '.');
     os_pushr(frame->operand_stack, (jref) jstrobj_create(frame->method->jclass->loader, class_name));
 }
 
@@ -203,7 +206,10 @@ static void desiredAssertionStatus0(struct stack_frame *frame)
  */
 static void isInstance(struct stack_frame *frame)
 {
-    jvm_abort("");
+    jref this_cls = slot_getr(frame->local_vars);
+    assert(this_cls->jclass != NULL);
+    jref obj = slot_getr(frame->local_vars + 1);
+    os_pushi(frame->operand_stack, (obj != NULL && jobject_is_instance_of(obj, this_cls->jclass)) ? 1 : 0);
 }
 
 /**
@@ -233,8 +239,8 @@ static void isInstance(struct stack_frame *frame)
  */
 static void isAssignableFrom(struct stack_frame *frame)
 {
-    struct jobject *this_cls = slot_getr(frame->local_vars);
-    struct jobject *cls = slot_getr(frame->local_vars + 1);
+    jref this_cls = slot_getr(frame->local_vars);
+    jref cls = slot_getr(frame->local_vars + 1);
     if (cls == NULL) {
         jvm_abort("NullPointerException"); // todo
     }
@@ -243,32 +249,28 @@ static void isAssignableFrom(struct stack_frame *frame)
     os_pushi(frame->operand_stack, b ? 1 : 0);
 }
 
-/**
- * Determines if the specified {@code Class} object represents an
- * interface type.
- *
- * @return  {@code true} if this object represents an interface;
- *          {@code false} otherwise.
+/*
+ * Determines if the specified class object represents an interface type.
  *
  * public native boolean isInterface();
  */
 static void isInterface(struct stack_frame *frame)
 {
-    jvm_abort("");
+    struct jclass *c = slot_getr(frame->local_vars)->jclass;
+    assert(c != NULL);
+    os_pushi(frame->operand_stack, IS_INTERFACE(c->access_flags) ? 1 : 0);
 }
 
-/**
- * Determines if this {@code Class} object represents an array class.
- *
- * @return  {@code true} if this object represents an array class;
- *          {@code false} otherwise.
- * @since   JDK1.1
+/*
+ * Determines if this class object represents an array class.
  *
  * public native boolean isArray();
  */
 static void isArray(struct stack_frame *frame)
 {
-    jvm_abort("");
+    struct jclass *c = slot_getr(frame->local_vars)->jclass;
+    assert(c != NULL);
+    os_pushi(frame->operand_stack, is_array(c) ? 1 : 0);
 }
 
 /**
@@ -304,9 +306,8 @@ static void isArray(struct stack_frame *frame)
 static void isPrimitive(struct stack_frame *frame)
 {
     struct jobject *this_obj = slot_getr(frame->local_vars);
-    // todo 判断是不是 class Object
-    bool b = is_primitive_by_class_name(this_obj->c.class_name);  // todo
-    os_pushi(frame->operand_stack, b ? 1 : 0); // todo
+    bool b = is_primitive_by_class_name(this_obj->c.class_name);
+    os_pushi(frame->operand_stack, b ? 1 : 0);
 }
 
 /**
@@ -324,7 +325,9 @@ static void isPrimitive(struct stack_frame *frame)
  */
 static void getSuperclass(struct stack_frame *frame)
 {
-    jvm_abort("");
+    struct jclass *c = slot_getr(frame->local_vars)->jclass;
+    assert(c != NULL);
+    os_pushr(frame->operand_stack, c->super_class != NULL ? c->super_class->clsobj : NULL);
 }
 
 /**
@@ -371,26 +374,20 @@ static void getSuperclass(struct stack_frame *frame)
  *
  * @return an array of interfaces implemented by this class.
  */
-//public Class<?>[] getInterfaces() {
-//    ReflectionData<T> rd = reflectionData();
-//    if (rd == null) {
-//        // no cloning required
-//        return getInterfaces0();
-//    } else {
-//        Class<?>[] interfaces = rd.interfaces;
-//        if (interfaces == null) {
-//            interfaces = getInterfaces0();
-//            rd.interfaces = interfaces;
-//        }
-//        // defensively copy before handing over to user code
-//        return interfaces.clone();
-//    }
-//}
-//
 //private native Class<?>[] getInterfaces0();
 static void getInterfaces0(struct stack_frame *frame)
 {
-    jvm_abort("");
+    struct jclass *c = slot_getr(frame->local_vars)->jclass;
+    assert(c != NULL);
+
+    struct jclass *arr_cls = classloader_load_class(frame->method->jclass->loader, "[java/lang/Class;");
+    jref interfaces = jarrobj_create(arr_cls, c->interfaces_count);
+    for (int i = 0; i < c->interfaces_count; i++) {
+        assert(c->interfaces[i] != NULL);
+        *((jref *) jarrobj_index(interfaces, i)) = c->interfaces[i]->clsobj;
+    }
+
+    os_pushr(frame->operand_stack, interfaces);
 }
 
 /*
@@ -441,7 +438,9 @@ static void getComponentType(struct stack_frame *frame)
 //public native int getModifiers();
 static void getModifiers(struct stack_frame *frame)
 {
-    jvm_abort("");
+    struct jclass *c = slot_getr(frame->local_vars)->jclass;
+    assert(c != NULL);
+    os_pushi(frame->operand_stack, c->access_flags);
 }
 
 /**
@@ -470,39 +469,6 @@ static void setSigners(struct stack_frame *frame)
 
 // private native Object[] getEnclosingMethod0();
 static void getEnclosingMethod0(struct stack_frame *frame)
-{
-    jvm_abort("");
-}
-
-/**
- * If the class or interface represented by this {@code Class} object
- * is a member of another class, returns the {@code Class} object
- * representing the class in which it was declared.  This method returns
- * null if this class or interface is not a member of any other class.  If
- * this {@code Class} object represents an array class, a primitive
- * type, or void,then this method returns null.
- *
- * @return the declaring class for this class
- * @throws SecurityException
- *         If a security manager, <i>s</i>, is present and the caller's
- *         class loader is not the same as or an ancestor of the class
- *         loader for the declaring class and invocation of {@link
- *         SecurityManager#checkPackageAccess s.checkPackageAccess()}
- *         denies access to the package of the declaring class
- * @since JDK1.1
- */
-//@CallerSensitive
-//public Class<?> getDeclaringClass() throws SecurityException {
-//        final Class<?> candidate = getDeclaringClass0();
-//
-//        if (candidate != null)
-//        candidate.checkPackageAccess(
-//        ClassLoader.getClassLoader(Reflection.getCallerClass()), true);
-//        return candidate;
-//}
-//
-//private native Class<?> getDeclaringClass0();
-static void getDeclaringClass0(struct stack_frame *frame)
 {
     jvm_abort("");
 }
@@ -554,93 +520,199 @@ static void getConstantPool(struct stack_frame *frame)
 static void getDeclaredFields0(struct stack_frame *frame)
 {
     struct jobject *this_obj = slot_getr(frame->local_vars);
-    bool public_only = slot_geti(frame->local_vars + 1) != 0;  // todo
+    bool public_only = slot_geti(frame->local_vars + 1) != 0;
 
     struct classloader *loader = frame->method->jclass->loader;
     struct jclass *cls = classloader_load_class(loader, this_obj->c.class_name);
 
-    struct jfield **fields;
-    struct jfield *tmp[cls->fields_count];
-    jint fields_count;
-    if (public_only) {
-        jclass_get_public_fields(cls, tmp, &fields_count);
-        fields = tmp;
-    } else {
-        fields = cls->fields;
-        fields_count = cls->fields_count;
-    }
+    struct jfield **fields = cls->fields;
+    jint fields_count = public_only ? cls->public_fields_count : cls->fields_count;
 
     struct jclass *jlrf_cls = classloader_load_class(loader, "java/lang/reflect/Field");
     char *arr_cls_name = get_arr_class_name(jlrf_cls->class_name);
-    struct jobject *jlrfs = jarrobj_create(classloader_load_class(loader, arr_cls_name), fields_count);
+    struct jobject *jlrf_arr = jarrobj_create(classloader_load_class(loader, arr_cls_name), fields_count);
+    os_pushr(frame->operand_stack, (jref) jlrf_arr);
     free(arr_cls_name);
 
     /*
-     * Field(Class<?> declaringClass,
-     *      String name,
-     *      Class<?> type,
-     *      int modifiers,
-     *      int slot,
-     *      String signature,
-     *      byte[] annotations)
+     * Field(Class<?> declaringClass, String name, Class<?> type,
+     *      int modifiers, int slot, String signature, byte[] annotations)
      */
     struct jmethod *field_constructor = jclass_get_constructor(jlrf_cls,
             "(Ljava/lang/Class;" "Ljava/lang/String;" "Ljava/lang/Class;" "II" "Ljava/lang/String;" "[B)V");
     assert(field_constructor != NULL);
 
+    // invoke constructor of class java/lang/reflect/Field
     for (int i = 0; i < fields_count; i++) {
-//        jprintf("%s\n", fields[i].toString().c_str());
-        struct jobject *jlrf_obj = jobject_create(jlrf_cls);//JObject::newJobject(jlrFieldCls);
+        struct jobject *jlrf_obj = jobject_create(jlrf_cls);
+        *(struct jobject **)jarrobj_index(jlrf_arr, i) = jlrf_obj;
 
-        // invoke constructor of class java/lang/reflect/Field
-
-        /*
-         * 这里必须把字符串放入字符串池中
-         * 因为 java/lang/Class 类中 searchFields 函数查找 field 时
-         * 名称比较用的 ‘==’ 来比较两个字符串而不是 equals，
-         * 所以必须保证是从字符串池中拿到的同一个字符串。
-         */
-        struct jobject *name = put_str_to_pool(frame->method->jclass->loader, fields[i]->name);
-
-//        printvm("%s   ********************************************************\n", unicode_to_utf8(jstrobj_value(name)));
-        bool ee = IS_VOLATILE(jlrf_obj->jclass->access_flags);
-        printvm("oooooooooooooooooooooooo                  %d\n", ee);
-        struct slot args[] = {
+        jthread_invoke_method(frame->thread, field_constructor, (struct slot[]) {
                 rslot(jlrf_obj), // this
                 rslot((jref) this_obj), // declaring class
-                rslot((jref) name), // name
+                rslot((jref) get_str_from_pool(frame->method->jclass->loader, fields[i]->name)), // name
                 rslot((jref) jfield_get_type(fields[i])), // type
                 islot(fields[i]->access_flags), // modifiers
                 islot(fields[i]->id), // slot   todo
                 rslot(NULL), // signature  todo
                 rslot(NULL), // annotations  todo
-        };
-
-        jthread_invoke_method(frame->thread, field_constructor, args);
-
-        struct slot s = rslot((jref) name);
-//        jobject_set_field_value_nt(jlrf_obj, "name", "Ljava/lang/String;", &s);
-        set_instance_field_value_by_nt(jlrf_obj, "name", "Ljava/lang/String;", &s);
-
-        *(struct jobject **)jarrobj_index(jlrfs, i) = jlrf_obj; // jlrFields->set(i, jlrFieldObj);
+        });
     }
-
-    os_pushr(frame->operand_stack, (jref) jlrfs);//frame->operandStack.push(jlrFields);
 }
 
-// private native Method[] getDeclaredMethods0(boolean publicOnly);
+/*
+ * 注意 getDeclaredMethods 和 getMethods 方法的不同。
+ * getDeclaredMethods(),该方法是获取本类中的所有方法，包括私有的(private、protected、默认以及public)的方法。
+ * getMethods(),该方法是获取本类以及父类或者父接口中所有的公共方法(public修饰符修饰的)
+ *
+ * getDeclaredMethods 强调的是本类中定义的方法，不包括继承而来的。
+ *
+ * private native Method[] getDeclaredMethods0(boolean publicOnly);
+ */
 static void getDeclaredMethods0(struct stack_frame *frame)
 {
-    jvm_abort("");
+    struct jobject *this_obj = slot_getr(frame->local_vars);
+    bool public_only = slot_geti(frame->local_vars + 1) != 0;
+
+    struct classloader *loader = frame->method->jclass->loader;
+    struct jclass *cls = classloader_load_class(loader, this_obj->c.class_name);
+
+    struct jmethod **methods = cls->methods;
+    jint methods_count = public_only ? cls->public_methods_count : cls->methods_count;
+
+    struct jclass *jlrm_cls = classloader_load_class(loader, "java/lang/reflect/Method");
+    char *arr_cls_name = get_arr_class_name(jlrm_cls->class_name);
+    struct jobject *jlrm_arr = jarrobj_create(classloader_load_class(loader, arr_cls_name), methods_count);
+    os_pushr(frame->operand_stack, (jref) jlrm_arr);
+    free(arr_cls_name);
+
+    /*
+     * Method(Class<?> declaringClass, String name, Class<?>[] parameterTypes, Class<?> returnType,
+     *      Class<?>[] checkedExceptions, int modifiers, int slot, String signature,
+     *      byte[] annotations, byte[] parameterAnnotations, byte[] annotationDefault)
+     */
+    struct jmethod *method_constructor = jclass_get_constructor(jlrm_cls,
+                "(Ljava/lang/Class;" "Ljava/lang/String;" "[Ljava/lang/Class;" "Ljava/lang/Class;"
+                "[Ljava/lang/Class;" "II" "Ljava/lang/String;" "[B[B[B)V");
+    assert(method_constructor != NULL);
+
+    // invoke constructor of class java/lang/reflect/Method
+    for (int i = 0; i < methods_count; i++) {
+        struct jobject *jlrf_obj = jobject_create(jlrm_cls);
+        *(struct jobject **)jarrobj_index(jlrm_arr, i) = jlrf_obj;
+
+        jthread_invoke_method(frame->thread, method_constructor, (struct slot[]) {
+                rslot(jlrf_obj), // this
+                rslot((jref) this_obj), // declaring class
+                rslot((jref) get_str_from_pool(frame->method->jclass->loader, methods[i]->name)), // name
+                rslot(NULL),  // parameterTypes todo
+                rslot(NULL),  // returnType todo
+                rslot(NULL),  // checkedExceptions todo
+                islot(methods[i]->access_flags), // modifiers
+                islot(0), // slot   todo
+                rslot(NULL), // signature  todo
+                rslot(NULL), // annotations  todo
+                rslot(NULL), // parameter annotations  todo
+                rslot(NULL), // annotation default  todo
+        });
+    }
 }
 
 // private native Constructor<T>[] getDeclaredConstructors0(boolean publicOnly);
 static void getDeclaredConstructors0(struct stack_frame *frame)
 {
-    jvm_abort("");
+    struct jobject *this_obj = slot_getr(frame->local_vars);
+    bool public_only = slot_geti(frame->local_vars + 1) != 0;
+
+    struct classloader *loader = frame->method->jclass->loader;
+    struct jclass *cls = classloader_load_class(loader, this_obj->c.class_name);
+
+    int constructors_count;
+    struct jmethod **methods = jclass_get_constructors(cls, public_only, &constructors_count);
+
+    struct jclass *jlrc_cls = classloader_load_class(loader, "java/lang/reflect/Constructor");
+    char *arr_cls_name = get_arr_class_name(jlrc_cls->class_name);
+    struct jobject *jlrc_arr = jarrobj_create(classloader_load_class(loader, arr_cls_name), constructors_count);
+    os_pushr(frame->operand_stack, (jref) jlrc_arr);
+    free(arr_cls_name);
+
+    /*
+     * Constructor(Class<T> declaringClass, Class<?>[] parameterTypes,
+     *      Class<?>[] checkedExceptions, int modifiers, int slot,
+     *      String signature, byte[] annotations, byte[] parameterAnnotations)
+     */
+    struct jmethod *constructor_constructor = jclass_get_constructor(jlrc_cls,
+                "(Ljava/lang/Class;" "[Ljava/lang/Class;" "[Ljava/lang/Class;" "II" "Ljava/lang/String;" "[B[B)V");
+    assert(constructor_constructor != NULL);
+
+    // invoke constructor of class java/lang/reflect/Constructor
+    for (int i = 0; i < constructors_count; i++) {
+        struct jobject *jlrf_obj = jobject_create(jlrc_cls);
+        *(struct jobject **)jarrobj_index(jlrc_arr, i) = jlrf_obj;
+
+        jthread_invoke_method(frame->thread, constructor_constructor, (struct slot[]) {
+                rslot(jlrf_obj), // this
+                rslot((jref) this_obj), // declaring class
+                rslot(NULL),  // parameter types todo
+                rslot(NULL),  // checked exceptions todo
+                islot(methods[i]->access_flags), // modifiers
+                islot(0), // slot   todo
+                rslot(NULL), // signature  todo
+                rslot(NULL), // annotations  todo
+                rslot(NULL), // parameter annotations  todo
+        });
+    }
 }
 
-// private native Class<?>[] getDeclaredClasses0();
+/**
+ * If the class or interface represented by this {@code Class} object
+ * is a member of another class, returns the {@code Class} object
+ * representing the class in which it was declared.  This method returns
+ * null if this class or interface is not a member of any other class.  If
+ * this {@code Class} object represents an array class, a primitive
+ * type, or void,then this method returns null.
+ *
+ * 如果此类为内部类，返回其外部类
+ *
+ * @return the declaring class for this class
+ * @throws SecurityException
+ *         If a security manager, <i>s</i>, is present and the caller's
+ *         class loader is not the same as or an ancestor of the class
+ *         loader for the declaring class and invocation of {@link
+ *         SecurityManager#checkPackageAccess s.checkPackageAccess()}
+ *         denies access to the package of the declaring class
+ * @since JDK1.1
+ *
+ * private native Class<?> getDeclaringClass0();
+ */
+static void getDeclaringClass0(struct stack_frame *frame)
+{
+    struct jclass *c = slot_getr(frame->local_vars)->jclass;
+    assert(c != NULL);
+    if (is_array(c) || is_primitive_array(c)) {
+        os_pushr(frame->operand_stack, NULL);
+        return;
+    }
+
+    char declaring_class_name[strlen(c->class_name) + 1];
+    strcpy(declaring_class_name, c->class_name);
+    char *last_dollar = strrchr(declaring_class_name, '$'); // 内部类标识：out_class_name$inner_class_name
+    if (last_dollar == NULL) {
+        os_pushr(frame->operand_stack, NULL);
+        return;
+    }
+
+    *last_dollar = 0;
+    os_pushr(frame->operand_stack, classloader_load_class(frame->method->jclass->loader, declaring_class_name)->clsobj);
+}
+
+/*
+ * getClasses和getDeclaredClasses的区别：
+ * getClasses得到该类及其父类所有的public的内部类。
+ * getDeclaredClasses得到该类所有的内部类，除去父类的。
+ *
+ * private native Class<?>[] getDeclaredClasses0();
+ */
 static void getDeclaredClasses0(struct stack_frame *frame)
 {
     jvm_abort("");
@@ -676,5 +748,6 @@ void java_lang_Class_registerNatives()
 
     register_native_method("java/lang/Class", "getDeclaredFields0", "(Z)[Ljava/lang/reflect/Field;", getDeclaredFields0);
     register_native_method("java/lang/Class", "getDeclaredMethods0", "(Z)[Ljava/lang/reflect/Method;", getDeclaredMethods0);
-    register_native_method("java/lang/Class", "getDeclaredConstructors0", "(Z)[Ljava/lang/reflect/Constructor;", getDeclaredConstructors0);
+    register_native_method(
+            "java/lang/Class", "getDeclaredConstructors0", "(Z)[Ljava/lang/reflect/Constructor;", getDeclaredConstructors0);
 }

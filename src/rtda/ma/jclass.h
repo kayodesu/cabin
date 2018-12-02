@@ -46,8 +46,14 @@ struct jclass {
 
     struct rtcp *rtcp;
 
+    /*
+     * 本类中定义的所有方法（不包括继承而来的）
+     * 所有的 public functions 都放在了最前面，
+     * 这样，当外界需要所有的 public functions 时，可以返回此指针，数量就是 public_methods_count
+     */
     struct jmethod **methods;
     int methods_count;
+    int public_methods_count;
 
     /*
      * 本类中所定义的变量（不包括继承而来的）
@@ -55,10 +61,14 @@ struct jclass {
      * declared by this class or interface type.
      * 类型二统计为两个数量
      *
+     * 所有的 public fields 都放在了最前面，
+     * 这样，当外界需要所有的 public fields 时，可以返回此指针，数量就是 public_fields_count
+     *
      * todo 接口中的变量怎么处理
      */
+    struct jfield **fields;
     int fields_count;
-    struct jfield **fields; // length is fields_count
+    int public_fields_count;
 
     // instance_field_count 有可能大于 fields_count，因为 instance_field_count 包含了继承过来的 field.
     // 类型二统计为两个数量
@@ -104,14 +114,19 @@ void set_static_field_value_by_nt(const struct jclass *c,
 const struct slot* get_static_field_value_by_id(const struct jclass *c, int id);
 const struct slot* get_static_field_value_by_nt(const struct jclass *c, const char *name, const char *descriptor);
 
-void jclass_get_public_fields(struct jclass *c, struct jfield* fields[], int *count);
+
+//struct jfield* jclass_get_field(struct jclass *c, const char *name, const char *descriptor);
+//struct jfield** jclass_get_fields(struct jclass *c, bool public_only);
 struct jfield* jclass_lookup_field(struct jclass *c, const char *name, const char *descriptor);
 struct jfield* jclass_lookup_static_field(struct jclass *c, const char *name, const char *descriptor);
 struct jfield* jclass_lookup_instance_field(struct jclass *c, const char *name, const char *descriptor);
 
 struct jmethod* jclass_get_method(struct jclass *c, const char *name, const char *descriptor);
+struct jmethod** jclass_get_methods(struct jclass *c, const char *name, bool public_only, int *count);
 
 struct jmethod* jclass_get_constructor(struct jclass *c, const char *descriptor);
+struct jmethod** jclass_get_constructors(struct jclass *c, bool public_only, int *count);
+
 struct jmethod* jclass_lookup_method(struct jclass *c, const char *name, const char *descriptor);
 struct jmethod* jclass_lookup_static_method(struct jclass *c, const char *name, const char *descriptor);
 struct jmethod* jclass_lookup_instance_method(struct jclass *c, const char *name, const char *descriptor);

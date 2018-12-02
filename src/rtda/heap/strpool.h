@@ -12,7 +12,7 @@ void build_str_pool();
 
 struct jobject* put_str_to_pool(struct classloader *loader, const char *str0);
 
-struct jobject* put_so_to_pool(struct classloader *loader, struct jobject *so);
+struct jobject* put_so_to_pool(struct jobject *so);
 
 struct jobject* get_str_from_pool(struct classloader *loader, const char *str0);
 
