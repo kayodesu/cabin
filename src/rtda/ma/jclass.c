@@ -623,6 +623,18 @@ char* get_arr_class_name(const char *class_name)
 //    return classloader_load_class(c->loader, array_class_name);
 //}
 
+struct jclass* jclass_component_class(const struct jclass *arr_cls)
+{
+    assert(arr_cls != NULL);
+    if (!is_array(arr_cls)) {
+        return NULL;
+    }
+
+    const char *component_name = arr_cls->class_name;
+    for (; *component_name == '['; component_name++);
+    return classloader_load_class(arr_cls->loader, component_name);
+}
+
 bool jclass_is_accessible_to(const struct jclass *c, const struct jclass *visitor)
 {
     // todo 实现对不对

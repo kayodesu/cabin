@@ -2,6 +2,7 @@
  * Author: Jia Yang
  */
 
+#include <time.h>
 #include "../../registry.h"
 #include "../../../interpreter/stack_frame.h"
 #include "../../../rtda/heap/jobject.h"
@@ -73,32 +74,35 @@ static void initProperties(struct stack_frame *frame)
 
 // private static native void setIn0(InputStream in);
 static void setIn0(struct stack_frame *frame) {
-    jvm_abort("error\n");
-//    jref in = frame->getLocalVar(0).getRef();
-//    JClass *sysClass = frame->method->jclass;
-//
-//    sysClass->setFieldValue("in", "Ljava/io/InputStream;", Slot(in));
+    jref in = slot_getr(frame->local_vars);
+    struct slot s = rslot(in);
+    set_static_field_value_by_nt(frame->method->jclass, "in", "Ljava/io/InputStream;", &s);
 }
 
 // private static native void setOut0(PrintStream out);
 static void setOut0(struct stack_frame *frame) {
-    jvm_abort("error\n");
-//    jref out = frame->getLocalVar(0).getRef();
-//    JClass *sysClass = frame->method->jclass;
-//
-//    sysClass->setFieldValue("out", "Ljava/io/PrintStream;", Slot(out));
+    jref out = slot_getr(frame->local_vars);
+    struct slot s = rslot(out);
+    set_static_field_value_by_nt(frame->method->jclass, "out", "Ljava/io/PrintStream;", &s);
 }
 
 // private static native void setErr0(PrintStream err);
 static void setErr0(struct stack_frame *frame) {
-    jvm_abort("error\n");
-//    jref err = frame->getLocalVar(0).getRef();
-//    struct jclass *sysClass = frame->method->jclass;
-//
-//    sysClass->setFieldValue("err", "Ljava/io/PrintStream;", Slot(err));
+    jref err = slot_getr(frame->local_vars);
+    struct slot s = rslot(err);
+    set_static_field_value_by_nt(frame->method->jclass, "err", "Ljava/io/PrintStream;", &s);
 }
 
-// public static native long nanoTime();
+/*
+ * 返回最准确的可用系统计时器的当前值，以毫微秒为单位。
+此方法只能用于测量已过的时间，与系统或钟表时间的其他任何时间概念无关。
+ 返回值表示从某一固定但任意的时间算起的毫微秒数（或许从以后算起，所以该值可能为负）。
+ 此方法提供毫微秒的精度，但不是必要的毫微秒的准确度。它对于值的更改频率没有作出保证。
+ 在取值范围大于约 292 年（263 毫微秒）的连续调用的不同点在于：由于数字溢出，将无法准确计算已过的时间。
+
+ *
+ * public static native long nanoTime();
+ */
 static void nanoTime(struct stack_frame *frame) {
     jvm_abort("error\n");
     // todo

@@ -69,50 +69,46 @@ static void addressSize(struct stack_frame *frame)
  */
 static void compareAndSwapInt(struct stack_frame *frame)
 {
-    jvm_abort("");
-#if 0
-    JObject *thisObj = frame->getLocalVar(0).getRef();
-    JObject *o = frame->getLocalVar(1).getRef();
-    jlong offset = frame->getLocalVar(2).getLong(); // long 占两个Slot
-    jint expected = frame->getLocalVar(4).getInt();
-    jint x = frame->getLocalVar(5).getInt();
+    //    jref this_obj = slot_getr(frame->local_vars);
+    jref o = slot_getr(frame->local_vars + 1); // first argument
+    jlong offset = slot_getl(frame->local_vars + 2); // long 占两个Slot
+    jint expected = slot_geti(frame->local_vars + 4);
+    jint x = slot_geti(frame->local_vars + 5);
 
-    jint value = o->getFieldValue(offset).getInt();
+    jint value = slot_geti(get_instance_field_value_by_id(o, offset));
     if (value == expected) {
-        o->setFieldValue(offset, Slot(x));
-        frame->operandStack.push(1); // todo
+        struct slot s = islot(x);
+        set_instance_field_value_by_id(o, offset, &s);
+        os_pushi(frame->operand_stack, 1); // todo
     } else {
-        frame->operandStack.push(0); // todo
+        os_pushi(frame->operand_stack, 0); // todo
     }
-#endif
 }
 
 // public final native boolean compareAndSwapLong(Object o, long offset, long expected, long x);
 static void compareAndSwapLong(struct stack_frame *frame)
 {
-    jvm_abort("");
-#if 0
-    JObject *thisObj = frame->getLocalVar(0).getRef();
-    JObject *o = frame->getLocalVar(1).getRef();
-    jlong offset = frame->getLocalVar(2).getLong(); // long 占两个Slot
-    jlong expected = frame->getLocalVar(4).getLong();
-    jlong x = frame->getLocalVar(6).getLong();
+    //    jref this_obj = slot_getr(frame->local_vars);
+    jref o = slot_getr(frame->local_vars + 1); // first argument
+    jlong offset = slot_getl(frame->local_vars + 2); // long 占两个Slot
+    jlong expected = slot_getl(frame->local_vars + 4);
+    jlong x = slot_getl(frame->local_vars + 6);
 
-    jlong value = o->getFieldValue(offset).getLong();
+    jlong value = slot_getl(get_instance_field_value_by_id(o, offset));
     if (value == expected) {
-        o->setFieldValue(offset, Slot(x));
-        frame->operandStack.push(1); // todo
+        struct slot s = lslot(x);
+        set_instance_field_value_by_id(o, offset, &s);
+        os_pushi(frame->operand_stack, 1); // todo
     } else {
-        frame->operandStack.push(0); // todo
+        os_pushi(frame->operand_stack, 0); // todo
     }
-#endif
 }
 
 // public final native boolean compareAndSwapObject(Object o, long offset, Object expected, Object x)
 static void compareAndSwapObject(struct stack_frame *frame)
 {
-    struct jobject *this_obj = slot_getr(frame->local_vars);
-    struct jobject *o = slot_getr(frame->local_vars + 1); // first argument
+//    jref this_obj = slot_getr(frame->local_vars);
+    jref o = slot_getr(frame->local_vars + 1); // first argument
     jlong offset = slot_getl(frame->local_vars + 2); // long 占两个Slot
     jref expected = slot_getr(frame->local_vars + 4);
     jref x = slot_getr(frame->local_vars + 5);
@@ -125,41 +121,22 @@ static void compareAndSwapObject(struct stack_frame *frame)
     } else {
         os_pushi(frame->operand_stack, 0); // todo
     }
-#if 0
-    JObject *thisObj = frame->getLocalVar(0).getRef();
-    JObject *o = frame->getLocalVar(1).getRef();
-    jlong offset = frame->getLocalVar(2).getLong(); // long 占两个Slot
-    jref expected = frame->getLocalVar(4).getRef();
-    jref x = frame->getLocalVar(5).getRef();
-
-    jref value = o->getFieldValue(offset).getRef();
-    if (value == expected) {
-        o->setFieldValue(offset, Slot(x));
-        frame->operandStack.push(1); // todo
-    } else {
-        frame->operandStack.push(0); // todo
-    }
-#endif
 }
 
 // public native int getIntVolatile(Object o, long offset);
 static void getIntVolatile(struct stack_frame *frame)
 {
-    jvm_abort("");
-#if 0
-    JObject *thisObj = frame->getLocalVar(0).getRef();
-    JObject *o = frame->getLocalVar(1).getRef();
-    jlong offset = frame->getLocalVar(2).getLong();
+//    jref this_obj = slot_getr(frame->local_vars);
+    jref o = slot_getr(frame->local_vars + 1); // first argument
+    jlong offset = slot_getl(frame->local_vars + 2);
 
-    if (o->getClass()->isArray()) {
-        JArrayObj *arr = dynamic_cast<JArrayObj *>(o);
-        jint value = arr->get<jint>(offset);
-        frame->operandStack.push(value);
+    jint value;
+    if (is_array(o->jclass)) {
+        value = *((jint *)jarrobj_index(o, offset));
     } else {
-        jint value = o->getFieldValue(offset).getInt();
-        frame->operandStack.push(value);
+        value = slot_geti(get_instance_field_value_by_id(o, offset));
     }
-#endif
+    os_pushi(frame->operand_stack, value);
 }
 
 void sun_misc_Unsafe_registerNatives()

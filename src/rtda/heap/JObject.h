@@ -25,7 +25,6 @@ struct jobject {
 
     // 保存所有实例变量的值
     // 包括此Object中定义的和从父类继承来的。
-//    struct fieldvalues *instance_field_values;
     int instance_fields_count;
     struct slot *instance_fields_values;
 

@@ -226,15 +226,21 @@ static void isInstance(struct stack_frame *frame)
  * @param cls the {@code Class} object to be checked
  * @return the {@code boolean} value indicating whether objects of the
  * type {@code cls} can be assigned to objects of this class
- * @exception NullPointerException if the specified Class parameter is
- *            null.
+ * @exception NullPointerException if the specified Class parameter is null.
  * @since JDK1.1
  *
  * public native boolean isAssignableFrom(Class<?> cls);
  */
 static void isAssignableFrom(struct stack_frame *frame)
 {
-    jvm_abort("没有实现   isAssignableFrom");
+    struct jobject *this_cls = slot_getr(frame->local_vars);
+    struct jobject *cls = slot_getr(frame->local_vars + 1);
+    if (cls == NULL) {
+        jvm_abort("NullPointerException"); // todo
+    }
+
+    bool b = jclass_is_subclass_of(cls->jclass, this_cls->jclass);
+    os_pushi(frame->operand_stack, b ? 1 : 0);
 }
 
 /**
@@ -387,20 +393,22 @@ static void getInterfaces0(struct stack_frame *frame)
     jvm_abort("");
 }
 
-/**
- * Returns the {@code Class} representing the component type of an
- * array.  If this class does not represent an array class this method
- * returns null.
+/*
+ * Returns the representing the component type of an array.
+ * If this class does not represent an array class this method returns null.
  *
- * @return the {@code Class} representing the component type of this
- * class if this class is an array
- * @see     java.lang.reflect.Array
- * @since JDK1.1
+ * public native Class<?> getComponentType();
  */
-//public native Class<?> getComponentType();
 static void getComponentType(struct stack_frame *frame)
 {
-    jvm_abort("error\n");
+    jref this_obj = slot_getr(frame->local_vars);
+    if (this_obj->t == ARRAY_OBJECT) {
+        struct jclass *component_cls = jclass_component_class(this_obj->jclass);
+        if (component_cls != NULL) {
+            os_pushr(frame->operand_stack, component_cls->clsobj);
+        }
+    }
+    os_pushr(frame->operand_stack, NULL);
 }
 
 /**
@@ -546,7 +554,6 @@ static void getConstantPool(struct stack_frame *frame)
 static void getDeclaredFields0(struct stack_frame *frame)
 {
     struct jobject *this_obj = slot_getr(frame->local_vars);
-    // todo 判断是不是 class Object
     bool public_only = slot_geti(frame->local_vars + 1) != 0;  // todo
 
     struct classloader *loader = frame->method->jclass->loader;

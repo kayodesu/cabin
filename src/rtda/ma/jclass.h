@@ -136,6 +136,12 @@ char* get_arr_class_name(const char *class_name);
 
 //struct jclass* jclass_array_class(struct jclass *c);
 
+/*
+ * Returns the representing the component class of an array class.
+ * If this class does not represent an array class this method returns null.
+ */
+struct jclass* jclass_component_class(const struct jclass *arr_cls);
+
 static inline bool is_array(const struct jclass *c)
 {
     return c != NULL && c->class_name[0] == '[';
