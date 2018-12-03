@@ -142,6 +142,9 @@ bool jclass_is_accessible_to(const struct jclass *c, const struct jclass *visito
  */
 int jclass_inherited_depth(const struct jclass *c);
 
+/*
+ * 参数@c可以为空
+ */
 char *jclass_to_string(const struct jclass *c);
 
 /*
@@ -167,6 +170,10 @@ static inline bool is_string(const struct jclass *c)
     return c != NULL && strcmp(c->class_name, "java/lang/String") == 0;  // todo 对不对
 }
 
+static inline bool is_class(const struct jclass *c)
+{
+    return c != NULL && strcmp(c->class_name, "java/lang/Class") == 0;  // todo 对不对
+}
 
 /*
   * 是否是基本类型的数组（当然是一维的）。

@@ -51,10 +51,13 @@ struct jobject {
 
     enum jobject_type t;
 
-    void *extra;
+    void *extra; // todo 干嘛的
 };
 
+void jobject_init(struct jobject *o, struct jclass *c);
 struct jobject* jobject_create(struct jclass *c);
+
+struct jobject* jobject_clone(const struct jobject *o);
 
 void set_instance_field_value_by_id(const struct jobject *o, int id, const struct slot *value);
 void set_instance_field_value_by_nt(const struct jobject *o,
@@ -69,7 +72,7 @@ const char* jstrobj_value(struct jobject *so);
 /*
  * @jclass_class: class of java/lang/Class
  */
-struct jobject* jclassobj_create(struct jclass *jclass_class, const char *class_name);
+struct jobject* jclsobj_create(struct jclass *jclass_class, const char *class_name);
 
 /*
  * 创建一维数组

@@ -30,6 +30,10 @@ struct jmethod {
     const char *name;
     const char *descriptor;
 
+    struct jobject *parameter_types; // "[Ljava/lang/Class;"
+    struct jobject *return_type;     // java/lang/Class
+    struct jobject *exception_types; // "[Ljava/lang/Class;"
+
     u2 access_flags;
     u2 max_stack;
     u2 max_locals;
@@ -55,6 +59,10 @@ bool jmethod_is_accessible_to(const struct jmethod *method, const struct jclass 
 
 // 查找 pc 所对应的行号
 int jmethod_get_line_number(const struct jmethod *method, int pc);
+
+struct jobject* jmethod_get_parameter_types(struct jmethod *method);
+struct jobject* jmethod_get_return_type(struct jmethod *method);
+struct jobject* jmethod_get_exception_types(struct jmethod *method);
 
 /*
  * @pc, 发生异常的位置

@@ -45,8 +45,8 @@ static struct jmethod* resolve_method_ref(const struct jclass *visitor, struct m
     }
 
     if (!jmethod_is_accessible_to(ref->resolved_method, visitor)) {
-        printvm("visitor is %s\n", jclass_to_string(visitor));
-        printvm("access to %s\n", jmethod_to_string(ref->resolved_method));
+        //printvm("visitor is %s\n", jclass_to_string(visitor));
+        //printvm("access to %s\n", jmethod_to_string(ref->resolved_method));
         jvm_abort("java.lang.IllegalAccessError\n"); // todo
     }
 

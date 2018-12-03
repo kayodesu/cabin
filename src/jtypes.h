@@ -151,9 +151,11 @@ static const struct {
 
 #define PRIMITIVE_TYPE_COUNT (sizeof(primitive_types) / sizeof(*primitive_types))
 
+bool is_primitive_type_descriptor(char descriptor);
 bool is_primitive_by_class_name(const char *class_name);
+
 const char* primitive_type_get_array_class_name_by_class_name(const char *class_name);
-const char* primitive_type_get_primitive_name_by_descriptor(const char *descriptor);
+const char* primitive_type_get_primitive_name_by_descriptor(char descriptor);
 
 
 #endif //JVM_JTYPES_H

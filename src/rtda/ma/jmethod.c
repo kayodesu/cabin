@@ -3,8 +3,117 @@
  */
 
 #include "jmethod.h"
-#include "../../jvm.h"
 #include "access.h"
+#include "../heap/jobject.h"
+
+/*
+ * parse method descriptor and create parameter_types and return_type of the method
+ */
+static void parse_descriptor(struct jmethod *method)
+{
+    assert(method != NULL);
+
+    struct jobject **parameter_types = malloc(sizeof(struct jobject **) * method->arg_slot_count);
+    int parameter_types_count = 0;
+    struct classloader *loader = method->jclass->loader;
+
+    char *b = strchr(method->descriptor, '(');
+    const char *e = strchr(method->descriptor, ')');
+    if (b == NULL || e == NULL) {
+        jvm_abort("error. %s\n", method->descriptor);
+    }
+
+    // parameter_types
+    while (++b < e) {
+        if (*b == 'L') { // reference
+            char *t = strchr(b, ';');
+            if (t == NULL) {
+                jvm_abort("error. %s\n", method->descriptor);
+            }
+
+            *t = 0;   // end string
+            parameter_types[parameter_types_count++] = classloader_load_class(loader, b + 1)->clsobj;
+            *t = ';'; // recover
+            b = t;
+        } else if (*b == '[') { // array reference, 描述符形如 [B 或 [[java/lang/String; 的形式
+            char *t = b;
+            while (*(++t) == '[');
+            if (!is_primitive_type_descriptor(*t)) {
+                t = strchr(t, ';');
+                if (t == NULL) {
+                    jvm_abort("error. %s\n", method->descriptor);
+                }
+            }
+
+            char k = *(++t);
+            *t = 0; // end string
+            parameter_types[parameter_types_count++] = classloader_load_class(loader, b)->clsobj;
+            *t = k; // recover
+            b = t;
+        } else if (is_primitive_type_descriptor(*b)) {
+            const char *class_name = primitive_type_get_primitive_name_by_descriptor(*b);
+            parameter_types[parameter_types_count++] = classloader_load_class(loader, class_name)->clsobj;
+        } else {
+            jvm_abort("error %s\n", method->descriptor);
+        }
+    }
+
+    method->parameter_types = jarrobj_create(classloader_load_class(loader, "[Ljava/lang/Class;"), parameter_types_count);
+    for (int i = 0; i < parameter_types_count; i++) {
+        *(struct jobject **)jarrobj_index(method->parameter_types, i) = parameter_types[i];
+    }
+
+    // create return_type
+    const char *class_name = ++e;
+    if (is_primitive_type_descriptor(*e)) {
+        class_name = primitive_type_get_primitive_name_by_descriptor(*e);
+    }
+    method->return_type = classloader_load_class(loader, class_name)->clsobj;
+}
+
+struct jobject* jmethod_get_parameter_types(struct jmethod *method)
+{
+    assert(method != NULL);
+    if (method->parameter_types == NULL) {
+        parse_descriptor(method);
+    }
+    assert(method->parameter_types != NULL);
+    return method->parameter_types;
+}
+
+struct jobject* jmethod_get_return_type(struct jmethod *method)
+{
+    assert(method != NULL);
+    if (method->return_type == NULL) {
+        parse_descriptor(method);
+    }
+    assert(method->return_type != NULL);
+    return method->return_type;
+}
+
+struct jobject* jmethod_get_exception_types(struct jmethod *method)
+{
+    assert(method != NULL);
+
+    if (method->exception_types == NULL) {
+        int count = 0;
+        struct jobject **exception_types = malloc(sizeof(struct jobject **) * method->exception_tables_count);
+        for (int i = 0; i < method->exception_tables_count; i++) {
+            struct jclass *c = method->exception_tables[i].catch_type;
+            if (c != NULL) {
+                exception_types[count++] = c->clsobj;
+            }
+        }
+
+        method->exception_types = jarrobj_create(classloader_load_class(method->jclass->loader, "[Ljava/lang/Class;"), count);
+        for (int i = 0; i < count; i++) {
+            *(struct jobject **)jarrobj_index(method->exception_types, i) = exception_types[i];
+        }
+    }
+
+    assert(method->exception_types != NULL);
+    return method->exception_types;
+}
 
 static void cal_arg_slot_count(struct jmethod *method)
 {
@@ -64,19 +173,19 @@ static void parse_code_attr(struct jmethod *method, struct code_attribute *a)
     method->exception_tables = malloc(sizeof(struct exception_table) * method->exception_tables_count);
     for (int i = 0; i < method->exception_tables_count; i++) {
         const struct code_attribute_exception_table *t0 = a->exception_tables + i;
-        struct exception_table *t1 = method->exception_tables + i;
-        t1->start_pc = t0->start_pc;
-        t1->end_pc = t0->end_pc;
-        t1->handler_pc = t0->handler_pc;
+        struct exception_table *t = method->exception_tables + i;
+        t->start_pc = t0->start_pc;
+        t->end_pc = t0->end_pc;
+        t->handler_pc = t0->handler_pc;
         if (t0->catch_type == 0) {
             /*
              * 异常处理项的 catch_type 有可能是 0。
              * 0 是无效的常量池索引，但是在这里 0 并非表示 catch-none，而是表示 catch-all。
              */
-            t1->catch_type = NULL;
+            t->catch_type = NULL;
         } else {
             const char *class_name = rtcp_get_class_name(method->jclass->rtcp, t0->catch_type);
-            t1->catch_type = classloader_load_class(method->jclass->loader, class_name);
+            t->catch_type = classloader_load_class(method->jclass->loader, class_name);
         }
     }
 
@@ -115,6 +224,10 @@ struct jmethod* jmethod_create(const struct jclass *c, const struct member_info 
     method->exception_tables = NULL;
     method->line_number_tables = NULL;
     method->code = NULL;
+
+    // parameter_types, return_type, exception_types
+    // 先不解析，待需要时再解析，以节省时间。
+    method->parameter_types = method->return_type = method->exception_types = NULL;
 
     cal_arg_slot_count(method);
 
@@ -268,14 +381,22 @@ int jmethod_find_exception_handler(struct jmethod *method, struct jclass *except
 
 char *jmethod_to_string(const struct jmethod *method)
 {
-    if (method == NULL) {
-        return "method: NULL";
+#define MAX_LEN 1023 // big enough
+    VM_MALLOCS(char, MAX_LEN + 1, result);
+
+    if (method != NULL) {
+        int n = snprintf(result, MAX_LEN,
+                         "method%s: %s~%s~%s", IS_NATIVE(method->access_flags) ? "(native)" : "",
+                         method->jclass->class_name, method->name, method->descriptor);
+        if (n < 0) {
+            jvm_abort("snprintf 出错\n"); // todo
+        }
+        assert(0 <= n && n <= MAX_LEN);
+        result[n] = 0;
+    } else {
+        strcpy(result, "method: NULL");
     }
-    snprintf(global_buf, GLOBAL_BUF_LEN,
-             "method%s: %s~%s~%s\0",
-             IS_NATIVE(method->access_flags) ? "(native)" : "",
-             method->jclass->class_name,
-             method->name,
-             method->descriptor);
-    return global_buf;
+
+    return result;
+#undef MAX_LEN
 }

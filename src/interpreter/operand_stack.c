@@ -167,7 +167,7 @@ void os_pushd(struct operand_stack *os, jdouble d)
 void os_pushr(struct operand_stack *os, jref r)
 {
     assert(os != NULL);
-    printvm("operand stack(%p) push reference: %p\n", os, r); ////////////////////////////////////////////////////////////
+    //printvm("operand stack(%p) push reference: %p\n", os, r); ////////////////////////////////////////////////////////////
     CHECK_FULL(os);
     os->slots[os->size++] = rslot(r);
 }

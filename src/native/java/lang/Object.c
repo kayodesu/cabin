@@ -9,7 +9,7 @@
 // public native int hashCode();
 static void hashCode(struct stack_frame *frame)
 {
-    struct jobject *this_obj = slot_getr(frame->local_vars);
+    jref this_obj = slot_getr(frame->local_vars);
     os_pushi(frame->operand_stack, (jint) this_obj); // todo
 //    JObject *thisObj = frame->getLocalVar(0).getRef();
 //    frame->operandStack.push((jint)((jlong)thisObj)); // todo
@@ -18,26 +18,19 @@ static void hashCode(struct stack_frame *frame)
 // protected native Object clone() throws CloneNotSupportedException;
 static void clone(struct stack_frame *frame)
 {
-    jvm_abort("error\n");
-//    JObject *thisObj = frame->getLocalVar(0).getRef();
-//    JClass *cloneable = frame->method->jclass->loader->loadClass("java/lang/Cloneable");
-//
-//    if (!(thisObj->getClass()->isSubclassOf(cloneable))) {  // todo
-//        jvmAbort("java.lang.CloneNotSupportedException");
-//    }
-//
-//    frame->operandStack.push(thisObj->clone());
+    jref this_obj = slot_getr(frame->local_vars);
+    struct jclass *cloneable = classloader_load_class(frame->method->jclass->loader, "java/lang/Cloneable");
+    if (!jclass_is_subclass_of(this_obj->jclass, cloneable)) {
+        jvm_abort("java.lang.CloneNotSupportedException");
+    }
+    os_pushr(frame->operand_stack, jobject_clone(this_obj));
 }
 
 // public final native Class<?> getClass();
 static void getClass(struct stack_frame *frame)
 {
-    // todo
-    struct jobject *this_obj = slot_getr(frame->local_vars);
+    jref this_obj = slot_getr(frame->local_vars);
     os_pushr(frame->operand_stack, this_obj->jclass->clsobj);
-//    JObject *thisObj = frame->getLocalVar(0).getRef();
-//    JClassObj *classObj = thisObj->getClass()->getClassObj();
-//    frame->operandStack.push(classObj);
 }
 
 void java_lang_Object_registerNatives()

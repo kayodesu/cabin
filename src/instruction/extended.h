@@ -16,7 +16,7 @@ static void multianewarray(struct stack_frame *frame)
     struct jclass *curr_class = frame->method->jclass;
     int index = bcr_readu2(frame->reader);
     const char *class_name = rtcp_get_class_name(curr_class->rtcp, index); // 这里解析出来的直接就是数组类。
-    printvm("multi array class name: %s\n", class_name);  ////////////////////////////////////////////
+//    printvm("multi array class name: %s\n", class_name);  ////////////////////////////////////////////
 
     int arr_dim = bcr_readu1(frame->reader); // 多维数组的维度
     size_t arr_lens[arr_dim]; // 每一维数组的长度

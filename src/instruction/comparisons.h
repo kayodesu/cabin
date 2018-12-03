@@ -57,7 +57,6 @@ static void dcmpg(struct stack_frame *frame)
         jint v2 = (cmp_with_0) ? 0 : os_popi(frame->operand_stack); \
         jint v1 = os_popi(frame->operand_stack); \
         jint offset = bcr_reads2(frame->reader); \
-        printvm("v1 = %d, v2 = %d, offset = %d\n", v1, v2, offset);\
         if (v1 oper v2) { \
             bcr_skip(frame->reader, offset - 3); /* 减3？减去本条指令自身的长度 todo */  \
         } \

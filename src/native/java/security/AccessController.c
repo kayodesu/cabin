@@ -77,7 +77,7 @@ void java_security_AccessController_registerNatives()
                          doPrivileged2);
 
     register_native_method("java/security/AccessController", "doPrivileged",
-                         "(Ljava/security/PrivilegedExceptionAction;Ljava/security/AccessControlContext;)Ljava/lang/Object;",
-                         doPrivileged3);
+                 "(Ljava/security/PrivilegedExceptionAction;Ljava/security/AccessControlContext;)Ljava/lang/Object;",
+                 doPrivileged3);
 
 }

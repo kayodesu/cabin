@@ -68,20 +68,20 @@ static void __ldc(struct stack_frame *frame, int index_bytes)
     } else if (type == FLOAT_CONSTANT) {
         os_pushf(os, rtcp_get_float(rtcp, index));
     } else if (type == STRING_CONSTANT) {
-        printvm("ldc string\n");
+//        printvm("ldc string\n");
         const char *str = rtcp_get_str(rtcp, index);
-        printvm("%s\n", str);
+//        printvm("%s\n", str);
         struct jobject *so = get_str_from_pool(frame->method->jclass->loader, str);
         STROBJ_CHECK(so);
-        printvm("%p, %s\n", so, jstrobj_value(so));
+//        printvm("%p, %s\n", so, jstrobj_value(so));
         os_pushr(os, so);
     } else if (type == CLASS_CONSTANT) {
         const char *class_name = rtcp_get_class_name(rtcp, index);
-        printvm("ldc class, %s\n", class_name);  //////////////////////////////////////////////////
+//        printvm("ldc class, %s\n", class_name);  //////////////////////////////////////////////////
         struct jclass *c = classloader_load_class(frame->method->jclass->loader, class_name);
         os_pushr(os, c->clsobj);
     } else {
-        jvm_abort("error. %d\n", type);
+        jvm_abort("error. %d\n", type); // todo
     }
 }
 

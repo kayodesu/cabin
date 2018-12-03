@@ -22,6 +22,16 @@ const char* get_jtype_name(enum jtype t)
     return names[t];
 }
 
+bool is_primitive_type_descriptor(char descriptor)
+{
+    for (int i = 0; i < PRIMITIVE_TYPE_COUNT; i++) {
+        if (primitive_types[i].descriptor == descriptor) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool is_primitive_by_class_name(const char *class_name)
 {
     for (int i = 0; i < PRIMITIVE_TYPE_COUNT; i++) {
@@ -44,16 +54,10 @@ const char* primitive_type_get_array_class_name_by_class_name(const char *class_
     return NULL;
 }
 
-const char* primitive_type_get_primitive_name_by_descriptor(const char *descriptor)
+const char* primitive_type_get_primitive_name_by_descriptor(char descriptor)
 {
-    assert(descriptor != NULL);
-
-    if (strlen(descriptor) != 1) {
-        return NULL; // not primitive type's descriptor
-    }
-
     for (int i = 0; i < PRIMITIVE_TYPE_COUNT; i++) {
-        if (primitive_types[i].descriptor == *descriptor) {
+        if (primitive_types[i].descriptor == descriptor) {
             return primitive_types[i].name;
         }
     }

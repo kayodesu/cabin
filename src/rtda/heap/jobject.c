@@ -10,15 +10,40 @@
 #include "../ma/jfield.h"
 #include "../../util/encoding.h"
 
-struct jobject* jobject_create(struct jclass *c)
+static struct jobject* jobject_alloc()
 {
-    assert(c != NULL);
-
     HEAP_ALLOC(struct jobject, o);
     if (o == NULL) {
         // todo 堆内存分配失败
         jvm_abort("堆溢出");
     }
+    return o;
+}
+
+void jobject_init(struct jobject *o, struct jclass *c)
+{
+    assert(c != NULL);
+    assert(o != NULL);
+
+    o->jclass = c;
+    o->t = NORMAL_OBJECT;
+
+    if (is_array(c)) { // todo
+        o->instance_fields_count = 0;
+        o->instance_fields_values = NULL;
+    } else {
+        o->instance_fields_count = c->instance_fields_count;
+        o->instance_fields_values = copy_inited_instance_fields_values(c);
+    }
+
+    o->extra = NULL;
+}
+
+struct jobject* jobject_create(struct jclass *c)
+{
+    assert(c != NULL);
+
+    struct jobject *o = jobject_alloc();
     o->jclass = c;
     o->t = NORMAL_OBJECT;
 
@@ -31,8 +56,88 @@ struct jobject* jobject_create(struct jclass *c)
     }
 
     o->extra = NULL;
-    printvm("create object: %s\n", jobject_to_string(o)); //////////////////////////////////////////////////
+//    printvm("create object: %s\n", jobject_to_string(o)); //////////////////////////////////////////////////
     return o;
+}
+
+static struct jobject* jarrobj_clone(const struct jobject *src)
+{
+    assert(src != NULL);
+    ARROBJ_CHECK(src);
+
+    struct jobject *o = jobject_alloc();
+    o->instance_fields_count = src->instance_fields_count;
+    o->instance_fields_values = NULL;
+
+    o->a.len = src->a.len;
+    o->a.ele_size = src->a.ele_size;
+    // o->a.data todo
+    // extra todo
+
+    o->t = ARRAY_OBJECT;
+    o->jclass = src->jclass;
+    return o;
+}
+
+static struct jobject* jobject_clone0(const struct jobject *src)
+{
+    assert(src != NULL);
+    struct jobject *o = jobject_alloc();
+
+    o->instance_fields_count = src->instance_fields_count;
+    // copy fields value todo
+    // extra todo
+
+    o->t = NORMAL_OBJECT;
+    o->jclass = src->jclass;
+    return o;
+}
+
+static struct jobject* jstrobj_clone(const struct jobject *src)
+{
+    assert(src != NULL);
+    STROBJ_CHECK(src);
+
+    struct jobject *o = jobject_clone0(src);
+    o->s.wstr = wcsdup(src->s.wstr);
+    o->s.str = strdup(src->s.str);
+
+    // extra todo
+    o->t = STRING_OBJECT;
+    return o;
+}
+
+static struct jobject* jclsobj_clone(const struct jobject *src)
+{
+    assert(src != NULL);
+    CLSOBJ_CHECK(src);
+
+    struct jobject *o = jobject_clone0(src);
+    strcpy(o->c.class_name, src->c.class_name);
+
+    // extra todo
+    o->t = CLASS_OBJECT;
+    return o;
+}
+
+struct jobject* jobject_clone(const struct jobject *src)
+{
+    assert(src != NULL);
+
+    if (src->t == NORMAL_OBJECT) {
+        return jobject_clone0(src);
+    }
+    if (src->t == ARRAY_OBJECT) {
+        return jarrobj_clone(src);
+    }
+    if (src->t == STRING_OBJECT) {
+        return jstrobj_clone(src);
+    }
+    if (src->t == CLASS_OBJECT) {
+        return jclsobj_clone(src);
+    }
+
+    jvm_abort("Never goes here, %d", src->t);
 }
 
 void set_instance_field_value_by_id(const struct jobject *o, int id, const struct slot *value)
@@ -78,7 +183,7 @@ const struct slot* get_instance_field_value_by_nt(const struct jobject *o, const
     return get_instance_field_value_by_id(o, f->id);
 }
 
-struct jobject* jclassobj_create(struct jclass *jclass_class, const char *class_name)
+struct jobject* jclsobj_create(struct jclass *jclass_class, const char *class_name)
 {
     // todo 判断jclass_class.class_name == "java/lang/Class"
     struct jobject *o = jobject_create(jclass_class);
@@ -108,7 +213,7 @@ struct jobject* jstrobj_create(struct classloader *loader, const char *str)
 
     struct jobject *so = jobject_create(classloader_load_class(loader, "java/lang/String"));
 
-    printvm("create a string: %p[%s]\n", so, str); ////////////////////////////////////////////////////////////////////////
+    //printvm("create a string: %p[%s]\n", so, str); ////////////////////////////////////////////////////////////////////////
 
     so->s.str = strdup(str);
     so->s.wstr = utf8_to_unicode(str);
@@ -299,19 +404,29 @@ void jobject_destroy(struct jobject *o)
 
 const char* jobject_to_string(struct jobject *o)
 {
+#define MAX_LEN 1023 // big enough
+    VM_MALLOCS(char, MAX_LEN + 1, result);
     if (o == NULL) {
-        return "jobject is null";
+        strcpy(result, "object is null");
+        return result;
     }
 
+    int n;
     if (o->t == STRING_OBJECT) {
-        snprintf(global_buf, GLOBAL_BUF_LEN, "string object(%p): %s\0", o, jstrobj_value(o));
+        n = snprintf(result, MAX_LEN, "string object(%p): %s", o, jstrobj_value(o));
     } else if (o->t == ARRAY_OBJECT) {
-        snprintf(global_buf, GLOBAL_BUF_LEN, "array object(%p): %d\0", o, o->a.len);
+        n = snprintf(result, MAX_LEN, "array object(%p): %d", o, o->a.len);
     } else if (o->t == CLASS_OBJECT) {
-        snprintf(global_buf, GLOBAL_BUF_LEN, "class object(%p)\0", o);
+        n = snprintf(result, MAX_LEN, "class object(%p)", o);
     } else {
-        snprintf(global_buf, GLOBAL_BUF_LEN, "normal object(%p), %s\0", o, o->jclass->class_name);
+        n = snprintf(result, MAX_LEN, "normal object(%p), %s", o, o->jclass->class_name);
     }
 
-    return global_buf;
+    if (n < 0) {
+        jvm_abort("snprintf 出错\n"); // todo
+    }
+    assert(0 <= n && n <= MAX_LEN);
+    result[n] = 0;
+    return result;
+#undef MAX_LEN
 }

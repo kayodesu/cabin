@@ -203,7 +203,7 @@ static struct jobject* get_jclass_obj_from_pool(struct classloader *loader, cons
         return clsobj;
     }
 
-    clsobj = jclassobj_create(loader->jclass_class, class_name);
+    clsobj = jclsobj_create(loader->jclass_class, class_name);
     hashmap_put(loader->classobj_pool, clsobj->c.class_name, clsobj);
 //    HASH_ADD_KEYPTR(hh, loader->classobj_pool, class_name, strlen(class_name), clsobj);
     return clsobj;

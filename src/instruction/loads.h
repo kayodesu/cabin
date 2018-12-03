@@ -80,7 +80,6 @@ static void aload_3(struct stack_frame *frame) { __aload(frame, 3); }
 static void func_name(struct stack_frame *frame) \
 { \
     jint index = os_popi(frame->operand_stack); \
-    printvm("index = %d\n", index);\
     struct jobject *ao = os_popr(frame->operand_stack); \
     ARROBJ_CHECK(ao); \
     \

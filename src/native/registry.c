@@ -72,6 +72,9 @@ void sun_misc_VM_registerNatives();
 void sun_misc_Unsafe_registerNatives();
 
 void sun_reflect_Reflection_registerNatives();
+void sun_reflect_NativeConstructorAccessorImpl_registerNatives();
+void sun_reflect_NativeMethodAccessorImpl_registerNatives();
+void sun_reflect_ConstantPool_registerNatives();
 
 void java_security_AccessController_registerNatives();
 
@@ -96,6 +99,9 @@ void register_all_native_methods()
     sun_misc_Unsafe_registerNatives();
 
     sun_reflect_Reflection_registerNatives();
+    sun_reflect_NativeConstructorAccessorImpl_registerNatives();
+    sun_reflect_NativeMethodAccessorImpl_registerNatives();
+    sun_reflect_ConstantPool_registerNatives();
 
     java_security_AccessController_registerNatives();
 }

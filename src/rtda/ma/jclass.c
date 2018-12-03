@@ -196,6 +196,7 @@ struct jclass *jclass_create_by_classfile(struct classloader *loader, struct cla
         *p = 0; // 得到包名
     }
 
+//    printvm("+++++++++++++++++++ %d\n", cf->super_class);
     if (cf->super_class == 0) { // why 0
         c->super_class = NULL; // 可以没有父类
     } else {
@@ -251,6 +252,9 @@ struct jclass *jclass_create_by_classfile(struct classloader *loader, struct cla
     }
 
     classfile_destroy(cf);
+//    if(strcmp(c->class_name, "java/lang/reflc->fieldsect/Constructor") == 0) {
+//        int iiii = 3;
+//    }
     return c;
 }
 
@@ -612,7 +616,11 @@ void set_static_field_value_by_nt(const struct jclass *c,
 const struct slot* get_static_field_value_by_id(const struct jclass *c, int id)
 {
     assert(c != NULL);
+    if (!(id >= 0 && id < c->static_fields_count)) {
+        printvm("-------------  %d, %d, %s\n", id, c->static_fields_count, c->class_name);
+    }
     assert(id >= 0 && id < c->static_fields_count);
+
     return c->static_fields_values + id;
 }
 
@@ -710,6 +718,8 @@ bool jclass_is_accessible_to(const struct jclass *c, const struct jclass *visito
 
 char *jclass_to_string(const struct jclass *c)
 {
-    snprintf(global_buf, GLOBAL_BUF_LEN, "class: %s\0", c == NULL ? "NULL" : c->class_name);
-    return global_buf;
+    VM_MALLOCS(char, PATH_MAX, result);
+    strcpy(result, "class: ");
+    strcat(result, c == NULL ? "NULL" : c->class_name);
+    return result;
 }

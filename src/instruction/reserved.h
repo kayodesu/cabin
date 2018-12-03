@@ -27,7 +27,7 @@ static void invoke_native_method(struct stack_frame *frame)
     const char *method_name = frame->method->name;
     const char *method_descriptor = frame->method->descriptor;
 
-    printvm("invoke native method: %s~%s~%s ----------------\n", class_name, method_name, method_descriptor);
+    printvm("invoke native method: %s~%s~%s\n", class_name, method_name, method_descriptor);
     find_native_method(class_name, method_name, method_descriptor)(frame);
 }
 

@@ -13,7 +13,7 @@
 struct jclass;
 
 struct jfield {
-    const struct jclass *jclass; // which class this field belongs to
+    struct jclass *jclass; // which class this field belongs to
     const char *name;
     const char *descriptor;
     /*
@@ -35,7 +35,7 @@ struct jfield {
 
 #define INVALID_CONSTANT_VALUE_INDEX (-1)
 
-struct jfield* jfield_create(const struct jclass *c, const struct member_info *info);
+struct jfield* jfield_create(struct jclass *c, const struct member_info *info);
 
 bool jfield_is_accessible_to(const struct jfield *field, const struct jclass *visitor);
 

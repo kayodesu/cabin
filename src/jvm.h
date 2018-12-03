@@ -15,7 +15,7 @@
  * 是否开启调试模式，
  * 如不开启，可注释掉此define
  */
-#define JVM_DEBUG
+//#define JVM_DEBUG
 
 #ifndef PATH_MAX
 #define PATH_MAX 260 // todo
@@ -48,11 +48,6 @@ struct name_and_type {
     const char *name;
     const char *descriptor;
 };
-
-// 一个全局的buf，代码中任何地方皆可使用，
-// 控制好多线程访问冲突即可。
-#define GLOBAL_BUF_LEN 10240  // I think this is big enough.
-char global_buf[GLOBAL_BUF_LEN];
 
 // The system Thread group.
 extern struct jobject *system_thread_group;

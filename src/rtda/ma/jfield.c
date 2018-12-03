@@ -13,7 +13,7 @@
 #include "../heap/jobject.h"
 
 
-struct jfield* jfield_create(const struct jclass *c, const struct member_info *info)
+struct jfield* jfield_create(struct jclass *c, const struct member_info *info)
 {
     assert(c != NULL && info != NULL);
 
@@ -108,7 +108,7 @@ struct jobject* jfield_get_type(struct jfield *field)
         type_name[len - 2] = 0; // set last char(';') is 0
         field->type = classloader_load_class(field->jclass->loader, type_name)->clsobj;
     } else { // 变量类型为基本类型
-        const char *type_name = primitive_type_get_primitive_name_by_descriptor(field->descriptor);
+        const char *type_name = primitive_type_get_primitive_name_by_descriptor(*(field->descriptor));
         if (type_name != NULL) {
             field->type = classloader_load_class(field->jclass->loader, type_name)->clsobj;
         }
@@ -127,11 +127,22 @@ void jfield_destroy(struct jfield *field)
 
 char* jfield_to_string(const struct jfield *field)
 {
-    if (field == NULL) {
-        return "jfield: NULL";
+#define MAX_LEN 1023 // big enough
+    VM_MALLOCS(char, MAX_LEN + 1, result);
+
+    if (field != NULL) {
+        int n = snprintf(
+                result, MAX_LEN, "field: %s~%s~%s", field->jclass->class_name, field->name, field->descriptor);
+        if (n < 0) {
+            jvm_abort("snprintf 出错\n"); // todo
+        }
+        assert(0 <= n && n <= MAX_LEN);
+        result[n] = 0;
+    } else {
+        strcpy(result, "field: NULL");
     }
 
-    snprintf(global_buf, GLOBAL_BUF_LEN, "field: %s~%s~%s\0", field->jclass->class_name, field->name, field->descriptor);
-    return global_buf;
+    return result;
+#undef MAX_LEN
 }
 

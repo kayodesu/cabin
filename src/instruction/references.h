@@ -65,23 +65,13 @@ static void putstatic(struct stack_frame *frame)
     struct field_ref *ref = rtcp_get_field_ref(curr_class->rtcp, index);
     resolve_static_field_ref(curr_class, ref);
 
-    if (!ref->resolved_class->inited) {
-        jclass_clinit(ref->resolved_class, frame);
+    struct jclass *cls = ref->resolved_field->jclass;
+
+    if (!cls->inited) {
+        jclass_clinit(cls, frame);
         /* 将pc指向本条指令之前，初始化完类后，继续执行本条指令。*/
         bcr_set_pc(frame->reader, jthread_get_pc(frame->thread));
         return;
-    }
-
-    /*
-     * 如果是final字段，则实际操作的是静态常量，只能在类初始化方法中给它赋值。
-     * 否则，会抛出 IllegalAccessError异常。类初始化方法由编译器生成，名字是<clinit>，
-     */
-    if (IS_FINAL(ref->resolved_field->access_flags)) {
-        // todo
-        if (frame->method->jclass != ref->resolved_class || strcmp(frame->method->name, "<clinit>") != 0) {
-            // panic("java.lang.IllegalAccessError")
-            jvm_abort("%s, %s, %s\n", frame->method->jclass->class_name, ref->resolved_class->class_name, frame->method->name);
-        }
     }
 
     // todo
@@ -102,7 +92,7 @@ static void putstatic(struct stack_frame *frame)
         jvm_abort("error, %s\n", ref->resolved_field->descriptor);
     }
 
-    set_static_field_value_by_id(ref->resolved_class, ref->resolved_field->id, &s);
+    set_static_field_value_by_id(cls, ref->resolved_field->id, &s);
 }
 
 static void getstatic(struct stack_frame *frame)
@@ -113,16 +103,15 @@ static void getstatic(struct stack_frame *frame)
     struct field_ref *ref = rtcp_get_field_ref(curr_class->rtcp, index);
     resolve_static_field_ref(curr_class, ref);
 
-    if (!ref->resolved_class->inited) {
-        jclass_clinit(ref->resolved_class, frame);
+    struct jclass *cls = ref->resolved_field->jclass;
+
+    if (!cls->inited) {
+        jclass_clinit(cls, frame);
         /* 将pc指向本条指令之前，初始化完类后，继续执行本条指令。*/
         bcr_set_pc(frame->reader, jthread_get_pc(frame->thread));
         return;
     }
-
-    // todo 如果声明字段的类还没有初始化好，也需要先初始化。
-
-    os_pushs(frame->operand_stack, get_static_field_value_by_id(ref->resolved_class, ref->resolved_field->id));
+    os_pushs(frame->operand_stack, get_static_field_value_by_id(cls, ref->resolved_field->id));
 }
 
 /*
@@ -203,11 +192,11 @@ static void getfield(struct stack_frame *frame)
         || ((d  == 'L' || d  == '[') && s->t == JREF)) {
         os_pushs(frame->operand_stack, s);
     } else {
-        SLOT_TO_STRING_WRAP(s, jvm_abort("type mismatch error. field's descriptor is %s, but slot is %s\n",
-                      ref->resolved_field->descriptor, slot_str));
+        jvm_abort("type mismatch error. field's descriptor is %s, but slot is %s\n",
+                  ref->resolved_field->descriptor, slot_to_string(s));
     }
 
-    printvm("getfield, operand_stack. %s\n", os_to_string(frame->operand_stack));
+    //printvm("getfield, operand_stack. %s\n", os_to_string(frame->operand_stack));
 }
 
 static void athrow(struct stack_frame *frame)
@@ -281,10 +270,10 @@ static void checkcast(struct stack_frame *frame)
     const char *class_name = rtcp_get_class_name(frame->method->jclass->rtcp, index);
 
     struct jclass *jclass = classloader_load_class(frame->method->jclass->loader, class_name); // todo resolve_class ???
-    printvm("checkcast. %s, %s\n", obj->jclass->class_name, jclass->class_name);  //////////////////////////////////////////////
+    //printvm("checkcast. %s, %s\n", obj->jclass->class_name, jclass->class_name);  //////////////////////////////////////////////
     if (!jobject_is_instance_of(obj, jclass)) {
         // java.lang.ClassCastException   todo
-        printvm("java.lang.ClassCastException. %s can not cast to %s\n", obj->jclass->class_name, jclass->class_name);
+        jvm_abort("java.lang.ClassCastException. %s can not cast to %s\n", obj->jclass->class_name, jclass->class_name);
     }
 }
 

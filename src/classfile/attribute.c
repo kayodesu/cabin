@@ -576,6 +576,6 @@ void* parse_attribute(struct bytecode_reader *reader, void **constant_pool, u2 c
     if (strcmp(BootstrapMethods, attr_name) == 0)
         return parse_bootstrap_method_attribute(reader, attribute_length);
 
-    printvm("unknown attr = %s\n", attr_name);
+    printvm("unknown attr = %s\n", attr_name); // todo
     return parse_unknown_attribute(reader, attribute_length);
 }
