@@ -132,9 +132,6 @@ static void func_name(struct stack_frame *frame) \
     if (ao == NULL) { \
         jvm_abort("error NULL Point Exception\n"); /* todo */ \
     } \
-    if (ao->t != ARRAY_OBJECT) { \
-        jvm_abort("error\n"); /* todo */ \
-    } \
      \
     if (!check_type(ao->jclass)) { \
         jvm_abort("error\n"); \

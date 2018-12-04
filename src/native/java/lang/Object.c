@@ -23,14 +23,14 @@ static void clone(struct stack_frame *frame)
     if (!jclass_is_subclass_of(this_obj->jclass, cloneable)) {
         jvm_abort("java.lang.CloneNotSupportedException");
     }
-    os_pushr(frame->operand_stack, jobject_clone(this_obj));
+    os_pushr(frame->operand_stack, jobject_clone(this_obj, NULL));
 }
 
 // public final native Class<?> getClass();
 static void getClass(struct stack_frame *frame)
 {
     jref this_obj = slot_getr(frame->local_vars);
-    os_pushr(frame->operand_stack, this_obj->jclass->clsobj);
+    os_pushr(frame->operand_stack, (jref) this_obj->jclass->clsobj); // todo 对不对
 }
 
 void java_lang_Object_registerNatives()

@@ -15,6 +15,8 @@ char bootstrap_classpath[PATH_MAX] = { 0 };
 char extension_classpath[PATH_MAX] = { 0 };
 char *user_classpath = "D:\\code\\jvm\\testclasses"; // todo;
 
+struct classloader *bootstrap_loader;
+
 struct jobject *system_thread_group;
 struct jthread *main_thread;
 
@@ -80,7 +82,7 @@ static void create_main_thread(struct classloader *loader)
     struct stack_frame *frame = sf_create(main_thread, constructor);
     frame->local_vars[0] = rslot(main_thread_obj);
     frame->local_vars[1] = rslot(system_thread_group);
-    frame->local_vars[2] = rslot(jstrobj_create(loader, MAIN_THREAD_NAME));
+    frame->local_vars[2] = rslot((jref) jstrobj_create(MAIN_THREAD_NAME));
     jthread_push_frame(main_thread, frame);
     jclass_clinit0(main_thread_obj->jclass, main_thread); // 最后压栈，保证先执行。
 
@@ -93,7 +95,7 @@ void start_jvm(const char *main_class_name)
 
     build_str_pool();
 
-    struct classloader *loader = classloader_create();
+    struct classloader *loader = classloader_create(true);
     create_system_thread_group(loader);
     create_main_thread(loader);
     init_jvm(loader, main_thread);

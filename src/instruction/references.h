@@ -21,6 +21,9 @@
  * 5. 执行某些反射操作时。
  */
 
+/*
+ * new指令专门用来创建类实例。数组由专门的指令创建 todo
+ */
 static void __new(struct stack_frame *frame)
 {
     struct bytecode_reader *reader = frame->reader;
@@ -40,14 +43,10 @@ static void __new(struct stack_frame *frame)
         jvm_abort("java.lang.InstantiationError\n");  // todo 抛出 InstantiationError 异常
     }
 
-    struct jobject *o;
-    if (strcmp(c->class_name, "java/lang/String") == 0) {
-        o = jstrobj_create(c->loader, ""); // todo 在哪里找字符串的内容？
-    } else {
-        o = jobject_create(c);
-    }
+    // todo java/lang/Class 会在这里创建，为什么会这样，怎么处理
+//    assert(strcmp(c->class_name, "java/lang/Class") == 0);
 
-    os_pushr(frame->operand_stack, o);
+    os_pushr(frame->operand_stack, jobject_create(c));
 }
 
 /*
@@ -180,6 +179,9 @@ static void getfield(struct stack_frame *frame)
     if (obj == NULL) {
         jvm_abort("java.lang.NullPointerException\n");  // todo
     }
+
+//    printvm("[%s], [%s]\n", jclass_to_string(ref->resolved_class), jfield_to_string(ref->resolved_field));
+//    printvm("%s\n", jobject_to_string(obj));
 
     const struct slot *s = get_instance_field_value_by_id(obj, ref->resolved_field->id);
 
@@ -396,7 +398,7 @@ static void invokevirtual(struct stack_frame *frame)
             const struct slot *arg = args + 1; // println 的参数
             if (arg->t == JREF) {
                 struct jobject *so = slot_getr(arg);
-                STROBJ_CHECK(so);
+                JOBJECT_CHECK_STROBJ(so);
                 printvm("%p, %s\n", so, jstrobj_value(so));
             } else if (arg->t == JINT) {
                 printvm("%d\n", slot_geti(arg));
@@ -591,19 +593,16 @@ static void anewarray(struct stack_frame *frame)
 
 static void arraylength(struct stack_frame *frame)
 {
-    struct jobject *arr = os_popr(frame->operand_stack);
-    if (arr == NULL) {
+    struct jobject *o = os_popr(frame->operand_stack);
+    if (o == NULL) {
         // todo java.lang.NullPointerException
         jvm_abort("error. java.lang.NullPointerException\n");
     }
-    // todo 判断是不是 array object
+    if (!jobject_is_array(o)) {
+        jvm_abort("error"); // todo
+    }
 
-    // todo 多维数组也可以？？？？？
-//    if (!is_one_dimension_array(arr->class)) {
-//        jprintf("error.\n"); // todo 一维数组?
-//    }
-
-    os_pushi(frame->operand_stack, arr->a.len);
+    os_pushi(frame->operand_stack, jarrobj_len(o));
 }
 
 static void monitorenter(struct stack_frame *frame)

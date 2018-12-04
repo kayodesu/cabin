@@ -24,11 +24,19 @@ jchar* utf8_to_unicode(const const char *str)
     return wstr;
 }
 
-char* unicode_to_utf8(const const jchar *wstr)
+//char* unicode_to_utf8(const const jchar *wstr)
+//{
+//    size_t len = wcslen(wstr);
+//    VM_MALLOCS(char, len + 1, str);
+//    wcstombs(str, wstr, len);
+//    str[len] = '\0';
+//    return str;
+//}
+
+char* unicode_to_utf8(const const jchar arr[], size_t len)
 {
-    size_t len = wcslen(wstr);
     VM_MALLOCS(char, len + 1, str);
-    wcstombs(str, wstr, len);
+    wcstombs(str, arr, len);
     str[len] = '\0';
     return str;
 }

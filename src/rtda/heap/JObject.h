@@ -8,13 +8,6 @@
 #include "../../slot.h"
 #include "../ma/jclass.h"
 
-enum jobject_type {
-    NORMAL_OBJECT,
-    ARRAY_OBJECT,
-    STRING_OBJECT,
-    CLASS_OBJECT
-};
-
 struct jobject {
     /*
      * 对象头
@@ -30,50 +23,34 @@ struct jobject {
 
     struct jclass *jclass;
 
-    union {
-        struct { // array object
-            jint len; // len of array
-            size_t ele_size;  // size of single element
-            s1 *data;
-        } a;
-
-        struct { // string object
-            const char *str; // key in hash table
-            const jchar *wstr;
-        } s;
-
-        struct { // class object
-            // 必须是全限定类名，用作 hash 表中的 key
-            // 形如 xxx/xxx/xxx 的形式
-            char class_name[FILENAME_MAX];
-        } c;
-    };
-
-    enum jobject_type t;
-
-    void *extra; // todo 干嘛的
+    /*
+     * extra字段保持对象的额外信息。
+     * 1. 对于 java/lang/Class 对象，extra字段类型为 struct jclass*, 保存 
+     *    The entity class (class, interface, array class, primitive type, or void) represented by this object
+     * 2. 对于 java/lang/String 对象，extra字段类型为 char *, 保存字符串的值。同时用作 key in string pool
+     * 3. 对于数组对象，
+     *    前 sizeof(jint) 个字节表示数组每个元素的大小，
+     *    紧接着的 sizeof(jint) 个字节表示数组的长度，
+     *    再后面是数组的数据。
+     * 4. 异常对象的extra字段中存放的就是Java虚拟机栈信息 todo 
+     */
+    void *extra;
 };
 
-void jobject_init(struct jobject *o, struct jclass *c);
 struct jobject* jobject_create(struct jclass *c);
 
-struct jobject* jobject_clone(const struct jobject *o);
-
-void set_instance_field_value_by_id(const struct jobject *o, int id, const struct slot *value);
-void set_instance_field_value_by_nt(const struct jobject *o,
-                                    const char *name, const char *descriptor, const struct slot *value);
-
-const struct slot* get_instance_field_value_by_id(const struct jobject *o, int id);
-const struct slot* get_instance_field_value_by_nt(const struct jobject *o, const char *name, const char *descriptor);
-
-struct jobject* jstrobj_create(struct classloader *loader, const char *str);
+// java/lang/Sting 对象操作函数
+struct jobject* jstrobj_create(const char *str);
 const char* jstrobj_value(struct jobject *so);
 
+// java/lang/Class 对象操作函数
 /*
- * @jclass_class: class of java/lang/Class
+ * @entity_class: todo 说明
  */
-struct jobject* jclsobj_create(struct jclass *jclass_class, const char *class_name);
+struct jobject* jclsobj_create(struct jclass *entity_class);
+struct jclass* jclsobj_entity_class(const struct jobject *co);
 
+// 数组对象操作函数
 /*
  * 创建一维数组
  * todo 说明 c 是什么东西
@@ -85,36 +62,8 @@ struct jobject *jarrobj_create(struct jclass *arr_class, jint arr_len);
  * todo 说明 c 是什么东西
  */
 struct jobject *jarrobj_create_multi(struct jclass *arr_class, size_t arr_dim, const size_t *arr_lens);
-
-#define STROBJ_CHECK(so) \
-    do { \
-        if ((so) == NULL) { \
-            jvm_abort("NULL point\n"); \
-        } \
-        if ((so)->t != STRING_OBJECT) { \
-            jvm_abort("is not string object. %d\n", (so)->t); \
-        } \
-    } while (false)
-
-#define ARROBJ_CHECK(ao) \
-    do { \
-        if ((ao) == NULL) { \
-            jvm_abort("NULL point\n"); \
-        } \
-        if ((ao)->t != ARRAY_OBJECT) { \
-            jvm_abort("is not array object. %d\n", (ao)->t); \
-        } \
-    } while (false)
-
-#define CLSOBJ_CHECK(co) \
-    do { \
-        if ((co) == NULL) { \
-            jvm_abort("NULL point\n"); \
-        } \
-        if ((co)->t != CLASS_OBJECT) { \
-            jvm_abort("is not class object. %d\n", (co)->t); \
-        } \
-    } while (false)
+jint jarrobj_len(const struct jobject *ao);
+void* jarrobj_data(const struct jobject *ao);
 
 /*
  * 判断两个数组是否是同一类型的数组
@@ -122,33 +71,66 @@ struct jobject *jarrobj_create_multi(struct jclass *arr_class, size_t arr_dim, c
  */
 bool jarrobj_is_same_type(const struct jobject *one, const struct jobject *other);
 
-bool jarrobj_check_bounds(const struct jobject *o, jint index);
+bool jarrobj_check_bounds(const struct jobject *ao, jint index);
+
+void* jarrobj_index(struct jobject *o, jint index);
+#define jarrobj_set(T, arrobj, index, data) (*(T *)jarrobj_index(arrobj, index) = data)
+#define jarrobj_get(T, arrobj, index) (*(T *)jarrobj_index(arrobj, index))
 
 void jarrobj_copy(struct jobject *dst, jint dst_pos, const struct jobject *src, jint src_pos, jint len);
 
-void* jarrobj_index(struct jobject *ao, jint index);
+
+/*
+ * clone @src to @dest if @dest is not NULL,
+ * else clone @src and return new one.
+ */
+struct jobject* jobject_clone(const struct jobject *src, struct jobject *dest);
+
+void set_instance_field_value_by_id(const struct jobject *o, int id, const struct slot *value);
+void set_instance_field_value_by_nt(const struct jobject *o,
+                                    const char *name, const char *descriptor, const struct slot *value);
+
+const struct slot* get_instance_field_value_by_id(const struct jobject *o, int id);
+const struct slot* get_instance_field_value_by_nt(const struct jobject *o, const char *name, const char *descriptor);
+
+bool jobject_is_array(const struct jobject *o);
+bool jobject_is_jlstring(const struct jobject *o);
+bool jobject_is_jlclass(const struct jobject *o);
 
 void jobject_destroy(struct jobject *o);
 
-
 bool jobject_is_instance_of(const struct jobject *o, const struct jclass *c);
 
+const char* jobject_to_string(const struct jobject *o);
 
-const char* jobject_to_string(struct jobject *o);
+#define JOBJECT_CHECK_STROBJ(o) \
+    do { \
+        if ((o) == NULL) { \
+            jvm_abort("NULL point\n"); \
+        } \
+        if (!jobject_is_jlstring((const struct jobject *) (o))) { \
+            jvm_abort("%s\n", jobject_to_string((const struct jobject *) (o))); \
+        } \
+    } while (false)
 
-//void jobject_set_field_value(struct jobject *o, int id, const struct slot *v);
+#define JOBJECT_CHECK_ARROBJ(o) \
+    do { \
+        if ((o) == NULL) { \
+            jvm_abort("NULL point\n"); \
+        } \
+        if (!jobject_is_array(o)) { \
+            jvm_abort("%s\n", jobject_to_string((const struct jobject *) (o))); \
+        } \
+    } while (false)
 
-/*
- * set filed value by name and type
- */
-//void jobject_set_field_value_nt(struct jobject *o, const char *name, const char *descriptor, struct slot *v);
-
-//struct slot* jobject_instance_field_value(struct jobject *o, int id);
-
-/*
- * get the point of filed value by name and type
- */
-//struct slot* jobject_instance_field_value_nt(struct jobject *o, const char *name, const char *descriptor);
-
+#define JOBJECT_CHECK_CLSOBJ(o) \
+    do { \
+        if ((o) == NULL) { \
+            jvm_abort("NULL point\n"); \
+        } \
+        if (!jobject_is_jlclass((const struct jobject *) (o))) { \
+            jvm_abort("%s\n", jobject_to_string((const struct jobject *) (o))); \
+        } \
+    } while (false)
 
 #endif //JVM_JOBJECT_H

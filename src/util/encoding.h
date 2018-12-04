@@ -12,6 +12,6 @@ void* decode_mutf8(const uint8_t *src_bytes, size_t len, char dest[len + 1]);
 
 jchar* utf8_to_unicode(const const char *str);
 
-char* unicode_to_utf8(const const jchar *wstr);
+char* unicode_to_utf8(const const jchar arr[], size_t len);
 
 #endif //JVM_ENCODING_H

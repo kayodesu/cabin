@@ -13,7 +13,7 @@
 #include "../../classfile/classfile.h"
 #include "../../interpreter/stack_frame.h"
 
-struct jclassobj;
+struct jobject;
 struct stack_frame;
 struct jthread;
 
@@ -28,6 +28,7 @@ struct jclass {
     u2 major_version;
 
     // object of java/lang/Class of this class
+    // 通过此字段，每个Class结构体实例都与一个类对象关联。
     struct jobject *clsobj;
 
     char *pkg_name;
@@ -160,7 +161,7 @@ char* get_arr_class_name(const char *class_name);
  */
 struct jclass* jclass_component_class(const struct jclass *arr_cls);
 
-static inline bool is_array(const struct jclass *c)
+static inline bool jclass_is_array(const struct jclass *c)
 {
     return c != NULL && c->class_name[0] == '[';
 }
@@ -209,7 +210,7 @@ static inline bool is_one_dimension_ref_array(const struct jclass *c)
 static inline bool is_ref_array(const struct jclass *c) { return !is_primitive_array(c); }
 
 // 是否是多维数组
-static inline bool is_multi_array(const struct jclass *c) { return is_array(c) && !is_one_dimension_array(c); }
+static inline bool is_multi_array(const struct jclass *c) { return jclass_is_array(c) && !is_one_dimension_array(c); }
 
 static inline bool is_bool_array(const struct jclass *c) { return strcmp(c->class_name, "[Z") == 0; }
 

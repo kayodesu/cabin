@@ -11,10 +11,12 @@
 static void arraycopy(struct stack_frame *frame)
 {
     struct jobject *src = slot_getr(frame->local_vars);
-    ARROBJ_CHECK(src);
     jint src_pos = slot_geti(frame->local_vars + 1);
     struct jobject *dest = slot_getr(frame->local_vars + 2);
-    ARROBJ_CHECK(dest);
+#ifdef JVM_DEBUG
+    JOBJECT_CHECK_ARROBJ(src);
+    JOBJECT_CHECK_ARROBJ(dest);
+#endif
     jint dest_pos = slot_geti(frame->local_vars + 3);
     jint length = slot_geti(frame->local_vars + 4);
 
@@ -47,7 +49,7 @@ static void initProperties(struct stack_frame *frame)
             { "sun.stderr.encoding",  "UTF-8" },
     };
 
-    struct jobject *props = slot_getr(frame->local_vars);//frame->getLocalVar(0).getRef();
+    struct jobject *props = slot_getr(frame->local_vars);
 
     // todo init
     struct jmethod *set_property = jclass_lookup_instance_method(
@@ -61,8 +63,8 @@ static void initProperties(struct stack_frame *frame)
     for (int i = 0; i < sizeof(sys_props) / sizeof(*sys_props); i++) {
         struct slot args[] = {
                 rslot(props),
-                rslot(jstrobj_create(props->jclass->loader, sys_props[i][0])),
-                rslot(jstrobj_create(props->jclass->loader, sys_props[i][1]))
+                rslot((jref) jstrobj_create(sys_props[i][0])),
+                rslot((jref) jstrobj_create(sys_props[i][1]))
         };
 
         jthread_invoke_method_with_shim(frame->thread, set_property, args);

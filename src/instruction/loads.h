@@ -81,7 +81,9 @@ static void func_name(struct stack_frame *frame) \
 { \
     jint index = os_popi(frame->operand_stack); \
     struct jobject *ao = os_popr(frame->operand_stack); \
-    ARROBJ_CHECK(ao); \
+    if (ao == NULL) { \
+        jvm_abort("error NULL Point Exception\n"); /* todo */ \
+    } \
     \
     if (!check_type(ao->jclass)) { \
         jvm_abort("error\n"); \

@@ -2,22 +2,15 @@
  * Author: Jia Yang
  */
 
-#include "jarrobj.h"
-#include "mm/halloc.h"
+#include "jobject.h"
 
-static struct jarrobj* jarrobj_alloc()
-{
-    HEAP_ALLOC(struct jarrobj, o);
-    if (o == NULL) {
-        // todo 堆内存分配失败
-        jvm_abort("堆溢出");
-    }
-    return o;
-}
+#define ELE_SIZE(o) (*(jint *) ((o)->extra))
+#define ARR_LEN(o) (*(jint *) (((s1 *)((o)->extra)) + sizeof(jint)))
+#define DATA(o) (((s1 *)((o)->extra)) + 2 * sizeof(jint))
 
-struct jarrobj *jarrobj_create0(struct jclass *arr_class, jint arr_len)
+struct jobject *jarrobj_create(struct jclass *arr_class, jint arr_len)
 {
-    if (arr_class == NULL || !is_array(arr_class)) {
+    if (arr_class == NULL || !jclass_is_array(arr_class)) {
         // todo arr_class is NULL
         jvm_abort("error. is not array. %s\n", arr_class->class_name); // todo
     }
@@ -25,7 +18,7 @@ struct jarrobj *jarrobj_create0(struct jclass *arr_class, jint arr_len)
     // 判断数组单个元素的大小
     // 除了基本类型的数组外，其他都是引用类型的数组
     // 多维数组是数组的数组，也是引用类型的数组
-    size_t ele_size = sizeof(jref);
+    jint ele_size = sizeof(jref);
     char t = arr_class->class_name[1]; // jump '['
     if (t == 'Z') { ele_size = sizeof(jbool); }
     else if (t == 'B') { ele_size = sizeof(jbyte); }
@@ -36,82 +29,115 @@ struct jarrobj *jarrobj_create0(struct jclass *arr_class, jint arr_len)
     else if (t == 'J') { ele_size = sizeof(jlong); }
     else if (t == 'D') { ele_size = sizeof(jdouble); }
 
-    struct jarrobj *ao = jarrobj_alloc();
-    jobject_init(&(ao->obj), arr_class);
+    struct jobject *o = jobject_create(arr_class);
+    jint len = sizeof(jint) /* store ele_size */ + sizeof(jint) /* store arr_len */ + arr_len * ele_size /* data */;
+    o->extra = malloc(len);  // todo NULL
+    // java数组创建后要赋默认值，0, 0.0, false,'\0', NULL 之类的 todo
+    memset(o->extra, 0, len);
 
-    // todo java new 一个数组会自动初始化为0吗?????????!!!!!!!!!!!!!!!!!!
-    ao->data = calloc(arr_len, ele_size);  // todo NULL
-    ao->ele_size = ele_size;
-    ao->len = arr_len;
-    ao->t = ARRAY_OBJECT;
-
-    return ao;
+    ELE_SIZE(o) = ele_size;
+    ARR_LEN(o) = arr_len;
+    return o;
 }
 
-struct jarrobj *jarrobj_create_multi0(struct jclass *arr_class, size_t arr_dim, const size_t *arr_lens)
+struct jobject *jarrobj_create_multi(struct jclass *arr_class, size_t arr_dim, const size_t *arr_lens)
 {
     assert(arr_class != NULL);
     assert(arr_lens != NULL);
-    // todo 判断 arr_class 是不是 array
+    if (!jclass_is_array(arr_class)) {
+        jvm_abort("error. is not array. %s\n", arr_class->class_name); // todo
+    }
     /*
      * 多维数组是数组的数组
      * 先创建其第一维，第一维的每个元素也是一数组
      */
     size_t len = arr_lens[0];
-    struct jarrobj *ao = jarrobj_create0(arr_class, len);
+    struct jobject *o = jarrobj_create(arr_class, len);
     if (arr_dim == 1) {
-        return ao;
+        return o;
     }
 
     // todo
     struct jclass *ele_class = classloader_load_class(arr_class->loader, arr_class->class_name + 1); // jump '['
     for (size_t i = 0; i < len; i++) {
-        *(struct jarrobj **)jarrobj_index0(ao, i) = jarrobj_create_multi0(ele_class, arr_dim - 1, arr_lens + 1);
+        jarrobj_set(struct jobject *, o, i, jarrobj_create_multi(ele_class, arr_dim - 1, arr_lens + 1));
     }
 
-    return ao;
+    assert(o->extra != NULL);
+    return o;
 }
 
-bool jarrobj_is_same_type0(const struct jarrobj *one, const struct jarrobj *other)
+jint jarrobj_len(const struct jobject *o)
+{
+    assert(o != NULL);
+    assert(jobject_is_array(o));
+    assert(o->extra != NULL);
+    return ARR_LEN(o);
+}
+
+void* jarrobj_data(const struct jobject *o)
+{
+    assert(o != NULL);
+    assert(jobject_is_array(o));
+    assert(o->extra != NULL);
+    return DATA(o);
+}
+
+bool jarrobj_is_same_type(const struct jobject *one, const struct jobject *other)
 {
     assert(one != NULL);
+    assert(jobject_is_array(one));
+    assert(one->extra != NULL);
+
     assert(other != NULL);
-    return one->ele_size == other->ele_size;  // todo 类型怎么判断
+    assert(jobject_is_array(other));
+    assert(other->extra != NULL);
+
+    return ELE_SIZE(one) == ELE_SIZE(other);  // todo 类型怎么判断
 }
 
-bool jarrobj_check_bounds0(const struct jarrobj *ao, jint index)
+bool jarrobj_check_bounds(const struct jobject *o, jint index)
 {
-    assert(ao != NULL);
+    assert(o != NULL);
+    assert(jobject_is_array(o));
+    assert(o->extra != NULL);
 
-    bool b =  index >= 0 && index < ao->len;
+    bool b = index >= 0 && index < ARR_LEN(o);
     if (!b) {
-        printvm("array index out of bounds. index is %d, array length is %d\n", index, ao->len);
+        printvm("array index out of bounds. index is %d, array length is %d\n", index, ARR_LEN(o));
     }
     return b;
 }
 
-void* jarrobj_index0(struct jarrobj *ao, jint index)
+void* jarrobj_index(struct jobject *o, jint index)
 {
-    assert(ao != NULL);
+    assert(o != NULL);
+    assert(jobject_is_array(o));
+    assert(o->extra != NULL);
 
-    if (index < 0 || index >= ao->len) {
-        jvm_abort("len = %zd, index = %d\n", ao->len, index);
+    if (index < 0 || index >= ARR_LEN(o)) {
+        jvm_abort("len = %zd, index = %d\n", ARR_LEN(o), index);
         return NULL;
     }
 
-    return ao->data + ao->ele_size * index;
+    return DATA(o) + ELE_SIZE(o) * index;
 }
 
-void jarrobj_copy0(struct jarrobj *dst, jint dst_pos, const struct jarrobj *src, jint src_pos, jint len)
+void jarrobj_copy(struct jobject *dst, jint dst_pos, const struct jobject *src, jint src_pos, jint len)
 {
-    assert(dst != NULL);
     assert(src != NULL);
+    assert(jobject_is_array(src));
+    assert(src->extra != NULL);
+
+    assert(dst != NULL);
+    assert(jobject_is_array(dst));
+    assert(dst->extra != NULL);
 
     /*
      * 首先确保src和dst都是数组，然后检查数组类型。
      * 如果两者都是引用数组，则可以拷贝，否则两者必须是相同类型的基本类型数组
      */
-    if (!jarrobj_is_same_type0(src, dst)) {
+    if (!jarrobj_is_same_type(src, dst)) {
         // todo error  ArrayStoreException
         printvm("ArrayStoreException\n");
     }
@@ -119,32 +145,25 @@ void jarrobj_copy0(struct jarrobj *dst, jint dst_pos, const struct jarrobj *src,
     if (src_pos < 0
         || dst_pos < 0
         || len < 0
-        || src_pos + len > src->len
-        || dst_pos + len > dst->len) {
+        || src_pos + len > ARR_LEN(src)
+        || dst_pos + len > ARR_LEN(dst)) {
         // todo "java.lang.IndexOutOfBoundsException"
         jvm_abort("java.lang.IndexOutOfBoundsException\n");
     }
 
-    s1 *d = dst->data;
-    const s1 *s = src->data;
-    size_t ele_size = src->ele_size;
+    s1 *d = DATA(dst);
+    const s1 *s = DATA(src);
+    jint ele_size = ELE_SIZE(src);
     memcpy(d + dst_pos * ele_size, s + src_pos * ele_size, len * ele_size);
 }
 
-struct jarrobj* jarrobj_clone0(const struct jarrobj *src)
+void* jarrobj_copy_data(const struct jobject *o)
 {
-    assert(src != NULL);
+    assert(o != NULL);
+    assert(jobject_is_array(o));
+    assert(o->extra != NULL);
 
-    struct jarrobj *ao = jarrobj_alloc();
-    ao->obj.instance_fields_count = 0;
-    ao->obj.instance_fields_values = NULL;
-
-    ao->len = src->len;
-    ao->ele_size = src->ele_size;
-    // o->a.data todo
-    // extra todo
-
-    ao->obj.t = ARRAY_OBJECT;
-    ao->obj.jclass = src->obj.jclass;
-    return ao;
+    int data_len = 2 * sizeof(jint) + ELE_SIZE(o) * ARR_LEN(o);
+    void *copy = malloc(data_len); // todo NULL
+    return memcpy(copy, o->extra, data_len);
 }

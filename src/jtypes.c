@@ -14,8 +14,9 @@ const char* get_jtype_name(enum jtype t)
         "jlong", "jfloat", "jdouble", "jref", "placeholder", "not a tpe"
     };
 
-    if (t < 0 || t >= sizeof(names) / sizeof(*names)) {
-        printvm("访问越界, %d of %d\n", t, sizeof(names));
+    int len = sizeof(names) / sizeof(*names);
+    if (t < 0 || t >= len) {
+        printvm("access beyoud bounds, %d of %d\n", t, len); // todo
         return "unknown";
     }
 

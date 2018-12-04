@@ -6,7 +6,6 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include "classloader.h"
-#include "../util/util.h"
 #include "minizip/unzip.h"
 #include "../rtda/ma/jclass.h"
 #include "../rtda/ma/access.h"
@@ -15,11 +14,27 @@
 #include "../rtda/heap/jobject.h"
 
 struct classloader {
-    struct jclass *jclass_class; // java.lang.Class 的类
     struct hashmap *loaded_class_pool; // 保存 jclass *
-    struct hashmap *classobj_pool; // java.lang.Class 类的对象池，保存 jobject *
+//    struct hashmap *classobj_pool; // java.lang.Class 类的对象池，保存 jobject *
+
+    // 缓存一下常见类
+    struct jclass *jlclass; // java.lang.Class 的类
+    struct jclass *jlstring; // java.lang.String 的类
 };
 
+struct jclass* classloader_get_jlclass(struct classloader *loader)
+{
+    assert(loader != NULL);
+    assert(loader->jlclass != NULL);
+    return loader->jlclass;
+}
+
+struct jclass* classloader_get_jlstring(struct classloader *loader)
+{
+    assert(loader != NULL);
+    assert(loader->jlstring != NULL);
+    return loader->jlstring;
+}
 
 struct bytecode_content {
     s1 *bytecode;
@@ -151,7 +166,13 @@ static struct bytecode_content read_class_from_dir(const char *dir_path, const c
                 } else if (strcmp(suffix, ".class") == 0) {
                     // class_name 不带 .class 后缀，而 abspath 有 .class 后缀
                     *suffix = 0; // 去掉 abspath 的 .class 后缀
-                    if (strend(abspath, class_name)) {
+                    char *cls_name = strrchr(abspath, '/');
+                    if (cls_name == NULL) {
+                        cls_name = abspath; // 此类没有包名 todo
+                    } else {
+                        cls_name++; // jump '/'
+                    }
+                    if (strcmp(cls_name, class_name) == 0) {
                         *suffix = '.'; // 加回 abspath 的 .class 后缀
                         // 找到 class 文件了，读其内容。
                         FILE *f = fopen(abspath, "rb");
@@ -194,20 +215,20 @@ static struct bytecode_content read_class(const char *class_name)
    return read_class_from_dir(user_classpath, class_name);
 }
 
-static struct jobject* get_jclass_obj_from_pool(struct classloader *loader, const char *class_name)
-{
-    struct jobject *clsobj = hashmap_find(loader->classobj_pool, class_name);
-//    HASH_FIND_STR(loader->classobj_pool, class_name, clsobj);
-    if (clsobj != NULL) {
-        printvm("find out class obj: %s\n", class_name);  /////////////////////////////////////
-        return clsobj;
-    }
-
-    clsobj = jclsobj_create(loader->jclass_class, class_name);
-    hashmap_put(loader->classobj_pool, clsobj->c.class_name, clsobj);
-//    HASH_ADD_KEYPTR(hh, loader->classobj_pool, class_name, strlen(class_name), clsobj);
-    return clsobj;
-}
+//static struct jobject* get_jclass_obj_from_pool(struct classloader *loader, const char *class_name)
+//{
+//    struct jobject *clsobj = hashmap_find(loader->classobj_pool, class_name);
+////    HASH_FIND_STR(loader->classobj_pool, class_name, clsobj);
+//    if (clsobj != NULL) {
+//        printvm("find out class obj: %s\n", class_name);  /////////////////////////////////////
+//        return clsobj;
+//    }
+//
+//    clsobj = jclsobj_create(loader->jlclass, class_name);
+//    hashmap_put(loader->classobj_pool, clsobj->c.class_name, clsobj);
+////    HASH_ADD_KEYPTR(hh, loader->classobj_pool, class_name, strlen(class_name), clsobj);
+//    return clsobj;
+//}
 
 //static void set_clsobj(struct classloader *loader, struct jclass *c)
 //{
@@ -215,19 +236,22 @@ static struct jobject* get_jclass_obj_from_pool(struct classloader *loader, cons
 //    c->clsobj = get_jclass_obj_from_pool(loader, c->class_name);
 //}
 
-struct classloader* classloader_create()
+struct classloader* classloader_create(bool is_bootstrap_loader)
 {
     VM_MALLOC(struct classloader, loader);
+    if (is_bootstrap_loader) {
+        bootstrap_loader = loader;
+    }
 
     loader->loaded_class_pool = hashmap_create_str_key();
-    loader->classobj_pool = hashmap_create_str_key();
+//    loader->classobj_pool = hashmap_create_str_key();
 
     /*
      * 先加载java.lang.Class类，
      * 这又会触发java.lang.Object等类和接口的加载。
      */
-    loader->jclass_class = NULL; // 不要胡乱删除这句。因为classloader_load_class中要判断loader->jclass_class是否为NULL。
-    loader->jclass_class = classloader_load_class(loader, "java/lang/Class");
+    loader->jlclass = NULL; // 不要胡乱删除这句。因为classloader_load_class中要判断loader->jclass_class是否为NULL。
+    loader->jlclass = classloader_load_class(loader, "java/lang/Class");
 
     // 加载基本类型（int, float, etc.）的 class
     for (int i = 0; i < PRIMITIVE_TYPE_COUNT; i++) {
@@ -248,8 +272,11 @@ struct classloader* classloader_create()
     hashmap_values(loader->loaded_class_pool, values);
     for (int i = 0; i < size; i++) {
         struct jclass *c = values[i];
-        c->clsobj = get_jclass_obj_from_pool(loader, c->class_name);
+        c->clsobj = jclsobj_create(c);//get_jclass_obj_from_pool(loader, c->class_name);
     }
+
+    // 缓存一下常见类
+    loader->jlstring = classloader_load_class(loader, "java/lang/String");
 
     return loader;
 }
@@ -258,7 +285,7 @@ static struct jclass* loading(struct classloader *loader, const char *class_name
 {
     struct bytecode_content content = read_class(class_name);
     if (IS_INVALID(content)) {
-        jvm_abort("class not find: %s\n", class_name);
+        jvm_abort("class not find: [%s]\n", class_name);
     }
 
     return jclass_create_by_classfile(loader, classfile_create(content.bytecode, content.len));
@@ -333,6 +360,9 @@ static struct jclass* load_non_arr_class(struct classloader *loader, const char 
 
 struct jclass* classloader_load_class(struct classloader *loader, const char *class_name)
 {
+    assert(loader != NULL);
+    assert(class_name != NULL);
+
     struct jclass *c = hashmap_find(loader->loaded_class_pool, class_name);
     if (c != NULL) {
         assert(strcmp(c->class_name, class_name) == 0);
@@ -349,13 +379,10 @@ struct jclass* classloader_load_class(struct classloader *loader, const char *cl
         jvm_abort("error"); // todo
     }
 
-//    if (verbose)
-//        printvm("load class %s\n", c->class_name);
-
     assert(strcmp(c->class_name, class_name) == 0);
 
-    if (loader->jclass_class != NULL) {
-        c->clsobj = get_jclass_obj_from_pool(loader, class_name);
+    if (loader->jlclass != NULL) {
+        c->clsobj = jclsobj_create(c);//get_jclass_obj_from_pool(loader, class_name);
     }
 
 //    printvm("put %s\n", c->class_name);
@@ -370,11 +397,11 @@ void classloader_destroy(struct classloader *loader)
     if (loader->loaded_class_pool != NULL) {
         hashmap_destroy(loader->loaded_class_pool);
     }
-    if (loader->classobj_pool != NULL) {
-        hashmap_destroy(loader->classobj_pool);
-    }
-    if (loader->jclass_class != NULL) {
-        jclass_destroy(loader->jclass_class);
+//    if (loader->classobj_pool != NULL) {
+//        hashmap_destroy(loader->classobj_pool);
+//    }
+    if (loader->jlclass != NULL) {
+        jclass_destroy(loader->jlclass);
     }
 
     free(loader);

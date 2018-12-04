@@ -13,7 +13,7 @@ static void parse_descriptor(struct jmethod *method)
 {
     assert(method != NULL);
 
-    struct jobject **parameter_types = malloc(sizeof(struct jobject **) * method->arg_slot_count);
+    struct jobject **parameter_types = malloc(sizeof(struct jclsobj **) * method->arg_slot_count);
     int parameter_types_count = 0;
     struct classloader *loader = method->jclass->loader;
 
@@ -58,9 +58,10 @@ static void parse_descriptor(struct jmethod *method)
         }
     }
 
-    method->parameter_types = jarrobj_create(classloader_load_class(loader, "[Ljava/lang/Class;"), parameter_types_count);
+    method->parameter_types
+            = jarrobj_create(classloader_load_class(loader, "[Ljava/lang/Class;"), parameter_types_count);
     for (int i = 0; i < parameter_types_count; i++) {
-        *(struct jobject **)jarrobj_index(method->parameter_types, i) = parameter_types[i];
+        jarrobj_set(struct jobject *, method->parameter_types, i, parameter_types[i]);
     }
 
     // create return_type
@@ -105,9 +106,10 @@ struct jobject* jmethod_get_exception_types(struct jmethod *method)
             }
         }
 
-        method->exception_types = jarrobj_create(classloader_load_class(method->jclass->loader, "[Ljava/lang/Class;"), count);
+        method->exception_types
+                = jarrobj_create(classloader_load_class(method->jclass->loader, "[Ljava/lang/Class;"), count);
         for (int i = 0; i < count; i++) {
-            *(struct jobject **)jarrobj_index(method->exception_types, i) = exception_types[i];
+            jarrobj_set(struct jobject *, method->exception_types, i, exception_types[i]);
         }
     }
 
@@ -227,7 +229,8 @@ struct jmethod* jmethod_create(const struct jclass *c, const struct member_info 
 
     // parameter_types, return_type, exception_types
     // 先不解析，待需要时再解析，以节省时间。
-    method->parameter_types = method->return_type = method->exception_types = NULL;
+    method->parameter_types = method->exception_types = NULL;
+    method->return_type = NULL;
 
     cal_arg_slot_count(method);
 

@@ -35,6 +35,9 @@ extern char extension_classpath[];
 // 用户类路径（user classpath）我们自己实现的类，以及第三方类库位于用户类路径
 extern char *user_classpath; // todo
 
+// todo 说明
+extern struct classloader *bootstrap_loader;
+
 #define VM_MALLOC_EXT(type, count, extra_len, var_name) type *(var_name) = malloc(sizeof(type) * (count) + (extra_len))
 #define VM_MALLOCS(type, count, var_name) VM_MALLOC_EXT(type, count, 0, var_name)
 #define VM_MALLOC(type, var_name) VM_MALLOCS(type, 1, var_name)

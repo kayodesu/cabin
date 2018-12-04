@@ -2,14 +2,11 @@
  * Author: Jia Yang
  */
 
-#include <limits.h>
-#include <assert.h>
 #include <stdlib.h>
 #include "jfield.h"
 #include "rtcp.h"
 #include "jclass.h"
 #include "../../util/util.h"
-#include "../../classfile/attribute.h"
 #include "../heap/jobject.h"
 
 

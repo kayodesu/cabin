@@ -12,14 +12,12 @@
 static void intern(struct stack_frame *frame)
 {
     // todo
-    jref so = slot_getr(frame->local_vars); // frame->local_vars[0]
-    STROBJ_CHECK(so);
+    jref so = slot_getr(frame->local_vars);
+#ifdef JVM_DEBUG
+    JOBJECT_CHECK_STROBJ(so);
+#endif
     put_so_to_pool(so);
     os_pushr(frame->operand_stack, so);
-
-//    auto thisStr = dynamic_cast<JStringObj *>(frame->getLocalVar(0).getRef());
-//    JStringObj *inPoolStr = putStrToPool(frame->method->jclass->loader, thisStr->value());
-//    frame->operandStack.push(inPoolStr);
 }
 
 void java_lang_String_registerNatives()

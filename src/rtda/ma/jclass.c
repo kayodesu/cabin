@@ -4,15 +4,9 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <mem.h>
 #include "jclass.h"
 #include "access.h"
-#include "../../jvm.h"
 #include "jfield.h"
-#include "jmethod.h"
-#include "../../classfile/attribute.h"
-#include "jmethod.h"
-#include "access.h"
 
 // 计算实例字段的个数，同时给它们编号
 static void calc_instance_field_id(struct jclass *c)
@@ -686,7 +680,7 @@ char* get_arr_class_name(const char *class_name)
 struct jclass* jclass_component_class(const struct jclass *arr_cls)
 {
     assert(arr_cls != NULL);
-    if (!is_array(arr_cls)) {
+    if (!jclass_is_array(arr_cls)) {
         return NULL;
     }
 

@@ -131,10 +131,11 @@ static void getIntVolatile(struct stack_frame *frame)
     jlong offset = slot_getl(frame->local_vars + 2);
 
     jint value;
-    if (is_array(o->jclass)) {
-        value = *((jint *)jarrobj_index(o, offset));
+    if (jclass_is_array(o->jclass)) {
+//        value = *((jint *)jarrobj_index(o, offset));
+        value = jarrobj_get(jint, o, offset);  // todo
     } else {
-        value = slot_geti(get_instance_field_value_by_id(o, offset));
+        value = slot_geti(get_instance_field_value_by_id(o, offset));  // todo
     }
     os_pushi(frame->operand_stack, value);
 }
