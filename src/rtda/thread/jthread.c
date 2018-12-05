@@ -147,13 +147,13 @@ void jthread_invoke_method(struct jthread *thread, struct jmethod *method, const
     jthread_push_frame(thread, new_frame);
 
     if (method->arg_slot_count > 0 && args == NULL) {
-        jvm_abort("do not find args\n"); // todo
+        jvm_abort("do not find args, %d\n", method->arg_slot_count); // todo
     }
 
     // 准备参数
     for (int i = 0; i < method->arg_slot_count; i++) {
         // 传递参数到被调用的函数。
-        sf_set_local_var(new_frame, i, &args[i]);
+        sf_set_local_var(new_frame, i, args + i);
     }
 
 //    // 准备参数

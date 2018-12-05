@@ -12,6 +12,7 @@
 #include "../../loader/classloader.h"
 #include "../../classfile/classfile.h"
 #include "../../interpreter/stack_frame.h"
+#include "../primitive_types.h"
 
 struct jobject;
 struct stack_frame;
@@ -97,6 +98,8 @@ struct jclass* jclass_create_primitive_class(struct classloader *loader, const c
 
 struct jclass* jclass_create_arr_class(struct classloader *loader, const char *class_name);
 
+void classloader_put_to_pool(struct classloader *loader, const char *class_name, struct jclass *c);
+
 void jclass_destroy(struct jclass *c);
 
 /*
@@ -122,6 +125,9 @@ struct jfield* jclass_lookup_field(struct jclass *c, const char *name, const cha
 struct jfield* jclass_lookup_static_field(struct jclass *c, const char *name, const char *descriptor);
 struct jfield* jclass_lookup_instance_field(struct jclass *c, const char *name, const char *descriptor);
 
+/*
+ * 有可能返回NULL todo
+ */
 struct jmethod* jclass_get_method(struct jclass *c, const char *name, const char *descriptor);
 struct jmethod** jclass_get_methods(struct jclass *c, const char *name, bool public_only, int *count);
 
@@ -174,6 +180,12 @@ static inline bool is_string(const struct jclass *c)
 static inline bool is_class(const struct jclass *c)
 {
     return c != NULL && strcmp(c->class_name, "java/lang/Class") == 0;  // todo 对不对
+}
+
+static inline bool jclass_is_primitive(const struct jclass *c)
+{
+    assert(c != NULL);
+    return pt_is_primitive_class_name(c->class_name);
 }
 
 /*

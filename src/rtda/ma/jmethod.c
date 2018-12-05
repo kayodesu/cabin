@@ -5,6 +5,7 @@
 #include "jmethod.h"
 #include "access.h"
 #include "../heap/jobject.h"
+#include "../primitive_types.h"
 
 /*
  * parse method descriptor and create parameter_types and return_type of the method
@@ -38,7 +39,7 @@ static void parse_descriptor(struct jmethod *method)
         } else if (*b == '[') { // array reference, 描述符形如 [B 或 [[java/lang/String; 的形式
             char *t = b;
             while (*(++t) == '[');
-            if (!is_primitive_type_descriptor(*t)) {
+            if (!pt_is_primitive_descriptor(*t)) {
                 t = strchr(t, ';');
                 if (t == NULL) {
                     jvm_abort("error. %s\n", method->descriptor);
@@ -50,8 +51,8 @@ static void parse_descriptor(struct jmethod *method)
             parameter_types[parameter_types_count++] = classloader_load_class(loader, b)->clsobj;
             *t = k; // recover
             b = t;
-        } else if (is_primitive_type_descriptor(*b)) {
-            const char *class_name = primitive_type_get_primitive_name_by_descriptor(*b);
+        } else if (pt_is_primitive_descriptor(*b)) {
+            const char *class_name = pt_get_class_name_by_descriptor(*b);
             parameter_types[parameter_types_count++] = classloader_load_class(loader, class_name)->clsobj;
         } else {
             jvm_abort("error %s\n", method->descriptor);
@@ -66,8 +67,8 @@ static void parse_descriptor(struct jmethod *method)
 
     // create return_type
     const char *class_name = ++e;
-    if (is_primitive_type_descriptor(*e)) {
-        class_name = primitive_type_get_primitive_name_by_descriptor(*e);
+    if (pt_is_primitive_descriptor(*e)) {
+        class_name = pt_get_class_name_by_descriptor(*e);
     }
     method->return_type = classloader_load_class(loader, class_name)->clsobj;
 }

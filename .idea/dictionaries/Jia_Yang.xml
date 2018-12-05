@@ -27,6 +27,7 @@
       <w>jlrf</w>
       <w>jlrm</w>
       <w>jlstring</w>
+      <w>jpriobj</w>
       <w>jstrobj</w>
       <w>jvms</w>
       <w>llen</w>
@@ -55,6 +56,7 @@
       <w>strobj</w>
       <w>strpool</w>
       <w>treturn</w>
+      <w>unbox</w>
       <w>valist</w>
       <w>wcscpy</w>
       <w>wstr</w>

@@ -93,7 +93,13 @@ void set_instance_field_value_by_nt(const struct jobject *o,
 const struct slot* get_instance_field_value_by_id(const struct jobject *o, int id);
 const struct slot* get_instance_field_value_by_nt(const struct jobject *o, const char *name, const char *descriptor);
 
+/*
+ * todo 说明
+ */
+struct slot jpriobj_unbox(const struct jobject *po);
+
 bool jobject_is_array(const struct jobject *o);
+bool jobject_is_primitive(const struct jobject *o);
 bool jobject_is_jlstring(const struct jobject *o);
 bool jobject_is_jlclass(const struct jobject *o);
 

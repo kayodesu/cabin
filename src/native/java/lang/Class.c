@@ -8,6 +8,7 @@
 #include "../../../rtda/ma/jfield.h"
 #include "../../../rtda/heap/strpool.h"
 #include "../../../util/util.h"
+#include "../../../rtda/primitive_types.h"
 
 // native ClassLoader getClassLoader0();
 static void getClassLoader0(struct stack_frame *frame)
@@ -327,7 +328,7 @@ static void isPrimitive(struct stack_frame *frame)
 #ifdef JVM_DEBUG
     JOBJECT_CHECK_CLSOBJ(this_cls_obj);
 #endif
-    bool b = is_primitive_by_class_name(jclsobj_entity_class(this_cls_obj)->class_name);
+    bool b = jclass_is_primitive(jclsobj_entity_class(this_cls_obj));
     os_pushi(frame->operand_stack, b ? 1 : 0);
 }
 

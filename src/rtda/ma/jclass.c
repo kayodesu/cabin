@@ -7,6 +7,7 @@
 #include "jclass.h"
 #include "access.h"
 #include "jfield.h"
+#include "../primitive_types.h"
 
 // 计算实例字段的个数，同时给它们编号
 static void calc_instance_field_id(struct jclass *c)
@@ -470,6 +471,7 @@ struct jmethod* jclass_get_method(struct jclass *c, const char *name, const char
             return c->methods[i];
         }
     }
+
     return NULL;
 }
 
@@ -499,7 +501,11 @@ struct jmethod* jclass_get_constructor(struct jclass *c, const char *descriptor)
 
 struct jmethod** jclass_get_constructors(struct jclass *c, bool public_only, int *count)
 {
-    return jclass_get_methods(c, "<init>", public_only, count);
+    struct jmethod **constructors = jclass_get_methods(c, "<init>", public_only, count);
+    if (*count < 1) {
+        jvm_abort("至少有一个constructor\n");
+    }
+    return constructors;
 }
 
 struct jmethod* jclass_lookup_method(struct jclass *c, const char *name, const char *descriptor)
@@ -643,7 +649,7 @@ char* get_arr_class_name(const char *class_name)
     }
 
     // 基本类型
-    const char *arr_cls_name = primitive_type_get_array_class_name_by_class_name(class_name);
+    const char *arr_cls_name = pt_get_array_class_name_by_class_name(class_name);
     if (arr_cls_name != NULL) {
         strcpy(array_class_name, arr_cls_name);
         return array_class_name;

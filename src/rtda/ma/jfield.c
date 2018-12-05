@@ -8,6 +8,7 @@
 #include "jclass.h"
 #include "../../util/util.h"
 #include "../heap/jobject.h"
+#include "../primitive_types.h"
 
 
 struct jfield* jfield_create(struct jclass *c, const struct member_info *info)
@@ -105,7 +106,7 @@ struct jobject* jfield_get_type(struct jfield *field)
         type_name[len - 2] = 0; // set last char(';') is 0
         field->type = classloader_load_class(field->jclass->loader, type_name)->clsobj;
     } else { // 变量类型为基本类型
-        const char *type_name = primitive_type_get_primitive_name_by_descriptor(*(field->descriptor));
+        const char *type_name = pt_get_class_name_by_descriptor(*(field->descriptor));
         if (type_name != NULL) {
             field->type = classloader_load_class(field->jclass->loader, type_name)->clsobj;
         }

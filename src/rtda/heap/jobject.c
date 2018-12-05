@@ -66,6 +66,17 @@ bool jobject_is_array(const struct jobject *o)
     return jclass_is_array(o->jclass);
 }
 
+bool jobject_is_primitive(const struct jobject *o)
+{
+    assert(o != NULL);
+    if (!jclass_is_primitive(o->jclass)) {
+        return false;
+    }
+
+    assert(strcmp(o->jclass->class_name, "void") != 0); // 没有 void object
+    return true;
+}
+
 bool jobject_is_jlstring(const struct jobject *o)
 {
     assert(o != NULL);
@@ -115,7 +126,7 @@ const struct slot* get_instance_field_value_by_nt(const struct jobject *o, const
 
     struct jfield *f = jclass_lookup_field(o->jclass, name, descriptor);
     if (f == NULL) {
-        jvm_abort("error\n"); // todo
+        jvm_abort("error, %s, %s\n", name, descriptor); // todo
     }
 
     return get_instance_field_value_by_id(o, f->id);
