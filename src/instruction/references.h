@@ -213,7 +213,7 @@ static void athrow(struct stack_frame *frame)
     // 遍历虚拟机栈找到可以处理此异常的方法
     while (!jthread_is_stack_empty(curr_thread)) {
         struct stack_frame *top = jthread_top_frame(curr_thread);
-        size_t pc = bcr_get_pc(top->reader) - 1; // todo why -1 ???
+        size_t pc = bcr_get_pc(top->reader) - 1; // todo why -1 ??? 减去opcode的长度
         int handler_pc = jmethod_find_exception_handler(top->method, exception->jclass, pc);
         if (handler_pc >= 0) {  // todo 可以等于0吗
             /*

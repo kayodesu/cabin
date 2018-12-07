@@ -63,10 +63,12 @@ void java_lang_Object_registerNatives();
 void java_lang_String_registerNatives();
 void java_lang_Throwable_registerNatives();
 void java_lang_Thread_registerNatives();
+void java_lang_ClassLoader_registerNatives();
 
 void java_io_FileDescriptor_registerNatives();
 void java_io_FileInputStream_registerNatives();
 void java_io_FileOutputStream_registerNatives();
+void java_io_WinNTFileSystem_registerNatives();
 
 void sun_misc_VM_registerNatives();
 void sun_misc_Unsafe_registerNatives();
@@ -77,6 +79,8 @@ void sun_reflect_NativeMethodAccessorImpl_registerNatives();
 void sun_reflect_ConstantPool_registerNatives();
 
 void java_security_AccessController_registerNatives();
+
+void java_util_concurrent_atomic_AtomicLong_registerNatives();
 
 void register_all_native_methods()
 {
@@ -90,10 +94,12 @@ void register_all_native_methods()
     java_lang_String_registerNatives();
     java_lang_Throwable_registerNatives();
     java_lang_Thread_registerNatives();
+    java_lang_ClassLoader_registerNatives();
 
     java_io_FileDescriptor_registerNatives();
     java_io_FileInputStream_registerNatives();
     java_io_FileOutputStream_registerNatives();
+    java_io_WinNTFileSystem_registerNatives();
 
     sun_misc_VM_registerNatives();
     sun_misc_Unsafe_registerNatives();
@@ -104,4 +110,6 @@ void register_all_native_methods()
     sun_reflect_ConstantPool_registerNatives();
 
     java_security_AccessController_registerNatives();
+
+    java_util_concurrent_atomic_AtomicLong_registerNatives();
 }

@@ -35,7 +35,7 @@ typedef int32_t  jint;
 typedef int64_t  jlong;
 typedef float   jfloat;
 typedef double  jdouble;
-typedef struct jobject* jref; // JVM中的引用类型，只能指向一个jobject对象。
+typedef struct  jobject* jref; // JVM中的引用类型，只能指向一个jobject对象。
 
 // 各类型的代码
 enum jtype {

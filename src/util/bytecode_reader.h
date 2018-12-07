@@ -27,7 +27,7 @@ bool bcr_skip(struct bytecode_reader *reader, int offset);
 /*
  * todo 函数干什么用的
  */
-bool bcr_skip_padding(struct bytecode_reader *reader);
+void bcr_align4(struct bytecode_reader *reader);
 
 void bcr_read_bytes(struct bytecode_reader *reader, u1 *buf, size_t len);
 

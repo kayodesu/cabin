@@ -35,7 +35,7 @@ static void fillInStackTrace(struct stack_frame *frame)
             strcpy(eles[i].file_name, frames[i]->method->jclass->source_file_name);
             strcpy(eles[i].class_name, frames[i]->method->jclass->class_name);
             strcpy(eles[i].method_name, frames[i]->method->name);
-            eles[i].line_number = jmethod_get_line_number(frames[i]->method, bcr_get_pc(frames[i]->reader) - 1); // todo why 减1？
+            eles[i].line_number = jmethod_get_line_number(frames[i]->method, bcr_get_pc(frames[i]->reader) - 1); // todo why 减1？ 减去opcode的长度
         }
 
         free(frames);

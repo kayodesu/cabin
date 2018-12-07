@@ -31,23 +31,24 @@ static void ret(struct stack_frame *frame)
 static void tableswitch(struct stack_frame *frame)
 {
     struct bytecode_reader *reader = frame->reader;
-    bcr_skip_padding(reader);//reader->skipPadding();
+    size_t pc = bcr_get_pc(reader) - 1; // 减去opcode的长度
+    bcr_align4(reader);
 
     // 默认情况下执行跳转所需字节码的偏移量
     // 对应于 switch 中的 default 分支。
-    s4 default_offset = bcr_reads4(reader);//reader->reads4();
+    s4 default_offset = bcr_reads4(reader);
 
     // low 和 height 标识了 case 的取值范围。
-    s4 low = bcr_reads4(reader);//reader->reads4();
-    s4 height = bcr_reads4(reader);//reader->reads4();
+    s4 low = bcr_reads4(reader);
+    s4 height = bcr_reads4(reader);
 
     // 跳转偏移量表，对应于各个 case 的情况
     s4 jump_offset_count = height - low + 1;
     s4 jump_offsets[jump_offset_count];
-    bcr_reads4s(reader, jump_offset_count, jump_offsets);// reader->reads4s(jumpOffsetCount, jumpOffsets);
+    bcr_reads4s(reader, jump_offset_count, jump_offsets);
 
     // 弹出要判断的值
-    jint index = os_popi(frame->operand_stack);//frame->operandStack.popInt();
+    jint index = os_popi(frame->operand_stack);
     s4 offset;
     if (index < low || index > height) {
         offset = default_offset; // 没在 case 标识的范围内，跳转到 default 分支。
@@ -55,7 +56,11 @@ static void tableswitch(struct stack_frame *frame)
         offset = jump_offsets[index - low]; // 找到对应的case了
     }
 
-    bcr_skip(reader, offset); //reader->skip(offset); // todo 要不要减去本条指令自身的长度
+    // The target address that can be calculated from each jump table
+    // offset, as well as the one that can be calculated from default,
+    // must be the address of an opcode of an instruction within the method
+    // that contains this tableswitch instruction.
+    bcr_set_pc(reader, pc + offset);
 }
 
 /*
@@ -64,21 +69,23 @@ static void tableswitch(struct stack_frame *frame)
 static void lookupswitch(struct stack_frame *frame)
 {
     struct bytecode_reader *reader = frame->reader;
-    bcr_skip_padding(reader);//reader->skipPadding();
+    size_t pc = bcr_get_pc(reader) - 1; // 减去opcode的长度
+    bcr_align4(reader);
 
     // 默认情况下执行跳转所需字节码的偏移量
     // 对应于 switch 中的 default 分支。
-    s4 default_offset = bcr_reads4(reader);//reader->reads4();
+    s4 default_offset = bcr_reads4(reader);
 
     // case的个数
-    s4 npairs = bcr_reads4(reader);//reader->reads4();
+    s4 npairs = bcr_reads4(reader);
+    assert(npairs >= 0); // The npairs must be greater than or equal to 0.
 
     // match_offsets 有点像 Map，它的 key 是 case 值，value 是跳转偏移量。
     s4 match_offsets[npairs * 2];
-    bcr_reads4s(reader, npairs * 2, match_offsets);//reader->reads4s(npairs * 2, matchOffsets);
+    bcr_reads4s(reader, npairs * 2, match_offsets);
 
     // 弹出要判断的值
-    jint key = os_popi(frame->operand_stack);//frame->operandStack.popInt();
+    jint key = os_popi(frame->operand_stack);
     s4 offset = default_offset;
     for (int i = 0; i < npairs * 2; i += 2) {
         if (match_offsets[i] == key) { // 找到 case
@@ -87,7 +94,9 @@ static void lookupswitch(struct stack_frame *frame)
         }
     }
 
-    bcr_skip(reader, offset); // todo 要不要减去本条指令自身的长度
+    // The target address is calculated by adding the corresponding offset
+    // to the address of the opcode of this lookupswitch instruction.
+    bcr_set_pc(reader, pc + offset);
 }
 
 

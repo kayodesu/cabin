@@ -79,7 +79,8 @@ static const struct item* get_item(const struct hashmap *map, const void *key)
     }
 
     for (struct item *curr = map->table[index]; curr != NULL; curr = curr->next) {
-        if (map->cmp(curr->key, key) == 0) { // existing
+        // 先判断 hash 提速，如 key's hash 不等，则 key 肯定不相等
+        if (curr->hash == hash && map->cmp(curr->key, key) == 0) { // existing
             return curr;
         }
     }
@@ -114,7 +115,8 @@ void hashmap_put(struct hashmap *map, const void *key, void *value)
     }
 
     for (struct item *curr = map->table[index]; curr != NULL; curr = curr->next) {
-        if (map->cmp(curr->key, key) == 0) { // existing
+        // 先判断 hash 提速，如 key's hash 不等，则 key 肯定不相等
+        if (curr->hash == hash && map->cmp(curr->key, key) == 0) { // existing
             return;
         }
     }

@@ -11,8 +11,8 @@ struct stack_frame;
 void register_all_native_methods();
 
 //typedef void (* native_method_f)(struct stack_frame *);
-
 static void empty_method(struct stack_frame *frame) { }
+static void registerNatives(struct stack_frame *frame) { }
 
 /*
  * 注册本地方法

@@ -6,6 +6,7 @@
 #include "jvm.h"
 #include "rtda/ma/jclass.h"
 #include "rtda/heap/jobject.h"
+#include "util/util.h"
 
 /*
  * Author: Jia Yang

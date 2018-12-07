@@ -7,6 +7,28 @@
 #include "../../../interpreter/stack_frame.h"
 #include "../../../rtda/heap/jobject.h"
 
+/**
+ * Maps a library name into a platform-specific string representing a native library.
+ *
+ * @param      libname the name of the library.
+ * @return     a platform-dependent native library name.
+ * @exception  NullPointerException if <code>libname</code> is
+ *             <code>null</code>
+ * @see        java.lang.System#loadLibrary(java.lang.String)
+ * @see        java.lang.ClassLoader#findLibrary(java.lang.String)
+ * @since      1.2
+ */
+// public static native String mapLibraryName(String libname);
+static void mapLibraryName(struct stack_frame *frame)
+{
+    jref libname = slot_getr(frame->local_vars + 1);
+    if (libname == NULL) {
+        jvm_abort("NullPointerException");// todo
+    }
+    JOBJECT_CHECK_STROBJ(libname);
+    jvm_abort("%s\n", jstrobj_value(libname));
+}
+
 // public static native void arraycopy(Object src, int srcPos, Object dest, int destPos, int length)
 static void arraycopy(struct stack_frame *frame)
 {
@@ -75,21 +97,24 @@ static void initProperties(struct stack_frame *frame)
 }
 
 // private static native void setIn0(InputStream in);
-static void setIn0(struct stack_frame *frame) {
+static void setIn0(struct stack_frame *frame)
+{
     jref in = slot_getr(frame->local_vars);
     struct slot s = rslot(in);
     set_static_field_value_by_nt(frame->method->jclass, "in", "Ljava/io/InputStream;", &s);
 }
 
 // private static native void setOut0(PrintStream out);
-static void setOut0(struct stack_frame *frame) {
+static void setOut0(struct stack_frame *frame)
+{
     jref out = slot_getr(frame->local_vars);
     struct slot s = rslot(out);
     set_static_field_value_by_nt(frame->method->jclass, "out", "Ljava/io/PrintStream;", &s);
 }
 
 // private static native void setErr0(PrintStream err);
-static void setErr0(struct stack_frame *frame) {
+static void setErr0(struct stack_frame *frame)
+{
     jref err = slot_getr(frame->local_vars);
     struct slot s = rslot(err);
     set_static_field_value_by_nt(frame->method->jclass, "err", "Ljava/io/PrintStream;", &s);
@@ -105,7 +130,8 @@ static void setErr0(struct stack_frame *frame) {
  *
  * public static native long nanoTime();
  */
-static void nanoTime(struct stack_frame *frame) {
+static void nanoTime(struct stack_frame *frame)
+{
     jvm_abort("error\n");
     // todo
     /*
@@ -118,14 +144,19 @@ static void nanoTime(struct stack_frame *frame) {
 
 void java_lang_System_registerNatives()
 {
-    register_native_method("java/lang/System", "registerNatives", "()V", empty_method);
-    register_native_method("java/lang/System", "arraycopy", "(Ljava/lang/Object;ILjava/lang/Object;II)V", arraycopy);
-    register_native_method("java/lang/System", "initProperties",
-                         "(Ljava/util/Properties;)Ljava/util/Properties;", initProperties);
+#define R(method, descriptor) register_native_method("java/lang/System", #method, descriptor, method)
+    
+    R(registerNatives, "()V");
 
-    register_native_method("java/lang/System", "setIn0", "(Ljava/io/InputStream;)V", setIn0);
-    register_native_method("java/lang/System", "setOut0", "(Ljava/io/PrintStream;)V", setOut0);
-    register_native_method("java/lang/System", "setErr0", "(Ljava/io/PrintStream;)V", setErr0);
+    R(mapLibraryName, "(Ljava/lang/String;)Ljava/lang/String;");
+    R(arraycopy, "(Ljava/lang/Object;ILjava/lang/Object;II)V");
+    R(initProperties, "(Ljava/util/Properties;)Ljava/util/Properties;");
 
-    register_native_method("java/lang/System", "nanoTime", "()J", nanoTime);
+    R(setIn0, "(Ljava/io/InputStream;)V");
+    R(setOut0, "(Ljava/io/PrintStream;)V");
+    R(setErr0, "(Ljava/io/PrintStream;)V");
+
+    R(nanoTime, "()J");
+
+#undef R
 }

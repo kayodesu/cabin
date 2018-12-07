@@ -5,6 +5,7 @@
 #include "jvm.h"
 #include "native/registry.h"
 #include "../test/test.h"
+#include "util/bigendian.h"
 
 static char main_class[FILENAME_MAX] = { 0 };
 

@@ -3,10 +3,12 @@
     <words>
       <w>allocs</w>
       <w>arrobj</w>
+      <w>bigendian</w>
       <w>cfcp</w>
       <w>clsobj</w>
       <w>dslot</w>
       <w>eles</w>
+      <w>endianness</w>
       <w>fieldvalues</w>
       <w>fslot</w>
       <w>getd</w>
@@ -57,6 +59,7 @@
       <w>strpool</w>
       <w>treturn</w>
       <w>unbox</w>
+      <w>unpark</w>
       <w>valist</w>
       <w>wcscpy</w>
       <w>wstr</w>

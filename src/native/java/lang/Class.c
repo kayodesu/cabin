@@ -774,35 +774,35 @@ static void getDeclaredClasses0(struct stack_frame *frame)
 
 void java_lang_Class_registerNatives()
 {
-#define CLS_NAME "java/lang/Class"
-    register_native_method(CLS_NAME, "registerNatives", "()V", empty_method);
-    register_native_method(CLS_NAME, "getClassLoader0", "()Ljava/lang/ClassLoader;", getClassLoader0);
-    register_native_method(CLS_NAME, "getPrimitiveClass", "(Ljava/lang/String;)Ljava/lang/Class;", getPrimitiveClass);
-    register_native_method(CLS_NAME, "getName0", "()Ljava/lang/String;", getName0);
-    register_native_method(CLS_NAME, "forName0",
-                         "(Ljava/lang/String;ZLjava/lang/ClassLoader;Ljava/lang/Class;)Ljava/lang/Class;", forName0);
-    register_native_method(CLS_NAME, "desiredAssertionStatus0", "(Ljava/lang/Class;)Z", desiredAssertionStatus0);
+#define R(method, descriptor) register_native_method("java/lang/Class", #method, descriptor, method);
 
-    register_native_method(CLS_NAME, "isInstance", "(Ljava/lang/Object;)Z", isInstance);
-    register_native_method(CLS_NAME, "isAssignableFrom", "(Ljava/lang/Class;)Z", isAssignableFrom);
-    register_native_method(CLS_NAME, "isInterface", "()Z", isInterface);
-    register_native_method(CLS_NAME, "isArray", "()Z", isArray);
-    register_native_method(CLS_NAME, "isPrimitive", "()Z", isPrimitive);
+    R(registerNatives, "()V");
+    R(getClassLoader0, "()Ljava/lang/ClassLoader;");
+    R(getPrimitiveClass, "(Ljava/lang/String;)Ljava/lang/Class;");
+    R(getName0, "()Ljava/lang/String;");
+    R(forName0, "(Ljava/lang/String;ZLjava/lang/ClassLoader;Ljava/lang/Class;)Ljava/lang/Class;");
+    R(desiredAssertionStatus0, "(Ljava/lang/Class;)Z");
 
-    register_native_method(CLS_NAME, "getSuperclass", "()Ljava/lang/Class;", getSuperclass);
-    register_native_method(CLS_NAME, "getInterfaces0", "()[Ljava/lang/Class;", getInterfaces0);
-    register_native_method(CLS_NAME, "getComponentType", "()Ljava/lang/Class;", getComponentType);
-    register_native_method(CLS_NAME, "getModifiers", "()I", getModifiers);
-    register_native_method(CLS_NAME, "getEnclosingMethod0", "()[Ljava/lang/Object;", getEnclosingMethod0);
-    register_native_method(CLS_NAME, "getDeclaringClass0", "()Ljava/lang/Class;", getDeclaringClass0);
-    register_native_method(CLS_NAME, "getGenericSignature0", "()Ljava/lang/String;", getGenericSignature0);
-    register_native_method(CLS_NAME, "getConstantPool", "()Lsun/reflect/ConstantPool;", getConstantPool);
+    R(isInstance, "(Ljava/lang/Object;)Z");
+    R(isAssignableFrom, "(Ljava/lang/Class;)Z");
+    R(isInterface, "()Z");
+    R(isArray, "()Z");
+    R(isPrimitive, "()Z");
 
-    register_native_method(CLS_NAME, "getRawAnnotations", "()[B", getRawAnnotations);
+    R(getSuperclass, "()Ljava/lang/Class;");
+    R(getInterfaces0, "()[Ljava/lang/Class;");
+    R(getComponentType, "()Ljava/lang/Class;");
+    R(getModifiers, "()I");
+    R(getEnclosingMethod0, "()[Ljava/lang/Object;");
+    R(getDeclaringClass0, "()Ljava/lang/Class;");
+    R(getGenericSignature0, "()Ljava/lang/String;");
+    R(getConstantPool, "()Lsun/reflect/ConstantPool;");
 
-    register_native_method(CLS_NAME, "getDeclaredFields0", "(Z)[Ljava/lang/reflect/Field;", getDeclaredFields0);
-    register_native_method(CLS_NAME, "getDeclaredMethods0", "(Z)[Ljava/lang/reflect/Method;", getDeclaredMethods0);
-    register_native_method(
-            CLS_NAME, "getDeclaredConstructors0", "(Z)[Ljava/lang/reflect/Constructor;", getDeclaredConstructors0);
-#undef CLS_NAME
+    R(getRawAnnotations, "()[B");
+
+    R(getDeclaredFields0, "(Z)[Ljava/lang/reflect/Field;");
+    R(getDeclaredMethods0, "(Z)[Ljava/lang/reflect/Method;");
+    R(getDeclaredConstructors0, "(Z)[Ljava/lang/reflect/Constructor;");
+
+#undef R
 }
