@@ -51,13 +51,14 @@ int main(int argc, char* argv[])
 
     // 命令行参数没有设置 bootstrap_classpath 的值，那么使用 JAVA_HOME 环境变量
     if (bootstrap_classpath[0] == 0) { // empty
-        char *java_home = getenv("JAVA_HOME");
+        char *java_home = getenv("JAVA_HOME"); // JAVA_HOME 是 JDK 的目录
         if (java_home == NULL) {
             // todo error
             printvm("no java home");
             return -1;
         }
         strcpy(bootstrap_classpath, java_home);
+        strcat(bootstrap_classpath, "/jre/lib");
     }
 
     if (extension_classpath[0] == 0) {  // empty

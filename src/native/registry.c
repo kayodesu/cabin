@@ -64,6 +64,7 @@ void java_lang_String_registerNatives();
 void java_lang_Throwable_registerNatives();
 void java_lang_Thread_registerNatives();
 void java_lang_ClassLoader_registerNatives();
+void java_lang_ClassLoader$NativeLibrary_registerNatives();
 
 void java_io_FileDescriptor_registerNatives();
 void java_io_FileInputStream_registerNatives();
@@ -95,6 +96,7 @@ void register_all_native_methods()
     java_lang_Throwable_registerNatives();
     java_lang_Thread_registerNatives();
     java_lang_ClassLoader_registerNatives();
+    java_lang_ClassLoader$NativeLibrary_registerNatives();
 
     java_io_FileDescriptor_registerNatives();
     java_io_FileInputStream_registerNatives();

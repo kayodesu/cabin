@@ -21,12 +21,20 @@
 // public static native String mapLibraryName(String libname);
 static void mapLibraryName(struct stack_frame *frame)
 {
-    jref libname = slot_getr(frame->local_vars + 1);
+    jref libname = slot_getr(frame->local_vars);
     if (libname == NULL) {
         jvm_abort("NullPointerException");// todo
     }
+#ifdef JVM_DEBUG
     JOBJECT_CHECK_STROBJ(libname);
-    jvm_abort("%s\n", jstrobj_value(libname));
+#endif
+//    jvm_abort("%s\n", jstrobj_value(libname));
+    const char *name = jstrobj_value(libname);
+    char mapping_name[strlen(name) + 5];;
+    strcpy(mapping_name, name);
+    strcat(mapping_name, ".dll");
+    printvm("mapLibraryName, %s\n", mapping_name);
+    os_pushr(frame->operand_stack, jstrobj_create(mapping_name));  // todo
 }
 
 // public static native void arraycopy(Object src, int srcPos, Object dest, int destPos, int length)
@@ -49,13 +57,14 @@ static void arraycopy(struct stack_frame *frame)
 static void initProperties(struct stack_frame *frame)
 {
     char *sys_props[][2] = {  // todo
-            { "java.version",          "1.8.0" },  // todo
-            { "java.vendor",          "" }, // todo
-            { "java.vendor.url",      ""}, // todo
-            { "java.home",            "" }, // options.AbsJavaHome
+            { "java.version",         "1.8.0" },  // todo
+            { "java.vendor",          "Jia Yang" }, // todo "jvm.go"
+            { "java.vendor.url",      "doesn't have"}, // todo "https://github.com/zxh0/jvm.go"
+            { "java.home",            "" }, // options.AbsJavaHome // todo
+            { "java.library.path", "C:\\Program Files\\Java\\jre1.8.0_162\\bin" },  // todo
             { "java.class.version",   "52.0"}, // todo
-            { "java.class.path",      "" }, // heap.BootLoader().ClassPath().String()
-            { "java.awt.graphicsenv", "sun.awt.CGraphicsEnvironment"},
+            { "java.class.path",      "" }, // heap.BootLoader().ClassPath().String() // todo
+            { "java.awt.graphicsenv", "sun.awt.CGraphicsEnvironment"}, // todo
             { "os.name",              "" },   // todo runtime.GOOS
             { "os.arch",              "" }, // todo runtime.GOARCH
             { "os.version",           "" },             // todo

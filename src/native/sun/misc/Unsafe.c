@@ -166,6 +166,7 @@ static void objectFieldOffset(struct stack_frame *frame)
 
     jref field_obj = slot_getr(frame->local_vars + 1);
     jint offset = slot_geti(get_instance_field_value_by_nt(field_obj, "slot", "I")); // todo "slot", "I" 什么东西
+    printvm("-------   %s, %d\n", jobject_to_string(field_obj), offset);
     os_pushl(frame->operand_stack, offset);
 }
 
@@ -363,6 +364,243 @@ static void putOrderedObject(struct stack_frame *frame)
 /*************************************    unsafe memory    ************************************/
 // todo 说明 unsafe memory
 
+/*
+ * todo
+ * 分配内存方法还有重分配内存方法都是分配的堆外内存，
+ * 返回的是一个long类型的地址偏移量。这个偏移量在你的Java程序中每块内存都是唯一的。
+ */
+// public native long allocateMemory(long bytes);
+static void allocateMemory(struct stack_frame *frame)
+{
+    jlong bytes = slot_getl(frame->local_vars + 1);
+    VM_MALLOCS(u1, bytes, p);
+    os_pushl(frame->operand_stack, (jlong) p);
+}
+
+// public native long reallocateMemory(long address, long bytes);
+static void reallocateMemory(struct stack_frame *frame)
+{
+    jlong address = slot_getl(frame->local_vars + 1);
+    jlong bytes = (jbyte) slot_getl(frame->local_vars + 3);
+    os_pushl(frame->operand_stack, (jlong) realloc((void *) address, (size_t) bytes));
+}
+
+// public native void freeMemory(long address);
+static void freeMemory(struct stack_frame *frame)
+{
+    jlong address = slot_getl(frame->local_vars + 1);
+    free((void *) address);
+}
+
+// public native int addressSize();
+static void addressSize(struct stack_frame *frame)
+{
+    os_pushi(frame->operand_stack, sizeof(jlong)); // todo
+}
+
+// public native void putByte(long address, byte x);
+static void putByte(struct stack_frame *frame)
+{
+    jlong address = slot_getl(frame->local_vars + 1);
+    jbyte x = (jbyte) slot_geti(frame->local_vars + 3);
+    *(jbyte *) address = BIGENDIAN(x); // todo java按大端存储？？？？？？？
+}
+
+// public native byte getByte(long address);
+static void getByte(struct stack_frame *frame)
+{
+    jlong address = slot_getl(frame->local_vars + 1);
+    os_pushi(frame->operand_stack, *(jbyte *) address);
+}
+
+// public native void putChar(long address, char x);
+static void putChar(struct stack_frame *frame)
+{
+    jlong address = slot_getl(frame->local_vars + 1);
+    jchar x = (jchar) slot_geti(frame->local_vars + 3);
+    *(jchar *) address = BIGENDIAN(x);
+}
+
+// public native char getChar(long address);
+static void getChar(struct stack_frame *frame)
+{
+    jlong address = slot_getl(frame->local_vars + 1);
+    os_pushi(frame->operand_stack, *(jchar *) address);
+}
+
+// public native void putShort(long address, short x);
+static void putShort(struct stack_frame *frame)
+{
+    jlong address = slot_getl(frame->local_vars + 1);
+    jshort x = (jshort) slot_geti(frame->local_vars + 3);
+    *(jshort *) address = BIGENDIAN(x);
+}
+
+// public native short getShort(long address);
+static void getShort(struct stack_frame *frame)
+{
+    jlong address = slot_getl(frame->local_vars + 1);
+    os_pushi(frame->operand_stack, *(jshort *) address);
+}
+
+// public native void putInt(long address, int x);
+static void putInt(struct stack_frame *frame)
+{
+    jlong address = slot_getl(frame->local_vars + 1);
+    jint x = slot_geti(frame->local_vars + 3);
+    *(jint *) address = BIGENDIAN(x);
+}
+
+// public native int getInt(long address);
+static void getInt(struct stack_frame *frame)
+{
+    jlong address = slot_getl(frame->local_vars + 1);
+    os_pushi(frame->operand_stack, *(jint *) address);
+}
+
+// public native void putLong(long address, long x);
+static void putLong(struct stack_frame *frame)
+{
+    jlong address = slot_getl(frame->local_vars + 1);
+    jlong x = slot_getl(frame->local_vars + 3);
+    *(jlong *) address = BIGENDIAN(x);
+}
+
+// public native long getLong(long address);
+static void getLong(struct stack_frame *frame)
+{
+    jlong address = slot_getl(frame->local_vars + 1);
+    os_pushl(frame->operand_stack, *(jlong *) address);
+}
+
+// public native void putFloat(long address, float x);
+static void putFloat(struct stack_frame *frame)
+{
+    jlong address = slot_getl(frame->local_vars + 1);
+    jfloat x = slot_getf(frame->local_vars + 3);
+    *(jfloat *) address = BIGENDIAN(x);
+}
+
+// public native float getFloat(long address);
+static void getFloat(struct stack_frame *frame)
+{
+    jlong address = slot_getl(frame->local_vars + 1);
+    os_pushf(frame->operand_stack, *(jfloat *) address);
+}
+
+// public native void putDouble(long address, double x);
+static void putDouble(struct stack_frame *frame)
+{
+    jlong address = slot_getl(frame->local_vars + 1);
+    jdouble x = slot_getd(frame->local_vars + 3);
+    *(jdouble *) address = BIGENDIAN(x);
+}
+
+// public native double getDouble(long address);
+static void getDouble(struct stack_frame *frame)
+{
+    jlong address = slot_getl(frame->local_vars + 1);
+    os_pushd(frame->operand_stack, *(jdouble *) address);
+}
+
+// public native void putAddress(long address, long x);
+static void putAddress(struct stack_frame *frame)
+{
+    putLong(frame);
+}
+
+// public native long getAddress(long address);
+static void getAddress(struct stack_frame *frame)
+{
+    getLong(frame);
+}
+
+void sun_misc_Unsafe_registerNatives()
+{
+#define T(name, descriptor, method) register_native_method("sun/misc/Unsafe", name, descriptor, method)
+#define R(method, descriptor) T(#method, descriptor, method)
+
+    R(registerNatives, "()V");
+
+    R(park, "(ZJ)V");
+    R(unpark, "(Ljava/lang/Object;)V");
+
+    // compare and swap
+    R(compareAndSwapInt, "(Ljava/lang/Object;JII)Z");
+    R(compareAndSwapLong, "(Ljava/lang/Object;JJJ)Z");
+    R(compareAndSwapObject, "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z");
+
+    // class
+    R(allocateInstance, "(Ljava/lang/Class;)Ljava/lang/Object;");
+    R(defineClass, "(Ljava/lang/String;[BIILjava/lang/ClassLoader;Ljava/security/ProtectionDomain;)Ljava/lang/Class;");
+    R(ensureClassInitialized, "(Ljava/lang/Class;)V");
+    R(staticFieldOffset, "(Ljava/lang/reflect/Field;)J");
+    R(staticFieldBase, "(Ljava/lang/reflect/Field;)Ljava/lang/Object;");
+
+    // object
+    R(arrayBaseOffset, "(Ljava/lang/Class;)I");
+    R(arrayIndexScale, "(Ljava/lang/Class;)I");
+    R(objectFieldOffset, "(Ljava/lang/reflect/Field;)J");
+    
+    R(getBoolean, "(Ljava/lang/Object;J)Z");
+    R(putBoolean, "(Ljava/lang/Object;JZ)V");
+    T("getByte", "(Ljava/lang/Object;J)B", obj_getByte);
+    T("putByte", "(Ljava/lang/Object;JB)V", obj_putByte);
+    T("getChar", "(Ljava/lang/Object;J)C", obj_getChar);
+    T("putChar", "(Ljava/lang/Object;JC)V", obj_putChar);
+    T("getShort", "(Ljava/lang/Object;J)S", obj_getShort);
+    T("putShort", "(Ljava/lang/Object;JS)V", obj_putShort);
+    T("getInt", "(Ljava/lang/Object;J)I", obj_getInt);
+    T("putInt", "(Ljava/lang/Object;JI)V", obj_putInt);
+    T("getLong", "(Ljava/lang/Object;J)J", obj_getLong);
+    T("putLong", "(Ljava/lang/Object;JJ)V", obj_putLong);
+    T("getFloat", "(Ljava/lang/Object;J)F", obj_getFloat);
+    T("putFloat", "(Ljava/lang/Object;JF)V", obj_putFloat);
+    T("getDouble", "(Ljava/lang/Object;J)D", obj_getDouble);
+    T("putDouble", "(Ljava/lang/Object;JD)V", obj_putDouble);
+    R(getObject, "(Ljava/lang/Object;J)Ljava/lang/Object;");
+    R(putObject, "(Ljava/lang/Object;JLjava/lang/Object;)V");
+    R(getObjectVolatile, "(Ljava/lang/Object;J)Ljava/lang/Object;");
+    R(putObjectVolatile, "(Ljava/lang/Object;JLjava/lang/Object;)V");
+    R(getOrderedObject, "(Ljava/lang/Object;J)Ljava/lang/Object;");
+    R(putOrderedObject, "(Ljava/lang/Object;JLjava/lang/Object;)V");
+    R(getIntVolatile, "(Ljava/lang/Object;J)I");
+    R(getLongVolatile, "(Ljava/lang/Object;J)J");
+    R(getBooleanVolatile, "(Ljava/lang/Object;J)Z");
+    R(getByteVolatile, "(Ljava/lang/Object;J)B");
+    R(getCharVolatile, "(Ljava/lang/Object;J)C");
+    R(getShortVolatile, "(Ljava/lang/Object;J)S");
+    R(getFloatVolatile, "(Ljava/lang/Object;J)F");
+    R(getDoubleVolatile, "(Ljava/lang/Object;J)D");
+
+    // unsafe memory
+    R(allocateMemory, "(J)J");
+    R(reallocateMemory, "(JJ)J");
+    R(freeMemory, "(J)V");
+    R(addressSize, "()I");
+    R(putAddress, "(JJ)V");
+    R(getAddress, "(J)J");
+    R(putByte, "(JB)V");
+    R(getByte, "(J)B");
+    R(putShort, "(JS)V");
+    R(getShort, "(J)S");
+    R(putChar, "(JC)V");
+    R(getChar, "(J)C");
+    R(putInt, "(JI)V");
+    R(getInt, "(J)I");
+    R(putLong, "(JJ)V");
+    R(getLong, "(J)J");
+    R(putFloat, "(JF)V");
+    R(getFloat, "(J)F");
+    R(putDouble, "(JD)V");
+    R(getDouble, "(J)D");
+
+#undef T
+#undef R
+}
+
+/*
+
 struct mem_info {
     jlong start_add; // start address, include.
     jlong end_add;   // end address, exclude.
@@ -420,11 +658,6 @@ static inline void __free_add(jlong address)
     }
 }
 
-/*
- * todo
- * 分配内存方法还有重分配内存方法都是分配的堆外内存，
- * 返回的是一个long类型的地址偏移量。这个偏移量在你的Java程序中每块内存都是唯一的。
- */
 // public native long allocateMemory(long bytes);
 static void allocateMemory(struct stack_frame *frame)
 {
@@ -483,7 +716,7 @@ static void freeMemory(struct stack_frame *frame)
 // public native int addressSize();
 static void addressSize(struct stack_frame *frame)
 {
-    os_pushi(frame->operand_stack, sizeof(jlong));
+    os_pushi(frame->operand_stack, sizeof(jlong)); // todo
 }
 
 // public native void putByte(long address, byte x);
@@ -591,98 +824,4 @@ static void getDouble(struct stack_frame *frame)
     os_pushd(frame->operand_stack, *(jdouble *) __memory_at(address));
 }
 
-// public native void putAddress(long address, long x);
-static void putAddress(struct stack_frame *frame)
-{
-    putLong(frame);
-}
-
-// public native long getAddress(long address);
-static void getAddress(struct stack_frame *frame)
-{
-    getLong(frame);
-}
-
-void sun_misc_Unsafe_registerNatives()
-{
-#define T(name, descriptor, method) register_native_method("sun/misc/Unsafe", name, descriptor, method)
-#define R(method, descriptor) T(#method, descriptor, method)
-
-    R(registerNatives, "()V");
-
-    R(park, "(ZJ)V");
-    R(unpark, "(Ljava/lang/Object;)V");
-
-    // compare and swap
-    R(compareAndSwapInt, "(Ljava/lang/Object;JII)Z");
-    R(compareAndSwapLong, "(Ljava/lang/Object;JJJ)Z");
-    R(compareAndSwapObject, "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z");
-
-    // class
-    R(allocateInstance, "(Ljava/lang/Class;)Ljava/lang/Object;");
-    R(defineClass, "(Ljava/lang/String;[BIILjava/lang/ClassLoader;Ljava/security/ProtectionDomain;)Ljava/lang/Class;");
-    R(ensureClassInitialized, "(Ljava/lang/Class;)V");
-    R(staticFieldOffset, "(Ljava/lang/reflect/Field;)J");
-    R(staticFieldBase, "(Ljava/lang/reflect/Field;)Ljava/lang/Object;");
-
-    // object
-    R(arrayBaseOffset, "(Ljava/lang/Class;)I");
-    R(arrayIndexScale, "(Ljava/lang/Class;)I");
-    R(objectFieldOffset, "(Ljava/lang/reflect/Field;)J");
-    
-    R(getBoolean, "(Ljava/lang/Object;J)Z");
-    R(putBoolean, "(Ljava/lang/Object;JZ)V");
-    T("getByte", "(Ljava/lang/Object;J)B", obj_getByte);
-    T("putByte", "(Ljava/lang/Object;JB)V", obj_putByte);
-    T("getChar", "(Ljava/lang/Object;J)C", obj_getChar);
-    T("putChar", "(Ljava/lang/Object;JC)V", obj_putChar);
-    T("getShort", "(Ljava/lang/Object;J)S", obj_getShort);
-    T("putShort", "(Ljava/lang/Object;JS)V", obj_putShort);
-    T("getInt", "(Ljava/lang/Object;J)I", obj_getInt);
-    T("putInt", "(Ljava/lang/Object;JI)V", obj_putInt);
-    T("getLong", "(Ljava/lang/Object;J)J", obj_getLong);
-    T("putLong", "(Ljava/lang/Object;JJ)V", obj_putLong);
-    T("getFloat", "(Ljava/lang/Object;J)F", obj_getFloat);
-    T("putFloat", "(Ljava/lang/Object;JF)V", obj_putFloat);
-    T("getDouble", "(Ljava/lang/Object;J)D", obj_getDouble);
-    T("putDouble", "(Ljava/lang/Object;JD)V", obj_putDouble);
-    R(getObject, "(Ljava/lang/Object;J)Ljava/lang/Object;");
-    R(putObject, "(Ljava/lang/Object;JLjava/lang/Object;)V");
-    R(getObjectVolatile, "(Ljava/lang/Object;J)Ljava/lang/Object;");
-    R(putObjectVolatile, "(Ljava/lang/Object;JLjava/lang/Object;)V");
-    R(getOrderedObject, "(Ljava/lang/Object;J)Ljava/lang/Object;");
-    R(putOrderedObject, "(Ljava/lang/Object;JLjava/lang/Object;)V");
-    R(getIntVolatile, "(Ljava/lang/Object;J)I");
-    R(getLongVolatile, "(Ljava/lang/Object;J)J");
-    R(getBooleanVolatile, "(Ljava/lang/Object;J)Z");
-    R(getByteVolatile, "(Ljava/lang/Object;J)B");
-    R(getCharVolatile, "(Ljava/lang/Object;J)C");
-    R(getShortVolatile, "(Ljava/lang/Object;J)S");
-    R(getFloatVolatile, "(Ljava/lang/Object;J)F");
-    R(getDoubleVolatile, "(Ljava/lang/Object;J)D");
-
-    // unsafe memory
-    R(allocateMemory, "(J)J");
-    R(reallocateMemory, "(JJ)J");
-    R(freeMemory, "(J)V");
-    R(addressSize, "()I");
-    R(putAddress, "(JJ)V");
-    R(getAddress, "(J)J");
-    R(putByte, "(JB)V");
-    R(getByte, "(J)B");
-    R(putShort, "(JS)V");
-    R(getShort, "(J)S");
-    R(putChar, "(JC)V");
-    R(getChar, "(J)C");
-    R(putInt, "(JI)V");
-    R(getInt, "(J)I");
-    R(putLong, "(JJ)V");
-    R(getLong, "(J)J");
-    R(putFloat, "(JF)V");
-    R(getFloat, "(J)F");
-    R(putDouble, "(JD)V");
-    R(getDouble, "(J)D");
-
-#undef T
-#undef R
-}
+ */
