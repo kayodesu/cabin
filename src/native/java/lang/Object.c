@@ -33,10 +33,27 @@ static void getClass(struct stack_frame *frame)
     os_pushr(frame->operand_stack, (jref) this_obj->jclass->clsobj); // todo 对不对
 }
 
+// public final native void notifyAll();
+static void notifyAll(struct stack_frame *frame)
+{
+    jref this_obj = slot_getr(frame->local_vars);
+    // todo
+}
+
+// public final native void wait(long timeout) throws InterruptedException;
+static void wait(struct stack_frame *frame)
+{
+    jref this_obj = slot_getr(frame->local_vars);
+    jlong timeout = slot_getl(frame->local_vars + 1);
+    // todo
+}
+
 void java_lang_Object_registerNatives()
 {
     register_native_method("java/lang/Object", "registerNatives", "()V", empty_method);
     register_native_method("java/lang/Object", "hashCode", "()I", hashCode);
     register_native_method("java/lang/Object", "getClass", "()Ljava/lang/Class;", getClass);
     register_native_method("java/lang/Object", "clone", "()Ljava/lang/Object;", clone);
+    register_native_method("java/lang/Object", "notifyAll", "()V", notifyAll);
+    register_native_method("java/lang/Object", "wait", "(J)V", wait);
 }

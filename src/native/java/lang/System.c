@@ -32,7 +32,7 @@ static void mapLibraryName(struct stack_frame *frame)
     const char *name = jstrobj_value(libname);
     char mapping_name[strlen(name) + 5];;
     strcpy(mapping_name, name);
-    strcat(mapping_name, ".dll");
+    strcat(mapping_name, ".dll"); // todo ...........................
     printvm("mapLibraryName, %s\n", mapping_name);
     os_pushr(frame->operand_stack, jstrobj_create(mapping_name));  // todo
 }

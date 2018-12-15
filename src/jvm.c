@@ -30,17 +30,18 @@ static void init_jvm(struct classloader *loader, struct jthread *main_thread)
         return;
     }
 
-    struct jmethod *init = jclass_lookup_static_method(vm_class, "initialize", "()V");
-    if (init == NULL) {
-        jvm_abort("error %s\n", jclass_to_string(vm_class));
-        return;
-    }
+//    struct jmethod *init = jclass_lookup_static_method(vm_class, "initialize", "()V");
+//    if (init == NULL) {
+//        jvm_abort("error %s\n", jclass_to_string(vm_class));
+//        return;
+//    }
 
-    struct stack_frame *init_frame = sf_create(main_thread, init);
-    jthread_push_frame(main_thread, init_frame);
+//    struct stack_frame *init_frame = sf_create(main_thread, init);
+//    jthread_push_frame(main_thread, init_frame);
     // vm_class 的 clinit 后于 init_frame加入到线程的执行栈中
     // 保证vm_class 的 clinit方法先执行。
-    jclass_clinit(vm_class, init_frame);  // todo clinit 方法到底在何时调用
+//    jclass_clinit(vm_class, init_frame);  // todo clinit 方法到底在何时调用
+    jclass_clinit0(vm_class, main_thread);
     interpret(main_thread);
 }
 

@@ -32,14 +32,24 @@ static void findLoadedClass0(struct stack_frame *frame)
 // private static native String findBuiltinLib(String name);
 static void findBuiltinLib(struct stack_frame *frame)
 {
+//    jvm_abort("findBuiltinLib");
+
     // todo
-    jref name = slot_getr(frame->local_vars);
+    jref name0 = slot_getr(frame->local_vars);
 
 #ifdef JVM_DEBUG
-    JOBJECT_CHECK_STROBJ(name);
+    JOBJECT_CHECK_STROBJ(name0);
 #endif
-    printvm("findBuiltinLib, %s\n", jstrobj_value(name));
-    os_pushr(frame->operand_stack, name);  // todo
+    const char *name = jstrobj_value(name0);
+    printvm("findBuiltinLib, %s\n", name);
+    if (strcmp(name, "zip.dll") == 0) {
+        // C:\Program Files\Java\jre1.8.0_162\bin
+        char buf[1024] = "C:\\Program Files\\Java\\jre1.8.0_162\\bin\\zip.dll";
+        os_pushr(frame->operand_stack, jstrobj_create(buf));
+    } else {
+        jvm_abort(name);
+    }
+//    os_pushr(frame->operand_stack, name0);  // todo
 }
 
 void java_lang_ClassLoader_registerNatives()

@@ -8,6 +8,11 @@
 // private static native void initialize();
 static void initialize(struct stack_frame *frame)
 {
+//    static bool flag = false;
+//    if (flag) {
+//        return;
+//    }
+
     // todo
     struct jclass *sys_class = classloader_load_class(frame->method->jclass->loader, "java/lang/System");
 //    sysClass->clinit(frame);  // todo

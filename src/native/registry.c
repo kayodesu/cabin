@@ -73,6 +73,8 @@ void java_io_WinNTFileSystem_registerNatives();
 
 void sun_misc_VM_registerNatives();
 void sun_misc_Unsafe_registerNatives();
+void sun_misc_Signal_registerNatives();
+void sun_io_Win32ErrorMode_registerNatives();
 
 void sun_reflect_Reflection_registerNatives();
 void sun_reflect_NativeConstructorAccessorImpl_registerNatives();
@@ -105,6 +107,9 @@ void register_all_native_methods()
 
     sun_misc_VM_registerNatives();
     sun_misc_Unsafe_registerNatives();
+    sun_misc_Signal_registerNatives();
+
+    sun_io_Win32ErrorMode_registerNatives();
 
     sun_reflect_Reflection_registerNatives();
     sun_reflect_NativeConstructorAccessorImpl_registerNatives();

@@ -5,6 +5,7 @@
 #include "../../registry.h"
 #include "../../../jvm.h"
 #include "../../../interpreter/stack_frame.h"
+#include "../../../slot.h"
 
 
 // private static native void initIDs();
@@ -51,8 +52,31 @@ static void writeBytes(struct stack_frame *frame)
 //    jint len = frame->getLocalVar(3).getInt();
 //    jbool append = jtypes::i2z(frame->getLocalVar(4).getInt());  // todo
 
-    jvm_abort("error\n");
+    jref this = slot_getr(frame->local_vars);
+    jref b = slot_getr(frame->local_vars + 1);
+    jint off = slot_geti(frame->local_vars + 2);
+    jint len = slot_geti(frame->local_vars + 3);
+    bool append = slot_geti(frame->local_vars + 2) == 0 ? false : true;
     // todo
+    /*
+    fdObj := fosObj.GetFieldValue("fd", "Ljava/io/FileDescriptor;").(*heap.Object)
+	if fdObj.Extra() == nil {
+		goFd := fdObj.GetFieldValue("fd", "I").(int32)
+		switch goFd {
+		case 0:
+			fdObj.SetExtra(os.Stdin)
+		case 1:
+			fdObj.SetExtra(os.Stdout)
+		case 2:
+			fdObj.SetExtra(os.Stderr)
+		}
+	}
+	goFile := fdObj.Extra().(*os.File)
+
+	goBytes := byteArrObj.GoBytes()
+	goBytes = goBytes[offset : offset+length]
+	goFile.Write(goBytes)
+     */
 }
 
 // private native void close0() throws IOException;
