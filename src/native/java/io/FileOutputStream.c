@@ -6,6 +6,8 @@
 #include "../../../jvm.h"
 #include "../../../interpreter/stack_frame.h"
 #include "../../../slot.h"
+#include "../../../rtda/heap/jobject.h"
+#include "../../../output.h"
 
 
 // private static native void initIDs();
@@ -39,25 +41,24 @@ static void initIDs(struct stack_frame *frame)
  * @param b the data to be written
  * @param off the start offset in the data
  * @param len the number of bytes that are written
- * @param append {@code true} to first advance the position to the
- *     end of file
+ * @param append {@code true} to first advance the position to the end of file
  * @exception IOException If an I/O error has occurred.
  */
 // private native void writeBytes(byte b[], int off, int len, boolean append) throws IOException;
 static void writeBytes(struct stack_frame *frame)
 {
-//    auto thisObj = frame->getLocalVar(0).getRef();
-//    auto b = frame->getLocalVar(1).getRef();
-//    jint off = frame->getLocalVar(2).getInt();
-//    jint len = frame->getLocalVar(3).getInt();
-//    jbool append = jtypes::i2z(frame->getLocalVar(4).getInt());  // todo
-
     jref this = slot_getr(frame->local_vars);
     jref b = slot_getr(frame->local_vars + 1);
     jint off = slot_geti(frame->local_vars + 2);
     jint len = slot_geti(frame->local_vars + 3);
-    bool append = slot_geti(frame->local_vars + 2) == 0 ? false : true;
+    bool append = slot_geti(frame->local_vars + 4) == 0 ? false : true;
+
+#ifdef JVM_DEBUG
+    JOBJECT_CHECK_ARROBJ(b);
+#endif
     // todo
+    jbyte *data = jarrobj_data(b);
+    write_bytes(this, data + off, len);
     /*
     fdObj := fosObj.GetFieldValue("fd", "Ljava/io/FileDescriptor;").(*heap.Object)
 	if fdObj.Extra() == nil {

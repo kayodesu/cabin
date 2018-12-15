@@ -392,27 +392,27 @@ static void invokevirtual(struct stack_frame *frame)
 
     struct jobject *obj = slot_getr(args); // args[0]
     if (obj == NULL) {
-        if (strcmp(ref->resolved_method->name, "println") == 0) {
-            // todo   println  暂时先这么搞
-            printvm("fake println!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-            const struct slot *arg = args + 1; // println 的参数
-            if (arg->t == JREF) {
-                struct jobject *so = slot_getr(arg);
-                JOBJECT_CHECK_STROBJ(so);
-                printvm("%p, %s\n", so, jstrobj_value(so));
-            } else if (arg->t == JINT) {
-                printvm("%d\n", slot_geti(arg));
-            } else if (arg->t == JFLOAT) {
-                printvm("%f\n", slot_getf(arg));
-            } else if (arg->t == JLONG) {
-                printvm("%ld\n", slot_getl(arg));
-            } else if (arg->t == JDOUBLE) {
-                printvm("%f\n", slot_getd(arg));
-            } else {
-                jvm_abort("println 找不到类型\n");
-            }
-            return;
-        }
+//        if (strcmp(ref->resolved_method->name, "println") == 0) {
+//            // todo   println  暂时先这么搞
+//            printvm("fake println!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+//            const struct slot *arg = args + 1; // println 的参数
+//            if (arg->t == JREF) {
+//                struct jobject *so = slot_getr(arg);
+//                JOBJECT_CHECK_STROBJ(so);
+//                printvm("%p, %s\n", so, jstrobj_value(so));
+//            } else if (arg->t == JINT) {
+//                printvm("%d\n", slot_geti(arg));
+//            } else if (arg->t == JFLOAT) {
+//                printvm("%f\n", slot_getf(arg));
+//            } else if (arg->t == JLONG) {
+//                printvm("%ld\n", slot_getl(arg));
+//            } else if (arg->t == JDOUBLE) {
+//                printvm("%f\n", slot_getd(arg));
+//            } else {
+//                jvm_abort("println 找不到类型\n");
+//            }
+//            return;
+//        }
         printvm("%s~%s~%s\n", ref->class_name, ref->resolved_method->name, ref->resolved_method->descriptor);
         jvm_abort("java.lang.NullPointerException\n"); // todo  java.lang.NullPointerException
     }

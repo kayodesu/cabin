@@ -15,7 +15,7 @@
  * 是否开启调试模式，
  * 如不开启，可注释掉此define
  */
-#define JVM_DEBUG
+//#define JVM_DEBUG
 
 #ifndef PATH_MAX
 #define PATH_MAX 260 // todo
