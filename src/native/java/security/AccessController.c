@@ -5,7 +5,7 @@
 #include "../../registry.h"
 #include "../../../interpreter/stack_frame.h"
 #include "../../../slot.h"
-#include "../../../rtda/heap/JObject.h"
+#include "../../../rtda/heap/jobject.h"
 
 // @CallerSensitive
 // public static native <T> T doPrivileged(PrivilegedAction<T> action);

@@ -6,7 +6,7 @@
 #include "../../../jvm.h"
 #include "../../../interpreter/stack_frame.h"
 #include "../../../slot.h"
-#include "../../../rtda/heap/JObject.h"
+#include "../../../rtda/heap/jobject.h"
 
 // private native Class<?> defineClass1(String name, byte[] b, int off, int len, ProtectionDomain pd, String source);
 static void defineClass1(struct stack_frame *frame)

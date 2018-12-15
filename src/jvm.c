@@ -16,10 +16,10 @@ char bootstrap_classpath[PATH_MAX] = { 0 };
 char extension_classpath[PATH_MAX] = { 0 };
 char *user_classpath = "D:\\code\\jvm\\testclasses"; // todo;
 
-struct classloader *bootstrap_loader;
+struct classloader *bootstrap_loader = NULL;
 
-struct jobject *system_thread_group;
-struct jthread *main_thread;
+struct jobject *system_thread_group = NULL;
+struct jthread *main_thread = NULL;
 
 static void init_jvm(struct classloader *loader, struct jthread *main_thread)
 {
@@ -132,3 +132,17 @@ void start_jvm(const char *main_class_name)
     jthread_destroy(main_thread);
     classloader_destroy(loader);
 }
+
+//void print_properties()
+//{
+//    if (bootstrap_loader == NULL) {
+//        return;
+//    }
+//
+//    struct jclass *c = classloader_find_class(bootstrap_loader, "java/lang/System");
+//    if (c == NULL) {
+//        return;
+//    }
+//
+//    struct jfield *f = jclass_lookup_static_field(c, "props", "java/util/Properties");
+//}

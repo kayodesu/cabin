@@ -53,6 +53,24 @@ static void arraycopy(struct stack_frame *frame)
     jarrobj_copy(dest, dest_pos, src, src_pos, length);
 }
 
+/*
+ * System properties. The following properties are guaranteed to be defined:
+ * java.version         Java version number
+ * java.vendor          Java vendor specific string
+ * java.vendor.url      Java vendor URL
+ * java.home            Java installation directory
+ * java.class.version   Java class version number
+ * java.class.path      Java classpath
+ * os.name              Operating System Name
+ * os.arch              Operating System Architecture
+ * os.version           Operating System Version
+ * file.separator       File separator ("/" on Unix)
+ * path.separator       Path separator (":" on Unix)
+ * line.separator       Line separator ("\n" on Unix)
+ * user.name            User account name
+ * user.home            User home directory
+ * user.dir             User's current working directory
+ */
 // private static native Properties initProperties(Properties props);
 static void initProperties(struct stack_frame *frame)
 {
@@ -60,17 +78,16 @@ static void initProperties(struct stack_frame *frame)
             { "java.version",         "1.8.0" },  // todo
             { "java.vendor",          "Jia Yang" }, // todo "jvm.go"
             { "java.vendor.url",      "doesn't have"}, // todo "https://github.com/zxh0/jvm.go"
-            { "java.home",            "" }, // options.AbsJavaHome // todo
-            { "java.library.path", "C:\\Program Files\\Java\\jre1.8.0_162\\bin" },  // todo
+            { "java.home",            "C:\\Program Files\\Java\\jdk1.8.0_162" }, // options.AbsJavaHome // todo
             { "java.class.version",   "52.0"}, // todo
-            { "java.class.path",      "" }, // heap.BootLoader().ClassPath().String() // todo
-            { "java.awt.graphicsenv", "sun.awt.CGraphicsEnvironment"}, // todo
+            { "java.class.path",      "C:\\Program Files\\Java\\jdk1.8.0_162\\lib" }, // heap.BootLoader().ClassPath().String() // todo
+//            { "java.awt.graphicsenv", "sun.awt.CGraphicsEnvironment"}, // todo
             { "os.name",              "" },   // todo runtime.GOOS
             { "os.arch",              "" }, // todo runtime.GOARCH
             { "os.version",           "" },             // todo
-            { "file.separator",       "/" },            // todo os.PathSeparator
-            { "path.separator",       ":" },            // todo os.PathListSeparator
-            { "line.separator",       "\n" },           // todo
+            { "file.separator",       "\\" },            // todo os.PathSeparator
+            { "path.separator",       ";" },            // todo os.PathListSeparator
+            { "line.separator",       "\r\n" },           // todo
             { "user.name",            "" },             // todo
             { "user.home",            "" },             // todo
             { "user.dir",             "." },            // todo
@@ -88,8 +105,6 @@ static void initProperties(struct stack_frame *frame)
     if (set_property == NULL) {
         jvm_abort("error\n"); // todo
     }
-
-//    int props_count = sizeof(sys_props) / sizeof(*sys_props);
 
     for (int i = 0; i < sizeof(sys_props) / sizeof(*sys_props); i++) {
         struct slot args[] = {

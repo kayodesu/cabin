@@ -369,6 +369,13 @@ static struct jclass* load_non_arr_class(struct classloader *loader, const char 
     return initialization(resolution(preparation(verification(c))));
 }
 
+struct jclass* classloader_find_class(const struct classloader *loader, const char *class_name)
+{
+    assert(loader != NULL);
+    assert(class_name != NULL);
+    return hashmap_find(loader->loaded_class_pool, class_name);
+}
+
 struct jclass* classloader_load_class(struct classloader *loader, const char *class_name)
 {
     assert(loader != NULL);
