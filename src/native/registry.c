@@ -3,51 +3,56 @@
  */
 
 #include <stdio.h>
+#include <string.h>
+#include <assert.h>
 #include "registry.h"
 #include "../jvm.h"
 #include "../util/hashmap.h"
 
 // key 的组成为 "class_name~method_name~method_descriptor" 的形式，
 // key 的长度要足够存储上述格式的字符和外加字符串结尾的'\0'
-#define KEY_LEN (3 * FILENAME_MAX + 3)  // big enough?
-
-struct native_method {
-    char key[KEY_LEN];
-    void (* method)(struct stack_frame *);
-};
+#define KEY_LEN(class_name, method_name, method_descriptor) \
+                 (strlen(class_name) + strlen(method_name) + strlen(method_descriptor) + 3 + 1)
 
 static struct hashmap *native_methods;
 
-//void print_registered_native_methods()
-//{
-//    printvm("\n");
-//    hashmap_print(native_methods);
-//}
-
-static char* gen_key(const char *class_name, const char *method_name, const char *method_descriptor, char key[])
+static char* gen_key(const char *class_name,
+                     const char *method_name, const char *method_descriptor, char key0[], size_t key_len)
 {
-    sprintf(key, "%s~%s~%s\0", class_name, method_name, method_descriptor);
+    assert(class_name != NULL);
+    assert(method_name != NULL);
+    assert(method_descriptor != NULL);
+
+    char *key;
+    size_t len;
+    if (key0 != NULL) {
+        key = key0;
+        len = key_len;
+    } else {
+        len = KEY_LEN(class_name, method_name, method_descriptor);
+        key = malloc(sizeof(char) * len);
+    }
+
+    snprintf(key, len - 1, "%s~%s~%s", class_name, method_name, method_descriptor);
+    key[len - 1] = 0;
     return key;
 }
 
 void register_native_method(const char *class_name, const char *method_name,
-                            const char *method_descriptor, void (* method)(struct stack_frame *))
+                            const char *method_descriptor, native_method_t method)
 {
-    VM_MALLOC(struct native_method, nm);
-    nm->method = method;
-    gen_key(class_name, method_name, method_descriptor, nm->key);
-    hashmap_put(native_methods, nm->key, nm);
+    hashmap_put(native_methods, gen_key(class_name, method_name, method_descriptor, NULL, 0), method);
 }
 
-void (* find_native_method(const char *class_name,
-                           const char *method_name, const char *method_descriptor))(struct stack_frame *)
+native_method_t find_native_method(const char *class_name, const char *method_name, const char *method_descriptor)
 {
-    char key[KEY_LEN];
-    gen_key(class_name, method_name, method_descriptor, key);
+    size_t key_len = KEY_LEN(class_name, method_name, method_descriptor);
+    char key[key_len];
+    gen_key(class_name, method_name, method_descriptor, key, key_len);
 
-    struct native_method *nm = hashmap_find(native_methods, key);
-    if (nm != NULL) {
-        return nm->method;
+    native_method_t method = hashmap_find(native_methods, key);
+    if (method != NULL) {
+        return method;
     }
 
     // todo not find;   UnsatisfiedLinkError异常

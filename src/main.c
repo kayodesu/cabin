@@ -66,9 +66,9 @@ int main(int argc, char* argv[])
         strcat(extension_classpath, "/ext");  // todo JDK9+ 的目录结构有变动！！！！！！！
     }
 
-    printvm("bootstrap_classpath: %s\n", bootstrap_classpath);
-    printvm("extension_classpath: %s\n", extension_classpath);
-    printvm("user_classpath: %s\n", user_classpath);
+//    printvm("bootstrap_classpath: %s\n", bootstrap_classpath);
+//    printvm("extension_classpath: %s\n", extension_classpath);
+//    printvm("user_classpath: %s\n", user_classpath);
 
     // todo 测试 JAVA_HOME 是不是  java8  版本
 //    jvm_abort("just support java8.\n");

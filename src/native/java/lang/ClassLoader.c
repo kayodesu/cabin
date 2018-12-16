@@ -41,11 +41,11 @@ static void findBuiltinLib(struct stack_frame *frame)
     JOBJECT_CHECK_STROBJ(name0);
 #endif
     const char *name = jstrobj_value(name0);
-    printvm("findBuiltinLib, %s\n", name);
+//    printvm("findBuiltinLib, %s\n", name);
     if (strcmp(name, "zip.dll") == 0) {
         // C:\Program Files\Java\jre1.8.0_162\bin
-        char buf[1024] = "C:\\Program Files\\Java\\jre1.8.0_162\\bin\\zip.dll";
-        os_pushr(frame->operand_stack, jstrobj_create(buf));
+        char buf[1024] = "C:\\Program Files\\Java\\jre1.8.0_162\\bin\\zip.dll";  // todo
+        os_pushr(frame->operand_stack, jstrobj_create(buf));    // todo
     } else {
         jvm_abort(name);
     }

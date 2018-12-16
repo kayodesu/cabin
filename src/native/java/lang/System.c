@@ -33,7 +33,7 @@ static void mapLibraryName(struct stack_frame *frame)
     char mapping_name[strlen(name) + 5];;
     strcpy(mapping_name, name);
     strcat(mapping_name, ".dll"); // todo ...........................
-    printvm("mapLibraryName, %s\n", mapping_name);
+//    printvm("mapLibraryName, %s\n", mapping_name);
     os_pushr(frame->operand_stack, jstrobj_create(mapping_name));  // todo
 }
 
@@ -87,7 +87,7 @@ static void initProperties(struct stack_frame *frame)
             { "os.version",           "" },             // todo
             { "file.separator",       "\\" },            // todo os.PathSeparator
             { "path.separator",       ";" },            // todo os.PathListSeparator
-            { "line.separator",       "\r\n" },           // todo
+            { "line.separator",       "\n" }, // System.out.println最后输出换行符就会用到这个  // todo
             { "user.name",            "" },             // todo
             { "user.home",            "" },             // todo
             { "user.dir",             "." },            // todo

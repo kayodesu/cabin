@@ -31,10 +31,11 @@ static void load(struct stack_frame *frame)
 
     // todo load
 
+    // set boolean loaded is true
     struct slot s = islot(1);
     set_instance_field_value_by_nt(this, "loaded", "Z", &s);
 
-    printvm("-------- %s, %d\n", jstrobj_value(name), is_builtin);
+//    printvm("-------- %s, %d\n", jstrobj_value(name), is_builtin);
 }
 
 

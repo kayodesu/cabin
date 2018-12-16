@@ -166,7 +166,7 @@ static void objectFieldOffset(struct stack_frame *frame)
 
     jref field_obj = slot_getr(frame->local_vars + 1);
     jint offset = slot_geti(get_instance_field_value_by_nt(field_obj, "slot", "I")); // todo "slot", "I" 什么东西
-    printvm("-------   %s, %d\n", jobject_to_string(field_obj), offset);
+//    printvm("-------   %s, %d\n", jobject_to_string(field_obj), offset);
     os_pushl(frame->operand_stack, offset);
 }
 

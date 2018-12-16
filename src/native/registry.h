@@ -14,17 +14,18 @@ void register_all_native_methods();
 static void empty_method(struct stack_frame *frame) { }
 static void registerNatives(struct stack_frame *frame) { }
 
+typedef void (* native_method_t)(struct stack_frame *);
+
 /*
  * 注册本地方法
  */
 void register_native_method(const char *class_name, const char *method_name,
-                            const char *method_descriptor, void (* method)(struct stack_frame *));
+                            const char *method_descriptor, native_method_t method);
 
 /*
  * 查找本地方法
  */
-void (* find_native_method(const char *class_name,
-                           const char *method_name, const char *method_descriptor))(struct stack_frame *);
+native_method_t find_native_method(const char *class_name, const char *method_name, const char *method_descriptor);
 
 //void print_registered_native_methods();
 

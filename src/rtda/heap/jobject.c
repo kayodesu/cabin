@@ -56,7 +56,7 @@ struct jobject* jobject_clone(const struct jobject *src, struct jobject *dest)
         memcpy(o->instance_fields_values, src->instance_fields_values, len);
         o->extra = src->extra;
     }
-    printvm("create object: %s\n", jobject_to_string(o));
+//    printvm("create object: %s\n", jobject_to_string(o));
     return o;
 }
 

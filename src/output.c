@@ -8,7 +8,7 @@
 #include "jvm.h"
 
 /*
- * jbyte 是有符号的，C语言的char是无符号的   todo
+ * jbyte 是有符号的  todo
  */
 void write_bytes(jref obj, jbyte bytes[], jint len)
 {
@@ -19,5 +19,5 @@ void write_bytes(jref obj, jbyte bytes[], jint len)
     for (jint i = 0; i < len; i++) {
         printf("%c", data[i]);
     }
-    fflush(stdout);
+    fflush(stdout);  // todo
 }
