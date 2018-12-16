@@ -26,6 +26,6 @@ static void initialize(struct stack_frame *frame)
 
 void sun_misc_VM_registerNatives()
 {
-    register_native_method("sun/misc/VM", "registerNatives", "()V", empty_method);
+    register_native_method("sun/misc/VM", "registerNatives", "()V", registerNatives);
     register_native_method("sun/misc/VM", "initialize", "()V", initialize);
 }

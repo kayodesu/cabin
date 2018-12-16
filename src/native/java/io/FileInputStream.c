@@ -95,6 +95,6 @@ static void initIDs(struct stack_frame *frame)
 
 void java_io_FileInputStream_registerNatives()
 {
-    register_native_method("java/io/FileInputStream", "registerNatives", "()V", empty_method);
+    register_native_method("java/io/FileInputStream", "registerNatives", "()V", registerNatives);
     register_native_method("java/io/FileInputStream", "initIDs", "()V", initIDs);
 }

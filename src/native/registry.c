@@ -16,6 +16,8 @@
 
 static struct hashmap *native_methods;
 
+void registerNatives(struct stack_frame *frame) { /* do nothing */ }
+
 static char* gen_key(const char *class_name,
                      const char *method_name, const char *method_descriptor, char key0[], size_t key_len)
 {

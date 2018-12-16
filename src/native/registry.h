@@ -10,9 +10,7 @@ struct stack_frame;
 // 注册所有的本地方法
 void register_all_native_methods();
 
-//typedef void (* native_method_f)(struct stack_frame *);
-static void empty_method(struct stack_frame *frame) { }
-static void registerNatives(struct stack_frame *frame) { }
+extern void registerNatives(struct stack_frame *);
 
 typedef void (* native_method_t)(struct stack_frame *);
 

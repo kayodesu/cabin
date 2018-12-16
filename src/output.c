@@ -10,7 +10,7 @@
 /*
  * jbyte 是有符号的  todo
  */
-void write_bytes(jref obj, jbyte bytes[], jint len)
+void write_bytes(jref obj, jbyte bytes[], jint len, bool append)
 {
     assert(obj != NULL);
     assert(bytes != NULL);

@@ -73,8 +73,8 @@ bool jarrobj_is_same_type(const struct jobject *one, const struct jobject *other
 
 bool jarrobj_check_bounds(const struct jobject *ao, jint index);
 
-void* jarrobj_index(struct jobject *o, jint index);
-#define jarrobj_set(T, arrobj, index, data) (*(T *)jarrobj_index(arrobj, index) = data)
+void* jarrobj_index(const struct jobject *o, jint index);
+#define jarrobj_set(T, arrobj, index, data) (*(T *)jarrobj_index(arrobj, index) = (data))
 #define jarrobj_get(T, arrobj, index) (*(T *)jarrobj_index(arrobj, index))
 
 void jarrobj_copy(struct jobject *dst, jint dst_pos, const struct jobject *src, jint src_pos, jint len);

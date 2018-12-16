@@ -12,8 +12,7 @@ struct slot* convert_args(jref this_obj, struct jmethod *m, jref args)
 {
     struct jobject *types = jmethod_get_parameter_types(m);
     int types_len = jarrobj_len(types);
-    int args_len = jarrobj_len(args);
-    assert(types_len == args_len);
+    assert(types_len == jarrobj_len(args));
 
     // 因为有 category two 的存在，result 的长度最大为 types_len * 2 + this_obj
     VM_MALLOCS(struct slot, types_len * 2 + this_obj != NULL ? 1 : 0, result);
@@ -88,7 +87,7 @@ static void newInstance0(struct stack_frame *frame)
 
 void sun_reflect_NativeConstructorAccessorImpl_registerNatives()
 {
-    register_native_method("sun/reflect/NativeConstructorAccessorImpl", "registerNatives", "()V", empty_method);
+    register_native_method("sun/reflect/NativeConstructorAccessorImpl", "registerNatives", "()V", registerNatives);
     register_native_method("sun/reflect/NativeConstructorAccessorImpl", "newInstance0",
                            "(Ljava/lang/reflect/Constructor;[Ljava/lang/Object;)Ljava/lang/Object;", newInstance0);
 }

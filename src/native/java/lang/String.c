@@ -22,6 +22,6 @@ static void intern(struct stack_frame *frame)
 
 void java_lang_String_registerNatives()
 {
-    register_native_method("java/lang/String", "registerNatives", "()V", empty_method);
+    register_native_method("java/lang/String", "registerNatives", "()V", registerNatives);
     register_native_method("java/lang/String", "intern", "()Ljava/lang/String;", intern);
 }

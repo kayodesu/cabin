@@ -18,6 +18,6 @@ static void VMSupportsCS8(struct stack_frame *frame)
 
 void java_util_concurrent_atomic_AtomicLong_registerNatives()
 {
-    register_native_method("java/util/concurrent/atomic/AtomicLong", "registerNatives", "()V", empty_method);
+    register_native_method("java/util/concurrent/atomic/AtomicLong", "registerNatives", "()V", registerNatives);
     register_native_method("java/util/concurrent/atomic/AtomicLong", "VMSupportsCS8", "()Z", VMSupportsCS8);
 }

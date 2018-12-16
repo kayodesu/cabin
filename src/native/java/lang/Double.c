@@ -23,7 +23,7 @@ static void longBitsToDouble(struct stack_frame *frame)
 
 void java_lang_Double_registerNatives()
 {
-    register_native_method("java/lang/Double", "registerNatives", "()V", empty_method);
+    register_native_method("java/lang/Double", "registerNatives", "()V", registerNatives);
     register_native_method("java/lang/Double", "doubleToRawLongBits", "(D)J", doubleToRawLongBits);
     register_native_method("java/lang/Double", "longBitsToDouble", "(J)D", longBitsToDouble);
 }

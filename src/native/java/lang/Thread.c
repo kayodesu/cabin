@@ -67,7 +67,7 @@ static void isAlive(struct stack_frame *frame)
     // todo
 //    JObject *thisObj = frame->getLocalVar(0).getRef();
 //    frame->operandStack.push(0);  // todo wtf?
-    struct jobject *this_obj = slot_getr(frame->local_vars);
+//    struct jobject *this_obj = slot_getr(frame->local_vars);
     os_pushi(frame->operand_stack, 0); // todo 为什么要设置成0，设置成1就状态错误
 }
 
@@ -102,7 +102,7 @@ static void start0(struct stack_frame *frame)
 
 void java_lang_Thread_registerNatives()
 {
-    register_native_method("java/lang/Thread", "registerNatives", "()V", empty_method);
+    register_native_method("java/lang/Thread", "registerNatives", "()V", registerNatives);
     register_native_method("java/lang/Thread", "currentThread", "()Ljava/lang/Thread;", currentThread);
     register_native_method("java/lang/Thread", "sleep", "(J)V", sleep);
     register_native_method("java/lang/Thread", "interrupt0", "()V", interrupt0);

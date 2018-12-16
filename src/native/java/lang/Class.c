@@ -487,20 +487,20 @@ static void getModifiers(struct stack_frame *frame)
  * @since   JDK1.1
  */
 //public native Object[] getSigners();
-static void getSigners(struct stack_frame *frame)
-{
-    jvm_abort("");
-}
+//static void getSigners(struct stack_frame *frame)
+//{
+//    jvm_abort("");
+//}
 
 
 /**
  * Set the signers of this class.
  */
 //native void setSigners(Object[] signers);
-static void setSigners(struct stack_frame *frame)
-{
-    jvm_abort("");
-}
+//static void setSigners(struct stack_frame *frame)
+//{
+//    jvm_abort("");
+//}
 
 // private native Object[] getEnclosingMethod0();
 static void getEnclosingMethod0(struct stack_frame *frame)
@@ -512,10 +512,10 @@ static void getEnclosingMethod0(struct stack_frame *frame)
  * Returns the ProtectionDomain of this class.
  */
 //private native java.security.ProtectionDomain getProtectionDomain0();
-static void getProtectionDomain0(struct stack_frame *frame)
-{
-    jvm_abort("");
-}
+//static void getProtectionDomain0(struct stack_frame *frame)
+//{
+//    jvm_abort("");
+//}
 
 // Generic signature handling
 //private native String getGenericSignature0();
@@ -533,10 +533,10 @@ static void getRawAnnotations(struct stack_frame *frame)
 
 //// Since 1.8
 //native byte[] getRawTypeAnnotations();
-static void getRawTypeAnnotations(struct stack_frame *frame)
-{
-    jvm_abort("");
-}
+//static void getRawTypeAnnotations(struct stack_frame *frame)
+//{
+//    jvm_abort("");
+//}
 
 
 //static byte[] getExecutableTypeAnnotationBytes(Executable ex) {
@@ -766,10 +766,10 @@ static void getDeclaringClass0(struct stack_frame *frame)
  *
  * private native Class<?>[] getDeclaredClasses0();
  */
-static void getDeclaredClasses0(struct stack_frame *frame)
-{
-    jvm_abort("");
-}
+//static void getDeclaredClasses0(struct stack_frame *frame)
+//{
+//    jvm_abort("");
+//}
 
 
 void java_lang_Class_registerNatives()

@@ -23,7 +23,7 @@ static void intBitsToFloat(struct stack_frame *frame)
 
 void java_lang_Float_registerNatives()
 {
-    register_native_method("java/lang/Float", "registerNatives", "()V", empty_method);
+    register_native_method("java/lang/Float", "registerNatives", "()V", registerNatives);
     register_native_method("java/lang/Float", "floatToRawIntBits", "(F)I", floatToRawIntBits);
     register_native_method("java/lang/Float", "intBitsToFloat", "(I)F", intBitsToFloat);
 }

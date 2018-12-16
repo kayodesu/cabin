@@ -314,7 +314,7 @@ static struct jclass* verification(struct jclass *c)
 
 static struct jclass* preparation(struct jclass *c)
 {
-    const struct rtcp* const rtcp = c->rtcp;
+//    const struct rtcp* const rtcp = c->rtcp;
 
     // 如果静态变量属于基本类型或String类型，有final修饰符，
     // 且它的值在编译期已知，则该值存储在class文件常量池中。
@@ -324,10 +324,10 @@ static struct jclass* preparation(struct jclass *c)
             continue;
         }
 
-        const int index = c->fields[i]->constant_value_index;
+//        const int index = c->fields[i]->constant_value_index;
 
         // 值已经在常量池中了
-        const bool b = (index != INVALID_CONSTANT_VALUE_INDEX);
+//        const bool b = (index != INVALID_CONSTANT_VALUE_INDEX);
 // todo
 //        c->setFieldValue(field.id, field.descriptor,
 //        [&]() -> jint { return b ? rtcp->getInt(index) : 0; },  // todo byte short 等都是用 int 表示的吗

@@ -7,6 +7,6 @@
 
 #include "jtypes.h"
 
-void write_bytes(jref obj, jbyte bytes[], jint len);
+void write_bytes(jref obj, jbyte bytes[], jint len, bool append);
 
 #endif //JVM_OUTPUT_H

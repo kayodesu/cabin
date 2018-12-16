@@ -61,7 +61,7 @@ static void set(struct stack_frame *frame)
 
 void java_io_FileDescriptor_registerNatives()
 {
-    register_native_method("java/io/FileDescriptor", "registerNatives", "()V", empty_method);
+    register_native_method("java/io/FileDescriptor", "registerNatives", "()V", registerNatives);
     register_native_method("java/io/FileDescriptor", "initIDs", "()V", initIDs);
     register_native_method("java/io/FileDescriptor", "set", "(I)J", set);
 }

@@ -374,7 +374,7 @@ static void allocateMemory(struct stack_frame *frame)
 {
     jlong bytes = slot_getl(frame->local_vars + 1);
     VM_MALLOCS(u1, bytes, p);
-    os_pushl(frame->operand_stack, (jlong) p);
+    os_pushl(frame->operand_stack, (jlong) (intptr_t) p);
 }
 
 // public native long reallocateMemory(long address, long bytes);
@@ -382,14 +382,14 @@ static void reallocateMemory(struct stack_frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
     jlong bytes = (jbyte) slot_getl(frame->local_vars + 3);
-    os_pushl(frame->operand_stack, (jlong) realloc((void *) address, (size_t) bytes));
+    os_pushl(frame->operand_stack, (jlong) (intptr_t) realloc((void *) (intptr_t) address, (size_t) bytes)); // 有内存泄漏
 }
 
 // public native void freeMemory(long address);
 static void freeMemory(struct stack_frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
-    free((void *) address);
+    free((void *) (intptr_t) address);
 }
 
 // public native int addressSize();
@@ -403,14 +403,14 @@ static void putByte(struct stack_frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
     jbyte x = (jbyte) slot_geti(frame->local_vars + 3);
-    *(jbyte *) address = BIGENDIAN(x); // todo java按大端存储？？？？？？？
+    *(jbyte *) (intptr_t) address = BIGENDIAN(x); // todo java按大端存储？？？？？？？
 }
 
 // public native byte getByte(long address);
 static void getByte(struct stack_frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
-    os_pushi(frame->operand_stack, *(jbyte *) address);
+    os_pushi(frame->operand_stack, *(jbyte *) (intptr_t) address);
 }
 
 // public native void putChar(long address, char x);
@@ -418,14 +418,14 @@ static void putChar(struct stack_frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
     jchar x = (jchar) slot_geti(frame->local_vars + 3);
-    *(jchar *) address = BIGENDIAN(x);
+    *(jchar *) (intptr_t) address = BIGENDIAN(x);
 }
 
 // public native char getChar(long address);
 static void getChar(struct stack_frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
-    os_pushi(frame->operand_stack, *(jchar *) address);
+    os_pushi(frame->operand_stack, *(jchar *) (intptr_t) address);
 }
 
 // public native void putShort(long address, short x);
@@ -433,14 +433,14 @@ static void putShort(struct stack_frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
     jshort x = (jshort) slot_geti(frame->local_vars + 3);
-    *(jshort *) address = BIGENDIAN(x);
+    *(jshort *) (intptr_t) address = BIGENDIAN(x);
 }
 
 // public native short getShort(long address);
 static void getShort(struct stack_frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
-    os_pushi(frame->operand_stack, *(jshort *) address);
+    os_pushi(frame->operand_stack, *(jshort *) (intptr_t) address);
 }
 
 // public native void putInt(long address, int x);
@@ -448,14 +448,14 @@ static void putInt(struct stack_frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
     jint x = slot_geti(frame->local_vars + 3);
-    *(jint *) address = BIGENDIAN(x);
+    *(jint *) (intptr_t) address = BIGENDIAN(x);
 }
 
 // public native int getInt(long address);
 static void getInt(struct stack_frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
-    os_pushi(frame->operand_stack, *(jint *) address);
+    os_pushi(frame->operand_stack, *(jint *) (intptr_t) address);
 }
 
 // public native void putLong(long address, long x);
@@ -463,14 +463,14 @@ static void putLong(struct stack_frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
     jlong x = slot_getl(frame->local_vars + 3);
-    *(jlong *) address = BIGENDIAN(x);
+    *(jlong *) (intptr_t) address = BIGENDIAN(x);
 }
 
 // public native long getLong(long address);
 static void getLong(struct stack_frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
-    os_pushl(frame->operand_stack, *(jlong *) address);
+    os_pushl(frame->operand_stack, *(jlong *) (intptr_t) address);
 }
 
 // public native void putFloat(long address, float x);
@@ -478,14 +478,14 @@ static void putFloat(struct stack_frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
     jfloat x = slot_getf(frame->local_vars + 3);
-    *(jfloat *) address = BIGENDIAN(x);
+    *(jfloat *) (intptr_t) address = BIGENDIAN(x);
 }
 
 // public native float getFloat(long address);
 static void getFloat(struct stack_frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
-    os_pushf(frame->operand_stack, *(jfloat *) address);
+    os_pushf(frame->operand_stack, *(jfloat *) (intptr_t) address);
 }
 
 // public native void putDouble(long address, double x);
@@ -493,14 +493,14 @@ static void putDouble(struct stack_frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
     jdouble x = slot_getd(frame->local_vars + 3);
-    *(jdouble *) address = BIGENDIAN(x);
+    *(jdouble *) (intptr_t) address = BIGENDIAN(x);
 }
 
 // public native double getDouble(long address);
 static void getDouble(struct stack_frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
-    os_pushd(frame->operand_stack, *(jdouble *) address);
+    os_pushd(frame->operand_stack, *(jdouble *) (intptr_t) address);
 }
 
 // public native void putAddress(long address, long x);

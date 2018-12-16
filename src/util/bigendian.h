@@ -74,7 +74,7 @@ static inline jdouble swap_jdouble_endian(jdouble x)
 {
     static union {
         jdouble d;
-        char c[4];
+        char c[8];
     } t1, t2;
 
     t1.d = x;

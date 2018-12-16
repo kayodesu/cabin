@@ -589,7 +589,7 @@ struct slot* copy_inited_instance_fields_values(const struct jclass *c)
     return copy;
 }
 
-void set_static_field_value_by_id(const struct jclass *c, int id, const struct slot *value)
+void set_static_field_value_by_id(struct jclass *c, int id, const struct slot *value)
 {
     assert(c != NULL && value != NULL);
     assert(id >= 0 && id < c->static_fields_count);
@@ -600,7 +600,7 @@ void set_static_field_value_by_id(const struct jclass *c, int id, const struct s
     }
 }
 
-void set_static_field_value_by_nt(const struct jclass *c,
+void set_static_field_value_by_nt(struct jclass *c,
                   const char *name, const char *descriptor, const struct slot *value)
 {
     assert(c != NULL && name != NULL && descriptor != NULL && value != NULL);

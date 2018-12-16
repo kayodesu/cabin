@@ -58,7 +58,7 @@ static void writeBytes(struct stack_frame *frame)
 #endif
     // todo
     jbyte *data = jarrobj_data(b);
-    write_bytes(this, data + off, len);
+    write_bytes(this, data + off, len, append);
     /*
     fdObj := fosObj.GetFieldValue("fd", "Ljava/io/FileDescriptor;").(*heap.Object)
 	if fdObj.Extra() == nil {
@@ -85,7 +85,7 @@ static void writeBytes(struct stack_frame *frame)
 
 void java_io_FileOutputStream_registerNatives()
 {
-    register_native_method("java/io/FileOutputStream", "registerNatives", "()V", empty_method);
+    register_native_method("java/io/FileOutputStream", "registerNatives", "()V", registerNatives);
     register_native_method("java/io/FileOutputStream", "writeBytes", "([BIIZ)V", writeBytes);
     register_native_method("java/io/FileOutputStream", "initIDs", "()V", initIDs);
 }

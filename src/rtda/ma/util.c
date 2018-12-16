@@ -1,6 +1,4 @@
-
 #include "../heap/jobject.h"
-#include "../primitive_types.h"
 
 /*
  * Author: Jia Yang

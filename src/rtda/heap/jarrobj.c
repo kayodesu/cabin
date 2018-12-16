@@ -109,7 +109,7 @@ bool jarrobj_check_bounds(const struct jobject *o, jint index)
     return b;
 }
 
-void* jarrobj_index(struct jobject *o, jint index)
+void* jarrobj_index(const struct jobject *o, jint index)
 {
     assert(o != NULL);
     assert(jobject_is_array(o));
