@@ -7,7 +7,7 @@
 #include "jclass.h"
 #include "access.h"
 #include "jfield.h"
-#include "../primitive_types.h"
+
 
 // 计算实例字段的个数，同时给它们编号
 static void calc_instance_field_id(struct jclass *c)
@@ -191,7 +191,6 @@ struct jclass *jclass_create_by_classfile(struct classloader *loader, struct cla
         *p = 0; // 得到包名
     }
 
-//    printvm("+++++++++++++++++++ %d\n", cf->super_class);
     if (cf->super_class == 0) { // why 0
         c->super_class = NULL; // 可以没有父类
     } else {
@@ -247,9 +246,6 @@ struct jclass *jclass_create_by_classfile(struct classloader *loader, struct cla
     }
 
     classfile_destroy(cf);
-//    if(strcmp(c->class_name, "java/lang/reflc->fieldsect/Constructor") == 0) {
-//        int iiii = 3;
-//    }
     return c;
 }
 

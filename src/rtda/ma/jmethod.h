@@ -41,7 +41,7 @@ struct jmethod {
 
     u2 exception_tables_count;
     /*
-     * start_pc 给出的是try{}语句块的第一条指令，end_pc 给出的则是try{}语句块的下一条指令。
+     * start_pc 给出的是try{ }语句块的第一条指令，end_pc 给出的则是try{}语句块的下一条指令。
      * 如果 catch_type 是 NULL（在class文件中是0），表示可以处理所有异常，这是用来实现finally子句的。
      */
     struct exception_table *exception_tables;

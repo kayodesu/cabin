@@ -8,7 +8,6 @@
 #include "jclass.h"
 #include "../../util/util.h"
 #include "../heap/jobject.h"
-#include "../primitive_types.h"
 
 
 struct jfield* jfield_create(struct jclass *c, const struct member_info *info)
@@ -143,4 +142,3 @@ char* jfield_to_string(const struct jfield *field)
     return result;
 #undef MAX_LEN
 }
-

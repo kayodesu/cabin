@@ -18,19 +18,6 @@ static struct hashmap *native_methods;
 
 void registerNatives(struct stack_frame *frame) { /* do nothing */ }
 
-static char* gen_key(const char *class_name,
-                     const char *method_name, const char *method_descriptor, char key[], size_t key_len)
-{
-    assert(class_name != NULL);
-    assert(method_name != NULL);
-    assert(method_descriptor != NULL);
-    assert(key != NULL);
-
-    snprintf(key, key_len - 1, "%s~%s~%s", class_name, method_name, method_descriptor);
-    key[key_len - 1] = 0;
-    return key;
-}
-
 void register_native_method(const char *key, native_method_t method)
 {
     hashmap_put(native_methods, key, method);
@@ -38,9 +25,14 @@ void register_native_method(const char *key, native_method_t method)
 
 native_method_t find_native_method(const char *class_name, const char *method_name, const char *method_descriptor)
 {
+    assert(class_name != NULL);
+    assert(method_name != NULL);
+    assert(method_descriptor != NULL);
+
     size_t key_len = KEY_LEN(class_name, method_name, method_descriptor);
     char key[key_len];
-    gen_key(class_name, method_name, method_descriptor, key, key_len);
+    snprintf(key, key_len - 1, "%s~%s~%s", class_name, method_name, method_descriptor);
+    key[key_len - 1] = 0;
 
     native_method_t method = hashmap_find(native_methods, key);
     if (method != NULL) {
