@@ -19,31 +19,21 @@ static struct hashmap *native_methods;
 void registerNatives(struct stack_frame *frame) { /* do nothing */ }
 
 static char* gen_key(const char *class_name,
-                     const char *method_name, const char *method_descriptor, char key0[], size_t key_len)
+                     const char *method_name, const char *method_descriptor, char key[], size_t key_len)
 {
     assert(class_name != NULL);
     assert(method_name != NULL);
     assert(method_descriptor != NULL);
+    assert(key != NULL);
 
-    char *key;
-    size_t len;
-    if (key0 != NULL) {
-        key = key0;
-        len = key_len;
-    } else {
-        len = KEY_LEN(class_name, method_name, method_descriptor);
-        key = malloc(sizeof(char) * len);
-    }
-
-    snprintf(key, len - 1, "%s~%s~%s", class_name, method_name, method_descriptor);
-    key[len - 1] = 0;
+    snprintf(key, key_len - 1, "%s~%s~%s", class_name, method_name, method_descriptor);
+    key[key_len - 1] = 0;
     return key;
 }
 
-void register_native_method(const char *class_name, const char *method_name,
-                            const char *method_descriptor, native_method_t method)
+void register_native_method(const char *key, native_method_t method)
 {
-    hashmap_put(native_methods, gen_key(class_name, method_name, method_descriptor, NULL, 0), method);
+    hashmap_put(native_methods, key, method);
 }
 
 native_method_t find_native_method(const char *class_name, const char *method_name, const char *method_descriptor)

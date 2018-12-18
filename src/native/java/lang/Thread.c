@@ -102,12 +102,12 @@ static void start0(struct stack_frame *frame)
 
 void java_lang_Thread_registerNatives()
 {
-    register_native_method("java/lang/Thread", "registerNatives", "()V", registerNatives);
-    register_native_method("java/lang/Thread", "currentThread", "()Ljava/lang/Thread;", currentThread);
-    register_native_method("java/lang/Thread", "sleep", "(J)V", sleep);
-    register_native_method("java/lang/Thread", "interrupt0", "()V", interrupt0);
-    register_native_method("java/lang/Thread", "isInterrupted", "(Z)Z", isInterrupted);
-    register_native_method("java/lang/Thread", "isAlive", "()Z", isAlive);
-    register_native_method("java/lang/Thread", "setPriority0", "(I)V", setPriority0);
-    register_native_method("java/lang/Thread", "start0", "()V", start0);
+    register_native_method("java/lang/Thread~registerNatives~()V", registerNatives);
+    register_native_method("java/lang/Thread~currentThread~()Ljava/lang/Thread;", currentThread);
+    register_native_method("java/lang/Thread~sleep~(J)V", sleep);
+    register_native_method("java/lang/Thread~interrupt0~()V", interrupt0);
+    register_native_method("java/lang/Thread~isInterrupted~(Z)Z", isInterrupted);
+    register_native_method("java/lang/Thread~isAlive~()Z", isAlive);
+    register_native_method("java/lang/Thread~setPriority0~(I)V", setPriority0);
+    register_native_method("java/lang/Thread~start0~()V", start0);
 }

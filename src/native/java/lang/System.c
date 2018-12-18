@@ -168,19 +168,15 @@ static void nanoTime(struct stack_frame *frame)
 
 void java_lang_System_registerNatives()
 {
-#define R(method, descriptor) register_native_method("java/lang/System", #method, descriptor, method)
-    
-    R(registerNatives, "()V");
+    register_native_method("java/lang/System~registerNatives~()V", registerNatives);
 
-    R(mapLibraryName, "(Ljava/lang/String;)Ljava/lang/String;");
-    R(arraycopy, "(Ljava/lang/Object;ILjava/lang/Object;II)V");
-    R(initProperties, "(Ljava/util/Properties;)Ljava/util/Properties;");
+    register_native_method("java/lang/System~mapLibraryName~(Ljava/lang/String;)Ljava/lang/String;", mapLibraryName);
+    register_native_method("java/lang/System~arraycopy~(Ljava/lang/Object;ILjava/lang/Object;II)V", arraycopy);
+    register_native_method("java/lang/System~initProperties~(Ljava/util/Properties;)Ljava/util/Properties;", initProperties);
 
-    R(setIn0, "(Ljava/io/InputStream;)V");
-    R(setOut0, "(Ljava/io/PrintStream;)V");
-    R(setErr0, "(Ljava/io/PrintStream;)V");
+    register_native_method("java/lang/System~setIn0~(Ljava/io/InputStream;)V", setIn0);
+    register_native_method("java/lang/System~setOut0~(Ljava/io/PrintStream;)V", setOut0);
+    register_native_method("java/lang/System~setErr0~(Ljava/io/PrintStream;)V", setErr0);
 
-    R(nanoTime, "()J");
-
-#undef R
+    register_native_method("java/lang/System~nanoTime~()J", nanoTime);
 }

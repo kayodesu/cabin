@@ -54,14 +54,12 @@ static void findBuiltinLib(struct stack_frame *frame)
 
 void java_lang_ClassLoader_registerNatives()
 {
-#define R(method, descriptor) register_native_method("java/lang/ClassLoader", #method, descriptor, method)
-
-    R(registerNatives, "()V");
-    R(defineClass1, "(Ljava/lang/String;[BIILjava/security/ProtectionDomain;Ljava/lang/String;)Ljava/lang/Class;");
-    R(findBootstrapClass, "(Ljava/lang/String;)Ljava/lang/Class;");
-    R(findLoadedClass0, "(Ljava/lang/String;)Ljava/lang/Class;");
-    R(findBuiltinLib, "(Ljava/lang/String;)Ljava/lang/String;");
-
-#undef R
+    register_native_method("java/lang/ClassLoader~registerNatives~()V", registerNatives);
+    register_native_method("java/lang/ClassLoader~defineClass1~"
+             "(Ljava/lang/String;[BIILjava/security/ProtectionDomain;Ljava/lang/String;)Ljava/lang/Class;",
+                           defineClass1);
+    register_native_method("java/lang/ClassLoader~findBootstrapClass~(Ljava/lang/String;)Ljava/lang/Class;", findBootstrapClass);
+    register_native_method("java/lang/ClassLoader~findLoadedClass0~(Ljava/lang/String;)Ljava/lang/Class;", findLoadedClass0);
+    register_native_method("java/lang/ClassLoader~findBuiltinLib~(Ljava/lang/String;)Ljava/lang/String;", findBuiltinLib);
 }
 

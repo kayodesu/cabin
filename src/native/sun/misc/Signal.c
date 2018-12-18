@@ -9,7 +9,7 @@
 // private static native int findSignal(String string);
 static void findSignal(struct stack_frame *frame)
 {
-//    jref name = slot_getr(frame->local_vars);
+    jref name = slot_getr(frame->local_vars);
 #ifdef JVM_DEBUG
     JOBJECT_CHECK_STROBJ(name);
 #endif
@@ -35,8 +35,8 @@ static void raise0(struct stack_frame *frame)
 
 void sun_misc_Signal_registerNatives()
 {
-    register_native_method("sun/misc/Signal", "registerNatives", "()V", registerNatives);
-    register_native_method("sun/misc/Signal", "findSignal", "(Ljava/lang/String;)I", findSignal);
-    register_native_method("sun/misc/Signal", "handle0", "(IJ)J", handle0);
-    register_native_method("sun/misc/Signal", "raise0", "(I)V", raise0);
+    register_native_method("sun/misc/Signal~registerNatives~()V", registerNatives);
+    register_native_method("sun/misc/Signal~findSignal~(Ljava/lang/String;)I", findSignal);
+    register_native_method("sun/misc/Signal~handle0~(IJ)J", handle0);
+    register_native_method("sun/misc/Signal~raise0~(I)V", raise0);
 }

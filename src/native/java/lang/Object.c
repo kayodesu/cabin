@@ -50,10 +50,10 @@ static void wait(struct stack_frame *frame)
 
 void java_lang_Object_registerNatives()
 {
-    register_native_method("java/lang/Object", "registerNatives", "()V", registerNatives);
-    register_native_method("java/lang/Object", "hashCode", "()I", hashCode);
-    register_native_method("java/lang/Object", "getClass", "()Ljava/lang/Class;", getClass);
-    register_native_method("java/lang/Object", "clone", "()Ljava/lang/Object;", clone);
-    register_native_method("java/lang/Object", "notifyAll", "()V", notifyAll);
-    register_native_method("java/lang/Object", "wait", "(J)V", wait);
+    register_native_method("java/lang/Object~registerNatives~()V", registerNatives);
+    register_native_method("java/lang/Object~hashCode~()I", hashCode);
+    register_native_method("java/lang/Object~getClass~()Ljava/lang/Class;", getClass);
+    register_native_method("java/lang/Object~clone~()Ljava/lang/Object;", clone);
+    register_native_method("java/lang/Object~notifyAll~()V", notifyAll);
+    register_native_method("java/lang/Object~wait~(J)V", wait);
 }

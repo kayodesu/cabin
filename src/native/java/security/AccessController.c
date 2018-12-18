@@ -60,24 +60,25 @@ static void getStackAccessControlContext(struct stack_frame *frame)
 
 void java_security_AccessController_registerNatives()
 {
-    register_native_method("java/security/AccessController", "registerNatives", "()V", registerNatives);
-    register_native_method("java/security/AccessController", "getStackAccessControlContext",
-                         "()Ljava/security/AccessControlContext;", getStackAccessControlContext);
+    register_native_method("java/security/AccessController~registerNatives~()V", registerNatives);
+    register_native_method("java/security/AccessController~"
+                                   "getStackAccessControlContext~"
+                                   "()Ljava/security/AccessControlContext;",
+                           getStackAccessControlContext);
 
-    register_native_method("java/security/AccessController", "doPrivileged",
-                         "(Ljava/security/PrivilegedAction;)Ljava/lang/Object;",
+    register_native_method("java/security/AccessController~doPrivileged~"
+                                   "(Ljava/security/PrivilegedAction;)Ljava/lang/Object;",
                          doPrivileged);
 
-    register_native_method("java/security/AccessController", "doPrivileged",
-                         "(Ljava/security/PrivilegedAction;Ljava/security/AccessControlContext;)Ljava/lang/Object;",
+    register_native_method("java/security/AccessController~doPrivileged~"
+             "(Ljava/security/PrivilegedAction;Ljava/security/AccessControlContext;)Ljava/lang/Object;",
                          doPrivileged1);
 
-    register_native_method("java/security/AccessController", "doPrivileged",
-                         "(Ljava/security/PrivilegedExceptionAction;)Ljava/lang/Object;",
+    register_native_method("java/security/AccessController~doPrivileged~"
+                                   "(Ljava/security/PrivilegedExceptionAction;)Ljava/lang/Object;",
                          doPrivileged2);
 
-    register_native_method("java/security/AccessController", "doPrivileged",
-                 "(Ljava/security/PrivilegedExceptionAction;Ljava/security/AccessControlContext;)Ljava/lang/Object;",
-                 doPrivileged3);
-
+    register_native_method("java/security/AccessController~doPrivileged~"
+             "(Ljava/security/PrivilegedExceptionAction;Ljava/security/AccessControlContext;)Ljava/lang/Object;",
+                           doPrivileged3);
 }

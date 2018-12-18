@@ -31,8 +31,7 @@ static void getUTF8At0(struct stack_frame *frame)
 
 void sun_reflect_ConstantPool_registerNatives()
 {
-    register_native_method("sun/reflect/ConstantPool", "registerNatives", "()V", registerNatives);
-    register_native_method("sun/reflect/ConstantPool", "getLongAt0", "(Ljava/lang/Object;I)J", getLongAt0);
-    register_native_method("sun/reflect/ConstantPool",
-                           "getUTF8At0", "(Ljava/lang/Object;I)Ljava/lang/String;", getUTF8At0);
+    register_native_method("sun/reflect/ConstantPool~registerNatives~()V", registerNatives);
+    register_native_method("sun/reflect/ConstantPool~getLongAt0~(Ljava/lang/Object;I)J", getLongAt0);
+    register_native_method("sun/reflect/ConstantPool~getUTF8At0~(Ljava/lang/Object;I)Ljava/lang/String;", getUTF8At0);
 }

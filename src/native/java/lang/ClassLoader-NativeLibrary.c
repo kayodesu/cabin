@@ -22,7 +22,7 @@ static void load(struct stack_frame *frame)
 {
     // todo
     jref this = slot_getr(frame->local_vars);
-//    jref name = slot_getr(frame->local_vars + 1);
+    jref name = slot_getr(frame->local_vars + 1);
 #ifdef JVM_DEBUG
     JOBJECT_CHECK_STROBJ(name);
 #endif
@@ -40,8 +40,8 @@ static void load(struct stack_frame *frame)
 
 void java_lang_ClassLoader$NativeLibrary_registerNatives()
 {
-    register_native_method("java/lang/ClassLoader$NativeLibrary", "registerNatives", "()V", registerNatives);
-    register_native_method("java/lang/ClassLoader$NativeLibrary", "find", "(Ljava/lang/String;)J", find);
-    register_native_method("java/lang/ClassLoader$NativeLibrary", "load", "(Ljava/lang/String;Z)V", load);
+    register_native_method("java/lang/ClassLoader$NativeLibrary~registerNatives~()V", registerNatives);
+    register_native_method("java/lang/ClassLoader$NativeLibrary~find~(Ljava/lang/String;)J", find);
+    register_native_method("java/lang/ClassLoader$NativeLibrary~load~(Ljava/lang/String;Z)V", load);
 }
 

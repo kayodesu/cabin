@@ -45,6 +45,6 @@ static void fillInStackTrace(struct stack_frame *frame)
 
 void java_lang_Throwable_registerNatives()
 {
-    register_native_method("java/lang/Throwable", "registerNatives", "()V", registerNatives);
-    register_native_method("java/lang/Throwable", "fillInStackTrace", "(I)Ljava/lang/Throwable;", fillInStackTrace);
+    register_native_method("java/lang/Throwable~registerNatives~()V", registerNatives);
+    register_native_method("java/lang/Throwable~fillInStackTrace~(I)Ljava/lang/Throwable;", fillInStackTrace);
 }

@@ -14,6 +14,7 @@
 
 char bootstrap_classpath[PATH_MAX] = { 0 };
 char extension_classpath[PATH_MAX] = { 0 };
+
 char *user_classpath = "D:\\code\\jvm\\testclasses"; // todo;
 
 struct classloader *bootstrap_loader = NULL;

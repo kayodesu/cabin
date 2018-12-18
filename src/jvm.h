@@ -33,6 +33,12 @@ extern char bootstrap_classpath[];
 extern char extension_classpath[];
 
 // 用户类路径（user classpath）我们自己实现的类，以及第三方类库位于用户类路径
+/*
+ * 用户类路径的默认值是当前目录，也就是“.”。可以设置CLASSPATH环境变量来修改用户类路径。
+ * 可以通过-classpath（或简写为-cp）选项修改，
+ * -classpath/-cp选项的优先级更高，可以覆盖CLASSPATH环境变量设置。
+ * -classpath/-cp选项既可以指定目录，也可以指定JAR文件或者ZIP文件。
+ */
 extern char *user_classpath; // todo
 
 

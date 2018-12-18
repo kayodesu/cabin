@@ -13,6 +13,6 @@ static void setErrorMode(struct stack_frame *frame)
 
 void sun_io_Win32ErrorMode_registerNatives()
 {
-    register_native_method("sun/io/Win32ErrorMode", "registerNatives", "()V", registerNatives);
-    register_native_method("sun/io/Win32ErrorMode", "setErrorMode", "(J)J", setErrorMode);
+    register_native_method("sun/io/Win32ErrorMode~registerNatives~()V", registerNatives);
+    register_native_method("sun/io/Win32ErrorMode~setErrorMode~(J)J", setErrorMode);
 }

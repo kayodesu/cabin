@@ -87,7 +87,8 @@ static void newInstance0(struct stack_frame *frame)
 
 void sun_reflect_NativeConstructorAccessorImpl_registerNatives()
 {
-    register_native_method("sun/reflect/NativeConstructorAccessorImpl", "registerNatives", "()V", registerNatives);
-    register_native_method("sun/reflect/NativeConstructorAccessorImpl", "newInstance0",
-                           "(Ljava/lang/reflect/Constructor;[Ljava/lang/Object;)Ljava/lang/Object;", newInstance0);
+    register_native_method("sun/reflect/NativeConstructorAccessorImpl~registerNatives~()V", registerNatives);
+    register_native_method("sun/reflect/NativeConstructorAccessorImpl~newInstance0~"
+                                   "(Ljava/lang/reflect/Constructor;[Ljava/lang/Object;)Ljava/lang/Object;",
+                           newInstance0);
 }
