@@ -6,7 +6,7 @@
 #include "jvm.h"
 #include "rtda/ma/jclass.h"
 #include "rtda/heap/jobject.h"
-#include "util/util.h"
+#include "native/registry.h"
 
 /*
  * Author: Jia Yang
@@ -14,8 +14,7 @@
 
 char bootstrap_classpath[PATH_MAX] = { 0 };
 char extension_classpath[PATH_MAX] = { 0 };
-
-char *user_classpath = "D:\\code\\jvm\\testclasses"; // todo;
+char user_classpath[PATH_MAX] = "./"; // default: current path.
 
 struct classloader *bootstrap_loader = NULL;
 
@@ -92,20 +91,16 @@ static void create_main_thread(struct classloader *loader)
     interpret(main_thread);
 }
 
-void start_jvm(const char *main_class_name)
-{
-    assert(main_class_name != NULL);
+static char main_class_name[FILENAME_MAX] = { 0 };
 
+static void start_jvm()
+{
     build_str_pool();
 
     struct classloader *loader = classloader_create(true);
     create_system_thread_group(loader);
     create_main_thread(loader);
     init_jvm(loader, main_thread);
-
-#ifdef JVM_DEBUG
-    printvm("loading main class: %s !!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", main_class_name);
-#endif
 
     struct jclass *main_class = classloader_load_class(loader, main_class_name);
     if (main_class == NULL) {
@@ -135,16 +130,70 @@ void start_jvm(const char *main_class_name)
     classloader_destroy(loader);
 }
 
-//void print_properties()
-//{
-//    if (bootstrap_loader == NULL) {
-//        return;
-//    }
-//
-//    struct jclass *c = classloader_find_class(bootstrap_loader, "java/lang/System");
-//    if (c == NULL) {
-//        return;
-//    }
-//
-//    struct jfield *f = jclass_lookup_static_field(c, "props", "java/util/Properties");
-//}
+/*
+ * -bcp path: Bootstrap Class Path, JavaHome路径, 对应 jre/lib 目录。
+ * -cp: Class Path, user class path.
+ */
+static void parse_args(int argc, char* argv[])
+{
+    // 可执行程序的名字为 argv[0]，跳过。
+    for (int i = 1; i < argc; i++) {
+        if (argv[i][0] == '-') {
+            const char *name = argv[i];
+            if (strcmp(name, "-bcp") == 0) { // parse Bootstrap Class Path
+                if (++i >= argc) {
+                    jvm_abort("缺少参数：%s\n", name);
+                }
+                strcpy(bootstrap_classpath, argv[i]);
+            } if (strcmp(name, "-cp") == 0) { // parse Class Path
+                if (++i >= argc) {
+                    jvm_abort("缺少参数：%s\n", name);
+                }
+                strcpy(user_classpath, argv[i]);
+            } else {
+                jvm_abort("不认识的参数：%s\n", name);
+            }
+        } else {
+            strcpy(main_class_name, argv[i]);
+        }
+    }
+
+    if (main_class_name[0] == 0) {  // empty
+        jvm_abort("no input file\n");
+    }
+}
+
+int main(int argc, char* argv[])
+{
+    parse_args(argc, argv);
+
+    // 命令行参数没有设置 bootstrap_classpath 的值，那么使用 JAVA_HOME 环境变量
+    if (bootstrap_classpath[0] == 0) { // empty
+        char *java_home = getenv("JAVA_HOME"); // JAVA_HOME 是 JDK 的目录
+        if (java_home == NULL) {
+            // todo error
+            jvm_abort("no java lib");
+            return -1;
+        }
+        strcpy(bootstrap_classpath, java_home);
+        strcat(bootstrap_classpath, "/jre/lib");
+    }
+
+    if (extension_classpath[0] == 0) {  // empty
+        strcpy(extension_classpath, bootstrap_classpath);
+        strcat(extension_classpath, "/ext");  // todo JDK9+ 的目录结构有变动！！！！！！！
+    }
+
+#ifdef JVM_DEBUG
+    printvm("bootstrap_classpath: %s\n", bootstrap_classpath);
+    printvm("extension_classpath: %s\n", extension_classpath);
+    printvm("user_classpath: %s\n", user_classpath);
+#endif
+
+    // todo 测试 JAVA_HOME 是不是  java8  版本
+//    jvm_abort("just support java8");
+
+    register_all_native_methods(); // todo 不要一次全注册，需要时再注册
+    start_jvm();
+    return 0;
+}

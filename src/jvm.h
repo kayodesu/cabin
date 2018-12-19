@@ -35,11 +35,11 @@ extern char extension_classpath[];
 // 用户类路径（user classpath）我们自己实现的类，以及第三方类库位于用户类路径
 /*
  * 用户类路径的默认值是当前目录，也就是“.”。可以设置CLASSPATH环境变量来修改用户类路径。
- * 可以通过-classpath（或简写为-cp）选项修改，
- * -classpath/-cp选项的优先级更高，可以覆盖CLASSPATH环境变量设置。
- * -classpath/-cp选项既可以指定目录，也可以指定JAR文件或者ZIP文件。
+ * 可以通过 -cp 选项修改，
+ * -cp 选项的优先级更高，可以覆盖CLASSPATH环境变量设置。
+ * -cp 选项既可以指定目录，也可以指定JAR文件或者ZIP文件。 todo
  */
-extern char *user_classpath; // todo
+extern char user_classpath[]; // todo
 
 
 // todo 说明
@@ -65,15 +65,9 @@ extern struct jobject *system_thread_group;
 // name of main thread
 #define MAIN_THREAD_NAME "main"
 
-/*
- * start jvm.
- * todo 说明 main_class_name 的格式，全路径名
- */
-void start_jvm(const char *main_class_name);
-
 #define printvm(...) do { printf("%s: %d: ", __FILE__, __LINE__); printf(__VA_ARGS__); } while(false)
 
 // 出现异常，退出jvm
-#define jvm_abort(...) do { printvm("fatal error. "); printf(__VA_ARGS__); exit(-1); } while(false)
+#define jvm_abort(...) do { printf("fatal error. "); printf(__VA_ARGS__); exit(-1); } while(false)
 
 #endif //JVM_JVM_H
