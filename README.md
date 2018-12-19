@@ -15,7 +15,7 @@ A JVM written in C.
 -cp 选项既可以指定多个目录和JAR文件，以分号隔开。
 
 ## 示例
-+ Hello Wrold
+#### Hello World
 ![](./pics/HelloWorld.jpg)
 
 ## 参考资料
