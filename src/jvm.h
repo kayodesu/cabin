@@ -37,9 +37,22 @@ extern char extension_classpath[];
  * 用户类路径的默认值是当前目录，也就是“.”。可以设置CLASSPATH环境变量来修改用户类路径。
  * 可以通过 -cp 选项修改，
  * -cp 选项的优先级更高，可以覆盖CLASSPATH环境变量设置。
- * -cp 选项既可以指定目录，也可以指定JAR文件或者ZIP文件。 todo
+ * -cp 选项既可以指定目录，也可以指定JAR文件或者ZIP文件。 // todo 多个目录，多个jar
  */
 extern char user_classpath[]; // todo
+
+
+
+extern int jre_lib_jars_count;
+extern char jre_lib_jars[][PATH_MAX];
+
+extern int jre_ext_jars_count;
+extern char jre_ext_jars[][PATH_MAX];
+
+extern int user_dirs_count;
+extern int user_jars_count;
+extern char user_dirs[][PATH_MAX];
+extern char user_jars[][PATH_MAX];
 
 
 // todo 说明

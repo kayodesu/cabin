@@ -35,6 +35,6 @@ def test_all():
 
 if __name__ == '__main__':
     # test_all()
-    subprocess.call(jvm + 'exception/UncaughtTest')
-    # subprocess.call(jvm + 'HelloWorld.class')
+    # subprocess.call(jvm + 'exception/UncaughtTest')
+    subprocess.call(jvm + 'HelloWorld.class')
     pass

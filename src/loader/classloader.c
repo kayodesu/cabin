@@ -3,8 +3,6 @@
  */
 
 #include <stdlib.h>
-#include <dirent.h>
-#include <sys/stat.h>
 #include <errno.h>
 #include "classloader.h"
 #include "minizip/unzip.h"
@@ -125,19 +123,19 @@ static struct bytecode_content read_class_from_jar(const char *jar_path, const c
     return invalid_bytecode_content;
 }
 
-static struct bytecode_content read_class_file(FILE *f)
-{
-    assert(f != NULL);
-
-    fseek(f, 0, SEEK_END); //定位到文件末
-    size_t file_len = (size_t) ftell(f); //文件长度
-
-    VM_MALLOCS(s1, file_len, bytecode);
-    fseek(f, 0, SEEK_SET);
-    fread(bytecode, 1, file_len, f);
-    fclose(f);
-    return (struct bytecode_content) { bytecode, file_len };
-}
+//static struct bytecode_content read_class_file(FILE *f)
+//{
+//    assert(f != NULL);
+//
+//    fseek(f, 0, SEEK_END); //定位到文件末
+//    size_t file_len = (size_t) ftell(f); //文件长度
+//
+//    VM_MALLOCS(s1, file_len, bytecode);
+//    fseek(f, 0, SEEK_SET);
+//    fread(bytecode, 1, file_len, f);
+//    fclose(f);
+//    return (struct bytecode_content) { bytecode, file_len };
+//}
 
 static struct bytecode_content read_class_from_dir(const char *dir_path, const char *class_name)
 {
@@ -149,15 +147,24 @@ static struct bytecode_content read_class_from_dir(const char *dir_path, const c
 
     FILE *f = fopen(file_path, "rb");
     if (f != NULL) { // find out
-        return read_class_file(f);
+        fseek(f, 0, SEEK_END); //定位到文件末
+        size_t file_len = (size_t) ftell(f); //文件长度
+
+        VM_MALLOCS(s1, file_len, bytecode);
+        fseek(f, 0, SEEK_SET);
+        fread(bytecode, 1, file_len, f);
+        fclose(f);
+        return (struct bytecode_content) { bytecode, file_len };
     }
 
     if (errno != ENOFILE) {
         // file is exist, but open failed
-        printvm("%s\n", strerror(errno));
-        return invalid_bytecode_content;
+        jvm_abort("%s\n", strerror(errno)); // todo
     }
 
+    // not find
+    return invalid_bytecode_content;
+#if 0
     DIR *dir = opendir(dir_path);
     if (dir == NULL) {
         printvm("open dir failed. %s\n", dir_path);
@@ -219,10 +226,40 @@ static struct bytecode_content read_class_from_dir(const char *dir_path, const c
     // not find
     closedir(dir);
     return invalid_bytecode_content;
+#endif
 }
 
 static struct bytecode_content read_class(const char *class_name)
 {
+    // search jre/lib
+    for (int i = 0; i < jre_lib_jars_count; i++) {
+        struct bytecode_content content = read_class_from_jar(jre_lib_jars[i], class_name);
+        if (!IS_INVALID(content)) // find out
+            return content;
+    }
+
+    // search jre/lib/ext
+    for (int i = 0; i < jre_ext_jars_count; i++) {
+        struct bytecode_content content = read_class_from_jar(jre_ext_jars[i], class_name);
+        if (!IS_INVALID(content)) // find out
+            return content;
+    }
+
+    // search user paths
+    for (int i = 0; i < user_dirs_count; i++) {
+        struct bytecode_content content = read_class_from_dir(user_dirs[i], class_name);
+        if (!IS_INVALID(content)) // find out
+            return content;
+    }
+
+    // search user jars
+    for (int i = 0; i < user_jars_count; i++) {
+        struct bytecode_content content = read_class_from_jar(user_jars[i], class_name);
+        if (!IS_INVALID(content)) // find out
+            return content;
+    }
+
+#if 0
     struct bytecode_content content = read_class_from_dir(bootstrap_classpath, class_name);
     if (!IS_INVALID(content))
         return content;
@@ -232,6 +269,7 @@ static struct bytecode_content read_class(const char *class_name)
         return content;
 
    return read_class_from_dir(user_classpath, class_name);
+#endif
 }
 
 //static struct jobject* get_jclass_obj_from_pool(struct classloader *loader, const char *class_name)

@@ -1,3 +1,5 @@
+#include <dirent.h>
+#include <sys/stat.h>
 #include "loader/classloader.h"
 #include "rtda/thread/jthread.h"
 #include "rtda/ma/access.h"
@@ -14,7 +16,25 @@
 
 char bootstrap_classpath[PATH_MAX] = { 0 };
 char extension_classpath[PATH_MAX] = { 0 };
-char user_classpath[PATH_MAX] = "./"; // default: current path.
+char user_classpath[PATH_MAX] = "./"; // default: current path. todo
+
+
+#define JRE_LIB_JARS_MAX_COUNT 64 // big enough
+#define JRE_EXT_JARS_MAX_COUNT 64 // big enough
+#define USER_DIRS_MAX_COUNT 64 // big enough? // todo
+#define USER_JARS_MAX_COUNT 64 // big enough? // todo
+
+int jre_lib_jars_count = 0;
+char jre_lib_jars[JRE_LIB_JARS_MAX_COUNT][PATH_MAX];
+
+int jre_ext_jars_count = 0;
+char jre_ext_jars[JRE_EXT_JARS_MAX_COUNT][PATH_MAX];
+
+int user_dirs_count = 0;
+int user_jars_count = 0;
+char user_dirs[USER_DIRS_MAX_COUNT][PATH_MAX];
+char user_jars[USER_JARS_MAX_COUNT][PATH_MAX];
+
 
 struct classloader *bootstrap_loader = NULL;
 
@@ -150,6 +170,7 @@ static void parse_args(int argc, char* argv[])
                     jvm_abort("缺少参数：%s\n", name);
                 }
                 strcpy(user_classpath, argv[i]);
+                strcpy(user_dirs[user_dirs_count++], argv[i]); // todo
             } else {
                 jvm_abort("不认识的参数：%s\n", name);
             }
@@ -161,6 +182,68 @@ static void parse_args(int argc, char* argv[])
     if (main_class_name[0] == 0) {  // empty
         jvm_abort("no input file\n");
     }
+}
+
+static void find_jre_lib_jars()
+{
+    DIR *dir = opendir(bootstrap_classpath);
+    if (dir == NULL) {
+        printvm("open dir failed. %s\n", bootstrap_classpath);
+    }
+
+    // 第0个位置放rt.jar，因为rt.jar常用，所以放第0个位置首先搜索。
+    sprintf(jre_lib_jars[0], "%s/%s\0", bootstrap_classpath, "rt.jar");
+    jre_lib_jars_count = 1;
+
+    struct dirent *entry;
+    struct stat statbuf;
+    while ((entry = readdir(dir)) != NULL) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+
+        char abspath[PATH_MAX];
+        sprintf(abspath, "%s/%s\0", bootstrap_classpath, entry->d_name); // 绝对路径
+
+        stat(abspath, &statbuf);
+        if (S_ISREG(statbuf.st_mode)) { // 常规文件
+            char *suffix = strrchr(abspath, '.');
+            if (suffix != NULL && strcmp(suffix, ".jar") == 0 && strcmp(entry->d_name, "rt.jar") != 0) {
+                strcpy(jre_lib_jars[jre_lib_jars_count++], abspath);
+            }
+        }
+    }
+
+    closedir(dir);
+}
+
+static void find_jre_ext_jars()
+{
+    DIR *dir = opendir(extension_classpath);
+    if (dir == NULL) {
+        printvm("open dir failed. %s\n", extension_classpath);
+    }
+
+    struct dirent *entry;
+    struct stat statbuf;
+    while ((entry = readdir(dir)) != NULL) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+
+        char abspath[PATH_MAX];
+        sprintf(abspath, "%s/%s\0", extension_classpath, entry->d_name); // 绝对路径
+
+        stat(abspath, &statbuf);
+        if (S_ISREG(statbuf.st_mode)) { // 常规文件
+            char *suffix = strrchr(abspath, '.');
+            if (suffix != NULL && strcmp(suffix, ".jar") == 0) {
+                strcpy(jre_ext_jars[jre_ext_jars_count++], abspath);
+            }
+        }
+    }
+
+    closedir(dir);
 }
 
 int main(int argc, char* argv[])
@@ -179,10 +262,14 @@ int main(int argc, char* argv[])
         strcat(bootstrap_classpath, "/jre/lib");
     }
 
+    find_jre_lib_jars();
+
     if (extension_classpath[0] == 0) {  // empty
         strcpy(extension_classpath, bootstrap_classpath);
         strcat(extension_classpath, "/ext");  // todo JDK9+ 的目录结构有变动！！！！！！！
     }
+
+    find_jre_ext_jars();
 
     // 如果 main_class_name 有 .class 后缀，去掉后缀。
     char *p = strrchr(main_class_name, '.');
@@ -195,9 +282,6 @@ int main(int argc, char* argv[])
     printvm("extension_classpath: %s\n", extension_classpath);
     printvm("user_classpath: %s\n", user_classpath);
 #endif
-
-    // todo 测试 JAVA_HOME 是不是  java8  版本
-//    jvm_abort("just support java8");
 
     register_all_native_methods(); // todo 不要一次全注册，需要时再注册
     start_jvm();
