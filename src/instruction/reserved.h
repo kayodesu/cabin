@@ -7,6 +7,7 @@
 
 #include "../interpreter/stack_frame.h"
 #include "../native/registry.h"
+#include "../rtda/ma/access.h"
 
 // 没有使用的指令
 static void notused(struct stack_frame *frame)

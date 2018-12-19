@@ -12,7 +12,7 @@ struct classloader;
 struct classloader* classloader_create(bool is_bootstrap_loader);
 
 /*
- * @lass_name: 全限定类名
+ * @lass_name: 全限定类名，不带 .class 后缀
  *
  * class names:
  *    - primitive types: boolean, byte, int ...

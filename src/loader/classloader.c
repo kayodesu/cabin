@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <errno.h>
 #include "classloader.h"
 #include "minizip/unzip.h"
 #include "../rtda/ma/jclass.h"
@@ -47,7 +48,7 @@ static struct bytecode_content invalid_bytecode_content = { NULL, 0 };
 
 #define IS_INVALID(bytecode_content) ((bytecode_content).bytecode == NULL || (bytecode_content).len == 0)
 
-static struct bytecode_content read_class_from_jar (const char *jar_path, const char *class_name)
+static struct bytecode_content read_class_from_jar(const char *jar_path, const char *class_name)
 {
     unz_global_info64 global_info;
     unz_file_info64 file_info;
@@ -94,7 +95,6 @@ static struct bytecode_content read_class_from_jar (const char *jar_path, const 
                 }
 
                 size_t uncompressed_size = file_info.uncompressed_size;
-//                s1 *bytecode = malloc(sizeof(s1) * uncompressed_size);
                 VM_MALLOCS(s1, uncompressed_size, bytecode);
                 if (unzReadCurrentFile(jar_file, bytecode, (unsigned int) uncompressed_size) != uncompressed_size) {
                     // todo error
@@ -125,9 +125,36 @@ static struct bytecode_content read_class_from_jar (const char *jar_path, const 
     return invalid_bytecode_content;
 }
 
+static struct bytecode_content read_class_file(FILE *f)
+{
+    assert(f != NULL);
+
+    fseek(f, 0, SEEK_END); //定位到文件末
+    size_t file_len = (size_t) ftell(f); //文件长度
+
+    VM_MALLOCS(s1, file_len, bytecode);
+    fseek(f, 0, SEEK_SET);
+    fread(bytecode, 1, file_len, f);
+    fclose(f);
+    return (struct bytecode_content) { bytecode, file_len };
+}
+
 static struct bytecode_content read_class_from_dir(const char *dir_path, const char *class_name)
 {
-    if (dir_path == NULL || strlen(dir_path) == 0) {
+    assert(dir_path != NULL);
+    assert(class_name != NULL);
+
+    char file_path[PATH_MAX];
+    sprintf(file_path, "%s/%s.class\0", dir_path, class_name);
+
+    FILE *f = fopen(file_path, "rb");
+    if (f != NULL) { // find out
+        return read_class_file(f);
+    }
+
+    if (errno != ENOFILE) {
+        // file is exist, but open failed
+        printvm("%s\n", strerror(errno));
         return invalid_bytecode_content;
     }
 
@@ -165,9 +192,9 @@ static struct bytecode_content read_class_from_dir(const char *dir_path, const c
                     if (!IS_INVALID(content)) {
                         return content; // find out
                     }
-                } else if (strcmp(suffix, ".class") == 0) {
-                    // class_name 不带 .class 后缀，而 abspath 有 .class 后缀
-                    *suffix = 0; // 去掉 abspath 的 .class 后缀
+                }
+#if 0
+                else if (strcmp(suffix, ".class") == 0) {
                     char *cls_name = strrchr(abspath, '/');
                     if (cls_name == NULL) {
                         cls_name = abspath; // 此类没有包名 todo
@@ -175,26 +202,16 @@ static struct bytecode_content read_class_from_dir(const char *dir_path, const c
                         cls_name++; // jump '/'
                     }
                     if (strcmp(cls_name, class_name) == 0) {
-                        *suffix = '.'; // 加回 abspath 的 .class 后缀
                         // 找到 class 文件了，读其内容。
-                        FILE *f = fopen(abspath, "rb");
-                        if (f == NULL) {
+                        FILE *file = fopen(abspath, "rb");
+                        if (file == NULL) {
                             jvm_abort("open file failed: %s\n", abspath);
                         }
 
-                        fseek(f, 0, SEEK_END); //定位到文件末
-                        size_t file_len = (size_t) ftell(f); //文件长度
-                        if (file_len == -1) {
-                            jvm_abort("ftell error: %s\n", abspath);
-                        }
-
-                        VM_MALLOCS(s1, file_len, bytecode);
-                        fseek(f, 0, SEEK_SET);
-                        fread(bytecode, 1, file_len, f);
-                        fclose(f);
-                        return (struct bytecode_content) { bytecode, file_len };
+                        return read_class_file(file);
                     }
                 }
+#endif
             }
         }
     }
@@ -297,7 +314,7 @@ static struct jclass* loading(struct classloader *loader, const char *class_name
 {
     struct bytecode_content content = read_class(class_name);
     if (IS_INVALID(content)) {
-        jvm_abort("class not find: [%s]\n", class_name);
+        jvm_abort("class not find: %s", class_name);
     }
 
     return jclass_create_by_classfile(loader, classfile_create(content.bytecode, content.len));
@@ -306,7 +323,7 @@ static struct jclass* loading(struct classloader *loader, const char *class_name
 static struct jclass* verification(struct jclass *c)
 {
     if (c->magic != 0xcafebabe) {
-        jvm_abort("error. magic = %u(0x%x)\n", c->magic, c->magic);
+        jvm_abort("error. magic = %u(0x%x)", c->magic, c->magic);
     }
     // todo 验证版本号
     return c;

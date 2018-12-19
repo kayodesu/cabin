@@ -184,6 +184,12 @@ int main(int argc, char* argv[])
         strcat(extension_classpath, "/ext");  // todo JDK9+ 的目录结构有变动！！！！！！！
     }
 
+    // 如果 main_class_name 有 .class 后缀，去掉后缀。
+    char *p = strrchr(main_class_name, '.');
+    if (p != NULL && strcmp(p, ".class") == 0) {
+        *p = 0;
+    }
+
 #ifdef JVM_DEBUG
     printvm("bootstrap_classpath: %s\n", bootstrap_classpath);
     printvm("extension_classpath: %s\n", extension_classpath);

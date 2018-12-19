@@ -1,7 +1,7 @@
 import subprocess
 
-
-jvm = './cmake-build-release/jvm -cp ./testclasses '
+# change the path if necessary
+jvm = './cmake-build-release/jvm -cp D:/code/jvm/testclasses '
 
 
 def test_array():
@@ -15,13 +15,26 @@ def test_string():
     subprocess.call(jvm + 'string/StringTest')
 
 
+def test_exception():
+    subprocess.call(jvm + 'exception/UncaughtTest')
+
+
 def test_classic():
     """
     some classical problems
     """
-    cmd = jvm
-    subprocess.call(cmd + 'HelloWorld')
+    subprocess.call(jvm + 'HelloWorld')
+
+
+def test_all():
+    test_array()
+    test_string()
+    test_exception()
+    test_classic()
 
 
 if __name__ == '__main__':
-    test_classic()
+    # test_all()
+    subprocess.call(jvm + 'exception/UncaughtTest')
+    # subprocess.call(jvm + 'HelloWorld.class')
+    pass

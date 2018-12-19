@@ -26,6 +26,24 @@ static void parse_member_info(struct bytecode_reader *reader,
 
 static const struct placeholder_constant placeholder_constant = (struct placeholder_constant){ PLACEHOLDER_CONSTANT };
 
+/*
+ * Class版本号和Java版本对应关系
+ * JDK 1.8 = 52
+ * JDK 1.7 = 51
+ * JDK 1.6 =50
+ * JDK 1.5 = 49
+ * JDK 1.4 = 48
+ * JDK 1.3 = 47
+ * JDK 1.2 = 46
+ * JDK 1.1 = 45
+ */
+static inline void test_class_version(u2 major_version, u2 minor_version)
+{
+    if (major_version != 52) {
+        jvm_abort("only support jdk 8"); // todo
+    }
+}
+
 struct classfile* classfile_create(s1 *bytecode, size_t len)
 {
     assert(bytecode != NULL);
@@ -36,6 +54,7 @@ struct classfile* classfile_create(s1 *bytecode, size_t len)
     cf->magic = bcr_readu4(reader);
     cf->minor_version = bcr_readu2(reader);
     cf->major_version = bcr_readu2(reader);
+    test_class_version(cf->major_version, cf->minor_version);
 
     // parse constant pool
     cf->constant_pool_count = bcr_readu2(reader);
