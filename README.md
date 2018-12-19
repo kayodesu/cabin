@@ -1,7 +1,9 @@
 # JVM
 A JVM written in C.
 
-开发环境 win10 + clion + MinGW  
+开发环境 win10 + clion + MinGW
+
+## Dependence
 本项目依赖 zlib, minizib 库，请确保在 MinGW 中下载了它们。
 
 基于jre8.
@@ -13,8 +15,8 @@ A JVM written in C.
 -cp 选项既可以指定多个目录和JAR文件，以分号隔开。
 
 ## 示例
-1. Hello Wrold
-![HelloWorld](./pics/HelloWorld.jpg)
++ Hello Wrold
+![](./pics/HelloWorld.jpg)
 
 ## 参考资料
 1. 自己动手写Java虚拟机，张秀宏。
