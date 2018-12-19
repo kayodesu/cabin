@@ -81,7 +81,7 @@ static void newInstance0(struct stack_frame *frame)
 
     if (!constructor->jclass->inited) {
         // todo java.lang.reflect/Constructor 的 clinit
-        jclass_clinit0(constructor_obj->jclass, frame->thread);
+        jclass_clinit(constructor_obj->jclass, frame->thread);
     }
 }
 

@@ -34,7 +34,7 @@ static void __new(struct stack_frame *frame)
 
     struct jclass *c = resolve_class(frame->method->jclass, class_name);  // todo
     if (!c->inited) {
-        jclass_clinit(c, frame);
+        jclass_clinit(c, frame->thread);
         bcr_set_pc(reader, jthread_get_pc(frame->thread)); // 将pc指向本条指令之前，初始化完类后，继续执行本条指令。
         return;
     }
@@ -67,7 +67,7 @@ static void putstatic(struct stack_frame *frame)
     struct jclass *cls = ref->resolved_field->jclass;
 
     if (!cls->inited) {
-        jclass_clinit(cls, frame);
+        jclass_clinit(cls, frame->thread);
         /* 将pc指向本条指令之前，初始化完类后，继续执行本条指令。*/
         bcr_set_pc(frame->reader, jthread_get_pc(frame->thread));
         return;
@@ -105,7 +105,7 @@ static void getstatic(struct stack_frame *frame)
     struct jclass *cls = ref->resolved_field->jclass;
 
     if (!cls->inited) {
-        jclass_clinit(cls, frame);
+        jclass_clinit(cls, frame->thread);
         /* 将pc指向本条指令之前，初始化完类后，继续执行本条指令。*/
         bcr_set_pc(frame->reader, jthread_get_pc(frame->thread));
         return;
@@ -301,7 +301,7 @@ static void invokestatic(struct stack_frame *frame)
     }
 
     if (!ref->resolved_class->inited) {
-        jclass_clinit(ref->resolved_class, frame);
+        jclass_clinit(ref->resolved_class, frame->thread);
         /* 将pc指向本条指令之前，初始化完类后，继续执行本条指令。*/
         bcr_set_pc(frame->reader, jthread_get_pc(frame->thread));
         return;

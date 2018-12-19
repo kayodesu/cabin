@@ -1,3 +1,6 @@
+/*
+ * Author: Jia Yang
+ */
 #include <dirent.h>
 #include <sys/stat.h>
 #include "loader/classloader.h"
@@ -9,14 +12,6 @@
 #include "rtda/ma/jclass.h"
 #include "rtda/heap/jobject.h"
 #include "native/registry.h"
-
-/*
- * Author: Jia Yang
- */
-
-char bootstrap_classpath[PATH_MAX] = { 0 };
-char extension_classpath[PATH_MAX] = { 0 };
-char user_classpath[PATH_MAX] = "./"; // default: current path. todo
 
 
 #define JRE_LIB_JARS_MAX_COUNT 64 // big enough
@@ -43,25 +38,16 @@ struct jthread *main_thread = NULL;
 
 static void init_jvm(struct classloader *loader, struct jthread *main_thread)
 {
-    // 先加载sun.mis.VM类，然后执行其类初始化方法
+    // 先加载 sun.mis.VM 类，然后执行其类初始化方法
     struct jclass *vm_class = classloader_load_class(loader, "sun/misc/VM");
     if (vm_class == NULL) {
         jvm_abort("vm_class is null\n");  // todo throw exception
         return;
     }
 
-//    struct jmethod *init = jclass_lookup_static_method(vm_class, "initialize", "()V");
-//    if (init == NULL) {
-//        jvm_abort("error %s\n", jclass_to_string(vm_class));
-//        return;
-//    }
-
-//    struct stack_frame *init_frame = sf_create(main_thread, init);
-//    jthread_push_frame(main_thread, init_frame);
-    // vm_class 的 clinit 后于 init_frame加入到线程的执行栈中
-    // 保证vm_class 的 clinit方法先执行。
-//    jclass_clinit(vm_class, init_frame);  // todo clinit 方法到底在何时调用
-    jclass_clinit0(vm_class, main_thread);
+    // VM类的 "initialize~()V" 方法需调用执行
+    // 在VM类的类初始化方法中调用了 "initialize" 方法。
+    jclass_clinit(vm_class, main_thread); // todo clinit 方法到底在何时调用
     interpret(main_thread);
 }
 
@@ -85,7 +71,7 @@ static void create_system_thread_group(struct classloader *loader)
     sf_set_local_var(frame, 0, &arg);
 
     jthread_push_frame(tmp, frame);
-    jclass_clinit(thread_group_class, frame);  // todo
+    jclass_clinit(thread_group_class, tmp);  // todo
     interpret(tmp);
     jthread_destroy(tmp);
 }
@@ -106,14 +92,12 @@ static void create_main_thread(struct classloader *loader)
     frame->local_vars[1] = rslot(system_thread_group);
     frame->local_vars[2] = rslot((jref) jstrobj_create(MAIN_THREAD_NAME));
     jthread_push_frame(main_thread, frame);
-    jclass_clinit0(main_thread_obj->jclass, main_thread); // 最后压栈，保证先执行。
+    jclass_clinit(main_thread_obj->jclass, main_thread); // 最后压栈，保证先执行。
 
     interpret(main_thread);
 }
 
-static char main_class_name[FILENAME_MAX] = { 0 };
-
-static void start_jvm()
+static void start_jvm(const char *main_class_name)
 {
     build_str_pool();
 
@@ -150,12 +134,46 @@ static void start_jvm()
     classloader_destroy(loader);
 }
 
-/*
- * -bcp path: Bootstrap Class Path, JavaHome路径, 对应 jre/lib 目录。
- * -cp: Class Path, user class path.
- */
-static void parse_args(int argc, char* argv[])
+static void find_jars(const char *path, char jars[][PATH_MAX], int *jars_count)
 {
+    DIR *dir = opendir(path);
+    if (dir == NULL) {
+        printvm("open dir failed. %s\n", path);
+    }
+
+    int count = 0;
+    struct dirent *entry;
+    struct stat statbuf;
+    while ((entry = readdir(dir)) != NULL) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+
+        char abspath[PATH_MAX];
+        sprintf(abspath, "%s/%s\0", path, entry->d_name); // 绝对路径
+
+        stat(abspath, &statbuf);
+        if (S_ISREG(statbuf.st_mode)) { // 常规文件
+            char *suffix = strrchr(abspath, '.');
+            if (suffix != NULL && strcmp(suffix, ".jar") == 0) {
+                strcpy(jars[count++], abspath);
+            }
+        }
+    }
+
+    *jars_count = count;
+    closedir(dir);
+}
+
+int main(int argc, char* argv[])
+{
+    char bootstrap_classpath[PATH_MAX] = { 0 };
+    char extension_classpath[PATH_MAX] = { 0 };
+    char user_classpath[PATH_MAX] = { 0 };
+
+    char main_class_name[FILENAME_MAX] = { 0 };
+
+    // parse cmd arguments
     // 可执行程序的名字为 argv[0]，跳过。
     for (int i = 1; i < argc; i++) {
         if (argv[i][0] == '-') {
@@ -170,7 +188,6 @@ static void parse_args(int argc, char* argv[])
                     jvm_abort("缺少参数：%s\n", name);
                 }
                 strcpy(user_classpath, argv[i]);
-                strcpy(user_dirs[user_dirs_count++], argv[i]); // todo
             } else {
                 jvm_abort("不认识的参数：%s\n", name);
             }
@@ -182,76 +199,16 @@ static void parse_args(int argc, char* argv[])
     if (main_class_name[0] == 0) {  // empty
         jvm_abort("no input file\n");
     }
-}
 
-static void find_jre_lib_jars()
-{
-    DIR *dir = opendir(bootstrap_classpath);
-    if (dir == NULL) {
-        printvm("open dir failed. %s\n", bootstrap_classpath);
+    // 如果 main_class_name 有 .class 后缀，去掉后缀。
+    char *p = strrchr(main_class_name, '.');
+    if (p != NULL && strcmp(p, ".class") == 0) {
+        *p = 0;
     }
 
-    // 第0个位置放rt.jar，因为rt.jar常用，所以放第0个位置首先搜索。
-    sprintf(jre_lib_jars[0], "%s/%s\0", bootstrap_classpath, "rt.jar");
-    jre_lib_jars_count = 1;
-
-    struct dirent *entry;
-    struct stat statbuf;
-    while ((entry = readdir(dir)) != NULL) {
-        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
-            continue;
-        }
-
-        char abspath[PATH_MAX];
-        sprintf(abspath, "%s/%s\0", bootstrap_classpath, entry->d_name); // 绝对路径
-
-        stat(abspath, &statbuf);
-        if (S_ISREG(statbuf.st_mode)) { // 常规文件
-            char *suffix = strrchr(abspath, '.');
-            if (suffix != NULL && strcmp(suffix, ".jar") == 0 && strcmp(entry->d_name, "rt.jar") != 0) {
-                strcpy(jre_lib_jars[jre_lib_jars_count++], abspath);
-            }
-        }
-    }
-
-    closedir(dir);
-}
-
-static void find_jre_ext_jars()
-{
-    DIR *dir = opendir(extension_classpath);
-    if (dir == NULL) {
-        printvm("open dir failed. %s\n", extension_classpath);
-    }
-
-    struct dirent *entry;
-    struct stat statbuf;
-    while ((entry = readdir(dir)) != NULL) {
-        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
-            continue;
-        }
-
-        char abspath[PATH_MAX];
-        sprintf(abspath, "%s/%s\0", extension_classpath, entry->d_name); // 绝对路径
-
-        stat(abspath, &statbuf);
-        if (S_ISREG(statbuf.st_mode)) { // 常规文件
-            char *suffix = strrchr(abspath, '.');
-            if (suffix != NULL && strcmp(suffix, ".jar") == 0) {
-                strcpy(jre_ext_jars[jre_ext_jars_count++], abspath);
-            }
-        }
-    }
-
-    closedir(dir);
-}
-
-int main(int argc, char* argv[])
-{
-    parse_args(argc, argv);
-
-    // 命令行参数没有设置 bootstrap_classpath 的值，那么使用 JAVA_HOME 环境变量
+    // parse bootstrap classpath
     if (bootstrap_classpath[0] == 0) { // empty
+        // 命令行参数没有设置 bootstrap_classpath 的值，那么使用 JAVA_HOME 环境变量
         char *java_home = getenv("JAVA_HOME"); // JAVA_HOME 是 JDK 的目录
         if (java_home == NULL) {
             // todo error
@@ -262,19 +219,44 @@ int main(int argc, char* argv[])
         strcat(bootstrap_classpath, "/jre/lib");
     }
 
-    find_jre_lib_jars();
+    find_jars(bootstrap_classpath, jre_lib_jars, &jre_lib_jars_count);
 
+    // 第0个位置放rt.jar，因为rt.jar常用，所以放第0个位置首先搜索。
+    for (int i = 0; i < jre_lib_jars_count; i++) {
+        char *s = strrchr(jre_lib_jars[i], '\\');
+        char *t = strrchr(jre_lib_jars[i], '/');
+        if ((s != NULL && strcmp(s + 1, "rt.jar") == 0) || (t != NULL && strcmp(t + 1, "rt.jar") == 0)) { // find
+            char tmp[PATH_MAX];
+            strcpy(tmp, jre_lib_jars[0]);
+            strcpy(jre_lib_jars[0], jre_lib_jars[i]);
+            strcpy(jre_lib_jars[i], tmp);
+            break;
+        }
+    }
+
+    // parse extension classpath
     if (extension_classpath[0] == 0) {  // empty
         strcpy(extension_classpath, bootstrap_classpath);
         strcat(extension_classpath, "/ext");  // todo JDK9+ 的目录结构有变动！！！！！！！
     }
 
-    find_jre_ext_jars();
+    find_jars(extension_classpath, jre_ext_jars, &jre_ext_jars_count);
 
-    // 如果 main_class_name 有 .class 后缀，去掉后缀。
-    char *p = strrchr(main_class_name, '.');
-    if (p != NULL && strcmp(p, ".class") == 0) {
-        *p = 0;
+    // parse user classpath
+    if (user_classpath[0] == 0) {  // empty
+        getcwd(user_dirs[user_dirs_count++], PATH_MAX); // default: current working path
+    } else {
+        char *delim = ";"; // 各个path以分号分隔
+        char *path = strtok(user_classpath, delim);
+        while (path != NULL) {
+            const char *suffix = strrchr(path, '.');
+            if (suffix != NULL && strcmp(suffix, ".jar") == 0) { // jar file
+                strcpy(user_jars[user_jars_count++], path);
+            } else { // directory
+                strcpy(user_dirs[user_dirs_count++], path);
+            }
+            path = strtok(NULL, delim);
+        }
     }
 
 #ifdef JVM_DEBUG
@@ -284,6 +266,6 @@ int main(int argc, char* argv[])
 #endif
 
     register_all_native_methods(); // todo 不要一次全注册，需要时再注册
-    start_jvm();
+    start_jvm(main_class_name);
     return 0;
 }

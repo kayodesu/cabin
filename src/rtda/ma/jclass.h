@@ -106,8 +106,7 @@ void jclass_destroy(struct jclass *c);
  * 调用类的类初始化方法。
  * clinit are the static initialization blocks for the class, and static field initialization.
  */
-void jclass_clinit0(struct jclass *c, struct jthread *thread);
-void jclass_clinit(struct jclass *c, struct stack_frame *invoke_frame);
+void jclass_clinit(struct jclass *c, struct jthread *thread);
 
 struct slot* copy_inited_instance_fields_values(const struct jclass *c);
 

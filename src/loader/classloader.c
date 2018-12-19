@@ -123,20 +123,6 @@ static struct bytecode_content read_class_from_jar(const char *jar_path, const c
     return invalid_bytecode_content;
 }
 
-//static struct bytecode_content read_class_file(FILE *f)
-//{
-//    assert(f != NULL);
-//
-//    fseek(f, 0, SEEK_END); //定位到文件末
-//    size_t file_len = (size_t) ftell(f); //文件长度
-//
-//    VM_MALLOCS(s1, file_len, bytecode);
-//    fseek(f, 0, SEEK_SET);
-//    fread(bytecode, 1, file_len, f);
-//    fclose(f);
-//    return (struct bytecode_content) { bytecode, file_len };
-//}
-
 static struct bytecode_content read_class_from_dir(const char *dir_path, const char *class_name)
 {
     assert(dir_path != NULL);
@@ -164,69 +150,6 @@ static struct bytecode_content read_class_from_dir(const char *dir_path, const c
 
     // not find
     return invalid_bytecode_content;
-#if 0
-    DIR *dir = opendir(dir_path);
-    if (dir == NULL) {
-        printvm("open dir failed. %s\n", dir_path);
-    }
-
-    struct dirent *entry;
-    struct stat statbuf;
-    while ((entry = readdir(dir)) != NULL) {
-        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
-            continue;
-        }
-
-        char abspath[PATH_MAX];
-        sprintf(abspath, "%s/%s\0", dir_path, entry->d_name); // 绝对路径
-        // 将路径中的 '\' 替换为 '/'
-        char *tmp = abspath;
-        while ((tmp = strchr(tmp, '\\')) != NULL) {
-            *tmp = '/';
-        }
-
-        stat(abspath, &statbuf);
-        if (S_ISDIR(statbuf.st_mode)) { // 目录
-            struct bytecode_content content = read_class_from_dir(abspath, class_name);
-            if (!IS_INVALID(content)) {
-                return content; // find out
-            }
-        } else if (S_ISREG(statbuf.st_mode)) { // 常规文件
-            char *suffix = strrchr(abspath, '.');
-            if (suffix != NULL) {
-                if (strcmp(suffix, ".jar") == 0) {
-                    struct bytecode_content content = read_class_from_jar(abspath, class_name);
-                    if (!IS_INVALID(content)) {
-                        return content; // find out
-                    }
-                }
-#if 0
-                else if (strcmp(suffix, ".class") == 0) {
-                    char *cls_name = strrchr(abspath, '/');
-                    if (cls_name == NULL) {
-                        cls_name = abspath; // 此类没有包名 todo
-                    } else {
-                        cls_name++; // jump '/'
-                    }
-                    if (strcmp(cls_name, class_name) == 0) {
-                        // 找到 class 文件了，读其内容。
-                        FILE *file = fopen(abspath, "rb");
-                        if (file == NULL) {
-                            jvm_abort("open file failed: %s\n", abspath);
-                        }
-
-                        return read_class_file(file);
-                    }
-                }
-#endif
-            }
-        }
-    }
-
-    // not find
-    closedir(dir);
-    return invalid_bytecode_content;
-#endif
 }
 
 static struct bytecode_content read_class(const char *class_name)
@@ -260,18 +183,6 @@ static struct bytecode_content read_class(const char *class_name)
     }
 
     return invalid_bytecode_content; // not find
-
-#if 0
-    struct bytecode_content content = read_class_from_dir(bootstrap_classpath, class_name);
-    if (!IS_INVALID(content))
-        return content;
-
-    content = read_class_from_dir(extension_classpath, class_name);
-    if (!IS_INVALID(content))
-        return content;
-
-   return read_class_from_dir(user_classpath, class_name);
-#endif
 }
 
 //static struct jobject* get_jclass_obj_from_pool(struct classloader *loader, const char *class_name)

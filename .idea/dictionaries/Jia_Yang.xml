@@ -6,6 +6,7 @@
       <w>bigendian</w>
       <w>cfcp</w>
       <w>clsobj</w>
+      <w>delim</w>
       <w>dslot</w>
       <w>eles</w>
       <w>endianness</w>

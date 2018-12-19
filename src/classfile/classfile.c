@@ -2,7 +2,6 @@
  * Author: Jia Yang
  */
 
-#include <limits.h>
 #include <stdlib.h>
 #include <assert.h>
 #include "classfile.h"
@@ -30,7 +29,7 @@ static const struct placeholder_constant placeholder_constant = (struct placehol
  * Class版本号和Java版本对应关系
  * JDK 1.8 = 52
  * JDK 1.7 = 51
- * JDK 1.6 =50
+ * JDK 1.6 = 50
  * JDK 1.5 = 49
  * JDK 1.4 = 48
  * JDK 1.3 = 47
