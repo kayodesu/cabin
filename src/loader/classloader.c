@@ -259,6 +259,8 @@ static struct bytecode_content read_class(const char *class_name)
             return content;
     }
 
+    return invalid_bytecode_content; // not find
+
 #if 0
     struct bytecode_content content = read_class_from_dir(bootstrap_classpath, class_name);
     if (!IS_INVALID(content))
