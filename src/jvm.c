@@ -244,7 +244,12 @@ int main(int argc, char* argv[])
 
     // parse user classpath
     if (user_classpath[0] == 0) {  // empty
-        getcwd(user_dirs[user_dirs_count++], PATH_MAX); // default: current working path
+        char *classpath = getenv("CLASSPATH");
+        if (classpath == NULL) {
+            getcwd(user_dirs[user_dirs_count++], PATH_MAX); // current working path
+        } else {
+            strcpy(user_dirs[user_dirs_count++], classpath);
+        }
     } else {
         char *delim = ";"; // 各个path以分号分隔
         char *path = strtok(user_classpath, delim);
@@ -262,7 +267,12 @@ int main(int argc, char* argv[])
 #ifdef JVM_DEBUG
     printvm("bootstrap_classpath: %s\n", bootstrap_classpath);
     printvm("extension_classpath: %s\n", extension_classpath);
-    printvm("user_classpath: %s\n", user_classpath);
+    for (int i = 0; i < user_dirs_count; i++) {
+        printvm("user_classpath: %s\n", user_dirs[i]);
+    }
+    for (int i = 0; i < user_jars_count; i++) {
+        printvm("user_classpath: %s\n", user_jars[i]);
+    }
 #endif
 
     register_all_native_methods(); // todo 不要一次全注册，需要时再注册

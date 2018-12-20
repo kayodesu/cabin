@@ -179,7 +179,7 @@ struct jclass *jclass_create_by_classfile(struct classloader *loader, struct cla
          * 并不是每个class文件中都有源文件信息，这个因编译时的编译器选项而异。
          * todo 什么编译选项
          */
-        c->source_file_name = "Unknown";
+        c->source_file_name = "Unknown source file name";
     }
 
     c->class_name = rtcp_get_class_name(c->rtcp, cf->this_class);

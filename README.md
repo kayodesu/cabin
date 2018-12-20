@@ -17,6 +17,10 @@ A JVM written in C.
 ## 示例
 #### Hello World
 ![](./pics/HelloWorld.jpg)
+#### Bubble Sort
+![](./pics/BubbleSort.jpg)
+#### Stack Trace
+![](./pics/StackTrace.jpg)
 
 ## 参考资料
 1. 自己动手写Java虚拟机，张秀宏。

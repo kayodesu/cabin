@@ -20,6 +20,8 @@ void* vector_pop_back(struct vector *vec);
  */
 void** vector_to_array(const struct vector *vec, int *len);
 
+void vector_clear(struct vector *vec);
+
 void vector_destroy(struct vector *vec);
 
 #endif //JVM_VECTOR_H

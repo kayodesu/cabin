@@ -41,7 +41,8 @@ void jthread_push_frame(struct jthread *thread, struct stack_frame *frame);
 
 /*
  * 返回完整的虚拟机栈
- * 由调用者释放返回的array of struct stack_frame*
+ * 顺序为由栈底到栈顶
+ * 由调用者释放返回的array of struct stack_frame *
  */
 struct stack_frame** jthread_get_frames(const struct jthread *thread, int *num);
 
@@ -72,7 +73,7 @@ void jthread_invoke_method(struct jthread *thread, struct jmethod *method, const
 void jthread_invoke_method_with_shim(struct jthread *thread, struct jmethod *method, const struct slot *args);
 
 // todo UncaughtException
-void jthread_handle_uncaught_exception(struct jthread *thread, const struct jobject *exception);
+void jthread_handle_uncaught_exception(struct jthread *thread, struct jobject *exception);
 
 void jthread_destroy(struct jthread *thread);
 

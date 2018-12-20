@@ -53,6 +53,13 @@ static void arraycopy(struct stack_frame *frame)
     jarrobj_copy(dest, dest_pos, src, src_pos, length);
 }
 
+// public static native int identityHashCode(Object x);
+static void identityHashCode(struct stack_frame *frame)
+{
+    jref x = slot_getr(frame->local_vars);
+    os_pushi(frame->operand_stack, (jint) (intptr_t) x);
+}
+
 /*
  * System properties. The following properties are guaranteed to be defined:
  * java.version         Java version number
@@ -150,7 +157,7 @@ static void setErr0(struct stack_frame *frame)
  返回值表示从某一固定但任意的时间算起的毫微秒数（或许从以后算起，所以该值可能为负）。
  此方法提供毫微秒的精度，但不是必要的毫微秒的准确度。它对于值的更改频率没有作出保证。
  在取值范围大于约 292 年（263 毫微秒）的连续调用的不同点在于：由于数字溢出，将无法准确计算已过的时间。
-
+todo
  *
  * public static native long nanoTime();
  */
@@ -172,6 +179,7 @@ void java_lang_System_registerNatives()
 
     register_native_method("java/lang/System~mapLibraryName~(Ljava/lang/String;)Ljava/lang/String;", mapLibraryName);
     register_native_method("java/lang/System~arraycopy~(Ljava/lang/Object;ILjava/lang/Object;II)V", arraycopy);
+    register_native_method("java/lang/System~identityHashCode~(Ljava/lang/Object;)I", identityHashCode);
     register_native_method("java/lang/System~initProperties~(Ljava/util/Properties;)Ljava/util/Properties;", initProperties);
 
     register_native_method("java/lang/System~setIn0~(Ljava/io/InputStream;)V", setIn0);

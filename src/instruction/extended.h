@@ -59,7 +59,7 @@ static void goto_w(struct stack_frame *frame)
 
 static void jsr_w(struct stack_frame *frame)
 {
-    jvm_abort("jsr_w 不支持"); // todo
+    jvm_abort("jsr_w doesn't support after jdk 6.");
 }
 
 extern bool wide_extending;

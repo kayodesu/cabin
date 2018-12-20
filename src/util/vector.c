@@ -76,6 +76,12 @@ void** vector_to_array(const struct vector *vec, int *len)
     return arr;
 }
 
+void vector_clear(struct vector *vec)
+{
+    assert(vec != NULL);
+    vec->len = 0;
+}
+
 void vector_destroy(struct vector *vec)
 {
     assert(vec != NULL);

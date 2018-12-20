@@ -10,16 +10,7 @@ public class StackTraceTest {
         }
     }
     
-    private static void foo() {
-        bar();
-    }
-    
-    private static void bar() {
-        bad();
-    }
-    
-    private static void bad() {
-        throw new RuntimeException("BAD!");
-    }
-    
+    private static void foo() { bar(); }    
+    private static void bar() { bad(); }    
+    private static void bad() { throw new RuntimeException("BAD!"); }    
 }

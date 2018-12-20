@@ -189,29 +189,18 @@ void jthread_invoke_method_with_shim(struct jthread *thread, struct jmethod *met
     jthread_push_frame(thread, top);
 }
 
-void jthread_handle_uncaught_exception(struct jthread *thread, const struct jobject *exception)
+void jthread_handle_uncaught_exception(struct jthread *thread, struct jobject *exception)
 {
     assert(thread != NULL);
     assert(exception != NULL);
-    /*
-     正确的做法
-    self.stack.clear()
-	sysClass := heap.BootLoader().LoadClass("java/lang/System")
-	sysErr := sysClass.GetStaticValue("out", "Ljava/io/PrintStream;").(*heap.Object)
-	printStackTrace := ex.Class().GetInstanceMethod("printStackTrace", "(Ljava/io/PrintStream;)V")
 
-	// call ex.printStackTrace(System.err)
-	newFrame := self.NewFrame(printStackTrace)
-	vars := newFrame.localVars
-	vars.SetRef(0, ex)
-	vars.SetRef(1, sysErr)
-	self.PushFrame(newFrame)
-     */
+    vector_clear(thread->vm_stack);
+    struct jmethod *pst = jclass_lookup_instance_method(exception->jclass, "printStackTrace", "()V");
 
-    // todo
-    struct jobject *so = slot_getr(get_instance_field_value_by_nt(exception, "detailMessage", "Ljava/lang/String;"));
-    // detailMessage 的值有可能为空，即 so 有可能为 NULL
-    jvm_abort("UncaughtException. %s. %s\n", exception->jclass->class_name, so != NULL ? jstrobj_value(so) : "NULL");
+    // call exception.printStackTrace()
+    struct stack_frame *frame = sf_create(thread, pst);
+    frame->local_vars[0] = rslot(exception);
+    jthread_push_frame(thread, frame);
 }
 
 void jthread_destroy(struct jthread *thread)

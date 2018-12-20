@@ -13,15 +13,20 @@ static void __goto(struct stack_frame *frame)
     bcr_skip(frame->reader, offset - 3);  // 减3？减去本条指令自身的长度 todo
 }
 
+/*
+ * 在Java 6之前，Oracle的Java编译器使用 jsr, jsr_w 和 ret 指令来实现 finally 子句。
+ * 从Java 6开始，已经不再使用这些指令
+ */
+
 static void jsr(struct stack_frame *frame)
 {
-    jvm_abort("jsr 不支持");  // todo
+    jvm_abort("jsr doesn't support after jdk 6.");
 }
 
 static void ret(struct stack_frame *frame)
 {
-    // todo ret 有 wide 扩展
-    jvm_abort("ret 不支持");  // todo
+    // ret 有 wide 扩展
+    jvm_abort("ret doesn't support after jdk 6.");
 }
 
 
