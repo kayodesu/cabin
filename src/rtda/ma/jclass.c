@@ -204,7 +204,8 @@ struct jclass *jclass_create_by_classfile(struct classloader *loader, struct cla
     }
 
     c->interfaces_count = cf->interfaces_count;
-    c->interfaces = malloc(sizeof(struct jclass *) * c->interfaces_count); // todo NULL
+    c->interfaces = malloc(sizeof(struct jclass *) * c->interfaces_count);
+    CHECK_MALLOC_RESULT(c->interfaces);
     for (int i = 0; i < c->interfaces_count; i++) {
         const char *interface_name = rtcp_get_class_name(c->rtcp, cf->interfaces[i]);
         if (interface_name[0] == 0) { // empty
@@ -410,7 +411,7 @@ struct jfield* jclass_lookup_field(struct jclass *c, const char *name, const cha
 
 struct jfield* jclass_lookup_static_field(struct jclass *c, const char *name, const char *descriptor)
 {
-    struct jfield* field = jclass_lookup_field(c, name, descriptor);
+    struct jfield *field = jclass_lookup_field(c, name, descriptor);
     // todo field == nullptr
     if (!IS_STATIC(field->access_flags)) {
         // todo java.lang.IncompatibleClassChangeError

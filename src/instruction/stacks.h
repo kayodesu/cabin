@@ -13,7 +13,7 @@ static void pop(struct stack_frame *frame)
 #ifdef JVM_DEBUG
     struct slot *s = os_pops(frame->operand_stack);
     if(!slot_is_category_one(s)) {
-        jvm_abort(""); // todo
+        vm_unknown_error("slot's category is error");
     }
 #else
     os_pops(frame->operand_stack);
@@ -28,7 +28,7 @@ static void pop2(struct stack_frame *frame)
     struct slot *top2 = os_pops(frame->operand_stack);
 
     if( !(slots_are_category_two_and_ph(top2, top1) || slots_are_category_one(2, top1, top2)) ) {
-        jvm_abort(""); // todo
+        vm_unknown_error("slot's category is error");
     }
 #else
     os_pops(frame->operand_stack);
@@ -42,7 +42,7 @@ static void dup(struct stack_frame *frame)
     const struct slot *s = os_top(frame->operand_stack);
 #ifdef JVM_DEBUG
     if (!slot_is_category_one(s)) {
-        jvm_abort(""); // todo
+        vm_unknown_error("slot's category is error");
     }
 #endif
     os_push_slot_directly(frame->operand_stack, s);
@@ -56,7 +56,7 @@ static void dup2(struct stack_frame *frame)
 
 #ifdef JVM_DEBUG
     if( !(slots_are_category_two_and_ph(&top2, &top1) || slots_are_category_one(2, &top1, &top2)) ) {
-        jvm_abort(""); // todo
+        vm_unknown_error("slot's category is error");
     }
 #endif
 
@@ -80,7 +80,7 @@ static void dup_x1(struct stack_frame *frame)
 
 #ifdef JVM_DEBUG
     if (!slots_are_category_one(2, &top1, &top2)) {
-        jvm_abort(""); // todo
+        vm_unknown_error("slot's category is error");
     }
 #endif
 
@@ -101,7 +101,7 @@ static void dup_x2(struct stack_frame *frame)
     bool f1 = slot_is_category_one(&top1) && slots_are_category_two_and_ph(&top3, &top2); // 栈顶类型一，栈顶下一个类型二
     bool f2 = slots_are_category_one(3, &top1, &top2, &top3);
     if ( !(f1 || f2) ) {
-        jvm_abort(""); // todo
+        vm_unknown_error("slot's category is error");
     }
 #endif
 
@@ -135,7 +135,7 @@ static void dup2_x1(struct stack_frame *frame)
     bool f1 = slots_are_category_one(3, &top1, &top2, &top3); // Form 1
     bool f2 = slots_are_category_two_and_ph(&top2, &top1) && slot_is_category_one(&top3);  // Form 2
     if ( !(f1 || f2) ) {
-        jvm_abort(""); // todo
+        vm_unknown_error("slot's category is error");
     }
 #endif
 
@@ -184,7 +184,7 @@ static void dup2_x2(struct stack_frame *frame)
     bool f3 = slots_are_category_one(2, &top1, &top2) && slots_are_category_two_and_ph(&top4, &top3);     // Form 3
     bool f4 = slots_are_category_two_and_ph(&top4, &top3) && slots_are_category_two_and_ph(&top2, &top1); // Form 4
     if ( !(f1 || f2 || f3 || f4) ) {
-        jvm_abort(""); // todo
+        vm_unknown_error("slot's category is error");
     }
 #endif
 
@@ -209,7 +209,7 @@ static void __swap(struct stack_frame *frame)
 
 #ifdef JVM_DEBUG
     if (!slots_are_category_one(2, &top1, &top2)) {
-        jvm_abort(""); // todo
+        vm_unknown_error("slot's category is error");
     }
 #endif
 

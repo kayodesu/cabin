@@ -1,5 +1,3 @@
-#include <string.h>
-#include <assert.h>
 #include "jtypes.h"
 #include "jvm.h"
 
@@ -16,7 +14,7 @@ const char* get_jtype_name(enum jtype t)
 
     int len = sizeof(names) / sizeof(*names);
     if (t < 0 || t >= len) {
-        printvm("access beyoud bounds, %d of %d\n", t, len); // todo
+        VM_UNKNOWN_ERROR("access beyond bounds, %d of %d\n", t, len);
         return "unknown";
     }
 

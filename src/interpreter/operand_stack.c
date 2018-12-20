@@ -53,7 +53,7 @@ struct slot* os_pops(struct operand_stack *os)
     assert(os != NULL);
 
     if (os->size == 0) {
-        printvm("operand stack is empty\n");
+        vm_unknown_error("operand stack is empty");
         return NULL;
     }
     return os->slots + --os->size;

@@ -178,7 +178,7 @@ static void getName0(struct stack_frame *frame)
 static void desiredAssertionStatus0(struct stack_frame *frame)
 {
     // todo 本书不讨论断言。desiredAssertionStatus0（）方法把false推入操作数栈顶
-    os_pushi(frame->operand_stack, 0); // todo pushBoolean?????????????????????????????????????????????
+    os_pushi(frame->operand_stack, 0);
 }
 
 /**
@@ -254,7 +254,7 @@ static void isAssignableFrom(struct stack_frame *frame)
     struct jobject *this_cls_obj = slot_getr(frame->local_vars);
     struct jobject *cls = (struct jobject *) slot_getr(frame->local_vars + 1);
     if (cls == NULL) {
-        jvm_abort("NullPointerException"); // todo
+        jthread_throw_null_pointer_exception(frame->thread);
     }
 #ifdef JVM_DEBUG
     JOBJECT_CHECK_CLSOBJ(this_cls_obj);

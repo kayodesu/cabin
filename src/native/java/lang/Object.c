@@ -10,9 +10,7 @@
 static void hashCode(struct stack_frame *frame)
 {
     jref this_obj = slot_getr(frame->local_vars);
-    os_pushi(frame->operand_stack, (jint) this_obj); // todo
-//    JObject *thisObj = frame->getLocalVar(0).getRef();
-//    frame->operandStack.push((jint)((jlong)thisObj)); // todo
+    os_pushi(frame->operand_stack, (jint) (intptr_t) this_obj);
 }
 
 // protected native Object clone() throws CloneNotSupportedException;
@@ -21,7 +19,7 @@ static void clone(struct stack_frame *frame)
     jref this_obj = slot_getr(frame->local_vars);
     struct jclass *cloneable = classloader_load_class(frame->method->jclass->loader, "java/lang/Cloneable");
     if (!jclass_is_subclass_of(this_obj->jclass, cloneable)) {
-        jvm_abort("java.lang.CloneNotSupportedException");
+        jvm_abort("java.lang.CloneNotSupportedException"); // todo
     }
     os_pushr(frame->operand_stack, jobject_clone(this_obj, NULL));
 }

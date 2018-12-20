@@ -23,7 +23,7 @@ static void multianewarray(struct stack_frame *frame)
     for (int i = arr_dim - 1; i >= 0; i--) {
         int len = os_popi(frame->operand_stack);
         if (len < 0) {  // todo 等于0的情况
-            jvm_abort("error. java.lang.NegativeArraySizeException. %d \n", len); // todo
+            jthread_throw_negative_array_size_exception(frame->thread, len);
             return;
         }
         arr_lens[i] = (size_t) len;
@@ -54,12 +54,12 @@ static void ifnonnull(struct stack_frame *frame)
 
 static void goto_w(struct stack_frame *frame)
 {
-    jvm_abort("goto_w 不支持"); // todo
+    vm_internal_error("goto_w 不支持"); // todo
 }
 
 static void jsr_w(struct stack_frame *frame)
 {
-    jvm_abort("jsr_w doesn't support after jdk 6.");
+    vm_internal_error("jsr_w doesn't support after jdk 6.");
 }
 
 extern bool wide_extending;

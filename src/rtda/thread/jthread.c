@@ -203,6 +203,34 @@ void jthread_handle_uncaught_exception(struct jthread *thread, struct jobject *e
     jthread_push_frame(thread, frame);
 }
 
+void jthread_throw_null_pointer_exception(struct jthread *thread)
+{
+    assert(thread != NULL);
+    // todo
+}
+
+void jthread_throw_negative_array_size_exception(struct jthread *thread, int array_size)
+{
+    assert(thread != NULL);
+    // todo
+}
+
+void jthread_throw_array_index_out_of_bounds_exception(struct jthread *thread, int index)
+{
+    assert(thread != NULL);
+    // todo
+}
+
+void jthread_throw_class_cast_exception(
+        struct jthread *thread, const char *from_class_name, const char *to_class_name)
+{
+    assert(thread != NULL);
+    assert(from_class_name != NULL);
+    assert(to_class_name != NULL);
+    // ("%s can not be cast to %s\n", from_class_name, to_class_name);
+    // todo
+}
+
 void jthread_destroy(struct jthread *thread)
 {
     // todo

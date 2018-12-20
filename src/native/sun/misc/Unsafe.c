@@ -57,9 +57,9 @@ static void compareAndSwapInt(struct stack_frame *frame)
     if (value == expected) {
         struct slot s = islot(x);
         set_instance_field_value_by_id(o, offset, &s);
-        os_pushi(frame->operand_stack, 1); // todo
+        os_pushi(frame->operand_stack, 1);
     } else {
-        os_pushi(frame->operand_stack, 0); // todo
+        os_pushi(frame->operand_stack, 0);
     }
 }
 
@@ -76,9 +76,9 @@ static void compareAndSwapLong(struct stack_frame *frame)
     if (value == expected) {
         struct slot s = lslot(x);
         set_instance_field_value_by_id(o, offset, &s);
-        os_pushi(frame->operand_stack, 1); // todo
+        os_pushi(frame->operand_stack, 1);
     } else {
-        os_pushi(frame->operand_stack, 0); // todo
+        os_pushi(frame->operand_stack, 0);
     }
 }
 
@@ -95,9 +95,9 @@ static void compareAndSwapObject(struct stack_frame *frame)
     if (value == expected) {
         struct slot s = rslot(x);
         set_instance_field_value_by_id(o, offset, &s);
-        os_pushi(frame->operand_stack, 1); // todo
+        os_pushi(frame->operand_stack, 1);
     } else {
-        os_pushi(frame->operand_stack, 0); // todo
+        os_pushi(frame->operand_stack, 0);
     }
 }
 
@@ -305,13 +305,11 @@ static void getShortVolatile(struct stack_frame *frame)
 // public native int getIntVolatile(Object o, long offset);
 static void getIntVolatile(struct stack_frame *frame)
 {
-//    jref this_obj = slot_getr(frame->local_vars);
     jref o = slot_getr(frame->local_vars + 1); // first argument
     jlong offset = slot_getl(frame->local_vars + 2);
 
     jint value;
     if (jclass_is_array(o->jclass)) {
-//        value = *((jint *)jarrobj_index(o, offset));
         value = jarrobj_get(jint, o, offset);  // todo
     } else {
         value = slot_geti(get_instance_field_value_by_id(o, offset));  // todo

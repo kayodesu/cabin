@@ -31,7 +31,8 @@ struct jobject *jarrobj_create(struct jclass *arr_class, jint arr_len)
 
     struct jobject *o = jobject_create(arr_class);
     jint len = sizeof(jint) /* store ele_size */ + sizeof(jint) /* store arr_len */ + arr_len * ele_size /* data */;
-    o->extra = malloc(len);  // todo NULL
+    o->extra = malloc(len);
+    CHECK_MALLOC_RESULT(o->extra);
     // java数组创建后要赋默认值，0, 0.0, false,'\0', NULL 之类的 todo
     memset(o->extra, 0, len);
 
@@ -163,7 +164,8 @@ void* jarrobj_copy_data(const struct jobject *o)
     assert(jobject_is_array(o));
     assert(o->extra != NULL);
 
-    int data_len = 2 * sizeof(jint) + ELE_SIZE(o) * ARR_LEN(o);
-    void *copy = malloc(data_len); // todo NULL
+    size_t data_len = 2 * sizeof(jint) + ELE_SIZE(o) * ARR_LEN(o);
+    void *copy = malloc(data_len);
+    CHECK_MALLOC_RESULT(copy);
     return memcpy(copy, o->extra, data_len);
 }

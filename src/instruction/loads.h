@@ -82,16 +82,15 @@ static void func_name(struct stack_frame *frame) \
     jint index = os_popi(frame->operand_stack); \
     struct jobject *ao = os_popr(frame->operand_stack); \
     if (ao == NULL) { \
-        jvm_abort("error NULL Point Exception\n"); /* todo */ \
+        jthread_throw_null_pointer_exception(frame->thread); \
     } \
     \
     if (!check_type(ao->jclass)) { \
-        jvm_abort("error\n"); \
+        vm_unknown_error("type mismatch"); \
     } \
     \
     if (!jarrobj_check_bounds(ao, index)) { \
-        jvm_abort("ArrayIndexOutOfBoundsException. %p\n", ao); \
-        /* todo throw new ArrayIndexOutOfBoundsException(String.valueOf(index)); */ \
+        jthread_throw_array_index_out_of_bounds_exception(frame->thread, index); \
     } \
     os_push(frame->operand_stack, *(raw_type *)jarrobj_index(ao, index)); \
 }

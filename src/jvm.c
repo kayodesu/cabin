@@ -107,11 +107,6 @@ static void start_jvm(const char *main_class_name)
     init_jvm(loader, main_thread);
 
     struct jclass *main_class = classloader_load_class(loader, main_class_name);
-    if (main_class == NULL) {
-        jvm_abort("error %s\n", main_class_name);  // todo
-        return;
-    }
-
     struct jmethod *main_method = jclass_lookup_static_method(main_class, "main", "([Ljava/lang/String;)V");
     if (main_method == NULL) {
         jvm_abort("can't find method main.\n");
@@ -183,13 +178,13 @@ int main(int argc, char* argv[])
                     jvm_abort("缺少参数：%s\n", name);
                 }
                 strcpy(bootstrap_classpath, argv[i]);
-            } if (strcmp(name, "-cp") == 0) { // parse Class Path
+            } else if (strcmp(name, "-cp") == 0) { // parse Class Path
                 if (++i >= argc) {
                     jvm_abort("缺少参数：%s\n", name);
                 }
                 strcpy(user_classpath, argv[i]);
             } else {
-                jvm_abort("不认识的参数：%s\n", name);
+                jvm_abort("unknown 参数: %s\n", name);
             }
         } else {
             strcpy(main_class_name, argv[i]);
@@ -211,8 +206,7 @@ int main(int argc, char* argv[])
         // 命令行参数没有设置 bootstrap_classpath 的值，那么使用 JAVA_HOME 环境变量
         char *java_home = getenv("JAVA_HOME"); // JAVA_HOME 是 JDK 的目录
         if (java_home == NULL) {
-            // todo error
-            jvm_abort("no java lib");
+            vm_internal_error("no java lib"); // todo
             return -1;
         }
         strcpy(bootstrap_classpath, java_home);

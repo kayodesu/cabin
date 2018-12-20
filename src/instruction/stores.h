@@ -12,13 +12,12 @@ jint fetch_index(struct stack_frame *frame);
 static inline void __istore(struct stack_frame *frame, int index)
 {
     struct slot *s = os_pops(frame->operand_stack);
-    if (s != NULL && s->t == JINT) {
+    if (s->t == JINT) {
         sf_set_local_var(frame, index, s);
         return;
     }
 
-    // todo error
-    jvm_abort("error\n");
+    VM_UNKNOWN_ERROR("slot's type is mismatch, wants \'jint\', gets \'%s\'.\n", slot_to_string(s));
 }
 
 static void istore(struct stack_frame *frame)   { __istore(frame, fetch_index(frame)); }
@@ -32,13 +31,12 @@ static void istore_3(struct stack_frame *frame) { __istore(frame, 3); }
 static inline void __fstore(struct stack_frame *frame, int index)
 {
     struct slot *s = os_pops(frame->operand_stack);
-    if (s != NULL && s->t == JFLOAT) {
+    if (s->t == JFLOAT) {
         sf_set_local_var(frame, index, s);
         return;
     }
 
-    // todo error
-    jvm_abort("error\n");
+    VM_UNKNOWN_ERROR("slot's type is mismatch, wants \'jfloat\', gets \'%s\'.\n", slot_to_string(s));
 }
 
 static void fstore(struct stack_frame *frame)   { __fstore(frame, fetch_index(frame)); }
@@ -52,17 +50,12 @@ static void fstore_3(struct stack_frame *frame) { __fstore(frame, 3); }
 static inline void __astore(struct stack_frame *frame, int index)
 {
     struct slot *s = os_pops(frame->operand_stack);
-    if (s != NULL && s->t == JREF) {
+    if (s->t == JREF) {
         sf_set_local_var(frame, index, s);
         return;
     }
 
-    // todo error
-    if (s == NULL) {
-        jvm_abort("operand stack is empty.\n");
-    } else {
-        jvm_abort("slot's type is mismatch, wants \'reference\', gets \'%s\'.\n", get_jtype_name(s->t));
-    }
+    VM_UNKNOWN_ERROR("slot's type is mismatch, wants \'reference\', gets \'%s\'.\n", slot_to_string(s));
 }
 
 static void astore(struct stack_frame *frame)   { __astore(frame, fetch_index(frame)); }
@@ -76,15 +69,13 @@ static void astore_3(struct stack_frame *frame) { __astore(frame, 3); }
 static void __lstore(struct stack_frame *frame, int index)
 {
     struct slot *s = os_pops(frame->operand_stack);
-    if (s == NULL || s->t != PH) {
-        // todo error
-        jvm_abort("wants placeholder, gets %s.", slot_to_string(s));
+    if (s->t != PH) {
+        VM_UNKNOWN_ERROR("wants placeholder, gets %s.", slot_to_string(s));
     }
 
     s = os_pops(frame->operand_stack);
-    if (s == NULL || s->t != JLONG) {
-        // todo error
-        jvm_abort("wants jlong, gets %s.", slot_to_string(s));
+    if (s->t != JLONG) {
+        VM_UNKNOWN_ERROR("slot's type is mismatch, wants \'jlong\', gets \'%s\'.\n", slot_to_string(s));
     }
 
     sf_set_local_var(frame, index, s);
@@ -101,15 +92,13 @@ static void lstore_3(struct stack_frame *frame) { __lstore(frame, 3); }
 static void __dstore(struct stack_frame *frame, int index)
 {
     struct slot *s = os_pops(frame->operand_stack);
-    if (s == NULL || s->t != PH) {
-        // todo error
-        jvm_abort("error");
+    if (s->t != PH) {
+        VM_UNKNOWN_ERROR("wants placeholder, gets %s.", slot_to_string(s));
     }
 
     s = os_pops(frame->operand_stack);
-    if (s == NULL || s->t != JDOUBLE) {
-        // todo error
-        jvm_abort("error");
+    if (s->t != JDOUBLE) {
+        VM_UNKNOWN_ERROR("slot's type is mismatch, wants \'jdouble\', gets \'%s\'.\n", slot_to_string(s));
     }
 
     sf_set_local_var(frame, index, s);
@@ -130,15 +119,14 @@ static void func_name(struct stack_frame *frame) \
     jint index = os_popi(frame->operand_stack); \
     struct jobject *ao = os_popr(frame->operand_stack); \
     if (ao == NULL) { \
-        jvm_abort("error NULL Point Exception\n"); /* todo */ \
+        jthread_throw_null_pointer_exception(frame->thread); \
     } \
      \
     if (!check_type(ao->jclass)) { \
-        jvm_abort("error\n"); \
+        vm_unknown_error("is not array"); \
     } \
     if (!jarrobj_check_bounds(ao, index)) { \
-        jvm_abort("ArrayIndexOutOfBoundsException\n"); \
-        /* todo throw new ArrayIndexOutOfBoundsException(String.valueOf(index)); */ \
+        jthread_throw_array_index_out_of_bounds_exception(frame->thread, index); \
     } \
     *(raw_type *)jarrobj_index(ao, index) = value; \
 }

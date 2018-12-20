@@ -16,7 +16,8 @@ static struct annotation* parse_annotation(struct bytecode_reader *reader)
 
     a->type_index = bcr_readu2(reader);
     a->num_element_value_pairs = bcr_readu2(reader);
-    a->element_value_pairs = malloc(sizeof(struct element_value_pair) * a->num_element_value_pairs); // todo NULL
+    a->element_value_pairs = malloc(sizeof(struct element_value_pair) * a->num_element_value_pairs);
+    CHECK_MALLOC_RESULT(a->element_value_pairs);
     for (int i = 0; i < a->num_element_value_pairs; i++) {
         a->element_value_pairs[i].element_name_index = bcr_readu2(reader);
         a->element_value_pairs[i].value = parse_element_value(reader);
@@ -59,7 +60,7 @@ static struct element_value* parse_element_value(struct bytecode_reader *reader)
             }
             break;
         default:
-            jvm_abort("error\n"); // todo error
+            VM_UNKNOWN_ERROR("unknown tag: %d", ev->tag);
     }
 
     return ev;
@@ -124,9 +125,8 @@ parse_code_attribute(struct bytecode_reader *reader, u4 attribute_length, void *
     a->max_locals = bcr_readu2(reader);
     a->code_length = bcr_readu4(reader);
     a->code = malloc(sizeof(u1) * a->code_length);
-    for (int i = 0; i < a->code_length; i++) {
-        a->code[i] = bcr_readu1(reader);  // todo 严重效率问题，应该一次读入。
-    }
+    CHECK_MALLOC_RESULT(a->code);
+    bcr_read_bytes(reader, a->code, a->code_length);
 
     a->exception_tables_length = bcr_readu2(reader);
     a->exception_tables = malloc(sizeof(struct code_attribute_exception_table) * a->exception_tables_length);
@@ -424,10 +424,8 @@ parse_source_debug_extension_attribute(struct bytecode_reader *reader, u4 attrib
     VM_MALLOC(struct source_debug_extension_attribute, a);
 
     a->debug_extension = malloc(sizeof(u1) * attribute_length);
-
-    for (int i = 0; i < attribute_length; i++) {
-        a->debug_extension[i] = bcr_readu1(reader); // todo 效率低下，应该一次读取
-    }
+    CHECK_MALLOC_RESULT(a->debug_extension);
+    bcr_read_bytes(reader, a->debug_extension, attribute_length);
 
     a->common.name = SourceDebugExtension;
     a->common.attribute_length = attribute_length;

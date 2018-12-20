@@ -87,8 +87,7 @@ static void putstatic(struct stack_frame *frame)
     } else if (d  == 'L' || d  == '[') {
         s = rslot(os_popr(frame->operand_stack));
     } else {
-        // todo error
-        jvm_abort("error, %s\n", ref->resolved_field->descriptor);
+        VM_UNKNOWN_ERROR("field's descriptor error. %s", ref->resolved_field->descriptor);
     }
 
     set_static_field_value_by_id(cls, ref->resolved_field->id, &s);
@@ -150,13 +149,12 @@ static void putfield(struct stack_frame *frame)
     } else if (d  == 'L' || d  == '[') {
         s = rslot(os_popr(frame->operand_stack));
     } else {
-        // todo error
-        jvm_abort("error, %s\n", ref->resolved_field->descriptor);
+        VM_UNKNOWN_ERROR("field's descriptor error. %s", ref->resolved_field->descriptor);
     }
 
     jref obj = os_popr(frame->operand_stack);
     if (obj == NULL) {
-        jvm_abort("java.lang.NullPointerException\n"); // todo
+        jthread_throw_null_pointer_exception(frame->thread);
     }
 
     set_instance_field_value_by_id(obj, ref->resolved_field->id, &s);
@@ -177,11 +175,8 @@ static void getfield(struct stack_frame *frame)
 
     jref obj = os_popr(frame->operand_stack);
     if (obj == NULL) {
-        jvm_abort("java.lang.NullPointerException\n");  // todo
+        jthread_throw_null_pointer_exception(frame->thread);
     }
-
-//    printvm("[%s], [%s]\n", jclass_to_string(ref->resolved_class), jfield_to_string(ref->resolved_field));
-//    printvm("%s\n", jobject_to_string(obj));
 
     const struct slot *s = get_instance_field_value_by_id(obj, ref->resolved_field->id);
 
@@ -194,7 +189,7 @@ static void getfield(struct stack_frame *frame)
         || ((d  == 'L' || d  == '[') && s->t == JREF)) {
         os_pushs(frame->operand_stack, s);
     } else {
-        jvm_abort("type mismatch error. field's descriptor is %s, but slot is %s\n",
+        VM_UNKNOWN_ERROR("type mismatch error. field's descriptor is %s, but slot is %s",
                   ref->resolved_field->descriptor, slot_to_string(s));
     }
 
@@ -205,7 +200,7 @@ static void athrow(struct stack_frame *frame)
 {
     jref exception = os_popr(frame->operand_stack);
     if (exception == NULL) {
-        jvm_abort("java.lang.NullPointerException\n");  // todo
+        jthread_throw_null_pointer_exception(frame->thread);
     }
 
     struct jthread *curr_thread = frame->thread;
@@ -253,7 +248,7 @@ static void instanceof(struct stack_frame *frame)
         return;
     }
 
-    os_pushi(frame->operand_stack, (jint)(jobject_is_instance_of(obj, jclass) ? 1 : 0));  // todo
+    os_pushi(frame->operand_stack, (jint)(jobject_is_instance_of(obj, jclass) ? 1 : 0));
 }
 
 /*
@@ -272,10 +267,8 @@ static void checkcast(struct stack_frame *frame)
     const char *class_name = rtcp_get_class_name(frame->method->jclass->rtcp, index);
 
     struct jclass *jclass = classloader_load_class(frame->method->jclass->loader, class_name); // todo resolve_class ???
-    //printvm("checkcast. %s, %s\n", obj->jclass->class_name, jclass->class_name);  //////////////////////////////////////////////
     if (!jobject_is_instance_of(obj, jclass)) {
-        // java.lang.ClassCastException   todo
-        jvm_abort("java.lang.ClassCastException. %s can not cast to %s\n", obj->jclass->class_name, jclass->class_name);
+        jthread_throw_class_cast_exception(frame->thread, obj->jclass->class_name, jclass->class_name);
     }
 }
 
@@ -352,10 +345,6 @@ static void invokespecial(struct stack_frame *frame)
         jvm_abort("java.lang.AbstractMethodError\n");
     }
 
-    if (method->arg_slot_count < 1) {
-        jvm_abort("error\n");
-    }
-
     struct slot args[method->arg_slot_count];
     for (int i = method->arg_slot_count - 1; i >= 0; i--) {
         args[i] = *os_pops(frame->operand_stack);
@@ -363,8 +352,7 @@ static void invokespecial(struct stack_frame *frame)
 
     jref obj = slot_getr(args); // args[0]
     if (obj == NULL) {
-        // todo  java.lang.NullPointerException
-        jvm_abort("java.lang.NullPointerException\n");
+        jthread_throw_null_pointer_exception(frame->thread);
     }
 
     jthread_invoke_method(frame->thread, method, args);
@@ -381,10 +369,6 @@ static void invokevirtual(struct stack_frame *frame)
     struct method_ref *ref = rtcp_get_method_ref(curr_class->rtcp, index);
     resolve_non_static_method_ref(curr_class, ref);
 
-    if (ref->resolved_method->arg_slot_count < 1) {
-        jvm_abort("%d, %s\n", ref->resolved_method->arg_slot_count, jmethod_to_string(ref->resolved_method));
-    }
-
     struct slot args[ref->resolved_method->arg_slot_count];
     for (int i = ref->resolved_method->arg_slot_count - 1; i >= 0; i--) {
         args[i] = *os_pops(frame->operand_stack);
@@ -392,29 +376,7 @@ static void invokevirtual(struct stack_frame *frame)
 
     struct jobject *obj = slot_getr(args); // args[0]
     if (obj == NULL) {
-//        if (strcmp(ref->resolved_method->name, "println") == 0) {
-//            // todo   println  暂时先这么搞
-//            printvm("fake println!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-//            const struct slot *arg = args + 1; // println 的参数
-//            if (arg->t == JREF) {
-//                struct jobject *so = slot_getr(arg);
-//                JOBJECT_CHECK_STROBJ(so);
-//                printvm("%p, %s\n", so, jstrobj_value(so));
-//            } else if (arg->t == JINT) {
-//                printvm("%d\n", slot_geti(arg));
-//            } else if (arg->t == JFLOAT) {
-//                printvm("%f\n", slot_getf(arg));
-//            } else if (arg->t == JLONG) {
-//                printvm("%ld\n", slot_getl(arg));
-//            } else if (arg->t == JDOUBLE) {
-//                printvm("%f\n", slot_getd(arg));
-//            } else {
-//                jvm_abort("println 找不到类型\n");
-//            }
-//            return;
-//        }
-        printvm("%s~%s~%s\n", ref->class_name, ref->resolved_method->name, ref->resolved_method->descriptor);
-        jvm_abort("java.lang.NullPointerException\n"); // todo  java.lang.NullPointerException
+        jthread_throw_null_pointer_exception(frame->thread);
     }
 
     // 从对象的类中查找真正要调用的方法
@@ -456,10 +418,6 @@ static void invokeinterface(struct stack_frame *frame)
 
     /* todo 本地方法 */
 
-    if (ref->resolved_method->arg_slot_count < 1) {
-        jvm_abort("error\n");
-    }
-
     struct slot args[ref->resolved_method->arg_slot_count];
     for (int i = ref->resolved_method->arg_slot_count - 1; i >= 0; i--) {
         args[i] = *os_pops(frame->operand_stack);
@@ -467,8 +425,7 @@ static void invokeinterface(struct stack_frame *frame)
 
     jref obj = slot_getr(args); // args[0]
     if (obj == NULL) {
-        // todo  java.lang.NullPointerException
-        jvm_abort("java.lang.NullPointerException\n");
+        jthread_throw_null_pointer_exception(frame->thread);
     }
 
     struct jmethod *method = jclass_lookup_method(obj->jclass, ref->name, ref->descriptor);
@@ -527,8 +484,7 @@ static void newarray(struct stack_frame *frame)
 {
     jint arr_len = os_popi(frame->operand_stack);
     if (arr_len < 0) {
-        // todo  java.lang.NegativeArraySizeException
-        jvm_abort("error. java.lang.NegativeArraySizeException. %d \n", arr_len);
+        jthread_throw_negative_array_size_exception(frame->thread, arr_len);
         return;
     }
 
@@ -555,8 +511,8 @@ static void newarray(struct stack_frame *frame)
         case 9: arr_name = "[S"; break;
         case 10: arr_name = "[I"; break;
         case 11: arr_name = "[J"; break;
-        default:  // todo
-            jvm_abort("error. Invalid array type: %d.\n", arr_type);
+        default:
+            VM_UNKNOWN_ERROR("error. Invalid array type: %d", arr_type);
             return;
     }
 
@@ -576,8 +532,7 @@ static void anewarray(struct stack_frame *frame)
     struct jclass *curr_class = frame->method->jclass;
     jint arr_len = os_popi(frame->operand_stack);
     if (arr_len < 0) {
-        // todo  java.lang.NegativeArraySizeException
-        jvm_abort("error. java.lang.NegativeArraySizeException. %d \n", arr_len);
+        jthread_throw_negative_array_size_exception(frame->thread, arr_len);
         return;
     }
 
@@ -595,11 +550,10 @@ static void arraylength(struct stack_frame *frame)
 {
     struct jobject *o = os_popr(frame->operand_stack);
     if (o == NULL) {
-        // todo java.lang.NullPointerException
-        jvm_abort("error. java.lang.NullPointerException\n");
+        jthread_throw_null_pointer_exception(frame->thread);
     }
     if (!jobject_is_array(o)) {
-        jvm_abort("error"); // todo
+        vm_unknown_error("is not a array");
     }
 
     os_pushi(frame->operand_stack, jarrobj_len(o));

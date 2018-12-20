@@ -52,7 +52,6 @@ char* slot_to_string(const struct slot *s)
         jvm_abort("snprintf 出错\n"); // todo
     }
 
-    assert(0 <= n && n <= MAX_LEN);
     result[n] = 0;
 #undef MAX_LEN
 

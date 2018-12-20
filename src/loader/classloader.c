@@ -362,7 +362,8 @@ struct jclass* classloader_load_class(struct classloader *loader, const char *cl
     }
 
     if (c == NULL) {
-        jvm_abort("error"); // todo
+        VM_UNKNOWN_ERROR("loader class failed. %s", class_name);
+        return NULL;
     }
 
     assert(strcmp(c->class_name, class_name) == 0);

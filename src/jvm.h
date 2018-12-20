@@ -10,6 +10,7 @@
 #include <stdbool.h>
 #include <limits.h>
 #include "jtypes.h"
+#include "vm_error.h"
 
 /*
  * 是否开启调试模式，
@@ -51,8 +52,18 @@ extern char user_jars[][PATH_MAX];
 // todo 说明
 extern struct classloader *bootstrap_loader;
 
-#define VM_MALLOC_EXT(type, count, extra_len, var_name) type *(var_name) = malloc(sizeof(type) * (count) + (extra_len))
+#define CHECK_MALLOC_RESULT(point) do { if ((point) == NULL) vm_internal_error("malloc failed"); } while (false)
+
+/*
+ * 下面申请内存的宏会检查申请是否成功
+ * 使用时要小心，这些宏展开后是多条语句而不是一条。
+ */
+#define VM_MALLOC_EXT(type, count, extra_len, var_name) \
+                        type *(var_name) = malloc(sizeof(type) * (count) + (extra_len)); \
+                        CHECK_MALLOC_RESULT(var_name)
+
 #define VM_MALLOCS(type, count, var_name) VM_MALLOC_EXT(type, count, 0, var_name)
+
 #define VM_MALLOC(type, var_name) VM_MALLOCS(type, 1, var_name)
 
 /*
@@ -74,6 +85,6 @@ extern struct jobject *system_thread_group;
 #define printvm(...) do { printf("%s: %d: ", __FILE__, __LINE__); printf(__VA_ARGS__); } while(false)
 
 // 出现异常，退出jvm
-#define jvm_abort(...) do { printf("fatal error. "); printf(__VA_ARGS__); exit(-1); } while(false)
+#define jvm_abort(...) do { printvm("fatal error. "); printf(__VA_ARGS__); exit(-1); } while(false)
 
 #endif //JVM_JVM_H

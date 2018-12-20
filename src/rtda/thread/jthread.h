@@ -72,8 +72,13 @@ void jthread_invoke_method(struct jthread *thread, struct jmethod *method, const
  */
 void jthread_invoke_method_with_shim(struct jthread *thread, struct jmethod *method, const struct slot *args);
 
-// todo UncaughtException
 void jthread_handle_uncaught_exception(struct jthread *thread, struct jobject *exception);
+
+void jthread_throw_null_pointer_exception(struct jthread *thread);
+void jthread_throw_negative_array_size_exception(struct jthread *thread, int array_size);
+void jthread_throw_array_index_out_of_bounds_exception(struct jthread *thread, int index);
+void jthread_throw_class_cast_exception(
+        struct jthread *thread, const char *from_class_name, const char *to_class_name);
 
 void jthread_destroy(struct jthread *thread);
 

@@ -23,7 +23,7 @@ static void mapLibraryName(struct stack_frame *frame)
 {
     jref libname = slot_getr(frame->local_vars);
     if (libname == NULL) {
-        jvm_abort("NullPointerException");// todo
+        jthread_throw_null_pointer_exception(frame->thread);
     }
 #ifdef JVM_DEBUG
     JOBJECT_CHECK_STROBJ(libname);
@@ -109,9 +109,6 @@ static void initProperties(struct stack_frame *frame)
     // todo init
     struct jmethod *set_property = jclass_lookup_instance_method(
             props->jclass, "setProperty", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;");
-    if (set_property == NULL) {
-        jvm_abort("error\n"); // todo
-    }
 
     for (int i = 0; i < sizeof(sys_props) / sizeof(*sys_props); i++) {
         struct slot args[] = {

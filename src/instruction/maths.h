@@ -165,8 +165,7 @@ static void iinc(struct stack_frame *frame)
 
     struct slot *s = frame->local_vars + index;
     if (s->t != JINT) {
-        // todo error
-        jvm_abort("error\n");
+        VM_UNKNOWN_ERROR("type mismatch. wants %d, but gets %d", JINT, s->t);
     }
 
     s->v.i += value;
