@@ -71,15 +71,17 @@ struct utf8_constant {
     u1 bytes[];
 };
 
-#define REF_KIND_GET_FIELD          1
-#define REF_KIND_GET_STATIC         2
-#define REF_KIND_PUT_FIELD          3
-#define REF_KIND_PUT_STATIC         4
-#define REF_KIND_INVOKE_VIRTUAL     5
-#define REF_KIND_INVOKE_STATIC      6
-#define REF_KIND_INVOKE_SPECIAL     7
-#define REF_KIND_NEW_INVOKE_SPECIAL 8
-#define REF_KIND_INVOKE_INTERFACE   9
+// Bytecode Behaviors and Method Descriptors for Method Handles
+//      Description              | Kind   | Interpretation                           | Method descriptor
+#define REF_KIND_GET_FIELD          1    // getfield C.f:T                           | (C)T
+#define REF_KIND_GET_STATIC         2    // getstatic C.f:T                          | ()T
+#define REF_KIND_PUT_FIELD          3    // putfield C.f:T                           | (C,T)V
+#define REF_KIND_PUT_STATIC         4    // putstatic C.f:T                          | (T)V
+#define REF_KIND_INVOKE_VIRTUAL     5    // invokevirtual C.m:(A*)T                  | (C,A*)T
+#define REF_KIND_INVOKE_STATIC      6    // invokestatic C.m:(A*)T                   | (A*)T
+#define REF_KIND_INVOKE_SPECIAL     7    // invokespecial C.m:(A*)T                  | (C,A*)T
+#define REF_KIND_NEW_INVOKE_SPECIAL 8    // new C; dup; invokespecial C.<init>:(A*)V | (A*)C
+#define REF_KIND_INVOKE_INTERFACE   9    // invokeinterface C.m:(A*)T                | (C,A*)T
 
 struct method_handle_constant {
     u1 tag;
