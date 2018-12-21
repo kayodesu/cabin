@@ -24,6 +24,22 @@ struct vector* vector_create()
     return vec;
 }
 
+void* vector_get(struct vector *vec, int index)
+{
+    assert(vec != NULL);
+
+    if (index < 0 || index >= vec->len) {
+        jvm_abort(""); // todo
+    }
+
+    return vec->data[index];
+}
+
+void* vector_rget(struct vector *vec, int rindex)
+{
+    return vector_get(vec, vec->len - 1 - rindex);
+}
+
 int vector_len(const struct vector *vec)
 {
     assert(vec != NULL);

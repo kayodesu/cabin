@@ -117,7 +117,7 @@ static void initProperties(struct stack_frame *frame)
                 rslot((jref) jstrobj_create(sys_props[i][1]))
         };
 
-        jthread_invoke_method_with_shim(frame->thread, set_property, args);
+        jthread_invoke_method_with_shim(frame->thread, set_property, args, NULL);
     }
 
     // 返回参数

@@ -9,6 +9,9 @@ struct vector* vector_create();
 
 int vector_len(const struct vector *vec);
 
+void* vector_get(struct vector *vec, int index);
+void* vector_rget(struct vector *vec, int rindex);
+
 void vector_push_back(struct vector *vec, void *value);
 
 void* vector_back(struct vector *vec);

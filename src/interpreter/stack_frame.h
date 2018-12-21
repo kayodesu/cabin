@@ -12,7 +12,14 @@
 #include "../rtda/thread/jthread.h"
 #include "../util/bytecode_reader.h"
 
+enum stack_frame_type {
+    SF_TYPE_NORMAL,
+    SF_TYPE_SHIM
+};
+
 struct stack_frame {
+    enum stack_frame_type type;
+
     struct slot *local_vars; // 局部变量表
     int max_locals;  // todo
 
@@ -26,12 +33,16 @@ struct stack_frame {
 
     struct jmethod *method;
     struct jthread *thread;
+
+    // just for shim frame
+    void (* shim_action)(struct stack_frame *);
 };
 
 /*
  * create a shim stack frame.
+ * @shim_action, could be NULL
  */
-struct stack_frame* sf_create_shim(struct jthread *thread);
+struct stack_frame* sf_create_shim(struct jthread *thread, void (* shim_action)(struct stack_frame *));
 
 struct stack_frame* sf_create(struct jthread *thread, struct jmethod *method);
 

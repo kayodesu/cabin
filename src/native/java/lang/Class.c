@@ -116,11 +116,11 @@ static void getPrimitiveClass(struct stack_frame *frame)
 // private native String getName0();
 static void getName0(struct stack_frame *frame)
 {
-    struct jobject *this_obj = slot_getr(frame->local_vars);
+    struct jobject *this = slot_getr(frame->local_vars);
 #ifdef JVM_DEBUG
-    JOBJECT_CHECK_CLSOBJ(this_obj);
+    JOBJECT_CHECK_CLSOBJ(this);
 #endif
-    struct jclass *c = jclsobj_entity_class(this_obj);
+    struct jclass *c = jclsobj_entity_class(this);
     char class_name[strlen(c->class_name) + 1];
     strcpy(class_name, c->class_name);
     // 这里需要的是 java.lang.Object 这样的类名，而非 java/lang/Object
@@ -215,13 +215,13 @@ static void desiredAssertionStatus0(struct stack_frame *frame)
  */
 static void isInstance(struct stack_frame *frame)
 {
-    struct jobject *this_cls_obj = slot_getr(frame->local_vars);
+    struct jobject *this = slot_getr(frame->local_vars);
 #ifdef JVM_DEBUG
-    JOBJECT_CHECK_CLSOBJ(this_cls_obj);
+    JOBJECT_CHECK_CLSOBJ(this);
 #endif
     jref obj = slot_getr(frame->local_vars + 1);
     os_pushi(frame->operand_stack,
-             (obj != NULL && jobject_is_instance_of(obj, jclsobj_entity_class(this_cls_obj))) ? 1 : 0);
+             (obj != NULL && jobject_is_instance_of(obj, jclsobj_entity_class(this))) ? 1 : 0);
 }
 
 /**
@@ -251,16 +251,16 @@ static void isInstance(struct stack_frame *frame)
  */
 static void isAssignableFrom(struct stack_frame *frame)
 {
-    struct jobject *this_cls_obj = slot_getr(frame->local_vars);
+    struct jobject *this = slot_getr(frame->local_vars);
     struct jobject *cls = (struct jobject *) slot_getr(frame->local_vars + 1);
     if (cls == NULL) {
         jthread_throw_null_pointer_exception(frame->thread);
     }
 #ifdef JVM_DEBUG
-    JOBJECT_CHECK_CLSOBJ(this_cls_obj);
+    JOBJECT_CHECK_CLSOBJ(this);
     JOBJECT_CHECK_CLSOBJ(cls);
 #endif
-    bool b = jclass_is_subclass_of(jclsobj_entity_class(cls), jclsobj_entity_class(this_cls_obj));
+    bool b = jclass_is_subclass_of(jclsobj_entity_class(cls), jclsobj_entity_class(this));
     os_pushi(frame->operand_stack, b ? 1 : 0);
 }
 
@@ -271,11 +271,11 @@ static void isAssignableFrom(struct stack_frame *frame)
  */
 static void isInterface(struct stack_frame *frame)
 {
-    struct jobject *this_cls_obj = slot_getr(frame->local_vars);
+    struct jobject *this = slot_getr(frame->local_vars);
 #ifdef JVM_DEBUG
-    JOBJECT_CHECK_CLSOBJ(this_cls_obj);
+    JOBJECT_CHECK_CLSOBJ(this);
 #endif
-    os_pushi(frame->operand_stack, IS_INTERFACE(jclsobj_entity_class(this_cls_obj)->access_flags) ? 1 : 0);
+    os_pushi(frame->operand_stack, IS_INTERFACE(jclsobj_entity_class(this)->access_flags) ? 1 : 0);
 }
 
 /*
@@ -285,11 +285,11 @@ static void isInterface(struct stack_frame *frame)
  */
 static void isArray(struct stack_frame *frame)
 {
-    struct jobject *this_cls_obj = slot_getr(frame->local_vars);
+    struct jobject *this = slot_getr(frame->local_vars);
 #ifdef JVM_DEBUG
-    JOBJECT_CHECK_CLSOBJ(this_cls_obj);
+    JOBJECT_CHECK_CLSOBJ(this);
 #endif
-    os_pushi(frame->operand_stack, jclass_is_array(jclsobj_entity_class(this_cls_obj)) ? 1 : 0);  // todo
+    os_pushi(frame->operand_stack, jclass_is_array(jclsobj_entity_class(this)) ? 1 : 0);  // todo
 }
 
 /**
@@ -324,11 +324,11 @@ static void isArray(struct stack_frame *frame)
  */
 static void isPrimitive(struct stack_frame *frame)
 {
-    struct jobject *this_cls_obj =slot_getr(frame->local_vars);
+    struct jobject *this =slot_getr(frame->local_vars);
 #ifdef JVM_DEBUG
-    JOBJECT_CHECK_CLSOBJ(this_cls_obj);
+    JOBJECT_CHECK_CLSOBJ(this);
 #endif
-    bool b = jclass_is_primitive(jclsobj_entity_class(this_cls_obj));
+    bool b = jclass_is_primitive(jclsobj_entity_class(this));
     os_pushi(frame->operand_stack, b ? 1 : 0);
 }
 
@@ -347,11 +347,11 @@ static void isPrimitive(struct stack_frame *frame)
  */
 static void getSuperclass(struct stack_frame *frame)
 {
-    struct jobject *this_cls_obj =slot_getr(frame->local_vars);
+    struct jobject *this =slot_getr(frame->local_vars);
 #ifdef JVM_DEBUG
-    JOBJECT_CHECK_CLSOBJ(this_cls_obj);
+    JOBJECT_CHECK_CLSOBJ(this);
 #endif
-    struct jclass *entity_class = jclsobj_entity_class(this_cls_obj);
+    struct jclass *entity_class = jclsobj_entity_class(this);
 
     struct jclass *c = classloader_load_class(frame->method->jclass->loader, entity_class->class_name);
     os_pushr(frame->operand_stack, (jref) (c->super_class != NULL ? c->super_class->clsobj : NULL));
@@ -404,11 +404,11 @@ static void getSuperclass(struct stack_frame *frame)
 //private native Class<?>[] getInterfaces0();
 static void getInterfaces0(struct stack_frame *frame)
 {
-    struct jobject *this_cls_obj = slot_getr(frame->local_vars);
+    struct jobject *this = slot_getr(frame->local_vars);
 #ifdef JVM_DEBUG
-    JOBJECT_CHECK_CLSOBJ(this_cls_obj);
+    JOBJECT_CHECK_CLSOBJ(this);
 #endif
-    struct jclass *entity_class = jclsobj_entity_class(this_cls_obj);
+    struct jclass *entity_class = jclsobj_entity_class(this);
 
     struct jclass *arr_cls = classloader_load_class(frame->method->jclass->loader, "[java/lang/Class;");
     struct jobject *interfaces = jarrobj_create(arr_cls, entity_class->interfaces_count);
@@ -428,17 +428,18 @@ static void getInterfaces0(struct stack_frame *frame)
  */
 static void getComponentType(struct stack_frame *frame)
 {
-    struct jobject *this_cls_obj = slot_getr(frame->local_vars);
+    struct jobject *this = slot_getr(frame->local_vars);
 #ifdef JVM_DEBUG
-    JOBJECT_CHECK_CLSOBJ(this_cls_obj);
+    JOBJECT_CHECK_CLSOBJ(this);
 #endif
-    struct jclass *entity_class = jclsobj_entity_class(this_cls_obj);
+    struct jclass *entity_class = jclsobj_entity_class(this);
 
     struct jclass *component_cls = jclass_component_class(entity_class);
     if (component_cls != NULL) {
-        os_pushr(frame->operand_stack, (jref) component_cls->clsobj);
+        os_pushr(frame->operand_stack, component_cls->clsobj);
+    } else {
+        os_pushr(frame->operand_stack, NULL);
     }
-    os_pushr(frame->operand_stack, NULL);
 }
 
 /**
@@ -471,11 +472,11 @@ static void getComponentType(struct stack_frame *frame)
 //public native int getModifiers();
 static void getModifiers(struct stack_frame *frame)
 {
-    struct jobject *this_cls_obj = slot_getr(frame->local_vars);
+    struct jobject *this = slot_getr(frame->local_vars);
 #ifdef JVM_DEBUG
-    JOBJECT_CHECK_CLSOBJ(this_cls_obj);
+    JOBJECT_CHECK_CLSOBJ(this);
 #endif
-    os_pushi(frame->operand_stack, jclsobj_entity_class(this_cls_obj)->access_flags);
+    os_pushi(frame->operand_stack, jclsobj_entity_class(this)->access_flags);
 }
 
 /**
@@ -505,7 +506,22 @@ static void getModifiers(struct stack_frame *frame)
 // private native Object[] getEnclosingMethod0();
 static void getEnclosingMethod0(struct stack_frame *frame)
 {
-    jvm_abort("");
+    jref this = slot_getr(frame->local_vars);
+#ifdef JVM_DEBUG
+    JOBJECT_CHECK_CLSOBJ(this);
+#endif
+    struct jclass *c = jclsobj_entity_class(this);
+    if (c->enclosing_info[0] == NULL) {
+        os_pushr(frame->operand_stack, NULL);
+        return;
+    }
+
+    jref result = jarrobj_create(classloader_load_class(frame->method->jclass->loader, "[Ljava/lang/Object;"), 3);
+    for (int i = 0; i < 3; i++) {
+        jarrobj_set(struct jobject *, result, i, c->enclosing_info[i]);
+    }
+
+    os_pushr(frame->operand_stack, result);
 }
 
 /*
@@ -642,7 +658,6 @@ static void getDeclaredMethods0(struct stack_frame *frame)
     // invoke constructor of class java/lang/reflect/Method
     for (int i = 0; i < methods_count; i++) {
         struct jobject *jlrf_obj = jobject_create(jlrm_cls);
-//        *(struct jobject **)jobject_index(jlrm_arr, i) = jlrf_obj;
         jarrobj_set(struct jobject *, jlrm_arr, i, jlrf_obj);
 
         jthread_invoke_method(frame->thread, method_constructor, (struct slot[]) {

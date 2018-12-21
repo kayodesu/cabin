@@ -140,14 +140,10 @@ control to the invoker.
 static void func_name(struct stack_frame *frame) \
 { \
     assert(frame == jthread_top_frame(frame->thread)); \
-    /* frame->method->reset(); */ \
     jthread_pop_frame(frame->thread); \
     \
     struct stack_frame *invoke_frame = jthread_top_frame(frame->thread); \
-    /* todo invokeFrame 会不会为null */ \
-    if (invoke_frame == NULL) { \
-        jvm_abort("never goes here."); \
-    } \
+    assert(invoke_frame != NULL); \
     os_push##T(invoke_frame->operand_stack, os_pop##T(frame->operand_stack)); \
     sf_exe_over(frame); \
 }

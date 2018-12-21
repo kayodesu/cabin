@@ -84,7 +84,12 @@ struct jclass {
     int static_fields_count;
     struct slot *static_fields_values; // 保存所有类变量的值
 
-    struct bootstrap_methods_attribute *bootstrap_methods_attribute;
+//    struct bootstrap_methods_attribute *bootstrap_methods_attribute;
+
+    // enclosing_info[0]: the immediately enclosing class
+    // enclosing_info[1]: the immediately enclosing method or constructor's name (can be null).
+    // enclosing_info[2]: the immediately enclosing method or constructor's descriptor (null if name is).
+    struct jobject* enclosing_info[3];
 
     const char *source_file_name;
 };

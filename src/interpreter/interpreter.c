@@ -91,9 +91,11 @@ void interpret(struct jthread *thread)
 {
     while (!jthread_is_stack_empty(thread)) {
         struct stack_frame *frame = jthread_top_frame(thread);
-        struct bytecode_reader *reader = frame->reader;
-        if (reader == NULL) {
-            // a shim frame, just jump over it.
+        if (frame->type == SF_TYPE_SHIM) {
+            if (frame->shim_action != NULL) {
+                frame->shim_action(frame);
+            }
+
             jthread_pop_frame(thread);
             sf_destroy(frame);
 #ifdef JVM_DEBUG
@@ -101,11 +103,13 @@ void interpret(struct jthread *thread)
 #endif
             continue;
         }
+
+        struct bytecode_reader *reader = frame->reader;
 #ifdef JVM_DEBUG
         printvm("executing frame(%p): %s, pc = %lu\n", frame, sf_to_string(frame), bcr_get_pc(reader));
 #endif
         while (bcr_has_more(reader)) {
-            jthread_set_pc(frame->thread, bcr_get_pc(reader));
+            jthread_set_pc(frame->thread, bcr_get_pc(reader)); // store pc
             u1 opcode = bcr_readu1(reader);
 #ifdef JVM_DEBUG
             printvm("%d(0x%x), %s, pc = %lu\n", opcode, opcode, ins_code_name_mapping[opcode], bcr_get_pc(reader));
@@ -131,10 +135,10 @@ void interpret(struct jthread *thread)
              * 如果当前栈顶帧正在处理异常，
              * 则需重置frame和reader，因为在异常处理中可能有一些帧被弹出
              */
-            if (sf_is_proc_exception(jthread_top_frame(thread))) {
-                frame = jthread_top_frame(thread);
-                reader = frame->reader;
-            }
+//            if (sf_is_proc_exception(jthread_top_frame(thread))) {
+//                frame = jthread_top_frame(thread);
+//                reader = frame->reader;
+//            }
         }
     }
 #ifdef JVM_DEBUG

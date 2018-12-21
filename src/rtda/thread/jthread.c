@@ -8,12 +8,6 @@
 #include "../../util/vector.h"
 #include "../../interpreter/interpreter.h"
 
-struct jthread {
-    struct vector *vm_stack; // 虚拟机栈，一个线程只有一个虚拟机栈
-    struct jobject *this_obj; // object of java.lang.Thread   todo 干嘛用的
-
-    size_t pc;
-};
 
 struct jthread* jthread_create(struct classloader *loader)
 {
@@ -26,6 +20,8 @@ struct jthread* jthread_create(struct classloader *loader)
 
     struct slot value = islot(1);  // todo. why 1? I do not know. 参见 jvmgo/instructions/reserved/bootstrap.go
     set_instance_field_value_by_nt(thread->this_obj, "priority", "I", &value);
+
+    thread->dyn.caller = thread->dyn.invoked_type = NULL;
 
     /*
     auto jlThreadClass = classLoader->loadClass("java/lang/Thread");
@@ -109,10 +105,22 @@ bool jthread_is_stack_empty(const struct jthread *thread)
     return vector_len(thread->vm_stack) == 0;
 }
 
+int jthread_stack_depth(const struct jthread *thread)
+{
+    assert(thread != NULL);
+    return vector_len(thread->vm_stack);
+}
+
 struct stack_frame* jthread_top_frame(struct jthread *thread)
 {
     assert(thread != NULL);
     return vector_back(thread->vm_stack);
+}
+
+struct stack_frame* jthread_depth_frame(struct jthread *thread, int depth)
+{
+    assert(thread != NULL);
+    return vector_rget(thread->vm_stack, depth);
 }
 
 void jthread_pop_frame(struct jthread *thread)
@@ -177,7 +185,8 @@ void jthread_invoke_method(struct jthread *thread, struct jmethod *method, const
     // todo
 }
 
-void jthread_invoke_method_with_shim(struct jthread *thread, struct jmethod *method, const struct slot *args)
+void jthread_invoke_method_with_shim(struct jthread *thread, struct jmethod *method, const struct slot *args,
+                                     void (* shim_action)(struct stack_frame *))
 {
     jthread_invoke_method(thread, method, args);
 
@@ -185,7 +194,7 @@ void jthread_invoke_method_with_shim(struct jthread *thread, struct jmethod *met
     jthread_pop_frame(thread);
 
     // 创建一个 shim stack frame 来接受函数method的返回值
-    jthread_push_frame(thread, sf_create_shim(thread));
+    jthread_push_frame(thread, sf_create_shim(thread, shim_action));
     jthread_push_frame(thread, top);
 }
 
@@ -207,18 +216,21 @@ void jthread_throw_null_pointer_exception(struct jthread *thread)
 {
     assert(thread != NULL);
     // todo
+    jvm_abort("");
 }
 
 void jthread_throw_negative_array_size_exception(struct jthread *thread, int array_size)
 {
     assert(thread != NULL);
     // todo
+    jvm_abort("");
 }
 
 void jthread_throw_array_index_out_of_bounds_exception(struct jthread *thread, int index)
 {
     assert(thread != NULL);
     // todo
+    jvm_abort("");
 }
 
 void jthread_throw_class_cast_exception(
@@ -229,6 +241,7 @@ void jthread_throw_class_cast_exception(
     assert(to_class_name != NULL);
     // ("%s can not be cast to %s\n", from_class_name, to_class_name);
     // todo
+    jvm_abort("");
 }
 
 void jthread_destroy(struct jthread *thread)

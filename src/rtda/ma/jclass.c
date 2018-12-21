@@ -7,6 +7,7 @@
 #include "jclass.h"
 #include "access.h"
 #include "jfield.h"
+#include "../heap/jobject.h"
 
 
 // 计算实例字段的个数，同时给它们编号
@@ -141,6 +142,9 @@ struct jclass *jclass_create_by_classfile(struct classloader *loader, struct cla
     c->access_flags = cf->access_flags;
 
     int source_file_index = -1;
+    int enclosing_class_index = -1;
+    int enclosing_method_index = -1;
+    struct bootstrap_methods_attribute *bootstrap_methods_attribute = NULL;
 
     // 先解析属性，因为下面建立 Runtime Constant Pool 时需要用到属性中的值。
     for (int i = 0; i < cf->attributes_count; i++) {
@@ -150,7 +154,10 @@ struct jclass *jclass_create_by_classfile(struct classloader *loader, struct cla
         if (strcmp(attr->name, InnerClasses) == 0) {
             //          printvm("not parse attr: InnerClasses\n");
         } else if (strcmp(attr->name, EnclosingMethod) == 0) {  // 可选属性
-            //           printvm("not parse attr: EnclosingMethod\n");
+            // 这里先不解析，只是记录下source_file_index，因为常量池还没有建立。
+            struct enclosing_method_attribute *a = (struct enclosing_method_attribute *) attr;
+            enclosing_class_index = a->class_index;
+            enclosing_method_index = a->method_index;
         } else if (strcmp(attr->name, Synthetic) == 0) {
             set_synthetic(&c->access_flags);  // todo
         } else if (strcmp(attr->name, Signature) == 0) {  // 可选属性
@@ -167,11 +174,13 @@ struct jclass *jclass_create_by_classfile(struct classloader *loader, struct cla
         } else if (strcmp(attr->name, RuntimeInvisibleAnnotations) == 0) {
             //        printvm("not parse attr: RuntimeInvisibleAnnotations\n");
         } else if (strcmp(attr->name, BootstrapMethods) == 0) {
-            c->bootstrap_methods_attribute = (struct bootstrap_methods_attribute *) attr; // todo
+            bootstrap_methods_attribute = (struct bootstrap_methods_attribute *) attr; // todo
+        } else {
+            // todo
         }
     }
 
-    c->rtcp = rtcp_create(cf->constant_pool, cf->constant_pool_count, c->bootstrap_methods_attribute);
+    c->rtcp = rtcp_create(cf->constant_pool, cf->constant_pool_count, bootstrap_methods_attribute);
     if (source_file_index >= 0) {
         c->source_file_name = rtcp_get_str(c->rtcp, source_file_index);
     } else {
@@ -180,6 +189,19 @@ struct jclass *jclass_create_by_classfile(struct classloader *loader, struct cla
          * todo 什么编译选项
          */
         c->source_file_name = "Unknown source file name";
+    }
+
+    c->enclosing_info[0] = c->enclosing_info[1] = c->enclosing_info[2] = NULL;
+    if (enclosing_class_index > 0) {
+        struct jclass *enclosing_class
+                = classloader_load_class(loader, rtcp_get_class_name(c->rtcp, enclosing_class_index));
+        c->enclosing_info[0] = jclsobj_create(enclosing_class);
+
+        if (enclosing_method_index > 0) {
+            const struct name_and_type *nt = rtcp_get_name_and_type(c->rtcp, enclosing_method_index);
+            c->enclosing_info[1] = jstrobj_create(nt->name);
+            c->enclosing_info[2] = jstrobj_create(nt->descriptor);
+        }
     }
 
     c->class_name = rtcp_get_class_name(c->rtcp, cf->this_class);
@@ -274,8 +296,8 @@ struct jclass* jclass_create_primitive_class(struct classloader *loader, const c
     c->interfaces = NULL;
     c->methods = NULL;
     c->fields = NULL;
-    c->bootstrap_methods_attribute = NULL;
     c->source_file_name = NULL;
+    c->enclosing_info[0] = c->enclosing_info[1] = c->enclosing_info[2] = NULL;
     return c;
 }
 
@@ -303,8 +325,8 @@ struct jclass* jclass_create_arr_class(struct classloader *loader, const char *c
     c->methods_count = c->public_methods_count = 0;
     c->methods = NULL;
     c->fields = NULL;
-    c->bootstrap_methods_attribute = NULL;
     c->source_file_name = NULL;
+    c->enclosing_info[0] = c->enclosing_info[1] = c->enclosing_info[2] = NULL;
     return c;
 }
 
@@ -495,14 +517,13 @@ struct jmethod* jclass_lookup_method(struct jclass *c, const char *name, const c
     }
 
     // todo java.lang.NoSuchMethodError
-    //    jvmAbort("java.lang.NoSuchMethodError. %s, %s, %s\n", this->className.c_str(), method_name.c_str(), method_descriptor.c_str());
+    VM_UNKNOWN_ERROR("can not find method. %s~%s~%s", c->class_name, name, descriptor);
     return NULL;
 }
 
 struct jmethod* jclass_lookup_static_method(struct jclass *c, const char *name, const char *descriptor)
 {
     struct jmethod *m = jclass_lookup_method(c, name, descriptor);
-    // todo m == nullptr
     if (!IS_STATIC(m->access_flags)) {
         // todo java.lang.IncompatibleClassChangeError
         jvm_abort("java.lang.IncompatibleClassChangeError");
@@ -659,7 +680,23 @@ struct jclass* jclass_component_class(const struct jclass *arr_cls)
 
     const char *component_name = arr_cls->class_name;
     for (; *component_name == '['; component_name++);
-    return classloader_load_class(arr_cls->loader, component_name);
+
+    if (*component_name != 'L') {
+        return classloader_load_class(arr_cls->loader, component_name);
+    }
+
+    component_name++;
+    int last = strlen(component_name) - 1;
+    assert(last > 0);
+    if (component_name[last] != ';') {
+        VM_UNKNOWN_ERROR("%s", arr_cls->class_name); // todo
+        return NULL;
+    } else {
+        char buf[last + 1];
+        strncpy(buf, component_name, (size_t) last);
+        buf[last] = 0;
+        return classloader_load_class(arr_cls->loader, buf);
+    }
 }
 
 bool jclass_is_accessible_to(const struct jclass *c, const struct jclass *visitor)

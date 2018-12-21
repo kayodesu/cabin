@@ -22,29 +22,17 @@ struct rtcp {
     size_t count;
 };
 
-#ifdef JVM_DEBUG
-void print_rtcp(const struct rtcp *rtcp)
-{
-    assert(rtcp != NULL);
-    printvm("\ncount of rtcp is %d.\n", rtcp->count);
-    for (size_t i = 0; i < rtcp->count; i++) {
-        printf("%d, ", rtcp->pool[i].t);
-    }
-    printf("\n");
-}
-#endif
-
 #define check(rtcp, index, type) \
 do { \
     if ((rtcp)->pool[index].t != (type)) { \
-        jvm_abort("error. want %d, bug tag = %d, index = %d.\n", type, (rtcp)->pool[index].t, index); \
+        VM_UNKNOWN_ERROR("want %d, bug tag = %d, index = %d.\n", type, (rtcp)->pool[index].t, index); \
     } \
 } while (false)
 
 #define check2(rtcp, index, type1, type2) \
 do { \
     if ((rtcp)->pool[index].t != (type1) && (rtcp)->pool[index].t != (type2)) { \
-        jvm_abort("error. want %d or %d, bug tag = %d, index = %d.\n", type1, type2, (rtcp)->pool[index].t, index); \
+        VM_UNKNOWN_ERROR("want %d or %d, bug tag = %d, index = %d.\n", type1, type2, (rtcp)->pool[index].t, index); \
     } \
 } while (false)
 
@@ -174,7 +162,7 @@ static void build_method_handle_constant(struct rtcp *rtcp, const void **cfcp, s
             } else if (tag == INTERFACE_METHOD_REF_CONSTANT) {
                 handle->ref.mr = rtcp_get_interface_method_ref(rtcp, c->reference_index);
             } else {
-                jvm_abort("unknown constant tag: %d\n", tag);
+                VM_UNKNOWN_ERROR("unknown constant tag: %d\n", tag);
             }
             break;
         }
@@ -182,7 +170,7 @@ static void build_method_handle_constant(struct rtcp *rtcp, const void **cfcp, s
             handle->ref.mr = rtcp_get_interface_method_ref(rtcp, c->reference_index);
             break;
         default:
-            jvm_abort("unknown method handle kind: %d\n", handle->kind);
+            VM_UNKNOWN_ERROR("unknown method handle kind: %d\n", handle->kind);
             break;
     }
 
@@ -207,11 +195,11 @@ static void build_invoke_dynamic_constant(struct rtcp *rtcp,
 
     struct bootstrap_method *bm = bootstrap_methods_attribute->bootstrap_methods + c->bootstrap_method_attr_index;
 
-    VM_MALLOC_EXT(struct invoke_dynamic_ref, 1, sizeof(struct rtc) * bm->num_bootstrap_arguments, ref);
+    VM_MALLOC_EXT(struct invoke_dynamic_ref, 1, sizeof(int) * bm->num_bootstrap_arguments, ref);
     ref->argc = bm->num_bootstrap_arguments;
     ref->handle = rtcp_get_method_handle(rtcp, bm->bootstrap_method_ref);
     if (ref->handle->kind != REF_KIND_INVOKE_STATIC && ref->handle->kind != REF_KIND_NEW_INVOKE_SPECIAL) {
-        jvm_abort("error\n"); // todo
+        VM_UNKNOWN_ERROR("handle kind. %d", ref->handle->kind); // todo
         return;
     }
 
@@ -228,10 +216,10 @@ static void build_invoke_dynamic_constant(struct rtcp *rtcp,
             case DOUBLE_CONSTANT:
             case METHOD_HANDLE_CONSTANT:
             case METHOD_TYPE_CONSTANT:
-                ref->args[i] = rtcp->pool[k];
+                ref->args[i] = k;
                 break;
             default:
-                jvm_abort("error. t = %d, index = %d\n", rtcp->pool[k].t, k); // todo
+                VM_UNKNOWN_ERROR("unknown type. t = %d, index = %d\n", rtcp->pool[k].t, k);
         }
     }
 
@@ -242,10 +230,12 @@ static void build_invoke_dynamic_constant(struct rtcp *rtcp,
 struct rtcp* rtcp_create(const void **cfcp, size_t count,
                          const struct bootstrap_methods_attribute *bootstrap_methods_attribute)
 {
-    VM_MALLOC(struct rtcp, rtcp);
+    assert(cfcp != NULL);
 
+    VM_MALLOC(struct rtcp, rtcp);
     rtcp->count = count;
-    rtcp->pool = calloc(sizeof(*(rtcp->pool)), count); // todo null
+    rtcp->pool = calloc(sizeof(*(rtcp->pool)), count);
+    CHECK_MALLOC_RESULT(rtcp->pool);
 
     rtcp->pool[0].t = 0; // todo 第0位该怎么处理。
 
@@ -314,8 +304,13 @@ struct rtcp* rtcp_create(const void **cfcp, size_t count,
     // 遍历第4级
     for (size_t i = 1; i < count; i++) {
         u1 tag = CONSTANT_TAG(cfcp[i]);
-        if (tag == INVOKE_DYNAMIC_CONSTANT)
-            build_invoke_dynamic_constant(rtcp, cfcp, i, bootstrap_methods_attribute);
+        if (tag == INVOKE_DYNAMIC_CONSTANT) {
+            if (bootstrap_methods_attribute == NULL) {
+                VM_UNKNOWN_ERROR(""); // todo
+            } else {
+                build_invoke_dynamic_constant(rtcp, cfcp, i, bootstrap_methods_attribute);
+            }
+        }
     }
 
     return rtcp;
@@ -410,4 +405,3 @@ struct invoke_dynamic_ref* rtcp_get_invoke_dynamic(const struct rtcp *rtcp, int 
     check(rtcp, index, INVOKE_DYNAMIC_CONSTANT);
     return rtcp->pool[index].v.p;
 }
-

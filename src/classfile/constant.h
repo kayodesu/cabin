@@ -98,12 +98,11 @@ struct method_handle_constant {
      * 1. If the value of the reference_kind item is 1 (REF_getField), 2
      *    (REF_getStatic), 3 (REF_putField), or 4 (REF_putStatic), then the
      *    constant_pool entry at that index must be a CONSTANT_Fieldref_info
-     *    structure (§4.4.2) representing a field for which a method handle is to be
-     *    created.
+     *    structure representing a field for which a method handle is to be created.
      * 2. If the value of the reference_kind item is 5 (REF_invokeVirtual) or 8
      *    (REF_newInvokeSpecial), then the constant_pool entry at that index must
-     *    be a CONSTANT_Methodref_info structure (§4.4.2) representing a class's
-     *    method or constructor (§2.9.1) for which a method handle is to be created.
+     *    be a CONSTANT_Methodref_info structure representing a class's
+     *    method or constructor for which a method handle is to be created.
      * 3. If the value of the reference_kind item is 6 (REF_invokeStatic)
      *    or 7 (REF_invokeSpecial), then if the class file version number
      *    is less than 52.0, the constant_pool entry at that index must be
@@ -111,7 +110,7 @@ struct method_handle_constant {
      *    for which a method handle is to be created; if the class file
      *    version number is 52.0 or above, the constant_pool entry at that
      *    index must be either a CONSTANT_Methodref_info structure or a
-     *    CONSTANT_InterfaceMethodref_info structure (§4.4.2) representing a
+     *    CONSTANT_InterfaceMethodref_info structure representing a
      *    class's or interface's method for which a method handle is to be created.
      * 4. If the value of the reference_kind item is 9 (REF_invokeInterface),
      *    then the constant_pool entry at that index must be a

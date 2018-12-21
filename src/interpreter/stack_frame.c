@@ -7,19 +7,21 @@
 #include "stack_frame.h"
 #include "../slot.h"
 
-struct stack_frame* sf_create_shim(struct jthread *thread)
+
+struct stack_frame* sf_create_shim(struct jthread *thread, void (* shim_action)(struct stack_frame *))
 {
     assert(thread != NULL);
 
     VM_MALLOC(struct stack_frame, frame);
-
+    frame->type = SF_TYPE_SHIM;
     frame->thread = thread;
     frame->method = NULL;
-    frame->operand_stack = os_create(8); // 8 is big enough, 只是用来接收函数返回值
+    frame->operand_stack = os_create(2); // 2 is big enough, 只是用来接收函数返回值，at most 2 slots
     frame->max_locals = NULL;
     frame->local_vars = NULL;
     frame->reader = NULL;
     frame->interrupted_status = frame->exe_status = frame->proc_exception_status = false;
+    frame->shim_action = shim_action;
 
     return frame;
 }
@@ -31,6 +33,7 @@ struct stack_frame* sf_create(struct jthread *thread, struct jmethod *method)
 
     VM_MALLOC(struct stack_frame, frame);
 
+    frame->type = SF_TYPE_NORMAL;
     frame->thread = thread;
     frame->method = method;
     frame->operand_stack = os_create(method->max_stack);
@@ -38,6 +41,7 @@ struct stack_frame* sf_create(struct jthread *thread, struct jmethod *method)
     frame->local_vars = malloc(sizeof(struct slot) * frame->max_locals);
     frame->reader = bcr_create(method->code, method->code_length);
     frame->interrupted_status = frame->exe_status = frame->proc_exception_status = false;
+    frame->shim_action = NULL;
 
     return frame;
 }

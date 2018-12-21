@@ -208,23 +208,32 @@ static void athrow(struct stack_frame *frame)
     // 遍历虚拟机栈找到可以处理此异常的方法
     while (!jthread_is_stack_empty(curr_thread)) {
         struct stack_frame *top = jthread_top_frame(curr_thread);
-        size_t pc = bcr_get_pc(top->reader) - 1; // todo why -1 ??? 减去opcode的长度
-        int handler_pc = jmethod_find_exception_handler(top->method, exception->jclass, pc);
-        if (handler_pc >= 0) {  // todo 可以等于0吗
-            /*
-             * 找到可以处理的函数了
-             * 操作数栈清空
-             * 把异常对象引用推入栈顶
-             * 跳转到异常处理代码之前
-             */
-            os_clear(top->operand_stack);
-            os_pushr(top->operand_stack, exception);
-            bcr_set_pc(top->reader, handler_pc);  // todo 是setPc还是skip
-            sf_proc_exception(top);
-            return;
+        if (top->type == SF_TYPE_NORMAL) {
+            size_t pc = bcr_get_pc(top->reader) - 1; // todo why -1 ??? 减去opcode的长度
+            int handler_pc = jmethod_find_exception_handler(top->method, exception->jclass, pc);
+            if (handler_pc >= 0) {  // todo 可以等于0吗
+                /*
+                 * 找到可以处理的函数了
+                 * 操作数栈清空
+                 * 把异常对象引用推入栈顶
+                 * 跳转到异常处理代码之前
+                 */
+                os_clear(top->operand_stack);
+                os_pushr(top->operand_stack, exception);
+                bcr_set_pc(top->reader, handler_pc);  // todo 是setPc还是skip
+                sf_proc_exception(top);
+                return;
+            }
         }
 
+        // top frame 无法处理异常，弹出
         jthread_pop_frame(curr_thread);
+        if (top == frame) {
+            // 当前执行的 frame 不能直接销毁，设置成执行完毕即可，由解释器销毁
+            sf_exe_over(frame);
+        } else {
+            sf_destroy(top);
+        }
     }
 
     jthread_handle_uncaught_exception(curr_thread, exception);
@@ -327,12 +336,13 @@ static void invokespecial(struct stack_frame *frame)
 
     struct jmethod *method = ref->resolved_method;
     /*
-     * 如果调用的中超类中的函数，但不是构造函数，且当前类的ACC_SUPER标志被设置，
+     * 如果调用的中超类中的函数，但不是构造函数，不是private 函数，且当前类的ACC_SUPER标志被设置，
      * 需要一个额外的过程查找最终要调用的方法；否则前面从方法符号引用中解析出来的方法就是要调用的方法。
      * todo 详细说明
      */
     if (IS_SUPER(ref->resolved_class->access_flags)
-            && jclass_is_subclass_of(curr_class, ref->resolved_class)
+            && !IS_PRIVATE(method->access_flags)
+            && jclass_is_subclass_of(curr_class, ref->resolved_class) // todo
             && strcmp(ref->resolved_method->name, "<init>") != 0) {
         struct jmethod *tmp = jclass_lookup_method(curr_class->super_class, ref->name, ref->descriptor);
         if (tmp != NULL) {
@@ -381,10 +391,6 @@ static void invokevirtual(struct stack_frame *frame)
 
     // 从对象的类中查找真正要调用的方法
     struct jmethod *method = jclass_lookup_method(obj->jclass, ref->name, ref->descriptor);
-    if (method == NULL) {
-        jvm_abort("Can't find method: %s::%s:%s\n", obj->jclass->class_name, ref->name, ref->descriptor); // todo
-    }
-
     if (IS_ABSTRACT(method->access_flags)) {
         // todo java.lang.AbstractMethodError
         jvm_abort("java.lang.AbstractMethodError\n");
@@ -448,21 +454,22 @@ static void invokeinterface(struct stack_frame *frame)
 /*
  * todo 说明 invokedynamic!!!!!!!
  */
-// Bytecode Behaviors and Method Descriptors for Method Handles
-//      Description        | Kind  | Interpretation                           | Method descriptor
-#define REF_getField         1    // getfield C.f:T                           | (C)T
-#define REF_getStatic        2    // getstatic C.f:T                          | ()T
-#define REF_putField         3    // putfield C.f:T                           | (C,T)V
-#define REF_putStatic        4    // putstatic C.f:T                          | (T)V
-#define REF_invokeVirtual    5    // invokevirtual C.m:(A*)T                  | (C,A*)T
-#define REF_invokeStatic     6    // invokestatic C.m:(A*)T                   | (A*)T
-#define REF_invokeSpecial    7    // invokespecial C.m:(A*)T                  | (C,A*)T
-#define REF_newInvokeSpecial 8    // new C; dup; invokespecial C.<init>:(A*)V | (A*)C
-#define REF_invokeInterface  9    // invokeinterface C.m:(A*)T                | (C,A*)T
+static void set_invoked_type(struct stack_frame *frame)
+{
+    assert(frame != NULL);
+    frame->thread->dyn.invoked_type = os_popr(frame->operand_stack);
+}
+
+static void set_caller(struct stack_frame *frame)
+{
+    assert(frame != NULL);
+    frame->thread->dyn.caller = os_popr(frame->operand_stack);
+}
 
 static void invokedynamic(struct stack_frame *frame)
 {
     struct jclass *curr_class = frame->method->jclass;
+    struct jthread *curr_thread = frame->thread;
 
     // The run-time constant pool item at that index must be a symbolic reference to a call site specifier.
     int index = bcr_readu2(frame->reader);
@@ -471,6 +478,84 @@ static void invokedynamic(struct stack_frame *frame)
     bcr_readu1(frame->reader); // this byte must always be zero.
 
     struct invoke_dynamic_ref *ref = rtcp_get_invoke_dynamic(curr_class->rtcp, index);
+
+    bool need_again = false;
+
+    // create java/lang/invoke/MethodType of bootstrap method
+    struct jobject *parameter_types;
+    struct jobject *return_type = jmethod_parse_descriptor(curr_class->loader, ref->nt->descriptor, &parameter_types, -1);
+
+    struct jobject *invoked_type = curr_thread->dyn.invoked_type;
+    struct jobject *caller = curr_thread->dyn.caller;
+
+    if (invoked_type == NULL) {
+        need_again = true;
+        struct jclass *mt = classloader_load_class(bootstrap_loader, "java/lang/invoke/MethodType");
+
+        // public static MethodType methodType(Class<?> rtype, Class<?>[] ptypes)
+        struct jmethod *get_method_type = jclass_lookup_static_method(
+                mt, "methodType", "(Ljava/lang/Class;[Ljava/lang/Class;)Ljava/lang/invoke/MethodType;");
+        struct slot args[] = { rslot(return_type), rslot(parameter_types) };
+        jthread_invoke_method_with_shim(curr_thread, get_method_type, args, set_invoked_type);
+
+        if (!mt->inited) { // 后压栈，先执行
+            jclass_clinit(mt, curr_thread);
+        }
+    }
+
+    if (caller == NULL) {
+        need_again = true;
+        struct jclass *mhs = classloader_load_class(bootstrap_loader, "java/lang/invoke/MethodHandles");
+
+        // public static Lookup lookup()
+        struct jmethod *lookup = jclass_lookup_static_method(mhs, "lookup", "()Ljava/lang/invoke/MethodHandles$Lookup;");
+        jthread_invoke_method_with_shim(curr_thread, lookup, NULL, set_caller);
+
+        if (!mhs->inited) { // 后压栈，先执行
+            jclass_clinit(mhs, curr_thread);
+        }
+    }
+
+    if (need_again) {
+        bcr_set_pc(frame->reader, jthread_get_pc(curr_thread)); // recover pc
+        return;
+    }
+
+    // todo invoke bootstrap method
+
+    switch (ref->handle->kind) {
+    case REF_KIND_GET_FIELD:
+        break;
+    case REF_KIND_GET_STATIC:
+        break;
+    case REF_KIND_PUT_FIELD:
+        break;
+    case REF_KIND_PUT_STATIC:
+        break;
+    case REF_KIND_INVOKE_VIRTUAL:
+        break;
+    case REF_KIND_INVOKE_STATIC: {
+        struct method_ref *mr = ref->handle->ref.mr;
+        struct jclass *bootstrap_class = classloader_load_class(frame->method->jclass->loader, mr->class_name);
+        struct jmethod *bootstrap_method = jclass_lookup_static_method(bootstrap_class, mr->name, mr->descriptor);
+        // todo 说明 bootstrap_method 的格式
+
+        int argc = ref->argc + 3; // todo
+
+        break;
+    }
+    case REF_KIND_INVOKE_SPECIAL:
+        break;
+    case REF_KIND_NEW_INVOKE_SPECIAL:
+        break;
+    case REF_KIND_INVOKE_INTERFACE:
+        break;
+    default:
+        VM_UNKNOWN_ERROR("unknown kind. %d", ref->handle->kind);
+        break;
+    }
+
+    // todo rest thread.dyn 的值，下次调用时这两个值要从新解析。
 
     jvm_abort("not implement\n");  // todo
 }
@@ -492,13 +577,13 @@ static void newarray(struct stack_frame *frame)
 
     /*
      * AT_BOOLEAN = 4
-     * AT_CHAR = 5
-     * AT_FLOAT = 6
-     * AT_DOUBLE = 7
-     * AT_BYTE = 8
-     * AT_SHORT = 9
-     * AT_INT = 10
-     * AT_LONG = 11
+     * AT_CHAR    = 5
+     * AT_FLOAT   = 6
+     * AT_DOUBLE  = 7
+     * AT_BYTE    = 8
+     * AT_SHORT   = 9
+     * AT_INT     = 10
+     * AT_LONG    = 11
      */
     int arr_type = bcr_readu1(frame->reader);
     char *arr_name;
@@ -553,7 +638,7 @@ static void arraylength(struct stack_frame *frame)
         jthread_throw_null_pointer_exception(frame->thread);
     }
     if (!jobject_is_array(o)) {
-        vm_unknown_error("is not a array");
+        vm_unknown_error("not a array");
     }
 
     os_pushi(frame->operand_stack, jarrobj_len(o));

@@ -52,13 +52,17 @@ static void fillInStackTrace(struct stack_frame *frame)
     }
 
     VM_MALLOC_EXT(struct stack_trace, 1, sizeof(jref) * num, trace);
-    trace->count = num;
+    trace->count = 0;
 
     struct jclass *c = classloader_load_class(bootstrap_loader, "java/lang/StackTraceElement");
-    for (int i = num - 1, j = 0; i >= 0; i--, j++) {
-        // todo jump shim frame
+    for (int i = num - 1; i >= 0; i--) {
+        // jump shim frame
+        if (frames[i]->type == SF_TYPE_SHIM) {
+            continue;
+        }
+
         struct jobject *o = jobject_create(c);
-        trace->eles[j] = o;
+        trace->eles[trace->count++] = o;
 
         // public StackTraceElement(String declaringClass, String methodName, String fileName, int lineNumber)
         // may be should call <init>, but 直接赋值 is also ok.

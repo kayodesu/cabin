@@ -24,6 +24,23 @@ struct slot;
 
 struct jthread;
 
+struct invokedynamic_temp_store {
+    // java/lang/invoke/MethodType
+    struct jobject *invoked_type;
+
+    // java/lang/invoke/MethodHandles$Lookup
+    struct jobject *caller;
+};
+
+struct jthread {
+    struct vector *vm_stack; // 虚拟机栈，一个线程只有一个虚拟机栈
+    struct jobject *this_obj; // object of java.lang.Thread   todo 干嘛用的
+
+    size_t pc;
+
+    struct invokedynamic_temp_store dyn;
+};
+
 struct jthread* jthread_create(struct classloader *loader);
 
 struct jobject* jthread_get_obj(struct jthread *thread);
@@ -33,7 +50,10 @@ size_t jthread_get_pc(const struct jthread *thread);
 
 bool jthread_is_stack_empty(const struct jthread *thread);
 
+int jthread_stack_depth(const struct jthread *thread);
+
 struct stack_frame* jthread_top_frame(struct jthread *thread);
+struct stack_frame* jthread_depth_frame(struct jthread *thread, int depth);
 
 void jthread_pop_frame(struct jthread *thread);
 
@@ -70,7 +90,8 @@ void jthread_invoke_method(struct jthread *thread, struct jmethod *method, const
  * 这个函数存在的意义是为了解决函数jthread_invoke_method无法在循环中执行带返回值的方法的问题，
  * 参加 jthread_invoke_method 的注释。
  */
-void jthread_invoke_method_with_shim(struct jthread *thread, struct jmethod *method, const struct slot *args);
+void jthread_invoke_method_with_shim(struct jthread *thread, struct jmethod *method, const struct slot *args,
+                                     void (* shim_action)(struct stack_frame *));
 
 void jthread_handle_uncaught_exception(struct jthread *thread, struct jobject *exception);
 

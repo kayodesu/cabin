@@ -44,7 +44,7 @@ struct invoke_dynamic_ref {
     const struct name_and_type *nt;
 
     int argc;
-    struct rtc args[];
+    int args[]; // index in rtcp
 };
 
 struct jclass* resolve_class(const struct jclass *visitor, const char *class_name);

@@ -7,6 +7,7 @@
       <w>cfcp</w>
       <w>clsobj</w>
       <w>delim</w>
+      <w>dlen</w>
       <w>dslot</w>
       <w>eles</w>
       <w>endianness</w>
@@ -37,6 +38,7 @@
       <w>lslot</w>
       <w>lsun</w>
       <w>mallocs</w>
+      <w>methodref</w>
       <w>oper</w>
       <w>phslot</w>
       <w>popd</w>
@@ -46,11 +48,14 @@
       <w>popr</w>
       <w>primitivetypes</w>
       <w>printvm</w>
+      <w>ptypes</w>
       <w>pushd</w>
       <w>pushf</w>
       <w>pushi</w>
       <w>pushl</w>
       <w>pushr</w>
+      <w>rget</w>
+      <w>rindex</w>
       <w>rslot</w>
       <w>slen</w>
       <w>statbuf</w>
