@@ -1,12 +1,15 @@
 # JVM
 A JVM written in C.
 
-开发环境 win10 + clion + MinGW
+## Development environment
+* Win10 x64
+* CLion
+* MinGW
 
 ## Dependence
-本项目依赖 zlib, minizib 库，请确保在 MinGW 中下载了它们。
-
-基于jre8.
+* zlib, minizib
+* pthread lib
+* jre8 lib
 
 ## 命令行参数
 * -bcp path: Bootstrap Class Path, JavaHome路径, 对应 jre/lib 目录。
@@ -23,9 +26,15 @@ public class HelloWorld {
     }
 }
 ```
-使用 -bcp 指定了java库路径，使用 -cp 指定 CLASSPATH。
 
-![](./pics/HelloWorld.jpg)
+```
+# 使用 -bcp 指定了java库路径，使用 -cp 指定 CLASSPATH。
+
+C:\>jvm HelloWorld -bcp "C:\Program Files\Java\jre1.8.0_162\lib" -cp D:\code\jvm\testclasses
+Hello, world!
+
+C:\>
+```
 #### Bubble Sort
 ```java
 package array;
@@ -52,9 +61,15 @@ public class BubbleSort {
     }
 }
 ```
-没有指定Java库路径和CLASSPATH，使用环境变量 JAVA_HOME 和 CLASSPATH。
 
-![](./pics/BubbleSort.jpg)
+```
+# 没有指定Java库路径和CLASSPATH，使用环境变量 JAVA_HOME 和 CLASSPATH。
+
+C:\>jvm array/BubbleSort
+[9, 10, 11, 22, 24, 36, 36, 56, 65, 77, 78, 84, 92, 95, 97]
+
+C:\>
+```
 #### Stack Trace
 ```java
 package exception;
@@ -74,8 +89,16 @@ public class StackTraceTest {
     private static void bad() { throw new RuntimeException("BAD!"); }
 }
 ```
-![](./pics/StackTrace.jpg)
+```
+C:\>jvm exception/StackTraceTest
+java.lang.RuntimeException: BAD!
+        at exception/StackTraceTest.bad(StackTraceTest.java:15)
+        at exception/StackTraceTest.bar(StackTraceTest.java:14)
+        at exception/StackTraceTest.foo(StackTraceTest.java:13)
+        at exception/StackTraceTest.main(StackTraceTest.java:7)
 
+C:\>
+```
 ## 参考资料
 1. 自己动手写Java虚拟机，张秀宏。
 2. 深入理解Java虚拟机——JVM高级特性与最佳实践(第2版)，周志明。
