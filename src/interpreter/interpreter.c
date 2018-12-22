@@ -87,8 +87,11 @@ static char* ins_code_name_mapping[] = {
 
 extern void (* instructions[])(struct stack_frame *);
 
-void interpret(struct jthread *thread)
+void* interpret(void *thread0)
 {
+    assert(thread0 != NULL);
+    struct jthread *thread = thread0;
+
     while (!jthread_is_stack_empty(thread)) {
         struct stack_frame *frame = jthread_top_frame(thread);
         if (frame->type == SF_TYPE_SHIM) {
@@ -144,4 +147,5 @@ void interpret(struct jthread *thread)
 #ifdef JVM_DEBUG
     printvm("interpret exit.\n");
 #endif
+    return NULL; // todo
 }

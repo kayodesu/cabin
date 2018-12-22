@@ -40,16 +40,17 @@ struct invokedynamic_temp_store {
 
 struct jthread {
     struct vector *vm_stack; // 虚拟机栈，一个线程只有一个虚拟机栈
-    struct jobject *this_obj; // object of java.lang.Thread   todo 干嘛用的
+//    struct jobject *this_obj; // object of java.lang.Thread   todo 干嘛用的
 
 //    size_t pc;
+    struct jobject *jl_thread_obj; // object of java/lang/Thread
 
     struct invokedynamic_temp_store dyn;
 };
 
-struct jthread* jthread_create(struct classloader *loader);
+struct jthread* jthread_create(struct classloader *loader, struct jobject *jl_thread_obj);
 
-struct jobject* jthread_get_obj(struct jthread *thread);
+struct jobject* jthread_get_jl_thread_obj(struct jthread *thread);
 
 //void jthread_set_pc(struct jthread *thread, size_t new_pc);
 //size_t jthread_get_pc(const struct jthread *thread);

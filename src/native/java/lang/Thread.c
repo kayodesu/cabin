@@ -2,9 +2,12 @@
  * Author: Jia Yang
  */
 
+#include <pthread.h>
 #include "../../registry.h"
 #include "../../../interpreter/stack_frame.h"
 #include "../../../slot.h"
+#include "../../../rtda/heap/jobject.h"
+#include "../../../interpreter/interpreter.h"
 
 /*
  * Returns a reference to the currently executing thread object.
@@ -13,9 +16,8 @@
  */
 static void currentThread(struct stack_frame *frame)
 {
-    // push 一个 java/lang/Thread 对象
-    os_pushr(frame->operand_stack, jthread_get_obj(frame->thread));
-//    frame->operandStack.push(frame->thread->getJavaLangThreadObj());
+    // push a object of java/lang/Thread of current thread
+    os_pushr(frame->operand_stack, jthread_get_jl_thread_obj(frame->thread));
 }
 
 // public static native void sleep(long millis) throws InterruptedException;
@@ -71,17 +73,68 @@ static void isAlive(struct stack_frame *frame)
     os_pushi(frame->operand_stack, 0); // todo 为什么要设置成0，设置成1就状态错误
 }
 
+/**
+ * Changes the priority of this thread.
+ * <p>
+ * First the <code>checkAccess</code> method of this thread is called
+ * with no arguments. This may result in throwing a
+ * <code>SecurityException</code>.
+ * <p>
+ * Otherwise, the priority of this thread is set to the smaller of
+ * the specified <code>newPriority</code> and the maximum permitted
+ * priority of the thread's thread group.
+ *
+ * @param newPriority priority to set this thread to
+ * @exception  IllegalArgumentException  If the priority is not in the
+ *               range <code>MIN_PRIORITY</code> to
+ *               <code>MAX_PRIORITY</code>.
+ * @exception  SecurityException  if the current thread cannot modify
+ *               this thread.
+ * @see        #getPriority
+ * @see        #checkAccess()
+ * @see        #getThreadGroup()
+ * @see        #MAX_PRIORITY
+ * @see        #MIN_PRIORITY
+ * @see        ThreadGroup#getMaxPriority()
+ */
 // private native void setPriority0(int newPriority);
 static void setPriority0(struct stack_frame *frame)
 {
     // todo
+//    jref this = slot_getr(frame->local_vars);
+//    jint new_priority = slot_geti(frame->local_vars + 1);
+//
+//    struct slot priority = islot(new_priority);
+//    set_instance_field_value_by_nt(this, "priority", "I", &priority);
 }
 
 // private native void start0();
 static void start0(struct stack_frame *frame)
 {
     // todo
-//    jvm_abort("error\n");
+    jref this = slot_getr(frame->local_vars);
+
+#ifdef JVM_DEBUG
+    const char *name = jstrobj_value(slot_getr(get_instance_field_value_by_nt(this, "name", "Ljava/lang/String;")));
+    printvm("start thread: %s\n", name);
+#endif
+
+    struct jthread *new_thread = jthread_create(frame->method->jclass->loader, this);
+
+    // create a stack frame to hold run method
+    struct jmethod *run = jclass_lookup_instance_method(this->jclass, "run", "()V");
+    struct stack_frame *new_frame = sf_create(new_thread, run);
+    struct slot arg = rslot(this);
+    sf_set_local_var(new_frame, 0, &arg);
+
+    jthread_push_frame(new_thread, new_frame);
+
+//    pthread_t pid;
+//    int ret = pthread_create(&pid, NULL, interpret, new_thread);
+//    if (ret != 0) {
+//        vm_internal_error("create thread failed");
+//    }
+
     /*
      * 	vars := frame.LocalVars()
 	this := vars.GetThis()

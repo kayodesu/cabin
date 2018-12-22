@@ -5,8 +5,7 @@
 #ifndef JVM_INTERPRETER_H
 #define JVM_INTERPRETER_H
 
-struct jthread;
-
-void interpret(struct jthread *thread);
+// todo 参数说明
+void* interpret(void *thread);
 
 #endif //JVM_INTERPRETER_H

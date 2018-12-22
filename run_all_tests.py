@@ -25,6 +25,11 @@ def test_exception():
     subprocess.call(jvm + 'exception/FinallyTest')
 
 
+def test_thread():
+    subprocess.call(jvm + 'thread/MainThreadTest')
+    subprocess.call(jvm + 'thread/ThreadSubClassTest')
+
+
 def test_classic():
     """
     some classical problems
@@ -37,12 +42,14 @@ def test_all():
     test_string()
     test_lambda()
     test_exception()
+    test_thread()
     test_classic()
 
 
 if __name__ == '__main__':
     # test_all()
     # subprocess.call(jvm + 'exception/StackTraceTest')
-    subprocess.call(jvm + 'HelloWorld')
+    # subprocess.call(jvm + 'HelloWorld')
     # subprocess.call(jvm + 'lambda/LambdaTest')
+    subprocess.call(jvm + 'thread/MainThreadTest')
     pass

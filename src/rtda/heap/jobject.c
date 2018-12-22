@@ -51,8 +51,9 @@ struct jobject* jobject_clone(const struct jobject *src, struct jobject *dest)
         o->instance_fields_values = NULL;
         o->extra = jarrobj_copy_data(src);
     } else { // todo 其他情况，异常对象的情况
-        int len = sizeof(struct slot) * o->instance_fields_count;
+        size_t len = sizeof(struct slot) * o->instance_fields_count;
         o->instance_fields_values = malloc(len);
+        CHECK_MALLOC_RESULT(o->instance_fields_values);
         memcpy(o->instance_fields_values, src->instance_fields_values, len);
         o->extra = src->extra;
     }

@@ -47,14 +47,14 @@ static void init_jvm(struct classloader *loader, struct jthread *main_thread)
 
     // VM类的 "initialize~()V" 方法需调用执行
     // 在VM类的类初始化方法中调用了 "initialize" 方法。
-    jclass_clinit(vm_class, main_thread); // todo clinit 方法到底在何时调用
+    jclass_clinit(vm_class, main_thread);
     interpret(main_thread);
 }
 
 // todo 这函数干嘛的
 static void create_system_thread_group(struct classloader *loader)
 {
-    struct jclass *thread_group_class = classloader_load_class(loader, "java/lang/ThreadGroup"); // todo NULL
+    struct jclass *thread_group_class = classloader_load_class(loader, "java/lang/ThreadGroup");
     system_thread_group = jobject_create(thread_group_class);
 
     /*
@@ -65,7 +65,7 @@ static void create_system_thread_group(struct classloader *loader)
     struct jmethod *constructor = jclass_get_constructor(thread_group_class, "()V");
 
     // 启动一个临时线程来执行 system thread group 的构造函数
-    struct jthread *tmp = jthread_create(loader);
+    struct jthread *tmp = jthread_create(loader, NULL); // todo
     struct stack_frame *frame = sf_create(tmp, constructor);
     struct slot arg = rslot(system_thread_group);
     sf_set_local_var(frame, 0, &arg);
@@ -81,8 +81,17 @@ static void create_system_thread_group(struct classloader *loader)
  */
 static void create_main_thread(struct classloader *loader)
 {
-    main_thread = jthread_create(loader);
-    struct jobject *main_thread_obj = jthread_get_obj(main_thread);
+    struct jclass *jlt_class = classloader_load_class(loader, "java/lang/Thread");
+    struct jobject *main_thread_obj = jobject_create(jlt_class);
+
+    // from java/lang/Thread.java
+    // public final static int MIN_PRIORITY = 1;
+    // public final static int NORM_PRIORITY = 5;
+    // public final static int MAX_PRIORITY = 10;
+    struct slot value = islot(10);  // todo. why set this? I do not know. 参见 jvmgo/instructions/reserved/bootstrap.go
+    set_instance_field_value_by_nt(main_thread_obj, "priority", "I", &value);
+
+    main_thread = jthread_create(loader, main_thread_obj);
 
     // 调用 java/lang/Thread 的构造函数
     struct jmethod *constructor
@@ -92,8 +101,10 @@ static void create_main_thread(struct classloader *loader)
     frame->local_vars[1] = rslot(system_thread_group);
     frame->local_vars[2] = rslot((jref) jstrobj_create(MAIN_THREAD_NAME));
     jthread_push_frame(main_thread, frame);
+
     jclass_clinit(main_thread_obj->jclass, main_thread); // 最后压栈，保证先执行。
 
+    // 执行 java/lang/Thread 的 <clinit> and <init>
     interpret(main_thread);
 }
 
@@ -109,13 +120,13 @@ static void start_jvm(const char *main_class_name)
     struct jclass *main_class = classloader_load_class(loader, main_class_name);
     struct jmethod *main_method = jclass_lookup_static_method(main_class, "main", "([Ljava/lang/String;)V");
     if (main_method == NULL) {
-        jvm_abort("can't find method main.\n");
+        jvm_abort("can't find method main.");
     } else {
         if (!IS_PUBLIC(main_method->access_flags)) {
-            jvm_abort("method main must be public.\n");
+            jvm_abort("method main must be public.");
         }
         if (!IS_STATIC(main_method->access_flags)) {
-            jvm_abort("method main must be static.\n");
+            jvm_abort("method main must be static.");
         }
     }
 
@@ -123,6 +134,8 @@ static void start_jvm(const char *main_class_name)
 
     // 开始在主线程中执行 main 方法
     interpret(main_thread);
+
+    // todo 如果有其他的非后台线程在执行，则main线程需要在此wait
 
     // main_thread 退出，做一些清理工作。
     jthread_destroy(main_thread);

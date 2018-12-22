@@ -10,17 +10,20 @@
 #include "../../interpreter/interpreter.h"
 
 
-struct jthread* jthread_create(struct classloader *loader)
+struct jthread* jthread_create(struct classloader *loader, struct jobject *jl_thread_obj)
 {
+    assert(loader != NULL);
+
     VM_MALLOC(struct jthread, thread);
 
     thread->vm_stack = vector_create();
+    thread->jl_thread_obj = jl_thread_obj;
 
-    struct jclass *jlt_class = classloader_load_class(loader, "java/lang/Thread");
-    thread->this_obj = jobject_create(jlt_class);
+//    struct jclass *jlt_class = classloader_load_class(loader, "java/lang/Thread");
+//    thread->this_obj = jobject_create(jlt_class);
 
-    struct slot value = islot(1);  // todo. why 1? I do not know. 参见 jvmgo/instructions/reserved/bootstrap.go
-    set_instance_field_value_by_nt(thread->this_obj, "priority", "I", &value);
+//    struct slot value = islot(1);  // todo. why 1? I do not know. 参见 jvmgo/instructions/reserved/bootstrap.go
+//    set_instance_field_value_by_nt(thread->this_obj, "priority", "I", &value);
 
     thread->dyn.caller = thread->dyn.invoked_type = thread->dyn.call_set = thread->dyn.exact_method_handle = NULL;
 
@@ -48,8 +51,6 @@ struct jthread* jthread_create(struct classloader *loader)
         joinToMainThreadGroup();
     }
      */
-
-//    pthread_create(NULL, NULL, NULL, NULL); // todo
 
     return thread;
 }
@@ -84,10 +85,10 @@ static void JThread::joinToMainThreadGroup() {
 
 #endif
 
-struct jobject* jthread_get_obj(struct jthread *thread)
+struct jobject* jthread_get_jl_thread_obj(struct jthread *thread)
 {
     assert(thread != NULL);
-    return thread->this_obj;
+    return thread->jl_thread_obj;
 }
 
 //void jthread_set_pc(struct jthread *thread, size_t new_pc)
