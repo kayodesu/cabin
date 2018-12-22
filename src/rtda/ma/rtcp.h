@@ -32,8 +32,9 @@ struct rtc {
 };
 
 struct rtcp;
+struct constant;
 
-struct rtcp* rtcp_create(const void **cfcp, size_t count,
+struct rtcp* rtcp_create(const struct constant *cfcp, size_t count,
                          const struct bootstrap_methods_attribute *bootstrap_methods_attribute);
 void rtcp_destroy(struct rtcp *rtcp);
 

@@ -669,6 +669,6 @@ struct unknown_attribute {
 };
 
 
-void* parse_attribute(struct bytecode_reader *reader, void **constant_pool, u2 constant_pool_count);
+void* parse_attribute(struct bytecode_reader *reader, struct constant *constant_pool, u2 constant_pool_count);
 
 #endif //JVM_ATTRIBUTE_H

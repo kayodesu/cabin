@@ -15,13 +15,15 @@ struct member_info {
     void **attributes; // [attributes_count];
 };
 
+struct constant;
+
 struct classfile {
     u4 magic;
     u2 minor_version;
     u2 major_version;
 
     u2 constant_pool_count;
-    void **constant_pool; // The constant_pool table is indexed from 1 to constant_pool_count - 1.
+    struct constant *constant_pool; // The constant_pool table is indexed from 1 to constant_pool_count - 1.
 
     u2 access_flags;
     u2 this_class;

@@ -171,7 +171,7 @@ static void code_attribute_destroy(void *attr)
 }
 
 static struct code_attribute*
-parse_code_attribute(struct bytecode_reader *reader, u4 attribute_length, void **constant_pool, u2 constant_pool_count)
+parse_code_attribute(struct bytecode_reader *reader, u4 attribute_length, struct constant *constant_pool, u2 constant_pool_count)
 {
     assert(reader != NULL);
     assert(constant_pool != NULL);
@@ -591,7 +591,7 @@ parse_unknown_attribute(struct bytecode_reader *reader, u4 attribute_length)
 }
 
 
-void* parse_attribute(struct bytecode_reader *reader, void **constant_pool, u2 constant_pool_count)
+void* parse_attribute(struct bytecode_reader *reader, struct constant *constant_pool, u2 constant_pool_count)
 {
     assert(reader != NULL);
     assert(constant_pool != NULL);
@@ -604,20 +604,14 @@ void* parse_attribute(struct bytecode_reader *reader, void **constant_pool, u2 c
         jvm_abort("error");
     }
 
-    void *constant = constant_pool[attribute_name_index];
-    if (constant == NULL) {
-        // todo
-        jvm_abort("error\n");
-    }
-
-    if (CONSTANT_TAG(constant) != UTF8_CONSTANT) {
+    struct constant *c = constant_pool + attribute_name_index;
+    if (c->tag != UTF8_CONSTANT) {
         //todo
-        jvm_abort("error. %d\n", CONSTANT_TAG(constant));
+        jvm_abort("error. %d\n", constant_pool[attribute_name_index].tag);
     }
 
-    struct utf8_constant *uc = (struct utf8_constant *)constant;
-    char attr_name[uc->length + 1];
-    decode_mutf8(uc->bytes, uc->length, attr_name);
+    char attr_name[c->u.utf8_constant.length + 1];
+    decode_mutf8(c->u.utf8_constant.bytes, c->u.utf8_constant.length, attr_name);
 
     if (strcmp(Code, attr_name) == 0)
         return parse_code_attribute(reader, attribute_length, constant_pool, constant_pool_count);

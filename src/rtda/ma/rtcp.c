@@ -38,42 +38,43 @@ do { \
     } \
 } while (false)
 
-static void build_utf8_constant(struct rtcp *rtcp, const void **cfcp, size_t index)
+static void build_utf8_constant(struct rtcp *rtcp, const struct constant *cfcp, size_t index)
 {
-    const struct utf8_constant *c = cfcp[index];
-    VM_MALLOCS(char, c->length + 1, utf8);
-    rtcp->pool[index] = (struct rtc) { UTF8_CONSTANT, .v.p = decode_mutf8(c->bytes, c->length, utf8) };
+    const struct constant *c = cfcp + index;
+    u2 len = c->u.utf8_constant.length;
+    VM_MALLOCS(char, len + 1, utf8);
+    rtcp->pool[index] = (struct rtc) { UTF8_CONSTANT, .v.p = decode_mutf8(c->u.utf8_constant.bytes, len, utf8) };
 }
 
-static void build_string_constant(struct rtcp *rtcp, const void **cfcp, size_t index)
+static void build_string_constant(struct rtcp *rtcp, const struct constant *cfcp, size_t index)
 {
-    const struct string_constant *c = cfcp[index];
-    rtcp->pool[index] = (struct rtc) { STRING_CONSTANT, .v.p = (void *) rtcp_get_str(rtcp, c->string_index) };
+    const struct constant *c = cfcp + index;
+    rtcp->pool[index] = (struct rtc) { STRING_CONSTANT, .v.p = (void *) rtcp_get_str(rtcp, c->u.string_index) };
 }
 
-static void build_class_constant(struct rtcp *rtcp, const void **cfcp, size_t index)
+static void build_class_constant(struct rtcp *rtcp, const struct constant *cfcp, size_t index)
 {
-    const struct class_constant *c = cfcp[index];
-    rtcp->pool[index] = (struct rtc) { CLASS_CONSTANT, .v.p = (void *) rtcp_get_str(rtcp, c->name_index) };
+    const struct constant *c = cfcp + index;
+    rtcp->pool[index] = (struct rtc) { CLASS_CONSTANT, .v.p = (void *) rtcp_get_str(rtcp, c->u.class_name_index) };
 }
 
-static void build_name_and_type_constant(struct rtcp *rtcp, const void **cfcp, size_t index)
+static void build_name_and_type_constant(struct rtcp *rtcp, const struct constant *cfcp, size_t index)
 {
-    const struct name_and_type_constant *c = cfcp[index];
+    const struct constant *c = cfcp + index;
 
     VM_MALLOC(struct name_and_type, name_and_type);
-    name_and_type->name = rtcp_get_str(rtcp, c->name_index);
-    name_and_type->descriptor = rtcp_get_str(rtcp, c->descriptor_index);
+    name_and_type->name = rtcp_get_str(rtcp, c->u.name_and_type_constant.name_index);
+    name_and_type->descriptor = rtcp_get_str(rtcp, c->u.name_and_type_constant.descriptor_index);
     rtcp->pool[index] = (struct rtc) { NAME_AND_TYPE_CONSTANT, .v.p = name_and_type };
 }
 
-static void build_field_ref_constant(struct rtcp *rtcp, const void **cfcp, size_t index)
+static void build_field_ref_constant(struct rtcp *rtcp, const struct constant *cfcp, size_t index)
 {
-    const struct member_ref_constant *c = cfcp[index];
+    const struct constant *c = cfcp + index;
 
     VM_MALLOC(struct field_ref, ref);
-    ref->class_name = rtcp_get_class_name(rtcp, c->class_index);
-    const struct name_and_type *nt = rtcp_get_name_and_type(rtcp, c->name_and_type_index);
+    ref->class_name = rtcp_get_class_name(rtcp, c->u.field_ref_constant.class_index);
+    const struct name_and_type *nt = rtcp_get_name_and_type(rtcp, c->u.field_ref_constant.name_and_type_index);
     ref->name = nt->name;
     ref->descriptor = nt->descriptor;
     ref->resolved_class = NULL;
@@ -81,13 +82,13 @@ static void build_field_ref_constant(struct rtcp *rtcp, const void **cfcp, size_
     rtcp->pool[index] = (struct rtc) { FIELD_REF_CONSTANT, .v.p = ref };
 }
 
-static void build_method_ref_constant(struct rtcp *rtcp, const void **cfcp, size_t index)
+static void build_method_ref_constant(struct rtcp *rtcp, const struct constant *cfcp, size_t index)
 {
-    const struct member_ref_constant *c = cfcp[index];
+    const struct constant *c = cfcp + index;
 
     VM_MALLOC(struct method_ref, ref);
-    ref->class_name = rtcp_get_class_name(rtcp, c->class_index);
-    const struct name_and_type *nt = rtcp_get_name_and_type(rtcp, c->name_and_type_index);
+    ref->class_name = rtcp_get_class_name(rtcp, c->u.method_ref_constant.class_index);
+    const struct name_and_type *nt = rtcp_get_name_and_type(rtcp, c->u.method_ref_constant.name_and_type_index);
     ref->name = nt->name;
     ref->descriptor = nt->descriptor;
     ref->resolved_class = NULL;
@@ -95,13 +96,13 @@ static void build_method_ref_constant(struct rtcp *rtcp, const void **cfcp, size
     rtcp->pool[index] = (struct rtc) { METHOD_REF_CONSTANT, .v.p = ref };
 }
 
-static void build_interface_method_ref_constant(struct rtcp *rtcp, const void **cfcp, size_t index)
+static void build_interface_method_ref_constant(struct rtcp *rtcp, const struct constant *cfcp, size_t index)
 {
-    const struct member_ref_constant *c = cfcp[index];
+    const struct constant *c = cfcp + index;
 
     VM_MALLOC(struct method_ref, ref);
-    ref->class_name = rtcp_get_class_name(rtcp, c->class_index);
-    const struct name_and_type *nt = rtcp_get_name_and_type(rtcp, c->name_and_type_index);
+    ref->class_name = rtcp_get_class_name(rtcp, c->u.interface_method_ref_constant.class_index);
+    const struct name_and_type *nt = rtcp_get_name_and_type(rtcp, c->u.interface_method_ref_constant.name_and_type_index);
     ref->name = nt->name;
     ref->descriptor = nt->descriptor;
     ref->resolved_class = NULL;
@@ -109,67 +110,66 @@ static void build_interface_method_ref_constant(struct rtcp *rtcp, const void **
     rtcp->pool[index] = (struct rtc) { INTERFACE_METHOD_REF_CONSTANT, .v.p = ref };
 }
 
-static void build_integer_constant(struct rtcp *rtcp, const void **cfcp, size_t index)
+static void build_integer_constant(struct rtcp *rtcp, const struct constant *cfcp, size_t index)
 {  // todo 大小端
-    int32_t i = bytes_to_int32(((struct four_bytes_num_constant *)cfcp[index])->bytes);
+    int32_t i = bytes_to_int32(cfcp[index].u.bytes4);
     rtcp->pool[index] = (struct rtc) { INTEGER_CONSTANT, .v.i = i }; // todo int32_t to jint ???????????
 }
 
-static void build_float_constant(struct rtcp *rtcp, const void **cfcp, size_t index)
+static void build_float_constant(struct rtcp *rtcp, const struct constant *cfcp, size_t index)
 {
-    jfloat f = bytes_to_float(((struct four_bytes_num_constant *)cfcp[index])->bytes);
+    jfloat f = bytes_to_float(cfcp[index].u.bytes4);
     rtcp->pool[index] = (struct rtc) { FLOAT_CONSTANT, .v.f = f };
 }
 
-static void build_long_constant(struct rtcp *rtcp, const void **cfcp, size_t index)
+static void build_long_constant(struct rtcp *rtcp, const struct constant *cfcp, size_t index)
 {
-    int64_t l = bytes_to_int64(((struct eight_bytes_num_constant *)cfcp[index])->bytes);
+    int64_t l = bytes_to_int64(cfcp[index].u.bytes8);
     rtcp->pool[index] = (struct rtc) { LONG_CONSTANT, .v.l = l };  // todo int64_t to jlong ???????????
 }
 
-static void build_double_constant(struct rtcp *rtcp, const void **cfcp, size_t index)
+static void build_double_constant(struct rtcp *rtcp, const struct constant *cfcp, size_t index)
 {
-    jdouble d = bytes_to_double(((struct eight_bytes_num_constant *)cfcp[index])->bytes);
+    jdouble d = bytes_to_double(cfcp[index].u.bytes8);
     rtcp->pool[index] = (struct rtc) { DOUBLE_CONSTANT, .v.d = d };
 }
 
-static void build_method_handle_constant(struct rtcp *rtcp, const void **cfcp, size_t index)
+static void build_method_handle_constant(struct rtcp *rtcp, const struct constant *cfcp, size_t index)
 {
-    const struct method_handle_constant *c = cfcp[index];
+    const struct constant *c = cfcp + index;
 
     VM_MALLOC(struct method_handle, handle);
-    handle->kind = c->reference_kind;
+    handle->kind = c->u.method_handle_constant.reference_kind;
+    const u2 reference_index = c->u.method_handle_constant.reference_index;
     switch (handle->kind) {
         case REF_KIND_GET_FIELD:
         case REF_KIND_GET_STATIC:
         case REF_KIND_PUT_FIELD:
         case REF_KIND_PUT_STATIC:
-            handle->ref.fr = rtcp_get_field_ref(rtcp, c->reference_index);
+            handle->ref.fr = rtcp_get_field_ref(rtcp, reference_index);
             break;
         case REF_KIND_INVOKE_VIRTUAL:
         case REF_KIND_NEW_INVOKE_SPECIAL:
-            handle->ref.mr = rtcp_get_method_ref(rtcp, c->reference_index);
+            handle->ref.mr = rtcp_get_method_ref(rtcp, reference_index);
             break;
         case REF_KIND_INVOKE_STATIC:
-        case REF_KIND_INVOKE_SPECIAL: {
+        case REF_KIND_INVOKE_SPECIAL:
             /*
              * the constant_pool entry at reference_index must be
              * either a CONSTANT_Methodref_info structure
              * or a CONSTANT_InterfaceMethodref_info structure
              * representing a class's or interface's method for which a method handle is to be created.
              */
-            u1 tag = CONSTANT_TAG(cfcp[c->reference_index]);
-            if (tag == METHOD_REF_CONSTANT) {
-                handle->ref.mr = rtcp_get_method_ref(rtcp, c->reference_index);
-            } else if (tag == INTERFACE_METHOD_REF_CONSTANT) {
-                handle->ref.mr = rtcp_get_interface_method_ref(rtcp, c->reference_index);
+            if (cfcp[reference_index].tag == METHOD_REF_CONSTANT) {
+                handle->ref.mr = rtcp_get_method_ref(rtcp, reference_index);
+            } else if (cfcp[reference_index].tag == INTERFACE_METHOD_REF_CONSTANT) {
+                handle->ref.mr = rtcp_get_interface_method_ref(rtcp, reference_index);
             } else {
-                VM_UNKNOWN_ERROR("unknown constant tag: %d\n", tag);
+                VM_UNKNOWN_ERROR("unknown constant tag: %d\n", cfcp[reference_index].tag);
             }
             break;
-        }
         case REF_KIND_INVOKE_INTERFACE:
-            handle->ref.mr = rtcp_get_interface_method_ref(rtcp, c->reference_index);
+            handle->ref.mr = rtcp_get_interface_method_ref(rtcp, reference_index);
             break;
         default:
             VM_UNKNOWN_ERROR("unknown method handle kind: %d\n", handle->kind);
@@ -179,23 +179,25 @@ static void build_method_handle_constant(struct rtcp *rtcp, const void **cfcp, s
     rtcp->pool[index] = (struct rtc) { METHOD_HANDLE_CONSTANT, .v.p = handle };
 }
 
-static void build_method_type_constant(struct rtcp *rtcp, const void **cfcp, size_t index)
+static void build_method_type_constant(struct rtcp *rtcp, const struct constant *cfcp, size_t index)
 {
-    const struct method_type_constant *c = cfcp[index];
-    rtcp->pool[index] = (struct rtc) { METHOD_TYPE_CONSTANT, .v.p = (void *) rtcp_get_str(rtcp, c->descriptor_index) };
+    const struct constant *c = cfcp + index;
+    rtcp->pool[index]
+            = (struct rtc) { METHOD_TYPE_CONSTANT, .v.p = (void *) rtcp_get_str(rtcp, c->u.method_descriptor_index) };
 }
 
 static void build_invoke_dynamic_constant(struct rtcp *rtcp,
-                                          const void **cfcp, size_t index,
+                                          const struct constant *cfcp, size_t index,
                                           const struct bootstrap_methods_attribute *bootstrap_methods_attribute)
 {
-    const struct invoke_dynamic_constant *c = cfcp[index];
-    if (c->bootstrap_method_attr_index >= bootstrap_methods_attribute->num_bootstrap_methods) {
+    const struct constant *c = cfcp + index;
+    if (c->u.invoke_dynamic_constant.bootstrap_method_attr_index >= bootstrap_methods_attribute->num_bootstrap_methods) {
         jvm_abort("error\n"); // todo
         return;
     }
 
-    struct bootstrap_method *bm = bootstrap_methods_attribute->bootstrap_methods + c->bootstrap_method_attr_index;
+    struct bootstrap_method *bm
+            = bootstrap_methods_attribute->bootstrap_methods + c->u.invoke_dynamic_constant.bootstrap_method_attr_index;
 
     VM_MALLOC_EXT(struct invoke_dynamic_ref, 1, sizeof(int) * bm->num_bootstrap_arguments, ref);
     ref->argc = bm->num_bootstrap_arguments;
@@ -226,11 +228,11 @@ static void build_invoke_dynamic_constant(struct rtcp *rtcp,
         }
     }
 
-    ref->nt = rtcp_get_name_and_type(rtcp, c->name_and_type_index);
+    ref->nt = rtcp_get_name_and_type(rtcp, c->u.invoke_dynamic_constant.name_and_type_index);
     rtcp->pool[index] = (struct rtc) { INVOKE_DYNAMIC_CONSTANT, .v.p = ref };
 }
 
-struct rtcp* rtcp_create(const void **cfcp, size_t count,
+struct rtcp* rtcp_create(const struct constant *cfcp, size_t count,
                          const struct bootstrap_methods_attribute *bootstrap_methods_attribute)
 {
     assert(cfcp != NULL);
@@ -255,7 +257,7 @@ struct rtcp* rtcp_create(const void **cfcp, size_t count,
      */
     // 遍历第0级
     for (size_t i = 1; i < count; i++) {
-        u1 tag = CONSTANT_TAG(cfcp[i]);
+        u1 tag = cfcp[i].tag;
 
         if (tag == UTF8_CONSTANT)
             build_utf8_constant(rtcp, cfcp, i);
@@ -273,7 +275,7 @@ struct rtcp* rtcp_create(const void **cfcp, size_t count,
 
     // 遍历第1级
     for (size_t i = 1; i < count; i++) {
-        u1 tag = CONSTANT_TAG(cfcp[i]);
+        u1 tag = cfcp[i].tag;
 
         if (tag == CLASS_CONSTANT)
             build_class_constant(rtcp, cfcp, i);
@@ -287,7 +289,7 @@ struct rtcp* rtcp_create(const void **cfcp, size_t count,
 
     // 遍历第2级
     for (size_t i = 1; i < count; i++) {
-        u1 tag = CONSTANT_TAG(cfcp[i]);
+        u1 tag = cfcp[i].tag;
 
         if (tag == FIELD_REF_CONSTANT)
             build_field_ref_constant(rtcp, cfcp, i);
@@ -299,15 +301,14 @@ struct rtcp* rtcp_create(const void **cfcp, size_t count,
 
     // 遍历第3级
     for (size_t i = 1; i < count; i++) {
-        u1 tag = CONSTANT_TAG(cfcp[i]);
+        u1 tag = cfcp[i].tag;
         if (tag == METHOD_HANDLE_CONSTANT)
             build_method_handle_constant(rtcp, cfcp, i);
     }
 
     // 遍历第4级
     for (size_t i = 1; i < count; i++) {
-        u1 tag = CONSTANT_TAG(cfcp[i]);
-        if (tag == INVOKE_DYNAMIC_CONSTANT) {
+        if (cfcp[i].tag == INVOKE_DYNAMIC_CONSTANT) {
             if (bootstrap_methods_attribute == NULL) {
                 VM_UNKNOWN_ERROR(""); // todo
             } else {
