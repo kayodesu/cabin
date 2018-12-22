@@ -7,6 +7,7 @@
 
 #include "../../jtypes.h"
 #include "../../jvm.h"
+#include "../../slot.h"
 
 struct field_ref;
 struct method_ref;
@@ -69,6 +70,8 @@ struct method_handle* rtcp_get_method_handle(const struct rtcp *rtcp, int index)
 const char* rtcp_get_method_type(const struct rtcp *rtcp, int index);
 
 struct invoke_dynamic_ref* rtcp_get_invoke_dynamic(const struct rtcp *rtcp, int index);
+
+struct slot rtc_to_slot(struct classloader *loader, const struct rtcp *rtcp, int index);
 
 
 #ifdef JVM_DEBUG

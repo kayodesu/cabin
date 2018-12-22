@@ -41,10 +41,10 @@ static void forName0(struct stack_frame *frame)
     if (initialize && !c->inited) {
         // todo do init
         jclass_clinit(c, frame->thread);
-        bcr_set_pc(frame->reader, jthread_get_pc(frame->thread));
-    } else {
-        os_pushr(frame->operand_stack, (jref) c->clsobj);
+//        bcr_set_pc(frame->reader, jthread_get_pc(frame->thread));
     }
+
+    os_pushr(frame->operand_stack, (jref) c->clsobj);
 }
 
 /*

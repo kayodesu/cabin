@@ -12,6 +12,8 @@
 #include "../../util/convert.h"
 #include "symref.h"
 #include "../../classfile/attribute.h"
+#include "../../loader/classloader.h"
+#include "../heap/jobject.h"
 
 
 /*
@@ -207,6 +209,7 @@ static void build_invoke_dynamic_constant(struct rtcp *rtcp,
         u2 k = bm->bootstrap_arguments[i]; // 在常量池（rtcp）中的索引
         assert(k < rtcp->count);
         // 常量池在该索引出必须是下列八种结构之一
+        // todo 如果这里直接转成slot需要load class，会不会导致递归调用
         switch (rtcp->pool[k].t) {
             case STRING_CONSTANT:
             case CLASS_CONSTANT:
@@ -404,4 +407,41 @@ struct invoke_dynamic_ref* rtcp_get_invoke_dynamic(const struct rtcp *rtcp, int 
 {
     check(rtcp, index, INVOKE_DYNAMIC_CONSTANT);
     return rtcp->pool[index].v.p;
+}
+
+struct slot rtc_to_slot(struct classloader *loader, const struct rtcp *rtcp, int index)
+{
+    assert(rtcp != NULL);
+
+    struct rtc *rtc = rtcp->pool + index;
+
+    struct jclass *c;
+    switch (rtcp->pool[index].t) {
+        case STRING_CONSTANT:
+//            c = classloader_load_class(bootstrap_loader, "java/lang/String");
+            return rslot(jstrobj_create(rtcp_get_str(rtcp, index)));
+        case CLASS_CONSTANT:
+            return rslot(jclsobj_create(classloader_load_class(loader, rtcp_get_class_name(rtcp, index))));
+        case INTEGER_CONSTANT:
+            return islot(rtcp_get_int(rtcp, index));
+        case LONG_CONSTANT:
+            return lslot(rtcp_get_long(rtcp, index));
+        case FLOAT_CONSTANT:
+            return fslot(rtcp_get_float(rtcp, index));
+        case DOUBLE_CONSTANT:
+            return dslot(rtcp_get_double(rtcp, index));
+        case METHOD_HANDLE_CONSTANT: {
+            struct method_handle *mh = rtcp_get_method_handle(rtcp, index);
+            // todo
+            break;
+        }
+        case METHOD_TYPE_CONSTANT: {
+            // todo
+            const char *descriptor = rtcp_get_method_type(rtcp, index);
+            break;
+        }
+        default:
+            VM_UNKNOWN_ERROR("unknown type. t = %d, index = %d\n", rtcp->pool[index].t, index);
+            break;
+    }
 }

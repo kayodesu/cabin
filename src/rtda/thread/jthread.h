@@ -30,13 +30,19 @@ struct invokedynamic_temp_store {
 
     // java/lang/invoke/MethodHandles$Lookup
     struct jobject *caller;
+
+    // java/lang/invoke/CallSite
+    struct jobject *call_set;
+
+    // java/lang/invoke/MethodHandle
+    struct jobject *exact_method_handle;
 };
 
 struct jthread {
     struct vector *vm_stack; // 虚拟机栈，一个线程只有一个虚拟机栈
     struct jobject *this_obj; // object of java.lang.Thread   todo 干嘛用的
 
-    size_t pc;
+//    size_t pc;
 
     struct invokedynamic_temp_store dyn;
 };
@@ -45,8 +51,8 @@ struct jthread* jthread_create(struct classloader *loader);
 
 struct jobject* jthread_get_obj(struct jthread *thread);
 
-void jthread_set_pc(struct jthread *thread, size_t new_pc);
-size_t jthread_get_pc(const struct jthread *thread);
+//void jthread_set_pc(struct jthread *thread, size_t new_pc);
+//size_t jthread_get_pc(const struct jthread *thread);
 
 bool jthread_is_stack_empty(const struct jthread *thread);
 

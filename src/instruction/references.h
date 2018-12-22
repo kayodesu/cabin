@@ -26,16 +26,18 @@
  */
 static void __new(struct stack_frame *frame)
 {
+#undef INS_LEN
+#define INS_LEN 3 // instruction length
     struct bytecode_reader *reader = frame->reader;
     const char *class_name = rtcp_get_class_name(frame->method->jclass->rtcp, bcr_readu2(reader)); // todo reads2  ?????
-    if (class_name == NULL || strlen(class_name) == 0) {
-        jvm_abort("error. class name is empty\n");
-    }
+    assert(class_name != NULL);
+    assert(strlen(class_name) > 0);
 
     struct jclass *c = resolve_class(frame->method->jclass, class_name);  // todo
     if (!c->inited) {
         jclass_clinit(c, frame->thread);
-        bcr_set_pc(reader, jthread_get_pc(frame->thread)); // 将pc指向本条指令之前，初始化完类后，继续执行本条指令。
+//        bcr_set_pc(reader, jthread_get_pc(frame->thread)); // 将pc指向本条指令之前，初始化完类后，继续执行本条指令。
+        bcr_skip(reader, -INS_LEN); // recover pc
         return;
     }
 
@@ -58,6 +60,8 @@ static void __new(struct stack_frame *frame)
  */
 static void putstatic(struct stack_frame *frame)
 {
+#undef INS_LEN
+#define INS_LEN 3 // instruction length
     struct jclass *curr_class = frame->method->jclass;
 
     int index = bcr_readu2(frame->reader);
@@ -69,7 +73,8 @@ static void putstatic(struct stack_frame *frame)
     if (!cls->inited) {
         jclass_clinit(cls, frame->thread);
         /* 将pc指向本条指令之前，初始化完类后，继续执行本条指令。*/
-        bcr_set_pc(frame->reader, jthread_get_pc(frame->thread));
+//        bcr_set_pc(frame->reader, jthread_get_pc(frame->thread));
+        bcr_skip(frame->reader, -INS_LEN); // recover pc
         return;
     }
 
@@ -95,6 +100,8 @@ static void putstatic(struct stack_frame *frame)
 
 static void getstatic(struct stack_frame *frame)
 {
+#undef INS_LEN
+#define INS_LEN 3 // instruction length
     struct jclass *curr_class = frame->method->jclass;
 
     int index = bcr_readu2(frame->reader);
@@ -106,7 +113,8 @@ static void getstatic(struct stack_frame *frame)
     if (!cls->inited) {
         jclass_clinit(cls, frame->thread);
         /* 将pc指向本条指令之前，初始化完类后，继续执行本条指令。*/
-        bcr_set_pc(frame->reader, jthread_get_pc(frame->thread));
+//        bcr_set_pc(frame->reader, jthread_get_pc(frame->thread));
+        bcr_skip(frame->reader, -INS_LEN); // recover pc
         return;
     }
     os_pushs(frame->operand_stack, get_static_field_value_by_id(cls, ref->resolved_field->id));
@@ -192,8 +200,6 @@ static void getfield(struct stack_frame *frame)
         VM_UNKNOWN_ERROR("type mismatch error. field's descriptor is %s, but slot is %s",
                   ref->resolved_field->descriptor, slot_to_string(s));
     }
-
-    //printvm("getfield, operand_stack. %s\n", os_to_string(frame->operand_stack));
 }
 
 static void athrow(struct stack_frame *frame)
@@ -291,6 +297,8 @@ static void checkcast(struct stack_frame *frame)
  */
 static void invokestatic(struct stack_frame *frame)
 {
+#undef INS_LEN
+#define INS_LEN 3 // instruction length
     struct jclass *curr_class = frame->method->jclass;
 
     int index = bcr_readu2(frame->reader);
@@ -305,7 +313,8 @@ static void invokestatic(struct stack_frame *frame)
     if (!ref->resolved_class->inited) {
         jclass_clinit(ref->resolved_class, frame->thread);
         /* 将pc指向本条指令之前，初始化完类后，继续执行本条指令。*/
-        bcr_set_pc(frame->reader, jthread_get_pc(frame->thread));
+//        bcr_set_pc(frame->reader, jthread_get_pc(frame->thread));
+        bcr_skip(frame->reader, -INS_LEN); // recover pc
         return;
     }
 
@@ -466,8 +475,22 @@ static void set_caller(struct stack_frame *frame)
     frame->thread->dyn.caller = os_popr(frame->operand_stack);
 }
 
+static void set_call_set(struct stack_frame *frame)
+{
+    assert(frame != NULL);
+    frame->thread->dyn.call_set = os_popr(frame->operand_stack);
+}
+
+static void set_exact_method_handle(struct stack_frame *frame)
+{
+    assert(frame != NULL);
+    frame->thread->dyn.exact_method_handle = os_popr(frame->operand_stack);
+}
+
 static void invokedynamic(struct stack_frame *frame)
 {
+#undef INS_LEN
+#define INS_LEN 5 // instruction length
     struct jclass *curr_class = frame->method->jclass;
     struct jthread *curr_thread = frame->thread;
 
@@ -486,8 +509,6 @@ static void invokedynamic(struct stack_frame *frame)
     struct jobject *return_type = jmethod_parse_descriptor(curr_class->loader, ref->nt->descriptor, &parameter_types, -1);
 
     struct jobject *invoked_type = curr_thread->dyn.invoked_type;
-    struct jobject *caller = curr_thread->dyn.caller;
-
     if (invoked_type == NULL) {
         need_again = true;
         struct jclass *mt = classloader_load_class(bootstrap_loader, "java/lang/invoke/MethodType");
@@ -503,11 +524,12 @@ static void invokedynamic(struct stack_frame *frame)
         }
     }
 
+    struct jobject *caller = curr_thread->dyn.caller;
     if (caller == NULL) {
         need_again = true;
         struct jclass *mhs = classloader_load_class(bootstrap_loader, "java/lang/invoke/MethodHandles");
 
-        // public static Lookup lookup()
+        // Lookup(Class<?> lookupClass)
         struct jmethod *lookup = jclass_lookup_static_method(mhs, "lookup", "()Ljava/lang/invoke/MethodHandles$Lookup;");
         jthread_invoke_method_with_shim(curr_thread, lookup, NULL, set_caller);
 
@@ -517,12 +539,15 @@ static void invokedynamic(struct stack_frame *frame)
     }
 
     if (need_again) {
-        bcr_set_pc(frame->reader, jthread_get_pc(curr_thread)); // recover pc
+//        bcr_set_pc(frame->reader, jthread_get_pc(curr_thread));
+        bcr_skip(frame->reader, -INS_LEN); // recover pc
         return;
     }
 
-    // todo invoke bootstrap method
+    struct jobject *call_set = curr_thread->dyn.call_set;
+    struct jobject *exact_method_handle = curr_thread->dyn.exact_method_handle;
 
+    // todo
     switch (ref->handle->kind) {
     case REF_KIND_GET_FIELD:
         break;
@@ -535,14 +560,53 @@ static void invokedynamic(struct stack_frame *frame)
     case REF_KIND_INVOKE_VIRTUAL:
         break;
     case REF_KIND_INVOKE_STATIC: {
+        if (call_set != NULL) {
+            if (exact_method_handle != NULL) {
+                // public final Object invokeExact(Object... args) throws Throwable
+                struct jmethod *exact_method = jclass_lookup_instance_method(
+                        exact_method_handle->jclass, "invokeExact", "[Ljava/lang/Object;");
+                // todo args
+                jvm_abort(""); ////////////////////////////////////////////////////
+                // invoke exact method, invokedynamic completely execute over.
+                jthread_invoke_method(curr_thread, exact_method, NULL);
+                return;
+            } else {
+                // public abstract MethodHandle dynamicInvoker()
+                struct jmethod *dynamicInvoker = jclass_lookup_instance_method(
+                        call_set->jclass, "dynamicInvoker", "()Ljava/lang/invoke/MethodHandle;");
+                struct slot arg = rslot(call_set);
+                jthread_invoke_method_with_shim(curr_thread, dynamicInvoker, &arg, set_exact_method_handle);
+                bcr_skip(frame->reader, -INS_LEN); // recover pc
+            }
+
+//            bcr_set_pc(frame->reader, jthread_get_pc(curr_thread)); // recover pc
+            bcr_skip(frame->reader, -INS_LEN); // recover pc
+            return;
+        }
+
         struct method_ref *mr = ref->handle->ref.mr;
+
         struct jclass *bootstrap_class = classloader_load_class(frame->method->jclass->loader, mr->class_name);
         struct jmethod *bootstrap_method = jclass_lookup_static_method(bootstrap_class, mr->name, mr->descriptor);
         // todo 说明 bootstrap_method 的格式
+        // bootstrap_method is static,  todo 对不对
+        // 前三个参数固定为 MethodHandles.Lookup caller, String invokedName, MethodType invokedType todo 对不对
+        // 后续的参数由 ref->argc and ref->args 决定
+        assert(ref->argc + 3 == bootstrap_method->arg_slot_count);
+        struct slot args[bootstrap_method->arg_slot_count];
+        args[0] = rslot(caller);
+        args[1] = rslot(jstrobj_create(mr->name));
+        args[2] = rslot(invoked_type);
+        // parse remaining args
+        for (int i = 0, j = 3; i < ref->argc; i++, j++) {
+            args[j] = rtc_to_slot(curr_class->loader, curr_class->rtcp, ref->args[i]); // todo 用哪个类的 rtcp
+        }
 
-        int argc = ref->argc + 3; // todo
+        jthread_invoke_method_with_shim(curr_thread, bootstrap_method, args, set_call_set);
 
-        break;
+//        bcr_set_pc(frame->reader, jthread_get_pc(curr_thread)); // recover pc
+        bcr_skip(frame->reader, -INS_LEN); // recover pc
+        return;
     }
     case REF_KIND_INVOKE_SPECIAL:
         break;
@@ -555,9 +619,9 @@ static void invokedynamic(struct stack_frame *frame)
         break;
     }
 
-    // todo rest thread.dyn 的值，下次调用时这两个值要从新解析。
+    // todo rest thread.dyn 的值，下次调用时这个值要从新解析。
 
-    jvm_abort("not implement\n");  // todo
+    jvm_abort("invokedynamic not implement\n");  // todo
 }
 
 /*

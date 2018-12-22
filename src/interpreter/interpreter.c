@@ -109,7 +109,7 @@ void interpret(struct jthread *thread)
         printvm("executing frame(%p): %s, pc = %lu\n", frame, sf_to_string(frame), bcr_get_pc(reader));
 #endif
         while (bcr_has_more(reader)) {
-            jthread_set_pc(frame->thread, bcr_get_pc(reader)); // store pc
+//            jthread_set_pc(frame->thread, bcr_get_pc(reader)); // store pc
             u1 opcode = bcr_readu1(reader);
 #ifdef JVM_DEBUG
             printvm("%d(0x%x), %s, pc = %lu\n", opcode, opcode, ins_code_name_mapping[opcode], bcr_get_pc(reader));
