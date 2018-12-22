@@ -10,11 +10,13 @@
 /*
  * 判断 long_str 是不是以 short_str 结尾。
  */
-bool strend(const char *long_str, const char *short_str);
+bool vm_strend(const char *long_str, const char *short_str);
 
 /*
  * 将字符串 @str 中所有的字符 @s 替换成 @d
  */
-void strreplace(char str[static 1], char s, char d);
+void vm_strrpl(char str[static 1], char s, char d);
+
+char* vm_strdup(const char *s);
 
 #endif //JVM_UTIL_H

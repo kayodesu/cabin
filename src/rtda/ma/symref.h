@@ -5,8 +5,8 @@
 #ifndef JVM_SYMREF_H
 #define JVM_SYMREF_H
 
-#include "../../classfile/constant.h"
-#include "rtcp.h"
+
+#include "../../jtypes.h"
 
 /*
  * 定义及解析类，字段，方法的符号引用

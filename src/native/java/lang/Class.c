@@ -33,7 +33,7 @@ static void forName0(struct stack_frame *frame)
     char class_name[strlen(class_name0) + 1];
     strcpy(class_name, class_name0);
     // 这里class name 是形如 xxx.xx.xx的形式，将其替换为 xxx/xx/xx的形式
-    strreplace(class_name, '.', '/');
+    vm_strrpl(class_name, '.', '/');
 
     struct jclass *c = classloader_load_class(frame->method->jclass->loader, class_name);
 
@@ -125,7 +125,7 @@ static void getName0(struct stack_frame *frame)
     strcpy(class_name, c->class_name);
     // 这里需要的是 java.lang.Object 这样的类名，而非 java/lang/Object
     // 所以需要进行一下替换
-    strreplace(class_name, '/', '.');
+    vm_strrpl(class_name, '/', '.');
     os_pushr(frame->operand_stack, (jref) jstrobj_create(class_name));
 }
 

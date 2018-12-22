@@ -13,29 +13,11 @@ struct field_ref;
 struct method_ref;
 struct method_handle;
 struct invoke_dynamic_ref;
-struct bootstrap_methods_attribute;
-
-/*
- * RunTime Constant
- */
-struct rtc {
-    u1 t; // type of constant, defined in 'constant.h'
-
-    union {
-        jint i;
-        jfloat f;
-        jlong l;
-        jdouble d;
-//            struct name_and_type nt;
-        void *p;
-    } v;
-};
-
 struct rtcp;
 struct constant;
+struct attribute;
 
-struct rtcp* rtcp_create(const struct constant *cfcp, size_t count,
-                         const struct bootstrap_methods_attribute *bootstrap_methods_attribute);
+struct rtcp* rtcp_create(const struct constant *cfcp, size_t count, const struct attribute *bootstrap_methods_attribute);
 void rtcp_destroy(struct rtcp *rtcp);
 
 const u1 rtcp_get_type(const struct rtcp *rtcp, int index);

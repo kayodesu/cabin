@@ -30,13 +30,13 @@ struct jfield* jfield_create(struct jclass *c, const struct member_info *info)
     field->type = NULL;
 
     // 解析 field 的属性
-    for (int j = 0; j < info->attributes_count; j++) {
-        struct attribute_common *a = info->attributes[j];
+    for (int i = 0; i < info->attributes_count; i++) {
+        struct attribute *a = info->attributes + i;
 
         // todo fields Attributes
-        if (strcmp(a->name, Deprecated) == 0) { // 可选属性
+        if (a->type == AT_DEPRECATED) { // 可选属性
             //        printvm("not parse attr: Deprecated\n");
-        } else if (strcmp(a->name, ConstantValue) == 0) {
+        } else if (a->type == AT_CONSTANT_VALUE) {
             /*
              * ConstantValue属性表示一个常量字段的值。
              * 在一个field_info结构的属性表中最多只能有一个ConstantValue属性。
@@ -44,19 +44,21 @@ struct jfield* jfield_create(struct jclass *c, const struct member_info *info)
              * 非静态字段包含了ConstantValue属性，那么这个属性必须被虚拟机所忽略。
              */
             if (IS_STATIC(field->access_flags)) {  // todo
-                field->constant_value_index = ((struct constant_value_attribute *) a)->constant_value_index;
+                field->constant_value_index = a->u.constant_value_index;
             }
-        } else if (strcmp(a->name, Synthetic) == 0) {
+        } else if (a->type == AT_SYNTHETIC) {
             set_synthetic(&field->access_flags); // todo
-        } else if (strcmp(a->name, Signature) == 0) {  // 可选属性
+        } else if (a->type == AT_SIGNATURE) {  // 可选属性
 //                SignatureAttr *a = attr;
             //            printvm("not parse attr: Signature\n");
-        } else if (strcmp(a->name, RuntimeVisibleAnnotations) == 0) {
+        } else if (a->type == AT_RUNTIME_VISIBLE_ANNOTATIONS) {
 //                runtime_annotations_attr *a = attr;
             //       printvm("not parse attr: RuntimeVisibleAnnotations\n");
-        } else if (strcmp(a->name, RuntimeInvisibleAnnotations) == 0) {
+        } else if (a->type == AT_RUNTIME_INVISIBLE_ANNOTATIONS) {
 //                runtime_annotations_attr *a = attr;
             //        printvm("not parse attr: RuntimeInvisibleAnnotations\n");
+        } else {
+            jvm_abort("Unknown: %d", a->type); // todo
         }
     }
 
@@ -98,7 +100,7 @@ struct jobject* jfield_get_type(struct jfield *field)
     char d = *field->descriptor;
     if (d == '[') { // 变量类型为数组
         field->type = classloader_load_class(field->jclass->loader, field->descriptor)->clsobj;
-    } else if (d == 'L' && strend(field->descriptor, ";")) { // 变量类型为非数组引用（类引用）
+    } else if (d == 'L' && vm_strend(field->descriptor, ";")) { // 变量类型为非数组引用（类引用）
         int len = strlen(field->descriptor);
         char type_name[len];
         strcpy(type_name, field->descriptor + 1); // jump 'L'

@@ -8,6 +8,8 @@
 #include "access.h"
 #include "jfield.h"
 #include "../heap/jobject.h"
+#include "../../classfile/attribute.h"
+#include "../../util/util.h"
 
 
 // 计算实例字段的个数，同时给它们编号
@@ -144,39 +146,51 @@ struct jclass *jclass_create_by_classfile(struct classloader *loader, struct cla
     int source_file_index = -1;
     int enclosing_class_index = -1;
     int enclosing_method_index = -1;
-    struct bootstrap_methods_attribute *bootstrap_methods_attribute = NULL;
+    struct attribute *bootstrap_methods_attribute = NULL;
 
     // 先解析属性，因为下面建立 Runtime Constant Pool 时需要用到属性中的值。
     for (int i = 0; i < cf->attributes_count; i++) {
-        struct attribute_common *attr = cf->attributes[i];
+        struct attribute *a = cf->attributes + i;
 
         // todo class attributes
-        if (strcmp(attr->name, InnerClasses) == 0) {
-            //          printvm("not parse attr: InnerClasses\n");
-        } else if (strcmp(attr->name, EnclosingMethod) == 0) {  // 可选属性
-            // 这里先不解析，只是记录下source_file_index，因为常量池还没有建立。
-            struct enclosing_method_attribute *a = (struct enclosing_method_attribute *) attr;
-            enclosing_class_index = a->class_index;
-            enclosing_method_index = a->method_index;
-        } else if (strcmp(attr->name, Synthetic) == 0) {
+        switch (a->type) {
+        case AT_SIGNATURE:
+            // printvm("not parse attr: Signature\n");
+            break;
+        case AT_SYNTHETIC:
             set_synthetic(&c->access_flags);  // todo
-        } else if (strcmp(attr->name, Signature) == 0) {  // 可选属性
-            //            printvm("not parse attr: Signature\n");
-        } else if (strcmp(attr->name, SourceFile) == 0) {  // 可选属性
+            break;
+        case AT_DEPRECATED:
+            // printvm("not parse attr: Deprecated\n");
+            break;
+        case AT_SOURCE_FILE:
             // 这里先不解析，只是记录下source_file_index，因为常量池还没有建立。
-            source_file_index = ((struct source_file_attribute *) attr)->source_file_index;
-        } else if (strcmp(attr->name, SourceDebugExtension) == 0) {  // 可选属性
-            //      printvm("not parse attr: SourceDebugExtension\n");
-        } else if (strcmp(attr->name, Deprecated) == 0) {  // 可选属性
-            //        printvm("not parse attr: Deprecated\n");
-        } else if (strcmp(attr->name, RuntimeVisibleAnnotations) == 0) {
-            //         printvm("not parse attr: RuntimeVisibleAnnotations\n");
-        } else if (strcmp(attr->name, RuntimeInvisibleAnnotations) == 0) {
-            //        printvm("not parse attr: RuntimeInvisibleAnnotations\n");
-        } else if (strcmp(attr->name, BootstrapMethods) == 0) {
-            bootstrap_methods_attribute = (struct bootstrap_methods_attribute *) attr; // todo
-        } else {
-            // todo
+            source_file_index = a->u.source_file_index;
+            break;
+        case AT_INNER_CLASSES:
+            // printvm("not parse attr: InnerClasses\n");
+            break;
+        case AT_ENCLOSING_METHOD:
+            // 这里先不解析，只是记录下source_file_index，因为常量池还没有建立。
+            enclosing_class_index = a->u.enclosing_method.class_index;
+            enclosing_method_index = a->u.enclosing_method.method_index;
+            break;
+        case AT_SOURCE_DEBUG_EXTENSION:
+            // printvm("not parse attr: SourceDebugExtension\n");
+            break;
+        case AT_BOOTSTRAP_METHODS:
+            // printvm("not parse attr: AT_BOOTSTRAP_METHODS\n");
+            bootstrap_methods_attribute = a;
+            break;
+        case AT_RUNTIME_VISIBLE_ANNOTATIONS:
+            // printvm("not parse attr: RuntimeVisibleAnnotations\n");
+            break;
+        case AT_RUNTIME_INVISIBLE_ANNOTATIONS:
+            // printvm("not parse attr: RuntimeInvisibleAnnotations\n");
+            break;
+        default:
+            jvm_abort("Unknown: %d", a->type); // todo
+            break;
         }
     }
 
@@ -205,7 +219,7 @@ struct jclass *jclass_create_by_classfile(struct classloader *loader, struct cla
     }
 
     c->class_name = rtcp_get_class_name(c->rtcp, cf->this_class);
-    c->pkg_name = strdup(c->class_name);
+    c->pkg_name = vm_strdup(c->class_name);
     char *p = strrchr(c->pkg_name, '/');
     if (p == NULL) {
         c->pkg_name[0] = 0; // 包名可以为空
@@ -274,19 +288,15 @@ struct jclass *jclass_create_by_classfile(struct classloader *loader, struct cla
     return c;
 }
 
-struct jclass* jclass_create_primitive_class(struct classloader *loader, const char *class_name)
+static void jclass_clear(struct jclass *c)
 {
-    assert(loader != NULL);
-    assert(class_name != NULL);
+    assert(c != NULL);
 
-    // todo class_name 是不是基本类型
-
-    VM_MALLOC(struct jclass, c);
     c->access_flags = ACC_PUBLIC;
-    c->pkg_name = ""; // todo 包名
-    c->class_name = strdup(class_name);  // todo
-    c->loader = loader;
-    c->inited = true;
+    c->pkg_name = NULL;
+    c->class_name = NULL;
+    c->loader = NULL;
+    c->inited = false;
 
     c->clsobj = NULL;
     c->rtcp = NULL;
@@ -300,16 +310,41 @@ struct jclass* jclass_create_primitive_class(struct classloader *loader, const c
     c->fields = NULL;
     c->source_file_name = NULL;
     c->enclosing_info[0] = c->enclosing_info[1] = c->enclosing_info[2] = NULL;
+}
+
+struct jclass* jclass_create_primitive_class(struct classloader *loader, const char *class_name)
+{
+    assert(loader != NULL);
+    assert(class_name != NULL);
+
+    // todo class_name 是不是基本类型
+
+    VM_MALLOC(struct jclass, c);
+    jclass_clear(c);
+
+    c->access_flags = ACC_PUBLIC;
+    c->pkg_name = ""; // todo 包名
+    c->class_name = vm_strdup(class_name);
+    c->loader = loader;
+    c->inited = true;
+
+    // todo super_class ???? java.lang.Object ??????
+
     return c;
 }
 
 struct jclass* jclass_create_arr_class(struct classloader *loader, const char *class_name)
 {
+    assert(loader != NULL);
+    assert(class_name != NULL);
+
     // todo class_name 是不是 array
     VM_MALLOC(struct jclass, c);
+    jclass_clear(c);
+
     c->access_flags = ACC_PUBLIC;
     c->pkg_name = ""; // todo 包名
-    c->class_name = strdup(class_name);  // todo NULL
+    c->class_name = vm_strdup(class_name);
     c->loader = loader;
     c->inited = true; // 数组类不需要初始化
     c->super_class = classloader_load_class(loader, "java/lang/Object");
@@ -319,16 +354,6 @@ struct jclass* jclass_create_arr_class(struct classloader *loader, const char *c
     c->interfaces[0] = classloader_load_class(loader, "java/lang/Cloneable");
     c->interfaces[1] = classloader_load_class(loader, "java/io/Serializable");
 
-    c->clsobj = NULL;
-    c->rtcp = NULL;
-    c->inited_instance_fields_values = NULL;
-    c->static_fields_values = NULL;
-    c->instance_fields_count = c->static_fields_count = c->fields_count = c->public_fields_count = 0;
-    c->methods_count = c->public_methods_count = 0;
-    c->methods = NULL;
-    c->fields = NULL;
-    c->source_file_name = NULL;
-    c->enclosing_info[0] = c->enclosing_info[1] = c->enclosing_info[2] = NULL;
     return c;
 }
 

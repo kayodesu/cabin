@@ -11,19 +11,18 @@
 #include "attribute.h"
 
 static void parse_member_info(struct bytecode_reader *reader,
-                              struct constant *constant_pool, u2 constant_pool_count, struct member_info *info)
+                              struct constant *constant_pool, u2 constant_pool_count,
+                              struct member_info *info)
 {
     info->access_flags = bcr_readu2(reader);
     info->name_index = bcr_readu2(reader);
     info->descriptor_index = bcr_readu2(reader);
     info->attributes_count = bcr_readu2(reader);
-    info->attributes = malloc(sizeof(void *) * info->attributes_count);
+    info->attributes = malloc(sizeof(struct attribute) * info->attributes_count);
     for (int i = 0; i < info->attributes_count; i++) {
-        info->attributes[i] = parse_attribute(reader, constant_pool, constant_pool_count);
+        read_attribute(reader, constant_pool, constant_pool_count, info->attributes + i);
     }
 }
-
-//static const struct placeholder_constant placeholder_constant = (struct placeholder_constant){ PLACEHOLDER_CONSTANT };
 
 struct classfile* classfile_create(s1 *bytecode, size_t len)
 {
@@ -130,10 +129,10 @@ struct classfile* classfile_create(s1 *bytecode, size_t len)
 
     // parse class attributes
     cf->attributes_count = bcr_readu2(reader);
-    cf->attributes = malloc(sizeof(void **) * cf->attributes_count);
+    cf->attributes = malloc(sizeof(struct attribute) * cf->attributes_count);
     CHECK_MALLOC_RESULT(cf->attributes);
     for (int i = 0; i < cf->attributes_count; i++) {
-        cf->attributes[i] = parse_attribute(reader, cf->constant_pool, cf->constant_pool_count);
+        read_attribute(reader, cf->constant_pool, cf->constant_pool_count, cf->attributes + i);
     }
 
     bcr_destroy(reader);

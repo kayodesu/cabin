@@ -250,22 +250,25 @@ static void cal_arg_slot_count(struct jmethod *method)
 /*
  * 解析方法的 code 属性
  */
-static void parse_code_attr(struct jmethod *method, struct code_attribute *a)
+static void parse_code_attr(struct jmethod *method, struct attribute *a)
 {
-    method->max_stack = a->max_stack;
-    method->max_locals = a->max_locals;
+    assert(method != NULL);
+    assert(a != NULL);
 
-    method->code = a->code;
-    method->code_length = a->code_length;
+    method->max_stack = a->u.code.max_stack;
+    method->max_locals = a->u.code.max_locals;
+
+    method->code = a->u.code.code;
+    method->code_length = a->u.code.code_length;
 
     method->line_number_table_count = 0;
     method->line_number_tables = NULL;
 
-    method->exception_tables_count = a->exception_tables_length;
+    method->exception_tables_count = a->u.code.exception_tables_length;
     // todo exceptionTableCount == 0
     method->exception_tables = malloc(sizeof(struct exception_table) * method->exception_tables_count);
     for (int i = 0; i < method->exception_tables_count; i++) {
-        const struct code_attribute_exception_table *t0 = a->exception_tables + i;
+        const struct code_attribute_exception_table *t0 = a->u.code.exception_tables + i;
         struct exception_table *t = method->exception_tables + i;
         t->start_pc = t0->start_pc;
         t->end_pc = t0->end_pc;
@@ -283,22 +286,24 @@ static void parse_code_attr(struct jmethod *method, struct code_attribute *a)
     }
 
     // 解析 code 属性的属性
-    for (int k = 0; k < a->attributes_count; k++) {
-        if (strcmp(a->attributes[k]->name, StackMapTable) == 0) {
+    for (int k = 0; k < a->u.code.attributes_count; k++) {
+        struct attribute *ca = a->u.code.attributes + k; // code's attribute
+        if (ca->type == AT_STACK_MAP_TABLE) {
             // todo
-        } else if (strcmp(a->attributes[k]->name, LineNumberTable) == 0) {   // 可选属性
-            struct line_number_table_attribute *tmp = (struct line_number_table_attribute *) a->attributes[k];
-            method->line_number_table_count = tmp->line_number_table_length;
+        } else if (ca->type == AT_LINE_NUMBER_TABLE) {   // 可选属性
+            method->line_number_table_count = ca->u.line_number_table.num;
             method->line_number_tables = malloc(sizeof(struct line_number_table) * method->line_number_table_count);
             CHECK_MALLOC_RESULT(method->line_number_tables);
             for (int i = 0; i < method->line_number_table_count; i++) {
-                method->line_number_tables[i].start_pc = tmp->line_number_tables[i].start_pc;
-                method->line_number_tables[i].line_number = tmp->line_number_tables[i].line_number;
+                method->line_number_tables[i].start_pc = ca->u.line_number_table.tables[i].start_pc;
+                method->line_number_tables[i].line_number = ca->u.line_number_table.tables[i].line_number;
             }
-        } else if (strcmp(a->attributes[k]->name, LocalVariableTable) == 0) {   // 可选属性
+        } else if (ca->type == AT_LOCAL_VARIABLE_TABLE) {   // 可选属性
             //         printvm("not parse attr: LocalVariableTable\n");
-        } else if (strcmp(a->attributes[k]->name, LocalVariableTypeTable) == 0) {   // 可选属性
+        } else if (ca->type == AT_LOCAL_VARIABLE_TYPE_TABLE) {   // 可选属性
             //         printvm("not parse attr: LocalVariableTypeTable\n");
+        } else {
+            jvm_abort("Unknown: %d", a->type); // todo
         }
     }
 }
@@ -326,36 +331,44 @@ struct jmethod* jmethod_create(const struct jclass *c, const struct member_info 
 
     cal_arg_slot_count(method);
 
-    for (int j = 0; j < info->attributes_count; j++) {
-        struct attribute_common *attr = info->attributes[j];
+    for (int i = 0; i < info->attributes_count; i++) {
+        struct attribute *a = info->attributes + i;
+
         // todo methods Attributes
-        if (strcmp(attr->name, Code) == 0) {
-            parse_code_attr(method, (struct code_attribute *) attr);
-        } else if (strcmp(attr->name, Synthetic) == 0) {
+        switch (a->type) {
+        case AT_CODE:
+            parse_code_attr(method, a);
+            break;
+        case AT_SYNTHETIC:
             set_synthetic(&method->access_flags);  // todo
-        } else if (strcmp(attr->name, Signature) == 0) {  // 可选属性
-//                jvm_printf("not parse attr: Signature\n");
-        }  else if (strcmp(attr->name, Exceptions) == 0) {
-//                jvm_printf("not parse attr: Exceptions\n");
-        } else if (strcmp(attr->name, RuntimeVisibleParameterAnnotations) == 0) {
-            //           runtime_parameter_annotations_attr *a = attr;
-//                jvm_printf("not parse attr: RuntimeVisibleParameterAnnotations\n");
-        } else if (strcmp(attr->name, RuntimeInvisibleParameterAnnotations) == 0) {
-            //           runtime_parameter_annotations_attr *a = attr;
-//                jvm_printf("not parse attr: RuntimeInvisibleParameterAnnotations\n");
-        } else if (strcmp(attr->name, Deprecated) == 0) {  // 可选属性
-//                jvm_printf("not parse attr: Deprecated\n");
-        } else if (strcmp(attr->name, RuntimeVisibleAnnotations) == 0) {
-            //          runtime_annotations_attr *a = attr;
-//                jvm_printf("not parse attr: RuntimeVisibleAnnotations\n");
-        } else if (strcmp(attr->name, RuntimeInvisibleAnnotations) == 0) {
-            //         runtime_annotations_attr *a = attr;
-//                jvm_printf("not parse attr: RuntimeInvisibleAnnotations\n");
-        } else if (strcmp(attr->name, AnnotationDefault) == 0) {
-            //        annotation_default_attr *a = attr;
-//                jvm_printf("not parse attr: AnnotationDefault\n");
-        } else {
-            jvm_abort("Unknown: %s", attr->name);
+            break;
+        case AT_SIGNATURE:
+            // jvm_printf("not parse attr: Signature\n");
+            break;
+        case AT_EXCEPTIONS:
+            // jvm_printf("not parse attr: Exceptions\n");
+            break;
+        case AT_RUNTIME_VISIBLE_PARAMETER_ANNOTATIONS:
+            // jvm_printf("not parse attr: RuntimeVisibleParameterAnnotations\n");
+            break;
+        case AT_RUNTIME_INVISIBLE_PARAMETER_ANNOTATIONS:
+            // jvm_printf("not parse attr: RuntimeInvisibleParameterAnnotations\n");
+            break;
+        case AT_DEPRECATED:
+            //                jvm_printf("not parse attr: Deprecated\n");
+            break;
+        case AT_RUNTIME_VISIBLE_ANNOTATIONS:
+            //                jvm_printf("not parse attr: RuntimeVisibleAnnotations\n");
+            break;
+        case AT_RUNTIME_INVISIBLE_ANNOTATIONS:
+            //                jvm_printf("not parse attr: RuntimeInvisibleAnnotations\n");
+            break;
+        case AT_ANNOTATION_DEFAULT:
+            //                jvm_printf("not parse attr: AnnotationDefault\n");
+            break;
+        default:
+            jvm_abort("Unknown: %d", a->type); // todo
+            break;
         }
     }
 
