@@ -276,7 +276,23 @@ static struct jclass* verification(struct jclass *c)
     if (c->magic != 0xcafebabe) {
         jvm_abort("error. magic = %u(0x%x)", c->magic, c->magic);
     }
+
     // todo 验证版本号
+    /*
+     * Class版本号和Java版本对应关系
+     * JDK 1.8 = 52
+     * JDK 1.7 = 51
+     * JDK 1.6 = 50
+     * JDK 1.5 = 49
+     * JDK 1.4 = 48
+     * JDK 1.3 = 47
+     * JDK 1.2 = 46
+     * JDK 1.1 = 45
+     */
+    if (c->major_version != 52) {
+        jvm_abort("only support jdk 8"); // todo class version
+    }
+
     return c;
 }
 
