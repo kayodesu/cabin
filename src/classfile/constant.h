@@ -26,7 +26,7 @@
 
 /*
  * 常量池中的每一项都具备相同的格式特征——第一个字节作为类型标记用于识别该项是哪种类型的常量，称为“tag byte”。
- * 常量池的索引范围是1至constant_pool_count−1。
+ * 常量池的索引范围是 1 至 constant_pool_count − 1
  */
 struct class_constant {
     u1 tag;

@@ -286,3 +286,32 @@ int main(int argc, char* argv[])
     start_jvm(main_class_name);
     return 0;
 }
+
+
+void vm_internal_error(const char *msg)
+{
+    assert(msg != NULL);
+    // todo
+    jvm_abort(msg);
+}
+
+void vm_out_of_memory_error(const char *msg)
+{
+    assert(msg != NULL);
+    // todo
+    jvm_abort(msg);
+}
+
+void vm_stack_overflow_error(const char *msg)
+{
+    assert(msg != NULL);
+    // todo
+    jvm_abort(msg);
+}
+
+void vm_unknown_error(const char *msg)
+{
+    assert(msg != NULL);
+    // todo
+    jvm_abort(msg);
+}

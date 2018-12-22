@@ -213,7 +213,7 @@ struct classloader* classloader_create(bool is_bootstrap_loader)
         bootstrap_loader = loader;
     }
 
-    loader->loaded_class_pool = hashmap_create_str_key();
+    loader->loaded_class_pool = hashmap_create_str_key(false);
 //    loader->classobj_pool = hashmap_create_str_key();
 
     /*
@@ -346,12 +346,15 @@ struct jclass* classloader_find_class(const struct classloader *loader, const ch
 
 struct jclass* classloader_load_class(struct classloader *loader, const char *class_name)
 {
+//    printvm("in\n"); ///////////////////////////////////////////////////
+
     assert(loader != NULL);
     assert(class_name != NULL);
 
     struct jclass *c = hashmap_find(loader->loaded_class_pool, class_name);
     if (c != NULL) {
         assert(strcmp(c->class_name, class_name) == 0);
+ //       printvm("out 1\n"); ///////////////////////////////////////////////////
         return c;
     }
 
@@ -373,6 +376,8 @@ struct jclass* classloader_load_class(struct classloader *loader, const char *cl
     }
 
     hashmap_put(loader->loaded_class_pool, c->class_name, c);
+
+//    printvm("out 2\n"); ///////////////////////////////////////////////////
     return c;
 }
 

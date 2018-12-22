@@ -3,6 +3,7 @@
  */
 
 #include <string.h>
+#include <assert.h>
 #include "../jvm.h"
 #include "constant.h"
 #include "../util/encoding.h"
@@ -12,8 +13,9 @@ static struct element_value* parse_element_value(struct bytecode_reader *reader)
 
 static struct annotation* parse_annotation(struct bytecode_reader *reader)
 {
-    VM_MALLOC(struct annotation, a);
+    assert(reader != NULL);
 
+    VM_MALLOC(struct annotation, a);
     a->type_index = bcr_readu2(reader);
     a->num_element_value_pairs = bcr_readu2(reader);
     a->element_value_pairs = malloc(sizeof(struct element_value_pair) * a->num_element_value_pairs);
@@ -26,10 +28,19 @@ static struct annotation* parse_annotation(struct bytecode_reader *reader)
     return a;
 }
 
+static void annotation_destroy(struct annotation *a)
+{
+    if (a != NULL) {
+        free(a->element_value_pairs);
+        free(a);
+    }
+}
+
 static struct element_value* parse_element_value(struct bytecode_reader *reader)
 {
-    VM_MALLOC(struct element_value, ev);
+    assert(reader != NULL);
 
+    VM_MALLOC(struct element_value, ev);
     ev->tag = bcr_readu1(reader);
     switch (ev->tag) {
         case 'B':
@@ -55,6 +66,7 @@ static struct element_value* parse_element_value(struct bytecode_reader *reader)
         case '[':
             ev->value.array_value.num_values = bcr_readu2(reader);
             ev->value.array_value.values = malloc(sizeof(struct element_value *) * ev->value.array_value.num_values);
+            CHECK_MALLOC_RESULT(ev->value.array_value.values);
             for (int i = 0; i < ev->value.array_value.num_values; i++) {
                 ev->value.array_value.values[i] = parse_element_value(reader);
             }
@@ -66,14 +78,37 @@ static struct element_value* parse_element_value(struct bytecode_reader *reader)
     return ev;
 }
 
+static void element_value_destroy(struct element_value* ev)
+{
+    if (ev == NULL)
+        return;
+
+    if (ev->tag == '@') {
+        free(ev->value.annotation_value);
+    } else if (ev->tag == '[') {
+        for (int i = 0; i < ev->value.array_value.num_values; i++) {
+            element_value_destroy(ev->value.array_value.values[i]);
+        }
+        free(ev->value.array_value.values);
+    }
+    free(ev);
+}
+
 static void annotation_default_attribute_destroy(void *attr)
 {
-    // todo
+    if (attr == NULL)
+        return;
+
+    struct annotation_default_attribute *a = attr;
+    element_value_destroy(a->default_value);
+    free(a);
 }
 
 static struct annotation_default_attribute*
 parse_annotation_default_attribute(struct bytecode_reader *reader, u4 attribute_length)
 {
+    assert(reader != NULL);
+
     VM_MALLOC(struct annotation_default_attribute, a);
     a->default_value = parse_element_value(reader);
 
@@ -85,21 +120,33 @@ parse_annotation_default_attribute(struct bytecode_reader *reader, u4 attribute_
 
 static void bootstrap_methods_attribute_destroy(void *attr)
 {
-    // todo
+    if (attr == NULL)
+        return;
+
+    struct bootstrap_methods_attribute *a = attr;
+    for (int i = 0; i < a->num_bootstrap_methods; i++) {
+        free(a->bootstrap_methods[i].bootstrap_arguments);
+    }
+    free(a->bootstrap_methods);
+    free(a);
 }
 
 static struct bootstrap_methods_attribute*
 parse_bootstrap_method_attribute(struct bytecode_reader *reader, u4 attribute_length)
 {
+    assert(reader != NULL);
+
     VM_MALLOC(struct bootstrap_methods_attribute, a);
     a->num_bootstrap_methods = bcr_readu2(reader);
     a->bootstrap_methods = malloc(sizeof(struct bootstrap_method) * a->num_bootstrap_methods);
+    CHECK_MALLOC_RESULT(a->bootstrap_methods);
 
     for (int i = 0; i < a->num_bootstrap_methods; i++) {
         struct bootstrap_method *bm = a->bootstrap_methods + i;
         bm->bootstrap_method_ref = bcr_readu2(reader);
         bm->num_bootstrap_arguments = bcr_readu2(reader);
         bm->bootstrap_arguments = malloc(sizeof(u2) * bm->num_bootstrap_arguments);
+        CHECK_MALLOC_RESULT(bm->bootstrap_arguments);
         for (int j = 0; j < bm->num_bootstrap_arguments; j++) {
             bm->bootstrap_arguments[j] = bcr_readu2(reader);
         }
@@ -113,12 +160,22 @@ parse_bootstrap_method_attribute(struct bytecode_reader *reader, u4 attribute_le
 
 static void code_attribute_destroy(void *attr)
 {
+    if (attr == NULL)
+        return;
+
+    struct code_attribute *a = attr;
+
+    // do NOT free a->code, always using in jmethod
+
     // todo
 }
 
 static struct code_attribute*
 parse_code_attribute(struct bytecode_reader *reader, u4 attribute_length, void **constant_pool, u2 constant_pool_count)
 {
+    assert(reader != NULL);
+    assert(constant_pool != NULL);
+
     VM_MALLOC(struct code_attribute, a);
 
     a->max_stack = bcr_readu2(reader);
@@ -130,6 +187,7 @@ parse_code_attribute(struct bytecode_reader *reader, u4 attribute_length, void *
 
     a->exception_tables_length = bcr_readu2(reader);
     a->exception_tables = malloc(sizeof(struct code_attribute_exception_table) * a->exception_tables_length);
+    CHECK_MALLOC_RESULT(a->exception_tables);
     for (int i = 0; i < a->exception_tables_length; i++) {
         a->exception_tables[i].start_pc = bcr_readu2(reader);
         a->exception_tables[i].end_pc = bcr_readu2(reader);
@@ -139,6 +197,7 @@ parse_code_attribute(struct bytecode_reader *reader, u4 attribute_length, void *
 
     a->attributes_count = bcr_readu2(reader);
     a->attributes = malloc(sizeof(struct attribute_common *) * a->attributes_count);
+    CHECK_MALLOC_RESULT(a->attributes);
     for (int i = 0; i < a->attributes_count; i++) {
         a->attributes[i] = parse_attribute(reader, constant_pool, constant_pool_count);
     }
@@ -151,12 +210,14 @@ parse_code_attribute(struct bytecode_reader *reader, u4 attribute_length, void *
 
 static void constant_value_attribute_destroy(void *attr)
 {
-    // todo
+    free(attr);
 }
 
 static struct constant_value_attribute*
 parse_constant_value_attribute(struct bytecode_reader *reader, u4 attribute_length)
 {
+    assert(reader != NULL);
+
     VM_MALLOC(struct constant_value_attribute, a);
     a->constant_value_index = bcr_readu2(reader);
 
@@ -168,14 +229,15 @@ parse_constant_value_attribute(struct bytecode_reader *reader, u4 attribute_leng
 
 static void deprecated_attribute_destroy(void *attr)
 {
-    // todo
+    free(attr);
 }
 
 static struct deprecated_attribute*
 parse_deprecated_attribute(struct bytecode_reader *reader, u4 attribute_length)
 {
-    VM_MALLOC(struct deprecated_attribute, a);
+    assert(reader != NULL);
 
+    VM_MALLOC(struct deprecated_attribute, a);
     a->common.name = Deprecated;
     a->common.attribute_length = attribute_length;
     a->common.destroy = deprecated_attribute_destroy;
@@ -184,14 +246,15 @@ parse_deprecated_attribute(struct bytecode_reader *reader, u4 attribute_length)
 
 static void enclosing_method_attribute_destroy(void *attr)
 {
-    // todo
+    free(attr);
 }
 
 static struct enclosing_method_attribute*
 parse_enclosing_method_attribute(struct bytecode_reader *reader, u4 attribute_length)
 {
-    VM_MALLOC(struct enclosing_method_attribute, a);
+    assert(reader != NULL);
 
+    VM_MALLOC(struct enclosing_method_attribute, a);
     a->class_index = bcr_readu2(reader);
     a->method_index = bcr_readu2(reader);
 
@@ -209,10 +272,12 @@ static void exceptions_attribute_destroy(void *attr)
 static struct exceptions_attribute*
 parse_exceptions_attribute(struct bytecode_reader *reader, u4 attribute_length)
 {
-    VM_MALLOC(struct exceptions_attribute, a);
+    assert(reader != NULL);
 
+    VM_MALLOC(struct exceptions_attribute, a);
     a->number_of_exceptions = bcr_readu2(reader);
     a->exception_index_table = malloc(sizeof(u2) * a->number_of_exceptions);
+    CHECK_MALLOC_RESULT(a->exception_index_table);
     for (int i = 0; i < a->number_of_exceptions; i++) {
         a->exception_index_table[i] = bcr_readu2(reader);
     }
@@ -231,10 +296,12 @@ static void inner_classes_attribute_destroy(void *attr)
 static struct inner_classes_attribute*
 parse_inner_classes_attribute(struct bytecode_reader *reader, u4 attribute_length)
 {
-    VM_MALLOC(struct inner_classes_attribute, a);
+    assert(reader != NULL);
 
+    VM_MALLOC(struct inner_classes_attribute, a);
     a->number_of_classes = bcr_readu2(reader);
     a->classes = malloc(sizeof(struct inner_class) * a->number_of_classes);
+    CHECK_MALLOC_RESULT(a->classes);
     for (int i = 0; i < a->number_of_classes; i++) {
         a->classes[i].inner_class_info_index = bcr_readu2(reader);
         a->classes[i].outer_class_info_index = bcr_readu2(reader);
@@ -256,10 +323,12 @@ static void line_number_table_attribute_destroy(void *attr)
 static struct line_number_table_attribute*
 parse_line_number_table_attribute(struct bytecode_reader *reader, u4 attribute_length)
 {
-    VM_MALLOC(struct line_number_table_attribute, a);
+    assert(reader != NULL);
 
+    VM_MALLOC(struct line_number_table_attribute, a);
     a->line_number_table_length = bcr_readu2(reader);
     a->line_number_tables = malloc(sizeof(struct line_number_table) * a->line_number_table_length);
+    CHECK_MALLOC_RESULT(a->line_number_tables);
     for (int i = 0; i < a->line_number_table_length; i++) {
         a->line_number_tables[i].start_pc = bcr_readu2(reader);
         a->line_number_tables[i].line_number = bcr_readu2(reader);
@@ -279,10 +348,12 @@ static void local_variable_table_attribute_destroy(void *attr)
 static struct local_variable_table_attribute*
 parse_local_variable_table_attribute(struct bytecode_reader *reader, u4 attribute_length)
 {
-    VM_MALLOC(struct local_variable_table_attribute, a);
+    assert(reader != NULL);
 
+    VM_MALLOC(struct local_variable_table_attribute, a);
     a->local_variable_table_length = bcr_readu2(reader);
     a->local_variable_tables = malloc(sizeof(struct local_variable_table) * a->local_variable_table_length);
+    CHECK_MALLOC_RESULT(a->local_variable_tables);
     for (int i = 0; i < a->local_variable_table_length; i++) {
         a->local_variable_tables[i].start_pc = bcr_readu2(reader);
         a->local_variable_tables[i].length = bcr_readu2(reader);
@@ -305,10 +376,12 @@ static void local_variable_type_table_attribute_destroy(void *attr)
 static struct local_variable_type_table_attribute*
 parse_local_variable_type_table_attribute(struct bytecode_reader *reader, u4 attribute_length)
 {
-    VM_MALLOC(struct local_variable_type_table_attribute, a);
+    assert(reader != NULL);
 
+    VM_MALLOC(struct local_variable_type_table_attribute, a);
     int len = a->local_variable_type_table_length = bcr_readu2(reader);
     a->local_variable_type_tables = malloc(sizeof(struct local_variable_type_table) * len);
+    CHECK_MALLOC_RESULT(a->local_variable_type_tables);
     for (int i = 0; i < len; i++) {
         a->local_variable_type_tables[i].start_pc = bcr_readu2(reader);
         a->local_variable_type_tables[i].length = bcr_readu2(reader);
@@ -332,10 +405,12 @@ static void method_parameters_attribute_destroy(void *attr)
 static struct method_parameters_attribute*
 parse_method_parameters_attribute(struct bytecode_reader *reader, u4 attribute_length)
 {
-    VM_MALLOC(struct method_parameters_attribute, a);
+    assert(reader != NULL);
 
+    VM_MALLOC(struct method_parameters_attribute, a);
     a->parameters_count = bcr_readu1(reader);
     a->parameters = malloc(sizeof(struct parameter) * a->parameters_count);
+    CHECK_MALLOC_RESULT(a->parameters);
     for (int i = 0; i < a->parameters_count; i++) {
         a->parameters[i].name_index = bcr_readu2(reader);
         a->parameters[i].access_flags = bcr_readu2(reader);
@@ -355,10 +430,12 @@ static void runtime_annotations_attribute_destroy(void *attr)
 static struct runtime_annotations_attribute*
 parse_runtime_annotations_attribute(struct bytecode_reader *reader, u4 attribute_length, bool visible)
 {
-    VM_MALLOC(struct runtime_annotations_attribute, a);
+    assert(reader != NULL);
 
+    VM_MALLOC(struct runtime_annotations_attribute, a);
     a->num_annotations = bcr_readu2(reader);
     a->annotations = malloc(sizeof(struct annotation *) * a->num_annotations);
+    CHECK_MALLOC_RESULT(a->annotations);
     for (int i = 0; i < a->num_annotations; i++) {
         a->annotations[i] = parse_annotation(reader);
     }
@@ -377,10 +454,12 @@ static void runtime_parameter_annotations_attribute_destroy(void *attr)
 static struct runtime_parameter_annotations_attribute*
 parse_runtime_parameter_annotations_attribute(struct bytecode_reader *reader, u4 attribute_length, bool visible)
 {
-    VM_MALLOC(struct runtime_parameter_annotations_attribute, a);
+    assert(reader != NULL);
 
+    VM_MALLOC(struct runtime_parameter_annotations_attribute, a);
     a->num_parameters = bcr_readu2(reader);
     a->parameter_annotations = malloc(sizeof(struct parameter_annotation) * a->num_parameters);
+    CHECK_MALLOC_RESULT(a->parameter_annotations);
     for (int i = 0; i < a->num_parameters; i++) {
         u2 nums = a->parameter_annotations[i].num_annotations = bcr_readu2(reader);
         a->parameter_annotations[i].annotations = malloc(sizeof(struct annotation *) * nums);
@@ -397,14 +476,15 @@ parse_runtime_parameter_annotations_attribute(struct bytecode_reader *reader, u4
 
 static void signature_attribute_destroy(void *attr)
 {
-    // todo
+    free(attr);
 }
 
 static struct signature_attribute*
 parse_signature_attribute(struct bytecode_reader *reader, u4 attribute_length)
 {
-    VM_MALLOC(struct signature_attribute, a);
+    assert(reader != NULL);
 
+    VM_MALLOC(struct signature_attribute, a);
     a->signature_index = bcr_readu2(reader);
 
     a->common.name = Signature;
@@ -421,8 +501,9 @@ static void source_debug_extension_attribute_destroy(void *attr)
 static struct source_debug_extension_attribute*
 parse_source_debug_extension_attribute(struct bytecode_reader *reader, u4 attribute_length)
 {
-    VM_MALLOC(struct source_debug_extension_attribute, a);
+    assert(reader != NULL);
 
+    VM_MALLOC(struct source_debug_extension_attribute, a);
     a->debug_extension = malloc(sizeof(u1) * attribute_length);
     CHECK_MALLOC_RESULT(a->debug_extension);
     bcr_read_bytes(reader, a->debug_extension, attribute_length);
@@ -435,14 +516,15 @@ parse_source_debug_extension_attribute(struct bytecode_reader *reader, u4 attrib
 
 static void source_file_attribute_destroy(void *attr)
 {
-    // todo
+    free(attr);
 }
 
 static struct source_file_attribute*
 parse_source_file_attribute(struct bytecode_reader *reader, u4 attribute_length)
 {
-    VM_MALLOC(struct source_file_attribute, a);
+    assert(reader != NULL);
 
+    VM_MALLOC(struct source_file_attribute, a);
     a->source_file_index = bcr_readu2(reader);
 
     a->common.name = SourceFile;
@@ -459,8 +541,9 @@ static void stack_map_table_attribute_destroy(void *attr)
 static struct stack_map_table_attribute*
 parse_stack_map_table_attribute(struct bytecode_reader *reader, u4 attribute_length)
 {
-    VM_MALLOC(struct stack_map_table_attribute, a);
+    assert(reader != NULL);
 
+    VM_MALLOC(struct stack_map_table_attribute, a);
     a->number_of_entries = bcr_readu2(reader);
     // 跳过剩下的部分，先不处理。  todo
     bcr_skip(reader, (int) attribute_length - 2);
@@ -473,14 +556,15 @@ parse_stack_map_table_attribute(struct bytecode_reader *reader, u4 attribute_len
 
 static void synthetic_attribute_destroy(void *attr)
 {
-    // todo
+    free(attr);
 }
 
 static struct synthetic_attribute*
 parse_synthetic_attribute(struct bytecode_reader *reader, u4 attribute_length)
 {
-    VM_MALLOC(struct synthetic_attribute, a);
+    assert(reader != NULL);
 
+    VM_MALLOC(struct synthetic_attribute, a);
     a->common.name = Synthetic;
     a->common.attribute_length = attribute_length;
     a->common.destroy = synthetic_attribute_destroy;
@@ -489,14 +573,15 @@ parse_synthetic_attribute(struct bytecode_reader *reader, u4 attribute_length)
 
 static void unknown_attribute_destroy(void *attr)
 {
-    // todo
+    free(attr);
 }
 
 static struct unknown_attribute*
 parse_unknown_attribute(struct bytecode_reader *reader, u4 attribute_length)
 {
-    VM_MALLOC(struct unknown_attribute, a);
+    assert(reader != NULL);
 
+    VM_MALLOC(struct unknown_attribute, a);
     bcr_skip(reader, attribute_length);
 
     a->common.name = ""; // todo
@@ -508,6 +593,9 @@ parse_unknown_attribute(struct bytecode_reader *reader, u4 attribute_length)
 
 void* parse_attribute(struct bytecode_reader *reader, void **constant_pool, u2 constant_pool_count)
 {
+    assert(reader != NULL);
+    assert(constant_pool != NULL);
+
     u2 attribute_name_index = bcr_readu2(reader);
     u4 attribute_length = bcr_readu4(reader);
 

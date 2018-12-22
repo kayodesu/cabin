@@ -18,12 +18,12 @@ struct hashmap;
  * @hash hash function, 不能为 NULL
  * @cmp value cmp function. 不能为 NULL
  */
-struct hashmap* hashmap_create(int (*hash)(const void *), int (* cmp)(const void *, const void *));
+struct hashmap* hashmap_create(int (*hash)(const void *), int (* cmp)(const void *, const void *), bool add_existing);
 
 /*
  * 创建key为字符串（char*） 的hashmap
  */
-struct hashmap* hashmap_create_str_key();
+struct hashmap* hashmap_create_str_key(bool add_existing);
 
 /*
  * add a mapping to hashtable

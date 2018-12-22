@@ -58,6 +58,7 @@ struct classfile* classfile_create(s1 *bytecode, size_t len)
     // parse constant pool
     cf->constant_pool_count = bcr_readu2(reader);
     cf->constant_pool = malloc(sizeof(void *) * cf->constant_pool_count);
+    CHECK_MALLOC_RESULT(cf->constant_pool);
     cf->constant_pool[0] = NULL; // constant pool 从 1 开始计数
     for (int i = 1; i < cf->constant_pool_count; i++) {
         cf->constant_pool[i] = parse_constant(reader);
@@ -79,6 +80,7 @@ struct classfile* classfile_create(s1 *bytecode, size_t len)
     // parse interfaces
     cf->interfaces_count = bcr_readu2(reader);
     cf->interfaces = malloc(sizeof(u2) * cf->interfaces_count);
+    CHECK_MALLOC_RESULT(cf->interfaces);
     for (int i = 0; i < cf->interfaces_count; i++) {
         cf->interfaces[i] = bcr_readu2(reader);
     }
@@ -86,13 +88,15 @@ struct classfile* classfile_create(s1 *bytecode, size_t len)
     // parse fields
     cf->fields_count = bcr_readu2(reader);
     cf->fields = malloc(sizeof(struct member_info) * cf->fields_count);
+    CHECK_MALLOC_RESULT(cf->fields);
     for (int i = 0; i < cf->fields_count; i++) {
         parse_member_info(reader, cf->constant_pool, cf->constant_pool_count, cf->fields + i);
     }
 
     // parse methods
     cf->methods_count = bcr_readu2(reader);
-    cf->methods = malloc(sizeof(struct member_info) * cf->methods_count);
+    cf->methods = malloc(sizeof(struct member_info) * cf->methods_count);\
+    CHECK_MALLOC_RESULT(cf->methods);
     for (int i = 0; i < cf->methods_count; i++) {
         parse_member_info(reader, cf->constant_pool, cf->constant_pool_count, cf->methods + i);
     }
@@ -100,6 +104,7 @@ struct classfile* classfile_create(s1 *bytecode, size_t len)
     // parse class attributes
     cf->attributes_count = bcr_readu2(reader);
     cf->attributes = malloc(sizeof(void **) * cf->attributes_count);
+    CHECK_MALLOC_RESULT(cf->attributes);
     for (int i = 0; i < cf->attributes_count; i++) {
         cf->attributes[i] = parse_attribute(reader, cf->constant_pool, cf->constant_pool_count);
     }

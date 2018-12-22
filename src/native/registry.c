@@ -77,7 +77,7 @@ void java_util_concurrent_atomic_AtomicLong_registerNatives();
 
 void register_all_native_methods()
 {
-    native_methods = hashmap_create_str_key();
+    native_methods = hashmap_create_str_key(false);
 
     java_lang_Class_registerNatives();
     java_lang_Float_registerNatives();

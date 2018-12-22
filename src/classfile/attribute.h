@@ -53,10 +53,6 @@ struct annotation {
     };
 
     struct element_value_pair *element_value_pairs; // [num_element_value_pairs];
-
-//    annotation() {}
-
-//    annotation(bytecodereader &reader);
 };
 
 /*
@@ -117,10 +113,6 @@ struct element_value {
 struct annotation_default_attribute {
     struct attribute_common common;
     struct element_value *default_value;
-
-//    explicit AnnotationDefaultAttr(BytecodeReader &reader): Attribute(reader) {
-//        defaultValue = new ElementValue(reader);
-//    }
 };
 
 

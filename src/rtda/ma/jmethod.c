@@ -290,6 +290,7 @@ static void parse_code_attr(struct jmethod *method, struct code_attribute *a)
             struct line_number_table_attribute *tmp = (struct line_number_table_attribute *) a->attributes[k];
             method->line_number_table_count = tmp->line_number_table_length;
             method->line_number_tables = malloc(sizeof(struct line_number_table) * method->line_number_table_count);
+            CHECK_MALLOC_RESULT(method->line_number_tables);
             for (int i = 0; i < method->line_number_table_count; i++) {
                 method->line_number_tables[i].start_pc = tmp->line_number_tables[i].start_pc;
                 method->line_number_tables[i].line_number = tmp->line_number_tables[i].line_number;

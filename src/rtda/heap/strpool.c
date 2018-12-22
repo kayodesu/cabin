@@ -10,7 +10,7 @@ static struct hashmap *pool; // string pool
 
 void build_str_pool()
 {
-    pool = hashmap_create_str_key();
+    pool = hashmap_create_str_key(false);
 }
 
 struct jobject* put_str_to_pool(struct classloader *loader, const char *str0)

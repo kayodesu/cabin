@@ -21,14 +21,14 @@ struct classfile {
     u2 major_version;
 
     u2 constant_pool_count;
-    void **constant_pool;  // The constant_pool table is indexed from 1 to constant_pool_count - 1.
+    void **constant_pool; // The constant_pool table is indexed from 1 to constant_pool_count - 1.
 
     u2 access_flags;
     u2 this_class;
     u2 super_class;
 
     u2 interfaces_count;
-    u2 *interfaces; // [interfaces_count];
+    u2 *interfaces;
 
     u2 fields_count, methods_count;
     struct member_info *fields, *methods;

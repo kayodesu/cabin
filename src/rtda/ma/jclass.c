@@ -240,6 +240,7 @@ struct jclass *jclass_create_by_classfile(struct classloader *loader, struct cla
     c->fields_count = cf->fields_count;
     c->public_fields_count = 0;
     c->fields = malloc(sizeof(struct jfield *) * c->fields_count);
+    CHECK_MALLOC_RESULT(c->fields);
     for (int i = 0, k = 0, t = c->fields_count - 1; i < c->fields_count; i++) {
         struct jfield *f = jfield_create(c, cf->fields + i);
         // 保证所有的 public fields 放在前面
@@ -257,6 +258,7 @@ struct jclass *jclass_create_by_classfile(struct classloader *loader, struct cla
     c->methods_count = cf->methods_count;
     c->public_methods_count = 0;
     c->methods = malloc(sizeof(struct jmethod *) * c->methods_count);
+    CHECK_MALLOC_RESULT(c->methods);
     for (int i = 0, k = 0, t = c->methods_count - 1; i < c->methods_count; i++) {
         struct jmethod *m = jmethod_create(c, cf->methods + i);
         // 保证所有的 public functions 放在前面

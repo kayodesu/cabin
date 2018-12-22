@@ -37,6 +37,9 @@ struct hashmap {
 
     // The number of key-value mappings contained in this hashtable
     size_t size;
+
+    // 是否允许 add existing key
+    bool add_existing;
 };
 
 // The default initial capacity - MUST be a power of two.
@@ -47,7 +50,7 @@ struct hashmap {
 
 static int hash_string(const char *str);
 
-struct hashmap* hashmap_create(int (*hash)(const void *), int (* cmp)(const void *, const void *))
+struct hashmap* hashmap_create(int (*hash)(const void *), int (* cmp)(const void *, const void *), bool add_existing)
 {
     assert(hash != NULL);
     assert(cmp != NULL);
@@ -58,12 +61,15 @@ struct hashmap* hashmap_create(int (*hash)(const void *), int (* cmp)(const void
     map->size = 0;
     map->hash = hash;
     map->cmp = cmp;
+    map->add_existing = add_existing;
     return map;
 }
 
-struct hashmap* hashmap_create_str_key()
+struct hashmap* hashmap_create_str_key(bool add_existing)
 {
-    return hashmap_create((int (*)(const void *)) hash_string, (int (*)(const void *, const void *)) strcmp);
+    return hashmap_create((int (*)(const void *)) hash_string,
+                          (int (*)(const void *, const void *)) strcmp,
+                          add_existing);
 }
 
 static const struct item* get_item(const struct hashmap *map, const void *key)
@@ -117,6 +123,9 @@ void hashmap_put(struct hashmap *map, const void *key, void *value)
     for (struct item *curr = map->table[index]; curr != NULL; curr = curr->next) {
         // 先判断 hash 提速，如 key's hash 不等，则 key 肯定不相等
         if (curr->hash == hash && map->cmp(curr->key, key) == 0) { // existing
+            if (!map->add_existing) { // 不允许 add existing key
+                vm_unknown_error("key already existed");
+            }
             return;
         }
     }

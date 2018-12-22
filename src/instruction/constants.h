@@ -8,7 +8,6 @@
 #include "../classfile/constant.h"
 #include "../rtda/heap/strpool.h"
 #include "../rtda/heap/jobject.h"
-#include "../vm_error.h"
 
 #ifndef JVM_CONSTANTS_H
 #define JVM_CONSTANTS_H
