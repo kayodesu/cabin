@@ -16,26 +16,6 @@
 #include "../heap/jobject.h"
 
 /*
- * RunTime Constant
- */
-//struct rtc {
-//    u1 t; // type of constant, defined in 'constant.h'
-//
-//    union {
-//        jint i;
-//        jfloat f;
-//        jlong l;
-//        jdouble d;
-//
-//        void *p;
-//
-//        struct name_and_type nt;
-//        struct field_ref fr;
-//        struct method_ref mr;
-//    } v;
-//};
-
-/*
  * RunTime Constant Pool
  */
 struct rtcp {

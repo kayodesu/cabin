@@ -70,7 +70,7 @@ static void fillInStackTrace(struct stack_frame *frame)
         struct slot file_name = rslot(jstrobj_create(frames[i]->method->jclass->source_file_name));
         struct slot class_name = rslot(jstrobj_create(frames[i]->method->jclass->class_name));
         struct slot method_name = rslot(jstrobj_create(frames[i]->method->name));
-        struct slot line_number = islot(jmethod_get_line_number(frames[i]->method, bcr_get_pc(frames[i]->reader) - 1)); // todo why 减1？ 减去opcode的长度
+        struct slot line_number = islot(jmethod_get_line_number(frames[i]->method, frames[i]->reader->pc - 1)); // todo why 减1？ 减去opcode的长度
 
         set_instance_field_value_by_nt(o, "fileName", "Ljava/lang/String;", &file_name);
         set_instance_field_value_by_nt(o, "declaringClass", "Ljava/lang/String;", &class_name);

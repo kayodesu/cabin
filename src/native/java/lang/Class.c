@@ -710,7 +710,6 @@ static void getDeclaredConstructors0(struct stack_frame *frame)
     // invoke constructor of class java/lang/reflect/Constructor
     for (int i = 0; i < constructors_count; i++) {
         struct jobject *jlrf_obj = jobject_create(jlrc_cls);
-//        *(struct jobject **)jobject_index(jlrc_arr, i) = jlrf_obj;
         jarrobj_set(struct jobject *, jlrc_arr, i, jlrf_obj);
 
         jthread_invoke_method(frame->thread, constructor_constructor, (struct slot[]) {

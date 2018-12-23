@@ -68,6 +68,7 @@ extern struct classloader *bootstrap_loader;
 // 只做标记使用，标记结构体成员
 #define private
 
+
 /*
  * 用来表示字段和方法。
  * name_and_type 的名称来源于 Java 虚拟机规范文档.

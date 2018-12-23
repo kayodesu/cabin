@@ -20,20 +20,20 @@ void jfield_init(struct jfield *field, struct jclass *c, struct bytecode_reader 
     field->descriptor = rtcp_get_str(c->rtcp, bcr_readu2(reader));
 
     char d = field->descriptor[0];
-    field->category_two = false;
     if (d == 'J' || d == 'D') {
         field->category_two = true;
+    } else {
+        field->category_two = false;
     }
 
     field->type = NULL;
 
-    // 解析 field 的属性
+    // parse field's attributes
     u2 attr_count = bcr_readu2(reader);
     for (int i = 0; i < attr_count; i++) {
         const char *attr_name = rtcp_get_str(c->rtcp, bcr_readu2(reader));
         u4 attr_len = bcr_readu4(reader);
 
-        // todo fields Attributes
         if (strcmp(Deprecated, attr_name) == 0) {
             field->deprecated = true;
         } else if (strcmp(ConstantValue, attr_name) == 0) {

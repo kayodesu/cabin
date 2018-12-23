@@ -36,7 +36,7 @@ static void ret(struct stack_frame *frame)
 static void tableswitch(struct stack_frame *frame)
 {
     struct bytecode_reader *reader = frame->reader;
-    size_t pc = bcr_get_pc(reader) - 1; // 减去opcode的长度
+    size_t saved_pc = reader->pc - 1; // save the pc before 'tableswitch' instruction
     bcr_align4(reader);
 
     // 默认情况下执行跳转所需字节码的偏移量
@@ -65,7 +65,7 @@ static void tableswitch(struct stack_frame *frame)
     // offset, as well as the one that can be calculated from default,
     // must be the address of an opcode of an instruction within the method
     // that contains this tableswitch instruction.
-    bcr_set_pc(reader, pc + offset);
+    reader->pc = saved_pc + offset;
 }
 
 /*
@@ -74,7 +74,7 @@ static void tableswitch(struct stack_frame *frame)
 static void lookupswitch(struct stack_frame *frame)
 {
     struct bytecode_reader *reader = frame->reader;
-    size_t pc = bcr_get_pc(reader) - 1; // 减去opcode的长度
+    size_t saved_pc = reader->pc - 1; // save the pc before 'lookupswitch' instruction
     bcr_align4(reader);
 
     // 默认情况下执行跳转所需字节码的偏移量
@@ -101,9 +101,8 @@ static void lookupswitch(struct stack_frame *frame)
 
     // The target address is calculated by adding the corresponding offset
     // to the address of the opcode of this lookupswitch instruction.
-    bcr_set_pc(reader, pc + offset);
+    reader->pc = saved_pc + offset;
 }
-
 
 /*
  * todo

@@ -7,55 +7,140 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <assert.h>
+#include <string.h>
 #include "../jtypes.h"
 #include "../jvm.h"
+#include "convert.h"
 
 struct bytecode_reader {
     private const u1 *bytecode;
     private size_t len;  // bytecode len
-    private size_t pc;   // program count
+    size_t pc;   // program count
 };
 
-void bcr_init(struct bytecode_reader *reader, const u1 *bytecode, size_t len);
-/*
- * 'bcr' is short of 'bytecode reader'.
- */
-struct bytecode_reader* bcr_create(const u1 *bytecode, size_t len);
+static inline void bcr_init(struct bytecode_reader *reader, const u1 *bytecode, size_t len)
+{
+    assert(reader != NULL);
+    assert(bytecode != NULL);
 
-void bcr_release(struct bytecode_reader *reader);
-void bcr_destroy(struct bytecode_reader *reader);
+    reader->bytecode = bytecode;
+    reader->len = len;
+    reader->pc = 0;
+}
 
-bool bcr_has_more(const struct bytecode_reader *reader);
+static inline struct bytecode_reader* bcr_create(const u1 *bytecode, size_t len)
+{
+    assert(bytecode != NULL);
 
-bool bcr_set_pc(struct bytecode_reader *reader, size_t new_pc);
-size_t bcr_get_pc(const struct bytecode_reader *reader);
+    VM_MALLOC(struct bytecode_reader, reader);
+    bcr_init(reader, bytecode, len);
 
-bool bcr_skip(struct bytecode_reader *reader, int offset);
+    return reader;
+}
+
+static inline bool bcr_has_more(const struct bytecode_reader *reader)
+{
+    assert(reader != NULL);
+    return reader->pc < reader->len;
+}
+
+static inline void bcr_skip(struct bytecode_reader *reader, int offset)
+{
+    assert(reader != NULL);
+    reader->pc += offset;
+}
 
 /*
  * todo 函数干什么用的
  */
-void bcr_align4(struct bytecode_reader *reader);
+static inline void bcr_align4(struct bytecode_reader *reader)
+{
+    assert(reader != NULL);
+    while (reader->pc % 4 != 0) {
+        reader->pc++;
+    }
+}
 
-void bcr_read_bytes(struct bytecode_reader *reader, u1 *buf, size_t len);
+static inline void bcr_read_bytes(struct bytecode_reader *reader, u1 *buf, size_t len)
+{
+    assert(reader != NULL);
+    assert(buf != NULL);
 
-s1 bcr_reads1(struct bytecode_reader *reader);
+    memcpy(buf, reader->bytecode + reader->pc, len);
+    reader->pc += len;
+}
 
-u1 bcr_readu1(struct bytecode_reader *reader);
+static inline s1 bcr_reads1(struct bytecode_reader *reader)
+{
+    assert(reader != NULL);
+    return reader->bytecode[reader->pc++];
+}
 
-u2 bcr_readu2(struct bytecode_reader *reader);
-u2 bcr_peeku2(struct bytecode_reader *reader);
+static inline u1 bcr_readu1(struct bytecode_reader *reader)
+{
+    assert(reader != NULL);
+    return (u1) reader->bytecode[reader->pc++];
+}
 
-s2 bcr_reads2(struct bytecode_reader *reader);
+static inline u2 bcr_readu2(struct bytecode_reader *reader)
+{
+    assert(reader != NULL);
+    u2 x = bcr_readu1(reader);
+    u2 y = (u2) (bcr_readu1(reader) & 0x00ff);
 
-u4 bcr_readu4(struct bytecode_reader *reader);
+    return x << 8 | y;
+}
 
-s4 bcr_reads4(struct bytecode_reader *reader);
+static inline u2 bcr_peeku2(struct bytecode_reader *reader)
+{
+    u2 data = bcr_readu2(reader);
+    reader->pc -= 2;
+    return data;
+}
+
+static inline s2 bcr_reads2(struct bytecode_reader *reader)
+{
+    assert(reader != NULL);
+    return bcr_readu2(reader);
+}
+
+static inline u4 bcr_readu4(struct bytecode_reader *reader)
+{
+    assert(reader != NULL);
+    u1 buf[4];
+    bcr_read_bytes(reader, buf, 4);
+
+    return (u4) bytes_to_int32(buf);  // should be bytesToUint32  todo
+}
+
+static inline s4 bcr_reads4(struct bytecode_reader *reader)
+{
+    assert(reader != NULL);
+    u1 buf[4];
+    bcr_read_bytes(reader, buf, 4);
+
+    return (s4) bytes_to_int32(buf);
+}
 
 /*
  * 读 @n 个s4数据到 @s4s 数组中
  */
-void bcr_reads4s(struct bytecode_reader *reader, int n, s4 *s4s);
+static inline void bcr_reads4s(struct bytecode_reader *reader, int n, s4 *s4s)
+{
+    assert(reader != NULL);
+    for (int i = 0; i < n; i++) {
+        u1 buf[4];
+        bcr_read_bytes(reader, buf, 4);
+
+        s4s[i] = (s4) bytes_to_int32(buf);
+    }
+}
+
+static inline void bcr_destroy(struct bytecode_reader *reader)
+{
+    free(reader);
+}
 
 
 #endif //JVM_BYTECODE_READER_H

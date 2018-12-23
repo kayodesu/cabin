@@ -26,9 +26,9 @@
  */
 static void __new(struct stack_frame *frame)
 {
-#undef INS_LEN
-#define INS_LEN 3 // instruction length
     struct bytecode_reader *reader = frame->reader;
+    size_t saved_pc = reader->pc - 1;
+
     const char *class_name = rtcp_get_class_name(frame->method->jclass->rtcp, bcr_readu2(reader)); // todo reads2  ?????
     assert(class_name != NULL);
     assert(strlen(class_name) > 0);
@@ -36,8 +36,7 @@ static void __new(struct stack_frame *frame)
     struct jclass *c = resolve_class(frame->method->jclass, class_name);  // todo
     if (!c->inited) {
         jclass_clinit(c, frame->thread);
-//        bcr_set_pc(reader, jthread_get_pc(frame->thread)); // 将pc指向本条指令之前，初始化完类后，继续执行本条指令。
-        bcr_skip(reader, -INS_LEN); // recover pc
+        reader->pc = saved_pc; // recover pc
         return;
     }
 
@@ -60,11 +59,12 @@ static void __new(struct stack_frame *frame)
  */
 static void putstatic(struct stack_frame *frame)
 {
-#undef INS_LEN
-#define INS_LEN 3 // instruction length
+    struct bytecode_reader *reader = frame->reader;
+    size_t saved_pc = reader->pc - 1;
+
     struct jclass *curr_class = frame->method->jclass;
 
-    int index = bcr_readu2(frame->reader);
+    int index = bcr_readu2(reader);
     struct field_ref *ref = rtcp_get_field_ref(curr_class->rtcp, index);
     resolve_static_field_ref(curr_class, ref);
 
@@ -72,9 +72,7 @@ static void putstatic(struct stack_frame *frame)
 
     if (!cls->inited) {
         jclass_clinit(cls, frame->thread);
-        /* 将pc指向本条指令之前，初始化完类后，继续执行本条指令。*/
-//        bcr_set_pc(frame->reader, jthread_get_pc(frame->thread));
-        bcr_skip(frame->reader, -INS_LEN); // recover pc
+        reader->pc = saved_pc; // recover pc
         return;
     }
 
@@ -100,11 +98,12 @@ static void putstatic(struct stack_frame *frame)
 
 static void getstatic(struct stack_frame *frame)
 {
-#undef INS_LEN
-#define INS_LEN 3 // instruction length
+    struct bytecode_reader *reader = frame->reader;
+    size_t saved_pc = reader->pc - 1;
+
     struct jclass *curr_class = frame->method->jclass;
 
-    int index = bcr_readu2(frame->reader);
+    int index = bcr_readu2(reader);
     struct field_ref *ref = rtcp_get_field_ref(curr_class->rtcp, index);
     resolve_static_field_ref(curr_class, ref);
 
@@ -112,9 +111,7 @@ static void getstatic(struct stack_frame *frame)
 
     if (!cls->inited) {
         jclass_clinit(cls, frame->thread);
-        /* 将pc指向本条指令之前，初始化完类后，继续执行本条指令。*/
-//        bcr_set_pc(frame->reader, jthread_get_pc(frame->thread));
-        bcr_skip(frame->reader, -INS_LEN); // recover pc
+        reader->pc = saved_pc; // recover pc
         return;
     }
     os_pushs(frame->operand_stack, get_static_field_value_by_id(cls, ref->resolved_field->id));
@@ -215,8 +212,7 @@ static void athrow(struct stack_frame *frame)
     while (!jthread_is_stack_empty(curr_thread)) {
         struct stack_frame *top = jthread_top_frame(curr_thread);
         if (top->type == SF_TYPE_NORMAL) {
-            size_t pc = bcr_get_pc(top->reader) - 1; // todo why -1 ??? 减去opcode的长度
-            int handler_pc = jmethod_find_exception_handler(top->method, exception->jclass, pc);
+            int handler_pc = jmethod_find_exception_handler(top->method, exception->jclass, top->reader->pc - 1); // instruction length todo 好像是错的
             if (handler_pc >= 0) {  // todo 可以等于0吗
                 /*
                  * 找到可以处理的函数了
@@ -226,7 +222,7 @@ static void athrow(struct stack_frame *frame)
                  */
                 os_clear(top->operand_stack);
                 os_pushr(top->operand_stack, exception);
-                bcr_set_pc(top->reader, handler_pc);  // todo 是setPc还是skip
+                top->reader->pc = (size_t) handler_pc;
                 sf_proc_exception(top);
                 return;
             }
@@ -297,8 +293,7 @@ static void checkcast(struct stack_frame *frame)
  */
 static void invokestatic(struct stack_frame *frame)
 {
-#undef INS_LEN
-#define INS_LEN 3 // instruction length
+    size_t saved_pc = frame->reader->pc - 1;
     struct jclass *curr_class = frame->method->jclass;
 
     int index = bcr_readu2(frame->reader);
@@ -314,7 +309,7 @@ static void invokestatic(struct stack_frame *frame)
         jclass_clinit(ref->resolved_class, frame->thread);
         /* 将pc指向本条指令之前，初始化完类后，继续执行本条指令。*/
 //        bcr_set_pc(frame->reader, jthread_get_pc(frame->thread));
-        bcr_skip(frame->reader, -INS_LEN); // recover pc
+        frame->reader->pc = saved_pc; // recover pc
         return;
     }
 
@@ -489,8 +484,8 @@ static void set_exact_method_handle(struct stack_frame *frame)
 
 static void invokedynamic(struct stack_frame *frame)
 {
-#undef INS_LEN
-#define INS_LEN 5 // instruction length
+    size_t saved_pc = frame->reader->pc - 1;
+
     struct jclass *curr_class = frame->method->jclass;
     struct jthread *curr_thread = frame->thread;
 
@@ -539,8 +534,7 @@ static void invokedynamic(struct stack_frame *frame)
     }
 
     if (need_again) {
-//        bcr_set_pc(frame->reader, jthread_get_pc(curr_thread));
-        bcr_skip(frame->reader, -INS_LEN); // recover pc
+        frame->reader->pc = saved_pc; // recover pc
         return;
     }
 
@@ -576,11 +570,10 @@ static void invokedynamic(struct stack_frame *frame)
                         call_set->jclass, "dynamicInvoker", "()Ljava/lang/invoke/MethodHandle;");
                 struct slot arg = rslot(call_set);
                 jthread_invoke_method_with_shim(curr_thread, dynamicInvoker, &arg, set_exact_method_handle);
-                bcr_skip(frame->reader, -INS_LEN); // recover pc
+                frame->reader->pc = saved_pc; // recover pc
             }
 
-//            bcr_set_pc(frame->reader, jthread_get_pc(curr_thread)); // recover pc
-            bcr_skip(frame->reader, -INS_LEN); // recover pc
+            frame->reader->pc = saved_pc; // recover pc
             return;
         }
 
@@ -603,9 +596,7 @@ static void invokedynamic(struct stack_frame *frame)
         }
 
         jthread_invoke_method_with_shim(curr_thread, bootstrap_method, args, set_call_set);
-
-//        bcr_set_pc(frame->reader, jthread_get_pc(curr_thread)); // recover pc
-        bcr_skip(frame->reader, -INS_LEN); // recover pc
+        frame->reader->pc = saved_pc; // recover pc
         return;
     }
     case REF_KIND_INVOKE_SPECIAL:

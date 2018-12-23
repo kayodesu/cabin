@@ -51,6 +51,9 @@ static void dcmpg(struct stack_frame *frame)
 
 #undef CMP_RESULT
 
+#undef INS_LEN
+#define INS_LEN 3 // instruction length
+
 #define IF_ICMP(func_name, oper, cmp_with_0) \
     static void func_name(struct stack_frame *frame) \
     { \
@@ -58,7 +61,7 @@ static void dcmpg(struct stack_frame *frame)
         jint v1 = os_popi(frame->operand_stack); \
         jint offset = bcr_reads2(frame->reader); \
         if (v1 oper v2) { \
-            bcr_skip(frame->reader, offset - 3); /* 减3？减去本条指令自身的长度 todo */  \
+            bcr_skip(frame->reader, offset - INS_LEN); \
         } \
     }
 
@@ -78,21 +81,25 @@ IF_ICMP(if_icmple, <=, false)
 
 static void if_acmpeq(struct stack_frame *frame)
 {
+#undef INS_LEN
+#define INS_LEN 3 // instruction length
     jref v2 = os_popr(frame->operand_stack);
     jref v1 = os_popr(frame->operand_stack);
     int offset = bcr_reads2(frame->reader);
     if (v1 == v2) {
-        bcr_skip(frame->reader, offset - 3); /* todo 减3？减去本条指令自身的长度 */
+        bcr_skip(frame->reader, offset - INS_LEN);
     }
 }
 
 static void if_acmpne(struct stack_frame *frame)
 {
+#undef INS_LEN
+#define INS_LEN 3 // instruction length
     jref v2 = os_popr(frame->operand_stack);
     jref v1 = os_popr(frame->operand_stack);
     int offset = bcr_reads2(frame->reader);
     if (v1 != v2) {
-        bcr_skip(frame->reader, offset - 3); /* todo 减3？减去本条指令自身的长度 */
+        bcr_skip(frame->reader, offset - INS_LEN);
     }
 }
 

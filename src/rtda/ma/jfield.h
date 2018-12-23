@@ -46,7 +46,6 @@ struct jfield {
 
 #define INVALID_CONSTANT_VALUE_INDEX (-1)
 
-//struct jfield* jfield_create(struct jclass *c, const struct member_info *info);
 void jfield_init(struct jfield *field, struct jclass *c, struct bytecode_reader *reader);
 
 bool jfield_is_accessible_to(const struct jfield *field, const struct jclass *visitor);

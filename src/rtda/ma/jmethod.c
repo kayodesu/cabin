@@ -6,6 +6,7 @@
 #include "access.h"
 #include "../heap/jobject.h"
 
+
 struct jobject* jmethod_parse_descriptor(struct classloader *loader, const char *method_descriptor,
                                          struct jobject **parameter_types_add, int parameter_num_max)
 {
@@ -89,76 +90,6 @@ struct jobject* jmethod_parse_descriptor(struct classloader *loader, const char 
 
     return classloader_load_class(loader, class_name)->clsobj; // return_type
 }
-
-/*
- * parse method descriptor and create parameter_types and return_type of the method
- */
-//static inline void parse_descriptor(struct jmethod *method)
-//{
-//    assert(method != NULL);
-//    method->return_type = 
-//            jmethod_parse_descriptor(method->jclass->loader, method->descriptor, &(method->parameter_types));
-
-//    struct jobject **parameter_types = malloc(sizeof(struct jclsobj **) * method->arg_slot_count);
-//    CHECK_MALLOC_RESULT(parameter_types);
-//
-//    int parameter_types_count = 0;
-//    struct classloader *loader = method->jclass->loader;
-//
-//    char *b = strchr(method->descriptor, '(');
-//    const char *e = strchr(method->descriptor, ')');
-//    if (b == NULL || e == NULL) {
-//        VM_UNKNOWN_ERROR("descriptor error. %s\n", method->descriptor);
-//    }
-//
-//    // parameter_types
-//    while (++b < e) {
-//        if (*b == 'L') { // reference
-//            char *t = strchr(b, ';');
-//            if (t == NULL) {
-//                jvm_abort("error. %s\n", method->descriptor);
-//            }
-//
-//            *t = 0;   // end string
-//            parameter_types[parameter_types_count++] = classloader_load_class(loader, b + 1)->clsobj;
-//            *t = ';'; // recover
-//            b = t;
-//        } else if (*b == '[') { // array reference, 描述符形如 [B 或 [[java/lang/String; 的形式
-//            char *t = b;
-//            while (*(++t) == '[');
-//            if (!pt_is_primitive_descriptor(*t)) {
-//                t = strchr(t, ';');
-//                if (t == NULL) {
-//                    jvm_abort("error. %s\n", method->descriptor);
-//                }
-//            }
-//
-//            char k = *(++t);
-//            *t = 0; // end string
-//            parameter_types[parameter_types_count++] = classloader_load_class(loader, b)->clsobj;
-//            *t = k; // recover
-//            b = t;
-//        } else if (pt_is_primitive_descriptor(*b)) {
-//            const char *class_name = pt_get_class_name_by_descriptor(*b);
-//            parameter_types[parameter_types_count++] = classloader_load_class(loader, class_name)->clsobj;
-//        } else {
-//            jvm_abort("error %s\n", method->descriptor);
-//        }
-//    }
-//
-//    method->parameter_types
-//            = jarrobj_create(classloader_load_class(loader, "[Ljava/lang/Class;"), parameter_types_count);
-//    for (int i = 0; i < parameter_types_count; i++) {
-//        jarrobj_set(struct jobject *, method->parameter_types, i, parameter_types[i]);
-//    }
-//
-//    // create return_type
-//    const char *class_name = ++e;
-//    if (pt_is_primitive_descriptor(*e)) {
-//        class_name = pt_get_class_name_by_descriptor(*e);
-//    }
-//    method->return_type = classloader_load_class(loader, class_name)->clsobj;
-//}
 
 struct jobject* jmethod_get_parameter_types(struct jmethod *method)
 {
@@ -558,6 +489,7 @@ int jmethod_find_exception_handler(struct jmethod *method, struct jclass *except
 
 char *jmethod_to_string(const struct jmethod *method)
 {
+#undef MAX_LEN
 #define MAX_LEN 1023 // big enough
     VM_MALLOCS(char, MAX_LEN + 1, result);
 

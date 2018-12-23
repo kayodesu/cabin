@@ -389,7 +389,6 @@ struct jclass *jclass_create(struct classloader *loader, s1 *bytecode, size_t le
     }
 
     parse_attribute(c, &reader); // parse class attributes
-    bcr_release(&reader);
     return c;
 }
 
