@@ -268,7 +268,8 @@ static struct jclass* loading(struct classloader *loader, const char *class_name
         jvm_abort("class not find: %s", class_name);
     }
 
-    return jclass_create_by_classfile(loader, classfile_create(content.bytecode, content.len));
+//    return jclass_create_by_classfile(loader, classfile_create(content.bytecode, content.len));
+    return jclass_create(loader, content.bytecode, content.len);
 }
 
 static struct jclass* verification(struct jclass *c)
@@ -303,8 +304,7 @@ static struct jclass* preparation(struct jclass *c)
     // 如果静态变量属于基本类型或String类型，有final修饰符，
     // 且它的值在编译期已知，则该值存储在class文件常量池中。
     for (int i = 0; i < c->fields_count; i++) {
-        struct jfield *field = c->fields[i];
-        if (!IS_STATIC(field->access_flags)) {
+        if (!IS_STATIC(c->fields[i].access_flags)) {
             continue;
         }
 

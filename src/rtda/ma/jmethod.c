@@ -250,79 +250,110 @@ static void cal_arg_slot_count(struct jmethod *method)
 /*
  * 解析方法的 code 属性
  */
-static void parse_code_attr(struct jmethod *method, struct attribute *a)
+static void parse_code_attr(struct jmethod *method, struct bytecode_reader *reader)
 {
     assert(method != NULL);
-    assert(a != NULL);
+    assert(reader != NULL);
 
-    method->max_stack = a->u.code.max_stack;
-    method->max_locals = a->u.code.max_locals;
+    method->max_stack = bcr_readu2(reader);
+    method->max_locals = bcr_readu2(reader);
 
-    method->code = a->u.code.code;
-    method->code_length = a->u.code.code_length;
+    method->code_length = bcr_readu4(reader);
+    method->code = malloc(sizeof(u1) * method->code_length);
+    CHECK_MALLOC_RESULT(method->code);
+    bcr_read_bytes(reader, method->code, method->code_length);
 
     method->line_number_table_count = 0;
     method->line_number_tables = NULL;
 
-    method->exception_tables_count = a->u.code.exception_tables_length;
-    // todo exceptionTableCount == 0
-    method->exception_tables = malloc(sizeof(struct exception_table) * method->exception_tables_count);
-    for (int i = 0; i < method->exception_tables_count; i++) {
-        const struct code_attribute_exception_table *t0 = a->u.code.exception_tables + i;
-        struct exception_table *t = method->exception_tables + i;
-        t->start_pc = t0->start_pc;
-        t->end_pc = t0->end_pc;
-        t->handler_pc = t0->handler_pc;
-        if (t0->catch_type == 0) {
-            /*
-             * 异常处理项的 catch_type 有可能是 0。
-             * 0 是无效的常量池索引，但是在这里 0 并非表示 catch-none，而是表示 catch-all。
-             */
-            t->catch_type = NULL;
-        } else {
-            const char *class_name = rtcp_get_class_name(method->jclass->rtcp, t0->catch_type);
-            t->catch_type = classloader_load_class(method->jclass->loader, class_name);
+    // parse exception tables
+    method->exception_tables_count = bcr_readu2(reader);
+    if (method->exception_tables_count == 0) {
+        method->exception_tables = NULL;
+    } else {
+        method->exception_tables = malloc(sizeof(struct exception_table) * method->exception_tables_count);
+        CHECK_MALLOC_RESULT(method->exception_tables);
+        for (int i = 0; i < method->exception_tables_count; i++) {
+            struct exception_table *t = method->exception_tables + i;
+            t->start_pc = bcr_readu2(reader);
+            t->end_pc = bcr_readu2(reader);
+            t->handler_pc = bcr_readu2(reader);
+            u2 catch_type = bcr_readu2(reader);
+            if (catch_type == 0) {
+                // 异常处理项的 catch_type 有可能是 0。
+                // 0 是无效的常量池索引，但是在这里 0 并非表示 catch-none，而是表示 catch-all。
+                t->catch_type = NULL;
+            } else {
+                const char *class_name = rtcp_get_class_name(method->jclass->rtcp, catch_type);
+                t->catch_type = classloader_load_class(method->jclass->loader, class_name);
+            }
         }
     }
 
-    // 解析 code 属性的属性
-    for (int k = 0; k < a->u.code.attributes_count; k++) {
-        struct attribute *ca = a->u.code.attributes + k; // code's attribute
-        if (ca->type == AT_STACK_MAP_TABLE) {
-            // todo
-        } else if (ca->type == AT_LINE_NUMBER_TABLE) {   // 可选属性
-            method->line_number_table_count = ca->u.line_number_table.num;
+    // parse attributes of code's attributes
+    u2 attr_count = bcr_readu2(reader);
+    for (int k = 0; k < attr_count; k++) {
+        const char *attr_name = rtcp_get_str(method->jclass->rtcp, bcr_readu2(reader));
+        u4 attr_len = bcr_readu4(reader);
+
+        if (strcmp(LineNumberTable, attr_name) == 0) {
+            method->line_number_table_count = bcr_readu2(reader);
             method->line_number_tables = malloc(sizeof(struct line_number_table) * method->line_number_table_count);
             CHECK_MALLOC_RESULT(method->line_number_tables);
             for (int i = 0; i < method->line_number_table_count; i++) {
-                method->line_number_tables[i].start_pc = ca->u.line_number_table.tables[i].start_pc;
-                method->line_number_tables[i].line_number = ca->u.line_number_table.tables[i].line_number;
+                method->line_number_tables[i].start_pc = bcr_readu2(reader);
+                method->line_number_tables[i].line_number = bcr_readu2(reader);
             }
-        } else if (ca->type == AT_LOCAL_VARIABLE_TABLE) {   // 可选属性
-            //         printvm("not parse attr: LocalVariableTable\n");
-        } else if (ca->type == AT_LOCAL_VARIABLE_TYPE_TABLE) {   // 可选属性
-            //         printvm("not parse attr: LocalVariableTypeTable\n");
-        } else {
-            jvm_abort("Unknown: %d", a->type); // todo
+        }
+#if 0
+        else if (strcmp(StackMapTable, attr_name) == 0) { // todo
+            u2 number_of_entries = bcr_readu2(reader);
+            // 跳过剩下的部分，先不处理。  todo
+            bcr_skip(reader, (int) attr_len - 2);
+        } else if (strcmp(LocalVariableTable, attr_name) == 0) { // todo
+            u2 num = bcr_readu2(reader);
+            struct local_variable_table tables[num];
+            for (int i = 0; i < num; i++) {
+                tables[i].start_pc = bcr_readu2(reader);
+                tables[i].length = bcr_readu2(reader);
+                tables[i].name_index = bcr_readu2(reader);
+                tables[i].descriptor_index = bcr_readu2(reader);
+                tables[i].index = bcr_readu2(reader);
+            }
+        } else if (strcmp(LocalVariableTypeTable, attr_name) == 0) { // todo
+            u2 num = bcr_readu2(reader);
+            struct local_variable_type_table tables[num];
+            for (int i = 0; i < num; i++) {
+                tables[i].start_pc = bcr_readu2(reader);
+                tables[i].length = bcr_readu2(reader);
+                tables[i].name_index = bcr_readu2(reader);
+                tables[i].signature_index = bcr_readu2(reader);
+                tables[i].index = bcr_readu2(reader);
+            }
+        }
+#endif
+        else {
+            // unknown attribute
+//            printvm("unknown attribute: %s\n", attr_name);
+            bcr_skip(reader, attr_len);
         }
     }
 }
 
-struct jmethod* jmethod_create(const struct jclass *c, const struct member_info *info)
+void jmethod_init(struct jmethod *method, struct jclass *c, struct bytecode_reader *reader)
 {
-    assert(c != NULL && info != NULL);
-
-    VM_MALLOC(struct jmethod, method);
-    method->name = rtcp_get_str(c->rtcp, info->name_index);
-    method->descriptor = rtcp_get_str(c->rtcp, info->descriptor_index);
-    method->access_flags = info->access_flags;
     method->jclass = c;
+
+    method->access_flags = bcr_readu2(reader);
+    method->name = rtcp_get_str(c->rtcp, bcr_readu2(reader));
+    method->descriptor = rtcp_get_str(c->rtcp, bcr_readu2(reader));
 
     method->max_stack = method->max_locals = method->exception_tables_count = 0;
     method->line_number_table_count = method->code_length = 0;
     method->exception_tables = NULL;
     method->line_number_tables = NULL;
     method->code = NULL;
+    method->deprecated = false;
 
     // parameter_types, return_type, exception_types
     // 先不解析，待需要时再解析，以节省时间。
@@ -331,44 +362,85 @@ struct jmethod* jmethod_create(const struct jclass *c, const struct member_info 
 
     cal_arg_slot_count(method);
 
-    for (int i = 0; i < info->attributes_count; i++) {
-        struct attribute *a = info->attributes + i;
+    // todo methods Attributes
+    u2 attr_count = bcr_readu2(reader);
+    for (int i = 0; i < attr_count; i++) {
+        const char *attr_name = rtcp_get_str(c->rtcp, bcr_readu2(reader));
+        u4 attr_len = bcr_readu4(reader);
 
-        // todo methods Attributes
-        switch (a->type) {
-        case AT_CODE:
-            parse_code_attr(method, a);
-            break;
-        case AT_SYNTHETIC:
-            set_synthetic(&method->access_flags);  // todo
-            break;
-        case AT_SIGNATURE:
-            // jvm_printf("not parse attr: Signature\n");
-            break;
-        case AT_EXCEPTIONS:
-            // jvm_printf("not parse attr: Exceptions\n");
-            break;
-        case AT_RUNTIME_VISIBLE_PARAMETER_ANNOTATIONS:
-            // jvm_printf("not parse attr: RuntimeVisibleParameterAnnotations\n");
-            break;
-        case AT_RUNTIME_INVISIBLE_PARAMETER_ANNOTATIONS:
-            // jvm_printf("not parse attr: RuntimeInvisibleParameterAnnotations\n");
-            break;
-        case AT_DEPRECATED:
-            //                jvm_printf("not parse attr: Deprecated\n");
-            break;
-        case AT_RUNTIME_VISIBLE_ANNOTATIONS:
-            //                jvm_printf("not parse attr: RuntimeVisibleAnnotations\n");
-            break;
-        case AT_RUNTIME_INVISIBLE_ANNOTATIONS:
-            //                jvm_printf("not parse attr: RuntimeInvisibleAnnotations\n");
-            break;
-        case AT_ANNOTATION_DEFAULT:
-            //                jvm_printf("not parse attr: AnnotationDefault\n");
-            break;
-        default:
-            jvm_abort("Unknown: %d", a->type); // todo
-            break;
+        if (strcmp(Code, attr_name) == 0) {
+            parse_code_attr(method, reader);
+        } else if (strcmp(Deprecated, attr_name) == 0) {
+            method->deprecated = true;
+        } else if (strcmp(Synthetic, attr_name) == 0) {
+            set_synthetic(&method->access_flags);
+        } else if (strcmp(Signature, attr_name) == 0) {
+            c->signature = rtcp_get_str(c->rtcp, bcr_readu2(reader));
+        }
+#if 0
+        else if (strcmp(MethodParameters, attr_name) == 0) { // todo
+            u1 num = bcr_readu1(reader); // 这里就是 u1，不是u2
+            struct parameter parameters[num];
+            for (u2 k = 0; k < num; k++) {
+                parameters[k].name_index = bcr_readu2(reader);
+                parameters[k].access_flags = bcr_readu2(reader);
+            }
+        } else if (strcmp(Exceptions, attr_name) == 0) { // todo
+            // todo 啥意思
+            method->exception_tables_count = bcr_readu2(reader);
+            u2 exception_index_table[num];
+            for (u2 k = 0; k < num; k++) {
+                exception_index_table[i] = bcr_readu2(reader);
+            }
+        } else if (strcmp(RuntimeVisibleParameterAnnotations, attr_name) == 0) { // todo
+            u2 num = method->runtime_visible_parameter_annotations_num = bcr_readu2(reader);
+            struct parameter_annotation *as
+                    = method->runtime_visible_parameter_annotations = malloc(sizeof(struct parameter_annotation) * num);
+            CHECK_MALLOC_RESULT(as);
+            for (u2 k = 0; k < num; k++) {
+                u2 nums = as[i].num_annotations = bcr_readu2(reader);
+                as[i].annotations = malloc(sizeof(struct annotation) * nums);
+                CHECK_MALLOC_RESULT(as[i].annotations);
+                for (int j = 0; j < nums; j++) {
+                    read_annotation(reader, as[i].annotations + j);
+                }
+            }
+        } else if (strcmp(RuntimeInvisibleParameterAnnotations, attr_name) == 0) { // todo
+            u2 num = method->runtime_invisible_parameter_annotations_num = bcr_readu2(reader);
+            struct parameter_annotation *as
+                    = method->runtime_invisible_parameter_annotations = malloc(sizeof(struct parameter_annotation) * num);
+            CHECK_MALLOC_RESULT(as);
+            for (u2 k = 0; k < num; k++) {
+                u2 nums = as[i].num_annotations = bcr_readu2(reader);
+                as[i].annotations = malloc(sizeof(struct annotation) * nums);
+                CHECK_MALLOC_RESULT(as[i].annotations);
+                for (int j = 0; j < nums; j++) {
+                    read_annotation(reader, as[i].annotations + j);
+                }
+            }
+        } else if (strcmp(RuntimeVisibleAnnotations, attr_name) == 0) { // todo
+            u2 num = method->runtime_visible_annotations_num = bcr_readu2(reader);
+            method->runtime_visible_annotations = malloc(sizeof(struct annotation) * num);
+            CHECK_MALLOC_RESULT(method->runtime_visible_annotations);
+            for (u2 k = 0; k < num; k++) {
+                read_annotation(reader, method->runtime_visible_annotations + i);
+            }
+        } else if (strcmp(RuntimeInvisibleAnnotations, attr_name) == 0) { // todo
+            u2 num = method->runtime_invisible_annotations_num = bcr_readu2(reader);
+            method->runtime_invisible_annotations = malloc(sizeof(struct annotation) * num);
+            CHECK_MALLOC_RESULT(method->runtime_invisible_annotations);
+            for (u2 k = 0; k < num; k++) {
+                read_annotation(reader, method->runtime_invisible_annotations + i);
+            }
+        } else if (strcmp(AnnotationDefault, attr_name) == 0) { // todo
+            struct element_value ev;
+            read_element_value(reader, &ev);
+        }
+#endif
+        else {
+            // unknown attribute
+//            printvm("unknown attribute: %s\n", attr_name);
+            bcr_skip(reader, attr_len);
         }
     }
 
@@ -377,8 +449,8 @@ struct jmethod* jmethod_create(const struct jclass *c, const struct member_info 
         method->max_locals = method->arg_slot_count; // todo 因为本地方法帧的局部变量表只用来存放参数值，所以把argSlotCount赋给maxLocals字段刚好。
 
         size_t code_len = 2;
-        VM_MALLOCS(s1, code_len, code);
-        code[0] = (s1) 0xfe;  // 0xfe 是 "impdep1" 指令的代码，用这条指令来执行 native 方法。
+        VM_MALLOCS(u1, code_len, code);
+        code[0] = 0xfe;  // 0xfe 是 "impdep1" 指令的代码，用这条指令来执行 native 方法。
         const char *t = strchr(method->descriptor, ')'); // find return
         if (t == NULL) {
             //todo error
@@ -387,26 +459,25 @@ struct jmethod* jmethod_create(const struct jclass *c, const struct member_info 
 
         ++t;
         if (*t == 'V') {
-            code[1] = (s1) 0xb1; // return
+            code[1] = 0xb1; // return
         } else if (*t == 'D') {
-            code[1] = (s1) 0xaf; // dreturn
+            code[1] = 0xaf; // dreturn
         } else if (*t == 'F') {
-            code[1] = (s1) 0xae; // freturn
+            code[1] = 0xae; // freturn
         } else if (*t == 'J') {
-            code[1] = (s1) 0xad; // lreturn
+            code[1] = 0xad; // lreturn
         } else if (*t == 'L' || *t == '[') {
-            code[1] = (s1) 0xb0; // areturn
+            code[1] = 0xb0; // areturn
         } else {
-            code[1] = (s1) 0xac; // ireturn
+            code[1] = 0xac; // ireturn
         }
+
         method->code = code;
         method->code_length = code_len;
     }
-
-    return method;
 }
 
-void jmethod_destroy(struct jmethod *m)
+void jmethod_release(struct jmethod *m)
 {
     if (m == NULL) {
         // todo
@@ -414,8 +485,6 @@ void jmethod_destroy(struct jmethod *m)
     }
 
     // todo
-
-    free(m);
 }
 
 

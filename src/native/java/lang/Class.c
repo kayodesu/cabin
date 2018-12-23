@@ -579,7 +579,7 @@ static void getDeclaredFields0(struct stack_frame *frame)
     struct classloader *loader = frame->method->jclass->loader;
     struct jclass *cls = classloader_load_class(loader, jclsobj_entity_class(this_cls_obj)->class_name);
 
-    struct jfield **fields = cls->fields;
+    struct jfield *fields = cls->fields;
     jint fields_count = public_only ? cls->public_fields_count : cls->fields_count;
 
     struct jclass *jlrf_cls = classloader_load_class(loader, "java/lang/reflect/Field");
@@ -605,10 +605,10 @@ static void getDeclaredFields0(struct stack_frame *frame)
         jthread_invoke_method(frame->thread, field_constructor, (struct slot[]) {
                 rslot(jlrf_obj), // this
                 rslot((jref) this_cls_obj), // declaring class
-                rslot((jref) get_str_from_pool(frame->method->jclass->loader, fields[i]->name)), // name
-                rslot((jref) jfield_get_type(fields[i])), // type
-                islot(fields[i]->access_flags), // modifiers
-                islot(fields[i]->id), // slot   todo
+                rslot((jref) get_str_from_pool(frame->method->jclass->loader, fields[i].name)), // name
+                rslot((jref) jfield_get_type(fields + i)), // type
+                islot(fields[i].access_flags), // modifiers
+                islot(fields[i].id), // slot   todo
                 rslot(NULL), // signature  todo
                 rslot(NULL), // annotations  todo
         });
@@ -636,7 +636,7 @@ static void getDeclaredMethods0(struct stack_frame *frame)
     struct classloader *loader = frame->method->jclass->loader;
     struct jclass *cls = classloader_load_class(loader, jclsobj_entity_class(this_cls_obj)->class_name);
 
-    struct jmethod **methods = cls->methods;
+    struct jmethod *methods = cls->methods;
     jint methods_count = public_only ? cls->public_methods_count : cls->methods_count;
 
     struct jclass *jlrm_cls = classloader_load_class(loader, "java/lang/reflect/Method");
@@ -663,11 +663,11 @@ static void getDeclaredMethods0(struct stack_frame *frame)
         jthread_invoke_method(frame->thread, method_constructor, (struct slot[]) {
                 rslot(jlrf_obj),        // this
                 rslot((jref) this_cls_obj), // declaring class
-                rslot((jref) get_str_from_pool(frame->method->jclass->loader, methods[i]->name)), // name
-                rslot((jref) jmethod_get_parameter_types(methods[i])), // parameter types
-                rslot(jmethod_get_return_type(methods[i])),     // return type
-                rslot((jref) jmethod_get_exception_types(methods[i])), // checked exceptions
-                islot(methods[i]->access_flags), // modifiers
+                rslot((jref) get_str_from_pool(frame->method->jclass->loader, methods[i].name)), // name
+                rslot((jref) jmethod_get_parameter_types(methods + i)), // parameter types
+                rslot(jmethod_get_return_type(methods + i)),     // return type
+                rslot((jref) jmethod_get_exception_types(methods + i)), // checked exceptions
+                islot(methods[i].access_flags), // modifiers
                 islot(0), // slot   todo
                 rslot(NULL), // signature  todo
                 rslot(NULL), // annotations  todo

@@ -62,7 +62,7 @@ struct jobject* jstrobj_create(const char *str)
 
     // 给 java/lang/String 类的 value 变量赋值  todo
     for (int i = 0; i < o->jclass->fields_count; i++) {
-        struct jfield *field = o->jclass->fields[i];
+        struct jfield *field = o->jclass->fields + i;
         if (!IS_STATIC(field->access_flags)
             && strcmp(field->descriptor, "[C") == 0
             && strcmp(field->name, "value") == 0) {

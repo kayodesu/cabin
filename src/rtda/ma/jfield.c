@@ -10,16 +10,14 @@
 #include "../heap/jobject.h"
 
 
-struct jfield* jfield_create(struct jclass *c, const struct member_info *info)
+void jfield_init(struct jfield *field, struct jclass *c, struct bytecode_reader *reader)
 {
-    assert(c != NULL && info != NULL);
-
-    VM_MALLOC(struct jfield, field);
     field->constant_value_index = INVALID_CONSTANT_VALUE_INDEX;
     field->jclass = c;
-    field->access_flags = info->access_flags;
-    field->name = rtcp_get_str(c->rtcp, info->name_index);
-    field->descriptor = rtcp_get_str(c->rtcp, info->descriptor_index);
+    field->deprecated = false;
+    field->access_flags = bcr_readu2(reader);
+    field->name = rtcp_get_str(c->rtcp, bcr_readu2(reader));
+    field->descriptor = rtcp_get_str(c->rtcp, bcr_readu2(reader));
 
     char d = field->descriptor[0];
     field->category_two = false;
@@ -30,39 +28,53 @@ struct jfield* jfield_create(struct jclass *c, const struct member_info *info)
     field->type = NULL;
 
     // 解析 field 的属性
-    for (int i = 0; i < info->attributes_count; i++) {
-        struct attribute *a = info->attributes + i;
+    u2 attr_count = bcr_readu2(reader);
+    for (int i = 0; i < attr_count; i++) {
+        const char *attr_name = rtcp_get_str(c->rtcp, bcr_readu2(reader));
+        u4 attr_len = bcr_readu4(reader);
 
         // todo fields Attributes
-        if (a->type == AT_DEPRECATED) { // 可选属性
-            //        printvm("not parse attr: Deprecated\n");
-        } else if (a->type == AT_CONSTANT_VALUE) {
+        if (strcmp(Deprecated, attr_name) == 0) {
+            field->deprecated = true;
+        } else if (strcmp(ConstantValue, attr_name) == 0) {
             /*
              * ConstantValue属性表示一个常量字段的值。
              * 在一个field_info结构的属性表中最多只能有一个ConstantValue属性。
              *
              * 非静态字段包含了ConstantValue属性，那么这个属性必须被虚拟机所忽略。
              */
+            u2 index = bcr_readu2(reader);
             if (IS_STATIC(field->access_flags)) {  // todo
-                field->constant_value_index = a->u.constant_value_index;
+                field->constant_value_index = index;
             }
-        } else if (a->type == AT_SYNTHETIC) {
-            set_synthetic(&field->access_flags); // todo
-        } else if (a->type == AT_SIGNATURE) {  // 可选属性
-//                SignatureAttr *a = attr;
-            //            printvm("not parse attr: Signature\n");
-        } else if (a->type == AT_RUNTIME_VISIBLE_ANNOTATIONS) {
-//                runtime_annotations_attr *a = attr;
-            //       printvm("not parse attr: RuntimeVisibleAnnotations\n");
-        } else if (a->type == AT_RUNTIME_INVISIBLE_ANNOTATIONS) {
-//                runtime_annotations_attr *a = attr;
-            //        printvm("not parse attr: RuntimeInvisibleAnnotations\n");
-        } else {
-            jvm_abort("Unknown: %d", a->type); // todo
+        } else if (strcmp(Synthetic, attr_name) == 0) {
+            set_synthetic(&field->access_flags);
+        } else if (strcmp(Signature, attr_name) == 0) {
+            c->signature = rtcp_get_str(c->rtcp, bcr_readu2(reader));
+        }
+#if 0
+        else if (strcmp(RuntimeVisibleAnnotations, attr_name) == 0) { // todo
+            u2 num = field->runtime_visible_annotations_num = bcr_readu2(reader);
+            field->runtime_visible_annotations = malloc(sizeof(struct annotation) * num);
+            CHECK_MALLOC_RESULT(field->runtime_visible_annotations);
+            for (u2 k = 0; k < num; k++) {
+                read_annotation(reader, field->runtime_visible_annotations + i);
+            }
+        } else if (strcmp(RuntimeInvisibleAnnotations, attr_name) == 0) { // todo
+            u2 num = field->runtime_invisible_annotations_num = bcr_readu2(reader);
+            field->runtime_invisible_annotations = malloc(sizeof(struct annotation) * num);
+            CHECK_MALLOC_RESULT(field->runtime_invisible_annotations);
+            for (u2 k = 0; k < num; k++) {
+                read_annotation(reader, field->runtime_invisible_annotations + i);
+            }
+        }
+#endif
+        else {
+            // unknown attribute
+//            printvm("unknown attribute: %s\n", attr_name);
+            bcr_skip(reader, attr_len);
         }
     }
-
-    return field;
 }
 
 bool jfield_is_accessible_to(const struct jfield *field, const struct jclass *visitor)
@@ -119,7 +131,7 @@ struct jobject* jfield_get_type(struct jfield *field)
     return field->type;
 }
 
-void jfield_destroy(struct jfield *field)
+void jfield_release(struct jfield *field)
 {
     // todo
 }

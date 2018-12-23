@@ -10,12 +10,6 @@
 #include "../jvm.h"
 #include "bytecode_reader.h"
 
-struct bytecode_reader {
-    const s1 *bytecode;
-    size_t len;  // bytecode len
-    size_t pc;   // program count
-};
-
 bool bcr_has_more(const struct bytecode_reader *reader)
 {
     assert(reader != NULL);
@@ -25,10 +19,7 @@ bool bcr_has_more(const struct bytecode_reader *reader)
 bool bcr_set_pc(struct bytecode_reader *reader, size_t new_pc)
 {
     assert(reader != NULL);
-    if (new_pc >= reader->len) {
-        printvm("访问越界. new_pc = %zu, len = %zu\n", new_pc, reader->len);
-        return false;
-    }
+    assert (new_pc <= reader->len); // 相等说明已经读取了最后一个字节，也是合法的。
     reader->pc = new_pc;
     return true;
 }
@@ -83,6 +74,13 @@ u2 bcr_readu2(struct bytecode_reader *reader)
     return x << 8 | y;
 }
 
+u2 bcr_peeku2(struct bytecode_reader *reader)
+{
+    u2 data = bcr_readu2(reader);
+    reader->pc -= 2;
+    return data;
+}
+
 s2 bcr_reads2(struct bytecode_reader *reader)
 {
     assert(reader != NULL);
@@ -121,22 +119,35 @@ void bcr_reads4s(struct bytecode_reader *reader, int n, s4 *s4s)
     }
 }
 
-void bcr_destroy(struct bytecode_reader *reader)
+void bcr_release(struct bytecode_reader *reader)
 {
     if (reader == NULL)
         return;
     // todo
+}
+
+void bcr_destroy(struct bytecode_reader *reader)
+{
+    bcr_release(reader);
     free(reader);
 }
 
-struct bytecode_reader* bcr_create(const s1 *bytecode, size_t len)
+void bcr_init(struct bytecode_reader *reader, const u1 *bytecode, size_t len)
+{
+    assert(reader != NULL);
+    assert(bytecode != NULL);
+
+    reader->bytecode = bytecode;
+    reader->len = len;
+    reader->pc = 0;
+}
+
+struct bytecode_reader* bcr_create(const u1 *bytecode, size_t len)
 {
     assert(bytecode != NULL);
 
     VM_MALLOC(struct bytecode_reader, reader);
-    reader->bytecode = bytecode;
-    reader->len = len;
-    reader->pc = 0;
+    bcr_init(reader, bytecode, len);
 
     return reader;
 }

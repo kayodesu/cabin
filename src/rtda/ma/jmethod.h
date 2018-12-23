@@ -49,11 +49,35 @@ struct jmethod {
     u4 line_number_table_count;
     struct line_number_table *line_number_tables;
 
-    s1 *code;
+    u1 *code;
     size_t code_length;
+
+    bool deprecated;
+    const char *signature;
+
+#if 0
+    // 此方法可能会抛出的受检异常
+    char *checked_exceptions;
+    u2 checked_exceptions_num;
+
+    struct parameter_annotation *runtime_visible_parameter_annotations;
+    u2 runtime_visible_parameter_annotations_num;
+
+    struct parameter_annotation *runtime_invisible_parameter_annotations;
+    u2 runtime_invisible_parameter_annotations_num;
+
+    struct annotation *runtime_visible_annotations;
+    u2 runtime_visible_annotations_num;
+
+    struct annotation *runtime_invisible_annotations;
+    u2 runtime_invisible_annotations_num;
+#endif
 };
 
-struct jmethod* jmethod_create(const struct jclass *c, const struct member_info *info);
+struct bytecode_reader;
+
+//struct jmethod* jmethod_create(const struct jclass *c, const struct member_info *info);
+void jmethod_init(struct jmethod *method, struct jclass *c, struct bytecode_reader *reader);
 
 bool jmethod_is_accessible_to(const struct jmethod *method, const struct jclass *visitor);
 
@@ -79,6 +103,6 @@ int jmethod_find_exception_handler(struct jmethod *method, struct jclass *except
 
 char *jmethod_to_string(const struct jmethod *method);
 
-void jmethod_destroy(struct jmethod *m);
+void jmethod_release(struct jmethod *m);
 
 #endif //JVM_JMETHOD_H

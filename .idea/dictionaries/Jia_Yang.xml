@@ -40,6 +40,7 @@
       <w>mallocs</w>
       <w>methodref</w>
       <w>oper</w>
+      <w>peeku</w>
       <w>phslot</w>
       <w>popd</w>
       <w>popf</w>

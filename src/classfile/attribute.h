@@ -12,7 +12,7 @@
 #define Code "Code"                                                                  //                 method
 #define ConstantValue "ConstantValue"                                                //           field
 #define Signature "Signature"                                                        // ClassFile field method
-#define Synthetic "Synthetic"                                                        // ClassFile
+#define Synthetic "Synthetic"                                                        // ClassFile       method
 #define Deprecated "Deprecated"                                                      // ClassFile field method
 #define LineNumberTable "LineNumberTable"                                            //                        Code
 #define StackMapTable "StackMapTable"                                                //                        Code
@@ -30,32 +30,6 @@
 #define RuntimeInvisibleAnnotations "RuntimeInvisibleAnnotations"                    // ClassFile field method
 #define RuntimeVisibleParameterAnnotations "RuntimeVisibleParameterAnnotations"      //                 method
 #define RuntimeInvisibleParameterAnnotations "RuntimeInvisibleParameterAnnotations"  //                 method
-
-enum attr_type {
-    AT_CODE = 1,
-    AT_CONSTANT_VALUE,
-    AT_SIGNATURE,
-    AT_SYNTHETIC,
-    AT_DEPRECATED,
-    AT_LINE_NUMBER_TABLE,
-    AT_STACK_MAP_TABLE,
-    AT_LOCAL_VARIABLE_TABLE,
-    AT_LOCAL_VARIABLE_TYPE_TABLE,
-    AT_EXCEPTIONS,
-    AT_ANNOTATION_DEFAULT,
-    AT_SOURCE_FILE,
-    AT_INNER_CLASSES,
-    AT_ENCLOSING_METHOD,
-    AT_SOURCE_DEBUG_EXTENSION,
-    AT_BOOTSTRAP_METHODS,
-    AT_METHOD_PARAMETERS,
-    AT_RUNTIME_VISIBLE_ANNOTATIONS,
-    AT_RUNTIME_INVISIBLE_ANNOTATIONS,
-    AT_RUNTIME_VISIBLE_PARAMETER_ANNOTATIONS,
-    AT_RUNTIME_INVISIBLE_PARAMETER_ANNOTATIONS,
-
-    AT_UNKNOWN
-};
 
 /*****************************************************/
 struct element_value;
@@ -75,6 +49,13 @@ type_index.
 };
 
 struct annotation {
+    /*
+     * The value of the type_index item must be a valid index into the
+constant_pool table. The constant_pool entry at that index must be
+a CONSTANT_Utf8_info structure (§4.4.7) representing a field descriptor
+(§4.3.2). The field descriptor denotes the type of the annotation represented
+by this annotation structure.
+     */
     u2 type_index;
 
     u2 num_element_value_pairs;
@@ -576,7 +557,7 @@ table of a ClassFile structure.
 
 
 struct attribute {
-    enum attr_type type;
+//    enum attr_type type;
 
     union {
         /*
@@ -829,9 +810,7 @@ struct attribute {
     } u;
 };
 
-
-void read_attribute(struct bytecode_reader *reader,
-                      struct constant *constant_pool, u2 constant_pool_count,
-                      struct attribute *result);
+void read_annotation(struct bytecode_reader *reader, struct annotation *a);
+void read_element_value(struct bytecode_reader *reader, struct element_value *ev);
 
 #endif //JVM_ATTRIBUTE_H

@@ -17,7 +17,7 @@ struct stack_frame* sf_create_shim(struct jthread *thread, void (* shim_action)(
     frame->thread = thread;
     frame->method = NULL;
     frame->operand_stack = os_create(2); // 2 is big enough, 只是用来接收函数返回值，at most 2 slots
-    frame->max_locals = NULL;
+    frame->max_locals = 0;
     frame->local_vars = NULL;
     frame->reader = NULL;
     frame->interrupted_status = frame->exe_status = frame->proc_exception_status = false;

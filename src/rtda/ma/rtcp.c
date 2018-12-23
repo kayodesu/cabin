@@ -341,7 +341,7 @@ struct rtcp* rtcp_create(const struct constant *cfcp, size_t count, const struct
     for (size_t i = 1; i < count; i++) {
         if (cfcp[i].tag == INVOKE_DYNAMIC_CONSTANT) {
             if (bootstrap_methods_attribute == NULL) {
-                VM_UNKNOWN_ERROR(""); // todo
+//                VM_UNKNOWN_ERROR(""); // todo
             } else {
                 build_invoke_dynamic_constant(rtcp, cfcp, i, bootstrap_methods_attribute);
             }
@@ -447,9 +447,6 @@ struct slot rtc_to_slot(struct classloader *loader, const struct rtcp *rtcp, int
 {
     assert(rtcp != NULL);
 
-    struct rtc *rtc = rtcp->pool + index;
-
-    struct jclass *c;
     switch (rtcp->pool[index].t) {
         case STRING_CONSTANT:
 //            c = classloader_load_class(bootstrap_loader, "java/lang/String");

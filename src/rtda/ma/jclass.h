@@ -10,7 +10,6 @@
 #include "../../jtypes.h"
 #include "rtcp.h"
 #include "../../loader/classloader.h"
-#include "../../classfile/classfile.h"
 #include "../../interpreter/stack_frame.h"
 #include "../primitive_types.h"
 
@@ -44,7 +43,7 @@ struct jclass {
     struct jclass *super_class;
 
     struct jclass **interfaces;
-    int interfaces_count;
+    u2 interfaces_count;
 
     struct rtcp *rtcp;
 
@@ -53,9 +52,9 @@ struct jclass {
      * 所有的 public functions 都放在了最前面，
      * 这样，当外界需要所有的 public functions 时，可以返回此指针，数量就是 public_methods_count
      */
-    struct jmethod **methods;
-    int methods_count;
-    int public_methods_count;
+    struct jmethod *methods;
+    u2 methods_count;
+    u2 public_methods_count;
 
     /*
      * 本类中所定义的变量（不包括继承而来的）
@@ -68,9 +67,9 @@ struct jclass {
      *
      * todo 接口中的变量怎么处理
      */
-    struct jfield **fields;
-    int fields_count;
-    int public_fields_count;
+    struct jfield *fields;
+    u2 fields_count;
+    u2 public_fields_count;
 
     // instance_field_count 有可能大于 fields_count，因为 instance_field_count 包含了继承过来的 field.
     // 类型二统计为两个数量
@@ -91,10 +90,13 @@ struct jclass {
     // enclosing_info[2]: the immediately enclosing method or constructor's descriptor (null if name is).
     struct jobject* enclosing_info[3];
 
+    bool deprecated;
+    const char *signature;
     const char *source_file_name;
 };
 
-struct jclass *jclass_create_by_classfile(struct classloader *loader, struct classfile *cf);
+//struct jclass *jclass_create_by_classfile(struct classloader *loader, struct classfile *cf);
+struct jclass *jclass_create(struct classloader *loader, s1 *bytecode, size_t len);
 
 /*
  * 创建基本类型（int, float etc.）的 class.

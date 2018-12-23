@@ -8,8 +8,8 @@
 #include "access.h"
 #include "jfield.h"
 #include "../heap/jobject.h"
-#include "../../classfile/attribute.h"
 #include "../../util/util.h"
+#include "../../classfile/constant.h"
 
 
 // 计算实例字段的个数，同时给它们编号
@@ -24,9 +24,9 @@ static void calc_instance_field_id(struct jclass *c)
     }
 
     for (int i = 0; i < c->fields_count; i++) {
-        if (!IS_STATIC(c->fields[i]->access_flags))  {
-            c->fields[i]->id = id++;
-            if (c->fields[i]->category_two) {
+        if (!IS_STATIC(c->fields[i].access_flags))  {
+            c->fields[i].id = id++;
+            if (c->fields[i].category_two) {
                 id++;
             }
         }
@@ -45,7 +45,7 @@ static void calc_instance_field_id(struct jclass *c)
     }
     // 初始化本类中的实例变量
     for (int i = 0; i < c->fields_count; i++) {
-        struct jfield *field = c->fields[i];
+        struct jfield *field = c->fields + i;
         if (!IS_STATIC(field->access_flags)) {
             assert(field->id < c->instance_fields_count);
             switch (field->descriptor[0]) {
@@ -84,9 +84,9 @@ static void calc_static_field_id(struct jclass *c)
 
     int id = 0;
     for (int i = 0; i < c->fields_count; i++) {
-        if (IS_STATIC(c->fields[i]->access_flags)) {
-            c->fields[i]->id = id++;
-            if (c->fields[i]->category_two) {
+        if (IS_STATIC(c->fields[i].access_flags)) {
+            c->fields[i].id = id++;
+            if (c->fields[i].category_two) {
                 id++;
             }
         }
@@ -97,7 +97,7 @@ static void calc_static_field_id(struct jclass *c)
     c->static_fields_values = values;
     // 初始化本类中的静态变量
     for (int i = 0; i < c->fields_count; i++) {
-        struct jfield *field = c->fields[i];
+        struct jfield *field = c->fields + i;
         if (IS_STATIC(field->access_flags)) {
             assert(field->id < c->static_fields_count);
             switch (field->descriptor[0]) {
@@ -129,96 +129,185 @@ static void calc_static_field_id(struct jclass *c)
     // todo 保证 values 的每一项都被初始化了
 }
 
-struct jclass *jclass_create_by_classfile(struct classloader *loader, struct classfile *cf)
+static void read_constant_pool(struct constant pool[], u2 count, struct bytecode_reader *reader)
 {
-    assert(loader != NULL);
-    assert(cf != NULL);
+    // constant pool 从 1 开始计数，第0位无效
+    pool[0] = (struct constant) { .tag = INVALID_CONSTANT };
+    for (int i = 1; i < count; i++) {
+        struct constant *c = pool + i;
 
-    VM_MALLOC(struct jclass, c);
+        c->tag = bcr_readu1(reader);
+        switch (c->tag) {
+            case CLASS_CONSTANT:
+                c->u.class_name_index = bcr_readu2(reader);
+                break;
+            case FIELD_REF_CONSTANT:
+            case METHOD_REF_CONSTANT:
+            case INTERFACE_METHOD_REF_CONSTANT:
+                c->u.ref_constant.class_index = bcr_readu2(reader);
+                c->u.ref_constant.name_and_type_index = bcr_readu2(reader);
+                break;
+            case STRING_CONSTANT:
+                c->u.string_index = bcr_readu2(reader);
+                break;
+            case INTEGER_CONSTANT:
+            case FLOAT_CONSTANT:
+                bcr_read_bytes(reader, c->u.bytes4, 4);
+                break;
+            case LONG_CONSTANT:
+            case DOUBLE_CONSTANT:
+                bcr_read_bytes(reader, c->u.bytes8, 8);
+                // 在Class文件的常量池中，所有的8字节的常量都占两个表成员（项）的空间。
+                // 如果一个 CONSTANT_Long_info 或 CONSTANT_Double_info 结构的项在常量池中的索引为 n，
+                // 则常量池中下一个有效的项的索引为 n + 2，此时常量池中索引为n+1的项有效但必须被认为不可用
+                i++;
+                assert(i < count);
+                pool[i] = (struct constant) { .tag = PLACEHOLDER_CONSTANT };
+                break;
+            case NAME_AND_TYPE_CONSTANT:
+                c->u.name_and_type_constant.name_index = bcr_readu2(reader);
+                c->u.name_and_type_constant.descriptor_index = bcr_readu2(reader);
+                break;
+            case UTF8_CONSTANT:
+                c->u.utf8_constant.length = bcr_readu2(reader);
+                c->u.utf8_constant.bytes = malloc(c->u.utf8_constant.length);
+                CHECK_MALLOC_RESULT(c->u.utf8_constant.bytes);
+                bcr_read_bytes(reader, c->u.utf8_constant.bytes, c->u.utf8_constant.length);
+                break;
+            case METHOD_HANDLE_CONSTANT:
+                c->u.method_handle_constant.reference_kind = bcr_readu1(reader);
+                c->u.method_handle_constant.reference_index = bcr_readu2(reader);
+                break;
+            case METHOD_TYPE_CONSTANT:
+                c->u.method_descriptor_index = bcr_readu2(reader);
+                break;
+            case INVOKE_DYNAMIC_CONSTANT:
+                c->u.invoke_dynamic_constant.bootstrap_method_attr_index = bcr_readu2(reader);
+                c->u.invoke_dynamic_constant.name_and_type_index = bcr_readu2(reader);
+                break;
+            default:
+                jvm_abort("error. unknown constant tag: %d\n", c->tag);
+        }
+    }
+}
 
-    c->magic = cf->magic;
-    c->major_version = cf->major_version;
-    c->minor_version = cf->minor_version;
-    c->loader = loader;
-    c->inited = false;
-    c->access_flags = cf->access_flags;
+static void parse_attribute(struct jclass *c, struct bytecode_reader *reader)
+{
+    u2 attr_count = bcr_readu2(reader);
 
-    int source_file_index = -1;
-    int enclosing_class_index = -1;
-    int enclosing_method_index = -1;
-    struct attribute *bootstrap_methods_attribute = NULL;
-
-    // 先解析属性，因为下面建立 Runtime Constant Pool 时需要用到属性中的值。
-    for (int i = 0; i < cf->attributes_count; i++) {
-        struct attribute *a = cf->attributes + i;
+    for (int i = 0; i < attr_count; i++) {
+        const char *attr_name = rtcp_get_str(c->rtcp, bcr_readu2(reader));
+        u4 attr_len = bcr_readu4(reader);
 
         // todo class attributes
-        switch (a->type) {
-        case AT_SIGNATURE:
-            // printvm("not parse attr: Signature\n");
-            break;
-        case AT_SYNTHETIC:
-            set_synthetic(&c->access_flags);  // todo
-            break;
-        case AT_DEPRECATED:
-            // printvm("not parse attr: Deprecated\n");
-            break;
-        case AT_SOURCE_FILE:
-            // 这里先不解析，只是记录下source_file_index，因为常量池还没有建立。
-            source_file_index = a->u.source_file_index;
-            break;
-        case AT_INNER_CLASSES:
-            // printvm("not parse attr: InnerClasses\n");
-            break;
-        case AT_ENCLOSING_METHOD:
-            // 这里先不解析，只是记录下source_file_index，因为常量池还没有建立。
-            enclosing_class_index = a->u.enclosing_method.class_index;
-            enclosing_method_index = a->u.enclosing_method.method_index;
-            break;
-        case AT_SOURCE_DEBUG_EXTENSION:
-            // printvm("not parse attr: SourceDebugExtension\n");
-            break;
-        case AT_BOOTSTRAP_METHODS:
-            // printvm("not parse attr: AT_BOOTSTRAP_METHODS\n");
-            bootstrap_methods_attribute = a;
-            break;
-        case AT_RUNTIME_VISIBLE_ANNOTATIONS:
-            // printvm("not parse attr: RuntimeVisibleAnnotations\n");
-            break;
-        case AT_RUNTIME_INVISIBLE_ANNOTATIONS:
-            // printvm("not parse attr: RuntimeInvisibleAnnotations\n");
-            break;
-        default:
-            jvm_abort("Unknown: %d", a->type); // todo
-            break;
+
+        if (strcmp(Signature, attr_name) == 0) {
+            c->signature = rtcp_get_str(c->rtcp, bcr_readu2(reader));
+        } else if (strcmp(Synthetic, attr_name) == 0) {
+            set_synthetic(&c->access_flags);
+        } else if (strcmp(Deprecated, attr_name) == 0) {
+            c->deprecated = true;
+        } else if (strcmp(SourceFile, attr_name) == 0) {
+            u2 source_file_index = bcr_readu2(reader);
+            if (source_file_index >= 0) {
+                c->source_file_name = rtcp_get_str(c->rtcp, source_file_index);
+            } else {
+                /*
+                 * 并不是每个class文件中都有源文件信息，这个因编译时的编译器选项而异。
+                 * todo 什么编译选项
+                 */
+                c->source_file_name = "Unknown source file";
+            }
+        } else if (strcmp(EnclosingMethod, attr_name) == 0) {
+            u2 enclosing_class_index = bcr_readu2(reader);
+            u2 enclosing_method_index = bcr_readu2(reader);
+
+            c->enclosing_info[0] = c->enclosing_info[1] = c->enclosing_info[2] = NULL;
+            if (enclosing_class_index > 0) {
+                struct jclass *enclosing_class
+                        = classloader_load_class(c->loader, rtcp_get_class_name(c->rtcp, enclosing_class_index));
+                c->enclosing_info[0] = jclsobj_create(enclosing_class);
+
+                if (enclosing_method_index > 0) {
+                    const struct name_and_type *nt = rtcp_get_name_and_type(c->rtcp, enclosing_method_index);
+                    c->enclosing_info[1] = jstrobj_create(nt->name);
+                    c->enclosing_info[2] = jstrobj_create(nt->descriptor);
+                }
+            }
+        }
+#if 0
+        else if (strcmp(InnerClasses, attr_name) == 0) { // todo
+            u2 num = bcr_readu2(reader);
+            struct inner_class classes[num];
+            for (u2 k = 0; k < num; k++) {
+                classes[k].inner_class_info_index = bcr_readu2(reader);
+                classes[k].outer_class_info_index = bcr_readu2(reader);
+                classes[k].inner_name_index = bcr_readu2(reader);
+                classes[k].inner_class_access_flags = bcr_readu2(reader);
+            }
+        } else if (strcmp(SourceDebugExtension, attr_name) == 0) { // todo
+            u1 source_debug_extension[attr_len];
+            bcr_read_bytes(reader, source_debug_extension, attr_len);
+        } else if (strcmp(RuntimeVisibleAnnotations, attr_name) == 0) { // todo
+            u2 runtime_annotations_num = bcr_readu2(reader);
+            struct annotation annotations[runtime_annotations_num];
+            for (u2 k = 0; k < runtime_annotations_num; k++) {
+                read_annotation(reader, annotations + i);
+            }
+        } else if (strcmp(RuntimeInvisibleAnnotations, attr_name) == 0) { // todo
+            u2 runtime_annotations_num = bcr_readu2(reader);
+            struct annotation annotations[runtime_annotations_num];
+            for (u2 k = 0; k < runtime_annotations_num; k++) {
+                read_annotation(reader, annotations + i);
+            }
+        } else if (strcmp(BootstrapMethods, attr_name) == 0) { // todo
+            u2 bootstrap_methods_num = bcr_readu2(reader);
+            struct bootstrap_method methods[bootstrap_methods_num];
+
+            for (u2 k = 0; k < bootstrap_methods_num; k++) {
+                methods[i].bootstrap_method_ref = bcr_readu2(reader);
+                methods[i].num_bootstrap_arguments = bcr_readu2(reader);
+                methods[i].bootstrap_arguments = malloc(sizeof(u2) * methods[i].num_bootstrap_arguments);
+                CHECK_MALLOC_RESULT(methods[i].bootstrap_arguments);
+                for (int j = 0; j < methods[i].num_bootstrap_arguments; j++) {
+                    methods[i].bootstrap_arguments[j] = bcr_readu2(reader);
+                }
+            }
+        }
+#endif
+        else {
+            // unknown attribute
+//            printvm("unknown attribute: %s\n", attr_name);
+            bcr_skip(reader, attr_len);
         }
     }
+}
 
-    c->rtcp = rtcp_create(cf->constant_pool, cf->constant_pool_count, bootstrap_methods_attribute);
-    if (source_file_index >= 0) {
-        c->source_file_name = rtcp_get_str(c->rtcp, source_file_index);
-    } else {
-        /*
-         * 并不是每个class文件中都有源文件信息，这个因编译时的编译器选项而异。
-         * todo 什么编译选项
-         */
-        c->source_file_name = "Unknown source file name";
-    }
+struct jclass *jclass_create(struct classloader *loader, s1 *bytecode, size_t len)
+{
+    assert(loader != NULL);
+    assert(bytecode != NULL);
 
-    c->enclosing_info[0] = c->enclosing_info[1] = c->enclosing_info[2] = NULL;
-    if (enclosing_class_index > 0) {
-        struct jclass *enclosing_class
-                = classloader_load_class(loader, rtcp_get_class_name(c->rtcp, enclosing_class_index));
-        c->enclosing_info[0] = jclsobj_create(enclosing_class);
+    struct bytecode_reader reader;
+    bcr_init(&reader, bytecode, len);
 
-        if (enclosing_method_index > 0) {
-            const struct name_and_type *nt = rtcp_get_name_and_type(c->rtcp, enclosing_method_index);
-            c->enclosing_info[1] = jstrobj_create(nt->name);
-            c->enclosing_info[2] = jstrobj_create(nt->descriptor);
-        }
-    }
+    VM_MALLOC(struct jclass, c);
+    c->loader = loader;
+    c->inited = false;
+    c->deprecated = false;
 
-    c->class_name = rtcp_get_class_name(c->rtcp, cf->this_class);
+    c->magic = bcr_readu4(&reader);
+    c->minor_version = bcr_readu2(&reader);
+    c->major_version = bcr_readu2(&reader);
+
+    u2 constant_pool_count = bcr_readu2(&reader);
+    struct constant constant_pool[constant_pool_count];
+    read_constant_pool(constant_pool, constant_pool_count, &reader);
+    c->rtcp = rtcp_create(constant_pool, constant_pool_count, NULL); // todo
+
+    c->access_flags = bcr_readu2(&reader);
+
+    c->class_name = rtcp_get_class_name(c->rtcp, bcr_readu2(&reader));
     c->pkg_name = vm_strdup(c->class_name);
     char *p = strrchr(c->pkg_name, '/');
     if (p == NULL) {
@@ -227,10 +316,11 @@ struct jclass *jclass_create_by_classfile(struct classloader *loader, struct cla
         *p = 0; // 得到包名
     }
 
-    if (cf->super_class == 0) { // why 0
+    u2 super_class = bcr_readu2(&reader);
+    if (super_class == 0) { // why 0
         c->super_class = NULL; // 可以没有父类
     } else {
-        c->super_class = classloader_load_class(loader, rtcp_get_class_name(c->rtcp, cf->super_class));
+        c->super_class = classloader_load_class(loader, rtcp_get_class_name(c->rtcp, super_class));
         // 从父类中拷贝继承来的field   todo 要不要从新new个field不然delete要有问题，继承过来的field的类名问题
 //        for_each(superClass->instanceFields.begin(), superClass->instanceFields.end(), [](JField *f) {
 //            if (!f->isPrivate()) {
@@ -239,54 +329,70 @@ struct jclass *jclass_create_by_classfile(struct classloader *loader, struct cla
 //        });
     }
 
-    c->interfaces_count = cf->interfaces_count;
-    c->interfaces = malloc(sizeof(struct jclass *) * c->interfaces_count);
-    CHECK_MALLOC_RESULT(c->interfaces);
-    for (int i = 0; i < c->interfaces_count; i++) {
-        const char *interface_name = rtcp_get_class_name(c->rtcp, cf->interfaces[i]);
-        if (interface_name[0] == 0) { // empty
-            printvm("error\n"); // todo
-        } else {
-            c->interfaces[i] = classloader_load_class(loader, interface_name);
+    // parse interfaces
+    c->interfaces_count = bcr_readu2(&reader);
+    if (c->interfaces_count == 0) {
+        c->interfaces = NULL;
+    } else {
+        c->interfaces = malloc(sizeof(struct jclass *) * c->interfaces_count);
+        CHECK_MALLOC_RESULT(c->interfaces);
+
+        for (int i = 0; i < c->interfaces_count; i++) {
+            const char *interface_name = rtcp_get_class_name(c->rtcp, bcr_readu2(&reader));
+            if (interface_name[0] == 0) { // empty
+                printvm("error\n"); // todo
+            } else {
+                c->interfaces[i] = classloader_load_class(loader, interface_name);
+            }
         }
     }
 
-    c->fields_count = cf->fields_count;
+    // parse fields
+    c->fields_count = bcr_readu2(&reader);
     c->public_fields_count = 0;
-    c->fields = malloc(sizeof(struct jfield *) * c->fields_count);
-    CHECK_MALLOC_RESULT(c->fields);
-    for (int i = 0, k = 0, t = c->fields_count - 1; i < c->fields_count; i++) {
-        struct jfield *f = jfield_create(c, cf->fields + i);
-        // 保证所有的 public fields 放在前面
-        if (IS_PUBLIC(f->access_flags)) {
-            c->fields[k++] = f;
-            c->public_fields_count++;
-        } else {
-            c->fields[t--] = f;
+    if (c->fields_count == 0) {
+        c->fields = NULL;
+    } else {
+        c->fields = malloc(sizeof(struct jfield) * c->fields_count);
+        CHECK_MALLOC_RESULT(c->fields);
+        for (int i = 0, back = c->fields_count - 1; i < c->fields_count; i++) {
+            u2 access_flags = bcr_peeku2(&reader);
+            // 保证所有的 public fields 放在前面
+            if (IS_PUBLIC(access_flags)) {
+                jfield_init(c->fields + c->public_fields_count++, c, &reader);
+            } else {
+                jfield_init(c->fields + back--, c, &reader);
+            }
         }
     }
 
     calc_static_field_id(c);
     calc_instance_field_id(c);
 
-    c->methods_count = cf->methods_count;
+    // parse methods
+    c->methods_count = bcr_readu2(&reader);
     c->public_methods_count = 0;
-    c->methods = malloc(sizeof(struct jmethod *) * c->methods_count);
-    CHECK_MALLOC_RESULT(c->methods);
-    for (int i = 0, k = 0, t = c->methods_count - 1; i < c->methods_count; i++) {
-        struct jmethod *m = jmethod_create(c, cf->methods + i);
-        // 保证所有的 public functions 放在前面
-        if (IS_PUBLIC(m->access_flags)) {
-            c->methods[k++] = m;
-            c->public_methods_count++;
-        } else {
-            c->methods[t--] = m;
+    if (c->methods_count == 0) {
+        c->methods = NULL;
+    } else {
+        c->methods = malloc(sizeof(struct jmethod) * c->methods_count);
+        CHECK_MALLOC_RESULT(c->methods);
+        for (int i = 0, back = c->methods_count - 1; i < c->methods_count; i++) {
+            u2 access_flags = bcr_peeku2(&reader);
+            // 保证所有的 public methods 放在前面
+            if (IS_PUBLIC(access_flags)) {
+                jmethod_init(c->methods + c->public_methods_count++, c, &reader);
+            } else {
+                jmethod_init(c->methods + back--, c, &reader);
+            }
         }
     }
 
-    classfile_destroy(cf);
+    parse_attribute(c, &reader); // parse class attributes
+    bcr_release(&reader);
     return c;
 }
+
 
 static void jclass_clear(struct jclass *c)
 {
@@ -297,6 +403,7 @@ static void jclass_clear(struct jclass *c)
     c->class_name = NULL;
     c->loader = NULL;
     c->inited = false;
+    c->deprecated = false;
 
     c->clsobj = NULL;
     c->rtcp = NULL;
@@ -365,11 +472,11 @@ void jclass_destroy(struct jclass *c)
     }
 
     for (int i = 0; i < c->methods_count; i++) {
-        jmethod_destroy(c->methods[i]);
+        jmethod_release(c->methods + i);
     }
 
     for (int i = 0; i < c->fields_count; i++) {
-        jfield_destroy(c->fields[i]);
+        jfield_release(c->fields + i);
     }
 
     rtcp_destroy(c->rtcp);
@@ -435,8 +542,8 @@ void jclass_clinit(struct jclass *c, struct jthread *thread)
 struct jfield* jclass_lookup_field(struct jclass *c, const char *name, const char *descriptor)
 {
     for (int i = 0; i < c->fields_count; i++) {
-        if (strcmp(c->fields[i]->name, name) == 0 && strcmp(c->fields[i]->descriptor, descriptor) == 0) {
-            return c->fields[i];
+        if (strcmp(c->fields[i].name, name) == 0 && strcmp(c->fields[i].descriptor, descriptor) == 0) {
+            return c->fields + i;
         }
     }
 
@@ -483,8 +590,8 @@ struct jfield* jclass_lookup_instance_field(struct jclass *c, const char *name, 
 struct jmethod* jclass_get_method(struct jclass *c, const char *name, const char *descriptor)
 {
     for (int i = 0; i < c->methods_count; i++) {
-        if (strcmp(c->methods[i]->name, name) == 0 && strcmp(c->methods[i]->descriptor, descriptor) == 0) {
-            return c->methods[i];
+        if (strcmp(c->methods[i].name, name) == 0 && strcmp(c->methods[i].descriptor, descriptor) == 0) {
+            return c->methods + i;
         }
     }
 
@@ -501,8 +608,8 @@ struct jmethod** jclass_get_methods(struct jclass *c, const char *name, bool pub
     *count = 0;
 
     for (int i = 0; i < c->methods_count; i++) {
-        if ((!public_only || IS_PUBLIC(c->methods[i]->access_flags)) && (strcmp(c->methods[i]->name, name) == 0)) {
-            methods[*count] = c->methods[i];
+        if ((!public_only || IS_PUBLIC(c->methods[i].access_flags)) && (strcmp(c->methods[i].name, name) == 0)) {
+            methods[*count] = c->methods + i;
             (*count)++;
         }
     }
