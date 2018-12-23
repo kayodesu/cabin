@@ -8,6 +8,7 @@
 #include "jclass.h"
 #include "../../util/util.h"
 #include "../heap/jobject.h"
+#include "descriptor.h"
 
 
 void jfield_init(struct jfield *field, struct jclass *c, struct bytecode_reader *reader)
@@ -105,29 +106,10 @@ struct jobject* jfield_get_type(struct jfield *field)
 {
     assert(field != NULL);
 
-    if (field->type != NULL) {
-        return field->type;
-    }
-
-    char d = *field->descriptor;
-    if (d == '[') { // 变量类型为数组
-        field->type = classloader_load_class(field->jclass->loader, field->descriptor)->clsobj;
-    } else if (d == 'L' && vm_strend(field->descriptor, ";")) { // 变量类型为非数组引用（类引用）
-        int len = strlen(field->descriptor);
-        char type_name[len];
-        strcpy(type_name, field->descriptor + 1); // jump 'L'
-        type_name[len - 2] = 0; // set last char(';') is 0
-        field->type = classloader_load_class(field->jclass->loader, type_name)->clsobj;
-    } else { // 变量类型为基本类型
-        const char *type_name = pt_get_class_name_by_descriptor(*(field->descriptor));
-        if (type_name != NULL) {
-            field->type = classloader_load_class(field->jclass->loader, type_name)->clsobj;
-        }
-    }
-
     if (field->type == NULL) {
-        jvm_abort("Never goes here. %s\n", field->descriptor); // todo
+        field->type = descriptor_to_type(field->jclass->loader, field->descriptor);
     }
+
     return field->type;
 }
 

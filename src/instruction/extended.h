@@ -39,7 +39,7 @@ static void ifnull(struct stack_frame *frame)
     int offset = bcr_reads2(frame->reader);
 
     if (os_popr(frame->operand_stack) == NULL) {
-        bcr_skip(frame->reader, offset - 3); // why减3？减去本条指令自身的长度
+        bcr_skip(frame->reader, offset - 3); // minus instruction length
     }
 }
 
@@ -48,7 +48,7 @@ static void ifnonnull(struct stack_frame *frame)
     int offset = bcr_reads2(frame->reader);
 
     if (os_popr(frame->operand_stack) != NULL) {
-        bcr_skip(frame->reader, offset - 3); // why减3？减去本条指令自身的长度
+        bcr_skip(frame->reader, offset - 3); // minus instruction length
     }
 }
 

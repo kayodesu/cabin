@@ -68,6 +68,11 @@ extern struct classloader *bootstrap_loader;
 // 只做标记使用，标记结构体成员
 #define private
 
+/*
+ * jvms规定函数最多有255个参数，this也算，long和double占两个长度
+ */
+#define METHOD_PARAMETERS_MAX_COUNT 255
+
 
 /*
  * 用来表示字段和方法。

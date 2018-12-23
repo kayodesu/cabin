@@ -5,100 +5,14 @@
 #include "jmethod.h"
 #include "access.h"
 #include "../heap/jobject.h"
-
-
-struct jobject* jmethod_parse_descriptor(struct classloader *loader, const char *method_descriptor,
-                                         struct jobject **parameter_types_add, int parameter_num_max)
-{
-    assert(loader != NULL);
-    assert(method_descriptor != NULL);
-    assert(parameter_types_add != NULL);
-
-    int dlen = strlen(method_descriptor);
-    char descriptor[dlen + 1];
-    strcpy(descriptor, method_descriptor);
-
-    if (parameter_num_max < 0)
-        parameter_num_max = dlen;
-    struct jobject* buf[parameter_num_max]; // big enough
-
-    int parameter_types_count = 0;
-
-    char *b = strchr(descriptor, '(');
-    const char *e = strchr(descriptor, ')');
-    if (b == NULL || e == NULL) {
-        VM_UNKNOWN_ERROR("descriptor error. %s", descriptor);
-    }
-
-    // parameter_types
-    while (++b < e) {
-        if (*b == 'L') { // reference
-            char *t = strchr(b, ';');
-            if (t == NULL) {
-                VM_UNKNOWN_ERROR("descriptor error. %s", descriptor);
-            }
-
-            *t = 0;   // end string
-            buf[parameter_types_count++] = classloader_load_class(loader, b + 1 /* jump 'L' */)->clsobj;
-            *t = ';'; // recover
-            b = t;
-        } else if (*b == '[') { // array reference, 描述符形如 [B 或 [[java/lang/String; 的形式
-            char *t = b;
-            while (*(++t) == '[');
-            if (!pt_is_primitive_descriptor(*t)) {
-                t = strchr(t, ';');
-                if (t == NULL) {
-                    VM_UNKNOWN_ERROR("descriptor error. %s", descriptor);
-                }
-            }
-
-            char k = *(++t);
-            *t = 0; // end string
-            buf[parameter_types_count++] = classloader_load_class(loader, b)->clsobj;
-            *t = k; // recover
-            b = t;
-        } else if (pt_is_primitive_descriptor(*b)) {
-            const char *class_name = pt_get_class_name_by_descriptor(*b);
-            buf[parameter_types_count++] = classloader_load_class(loader, class_name)->clsobj;
-        } else {
-            VM_UNKNOWN_ERROR("descriptor error %s", descriptor);
-        }
-    }
-
-    // todo parameter_types_count == 0 是不是要填一个 void.class
-
-    struct jobject *parameter_types
-            = jarrobj_create(classloader_load_class(loader, "[Ljava/lang/Class;"), parameter_types_count);
-    for (int i = 0; i < parameter_types_count; i++) {
-        jarrobj_set(struct jobject *, parameter_types, i, buf[i]);
-    }
-
-    *parameter_types_add = parameter_types;
-    
-    // create return_type
-    const char *class_name = ++e;
-    if (pt_is_primitive_descriptor(*e)) {
-        class_name = pt_get_class_name_by_descriptor(*e);
-    } else if (*class_name == 'L') {
-        class_name++;
-        char *t = strchr(class_name, ';');
-        if (t == NULL) {
-            VM_UNKNOWN_ERROR("descriptor error. %s", descriptor);
-        }
-        *t = 0;   // end string
-    }
-
-    return classloader_load_class(loader, class_name)->clsobj; // return_type
-}
+#include "descriptor.h"
 
 struct jobject* jmethod_get_parameter_types(struct jmethod *method)
 {
     assert(method != NULL);
     if (method->parameter_types == NULL) {
-        method->return_type = jmethod_parse_descriptor(method->jclass->loader, method->descriptor,
-                                                       &(method->parameter_types), method->arg_slot_count);
+        method->parameter_types = method_descriptor_to_parameter_types(method->jclass->loader, method->descriptor);
     }
-    assert(method->parameter_types != NULL);
     return method->parameter_types;
 }
 
@@ -106,10 +20,8 @@ struct jobject* jmethod_get_return_type(struct jmethod *method)
 {
     assert(method != NULL);
     if (method->return_type == NULL) {
-        method->return_type = jmethod_parse_descriptor(method->jclass->loader, method->descriptor,
-                                                       &(method->parameter_types), method->arg_slot_count);
+        method->return_type = method_descriptor_to_return_type(method->jclass->loader, method->descriptor);
     }
-    assert(method->return_type != NULL);
     return method->return_type;
 }
 

@@ -9,10 +9,10 @@
 #include "../interpreter/stack_frame.h"
 
 #define x2y(x, y) \
-    static void __##x##2##y(struct stack_frame *frame) \
-    { \
-        os_push##y(frame->operand_stack, x##2##y(os_pop##x(frame->operand_stack))); \
-    } \
+static void __##x##2##y(struct stack_frame *frame) \
+{ \
+    os_push##y(frame->operand_stack, x##2##y(os_pop##x(frame->operand_stack))); \
+} \
 
 x2y(i, l) x2y(i, f) x2y(i, d)
 x2y(l, i) x2y(l, f) x2y(l, d)

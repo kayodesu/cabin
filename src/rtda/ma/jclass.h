@@ -95,7 +95,6 @@ struct jclass {
     const char *source_file_name;
 };
 
-//struct jclass *jclass_create_by_classfile(struct classloader *loader, struct classfile *cf);
 struct jclass *jclass_create(struct classloader *loader, s1 *bytecode, size_t len);
 
 /*

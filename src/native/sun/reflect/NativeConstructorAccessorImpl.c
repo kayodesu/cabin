@@ -4,9 +4,8 @@
 
 #include "../../registry.h"
 #include "../../../interpreter/stack_frame.h"
-#include "../../../slot.h"
 #include "../../../rtda/heap/jobject.h"
-#include "../../../rtda/ma/util.h"
+#include "../../../rtda/ma/descriptor.h"
 
 struct slot* convert_args(jref this_obj, struct jmethod *m, jref args)
 {

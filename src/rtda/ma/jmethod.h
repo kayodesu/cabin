@@ -83,16 +83,6 @@ bool jmethod_is_accessible_to(const struct jmethod *method, const struct jclass 
 // 查找 pc 所对应的行号
 int jmethod_get_line_number(const struct jmethod *method, int pc);
 
-/*
- * parse method descriptor and create parameter_types and return_type of the method
- * 
- * 返回 return type.
- */
-struct jobject* jmethod_parse_descriptor(struct classloader *loader,
-                                         const char *method_descriptor,
-                                         struct jobject **parameter_types_add,
-                                         int parameter_num_max);
-
 struct jobject* jmethod_get_parameter_types(struct jmethod *method);
 struct jobject* jmethod_get_return_type(struct jmethod *method);
 struct jobject* jmethod_get_exception_types(struct jmethod *method);

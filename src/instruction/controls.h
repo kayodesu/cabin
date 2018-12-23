@@ -155,7 +155,6 @@ TRETURN(areturn, r)
 
 static void __return(struct stack_frame *frame)
 {
-    /* frame->method->reset(); */
     jthread_pop_frame(frame->thread);
     sf_exe_over(frame);
 }

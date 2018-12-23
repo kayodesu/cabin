@@ -11,6 +11,7 @@
 #include "../util/encoding.h"
 #include "../rtda/heap/jobject.h"
 #include "../rtda/ma/symref.h"
+#include "../rtda/ma/descriptor.h"
 
 /*
  * 类的初始化在下列情况下触发：
@@ -500,8 +501,8 @@ static void invokedynamic(struct stack_frame *frame)
     bool need_again = false;
 
     // create java/lang/invoke/MethodType of bootstrap method
-    struct jobject *parameter_types;
-    struct jobject *return_type = jmethod_parse_descriptor(curr_class->loader, ref->nt->descriptor, &parameter_types, -1);
+    struct jobject *parameter_types = method_descriptor_to_parameter_types(curr_class->loader, ref->nt->descriptor);
+    struct jobject *return_type = method_descriptor_to_return_type(curr_class->loader, ref->nt->descriptor);
 
     struct jobject *invoked_type = curr_thread->dyn.invoked_type;
     if (invoked_type == NULL) {

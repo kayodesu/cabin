@@ -3,12 +3,9 @@
  */
 
 #include <stdlib.h>
-#include <pthread.h>
 #include "jthread.h"
 #include "../heap/jobject.h"
 #include "../../util/vector.h"
-#include "../../interpreter/interpreter.h"
-
 
 struct jthread* jthread_create(struct classloader *loader, struct jobject *jl_thread_obj)
 {

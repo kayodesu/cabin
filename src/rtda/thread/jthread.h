@@ -22,7 +22,6 @@ struct slot;
  * 但是内存已经耗尽，会导致OutOfMemoryError异常抛出。
  */
 
-struct jthread;
 
 struct invokedynamic_temp_store {
     // java/lang/invoke/MethodType
@@ -69,7 +68,7 @@ void jthread_push_frame(struct jthread *thread, struct stack_frame *frame);
 /*
  * 返回完整的虚拟机栈
  * 顺序为由栈底到栈顶
- * 由调用者释放返回的array of struct stack_frame *
+ * 由调用者释放返回的 array of struct stack_frame *
  */
 struct stack_frame** jthread_get_frames(const struct jthread *thread, int *num);
 
