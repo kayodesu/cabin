@@ -4,7 +4,7 @@
 
 #include <pthread.h>
 #include "../../registry.h"
-#include "../../../interpreter/stack_frame.h"
+#include "../../../rtda/thread/frame.h"
 #include "../../../slot.h"
 #include "../../../rtda/heap/jobject.h"
 #include "../../../interpreter/interpreter.h"
@@ -14,14 +14,14 @@
  *
  * public static native Thread currentThread();
  */
-static void currentThread(struct stack_frame *frame)
+static void currentThread(struct frame *frame)
 {
     // push a object of java/lang/Thread of current thread
-    os_pushr(frame->operand_stack, jthread_get_jl_thread_obj(frame->thread));
+    frame_stack_pushr(frame, jthread_get_jl_thread_obj(frame->thread));
 }
 
 // public static native void sleep(long millis) throws InterruptedException;
-static void sleep(struct stack_frame *frame)
+static void sleep(struct frame *frame)
 {
     jvm_abort("error\n");
     // todo
@@ -44,13 +44,13 @@ static void sleep(struct stack_frame *frame)
 }
 
 // private native void interrupt0();
-static void interrupt0(struct stack_frame *frame)
+static void interrupt0(struct frame *frame)
 {
     jvm_abort("error\n");
 }
 
 // private native boolean isInterrupted(boolean ClearInterrupted);
-static void isInterrupted(struct stack_frame *frame)
+static void isInterrupted(struct frame *frame)
 {
     jvm_abort("error\n");
 //    frame->operandStack.push(0);
@@ -64,13 +64,13 @@ static void isInterrupted(struct stack_frame *frame)
  *          <code>false</code> otherwise.
  */
 // public final native boolean isAlive();
-static void isAlive(struct stack_frame *frame)
+static void isAlive(struct frame *frame)
 {
     // todo
 //    JObject *thisObj = frame->getLocalVar(0).getRef();
 //    frame->operandStack.push(0);  // todo wtf?
 //    struct jobject *this_obj = slot_getr(frame->local_vars);
-    os_pushi(frame->operand_stack, 0); // todo 为什么要设置成0，设置成1就状态错误
+    frame_stack_pushi(frame, 0); // todo 为什么要设置成0，设置成1就状态错误
 }
 
 /**
@@ -98,7 +98,7 @@ static void isAlive(struct stack_frame *frame)
  * @see        ThreadGroup#getMaxPriority()
  */
 // private native void setPriority0(int newPriority);
-static void setPriority0(struct stack_frame *frame)
+static void setPriority0(struct frame *frame)
 {
     // todo
 //    jref this = slot_getr(frame->local_vars);
@@ -109,25 +109,27 @@ static void setPriority0(struct stack_frame *frame)
 }
 
 // private native void start0();
-static void start0(struct stack_frame *frame)
+static void start0(struct frame *frame)
 {
     // todo
-    jref this = slot_getr(frame->local_vars);
+    jref this = frame_locals_getr(frame, 0);
 
-#ifdef JVM_DEBUG
+#if (JVM_DEBUG)
     const char *name = jstrobj_value(slot_getr(get_instance_field_value_by_nt(this, "name", "Ljava/lang/String;")));
     printvm("start thread: %s\n", name);
 #endif
 
-    struct jthread *new_thread = jthread_create(frame->method->jclass->loader, this);
+    struct jthread *new_thread = jthread_create(frame->m.method->jclass->loader, this);
 
     // create a stack frame to hold run method
     struct jmethod *run = jclass_lookup_instance_method(this->jclass, "run", "()V");
-    struct stack_frame *new_frame = sf_create(new_thread, run);
+//    struct frame *new_frame = frmhub_get(&new_thread->fh, run);//frame_create(new_thread, run);
     struct slot arg = rslot(this);
-    sf_set_local_var(new_frame, 0, &arg);
 
-    jthread_push_frame(new_thread, new_frame);
+//    frame_locals_set(new_frame, 0, &arg);
+//    jthread_push_frame(new_thread, new_frame);
+
+    jthread_invoke_method(new_thread, run, &arg);
 
 //    pthread_t pid;
 //    int ret = pthread_create(&pid, NULL, interpret, new_thread);

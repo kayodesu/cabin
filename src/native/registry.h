@@ -5,14 +5,14 @@
 #ifndef JVM_REGISTRY_H
 #define JVM_REGISTRY_H
 
-struct stack_frame;
+struct frame;
 
 // 注册所有的本地方法
 void register_all_native_methods();
 
-extern void registerNatives(struct stack_frame *);
+extern void registerNatives(struct frame *);
 
-typedef void (* native_method_t)(struct stack_frame *);
+typedef void (* native_method_t)(struct frame *);
 
 /*
  * 注册本地方法

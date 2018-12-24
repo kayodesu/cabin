@@ -6,15 +6,15 @@
 #define JVM_MATHS_H
 
 #include <math.h>
-#include "../interpreter/stack_frame.h"
+#include "../rtda/thread/frame.h"
 #include "../slot.h"
 
 #define ICAL(func_name, oper) \
-    static void func_name(struct stack_frame *frame) \
+    static void func_name(struct frame *frame) \
     { \
-        jint v2 = os_popi(frame->operand_stack); \
-        jint v1 = os_popi(frame->operand_stack); \
-        os_pushi(frame->operand_stack, v1 oper v2); /* todo 相加溢出的问题 */ \
+        jint v2 = frame_stack_popi(frame); \
+        jint v1 = frame_stack_popi(frame); \
+        frame_stack_pushi(frame, v1 oper v2); /* todo 相加溢出的问题 */ \
     }
 
 ICAL(__iadd, +)
@@ -29,11 +29,11 @@ ICAL(__ixor, ^)
 ////////////////////////////
 
 #define LCAL(func_name, oper) \
-    static void func_name(struct stack_frame *frame) \
+    static void func_name(struct frame *frame) \
     { \
-        jlong v2 = os_popl(frame->operand_stack); \
-        jlong v1 = os_popl(frame->operand_stack); \
-        os_pushl(frame->operand_stack, v1 oper v2); /* todo 相加溢出的问题 */ \
+        jlong v2 = frame_stack_popl(frame); \
+        jlong v1 = frame_stack_popl(frame); \
+        frame_stack_pushl(frame, v1 oper v2); /* todo 相加溢出的问题 */ \
     }
 
 LCAL(__ladd, +)
@@ -48,11 +48,11 @@ LCAL(__lxor, ^)
 ////////////////////////////
 
 #define FCAL(func_name, oper) \
-    static void func_name(struct stack_frame *frame) \
+    static void func_name(struct frame *frame) \
     { \
-        jfloat v2 = os_popf(frame->operand_stack); \
-        jfloat v1 = os_popf(frame->operand_stack); \
-        os_pushf(frame->operand_stack, v1 oper v2); /* todo 相加溢出的问题 */ \
+        jfloat v2 = frame_stack_popf(frame); \
+        jfloat v1 = frame_stack_popf(frame); \
+        frame_stack_pushf(frame, v1 oper v2); /* todo 相加溢出的问题 */ \
     }
 
 FCAL(__fadd, +)
@@ -60,10 +60,10 @@ FCAL(__fsub, -)
 FCAL(__fmul, *)
 FCAL(__fdiv, /)
 
-static void __frem(struct stack_frame *frame)
+static void __frem(struct frame *frame)
 {
-    jfloat v2 = os_popf(frame->operand_stack);
-    jfloat v1 = os_popf(frame->operand_stack);
+    jfloat v2 = frame_stack_popf(frame);
+    jfloat v1 = frame_stack_popf(frame);
     jvm_abort("not implement\n");
 //    os_pushf(frame->operand_stack, dremf(v1, v2)); /* todo 相加溢出的问题 */
 }
@@ -71,11 +71,11 @@ static void __frem(struct stack_frame *frame)
 ////////////////////////////
 
 #define DCAL(func_name, oper) \
-    static void func_name(struct stack_frame *frame) \
+    static void func_name(struct frame *frame) \
     { \
-        jdouble v2 = os_popd(frame->operand_stack); \
-        jdouble v1 = os_popd(frame->operand_stack); \
-        os_pushd(frame->operand_stack, v1 oper v2); /* todo 相加溢出的问题 */ \
+        jdouble v2 = frame_stack_popd(frame); \
+        jdouble v1 = frame_stack_popd(frame); \
+        frame_stack_pushd(frame, v1 oper v2); /* todo 相加溢出的问题 */ \
     }
 
 DCAL(__dadd, +)
@@ -83,18 +83,18 @@ DCAL(__dsub, -)
 DCAL(__dmul, *)
 DCAL(__ddiv, /)
 
-static void __drem(struct stack_frame *frame)
+static void __drem(struct frame *frame)
 {
-    jdouble v2 = os_popd(frame->operand_stack);
-    jdouble v1 = os_popd(frame->operand_stack);
+    jdouble v2 = frame_stack_popd(frame);
+    jdouble v1 = frame_stack_popd(frame);
     jvm_abort("未实现\n");
 //    os_pushd(frame->operand_stack, drem(v1, v2)); /* todo 相加溢出的问题 */
 }
 
 #define NEG(T) \
-static void T##neg(struct stack_frame *frame) \
+static void T##neg(struct frame *frame) \
 { \
-    os_push##T(frame->operand_stack, -os_pop##T(frame->operand_stack)); \
+    frame_stack_push##T(frame, -frame_stack_pop##T(frame)); \
 }
 
 NEG(i)
@@ -102,68 +102,68 @@ NEG(l)
 NEG(f)
 NEG(d)
 
-static void ishl(struct stack_frame *frame)
+static void ishl(struct frame *frame)
 {
     // 与0x1f是因为低5位表示位移距离，位移距离实际上被限制在0到31之间。
-    jint shift = os_popi(frame->operand_stack) & 0x1f;
-    jint value = os_popi(frame->operand_stack);
-    os_pushi(frame->operand_stack, value << shift);
+    jint shift =frame_stack_popi(frame) & 0x1f;
+    jint value = frame_stack_popi(frame);
+    frame_stack_pushi(frame, value << shift);
 }
 
-static void lshl(struct stack_frame *frame)
+static void lshl(struct frame *frame)
 {
     // 与0x3f是因为低6位表示位移距离，位移距离实际上被限制在0到63之间。
-    jint shift = os_popi(frame->operand_stack) & 0x3f;
-    jlong value = os_popl(frame->operand_stack);
-    os_pushl(frame->operand_stack, value << shift);
+    jint shift = frame_stack_popi(frame) & 0x3f;
+    jlong value = frame_stack_popl(frame);
+    frame_stack_pushl(frame, value << shift);
 }
 
 // 逻辑右移 shift logical right
-static void ishr(struct stack_frame *frame)
+static void ishr(struct frame *frame)
 {
-    jint shift = os_popi(frame->operand_stack) & 0x1f;
-    jint value = os_popi(frame->operand_stack);
-    os_pushi(frame->operand_stack, (~(((jint)1) >> shift)) & (value >> shift));
+    jint shift = frame_stack_popi(frame) & 0x1f;
+    jint value = frame_stack_popi(frame);
+    frame_stack_pushi(frame, (~(((jint)1) >> shift)) & (value >> shift));
 }
 
-static void lshr(struct stack_frame *frame)
+static void lshr(struct frame *frame)
 {
-    jint shift = os_popi(frame->operand_stack) & 0x3f;
-    jlong value = os_popl(frame->operand_stack);
-    os_pushl(frame->operand_stack, (~(((jlong)1) >> shift)) & (value >> shift));
+    jint shift = frame_stack_popi(frame) & 0x3f;
+    jlong value = frame_stack_popl(frame);
+    frame_stack_pushl(frame, (~(((jlong)1) >> shift)) & (value >> shift));
 }
 
 // 算术右移 shift arithmetic right
-static void iushr(struct stack_frame *frame)
+static void iushr(struct frame *frame)
 {
-    jint shift = os_popi(frame->operand_stack) & 0x1f;
-    jint value = os_popi(frame->operand_stack);
-    os_pushi(frame->operand_stack, value >> shift);
+    jint shift = frame_stack_popi(frame) & 0x1f;
+    jint value = frame_stack_popi(frame);
+    frame_stack_pushi(frame, value >> shift);
 }
 
-static void lushr(struct stack_frame *frame)
+static void lushr(struct frame *frame)
 {
-    jint shift = os_popi(frame->operand_stack) & 0x3f;
-    jlong value = os_popl(frame->operand_stack);
-    os_pushl(frame->operand_stack, value >> shift);
+    jint shift = frame_stack_popi(frame) & 0x3f;
+    jlong value = frame_stack_popl(frame);
+    frame_stack_pushl(frame, value >> shift);
 }
 
 extern bool wide_extending;
 
-static void iinc(struct stack_frame *frame)
+static void iinc(struct frame *frame)
 {
     jint index, value;
 
     if (wide_extending) {
-        index = bcr_readu2(frame->reader);
-        value = bcr_reads2(frame->reader);
+        index = bcr_readu2(&frame->reader);
+        value = bcr_reads2(&frame->reader);
         wide_extending = false;
     } else {
-        index = bcr_readu1(frame->reader);
-        value = bcr_reads1(frame->reader);
+        index = bcr_readu1(&frame->reader);
+        value = bcr_reads1(&frame->reader);
     }
 
-    struct slot *s = frame->local_vars + index;
+    struct slot *s = frame_locals_get(frame, index);
     if (s->t != JINT) {
         VM_UNKNOWN_ERROR("type mismatch. wants %d, but gets %d", JINT, s->t);
     }

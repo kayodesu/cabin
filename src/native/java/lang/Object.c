@@ -3,45 +3,45 @@
  */
 
 #include "../../registry.h"
-#include "../../../interpreter/stack_frame.h"
+#include "../../../rtda/thread/frame.h"
 #include "../../../rtda/heap/jobject.h"
 
 // public native int hashCode();
-static void hashCode(struct stack_frame *frame)
+static void hashCode(struct frame *frame)
 {
-    jref this_obj = slot_getr(frame->local_vars);
-    os_pushi(frame->operand_stack, (jint) (intptr_t) this_obj);
+    jref this = frame_locals_getr(frame, 0);
+    frame_stack_pushi(frame, (jint) (intptr_t) this);
 }
 
 // protected native Object clone() throws CloneNotSupportedException;
-static void clone(struct stack_frame *frame)
+static void clone(struct frame *frame)
 {
-    jref this_obj = slot_getr(frame->local_vars);
-    struct jclass *cloneable = classloader_load_class(frame->method->jclass->loader, "java/lang/Cloneable");
-    if (!jclass_is_subclass_of(this_obj->jclass, cloneable)) {
+    jref this = frame_locals_getr(frame, 0);
+    struct jclass *cloneable = classloader_load_class(frame->m.method->jclass->loader, "java/lang/Cloneable");
+    if (!jclass_is_subclass_of(this->jclass, cloneable)) {
         jvm_abort("java.lang.CloneNotSupportedException"); // todo
     }
-    os_pushr(frame->operand_stack, jobject_clone(this_obj, NULL));
+    frame_stack_pushr(frame, jobject_clone(this, NULL));
 }
 
 // public final native Class<?> getClass();
-static void getClass(struct stack_frame *frame)
+static void getClass(struct frame *frame)
 {
-    jref this_obj = slot_getr(frame->local_vars);
-    os_pushr(frame->operand_stack, (jref) this_obj->jclass->clsobj); // todo 对不对
+    jref this = frame_locals_getr(frame, 0);
+    frame_stack_pushr(frame, (jref) this->jclass->clsobj); // todo 对不对
 }
 
 // public final native void notifyAll();
-static void notifyAll(struct stack_frame *frame)
+static void notifyAll(struct frame *frame)
 {
-//    jref this_obj = slot_getr(frame->local_vars);
+//    jref this = frame_locals_getr(frame, 0);
     // todo
 }
 
 // public final native void wait(long timeout) throws InterruptedException;
-static void wait(struct stack_frame *frame)
+static void wait(struct frame *frame)
 {
-//    jref this_obj = slot_getr(frame->local_vars);
+//    jref this = frame_locals_getr(frame, 0);
 //    jlong timeout = slot_getl(frame->local_vars + 1);
     // todo
 }

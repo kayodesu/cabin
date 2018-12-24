@@ -5,65 +5,42 @@
 #ifndef JVM_STACKS_H
 #define JVM_STACKS_H
 
-#include "../interpreter/stack_frame.h"
+#include "../rtda/thread/frame.h"
 
 // 弹出一个类型一的数据
-static void pop(struct stack_frame *frame)
+static void pop(struct frame *frame)
 {
-#ifdef JVM_DEBUG
-    struct slot *s = os_pops(frame->operand_stack);
-    if(!slot_is_category_one(s)) {
-        vm_unknown_error("slot's category is error");
-    }
-#else
-    os_pops(frame->operand_stack);
-#endif
+    assert(frame != NULL);
+    frame_stack_pop_slot(frame);
 }
 
 // 弹出两个类型一或一个类型二的数据
-static void pop2(struct stack_frame *frame)
+static void pop2(struct frame *frame)
 {
-#ifdef JVM_DEBUG
-    struct slot *top1 = os_pops(frame->operand_stack);
-    struct slot *top2 = os_pops(frame->operand_stack);
-
-    if( !(slots_are_category_two_and_ph(top2, top1) || slots_are_category_one(2, top1, top2)) ) {
-        vm_unknown_error("slot's category is error");
-    }
-#else
-    os_pops(frame->operand_stack);
-    os_pops(frame->operand_stack);
-#endif
+    assert(frame != NULL);
+    frame_stack_pop_slot(frame);
+    frame_stack_pop_slot(frame);
 }
 
 // 复制栈顶数值（只支持分类一的数据）并将复制值压入栈顶。
-static void dup(struct stack_frame *frame)
+static void dup(struct frame *frame)
 {
-    const struct slot *s = os_top(frame->operand_stack);
-#ifdef JVM_DEBUG
-    if (!slot_is_category_one(s)) {
-        vm_unknown_error("slot's category is error");
-    }
-#endif
-    os_push_slot_directly(frame->operand_stack, s);
+    assert(frame != NULL);
+    const struct slot *s = frame_stack_top(frame);
+    frame_stack_push_slot_directly(frame, s);
 }
 
 // 复制栈顶一个（分类二类型)或两个（分类一类型）数值并将复制值压入栈顶。
-static void dup2(struct stack_frame *frame)
+static void dup2(struct frame *frame)
 {
-    const struct slot top1 = *os_pops(frame->operand_stack);
-    const struct slot top2 = *os_pops(frame->operand_stack);
+    assert(frame != NULL);
+    const struct slot top1 = *frame_stack_pop_slot(frame);
+    const struct slot top2 = *frame_stack_pop_slot(frame);
 
-#ifdef JVM_DEBUG
-    if( !(slots_are_category_two_and_ph(&top2, &top1) || slots_are_category_one(2, &top1, &top2)) ) {
-        vm_unknown_error("slot's category is error");
-    }
-#endif
-
-    os_push_slot_directly(frame->operand_stack, &top2);
-    os_push_slot_directly(frame->operand_stack, &top1);
-    os_push_slot_directly(frame->operand_stack, &top2);
-    os_push_slot_directly(frame->operand_stack, &top1);
+    frame_stack_push_slot_directly(frame, &top2);
+    frame_stack_push_slot_directly(frame, &top1);
+    frame_stack_push_slot_directly(frame, &top2);
+    frame_stack_push_slot_directly(frame, &top1);
 }
 
 /*
@@ -73,42 +50,30 @@ static void dup2(struct stack_frame *frame)
  * The dup_x1 instruction must not be used unless both value1 and
  * value2 are values of a category 1 computational type
  */
-static void dup_x1(struct stack_frame *frame)
+static void dup_x1(struct frame *frame)
 {
-    const struct slot top1 = *os_pops(frame->operand_stack);
-    const struct slot top2 = *os_pops(frame->operand_stack);
+    assert(frame != NULL);
+    const struct slot top1 = *frame_stack_pop_slot(frame);
+    const struct slot top2 = *frame_stack_pop_slot(frame);
 
-#ifdef JVM_DEBUG
-    if (!slots_are_category_one(2, &top1, &top2)) {
-        vm_unknown_error("slot's category is error");
-    }
-#endif
-
-    os_push_slot_directly(frame->operand_stack, &top1);
-    os_push_slot_directly(frame->operand_stack, &top2);
-    os_push_slot_directly(frame->operand_stack, &top1);
+    frame_stack_push_slot_directly(frame, &top1);
+    frame_stack_push_slot_directly(frame, &top2);
+    frame_stack_push_slot_directly(frame, &top1);
 }
 
 // 复制操作数栈栈顶的值（类型一），
 // 并插入到栈顶以下2个（栈顶类型一，栈顶下一个类型二）或3个（三个值都是类型一）值之后
-static void dup_x2(struct stack_frame *frame)
+static void dup_x2(struct frame *frame)
 {
-    const struct slot top1 = *os_pops(frame->operand_stack);
-    const struct slot top2 = *os_pops(frame->operand_stack);
-    const struct slot top3 = *os_pops(frame->operand_stack);
+    assert(frame != NULL);
+    const struct slot top1 = *frame_stack_pop_slot(frame);
+    const struct slot top2 = *frame_stack_pop_slot(frame);
+    const struct slot top3 = *frame_stack_pop_slot(frame);
 
-#ifdef JVM_DEBUG
-    bool f1 = slot_is_category_one(&top1) && slots_are_category_two_and_ph(&top3, &top2); // 栈顶类型一，栈顶下一个类型二
-    bool f2 = slots_are_category_one(3, &top1, &top2, &top3);
-    if ( !(f1 || f2) ) {
-        vm_unknown_error("slot's category is error");
-    }
-#endif
-
-    os_push_slot_directly(frame->operand_stack, &top1);
-    os_push_slot_directly(frame->operand_stack, &top3);
-    os_push_slot_directly(frame->operand_stack, &top2);
-    os_push_slot_directly(frame->operand_stack, &top1);
+    frame_stack_push_slot_directly(frame, &top1);
+    frame_stack_push_slot_directly(frame, &top3);
+    frame_stack_push_slot_directly(frame, &top2);
+    frame_stack_push_slot_directly(frame, &top1);
 }
 
 /*
@@ -125,25 +90,18 @@ static void dup_x2(struct stack_frame *frame)
     where value1 is a value of a category 2 computational type
     and value2 is a value of a category 1 computational type.
  */
-static void dup2_x1(struct stack_frame *frame)
+static void dup2_x1(struct frame *frame)
 {
-    const struct slot top1 = *os_pops(frame->operand_stack);
-    const struct slot top2 = *os_pops(frame->operand_stack);
-    const struct slot top3 = *os_pops(frame->operand_stack);
+    assert(frame != NULL);
+    const struct slot top1 = *frame_stack_pop_slot(frame);
+    const struct slot top2 = *frame_stack_pop_slot(frame);
+    const struct slot top3 = *frame_stack_pop_slot(frame);
 
-#ifdef JVM_DEBUG
-    bool f1 = slots_are_category_one(3, &top1, &top2, &top3); // Form 1
-    bool f2 = slots_are_category_two_and_ph(&top2, &top1) && slot_is_category_one(&top3);  // Form 2
-    if ( !(f1 || f2) ) {
-        vm_unknown_error("slot's category is error");
-    }
-#endif
-
-    os_push_slot_directly(frame->operand_stack, &top2);
-    os_push_slot_directly(frame->operand_stack, &top1);
-    os_push_slot_directly(frame->operand_stack, &top3);
-    os_push_slot_directly(frame->operand_stack, &top2);
-    os_push_slot_directly(frame->operand_stack, &top1);
+    frame_stack_push_slot_directly(frame, &top2);
+    frame_stack_push_slot_directly(frame, &top1);
+    frame_stack_push_slot_directly(frame, &top3);
+    frame_stack_push_slot_directly(frame, &top2);
+    frame_stack_push_slot_directly(frame, &top1);
 }
 
 /*
@@ -171,29 +129,20 @@ static void dup2_x1(struct stack_frame *frame)
     ..., value1, value2, value1
     where value1 and value2 are both values of a category 2 computational type.
  */
-static void dup2_x2(struct stack_frame *frame)
+static void dup2_x2(struct frame *frame)
 {
-    const struct slot top1 = *os_pops(frame->operand_stack);
-    const struct slot top2 = *os_pops(frame->operand_stack);
-    const struct slot top3 = *os_pops(frame->operand_stack);
-    const struct slot top4 = *os_pops(frame->operand_stack);
+    assert(frame != NULL);
+    const struct slot top1 = *frame_stack_pop_slot(frame);
+    const struct slot top2 = *frame_stack_pop_slot(frame);
+    const struct slot top3 = *frame_stack_pop_slot(frame);
+    const struct slot top4 = *frame_stack_pop_slot(frame);
 
-#ifdef JVM_DEBUG
-    bool f1 = slots_are_category_one(4, &top1, &top2, &top3, &top4);                                      // Form 1
-    bool f2 = slots_are_category_two_and_ph(&top2, &top1) && slots_are_category_one(2, &top3, &top4);     // Form 2
-    bool f3 = slots_are_category_one(2, &top1, &top2) && slots_are_category_two_and_ph(&top4, &top3);     // Form 3
-    bool f4 = slots_are_category_two_and_ph(&top4, &top3) && slots_are_category_two_and_ph(&top2, &top1); // Form 4
-    if ( !(f1 || f2 || f3 || f4) ) {
-        vm_unknown_error("slot's category is error");
-    }
-#endif
-
-    os_push_slot_directly(frame->operand_stack, &top2);
-    os_push_slot_directly(frame->operand_stack, &top1);
-    os_push_slot_directly(frame->operand_stack, &top4);
-    os_push_slot_directly(frame->operand_stack, &top3);
-    os_push_slot_directly(frame->operand_stack, &top2);
-    os_push_slot_directly(frame->operand_stack, &top1);
+    frame_stack_push_slot_directly(frame, &top2);
+    frame_stack_push_slot_directly(frame, &top1);
+    frame_stack_push_slot_directly(frame, &top4);
+    frame_stack_push_slot_directly(frame, &top3);
+    frame_stack_push_slot_directly(frame, &top2);
+    frame_stack_push_slot_directly(frame, &top1);
 }
 
 /*
@@ -202,19 +151,14 @@ static void dup2_x2(struct stack_frame *frame)
  * The Java Virtual Machine does not provide an instruction
  * implementing a swap on operands of category 2 computational types.
  */
-static void __swap(struct stack_frame *frame)
+static void __swap(struct frame *frame)
 {
-    const struct slot top1 = *os_pops(frame->operand_stack);
-    const struct slot top2 = *os_pops(frame->operand_stack);
+    assert(frame != NULL);
+    const struct slot top1 = *frame_stack_pop_slot(frame);
+    const struct slot top2 = *frame_stack_pop_slot(frame);
 
-#ifdef JVM_DEBUG
-    if (!slots_are_category_one(2, &top1, &top2)) {
-        vm_unknown_error("slot's category is error");
-    }
-#endif
-
-    os_push_slot_directly(frame->operand_stack, &top1);
-    os_push_slot_directly(frame->operand_stack, &top2);
+    frame_stack_push_slot_directly(frame, &top1);
+    frame_stack_push_slot_directly(frame, &top2);
 }
 
 #endif //JVM_STACKS_H

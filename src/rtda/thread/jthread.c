@@ -13,8 +13,11 @@ struct jthread* jthread_create(struct classloader *loader, struct jobject *jl_th
 
     VM_MALLOC(struct jthread, thread);
 
-    thread->vm_stack = vector_create();
+    vector_init(&thread->vm_stack);
     thread->jl_thread_obj = jl_thread_obj;
+    for (int i = 0; i < FRMHUB_SLOTS_COUNT_MAX; i++) {
+        vector_init(thread->frame_cache + i);
+    }
 
 //    struct jclass *jlt_class = classloader_load_class(loader, "java/lang/Thread");
 //    thread->this_obj = jobject_create(jlt_class);
@@ -88,71 +91,89 @@ struct jobject* jthread_get_jl_thread_obj(struct jthread *thread)
     return thread->jl_thread_obj;
 }
 
-//void jthread_set_pc(struct jthread *thread, size_t new_pc)
-//{
-//    assert(thread != NULL);
-//    thread->pc = new_pc;
-//}
-//
-//size_t jthread_get_pc(const struct jthread *thread)
-//{
-//    assert(thread != NULL);
-//    return thread->pc;
-//}
-
 bool jthread_is_stack_empty(const struct jthread *thread)
 {
     assert(thread != NULL);
-    return vector_len(thread->vm_stack) == 0;
+    return vector_len(&thread->vm_stack) == 0;
 }
 
 int jthread_stack_depth(const struct jthread *thread)
 {
     assert(thread != NULL);
-    return vector_len(thread->vm_stack);
+    return vector_len(&thread->vm_stack);
 }
 
-struct stack_frame* jthread_top_frame(struct jthread *thread)
+struct frame* jthread_top_frame(struct jthread *thread)
 {
     assert(thread != NULL);
-    return vector_back(thread->vm_stack);
+    return vector_back(&thread->vm_stack);
 }
 
-struct stack_frame* jthread_depth_frame(struct jthread *thread, int depth)
+struct frame* jthread_depth_frame(struct jthread *thread, int depth)
 {
     assert(thread != NULL);
-    return vector_rget(thread->vm_stack, depth);
+    return vector_rget(&thread->vm_stack, depth);
 }
 
 void jthread_pop_frame(struct jthread *thread)
 {
     assert(thread != NULL);
-    vector_pop_back(thread->vm_stack);
+    vector_pop_back(&thread->vm_stack);
 }
 
-void jthread_push_frame(struct jthread *thread, struct stack_frame *frame)
+void jthread_push_frame(struct jthread *thread, struct frame *frame)
 {
     assert(thread != NULL && frame != NULL);
-    vector_push_back(thread->vm_stack, frame);
+    vector_push_back(&thread->vm_stack, frame);
 }
 
-struct stack_frame** jthread_get_frames(const struct jthread *thread, int *num)
+struct frame** jthread_get_frames(const struct jthread *thread, int *num)
 {
     assert(thread != NULL);
     assert(num != NULL);
-    return (struct stack_frame **) vector_to_array(thread->vm_stack, num);
+    return (struct frame **) vector_to_array(&thread->vm_stack, num);
+}
+
+static struct frame* frame_cache_get(struct jthread *thread, struct jmethod *m)
+{
+    assert(fh != NULL);
+    assert(m != NULL);
+
+    u4 max_locals_stack = m->max_locals + m->max_stack;
+    if (max_locals_stack < FRMHUB_SLOTS_COUNT_MAX) {
+        struct vector *v = thread->frame_cache + max_locals_stack;
+        if (!vector_empty(v)) {
+            struct frame *f = vector_pop_back(v);
+            frame_bind(f, thread, m);
+            return f;
+        }
+    }
+
+    return frame_create(thread, m);
+}
+
+void jthread_recycle_frame(struct frame *frame)
+{
+    assert(thread != NULL);
+    assert(f != NULL);
+
+    if (frame->max_locals_and_stack >= FRMHUB_SLOTS_COUNT_MAX) {
+        frame_destroy(frame); // too big, don't accept
+    } else {
+        vector_push_back(frame->thread->frame_cache + frame->max_locals_and_stack, frame);
+    }
 }
 
 void jthread_invoke_method(struct jthread *thread, struct jmethod *method, const struct slot *args)
 {
     assert(thread != NULL && method != NULL);
 
-    struct stack_frame *top_frame = jthread_top_frame(thread);
+    struct frame *top_frame = jthread_top_frame(thread);
     if (top_frame == NULL) {
         // todo 没有调用者，那么是每个线程的启动函数（主线程的启动函数就是main）
     }
 
-    struct stack_frame *new_frame = sf_create(thread, method);
+    struct frame *new_frame = frame_cache_get(thread, method); // frame_create(thread, method);
     jthread_push_frame(thread, new_frame);
 
     if (method->arg_slot_count > 0 && args == NULL) {
@@ -162,7 +183,7 @@ void jthread_invoke_method(struct jthread *thread, struct jmethod *method, const
     // 准备参数
     for (int i = 0; i < method->arg_slot_count; i++) {
         // 传递参数到被调用的函数。
-        sf_set_local_var(new_frame, i, args + i);
+        frame_locals_set(new_frame, i, args + i);
     }
 
 //    // 准备参数
@@ -180,22 +201,22 @@ void jthread_invoke_method(struct jthread *thread, struct jmethod *method, const
 
     // 中断 top_frame 的执行，执行 new_frame
     if (top_frame != NULL) {
-        sf_interrupt(top_frame);
+        frame_interrupt(top_frame);
     }
 
     // todo
 }
 
 void jthread_invoke_method_with_shim(struct jthread *thread, struct jmethod *method, const struct slot *args,
-                                     void (* shim_action)(struct stack_frame *))
+                                     void (* shim_action)(struct frame *))
 {
     jthread_invoke_method(thread, method, args);
 
-    struct stack_frame *top = jthread_top_frame(thread);
+    struct frame *top = jthread_top_frame(thread);
     jthread_pop_frame(thread);
 
     // 创建一个 shim stack frame 来接受函数method的返回值
-    jthread_push_frame(thread, sf_create_shim(thread, shim_action));
+    jthread_push_frame(thread, frame_create(thread, shim_action));
     jthread_push_frame(thread, top);
 }
 
@@ -204,12 +225,12 @@ void jthread_handle_uncaught_exception(struct jthread *thread, struct jobject *e
     assert(thread != NULL);
     assert(exception != NULL);
 
-    vector_clear(thread->vm_stack);
+    vector_clear(&thread->vm_stack);
     struct jmethod *pst = jclass_lookup_instance_method(exception->jclass, "printStackTrace", "()V");
 
     // call exception.printStackTrace()
-    struct stack_frame *frame = sf_create(thread, pst);
-    frame->local_vars[0] = rslot(exception);
+    struct frame *frame = frame_cache_get(thread, pst);//frame_create(thread, pst);
+    frame->locals[0] = rslot(exception);
     jthread_push_frame(thread, frame);
 }
 
@@ -249,6 +270,6 @@ void jthread_destroy(struct jthread *thread)
 {
     // todo
     assert(thread != NULL);
-    vector_destroy(thread->vm_stack);
+    vector_release(&thread->vm_stack);
     free(thread);
 }

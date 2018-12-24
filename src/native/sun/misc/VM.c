@@ -3,10 +3,10 @@
  */
 
 #include "../../registry.h"
-#include "../../../interpreter/stack_frame.h"
+#include "../../../rtda/thread/frame.h"
 
 // private static native void initialize();
-static void initialize(struct stack_frame *frame)
+static void initialize(struct frame *frame)
 {
 //    static bool flag = false;
 //    if (flag) {
@@ -14,7 +14,7 @@ static void initialize(struct stack_frame *frame)
 //    }
 
     // todo
-    struct jclass *sys_class = classloader_load_class(frame->method->jclass->loader, "java/lang/System");
+    struct jclass *sys_class = classloader_load_class(frame->m.method->jclass->loader, "java/lang/System");
 //    sysClass->clinit(frame);  // todo
     struct jmethod *m = jclass_lookup_static_method(sys_class, "initializeSystemClass", "()V");
     if (m == NULL) {

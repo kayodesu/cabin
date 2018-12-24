@@ -7,27 +7,23 @@
  */
 
 // private static native int findSignal(String string);
-static void findSignal(struct stack_frame *frame)
+static void findSignal(struct frame *frame)
 {
-    jref name = slot_getr(frame->local_vars);
-#ifdef JVM_DEBUG
-    JOBJECT_CHECK_STROBJ(name);
-#endif
-
-    os_pushi(frame->operand_stack, 0); // todo
+    jref name = frame_locals_getr(frame, 0);
+    frame_stack_pushi(frame, 0); // todo
 }
 
 // private static native long handle0(int i, long l);
-static void handle0(struct stack_frame *frame)
+static void handle0(struct frame *frame)
 {
 //    jint i = slot_geti(frame->local_vars);
 //    jlong l = slot_getl(frame->local_vars + 1);
 
-    os_pushl(frame->operand_stack, 0); // todo
+    frame_stack_pushl(frame, 0); // todo
 }
 
 // private static native void raise0(int i);
-static void raise0(struct stack_frame *frame)
+static void raise0(struct frame *frame)
 {
 //    jint i = slot_geti(frame->local_vars);
     // todo

@@ -6,12 +6,12 @@
 #define JVM_CONVERSIONS_H
 
 #include "../jtypes.h"
-#include "../interpreter/stack_frame.h"
+#include "../rtda/thread/frame.h"
 
 #define x2y(x, y) \
-static void __##x##2##y(struct stack_frame *frame) \
+static void __##x##2##y(struct frame *frame) \
 { \
-    os_push##y(frame->operand_stack, x##2##y(os_pop##x(frame->operand_stack))); \
+    frame_stack_push##y(frame, x##2##y(frame_stack_pop##x(frame))); \
 } \
 
 x2y(i, l) x2y(i, f) x2y(i, d)
@@ -24,9 +24,9 @@ x2y(d, i) x2y(d, l) x2y(d, f)
  * It is popped from the operand stack, truncated to a byte, then sign-extended
  * to an int result. That result is pushed onto the operand stack.
  */
-static void __i2b(struct stack_frame *frame)
+static void __i2b(struct frame *frame)
 {
-    os_pushi(frame->operand_stack, i2b(os_popi(frame->operand_stack)));
+    frame_stack_pushi(frame, i2b(frame_stack_popi(frame)));
 }
 
 /*
@@ -34,9 +34,9 @@ static void __i2b(struct stack_frame *frame)
  * It is popped from the operand stack, truncated to char, then zero-extended
  * to an int result. That result is pushed onto the operand stack.
  */
-static void __i2c(struct stack_frame *frame)
+static void __i2c(struct frame *frame)
 {
-    os_pushi(frame->operand_stack, i2c(os_popi(frame->operand_stack)));
+    frame_stack_pushi(frame, i2c(frame_stack_popi(frame)));
 }
 
 /*
@@ -44,9 +44,9 @@ static void __i2c(struct stack_frame *frame)
  * It is popped from the operand stack, truncated to a short, then sign-extended
  * to an int result. That result is pushed onto the operand stack.
  */
-static void __i2s(struct stack_frame *frame)
+static void __i2s(struct frame *frame)
 {
-    os_pushi(frame->operand_stack, i2s(os_popi(frame->operand_stack)));
+    frame_stack_pushi(frame, i2s(frame_stack_popi(frame)));
 }
 
 

@@ -12,6 +12,7 @@
       <w>eles</w>
       <w>endianness</w>
       <w>fieldvalues</w>
+      <w>frmhub</w>
       <w>fslot</w>
       <w>getd</w>
       <w>getf</w>
@@ -39,6 +40,7 @@
       <w>lsun</w>
       <w>mallocs</w>
       <w>methodref</w>
+      <w>nullslot</w>
       <w>oper</w>
       <w>peeku</w>
       <w>phslot</w>

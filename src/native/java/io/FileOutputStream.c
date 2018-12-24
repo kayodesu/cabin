@@ -4,14 +4,14 @@
 
 #include "../../registry.h"
 #include "../../../jvm.h"
-#include "../../../interpreter/stack_frame.h"
+#include "../../../rtda/thread/frame.h"
 #include "../../../slot.h"
 #include "../../../rtda/heap/jobject.h"
 #include "../../../output.h"
 
 
 // private static native void initIDs();
-static void initIDs(struct stack_frame *frame)
+static void initIDs(struct frame *frame)
 {
 //    jvm_abort("error\n");
     // todo
@@ -45,17 +45,14 @@ static void initIDs(struct stack_frame *frame)
  * @exception IOException If an I/O error has occurred.
  */
 // private native void writeBytes(byte b[], int off, int len, boolean append) throws IOException;
-static void writeBytes(struct stack_frame *frame)
+static void writeBytes(struct frame *frame)
 {
-    jref this = slot_getr(frame->local_vars);
-    jref b = slot_getr(frame->local_vars + 1);
-    jint off = slot_geti(frame->local_vars + 2);
-    jint len = slot_geti(frame->local_vars + 3);
-    bool append = slot_geti(frame->local_vars + 4) == 0 ? false : true;
+    jref this = frame_locals_getr(frame, 0);
+    jref b = frame_locals_getr(frame, 1);
+    jint off = frame_locals_geti(frame, 2);
+    jint len = frame_locals_geti(frame, 3);
+    bool append = frame_locals_getz(frame, 4);
 
-#ifdef JVM_DEBUG
-    JOBJECT_CHECK_ARROBJ(b);
-#endif
     // todo
     jbyte *data = jarrobj_data(b);
     write_bytes(this, data + off, len, append);

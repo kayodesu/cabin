@@ -5,7 +5,7 @@
 #ifndef JVM_REFERENCES_H
 #define JVM_REFERENCES_H
 
-#include "../interpreter/stack_frame.h"
+#include "../rtda/thread/frame.h"
 #include "../rtda/ma/jmethod.h"
 #include "../rtda/ma/jfield.h"
 #include "../util/encoding.h"
@@ -25,16 +25,16 @@
 /*
  * new指令专门用来创建类实例。数组由专门的指令创建 todo
  */
-static void __new(struct stack_frame *frame)
+static void __new(struct frame *frame)
 {
-    struct bytecode_reader *reader = frame->reader;
+    struct bytecode_reader *reader = &frame->reader;
     size_t saved_pc = reader->pc - 1;
 
-    const char *class_name = rtcp_get_class_name(frame->method->jclass->rtcp, bcr_readu2(reader)); // todo reads2  ?????
+    const char *class_name = rtcp_get_class_name(frame->m.method->jclass->rtcp, bcr_readu2(reader)); // todo reads2  ?????
     assert(class_name != NULL);
     assert(strlen(class_name) > 0);
 
-    struct jclass *c = resolve_class(frame->method->jclass, class_name);  // todo
+    struct jclass *c = resolve_class(frame->m.method->jclass, class_name);  // todo
     if (!c->inited) {
         jclass_clinit(c, frame->thread);
         reader->pc = saved_pc; // recover pc
@@ -48,7 +48,8 @@ static void __new(struct stack_frame *frame)
     // todo java/lang/Class 会在这里创建，为什么会这样，怎么处理
 //    assert(strcmp(c->class_name, "java/lang/Class") == 0);
 
-    os_pushr(frame->operand_stack, jobject_create(c));
+    frame_stack_pushr(frame, jobject_create(c));
+//    os_pushr(frame->operand_stack, jobject_create(c));
 }
 
 /*
@@ -58,12 +59,12 @@ static void __new(struct stack_frame *frame)
  *    就可以知道要给类的哪个静态变量赋值。
  * 第二个操作数是要赋给静态变量的值，从操作数栈中弹出。
  */
-static void putstatic(struct stack_frame *frame)
+static void putstatic(struct frame *frame)
 {
-    struct bytecode_reader *reader = frame->reader;
+    struct bytecode_reader *reader = &frame->reader;
     size_t saved_pc = reader->pc - 1;
 
-    struct jclass *curr_class = frame->method->jclass;
+    struct jclass *curr_class = frame->m.method->jclass;
 
     int index = bcr_readu2(reader);
     struct field_ref *ref = rtcp_get_field_ref(curr_class->rtcp, index);
@@ -77,6 +78,7 @@ static void putstatic(struct stack_frame *frame)
         return;
     }
 
+#if 0
     // todo
     char d = *ref->resolved_field->descriptor;
     struct slot s;
@@ -93,16 +95,21 @@ static void putstatic(struct stack_frame *frame)
     } else {
         VM_UNKNOWN_ERROR("field's descriptor error. %s", ref->resolved_field->descriptor);
     }
-
     set_static_field_value_by_id(cls, ref->resolved_field->id, &s);
+#endif
+    struct slot *s = frame_stack_pop_slot(frame);
+    if (slot_is_ph(s)) {
+        s = frame_stack_pop_slot(frame);
+    }
+    set_static_field_value_by_id(cls, ref->resolved_field->id, s);
 }
 
-static void getstatic(struct stack_frame *frame)
+static void getstatic(struct frame *frame)
 {
-    struct bytecode_reader *reader = frame->reader;
+    struct bytecode_reader *reader = &frame->reader;
     size_t saved_pc = reader->pc - 1;
 
-    struct jclass *curr_class = frame->method->jclass;
+    struct jclass *curr_class = frame->m.method->jclass;
 
     int index = bcr_readu2(reader);
     struct field_ref *ref = rtcp_get_field_ref(curr_class->rtcp, index);
@@ -115,7 +122,8 @@ static void getstatic(struct stack_frame *frame)
         reader->pc = saved_pc; // recover pc
         return;
     }
-    os_pushs(frame->operand_stack, get_static_field_value_by_id(cls, ref->resolved_field->id));
+    frame_stack_push_slot(frame, get_static_field_value_by_id(cls, ref->resolved_field->id));
+//    os_pushs(frame->operand_stack, get_static_field_value_by_id(cls, ref->resolved_field->id));
 }
 
 /*
@@ -123,11 +131,11 @@ static void getstatic(struct stack_frame *frame)
  * 前两个操作数是常量池索引和变量值，用法和putstatic一样。
  * 第三个操作数是对象引用，从操作数栈中弹出
  */
-static void putfield(struct stack_frame *frame)
+static void putfield(struct frame *frame)
 {
-    struct jclass *curr_class = frame->method->jclass;
+    struct jclass *curr_class = frame->m.method->jclass;
 
-    int index = bcr_readu2(frame->reader);
+    int index = bcr_readu2(&frame->reader);
     struct field_ref *ref = rtcp_get_field_ref(curr_class->rtcp, index);
     resolve_non_static_field_ref(curr_class, ref);
 
@@ -136,11 +144,12 @@ static void putfield(struct stack_frame *frame)
      */
     if (IS_FINAL(ref->resolved_field->access_flags)) {
         // todo
-        if (frame->method->jclass != ref->resolved_class || strcmp(frame->method->name, "<init>") != 0) {
+        if (frame->m.method->jclass != ref->resolved_class || strcmp(frame->m.method->name, "<init>") != 0) {
             jvm_abort("java.lang.IllegalAccessError\n"); // todo
         }
     }
 
+#if 0
     // todo
     char d = *ref->resolved_field->descriptor;
     struct slot s;
@@ -157,13 +166,19 @@ static void putfield(struct stack_frame *frame)
     } else {
         VM_UNKNOWN_ERROR("field's descriptor error. %s", ref->resolved_field->descriptor);
     }
+#endif
 
-    jref obj = os_popr(frame->operand_stack);
+    struct slot *s = frame_stack_pop_slot(frame);
+    if (slot_is_ph(s)) {
+        s = frame_stack_pop_slot(frame);
+    }
+
+    jref obj = frame_stack_popr(frame);  //os_popr(frame->operand_stack);
     if (obj == NULL) {
         jthread_throw_null_pointer_exception(frame->thread);
     }
 
-    set_instance_field_value_by_id(obj, ref->resolved_field->id, &s);
+    set_instance_field_value_by_id(obj, ref->resolved_field->id, s);
 }
 
 /*
@@ -171,21 +186,22 @@ static void putfield(struct stack_frame *frame)
  * 要两个操作数。第一个操作数是uint16索引，用法和前面三个指令
  * 一样。第二个操作数是对象引用，用法和putfield一样。
  */
-static void getfield(struct stack_frame *frame)
+static void getfield(struct frame *frame)
 {
-    struct jclass *curr_class = frame->method->jclass;
+    struct jclass *curr_class = frame->m.method->jclass;
 
-    int index = bcr_readu2(frame->reader);
+    int index = bcr_readu2(&frame->reader);
     struct field_ref *ref = rtcp_get_field_ref(curr_class->rtcp, index);
     resolve_non_static_field_ref(curr_class, ref);
 
-    jref obj = os_popr(frame->operand_stack);
+    jref obj = frame_stack_popr(frame);  //os_popr(frame->operand_stack);
     if (obj == NULL) {
         jthread_throw_null_pointer_exception(frame->thread);
     }
 
     const struct slot *s = get_instance_field_value_by_id(obj, ref->resolved_field->id);
-
+    frame_stack_push_slot(frame, s);
+#if 0
     // 检查 slot 的类型与 field 的类型是否匹配  todo
     char d = *ref->resolved_field->descriptor;
     if (((d == 'B' || d == 'C' || d == 'I' || d == 'S' || d == 'Z') && s->t == JINT)
@@ -198,11 +214,12 @@ static void getfield(struct stack_frame *frame)
         VM_UNKNOWN_ERROR("type mismatch error. field's descriptor is %s, but slot is %s",
                   ref->resolved_field->descriptor, slot_to_string(s));
     }
+#endif
 }
 
-static void athrow(struct stack_frame *frame)
+static void athrow(struct frame *frame)
 {
-    jref exception = os_popr(frame->operand_stack);
+    jref exception = frame_stack_popr(frame);  //os_popr(frame->operand_stack);
     if (exception == NULL) {
         jthread_throw_null_pointer_exception(frame->thread);
     }
@@ -211,9 +228,9 @@ static void athrow(struct stack_frame *frame)
 
     // 遍历虚拟机栈找到可以处理此异常的方法
     while (!jthread_is_stack_empty(curr_thread)) {
-        struct stack_frame *top = jthread_top_frame(curr_thread);
+        struct frame *top = jthread_top_frame(curr_thread);
         if (top->type == SF_TYPE_NORMAL) {
-            int handler_pc = jmethod_find_exception_handler(top->method, exception->jclass, top->reader->pc - 1); // instruction length todo 好像是错的
+            int handler_pc = jmethod_find_exception_handler(top->m.method, exception->jclass, top->reader.pc - 1); // instruction length todo 好像是错的
             if (handler_pc >= 0) {  // todo 可以等于0吗
                 /*
                  * 找到可以处理的函数了
@@ -221,10 +238,10 @@ static void athrow(struct stack_frame *frame)
                  * 把异常对象引用推入栈顶
                  * 跳转到异常处理代码之前
                  */
-                os_clear(top->operand_stack);
-                os_pushr(top->operand_stack, exception);
-                top->reader->pc = (size_t) handler_pc;
-                sf_proc_exception(top);
+                frame_stack_clear(top);
+                frame_stack_pushr(top, exception);
+                top->reader.pc = (size_t) handler_pc;
+                frame_proc_exception(top);
                 return;
             }
         }
@@ -233,9 +250,9 @@ static void athrow(struct stack_frame *frame)
         jthread_pop_frame(curr_thread);
         if (top == frame) {
             // 当前执行的 frame 不能直接销毁，设置成执行完毕即可，由解释器销毁
-            sf_exe_over(frame);
+            frame_exe_over(frame);
         } else {
-            sf_destroy(top);
+            frame_destroy(top); // todo
         }
     }
 
@@ -247,38 +264,39 @@ static void athrow(struct stack_frame *frame)
  * 第一个操作数是uint16索引，从方法的字节码中获取，通过这个索引可以从当前类的运行时常量池中找到一个类符号引用。
  * 第二个操作数是对象引用，从操作数栈中弹出。
  */
-static void instanceof(struct stack_frame *frame)
+static void instanceof(struct frame *frame)
 {
-    int index = bcr_readu2(frame->reader);
-    const char *class_name = rtcp_get_class_name(frame->method->jclass->rtcp, index);
+    int index = bcr_readu2(&frame->reader);
+    const char *class_name = rtcp_get_class_name(frame->m.method->jclass->rtcp, index);
 
-    struct jclass *jclass = classloader_load_class(frame->method->jclass->loader, class_name); // todo resolve_class ???
+    struct jclass *jclass = classloader_load_class(frame->m.method->jclass->loader, class_name); // todo resolve_class ???
 
-    jref obj = os_popr(frame->operand_stack);
+    jref obj = frame_stack_popr(frame);  //os_popr(frame->operand_stack);
     if (obj == NULL) {
-        os_pushi(frame->operand_stack, 0);
+        frame_stack_pushi(frame, 0); //os_pushi(frame->operand_stack, 0);
         return;
     }
 
-    os_pushi(frame->operand_stack, (jint)(jobject_is_instance_of(obj, jclass) ? 1 : 0));
+    frame_stack_pushi(frame, jobject_is_instance_of(obj, jclass) ? 1 : 0);
+//    os_pushi(frame->operand_stack, (jint)(jobject_is_instance_of(obj, jclass) ? 1 : 0));
 }
 
 /*
  * checkcast指令和instanceof指令很像，区别在于：instanceof指令会改变操作数栈（弹出对象引用，推入判断结果）
  * checkcast则不改变操作数栈（如果判断失败，直接抛出ClassCastException异常）
  */
-static void checkcast(struct stack_frame *frame)
+static void checkcast(struct frame *frame)
 {
-    jref obj = os_top(frame->operand_stack)->v.r;
-    int index = bcr_readu2(frame->reader);
+    jref obj = slot_getr(frame_stack_top(frame));//os_top(frame->operand_stack)->v.r;
+    int index = bcr_readu2(&frame->reader);
     if (obj == NULL) {
         // 如果引用是null，则指令执行结束。也就是说，null 引用可以转换成任何类型
         return;
     }
 
-    const char *class_name = rtcp_get_class_name(frame->method->jclass->rtcp, index);
+    const char *class_name = rtcp_get_class_name(frame->m.method->jclass->rtcp, index);
 
-    struct jclass *jclass = classloader_load_class(frame->method->jclass->loader, class_name); // todo resolve_class ???
+    struct jclass *jclass = classloader_load_class(frame->m.method->jclass->loader, class_name); // todo resolve_class ???
     if (!jobject_is_instance_of(obj, jclass)) {
         jthread_throw_class_cast_exception(frame->thread, obj->jclass->class_name, jclass->class_name);
     }
@@ -292,12 +310,12 @@ static void checkcast(struct stack_frame *frame)
  *     如果是针对接口类型的引用调用方法，就使用invokeinterface指令，
  *     否则使用invokevirtual指令。
  */
-static void invokestatic(struct stack_frame *frame)
+static void invokestatic(struct frame *frame)
 {
-    size_t saved_pc = frame->reader->pc - 1;
-    struct jclass *curr_class = frame->method->jclass;
+    size_t saved_pc = frame->reader.pc - 1;
+    struct jclass *curr_class = frame->m.method->jclass;
 
-    int index = bcr_readu2(frame->reader);
+    int index = bcr_readu2(&frame->reader);
     struct method_ref *ref = rtcp_get_method_ref(curr_class->rtcp, index);
     resolve_static_method_ref(curr_class, ref);
 
@@ -310,13 +328,13 @@ static void invokestatic(struct stack_frame *frame)
         jclass_clinit(ref->resolved_class, frame->thread);
         /* 将pc指向本条指令之前，初始化完类后，继续执行本条指令。*/
 //        bcr_set_pc(frame->reader, jthread_get_pc(frame->thread));
-        frame->reader->pc = saved_pc; // recover pc
+        frame->reader.pc = saved_pc; // recover pc
         return;
     }
 
     struct slot args[ref->resolved_method->arg_slot_count];
     for (int i = ref->resolved_method->arg_slot_count - 1; i >= 0; i--) {
-        args[i] = *os_pops(frame->operand_stack);
+        args[i] = *frame_stack_pop_slot(frame); //*os_pops(frame->operand_stack);
     }
 
     jthread_invoke_method(frame->thread, ref->resolved_method, args);
@@ -325,11 +343,11 @@ static void invokestatic(struct stack_frame *frame)
 /*
  * invokespecial指令用于调用一些需要特殊处理的实例方法，包括实例初始化方法、私有方法和父类方法。
  */
-static void invokespecial(struct stack_frame *frame)
+static void invokespecial(struct frame *frame)
 {
-    struct jclass *curr_class = frame->method->jclass;
+    struct jclass *curr_class = frame->m.method->jclass;
 
-    int index = bcr_readu2(frame->reader);
+    int index = bcr_readu2(&frame->reader);
     struct method_ref *ref = rtcp_get_method_ref(curr_class->rtcp, index);
     resolve_non_static_method_ref(curr_class, ref);
 
@@ -362,7 +380,7 @@ static void invokespecial(struct stack_frame *frame)
 
     struct slot args[method->arg_slot_count];
     for (int i = method->arg_slot_count - 1; i >= 0; i--) {
-        args[i] = *os_pops(frame->operand_stack);
+        args[i] = *frame_stack_pop_slot(frame); //*os_pops(frame->operand_stack);
     }
 
     jref obj = slot_getr(args); // args[0]
@@ -376,17 +394,17 @@ static void invokespecial(struct stack_frame *frame)
 /*
  * invokevirtual指令用于调用对象的实例方法，根据对象的实际类型进行分派（虚方法分派），这也是Java语言中最常见的方法分派方式。
  */
-static void invokevirtual(struct stack_frame *frame)
+static void invokevirtual(struct frame *frame)
 {
-    struct jclass *curr_class = frame->method->jclass;
+    struct jclass *curr_class = frame->m.method->jclass;
 
-    int index = bcr_readu2(frame->reader);
+    int index = bcr_readu2(&frame->reader);
     struct method_ref *ref = rtcp_get_method_ref(curr_class->rtcp, index);
     resolve_non_static_method_ref(curr_class, ref);
 
     struct slot args[ref->resolved_method->arg_slot_count];
     for (int i = ref->resolved_method->arg_slot_count - 1; i >= 0; i--) {
-        args[i] = *os_pops(frame->operand_stack);
+        args[i] = *frame_stack_pop_slot(frame); //*os_pops(frame->operand_stack);
     }
 
     struct jobject *obj = slot_getr(args); // args[0]
@@ -407,22 +425,22 @@ static void invokevirtual(struct stack_frame *frame)
 /*
  * invokeinterface指令用于调用接口方法，它会在运行时搜索一个实现了这个接口方法的对象，找出适合的方法进行调用。
  */
-static void invokeinterface(struct stack_frame *frame)
+static void invokeinterface(struct frame *frame)
 {
-    struct jclass *curr_class = frame->method->jclass;
-    int index = bcr_readu2(frame->reader);
+    struct jclass *curr_class = frame->m.method->jclass;
+    int index = bcr_readu2(&frame->reader);
 
     /*
      * 此字节的值是给方法传递参数需要的slot数，
      * 其含义和给method结构体定义的arg_slot_count字段相同。
      * 这个数是可以根据方法描述符计算出来的，它的存在仅仅是因为历史原因。
      */
-    bcr_readu1(frame->reader);
+    bcr_readu1(&frame->reader);
     /*
      * 此字节是留给Oracle的某些Java虚拟机实现用的，它的值必须是0。
      * 该字节的存在是为了保证Java虚拟机可以向后兼容。
      */
-    bcr_readu1(frame->reader);
+    bcr_readu1(&frame->reader);
 
     struct method_ref *ref = rtcp_get_interface_method_ref(curr_class->rtcp, index);
     resolve_non_static_method_ref(curr_class, ref);
@@ -431,7 +449,7 @@ static void invokeinterface(struct stack_frame *frame)
 
     struct slot args[ref->resolved_method->arg_slot_count];
     for (int i = ref->resolved_method->arg_slot_count - 1; i >= 0; i--) {
-        args[i] = *os_pops(frame->operand_stack);
+        args[i] = *frame_stack_pop_slot(frame); //*os_pops(frame->operand_stack);
     }
 
     jref obj = slot_getr(args); // args[0]
@@ -459,42 +477,42 @@ static void invokeinterface(struct stack_frame *frame)
 /*
  * todo 说明 invokedynamic!!!!!!!
  */
-static void set_invoked_type(struct stack_frame *frame)
+static void set_invoked_type(struct frame *frame)
 {
     assert(frame != NULL);
-    frame->thread->dyn.invoked_type = os_popr(frame->operand_stack);
+    frame->thread->dyn.invoked_type = frame_stack_popr(frame); //os_popr(frame->operand_stack);
 }
 
-static void set_caller(struct stack_frame *frame)
+static void set_caller(struct frame *frame)
 {
     assert(frame != NULL);
-    frame->thread->dyn.caller = os_popr(frame->operand_stack);
+    frame->thread->dyn.caller = frame_stack_popr(frame); //os_popr(frame->operand_stack);
 }
 
-static void set_call_set(struct stack_frame *frame)
+static void set_call_set(struct frame *frame)
 {
     assert(frame != NULL);
-    frame->thread->dyn.call_set = os_popr(frame->operand_stack);
+    frame->thread->dyn.call_set = frame_stack_popr(frame); //os_popr(frame->operand_stack);
 }
 
-static void set_exact_method_handle(struct stack_frame *frame)
+static void set_exact_method_handle(struct frame *frame)
 {
     assert(frame != NULL);
-    frame->thread->dyn.exact_method_handle = os_popr(frame->operand_stack);
+    frame->thread->dyn.exact_method_handle = frame_stack_popr(frame); //os_popr(frame->operand_stack);
 }
 
-static void invokedynamic(struct stack_frame *frame)
+static void invokedynamic(struct frame *frame)
 {
-    size_t saved_pc = frame->reader->pc - 1;
+    size_t saved_pc = frame->reader.pc - 1;
 
-    struct jclass *curr_class = frame->method->jclass;
+    struct jclass *curr_class = frame->m.method->jclass;
     struct jthread *curr_thread = frame->thread;
 
     // The run-time constant pool item at that index must be a symbolic reference to a call site specifier.
-    int index = bcr_readu2(frame->reader);
+    int index = bcr_readu2(&frame->reader);
 
-    bcr_readu1(frame->reader); // this byte must always be zero.
-    bcr_readu1(frame->reader); // this byte must always be zero.
+    bcr_readu1(&frame->reader); // this byte must always be zero.
+    bcr_readu1(&frame->reader); // this byte must always be zero.
 
     struct invoke_dynamic_ref *ref = rtcp_get_invoke_dynamic(curr_class->rtcp, index);
 
@@ -535,7 +553,7 @@ static void invokedynamic(struct stack_frame *frame)
     }
 
     if (need_again) {
-        frame->reader->pc = saved_pc; // recover pc
+        frame->reader.pc = saved_pc; // recover pc
         return;
     }
 
@@ -571,16 +589,16 @@ static void invokedynamic(struct stack_frame *frame)
                         call_set->jclass, "dynamicInvoker", "()Ljava/lang/invoke/MethodHandle;");
                 struct slot arg = rslot(call_set);
                 jthread_invoke_method_with_shim(curr_thread, dynamicInvoker, &arg, set_exact_method_handle);
-                frame->reader->pc = saved_pc; // recover pc
+                frame->reader.pc = saved_pc; // recover pc
             }
 
-            frame->reader->pc = saved_pc; // recover pc
+            frame->reader.pc = saved_pc; // recover pc
             return;
         }
 
         struct method_ref *mr = ref->handle->ref.mr;
 
-        struct jclass *bootstrap_class = classloader_load_class(frame->method->jclass->loader, mr->class_name);
+        struct jclass *bootstrap_class = classloader_load_class(frame->m.method->jclass->loader, mr->class_name);
         struct jmethod *bootstrap_method = jclass_lookup_static_method(bootstrap_class, mr->name, mr->descriptor);
         // todo 说明 bootstrap_method 的格式
         // bootstrap_method is static,  todo 对不对
@@ -597,7 +615,7 @@ static void invokedynamic(struct stack_frame *frame)
         }
 
         jthread_invoke_method_with_shim(curr_thread, bootstrap_method, args, set_call_set);
-        frame->reader->pc = saved_pc; // recover pc
+        frame->reader.pc = saved_pc; // recover pc
         return;
     }
     case REF_KIND_INVOKE_SPECIAL:
@@ -621,9 +639,9 @@ static void invokedynamic(struct stack_frame *frame)
  * 显然基本类型数组肯定都是一维数组，
  * 如果引用类型数组的元素也是数组，那么它就是多维数组。
  */
-static void newarray(struct stack_frame *frame)
+static void newarray(struct frame *frame)
 {
-    jint arr_len = os_popi(frame->operand_stack);
+    jint arr_len = frame_stack_popi(frame);  //os_popi(frame->operand_stack);
     if (arr_len < 0) {
         jthread_throw_negative_array_size_exception(frame->thread, arr_len);
         return;
@@ -641,7 +659,7 @@ static void newarray(struct stack_frame *frame)
      * AT_INT     = 10
      * AT_LONG    = 11
      */
-    int arr_type = bcr_readu1(frame->reader);
+    int arr_type = bcr_readu1(&frame->reader);
     char *arr_name;
     switch (arr_type) {
         case 4: arr_name = "[Z"; break;
@@ -657,9 +675,10 @@ static void newarray(struct stack_frame *frame)
             return;
     }
 
-    struct jclass *c = classloader_load_class(frame->method->jclass->loader, arr_name);
+    struct jclass *c = classloader_load_class(frame->m.method->jclass->loader, arr_name);
     // 因为前面已经判断了 arr_len >= 0，所以 arr_len 转型为 size_t 是安全的
-    os_pushr(frame->operand_stack, (jref) jarrobj_create(c, (size_t) arr_len));
+    frame_stack_pushr(frame, jarrobj_create(c, (size_t) arr_len));
+    //os_pushr(frame->operand_stack, (jref) jarrobj_create(c, (size_t) arr_len));
 }
 
 /*
@@ -668,10 +687,10 @@ static void newarray(struct stack_frame *frame)
  * 实现完全错误
  * 创建一维引用类型数组
  */
-static void anewarray(struct stack_frame *frame)
+static void anewarray(struct frame *frame)
 {
-    struct jclass *curr_class = frame->method->jclass;
-    jint arr_len = os_popi(frame->operand_stack);
+    struct jclass *curr_class = frame->m.method->jclass;
+    jint arr_len = frame_stack_popi(frame);  //os_popi(frame->operand_stack);
     if (arr_len < 0) {
         jthread_throw_negative_array_size_exception(frame->thread, arr_len);
         return;
@@ -679,17 +698,18 @@ static void anewarray(struct stack_frame *frame)
 
     // todo arrLen == 0 的情况
 
-    int index = bcr_readu2(frame->reader);
-    const char *class_name = rtcp_get_class_name(frame->method->jclass->rtcp, index); // 数组元素的类
+    int index = bcr_readu2(&frame->reader);
+    const char *class_name = rtcp_get_class_name(frame->m.method->jclass->rtcp, index); // 数组元素的类
     char *arr_class_name = get_arr_class_name(class_name);
     struct jclass *arr_class = classloader_load_class(curr_class->loader, arr_class_name);
     free(arr_class_name);
-    os_pushr(frame->operand_stack, (jref) jarrobj_create(arr_class, (size_t) arr_len));
+    frame_stack_pushr(frame, jarrobj_create(arr_class, (size_t) arr_len));
+    //os_pushr(frame->operand_stack, (jref) jarrobj_create(arr_class, (size_t) arr_len));
 }
 
-static void arraylength(struct stack_frame *frame)
+static void arraylength(struct frame *frame)
 {
-    struct jobject *o = os_popr(frame->operand_stack);
+    struct jobject *o = frame_stack_popr(frame); //os_popr(frame->operand_stack);
     if (o == NULL) {
         jthread_throw_null_pointer_exception(frame->thread);
     }
@@ -697,12 +717,12 @@ static void arraylength(struct stack_frame *frame)
         vm_unknown_error("not a array");
     }
 
-    os_pushi(frame->operand_stack, jarrobj_len(o));
+    frame_stack_pushi(frame, jarrobj_len(o)); //os_pushi(frame->operand_stack, jarrobj_len(o));
 }
 
-static void monitorenter(struct stack_frame *frame)
+static void monitorenter(struct frame *frame)
 {
-    jref o = os_popr(frame->operand_stack);
+    jref o = frame_stack_popr(frame); //os_popr(frame->operand_stack);
 
     // todo
 //    thread := frame.Thread()
@@ -715,9 +735,9 @@ static void monitorenter(struct stack_frame *frame)
 //    }
 }
 
-static void monitorexit(struct stack_frame *frame)
+static void monitorexit(struct frame *frame)
 {
-    jref o = os_popr(frame->operand_stack);
+    jref o = frame_stack_popr(frame); //os_popr(frame->operand_stack);
 
     // todo
 //    thread := frame.Thread()

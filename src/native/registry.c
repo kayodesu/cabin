@@ -16,7 +16,7 @@
 
 static struct hashmap *native_methods;
 
-void registerNatives(struct stack_frame *frame) { /* do nothing */ }
+void registerNatives(struct frame *frame) { /* do nothing */ }
 
 void register_native_method(const char *key, native_method_t method)
 {

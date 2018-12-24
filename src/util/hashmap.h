@@ -53,7 +53,7 @@ int hashmap_values(struct hashmap *map, void *values[]);
 
 void hashmap_destroy(struct hashmap *map);
 
-#ifdef JVM_DEBUG
+#if (JVM_DEBUG)
 void hashmap_print(const struct hashmap *map);
 #endif
 

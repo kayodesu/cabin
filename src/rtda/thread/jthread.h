@@ -7,9 +7,10 @@
 
 #include <stddef.h>
 #include <stdbool.h>
+#include "../../util/vector.h"
 
 struct classloader;
-struct stack_frame;
+struct frame;
 struct jmethod;
 struct jobject;
 struct slot;
@@ -37,11 +38,14 @@ struct invokedynamic_temp_store {
     struct jobject *exact_method_handle;
 };
 
+#define FRMHUB_SLOTS_COUNT_MAX 32
+
 struct jthread {
-    struct vector *vm_stack; // 虚拟机栈，一个线程只有一个虚拟机栈
+    struct vector vm_stack; // 虚拟机栈，一个线程只有一个虚拟机栈
 //    struct jobject *this_obj; // object of java.lang.Thread   todo 干嘛用的
 
-//    size_t pc;
+    struct vector frame_cache[FRMHUB_SLOTS_COUNT_MAX];
+
     struct jobject *jl_thread_obj; // object of java/lang/Thread
 
     struct invokedynamic_temp_store dyn;
@@ -58,19 +62,21 @@ bool jthread_is_stack_empty(const struct jthread *thread);
 
 int jthread_stack_depth(const struct jthread *thread);
 
-struct stack_frame* jthread_top_frame(struct jthread *thread);
-struct stack_frame* jthread_depth_frame(struct jthread *thread, int depth);
+struct frame* jthread_top_frame(struct jthread *thread);
+struct frame* jthread_depth_frame(struct jthread *thread, int depth);
 
 void jthread_pop_frame(struct jthread *thread);
 
-void jthread_push_frame(struct jthread *thread, struct stack_frame *frame);
+void jthread_push_frame(struct jthread *thread, struct frame *frame);
+
+void jthread_recycle_frame(struct frame *frame);
 
 /*
  * 返回完整的虚拟机栈
  * 顺序为由栈底到栈顶
- * 由调用者释放返回的 array of struct stack_frame *
+ * 由调用者释放返回的 array of struct frame *
  */
-struct stack_frame** jthread_get_frames(const struct jthread *thread, int *num);
+struct frame** jthread_get_frames(const struct jthread *thread, int *num);
 
 /*
  * 生成包含@method的栈帧，并将其压入@thread的虚拟机栈中，
@@ -97,7 +103,7 @@ void jthread_invoke_method(struct jthread *thread, struct jmethod *method, const
  * 参加 jthread_invoke_method 的注释。
  */
 void jthread_invoke_method_with_shim(struct jthread *thread, struct jmethod *method, const struct slot *args,
-                                     void (* shim_action)(struct stack_frame *));
+                                     void (* shim_action)(struct frame *));
 
 void jthread_handle_uncaught_exception(struct jthread *thread, struct jobject *exception);
 

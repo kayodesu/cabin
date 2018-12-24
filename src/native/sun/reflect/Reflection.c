@@ -11,19 +11,19 @@
 //}
 
 // public static native Class<?> getCallerClass()
-static void getCallerClass(struct stack_frame *frame)
+static void getCallerClass(struct frame *frame)
 {
     // todo
     // top0 is sun/reflect/Reflection
     // top1 is the caller of getCallerClass()
     // top2 is the caller of method
-    struct stack_frame *top0 = NULL;
-    struct stack_frame *top1 = NULL;
-    struct stack_frame *top2 = NULL;
+    struct frame *top0 = NULL;
+    struct frame *top1 = NULL;
+    struct frame *top2 = NULL;
 
     int depth = jthread_stack_depth(frame->thread);
     for (int i = 0; i < depth; i++) {
-        struct stack_frame *sf = jthread_depth_frame(frame->thread, i);
+        struct frame *sf = jthread_depth_frame(frame->thread, i);
         if (sf->type == SF_TYPE_NORMAL) {
             if (top0 == NULL) {
                 top0 = sf;
@@ -40,17 +40,14 @@ static void getCallerClass(struct stack_frame *frame)
         return;
     }
 
-    os_pushr(frame->operand_stack, top2->method->jclass->clsobj);
+    frame_stack_pushr(frame, top2->m.method->jclass->clsobj);
 }
 
 // public static native int getClassAccessFlags(Class<?> type)
-static void getClassAccessFlags(struct stack_frame *frame)
+static void getClassAccessFlags(struct frame *frame)
 {
-    struct jobject *type = slot_getr(frame->local_vars);
-#ifdef JVM_DEBUG
-    JOBJECT_CHECK_CLSOBJ(type);
-#endif
-    os_pushi(frame->operand_stack, type->jclass->access_flags);
+    struct jobject *type = frame_locals_getr(frame, 0);
+    frame_stack_pushi(frame, type->jclass->access_flags);
 }
 
 void sun_reflect_Reflection_registerNatives()

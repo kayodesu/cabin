@@ -56,9 +56,4 @@ struct invoke_dynamic_ref* rtcp_get_invoke_dynamic(const struct rtcp *rtcp, int 
 
 struct slot rtc_to_slot(struct classloader *loader, const struct rtcp *rtcp, int index);
 
-
-#ifdef JVM_DEBUG
-void print_rtcp(const struct rtcp *rtcp);
-#endif
-
 #endif //JVM_RTCP_H

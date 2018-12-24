@@ -4,7 +4,7 @@
 
 #include <time.h>
 #include "../../registry.h"
-#include "../../../interpreter/stack_frame.h"
+#include "../../../rtda/thread/frame.h"
 #include "../../../rtda/heap/jobject.h"
 
 /**
@@ -19,45 +19,39 @@
  * @since      1.2
  */
 // public static native String mapLibraryName(String libname);
-static void mapLibraryName(struct stack_frame *frame)
+static void mapLibraryName(struct frame *frame)
 {
-    jref libname = slot_getr(frame->local_vars);
+    jref libname = frame_locals_getr(frame, 0);
     if (libname == NULL) {
         jthread_throw_null_pointer_exception(frame->thread);
     }
-#ifdef JVM_DEBUG
-    JOBJECT_CHECK_STROBJ(libname);
-#endif
+
 //    jvm_abort("%s\n", jstrobj_value(libname));
     const char *name = jstrobj_value(libname);
     char mapping_name[strlen(name) + 5];;
     strcpy(mapping_name, name);
     strcat(mapping_name, ".dll"); // todo ...........................
 //    printvm("mapLibraryName, %s\n", mapping_name);
-    os_pushr(frame->operand_stack, jstrobj_create(mapping_name));  // todo
+    frame_stack_pushr(frame, jstrobj_create(mapping_name));  // todo
 }
 
 // public static native void arraycopy(Object src, int srcPos, Object dest, int destPos, int length)
-static void arraycopy(struct stack_frame *frame)
+static void arraycopy(struct frame *frame)
 {
-    struct jobject *src = slot_getr(frame->local_vars);
-    jint src_pos = slot_geti(frame->local_vars + 1);
-    struct jobject *dest = slot_getr(frame->local_vars + 2);
-#ifdef JVM_DEBUG
-    JOBJECT_CHECK_ARROBJ(src);
-    JOBJECT_CHECK_ARROBJ(dest);
-#endif
-    jint dest_pos = slot_geti(frame->local_vars + 3);
-    jint length = slot_geti(frame->local_vars + 4);
+    jref src = frame_locals_getr(frame, 0);
+    jint src_pos = frame_locals_geti(frame, 1);
+    jref dest = frame_locals_getr(frame, 2);
+    jint dest_pos = frame_locals_geti(frame, 3);
+    jint length = frame_locals_geti(frame, 4);
 
     jarrobj_copy(dest, dest_pos, src, src_pos, length);
 }
 
 // public static native int identityHashCode(Object x);
-static void identityHashCode(struct stack_frame *frame)
+static void identityHashCode(struct frame *frame)
 {
-    jref x = slot_getr(frame->local_vars);
-    os_pushi(frame->operand_stack, (jint) (intptr_t) x);
+    jref x = frame_locals_getr(frame, 0);
+    frame_stack_pushi(frame, (jint) (intptr_t) x);
 }
 
 /*
@@ -79,7 +73,7 @@ static void identityHashCode(struct stack_frame *frame)
  * user.dir             User's current working directory
  */
 // private static native Properties initProperties(Properties props);
-static void initProperties(struct stack_frame *frame)
+static void initProperties(struct frame *frame)
 {
     char *sys_props[][2] = {  // todo
             { "java.version",         "1.8.0" },  // todo
@@ -104,7 +98,7 @@ static void initProperties(struct stack_frame *frame)
             { "sun.stderr.encoding",  "UTF-8" },
     };
 
-    struct jobject *props = slot_getr(frame->local_vars);
+    struct jobject *props = frame_locals_getr(frame, 0);
 
     // todo init
     struct jmethod *set_property = jclass_lookup_instance_method(
@@ -121,31 +115,31 @@ static void initProperties(struct stack_frame *frame)
     }
 
     // 返回参数
-    os_pushr(frame->operand_stack, props);
+    frame_stack_pushr(frame, props);
 }
 
 // private static native void setIn0(InputStream in);
-static void setIn0(struct stack_frame *frame)
+static void setIn0(struct frame *frame)
 {
-    jref in = slot_getr(frame->local_vars);
+    jref in = frame_locals_getr(frame, 0);
     struct slot s = rslot(in);
-    set_static_field_value_by_nt(frame->method->jclass, "in", "Ljava/io/InputStream;", &s);
+    set_static_field_value_by_nt(frame->m.method->jclass, "in", "Ljava/io/InputStream;", &s);
 }
 
 // private static native void setOut0(PrintStream out);
-static void setOut0(struct stack_frame *frame)
+static void setOut0(struct frame *frame)
 {
-    jref out = slot_getr(frame->local_vars);
+    jref out = frame_locals_getr(frame, 0);
     struct slot s = rslot(out);
-    set_static_field_value_by_nt(frame->method->jclass, "out", "Ljava/io/PrintStream;", &s);
+    set_static_field_value_by_nt(frame->m.method->jclass, "out", "Ljava/io/PrintStream;", &s);
 }
 
 // private static native void setErr0(PrintStream err);
-static void setErr0(struct stack_frame *frame)
+static void setErr0(struct frame *frame)
 {
-    jref err = slot_getr(frame->local_vars);
+    jref err = frame_locals_getr(frame, 0);
     struct slot s = rslot(err);
-    set_static_field_value_by_nt(frame->method->jclass, "err", "Ljava/io/PrintStream;", &s);
+    set_static_field_value_by_nt(frame->m.method->jclass, "err", "Ljava/io/PrintStream;", &s);
 }
 
 /*
@@ -158,7 +152,7 @@ todo
  *
  * public static native long nanoTime();
  */
-static void nanoTime(struct stack_frame *frame)
+static void nanoTime(struct frame *frame)
 {
     jvm_abort("error\n");
     // todo
@@ -167,7 +161,7 @@ static void nanoTime(struct stack_frame *frame)
 	stack := frame.OperandStack()
 	stack.PushLong(nanoTime)
      */
-    os_pushl(frame->operand_stack, (jlong)1);
+    frame_stack_pushl(frame, (jlong)1);
 }
 
 void java_lang_System_registerNatives()

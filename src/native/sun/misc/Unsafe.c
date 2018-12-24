@@ -3,7 +3,7 @@
  */
 
 #include "../../registry.h"
-#include "../../../interpreter/stack_frame.h"
+#include "../../../rtda/thread/frame.h"
 #include "../../../rtda/heap/jobject.h"
 #include "../../../util/bigendian.h"
 
@@ -21,13 +21,13 @@ elsewhere.
 */
 
 // public native void park(boolean isAbsolute, long time);
-static void park(struct stack_frame *frame)
+static void park(struct frame *frame)
 {
     jvm_abort("");
 }
 
 //  public native void unpark(Object thread);
-static void unpark(struct stack_frame *frame)
+static void unpark(struct frame *frame)
 {
     jvm_abort("");
 }
@@ -45,110 +45,109 @@ static void unpark(struct stack_frame *frame)
  *
  * public final native boolean compareAndSwapInt(Object o, long offset, int expected, int x);
  */
-static void compareAndSwapInt(struct stack_frame *frame)
+static void compareAndSwapInt(struct frame *frame)
 {
-    //    jref this_obj = slot_getr(frame->local_vars);
-    jref o = slot_getr(frame->local_vars + 1); // first argument
-    jlong offset = slot_getl(frame->local_vars + 2); // long 占两个Slot
-    jint expected = slot_geti(frame->local_vars + 4);
-    jint x = slot_geti(frame->local_vars + 5);
+    jref o = frame_locals_getr(frame, 1); // first argument
+    jlong offset = frame_locals_getl(frame, 2); // long 占两个Slot
+    jint expected = frame_locals_geti(frame, 4);
+    jint x = frame_locals_geti(frame, 5);
 
     jint value = slot_geti(get_instance_field_value_by_id(o, offset));
     if (value == expected) {
         struct slot s = islot(x);
         set_instance_field_value_by_id(o, offset, &s);
-        os_pushi(frame->operand_stack, 1);
+        frame_stack_pushi(frame, 1);
     } else {
-        os_pushi(frame->operand_stack, 0);
+        frame_stack_pushi(frame, 0);
     }
 }
 
 // public final native boolean compareAndSwapLong(Object o, long offset, long expected, long x);
-static void compareAndSwapLong(struct stack_frame *frame)
+static void compareAndSwapLong(struct frame *frame)
 {
     //    jref this_obj = slot_getr(frame->local_vars);
-    jref o = slot_getr(frame->local_vars + 1); // first argument
-    jlong offset = slot_getl(frame->local_vars + 2); // long 占两个Slot
-    jlong expected = slot_getl(frame->local_vars + 4);
-    jlong x = slot_getl(frame->local_vars + 6);
+    jref o = frame_locals_getr(frame, 1); // first argument
+    jlong offset = frame_locals_getl(frame, 2); // long 占两个Slot
+    jlong expected = frame_locals_getl(frame, 4);
+    jlong x = frame_locals_getl(frame, 6);
 
     jlong value = slot_getl(get_instance_field_value_by_id(o, offset));
     if (value == expected) {
         struct slot s = lslot(x);
         set_instance_field_value_by_id(o, offset, &s);
-        os_pushi(frame->operand_stack, 1);
+        frame_stack_pushi(frame, 1);
     } else {
-        os_pushi(frame->operand_stack, 0);
+        frame_stack_pushi(frame, 0);
     }
 }
 
 // public final native boolean compareAndSwapObject(Object o, long offset, Object expected, Object x)
-static void compareAndSwapObject(struct stack_frame *frame)
+static void compareAndSwapObject(struct frame *frame)
 {
 //    jref this_obj = slot_getr(frame->local_vars);
-    jref o = slot_getr(frame->local_vars + 1); // first argument
-    jlong offset = slot_getl(frame->local_vars + 2); // long 占两个Slot
-    jref expected = slot_getr(frame->local_vars + 4);
-    jref x = slot_getr(frame->local_vars + 5);
+    jref o = frame_locals_getr(frame, 1); // first argument
+    jlong offset = frame_locals_getl(frame, 2); // long 占两个Slot
+    jref expected = frame_locals_getr(frame, 4);
+    jref x = frame_locals_getr(frame, 5);
 
     jref value = slot_getr(get_instance_field_value_by_id(o, offset));
     if (value == expected) {
         struct slot s = rslot(x);
         set_instance_field_value_by_id(o, offset, &s);
-        os_pushi(frame->operand_stack, 1);
+        frame_stack_pushi(frame, 1);
     } else {
-        os_pushi(frame->operand_stack, 0);
+        frame_stack_pushi(frame, 0);
     }
 }
 
 /*************************************    class    ************************************/
 
 // public native Object allocateInstance(Class<?> type) throws InstantiationException;
-static void allocateInstance(struct stack_frame *frame)
+static void allocateInstance(struct frame *frame)
 {
     jvm_abort("");
 }
 
 // public native Class defineClass(String name, byte[] b, int off, int len,
 //                                  ClassLoader loader, ProtectionDomain protectionDomain)
-static void defineClass(struct stack_frame *frame)
+static void defineClass(struct frame *frame)
 {
     jvm_abort("");
 }
 
 // public native void ensureClassInitialized(Class<?> c);
-static void ensureClassInitialized(struct stack_frame *frame)
+static void ensureClassInitialized(struct frame *frame)
 {
     jvm_abort("");
 }
 
 // public native Object staticFieldBase(Field f);
 // public native long staticFieldOffset(Field f);
-static void staticFieldOffset(struct stack_frame *frame)
+static void staticFieldOffset(struct frame *frame)
 {
     jvm_abort("");
 }
 
-static void staticFieldBase(struct stack_frame *frame)
+static void staticFieldBase(struct frame *frame)
 {
     jvm_abort("");
 }
 /*************************************    object    ************************************/
 
 // public native int arrayBaseOffset(Class<?> type)
-static void arrayBaseOffset(struct stack_frame *frame)
+static void arrayBaseOffset(struct frame *frame)
 {
-    os_pushi(frame->operand_stack, 0);//frame->operandStack.push((jint)0);  // todo
+    frame_stack_pushi(frame, 0);//frame->operandStack.push((jint)0);  // todo
 }
 
 // public native int arrayIndexScale(Class<?> type)
-static void arrayIndexScale(struct stack_frame *frame)
+static void arrayIndexScale(struct frame *frame)
 {
-    os_pushi(frame->operand_stack, 1);//frame->operandStack.push((jint)1);  // todo
+    frame_stack_pushi(frame, 1);//frame->operandStack.push((jint)1);  // todo
 }
 
 // public native long objectFieldOffset(Field field)
-static void objectFieldOffset(struct stack_frame *frame)
+static void objectFieldOffset(struct frame *frame)
 {
     /*
      * 	vars := frame.LocalVars()
@@ -164,149 +163,149 @@ static void objectFieldOffset(struct stack_frame *frame)
 //    jint offset = jlrFieldObj->getFieldValue("slot", "I").getInt();
 //    frame->operandStack.push((jlong)offset);
 
-    jref field_obj = slot_getr(frame->local_vars + 1);
+    jref field_obj =frame_locals_getr(frame, 1);
     jint offset = slot_geti(get_instance_field_value_by_nt(field_obj, "slot", "I")); // todo "slot", "I" 什么东西
 //    printvm("-------   %s, %d\n", jobject_to_string(field_obj), offset);
-    os_pushl(frame->operand_stack, offset);
+    frame_stack_pushl(frame, offset);
 }
 
 // public native boolean getBoolean(Object o, long offset);
-static void getBoolean(struct stack_frame *frame)
+static void getBoolean(struct frame *frame)
 {
     jvm_abort("");
 }
 
 // public native void putBoolean(Object o, long offset, boolean x);
-static void putBoolean(struct stack_frame *frame)
+static void putBoolean(struct frame *frame)
 {
     jvm_abort("");
 }
 
 // public native byte getByte(Object o, long offset);
-static void obj_getByte(struct stack_frame *frame)
+static void obj_getByte(struct frame *frame)
 {
     jvm_abort("");
 }
 
 // public native void putByte(Object o, long offset, byte x);
-static void obj_putByte(struct stack_frame *frame)
+static void obj_putByte(struct frame *frame)
 {
     jvm_abort("");
 }
 
 // public native char getChar(Object o, long offset);
-static void obj_getChar(struct stack_frame *frame)
+static void obj_getChar(struct frame *frame)
 {
     jvm_abort("");
 }
 
 // public native void putChar(Object o, long offset, char x);
-static void obj_putChar(struct stack_frame *frame)
+static void obj_putChar(struct frame *frame)
 {
     jvm_abort("");
 }
 
 // public native short getShort(Object o, long offset);
-static void obj_getShort(struct stack_frame *frame)
+static void obj_getShort(struct frame *frame)
 {
     jvm_abort("");
 }
 
 // public native void putShort(Object o, long offset, short x);
-static void obj_putShort(struct stack_frame *frame)
+static void obj_putShort(struct frame *frame)
 {
     jvm_abort("");
 }
 
 // public native int getInt(Object o, long offset);
-static void obj_getInt(struct stack_frame *frame)
+static void obj_getInt(struct frame *frame)
 {
     jvm_abort("");
 }
 
 // public native void putInt(Object o, long offset, int x);
-static void obj_putInt(struct stack_frame *frame)
+static void obj_putInt(struct frame *frame)
 {
     jvm_abort("");
 }
 
 // public native long getLong(Object o, long offset);
-static void obj_getLong(struct stack_frame *frame)
+static void obj_getLong(struct frame *frame)
 {
     jvm_abort("");
 }
 
 // public native void putLong(Object o, long offset, long x);
-static void obj_putLong(struct stack_frame *frame)
+static void obj_putLong(struct frame *frame)
 {
     jvm_abort("");
 }
 
 // public native float getFloat(Object o, long offset);
-static void obj_getFloat(struct stack_frame *frame)
+static void obj_getFloat(struct frame *frame)
 {
     jvm_abort("");
 }
 
 // public native void putFloat(Object o, long offset, float x);
-static void obj_putFloat(struct stack_frame *frame)
+static void obj_putFloat(struct frame *frame)
 {
     jvm_abort("");
 }
 
 // public native double getDouble(Object o, long offset);
-static void obj_getDouble(struct stack_frame *frame)
+static void obj_getDouble(struct frame *frame)
 {
     jvm_abort("");
 }
 
 // public native void putDouble(Object o, long offset, double x);
-static void obj_putDouble(struct stack_frame *frame)
+static void obj_putDouble(struct frame *frame)
 {
     jvm_abort("");
 }
 
 // public native Object getObject(Object o, long offset);
-static void getObject(struct stack_frame *frame)
+static void getObject(struct frame *frame)
 {
     jvm_abort("");
 }
 
 // public native void putObject(Object o, long offset, Object x);
-static void putObject(struct stack_frame *frame)
+static void putObject(struct frame *frame)
 {
     jvm_abort("");
 }
 
 // public native boolean getBooleanVolatile(Object o, long offset);
-static void getBooleanVolatile(struct stack_frame *frame)
+static void getBooleanVolatile(struct frame *frame)
 {
     jvm_abort("");
 }
 
 // public native byte getByteVolatile(Object o, long offset);
-static void getByteVolatile(struct stack_frame *frame)
+static void getByteVolatile(struct frame *frame)
 {
     jvm_abort("");
 }
 
 // public native char getCharVolatile(Object o, long offset);
-static void getCharVolatile(struct stack_frame *frame)
+static void getCharVolatile(struct frame *frame)
 {
     jvm_abort("");
 }
 
 // public native short getShortVolatile(Object o, long offset);
-static void getShortVolatile(struct stack_frame *frame)
+static void getShortVolatile(struct frame *frame)
 {
     jvm_abort("");
 }
 
 // public native int getIntVolatile(Object o, long offset);
-static void getIntVolatile(struct stack_frame *frame)
+static void getIntVolatile(struct frame *frame)
 {
-    jref o = slot_getr(frame->local_vars + 1); // first argument
-    jlong offset = slot_getl(frame->local_vars + 2);
+    jref o = frame_locals_getr(frame, 1); // first argument
+    jlong offset = frame_locals_getl(frame, 2);
 
     jint value;
     if (jclass_is_array(o->jclass)) {
@@ -314,47 +313,47 @@ static void getIntVolatile(struct stack_frame *frame)
     } else {
         value = slot_geti(get_instance_field_value_by_id(o, offset));  // todo
     }
-    os_pushi(frame->operand_stack, value);
+    frame_stack_pushi(frame, value);
 }
 
 // public native long getLongVolatile(Object o, long offset);
-static void getLongVolatile(struct stack_frame *frame)
+static void getLongVolatile(struct frame *frame)
 {
     jvm_abort("");
 }
 
 // public native float getFloatVolatile(Object o, long offset);
-static void getFloatVolatile(struct stack_frame *frame)
+static void getFloatVolatile(struct frame *frame)
 {
     jvm_abort("");
 }
 
 // public native double getDoubleVolatile(Object o, long offset);
-static void getDoubleVolatile(struct stack_frame *frame)
+static void getDoubleVolatile(struct frame *frame)
 {
     jvm_abort("");
 }
 
 // public native Object getObjectVolatile(Object o, long offset);
-static void getObjectVolatile(struct stack_frame *frame)
+static void getObjectVolatile(struct frame *frame)
 {
     jvm_abort("");
 }
 
 // public native void putObjectVolatile(Object o, long offset, Object x);
-static void putObjectVolatile(struct stack_frame *frame)
+static void putObjectVolatile(struct frame *frame)
 {
     jvm_abort("");
 }
 
 // public native Object getOrderedObject(Object o, long offset);
-static void getOrderedObject(struct stack_frame *frame)
+static void getOrderedObject(struct frame *frame)
 {
     jvm_abort("");
 }
 
 // public native void putOrderedObject(Object o, long offset, Object x);
-static void putOrderedObject(struct stack_frame *frame)
+static void putOrderedObject(struct frame *frame)
 {
     jvm_abort("");
 }
@@ -368,147 +367,147 @@ static void putOrderedObject(struct stack_frame *frame)
  * 返回的是一个long类型的地址偏移量。这个偏移量在你的Java程序中每块内存都是唯一的。
  */
 // public native long allocateMemory(long bytes);
-static void allocateMemory(struct stack_frame *frame)
+static void allocateMemory(struct frame *frame)
 {
-    jlong bytes = slot_getl(frame->local_vars + 1);
+    jlong bytes = frame_locals_getl(frame, 1);
     VM_MALLOCS(u1, bytes, p);
-    os_pushl(frame->operand_stack, (jlong) (intptr_t) p);
+    frame_stack_pushl(frame, (jlong) (intptr_t) p);
 }
 
 // public native long reallocateMemory(long address, long bytes);
-static void reallocateMemory(struct stack_frame *frame)
+static void reallocateMemory(struct frame *frame)
 {
-    jlong address = slot_getl(frame->local_vars + 1);
-    jlong bytes = (jbyte) slot_getl(frame->local_vars + 3);
-    os_pushl(frame->operand_stack, (jlong) (intptr_t) realloc((void *) (intptr_t) address, (size_t) bytes)); // 有内存泄漏
+    jlong address = frame_locals_getl(frame, 1);
+    jlong bytes = (jbyte) frame_locals_getl(frame, 3);
+    frame_stack_pushl(frame, (jlong) (intptr_t) realloc((void *) (intptr_t) address, (size_t) bytes)); // 有内存泄漏
 }
 
 // public native void freeMemory(long address);
-static void freeMemory(struct stack_frame *frame)
+static void freeMemory(struct frame *frame)
 {
-    jlong address = slot_getl(frame->local_vars + 1);
+    jlong address = frame_locals_getl(frame, 1);
     free((void *) (intptr_t) address);
 }
 
 // public native int addressSize();
-static void addressSize(struct stack_frame *frame)
+static void addressSize(struct frame *frame)
 {
-    os_pushi(frame->operand_stack, sizeof(jlong)); // todo
+    frame_stack_pushi(frame, sizeof(jlong)); // todo
 }
 
 // public native void putByte(long address, byte x);
-static void putByte(struct stack_frame *frame)
+static void putByte(struct frame *frame)
 {
-    jlong address = slot_getl(frame->local_vars + 1);
-    jbyte x = (jbyte) slot_geti(frame->local_vars + 3);
+    jlong address = frame_locals_getl(frame, 1);
+    jbyte x = (jbyte) frame_locals_geti(frame, 3);
     *(jbyte *) (intptr_t) address = BIGENDIAN(x); // todo java按大端存储？？？？？？？
 }
 
 // public native byte getByte(long address);
-static void getByte(struct stack_frame *frame)
+static void getByte(struct frame *frame)
 {
-    jlong address = slot_getl(frame->local_vars + 1);
-    os_pushi(frame->operand_stack, *(jbyte *) (intptr_t) address);
+    jlong address = frame_locals_getl(frame, 1);
+    frame_stack_pushi(frame, *(jbyte *) (intptr_t) address);
 }
 
 // public native void putChar(long address, char x);
-static void putChar(struct stack_frame *frame)
+static void putChar(struct frame *frame)
 {
-    jlong address = slot_getl(frame->local_vars + 1);
-    jchar x = (jchar) slot_geti(frame->local_vars + 3);
+    jlong address = frame_locals_getl(frame, 1);
+    jchar x = (jchar) frame_locals_geti(frame, 3);
     *(jchar *) (intptr_t) address = BIGENDIAN(x);
 }
 
 // public native char getChar(long address);
-static void getChar(struct stack_frame *frame)
+static void getChar(struct frame *frame)
 {
-    jlong address = slot_getl(frame->local_vars + 1);
-    os_pushi(frame->operand_stack, *(jchar *) (intptr_t) address);
+    jlong address = frame_locals_getl(frame, 1);
+    frame_stack_pushi(frame, *(jchar *) (intptr_t) address);
 }
 
 // public native void putShort(long address, short x);
-static void putShort(struct stack_frame *frame)
+static void putShort(struct frame *frame)
 {
-    jlong address = slot_getl(frame->local_vars + 1);
-    jshort x = (jshort) slot_geti(frame->local_vars + 3);
+    jlong address = frame_locals_getl(frame, 1);
+    jshort x = (jshort) frame_locals_geti(frame, 3);
     *(jshort *) (intptr_t) address = BIGENDIAN(x);
 }
 
 // public native short getShort(long address);
-static void getShort(struct stack_frame *frame)
+static void getShort(struct frame *frame)
 {
-    jlong address = slot_getl(frame->local_vars + 1);
-    os_pushi(frame->operand_stack, *(jshort *) (intptr_t) address);
+    jlong address = frame_locals_getl(frame, 1);
+    frame_stack_pushi(frame, *(jshort *) (intptr_t) address);
 }
 
 // public native void putInt(long address, int x);
-static void putInt(struct stack_frame *frame)
+static void putInt(struct frame *frame)
 {
-    jlong address = slot_getl(frame->local_vars + 1);
-    jint x = slot_geti(frame->local_vars + 3);
+    jlong address = frame_locals_getl(frame, 1);
+    jint x = frame_locals_geti(frame, 3);
     *(jint *) (intptr_t) address = BIGENDIAN(x);
 }
 
 // public native int getInt(long address);
-static void getInt(struct stack_frame *frame)
+static void getInt(struct frame *frame)
 {
-    jlong address = slot_getl(frame->local_vars + 1);
-    os_pushi(frame->operand_stack, *(jint *) (intptr_t) address);
+    jlong address = frame_locals_getl(frame, 1);
+    frame_stack_pushi(frame, *(jint *) (intptr_t) address);
 }
 
 // public native void putLong(long address, long x);
-static void putLong(struct stack_frame *frame)
+static void putLong(struct frame *frame)
 {
-    jlong address = slot_getl(frame->local_vars + 1);
-    jlong x = slot_getl(frame->local_vars + 3);
+    jlong address = frame_locals_getl(frame, 1);
+    jlong x = frame_locals_getl(frame, 3);
     *(jlong *) (intptr_t) address = BIGENDIAN(x);
 }
 
 // public native long getLong(long address);
-static void getLong(struct stack_frame *frame)
+static void getLong(struct frame *frame)
 {
-    jlong address = slot_getl(frame->local_vars + 1);
-    os_pushl(frame->operand_stack, *(jlong *) (intptr_t) address);
+    jlong address = frame_locals_getl(frame, 1);
+    frame_stack_pushl(frame, *(jlong *) (intptr_t) address);
 }
 
 // public native void putFloat(long address, float x);
-static void putFloat(struct stack_frame *frame)
+static void putFloat(struct frame *frame)
 {
-    jlong address = slot_getl(frame->local_vars + 1);
-    jfloat x = slot_getf(frame->local_vars + 3);
+    jlong address = frame_locals_getl(frame,+ 1);
+    jfloat x = frame_locals_getf(frame, 3);
     *(jfloat *) (intptr_t) address = BIGENDIAN(x);
 }
 
 // public native float getFloat(long address);
-static void getFloat(struct stack_frame *frame)
+static void getFloat(struct frame *frame)
 {
-    jlong address = slot_getl(frame->local_vars + 1);
-    os_pushf(frame->operand_stack, *(jfloat *) (intptr_t) address);
+    jlong address = frame_locals_getl(frame, 1);
+    frame_stack_pushf(frame, *(jfloat *) (intptr_t) address);
 }
 
 // public native void putDouble(long address, double x);
-static void putDouble(struct stack_frame *frame)
+static void putDouble(struct frame *frame)
 {
-    jlong address = slot_getl(frame->local_vars + 1);
-    jdouble x = slot_getd(frame->local_vars + 3);
+    jlong address = frame_locals_getl(frame, 1);
+    jdouble x = frame_locals_getd(frame, 3);
     *(jdouble *) (intptr_t) address = BIGENDIAN(x);
 }
 
 // public native double getDouble(long address);
-static void getDouble(struct stack_frame *frame)
+static void getDouble(struct frame *frame)
 {
-    jlong address = slot_getl(frame->local_vars + 1);
-    os_pushd(frame->operand_stack, *(jdouble *) (intptr_t) address);
+    jlong address = frame_locals_getl(frame, 1);
+    frame_stack_pushd(frame, *(jdouble *) (intptr_t) address);
 }
 
 // public native void putAddress(long address, long x);
-static void putAddress(struct stack_frame *frame)
+static void putAddress(struct frame *frame)
 {
     putLong(frame);
 }
 
 // public native long getAddress(long address);
-static void getAddress(struct stack_frame *frame)
+static void getAddress(struct frame *frame)
 {
     getLong(frame);
 }
@@ -656,14 +655,14 @@ static inline void __free_add(jlong address)
 }
 
 // public native long allocateMemory(long bytes);
-static void allocateMemory(struct stack_frame *frame)
+static void allocateMemory(struct frame *frame)
 {
     jlong bytes = slot_getl(frame->local_vars + 1);
     os_pushl(frame->operand_stack, __allocate(bytes)->start_add);
 }
 
 // public native long reallocateMemory(long address, long bytes);
-static void reallocateMemory(struct stack_frame *frame)
+static void reallocateMemory(struct frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
     jlong bytes = (jbyte) slot_getl(frame->local_vars + 3);
@@ -704,20 +703,20 @@ static void reallocateMemory(struct stack_frame *frame)
 }
 
 // public native void freeMemory(long address);
-static void freeMemory(struct stack_frame *frame)
+static void freeMemory(struct frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
     __free_add(address);
 }
 
 // public native int addressSize();
-static void addressSize(struct stack_frame *frame)
+static void addressSize(struct frame *frame)
 {
     os_pushi(frame->operand_stack, sizeof(jlong)); // todo
 }
 
 // public native void putByte(long address, byte x);
-static void putByte(struct stack_frame *frame)
+static void putByte(struct frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
     jbyte x = (jbyte) slot_geti(frame->local_vars + 3);
@@ -725,14 +724,14 @@ static void putByte(struct stack_frame *frame)
 }
 
 // public native byte getByte(long address);
-static void getByte(struct stack_frame *frame)
+static void getByte(struct frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
     os_pushi(frame->operand_stack, *(jbyte *) __memory_at(address));
 }
 
 // public native void putChar(long address, char x);
-static void putChar(struct stack_frame *frame)
+static void putChar(struct frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
     jchar x = (jchar) slot_geti(frame->local_vars + 3);
@@ -740,14 +739,14 @@ static void putChar(struct stack_frame *frame)
 }
 
 // public native char getChar(long address);
-static void getChar(struct stack_frame *frame)
+static void getChar(struct frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
     os_pushi(frame->operand_stack, *(jchar *) __memory_at(address));
 }
 
 // public native void putShort(long address, short x);
-static void putShort(struct stack_frame *frame)
+static void putShort(struct frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
     jshort x = (jshort) slot_geti(frame->local_vars + 3);
@@ -755,14 +754,14 @@ static void putShort(struct stack_frame *frame)
 }
 
 // public native short getShort(long address);
-static void getShort(struct stack_frame *frame)
+static void getShort(struct frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
     os_pushi(frame->operand_stack, *(jshort *) __memory_at(address));
 }
 
 // public native void putInt(long address, int x);
-static void putInt(struct stack_frame *frame)
+static void putInt(struct frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
     jint x = slot_geti(frame->local_vars + 3);
@@ -770,14 +769,14 @@ static void putInt(struct stack_frame *frame)
 }
 
 // public native int getInt(long address);
-static void getInt(struct stack_frame *frame)
+static void getInt(struct frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
     os_pushi(frame->operand_stack, *(jint *) __memory_at(address));
 }
 
 // public native void putLong(long address, long x);
-static void putLong(struct stack_frame *frame)
+static void putLong(struct frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
     jlong x = slot_getl(frame->local_vars + 3);
@@ -785,14 +784,14 @@ static void putLong(struct stack_frame *frame)
 }
 
 // public native long getLong(long address);
-static void getLong(struct stack_frame *frame)
+static void getLong(struct frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
     os_pushl(frame->operand_stack, *(jlong *) __memory_at(address));
 }
 
 // public native void putFloat(long address, float x);
-static void putFloat(struct stack_frame *frame)
+static void putFloat(struct frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
     jfloat x = slot_getf(frame->local_vars + 3);
@@ -800,14 +799,14 @@ static void putFloat(struct stack_frame *frame)
 }
 
 // public native float getFloat(long address);
-static void getFloat(struct stack_frame *frame)
+static void getFloat(struct frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
     os_pushf(frame->operand_stack, *(jfloat *) __memory_at(address));
 }
 
 // public native void putDouble(long address, double x);
-static void putDouble(struct stack_frame *frame)
+static void putDouble(struct frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
     jdouble x = slot_getd(frame->local_vars + 3);
@@ -815,7 +814,7 @@ static void putDouble(struct stack_frame *frame)
 }
 
 // public native double getDouble(long address);
-static void getDouble(struct stack_frame *frame)
+static void getDouble(struct frame *frame)
 {
     jlong address = slot_getl(frame->local_vars + 1);
     os_pushd(frame->operand_stack, *(jdouble *) __memory_at(address));

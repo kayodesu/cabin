@@ -1,14 +1,13 @@
 #include "../../registry.h"
-#include "../../../interpreter/operand_stack.h"
-#include "../../../interpreter/stack_frame.h"
+#include "../../../rtda/thread/frame.h"
 
 /*
  * Author: Jia Yang
  */
 
-static void setErrorMode(struct stack_frame *frame)
+static void setErrorMode(struct frame *frame)
 {
-    os_pushl(frame->operand_stack, 0); // todo
+    frame_stack_pushl(frame, 0); // todo
 }
 
 void sun_io_Win32ErrorMode_registerNatives()

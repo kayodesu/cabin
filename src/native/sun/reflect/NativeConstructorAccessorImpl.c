@@ -3,7 +3,7 @@
  */
 
 #include "../../registry.h"
-#include "../../../interpreter/stack_frame.h"
+#include "../../../rtda/thread/frame.h"
 #include "../../../rtda/heap/jobject.h"
 #include "../../../rtda/ma/descriptor.h"
 
@@ -43,21 +43,21 @@ struct slot* convert_args(jref this_obj, struct jmethod *m, jref args)
  * private static native Object newInstance0(Constructor<?> c, Object[] os)
  * throws InstantiationException, IllegalArgumentException, InvocationTargetException;
  */
-static void newInstance0(struct stack_frame *frame)
+static void newInstance0(struct frame *frame)
 {
-    jref constructor_obj = slot_getr(frame->local_vars);
+    jref constructor_obj = frame_locals_getr(frame, 0);
     /*
      * init_args array of objects to be passed as arguments to
      * the constructor call; values of primitive types are wrapped in
      * a wrapper object of the appropriate type
      */
-    jref init_args = slot_getr(frame->local_vars + 1); // may be NULL
+    jref init_args = frame_locals_getr(frame, 1); // may be NULL
 
     // which class this constructor belongs to.
     struct jclass *clazz = jclsobj_entity_class(
             slot_getr(get_instance_field_value_by_nt(constructor_obj, "clazz", "Ljava/lang/Class;")));
     struct jobject *this_obj = jobject_create(clazz);
-    os_pushr(frame->operand_stack, this_obj); // return value
+    frame_stack_pushr(frame, this_obj); // return value
 
     struct jmethod *constructor = NULL;
     if (init_args == NULL) { // 构造函数没有参数

@@ -1,7 +1,6 @@
 #include "../../registry.h"
 #include "../../../jtypes.h"
-#include "../../../interpreter/stack_frame.h"
-#include "../../../slot.h"
+#include "../../../rtda/thread/frame.h"
 #include "../../../rtda/heap/jobject.h"
 #include "../../../rtda/heap/strpool.h"
 
@@ -10,23 +9,23 @@
  */
 
 // private native long getLongAt0(Object o, int i);
-static void getLongAt0(struct stack_frame *frame)
+static void getLongAt0(struct frame *frame)
 {
     // todo 对不对
-    jref o = slot_getr(frame->local_vars + 1);
-    jint i = slot_geti(frame->local_vars + 2);
+    jref o = frame_locals_getr(frame, 1);
+    jint i = frame_locals_geti(frame, 2);
     jlong result = rtcp_get_long(o->jclass->rtcp, i);
-    os_pushl(frame->operand_stack, result);
+    frame_stack_pushl(frame, result);
 }
 
 // private native String getUTF8At0(Object o, int i);
-static void getUTF8At0(struct stack_frame *frame)
+static void getUTF8At0(struct frame *frame)
 {
     // todo 对不对
-    jref o = slot_getr(frame->local_vars + 1);
-    jint i = slot_geti(frame->local_vars + 2);
-    jref result = get_str_from_pool(frame->method->jclass->loader, rtcp_get_str(o->jclass->rtcp, i));
-    os_pushr(frame->operand_stack, result);
+    jref o = frame_locals_getr(frame, 1);
+    jint i = frame_locals_geti(frame, 2);
+    jref result = get_str_from_pool(frame->m.method->jclass->loader, rtcp_get_str(o->jclass->rtcp, i));
+    frame_stack_pushr(frame, result);
 }
 
 void sun_reflect_ConstantPool_registerNatives()

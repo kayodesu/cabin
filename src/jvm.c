@@ -66,11 +66,9 @@ static void create_system_thread_group(struct classloader *loader)
 
     // 启动一个临时线程来执行 system thread group 的构造函数
     struct jthread *tmp = jthread_create(loader, NULL); // todo
-    struct stack_frame *frame = sf_create(tmp, constructor);
     struct slot arg = rslot(system_thread_group);
-    sf_set_local_var(frame, 0, &arg);
+    jthread_invoke_method(tmp, constructor, &arg);
 
-    jthread_push_frame(tmp, frame);
     jclass_clinit(thread_group_class, tmp);  // todo
     interpret(tmp);
     jthread_destroy(tmp);
@@ -96,11 +94,12 @@ static void create_main_thread(struct classloader *loader)
     // 调用 java/lang/Thread 的构造函数
     struct jmethod *constructor
             = jclass_get_constructor(main_thread_obj->jclass, "(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");
-    struct stack_frame *frame = sf_create(main_thread, constructor);
-    frame->local_vars[0] = rslot(main_thread_obj);
-    frame->local_vars[1] = rslot(system_thread_group);
-    frame->local_vars[2] = rslot((jref) jstrobj_create(MAIN_THREAD_NAME));
-    jthread_push_frame(main_thread, frame);
+    struct slot args[] = {
+            rslot(main_thread_obj),
+            rslot(system_thread_group),
+            rslot(jstrobj_create(MAIN_THREAD_NAME)) // thread name
+    };
+    jthread_invoke_method(main_thread, constructor, args);
 
     jclass_clinit(main_thread_obj->jclass, main_thread); // 最后压栈，保证先执行。
 
@@ -130,7 +129,8 @@ static void start_jvm(const char *main_class_name)
         }
     }
 
-    jthread_push_frame(main_thread, sf_create(main_thread, main_method));
+    struct slot args[] = { islot(0), rslot(NULL) }; // todo
+    jthread_invoke_method(main_thread, main_method, args);
 
     // 开始在主线程中执行 main 方法
     interpret(main_thread);
@@ -270,17 +270,6 @@ int main(int argc, char* argv[])
             path = strtok(NULL, delim);
         }
     }
-
-#ifdef JVM_DEBUG
-    printvm("bootstrap_classpath: %s\n", bootstrap_classpath);
-    printvm("extension_classpath: %s\n", extension_classpath);
-    for (int i = 0; i < user_dirs_count; i++) {
-        printvm("user_classpath: %s\n", user_dirs[i]);
-    }
-    for (int i = 0; i < user_jars_count; i++) {
-        printvm("user_classpath: %s\n", user_jars[i]);
-    }
-#endif
 
     register_all_native_methods(); // todo 不要一次全注册，需要时再注册
     start_jvm(main_class_name);

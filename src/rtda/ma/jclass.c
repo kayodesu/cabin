@@ -283,7 +283,7 @@ static void parse_attribute(struct jclass *c, struct bytecode_reader *reader)
     }
 }
 
-struct jclass *jclass_create(struct classloader *loader, s1 *bytecode, size_t len)
+struct jclass *jclass_create(struct classloader *loader, u1 *bytecode, size_t len)
 {
     assert(loader != NULL);
     assert(bytecode != NULL);

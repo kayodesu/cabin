@@ -14,8 +14,8 @@
 #include "convert.h"
 
 struct bytecode_reader {
-    private const u1 *bytecode;
-    private size_t len;  // bytecode len
+    const u1 *bytecode;
+    size_t len;  // bytecode len
     size_t pc;   // program count
 };
 

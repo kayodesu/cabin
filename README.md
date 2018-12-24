@@ -1,5 +1,5 @@
 # JVM
-A JVM written in C.
+A JVM written in C, simple :thumbsup: slow :thumbsdown:
 
 ## Development environment
 * Win10 x64

@@ -5,7 +5,7 @@
 #ifndef JVM_COMPARISONS_H
 #define JVM_COMPARISONS_H
 
-#include "../interpreter/stack_frame.h"
+#include "../rtda/thread/frame.h"
 
 /*
  * NAN 与正常的的浮点数无法比较，即 即不大于 也不小于 也不等于。
@@ -14,155 +14,155 @@
 #define CMP_RESULT(v1, v2, default_value) \
             (jint)((v1) > (v2) ? 1 : ((v1) == (v2) ? 0 : ((v1) < (v2) ? -1 : (default_value))))
 
-static void lcmp(struct stack_frame *frame)
+static void lcmp(struct frame *frame)
 {
-    jlong v2 = os_popl(frame->operand_stack);
-    jlong v1 = os_popl(frame->operand_stack);
-    os_pushi(frame->operand_stack, CMP_RESULT(v1, v2, -1));
+    jlong v2 = frame_stack_popl(frame);
+    jlong v1 = frame_stack_popl(frame);
+    frame_stack_pushi(frame, CMP_RESULT(v1, v2, -1));
 }
 
-static void fcmpl(struct stack_frame *frame)
+static void fcmpl(struct frame *frame)
 {
-    jfloat v2 = os_popf(frame->operand_stack);
-    jfloat v1 = os_popf(frame->operand_stack);
-    os_pushi(frame->operand_stack, CMP_RESULT(v1, v2, -1));
+    jfloat v2 = frame_stack_popf(frame);
+    jfloat v1 = frame_stack_popf(frame);
+    frame_stack_pushi(frame, CMP_RESULT(v1, v2, -1));
 }
 
-static void fcmpg(struct stack_frame *frame)
+static void fcmpg(struct frame *frame)
 {
-    jfloat v2 = os_popf(frame->operand_stack);
-    jfloat v1 = os_popf(frame->operand_stack);
-    os_pushi(frame->operand_stack, CMP_RESULT(v1, v2, 1));
+    jfloat v2 = frame_stack_popf(frame);
+    jfloat v1 = frame_stack_popf(frame);
+    frame_stack_pushi(frame, CMP_RESULT(v1, v2, 1));
 }
 
-static void dcmpl(struct stack_frame *frame)
+static void dcmpl(struct frame *frame)
 {
-    jdouble v2 = os_popd(frame->operand_stack);
-    jdouble v1 = os_popd(frame->operand_stack);
-    os_pushi(frame->operand_stack, CMP_RESULT(v1, v2, -1));
+    jdouble v2 = frame_stack_popd(frame);
+    jdouble v1 = frame_stack_popd(frame);
+    frame_stack_pushi(frame, CMP_RESULT(v1, v2, -1));
 }
 
-static void dcmpg(struct stack_frame *frame)
+static void dcmpg(struct frame *frame)
 {
-    jdouble v2 = os_popd(frame->operand_stack);
-    jdouble v1 = os_popd(frame->operand_stack);
-    os_pushi(frame->operand_stack, CMP_RESULT(v1, v2, 1));
+    jdouble v2 = frame_stack_popd(frame);
+    jdouble v1 = frame_stack_popd(frame);
+    frame_stack_pushi(frame, CMP_RESULT(v1, v2, 1));
 }
 
 #undef CMP_RESULT
 
-static void ifeq(struct stack_frame *frame)
+static void ifeq(struct frame *frame)
 {
-    jint offset = bcr_reads2(frame->reader);
-    if (os_popi(frame->operand_stack) == 0)
-        bcr_skip(frame->reader, offset - 3); // minus instruction length
+    jint offset = bcr_reads2(&frame->reader);
+    if (frame_stack_popi(frame) == 0)
+        bcr_skip(&frame->reader, offset - 3); // minus instruction length
 }
 
-static void ifne(struct stack_frame *frame)
+static void ifne(struct frame *frame)
 {
-    jint offset = bcr_reads2(frame->reader);
-    if (os_popi(frame->operand_stack) != 0)
-        bcr_skip(frame->reader, offset - 3); // minus instruction length
+    jint offset = bcr_reads2(&frame->reader);
+    if (frame_stack_popi(frame) != 0)
+        bcr_skip(&frame->reader, offset - 3); // minus instruction length
 }
 
-static void iflt(struct stack_frame *frame)
+static void iflt(struct frame *frame)
 {
-    jint offset = bcr_reads2(frame->reader);
-    if (os_popi(frame->operand_stack) < 0)
-        bcr_skip(frame->reader, offset - 3); // minus instruction length
+    jint offset = bcr_reads2(&frame->reader);
+    if (frame_stack_popi(frame) < 0)
+        bcr_skip(&frame->reader, offset - 3); // minus instruction length
 }
 
-static void ifge(struct stack_frame *frame)
+static void ifge(struct frame *frame)
 {
-    jint offset = bcr_reads2(frame->reader);
-    if (os_popi(frame->operand_stack) >= 0)
-        bcr_skip(frame->reader, offset - 3); // minus instruction length
+    jint offset = bcr_reads2(&frame->reader);
+    if (frame_stack_popi(frame) >= 0)
+        bcr_skip(&frame->reader, offset - 3); // minus instruction length
 }
 
-static void ifgt(struct stack_frame *frame)
+static void ifgt(struct frame *frame)
 {
-    jint offset = bcr_reads2(frame->reader);
-    if (os_popi(frame->operand_stack) > 0)
-        bcr_skip(frame->reader, offset - 3); // minus instruction length
+    jint offset = bcr_reads2(&frame->reader);
+    if (frame_stack_popi(frame) > 0)
+        bcr_skip(&frame->reader, offset - 3); // minus instruction length
 }
 
-static void ifle(struct stack_frame *frame)
+static void ifle(struct frame *frame)
 {
-    jint offset = bcr_reads2(frame->reader);
-    if (os_popi(frame->operand_stack) <= 0)
-        bcr_skip(frame->reader, offset - 3); // minus instruction length
+    jint offset = bcr_reads2(&frame->reader);
+    if (frame_stack_popi(frame) <= 0)
+        bcr_skip(&frame->reader, offset - 3); // minus instruction length
 }
 
-static void if_icmpeq(struct stack_frame *frame)
+static void if_icmpeq(struct frame *frame)
 {
-    jint v2 = os_popi(frame->operand_stack);
-    jint v1 = os_popi(frame->operand_stack);
-    jint offset = bcr_reads2(frame->reader);
+    jint v2 = frame_stack_popi(frame);
+    jint v1 = frame_stack_popi(frame);
+    jint offset = bcr_reads2(&frame->reader);
     if (v1 == v2)
-        bcr_skip(frame->reader, offset - 3); // minus instruction length
+        bcr_skip(&frame->reader, offset - 3); // minus instruction length
 }
 
-static void if_icmpne(struct stack_frame *frame)
+static void if_icmpne(struct frame *frame)
 {
-    jint v2 = os_popi(frame->operand_stack);
-    jint v1 = os_popi(frame->operand_stack);
-    jint offset = bcr_reads2(frame->reader);
+    jint v2 = frame_stack_popi(frame);
+    jint v1 = frame_stack_popi(frame);
+    jint offset = bcr_reads2(&frame->reader);
     if (v1 != v2)
-        bcr_skip(frame->reader, offset - 3); // minus instruction length
+        bcr_skip(&frame->reader, offset - 3); // minus instruction length
 }
 
-static void if_icmplt(struct stack_frame *frame)
+static void if_icmplt(struct frame *frame)
 {
-    jint v2 = os_popi(frame->operand_stack);
-    jint v1 = os_popi(frame->operand_stack);
-    jint offset = bcr_reads2(frame->reader);
+    jint v2 = frame_stack_popi(frame);
+    jint v1 = frame_stack_popi(frame);
+    jint offset = bcr_reads2(&frame->reader);
     if (v1 < v2)
-        bcr_skip(frame->reader, offset - 3); // minus instruction length
+        bcr_skip(&frame->reader, offset - 3); // minus instruction length
 }
 
-static void if_icmpge(struct stack_frame *frame)
+static void if_icmpge(struct frame *frame)
 {
-    jint v2 = os_popi(frame->operand_stack);
-    jint v1 = os_popi(frame->operand_stack);
-    jint offset = bcr_reads2(frame->reader);
+    jint v2 = frame_stack_popi(frame);
+    jint v1 = frame_stack_popi(frame);
+    jint offset = bcr_reads2(&frame->reader);
     if (v1 >= v2)
-        bcr_skip(frame->reader, offset - 3); // minus instruction length
+        bcr_skip(&frame->reader, offset - 3); // minus instruction length
 }
 
-static void if_icmpgt(struct stack_frame *frame)
+static void if_icmpgt(struct frame *frame)
 {
-    jint v2 = os_popi(frame->operand_stack);
-    jint v1 = os_popi(frame->operand_stack);
-    jint offset = bcr_reads2(frame->reader);
+    jint v2 = frame_stack_popi(frame);
+    jint v1 = frame_stack_popi(frame);
+    jint offset = bcr_reads2(&frame->reader);
     if (v1 > v2)
-        bcr_skip(frame->reader, offset - 3); // minus instruction length
+        bcr_skip(&frame->reader, offset - 3); // minus instruction length
 }
 
-static void if_icmple(struct stack_frame *frame)
+static void if_icmple(struct frame *frame)
 {
-    jint v2 = os_popi(frame->operand_stack);
-    jint v1 = os_popi(frame->operand_stack);
-    jint offset = bcr_reads2(frame->reader);
+    jint v2 = frame_stack_popi(frame);
+    jint v1 = frame_stack_popi(frame);
+    jint offset = bcr_reads2(&frame->reader);
     if (v1 <= v2)
-        bcr_skip(frame->reader, offset - 3); // minus instruction length
+        bcr_skip(&frame->reader, offset - 3); // minus instruction length
 }
 
-static void if_acmpeq(struct stack_frame *frame)
+static void if_acmpeq(struct frame *frame)
 {
-    jref v2 = os_popr(frame->operand_stack);
-    jref v1 = os_popr(frame->operand_stack);
-    int offset = bcr_reads2(frame->reader);
+    jref v2 = frame_stack_popr(frame);
+    jref v1 = frame_stack_popr(frame);
+    int offset = bcr_reads2(&frame->reader);
     if (v1 == v2)
-        bcr_skip(frame->reader, offset - 3); // minus instruction length
+        bcr_skip(&frame->reader, offset - 3); // minus instruction length
 }
 
-static void if_acmpne(struct stack_frame *frame)
+static void if_acmpne(struct frame *frame)
 {
-    jref v2 = os_popr(frame->operand_stack);
-    jref v1 = os_popr(frame->operand_stack);
-    int offset = bcr_reads2(frame->reader);
+    jref v2 = frame_stack_popr(frame);
+    jref v1 = frame_stack_popr(frame);
+    int offset = bcr_reads2(&frame->reader);
     if (v1 != v2)
-        bcr_skip(frame->reader, offset - 3); // minus instruction length
+        bcr_skip(&frame->reader, offset - 3); // minus instruction length
 }
 
 #endif //JVM_COMPARISONS_H

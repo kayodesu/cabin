@@ -4,21 +4,21 @@
 
 #include "../../registry.h"
 #include "../../../util/convert.h"
-#include "../../../interpreter/stack_frame.h"
+#include "../../../rtda/thread/frame.h"
 #include "../../../slot.h"
 
 // public static native int floatToRawIntBits(float value);
-static void floatToRawIntBits(struct stack_frame *frame)
+static void floatToRawIntBits(struct frame *frame)
 {
-    jfloat f = slot_getf(frame->local_vars); // frame->local_vars[0]
-    os_pushi(frame->operand_stack, float_to_raw_int_bits(f));
+    jfloat f = frame_locals_getf(frame, 0);
+    frame_stack_pushi(frame, float_to_raw_int_bits(f));
 }
 
 // public static native float intBitsToFloat(int value);
-static void intBitsToFloat(struct stack_frame *frame)
+static void intBitsToFloat(struct frame *frame)
 {
-    jint i = slot_geti(frame->local_vars); // frame->local_vars[0]
-    os_pushf(frame->operand_stack, int_bits_to_float(i));
+    jint i = frame_locals_geti(frame, 0);
+    frame_stack_pushf(frame, int_bits_to_float(i));
 }
 
 void java_lang_Float_registerNatives()

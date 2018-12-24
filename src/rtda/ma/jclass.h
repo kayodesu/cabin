@@ -10,7 +10,7 @@
 #include "../../jtypes.h"
 #include "rtcp.h"
 #include "../../loader/classloader.h"
-#include "../../interpreter/stack_frame.h"
+#include "../thread/frame.h"
 #include "../primitive_types.h"
 
 struct jobject;
@@ -95,7 +95,7 @@ struct jclass {
     const char *source_file_name;
 };
 
-struct jclass *jclass_create(struct classloader *loader, s1 *bytecode, size_t len);
+struct jclass *jclass_create(struct classloader *loader, u1 *bytecode, size_t len);
 
 /*
  * 创建基本类型（int, float etc.）的 class.

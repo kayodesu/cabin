@@ -153,7 +153,7 @@ int hashmap_values(struct hashmap *map, void *values[])
     return map->size;
 }
 
-#ifdef JVM_DEBUG
+#if (JVM_DEBUG)
 void hashmap_print(const struct hashmap *map)
 {
     assert(map != NULL);

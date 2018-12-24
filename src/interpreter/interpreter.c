@@ -5,11 +5,11 @@
 #include "interpreter.h"
 #include "../rtda/thread/jthread.h"
 #include "../jvm.h"
-#include "stack_frame.h"
+#include "../rtda/thread/frame.h"
 
-#ifdef JVM_DEBUG
+#if (JVM_DEBUG)
 // the mapping of instructions's code and name
-static char* ins_code_name_mapping[] = {
+static char* code_names[] = {
         "nop",
 
         // Constants [0x01 ... 0x14]
@@ -85,7 +85,7 @@ static char* ins_code_name_mapping[] = {
 };
 #endif
 
-extern void (* instructions[])(struct stack_frame *);
+extern void (* instructions[])(struct frame *);
 
 void* interpret(void *thread0)
 {
@@ -93,58 +93,37 @@ void* interpret(void *thread0)
     struct jthread *thread = thread0;
 
     while (!jthread_is_stack_empty(thread)) {
-        struct stack_frame *frame = jthread_top_frame(thread);
+        struct frame *frame = jthread_top_frame(thread);
         if (frame->type == SF_TYPE_SHIM) {
-            if (frame->shim_action != NULL) {
-                frame->shim_action(frame);
+            if (frame->m.shim_action != NULL) {
+                frame->m.shim_action(frame);
             }
 
             jthread_pop_frame(thread);
-            sf_destroy(frame);
-#ifdef JVM_DEBUG
-            printvm("shim frame(%p) exe over, destroy.\n", frame);
-#endif
+            frame_destroy(frame);
+            printvm_debug("shim frame(%p) exe over, destroy.\n", frame);
             continue;
         }
 
-        struct bytecode_reader *reader = frame->reader;
-#ifdef JVM_DEBUG
-        printvm("executing frame(%p): %s, pc = %lu\n", frame, sf_to_string(frame), bcr_get_pc(reader));
-#endif
-        while (bcr_has_more(reader)) {
-            u1 opcode = bcr_readu1(reader);
-#ifdef JVM_DEBUG
-            printvm("%d(0x%x), %s, pc = %lu\n", opcode, opcode, ins_code_name_mapping[opcode], bcr_get_pc(reader));
-#endif
+        printvm_debug("executing frame(%p): %s, pc = %lu\n", frame, frame_to_string(frame), frame->reader.pc);
+        while (bcr_has_more(&frame->reader)) {
+            u1 opcode = bcr_readu1(&frame->reader);
+            printvm_debug("%d(0x%x), %s, pc = %lu\n", opcode, opcode, code_names[opcode], frame->reader.pc);
             instructions[opcode](frame);
 
-            if (sf_is_exe_over(frame)) {
-                sf_destroy(frame);
-#ifdef JVM_DEBUG
-                printvm("frame(%p) exe over, destroy.\n", frame);
-#endif
+            if (frame_is_exe_over(frame)) {
+                jthread_recycle_frame(frame);
+                printvm_debug("frame(%p) exe over, destroy.\n", frame);
                 break;
             }
 
-            if (sf_interrupted(frame)) {
-#ifdef JVM_DEBUG
-                printvm("frame(%p) interrupted.\n", frame);
-#endif
+            if (frame_interrupted(frame)) {
+                printvm_debug("frame(%p) interrupted.\n", frame);
                 break; // 当前函数执行被中断。跳出循环，终止当前 frame 的执行。
             }
-
-            /*
-             * 如果当前栈顶帧正在处理异常，
-             * 则需重置frame和reader，因为在异常处理中可能有一些帧被弹出
-             */
-//            if (sf_is_proc_exception(jthread_top_frame(thread))) {
-//                frame = jthread_top_frame(thread);
-//                reader = frame->reader;
-//            }
         }
     }
-#ifdef JVM_DEBUG
-    printvm("interpret exit.\n");
-#endif
+
+    printvm_debug("interpret exit.\n");
     return NULL; // todo
 }

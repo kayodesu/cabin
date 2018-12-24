@@ -3,15 +3,14 @@
  */
 
 #include "../../registry.h"
-#include "../../../interpreter/operand_stack.h"
-#include "../../../interpreter/stack_frame.h"
+#include "../../../rtda/thread/frame.h"
 
 /*
  * This routine initializes JNI field offsets for the class
  *
  * private native void initIDs();
  */
-static void initIDs(struct stack_frame *frame)
+static void initIDs(struct frame *frame)
 {
     // todo
 //    jvm_abort("error\n");
@@ -20,11 +19,11 @@ static void initIDs(struct stack_frame *frame)
 /*
  * private static native long set(int d);
  */
-static void set(struct stack_frame *frame)
+static void set(struct frame *frame)
 {
 //    jvm_abort("error\n");
     // todo
-    os_pushl(frame->operand_stack, 123);
+    frame_stack_pushl(frame, 123);
 }
 
 /**

@@ -5,7 +5,7 @@
 #include "../../registry.h"
 
 // private static native void initIDs();
-static void initIDs(struct stack_frame *frame)
+static void initIDs(struct frame *frame)
 {
     // todo
 }

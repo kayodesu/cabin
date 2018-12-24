@@ -5,12 +5,12 @@
 #ifndef JVM_CONTROLS_H
 #define JVM_CONTROLS_H
 
-#include "../interpreter/stack_frame.h"
+#include "../rtda/thread/frame.h"
 
-static void __goto(struct stack_frame *frame)
+static void __goto(struct frame *frame)
 {
-    int offset = bcr_reads2(frame->reader);
-    bcr_skip(frame->reader, offset - 3);  // 减3？减去本条指令自身的长度 todo
+    int offset = bcr_reads2(&frame->reader);
+    bcr_skip(&frame->reader, offset - 3);  // minus instruction length
 }
 
 /*
@@ -18,12 +18,12 @@ static void __goto(struct stack_frame *frame)
  * 从Java 6开始，已经不再使用这些指令
  */
 
-static void jsr(struct stack_frame *frame)
+static void jsr(struct frame *frame)
 {
     jvm_abort("jsr doesn't support after jdk 6.");
 }
 
-static void ret(struct stack_frame *frame)
+static void ret(struct frame *frame)
 {
     // ret 有 wide 扩展
     jvm_abort("ret doesn't support after jdk 6.");
@@ -33,9 +33,9 @@ static void ret(struct stack_frame *frame)
 /*
  * todo 指令说明  好像是实现 switch 语句
  */
-static void tableswitch(struct stack_frame *frame)
+static void tableswitch(struct frame *frame)
 {
-    struct bytecode_reader *reader = frame->reader;
+    struct bytecode_reader *reader = &frame->reader;
     size_t saved_pc = reader->pc - 1; // save the pc before 'tableswitch' instruction
     bcr_align4(reader);
 
@@ -53,7 +53,7 @@ static void tableswitch(struct stack_frame *frame)
     bcr_reads4s(reader, jump_offset_count, jump_offsets);
 
     // 弹出要判断的值
-    jint index = os_popi(frame->operand_stack);
+    jint index = frame_stack_popi(frame);
     s4 offset;
     if (index < low || index > height) {
         offset = default_offset; // 没在 case 标识的范围内，跳转到 default 分支。
@@ -71,9 +71,9 @@ static void tableswitch(struct stack_frame *frame)
 /*
  * todo 指令说明  好像是实现 switch 语句
  */
-static void lookupswitch(struct stack_frame *frame)
+static void lookupswitch(struct frame *frame)
 {
-    struct bytecode_reader *reader = frame->reader;
+    struct bytecode_reader *reader = &frame->reader;
     size_t saved_pc = reader->pc - 1; // save the pc before 'lookupswitch' instruction
     bcr_align4(reader);
 
@@ -90,7 +90,7 @@ static void lookupswitch(struct stack_frame *frame)
     bcr_reads4s(reader, npairs * 2, match_offsets);
 
     // 弹出要判断的值
-    jint key = os_popi(frame->operand_stack);
+    jint key = frame_stack_popi(frame);
     s4 offset = default_offset;
     for (int i = 0; i < npairs * 2; i += 2) {
         if (match_offsets[i] == key) { // 找到 case
@@ -136,15 +136,15 @@ The interpreter then reinstates the frame of the invoker and returns
 control to the invoker.
  */
 #define TRETURN(func_name, T) \
-static void func_name(struct stack_frame *frame) \
+static void func_name(struct frame *frame) \
 { \
     assert(frame == jthread_top_frame(frame->thread)); \
     jthread_pop_frame(frame->thread); \
     \
-    struct stack_frame *invoke_frame = jthread_top_frame(frame->thread); \
+    struct frame *invoke_frame = jthread_top_frame(frame->thread); \
     assert(invoke_frame != NULL); \
-    os_push##T(invoke_frame->operand_stack, os_pop##T(frame->operand_stack)); \
-    sf_exe_over(frame); \
+    frame_stack_push##T(invoke_frame, frame_stack_pop##T(frame)); \
+    frame_exe_over(frame); \
 }
 
 TRETURN(ireturn, i)
@@ -153,10 +153,10 @@ TRETURN(freturn, f)
 TRETURN(dreturn, d)
 TRETURN(areturn, r)
 
-static void __return(struct stack_frame *frame)
+static void __return(struct frame *frame)
 {
     jthread_pop_frame(frame->thread);
-    sf_exe_over(frame);
+    frame_exe_over(frame);
 }
 
 

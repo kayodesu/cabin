@@ -190,6 +190,7 @@ void jmethod_init(struct jmethod *method, struct jclass *c, struct bytecode_read
     method->access_flags = bcr_readu2(reader);
     method->name = rtcp_get_str(c->rtcp, bcr_readu2(reader));
     method->descriptor = rtcp_get_str(c->rtcp, bcr_readu2(reader));
+    u2 attr_count = bcr_readu2(reader);
 
     method->max_stack = method->max_locals = method->exception_tables_count = 0;
     method->line_number_table_count = method->code_length = 0;
@@ -206,7 +207,6 @@ void jmethod_init(struct jmethod *method, struct jclass *c, struct bytecode_read
     cal_arg_slot_count(method);
 
     // todo methods Attributes
-    u2 attr_count = bcr_readu2(reader);
     for (int i = 0; i < attr_count; i++) {
         const char *attr_name = rtcp_get_str(c->rtcp, bcr_readu2(reader));
         u4 attr_len = bcr_readu4(reader);

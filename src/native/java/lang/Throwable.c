@@ -3,7 +3,7 @@
  */
 
 #include "../../registry.h"
-#include "../../../interpreter/stack_frame.h"
+#include "../../../rtda/thread/frame.h"
 #include "../../../slot.h"
 #include "../../../rtda/heap/jobject.h"
 
@@ -14,13 +14,13 @@ struct stack_trace {
 };
 
 // private native Throwable fillInStackTrace(int dummy);
-static void fillInStackTrace(struct stack_frame *frame)
+static void fillInStackTrace(struct frame *frame)
 {
-    jref throwable = slot_getr(frame->local_vars);
-    os_pushr(frame->operand_stack, throwable);
+    jref this = frame_locals_getr(frame, 0);
+    frame_stack_pushr(frame, this);
 
     int num;
-    struct stack_frame **frames = jthread_get_frames(frame->thread, &num);
+    struct frame **frames = jthread_get_frames(frame->thread, &num);
     /*
      * 栈顶两帧正在执行 fillInStackTrace(int) 和 fillInStackTrace() 方法，所以需要跳过这两帧。
      * 这两帧下面的几帧正在执行异常类的构造函数，所以也要跳过。
@@ -41,7 +41,7 @@ static void fillInStackTrace(struct stack_frame *frame)
      * at java/lang/Throwable.fillInStackTrace(Native Method)
      */
     num -= 2; // 减去执行fillInStackTrace(int) 和 fillInStackTrace() 方法的frame
-    for (struct jclass *c = throwable->jclass; c != NULL; c = c->super_class) {
+    for (struct jclass *c = this->jclass; c != NULL; c = c->super_class) {
         num--; // 减去执行异常类的构造函数的frame
         if (strcmp(c->class_name, "java/lang/Throwable") == 0) {
             break; // 可以了，遍历到 Throwable 就行了，因为现在在执行 Throwable 的 fillInStackTrace 方法。
@@ -67,10 +67,10 @@ static void fillInStackTrace(struct stack_frame *frame)
         // public StackTraceElement(String declaringClass, String methodName, String fileName, int lineNumber)
         // may be should call <init>, but 直接赋值 is also ok.
 
-        struct slot file_name = rslot(jstrobj_create(frames[i]->method->jclass->source_file_name));
-        struct slot class_name = rslot(jstrobj_create(frames[i]->method->jclass->class_name));
-        struct slot method_name = rslot(jstrobj_create(frames[i]->method->name));
-        struct slot line_number = islot(jmethod_get_line_number(frames[i]->method, frames[i]->reader->pc - 1)); // todo why 减1？ 减去opcode的长度
+        struct slot file_name = rslot(jstrobj_create(frames[i]->m.method->jclass->source_file_name));
+        struct slot class_name = rslot(jstrobj_create(frames[i]->m.method->jclass->class_name));
+        struct slot method_name = rslot(jstrobj_create(frames[i]->m.method->name));
+        struct slot line_number = islot(jmethod_get_line_number(frames[i]->m.method, frames[i]->reader.pc - 1)); // todo why 减1？ 减去opcode的长度
 
         set_instance_field_value_by_nt(o, "fileName", "Ljava/lang/String;", &file_name);
         set_instance_field_value_by_nt(o, "declaringClass", "Ljava/lang/String;", &class_name);
@@ -79,27 +79,27 @@ static void fillInStackTrace(struct stack_frame *frame)
     }
 
     free(frames);
-    throwable->extra = trace;
+    this->extra = trace;
 }
 
 // native StackTraceElement getStackTraceElement(int index);
-static void getStackTraceElement(struct stack_frame *frame)
+static void getStackTraceElement(struct frame *frame)
 {
-    jref throwable = slot_getr(frame->local_vars);
-    jint index = slot_geti(frame->local_vars + 1);
+    jref throwable = frame_locals_getr(frame, 0);
+    jint index = frame_locals_geti(frame, 1);
 
     struct stack_trace *trace = throwable->extra;
     assert(trace != NULL);
-    os_pushr(frame->operand_stack, trace->eles[index]);
+    frame_stack_pushr(frame, trace->eles[index]);
 }
 
 // native int getStackTraceDepth();
-static void getStackTraceDepth(struct stack_frame *frame)
+static void getStackTraceDepth(struct frame *frame)
 {
-    jref throwable = slot_getr(frame->local_vars);
-    struct stack_trace *trace = throwable->extra;
+    jref this = frame_locals_getr(frame, 0);
+    struct stack_trace *trace = this->extra;
     assert(trace != NULL);
-    os_pushi(frame->operand_stack, trace->count);
+    frame_stack_pushi(frame, trace->count);
 }
 
 void java_lang_Throwable_registerNatives()

@@ -3,16 +3,16 @@
  */
 
 #include "../../registry.h"
-#include "../../../interpreter/stack_frame.h"
+#include "../../../rtda/thread/frame.h"
 #include "../../../slot.h"
 #include "../../../rtda/heap/jobject.h"
 
 // @CallerSensitive
 // public static native <T> T doPrivileged(PrivilegedAction<T> action);
-static void doPrivileged(struct stack_frame *frame)
+static void doPrivileged(struct frame *frame)
 {
     // todo 这个函数干什么用的。。。。
-    struct jobject *this_obj = slot_getr(frame->local_vars);
+    struct jobject *this = frame_locals_getr(frame, 0);
 
     /*
      * run 函数返回 T类型 的对象
@@ -21,14 +21,14 @@ static void doPrivileged(struct stack_frame *frame)
      *     T run();
      * }
      */
-    struct jmethod *m = jclass_get_method(this_obj->jclass, "run", "()Ljava/lang/Object;"); // todo getInstanceMethod
-    struct slot args[] = { rslot(this_obj) };
+    struct jmethod *m = jclass_get_method(this->jclass, "run", "()Ljava/lang/Object;"); // todo getInstanceMethod
+    struct slot args[] = { rslot(this) };
     jthread_invoke_method(frame->thread, m, args);
 }
 
 // @CallerSensitive
 // public static native <T> T doPrivileged(PrivilegedAction<T> action, AccessControlContext context);
-static void doPrivileged1(struct stack_frame *frame)
+static void doPrivileged1(struct frame *frame)
 {
     // todo
     doPrivileged(frame);
@@ -36,7 +36,7 @@ static void doPrivileged1(struct stack_frame *frame)
 
 // @CallerSensitive
 // public static native <T> T doPrivileged(PrivilegedExceptionAction<T> action) throws PrivilegedActionException;
-static void doPrivileged2(struct stack_frame *frame)
+static void doPrivileged2(struct frame *frame)
 {
     // todo
     doPrivileged(frame);
@@ -45,17 +45,17 @@ static void doPrivileged2(struct stack_frame *frame)
 // @CallerSensitive
 // public static native <T> T doPrivileged(PrivilegedExceptionAction<T> action, AccessControlContext context)
 //      throws PrivilegedActionException;
-static void doPrivileged3(struct stack_frame *frame)
+static void doPrivileged3(struct frame *frame)
 {
     // todo
     doPrivileged(frame);
 }
 
 // private static native AccessControlContext getStackAccessControlContext();
-static void getStackAccessControlContext(struct stack_frame *frame)
+static void getStackAccessControlContext(struct frame *frame)
 {
     // todo
-    os_pushr(frame->operand_stack, NULL);
+    frame_stack_pushr(frame, NULL);
 }
 
 void java_security_AccessController_registerNatives()

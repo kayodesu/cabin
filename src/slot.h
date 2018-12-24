@@ -34,6 +34,13 @@ struct slot {
 #define dslot(d0) ((struct slot) { .t = JDOUBLE, .v.d = (d0) })
 #define rslot(r0) ((struct slot) { .t = JREF,    .v.r = (r0) })
 #define phslot    ((struct slot) { .t = PH })
+#define nullslot  ((struct slot) { .t = NAT })
+
+static inline bool slot_is_null(const struct slot *s)
+{
+    assert(s != NULL);
+    return s->t == NAT;
+}
 
 jint    slot_geti(const struct slot *s);
 jfloat  slot_getf(const struct slot *s);

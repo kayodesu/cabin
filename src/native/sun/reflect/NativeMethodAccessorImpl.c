@@ -6,7 +6,7 @@
  */
 
 // private static native Object invoke0(Method method, Object o, Object[] os);
-static void invoke0(struct stack_frame *frame)
+static void invoke0(struct frame *frame)
 {
     jvm_abort("error\n");
 }

@@ -26,19 +26,19 @@
  */
 bool wide_extending = false;
 
-jint fetch_index(struct stack_frame *frame)
+jint fetch_index(struct frame *frame)
 {
     if (wide_extending) {
         wide_extending = false;
-        return bcr_readu2(frame->reader);
+        return bcr_readu2(&frame->reader);
     }
-    return bcr_readu1(frame->reader);
+    return bcr_readu1(&frame->reader);
 }
 
-static void nop(struct stack_frame *frame) { /* do nothing */ }
+static void nop(struct frame *frame) { /* do nothing */ }
 
 // 指令集
-void (* instructions[])(struct stack_frame *) = {
+void (* instructions[])(struct frame *) = {
         nop,
 
         // Constants [0x01 ... 0x14]

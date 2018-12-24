@@ -3,10 +3,10 @@
  */
 
 #include "../../registry.h"
-#include "../../../interpreter/stack_frame.h"
+#include "../../../rtda/thread/frame.h"
 
 // private native void initIDs();
-static void initIDs(struct stack_frame *frame)
+static void initIDs(struct frame *frame)
 {
 //    jvm_abort("error\n");
     // todo

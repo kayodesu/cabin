@@ -12,10 +12,9 @@
 #include "jtypes.h"
 
 /*
- * 是否开启调试模式，
- * 如不开启，可注释掉此define
+ * 是否开启调试模式
  */
-//#define JVM_DEBUG
+#define JVM_DEBUG false
 
 #ifndef PATH_MAX
 #define PATH_MAX 260 // todo
@@ -51,7 +50,7 @@ extern char user_jars[][PATH_MAX];
 // todo 说明
 extern struct classloader *bootstrap_loader;
 
-#define CHECK_MALLOC_RESULT(point) do { if ((point) == NULL) vm_internal_error("malloc failed"); } while (false)
+#define CHECK_MALLOC_RESULT(point) do { if ((point) == NULL) vm_internal_error("malloc failed"); } while (false) // todo
 
 /*
  * 下面申请内存的宏会检查申请是否成功
@@ -64,9 +63,6 @@ extern struct classloader *bootstrap_loader;
 #define VM_MALLOCS(type, count, var_name) VM_MALLOC_EXT(type, count, 0, var_name)
 
 #define VM_MALLOC(type, var_name) VM_MALLOCS(type, 1, var_name)
-
-// 只做标记使用，标记结构体成员
-#define private
 
 /*
  * jvms规定函数最多有255个参数，this也算，long和double占两个长度
@@ -91,6 +87,12 @@ extern struct jobject *system_thread_group;
 #define MAIN_THREAD_NAME "main"
 
 #define printvm(...) do { printf("%s: %d: ", __FILE__, __LINE__); printf(__VA_ARGS__); } while(false)
+
+#if (JVM_DEBUG)
+#define printvm_debug(...) printvm(__VA_ARGS__)
+#else
+#define printvm_debug(...)
+#endif
 
 // 出现异常，退出jvm
 #define jvm_abort(...) do { printvm("fatal error. "); printf(__VA_ARGS__); exit(-1); } while(false)
