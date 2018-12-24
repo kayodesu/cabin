@@ -11,14 +11,14 @@ A JVM written in C.
 * pthread lib
 * jre8 lib
 
-## 命令行参数
+## Run
 * -bcp path: Bootstrap Class Path, JavaHome路径, 对应 jre/lib 目录。
 * -cp path: Class Path, user class path.
 -cp 选项的优先级更高，可以覆盖CLASSPATH环境变量设置。
 -cp 选项既可以指定多个目录和JAR文件，以分号隔开。
 
-## 示例
-#### Hello World
+## Quiz
+### Hello World
 ```java
 public class HelloWorld {
     public static void main(String[] args) {
@@ -35,7 +35,7 @@ Hello, world!
 
 C:\>
 ```
-#### Bubble Sort
+### Bubble Sort
 ```java
 package array;
 
@@ -70,7 +70,7 @@ C:\>jvm array/BubbleSort
 
 C:\>
 ```
-#### Stack Trace
+### Stack Trace
 ```java
 package exception;
 
@@ -99,6 +99,7 @@ java.lang.RuntimeException: BAD!
 
 C:\>
 ```
-## 参考资料
-1. 自己动手写Java虚拟机，张秀宏。
-2. 深入理解Java虚拟机——JVM高级特性与最佳实践(第2版)，周志明。
+## Reference
+* jvms8.pdf
+* 自己动手写Java虚拟机，张秀宏。
+* 深入理解Java虚拟机——JVM高级特性与最佳实践(第2版)，周志明。
