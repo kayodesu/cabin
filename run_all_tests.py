@@ -51,5 +51,5 @@ if __name__ == '__main__':
     # subprocess.call(jvm + 'exception/StackTraceTest')
     # subprocess.call(jvm + 'HelloWorld')
     # subprocess.call(jvm + 'lambda/LambdaTest')
-    subprocess.call(jvm + 'thread/MainThreadTest')
+    # subprocess.call(jvm + 'thread/MainThreadTest')
     pass

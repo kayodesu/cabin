@@ -12,10 +12,18 @@ A JVM written in C, simple :thumbsup: slow :thumbsdown:
 * jre8 lib
 
 ## Run
-* -bcp path: Bootstrap Class Path, JavaHome路径, 对应 jre/lib 目录。
-* -cp path: Class Path, user class path.
--cp 选项的优先级更高，可以覆盖CLASSPATH环境变量设置。
--cp 选项既可以指定多个目录和JAR文件，以分号隔开。
+Ensure your Java version is Java8.
+
+Two command-line options:
+* -bcp path: set jre lib path.
+* -cp path: set class path.
+```
+C:\>jvm HelloWorld -bcp "C:\Program Files\Java\jre1.8.0_162\lib" -cp D:\code\jvm\testclasses
+```
+or, using JAVA_HOME and CLASS_PATH environment variables.
+```
+C:\>jvm HelloWorld
+```
 
 ## Quiz
 ### Hello World
@@ -28,8 +36,6 @@ public class HelloWorld {
 ```
 
 ```
-# 使用 -bcp 指定了java库路径，使用 -cp 指定 CLASSPATH。
-
 C:\>jvm HelloWorld -bcp "C:\Program Files\Java\jre1.8.0_162\lib" -cp D:\code\jvm\testclasses
 Hello, world!
 
@@ -63,8 +69,6 @@ public class BubbleSort {
 ```
 
 ```
-# 没有指定Java库路径和CLASSPATH，使用环境变量 JAVA_HOME 和 CLASSPATH。
-
 C:\>jvm array/BubbleSort
 [9, 10, 11, 22, 24, 36, 36, 56, 65, 77, 78, 84, 92, 95, 97]
 
