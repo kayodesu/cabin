@@ -6,6 +6,7 @@
 #include <assert.h>
 #include "frame.h"
 #include "../ma/access.h"
+#include "../heap/jobject.h"
 
 struct frame* frame_create_shim(struct jthread *thread, void (* shim_action)(struct frame *))
 {
@@ -56,6 +57,120 @@ struct frame* frame_create_normal(struct jthread *thread, struct jmethod *method
     VM_MALLOC_EXT(struct frame, 1, sizeof(struct slot) * (method->max_locals + method->max_stack), frame);
     frame_bind(frame, thread, method);
     return frame;
+}
+
+#define GET_AND_CHECK_ARRAY \
+    jint index = frame_stack_popi(frame); \
+    jref arr = frame_stack_popr(frame); \
+    if ((arr) == NULL) \
+        jthread_throw_null_pointer_exception(frame->thread); \
+    if (!jarrobj_check_bounds(arr, index)) \
+        jthread_throw_array_index_out_of_bounds_exception(frame->thread, index);
+
+// ----- loads
+void frame_iaload(struct frame *frame)
+{
+    GET_AND_CHECK_ARRAY
+    frame_stack_pushi(frame, jarrobj_get(jint, arr, index));
+}
+
+void frame_faload(struct frame *frame)
+{
+    GET_AND_CHECK_ARRAY
+    frame_stack_pushf(frame, jarrobj_get(jfloat, arr, index));
+}
+
+void frame_laload(struct frame *frame)
+{
+    GET_AND_CHECK_ARRAY
+    frame_stack_pushl(frame, jarrobj_get(jlong, arr, index));
+}
+
+void frame_daload(struct frame *frame)
+{
+    GET_AND_CHECK_ARRAY
+    frame_stack_pushd(frame, jarrobj_get(jdouble, arr, index));
+}
+
+void frame_aaload(struct frame *frame)
+{
+    GET_AND_CHECK_ARRAY
+    frame_stack_pushr(frame, jarrobj_get(jref, arr, index));
+}
+
+void frame_baload(struct frame *frame)
+{
+    GET_AND_CHECK_ARRAY
+    frame_stack_pushi(frame, jarrobj_get(jbyte, arr, index));
+}
+
+void frame_caload(struct frame *frame)
+{
+    GET_AND_CHECK_ARRAY
+    frame_stack_pushi(frame, jarrobj_get(jchar, arr, index));
+}
+
+void frame_saload(struct frame *frame)
+{
+    GET_AND_CHECK_ARRAY
+    frame_stack_pushi(frame, jarrobj_get(jshort, arr, index));
+}
+
+// ----- stores
+void frame_iastore(struct frame *frame)
+{
+    jint value = frame_stack_popi(frame);
+    GET_AND_CHECK_ARRAY
+    jarrobj_set(jint, arr, index, value);
+}
+
+void frame_fastore(struct frame *frame)
+{
+    jfloat value = frame_stack_popf(frame);
+    GET_AND_CHECK_ARRAY
+    jarrobj_set(jfloat, arr, index, value);
+}
+
+void frame_lastore(struct frame *frame)
+{
+    jlong value = frame_stack_popl(frame);
+    GET_AND_CHECK_ARRAY
+    jarrobj_set(jlong, arr, index, value);
+}
+
+void frame_dastore(struct frame *frame)
+{
+    jdouble value = frame_stack_popd(frame);
+    GET_AND_CHECK_ARRAY
+    jarrobj_set(jdouble, arr, index, value);
+}
+
+void frame_aastore(struct frame *frame)
+{
+    jref value = frame_stack_popr(frame);
+    GET_AND_CHECK_ARRAY
+    jarrobj_set(jref, arr, index, value);
+}
+
+void frame_bastore(struct frame *frame)
+{
+    jbyte value = (jbyte) frame_stack_popi(frame);
+    GET_AND_CHECK_ARRAY
+    jarrobj_set(jbyte, arr, index, value);
+}
+
+void frame_castore(struct frame *frame)
+{
+    jchar value = (jchar) frame_stack_popi(frame);
+    GET_AND_CHECK_ARRAY
+    jarrobj_set(jchar, arr, index, value);
+}
+
+void frame_sastore(struct frame *frame)
+{
+    jshort value = (jshort) frame_stack_popi(frame);
+    GET_AND_CHECK_ARRAY
+    jarrobj_set(jshort, arr, index, value);
 }
 
 char* frame_to_string(const struct frame *f)

@@ -65,7 +65,7 @@ int jthread_stack_depth(const struct jthread *thread);
 struct frame* jthread_top_frame(struct jthread *thread);
 struct frame* jthread_depth_frame(struct jthread *thread, int depth);
 
-void jthread_pop_frame(struct jthread *thread);
+struct frame* jthread_pop_frame(struct jthread *thread);
 
 void jthread_push_frame(struct jthread *thread, struct frame *frame);
 

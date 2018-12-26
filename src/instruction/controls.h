@@ -7,7 +7,7 @@
 
 #include "../rtda/thread/frame.h"
 
-static void __goto(struct frame *frame)
+static void inline __goto(struct frame *frame)
 {
     int offset = bcr_reads2(&frame->reader);
     bcr_skip(&frame->reader, offset - 3);  // minus instruction length
@@ -135,28 +135,38 @@ method are discarded.
 The interpreter then reinstates the frame of the invoker and returns
 control to the invoker.
  */
-#define TRETURN(func_name, T) \
-static void func_name(struct frame *frame) \
-{ \
-    assert(frame == jthread_top_frame(frame->thread)); \
-    jthread_pop_frame(frame->thread); \
-    \
-    struct frame *invoke_frame = jthread_top_frame(frame->thread); \
-    assert(invoke_frame != NULL); \
-    frame_stack_push##T(invoke_frame, frame_stack_pop##T(frame)); \
-    frame_exe_over(frame); \
-}
+//#define TRETURN(func_name, T) \
+//static void func_name(struct frame *frame) \
+//{ \
+//    assert(frame == jthread_top_frame(frame->thread)); \
+//    jthread_pop_frame(frame->thread); \
+//    \
+//    struct frame *invoke_frame = jthread_top_frame(frame->thread); \
+//    assert(invoke_frame != NULL); \
+//    frame_stack_push##T(invoke_frame, frame_stack_pop##T(frame)); \
+//    frame_exe_over(frame); \
+//}
+//
+//TRETURN(ireturn, i)
+//TRETURN(lreturn, l)
+//TRETURN(freturn, f)
+//TRETURN(dreturn, d)
+//TRETURN(areturn, r)
 
-TRETURN(ireturn, i)
-TRETURN(lreturn, l)
-TRETURN(freturn, f)
-TRETURN(dreturn, d)
-TRETURN(areturn, r)
+#define TRETURN(t) \
+    do { \
+        assert(frame == jthread_top_frame(frame->thread)); \
+        jthread_pop_frame(frame->thread); \
+        \
+        struct frame *invoke_frame = jthread_top_frame(frame->thread); \
+        assert(invoke_frame != NULL); \
+        frame_stack_push##t(invoke_frame, frame_stack_pop##t(frame)); \
+        frame_exe_over(frame); \
+    } while (false)
 
 static void __return(struct frame *frame)
 {
-    jthread_pop_frame(frame->thread);
-    frame_exe_over(frame);
+    frame_exe_over(jthread_pop_frame(frame->thread));
 }
 
 

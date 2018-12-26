@@ -8,14 +8,14 @@
 #include "../rtda/thread/frame.h"
 
 // 弹出一个类型一的数据
-static void pop(struct frame *frame)
+static inline void pop(struct frame *frame)
 {
     assert(frame != NULL);
     frame_stack_pop_slot(frame);
 }
 
 // 弹出两个类型一或一个类型二的数据
-static void pop2(struct frame *frame)
+static inline void pop2(struct frame *frame)
 {
     assert(frame != NULL);
     frame_stack_pop_slot(frame);
@@ -23,7 +23,7 @@ static void pop2(struct frame *frame)
 }
 
 // 复制栈顶数值（只支持分类一的数据）并将复制值压入栈顶。
-static void dup(struct frame *frame)
+static inline void dup(struct frame *frame)
 {
     assert(frame != NULL);
     const struct slot *s = frame_stack_top(frame);
@@ -31,7 +31,7 @@ static void dup(struct frame *frame)
 }
 
 // 复制栈顶一个（分类二类型)或两个（分类一类型）数值并将复制值压入栈顶。
-static void dup2(struct frame *frame)
+static inline void dup2(struct frame *frame)
 {
     assert(frame != NULL);
     const struct slot top1 = *frame_stack_pop_slot(frame);
@@ -50,7 +50,7 @@ static void dup2(struct frame *frame)
  * The dup_x1 instruction must not be used unless both value1 and
  * value2 are values of a category 1 computational type
  */
-static void dup_x1(struct frame *frame)
+static inline void dup_x1(struct frame *frame)
 {
     assert(frame != NULL);
     const struct slot top1 = *frame_stack_pop_slot(frame);
@@ -63,7 +63,7 @@ static void dup_x1(struct frame *frame)
 
 // 复制操作数栈栈顶的值（类型一），
 // 并插入到栈顶以下2个（栈顶类型一，栈顶下一个类型二）或3个（三个值都是类型一）值之后
-static void dup_x2(struct frame *frame)
+static inline void dup_x2(struct frame *frame)
 {
     assert(frame != NULL);
     const struct slot top1 = *frame_stack_pop_slot(frame);
@@ -90,10 +90,10 @@ static void dup_x2(struct frame *frame)
     where value1 is a value of a category 2 computational type
     and value2 is a value of a category 1 computational type.
  */
-static void dup2_x1(struct frame *frame)
+static inline void dup2_x1(struct frame *frame)
 {
     assert(frame != NULL);
-    const struct slot top1 = *frame_stack_pop_slot(frame);
+    const struct slot top1 = *frame_stack_pop_slot(frame);  // todo 实现错误 ！！！ 返回的是指针不是值
     const struct slot top2 = *frame_stack_pop_slot(frame);
     const struct slot top3 = *frame_stack_pop_slot(frame);
 
@@ -129,7 +129,7 @@ static void dup2_x1(struct frame *frame)
     ..., value1, value2, value1
     where value1 and value2 are both values of a category 2 computational type.
  */
-static void dup2_x2(struct frame *frame)
+static inline void dup2_x2(struct frame *frame)
 {
     assert(frame != NULL);
     const struct slot top1 = *frame_stack_pop_slot(frame);
@@ -151,7 +151,7 @@ static void dup2_x2(struct frame *frame)
  * The Java Virtual Machine does not provide an instruction
  * implementing a swap on operands of category 2 computational types.
  */
-static void __swap(struct frame *frame)
+static inline void __swap(struct frame *frame)
 {
     assert(frame != NULL);
     const struct slot top1 = *frame_stack_pop_slot(frame);

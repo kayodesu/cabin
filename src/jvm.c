@@ -32,7 +32,7 @@ char user_dirs[USER_DIRS_MAX_COUNT][PATH_MAX];
 char user_jars[USER_JARS_MAX_COUNT][PATH_MAX];
 
 
-struct classloader *bootstrap_loader = NULL;
+struct classloader *g_bootstrap_loader = NULL;
 
 struct jobject *system_thread_group = NULL;
 struct jthread *main_thread = NULL;
@@ -52,59 +52,51 @@ static void init_jvm(struct classloader *loader, struct jthread *main_thread)
     interpret(main_thread);
 }
 
-// todo 这函数干嘛的
-static void create_system_thread_group(struct classloader *loader)
-{
-    struct jclass *thread_group_class = classloader_load_class(loader, "java/lang/ThreadGroup");
-    system_thread_group = jobject_create(thread_group_class);
-
-    /*
-     * java/lang/ThreadGroup 的无参数构造函数主要用来：
-     * Creates an empty Thread group that is not in any Thread group.
-     * This method is used to create the system Thread group.
-     */
-    struct jmethod *constructor = jclass_get_constructor(thread_group_class, "()V");
-
-    // 启动一个临时线程来执行 system thread group 的构造函数
-    struct jthread *tmp = jthread_create(loader, NULL); // todo
-    struct slot arg = rslot(system_thread_group);
-    jthread_invoke_method(tmp, constructor, &arg);
-
-    jclass_clinit(thread_group_class, tmp);  // todo
-    interpret(tmp);
-    jthread_destroy(tmp);
-}
-
 /*
  * main thread 由虚拟机启动。
  */
 static void create_main_thread(struct classloader *loader)
 {
+    struct jclass *jltg_class = classloader_load_class(loader, "java/lang/ThreadGroup");
+    system_thread_group = jobject_create(jltg_class);
+
     struct jclass *jlt_class = classloader_load_class(loader, "java/lang/Thread");
-    struct jobject *main_thread_obj = jobject_create(jlt_class);
+    struct jobject *jlt_obj = jobject_create(jlt_class);
 
     // from java/lang/Thread.java
     // public final static int MIN_PRIORITY = 1;
     // public final static int NORM_PRIORITY = 5;
     // public final static int MAX_PRIORITY = 10;
-    struct slot value = islot(10);  // todo. why set this? I do not know. 参见 jvmgo/instructions/reserved/bootstrap.go
-    set_instance_field_value_by_nt(main_thread_obj, "priority", "I", &value);
+    struct slot value = islot(5);  // todo. why set this? I do not know. 参见 jvmgo/instructions/reserved/bootstrap.go
+    set_instance_field_value_by_nt(jlt_obj, "priority", "I", &value);
 
-    main_thread = jthread_create(loader, main_thread_obj);
+    main_thread = jthread_create(loader, jlt_obj);
 
     // 调用 java/lang/Thread 的构造函数
     struct jmethod *constructor
-            = jclass_get_constructor(main_thread_obj->jclass, "(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");
+            = jclass_get_constructor(jlt_obj->jclass, "(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");
     struct slot args[] = {
-            rslot(main_thread_obj),
+            rslot(jlt_obj),
             rslot(system_thread_group),
             rslot(jstrobj_create(MAIN_THREAD_NAME)) // thread name
     };
     jthread_invoke_method(main_thread, constructor, args);
+    jclass_clinit(jlt_obj->jclass, main_thread); // 最后压栈，保证先执行。
 
-    jclass_clinit(main_thread_obj->jclass, main_thread); // 最后压栈，保证先执行。
 
-    // 执行 java/lang/Thread 的 <clinit> and <init>
+    // 初始化 system_thread_group
+    // java/lang/ThreadGroup 的无参数构造函数主要用来：
+    // Creates an empty Thread group that is not in any Thread group.
+    // This method is used to create the system Thread group.
+    struct slot arg = rslot(system_thread_group);
+    jthread_invoke_method(main_thread, jclass_get_constructor(jltg_class, "()V"), &arg);
+    jclass_clinit(jltg_class, main_thread);
+
+    // 现在，main thread's vm stack 里面按将要执行的顺序（从栈顶到栈底）分别为：
+    // java/lang/ThreadGroup~<clinit>
+    // java/lang/ThreadGroup~<init>~()V
+    // java/lang/Thread~<clinit>
+    // java/lang/Thread~<init>~(Ljava/lang/ThreadGroup;Ljava/lang/String;)V
     interpret(main_thread);
 }
 
@@ -113,20 +105,19 @@ static void start_jvm(const char *main_class_name)
     build_str_pool();
 
     struct classloader *loader = classloader_create(true);
-    create_system_thread_group(loader);
     create_main_thread(loader);
     init_jvm(loader, main_thread);
 
     struct jclass *main_class = classloader_load_class(loader, main_class_name);
     struct jmethod *main_method = jclass_lookup_static_method(main_class, "main", "([Ljava/lang/String;)V");
     if (main_method == NULL) {
-        jvm_abort("can't find method main.");
+        jvm_abort("can't find method main."); // todo
     } else {
         if (!IS_PUBLIC(main_method->access_flags)) {
-            jvm_abort("method main must be public.");
+            jvm_abort("method main must be public."); // todo
         }
         if (!IS_STATIC(main_method->access_flags)) {
-            jvm_abort("method main must be static.");
+            jvm_abort("method main must be static."); // todo
         }
     }
 

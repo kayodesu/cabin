@@ -11,6 +11,7 @@
 #ifndef JVM_CONSTANTS_H
 #define JVM_CONSTANTS_H
 
+#if 0
 #define tconst(func_name, value) \
 static void func_name(struct frame *frame) \
 { \
@@ -48,16 +49,10 @@ static void sipush(struct frame *frame)
     jint i = bcr_reads2(&frame->reader);
     frame_stack_pushi(frame, i);
 }
+#endif
 
-static void __ldc(struct frame *frame, int index_bytes)
+static void __ldc(struct frame *frame, int index)
 {
-    int index;
-    if (index_bytes == 1) {
-        index = bcr_readu1(&frame->reader);
-    } else {
-        index = bcr_readu2(&frame->reader);
-    }
-
     struct rtcp *rtcp = frame->m.method->jclass->rtcp;
     u1 type = rtcp_get_type(rtcp, index);
 
@@ -76,16 +71,6 @@ static void __ldc(struct frame *frame, int index_bytes)
     } else {
         VM_UNKNOWN_ERROR("unknown type: %d", type);
     }
-}
-
-static void ldc(struct frame *frame)
-{
-    __ldc(frame, 1);
-}
-
-static void ldc_w(struct frame *frame)
-{
-    __ldc(frame, 2);
 }
 
 static void ldc2_w(struct frame *frame)

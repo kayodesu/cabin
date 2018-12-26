@@ -8,6 +8,7 @@
 #include "../rtda/thread/frame.h"
 #include "../rtda/heap/jobject.h"
 
+#if 0
 jint fetch_index(struct frame *frame);
 
 /////////////////////////////
@@ -103,5 +104,6 @@ __taload(aaload, is_ref_array, jref)
 __taload(baload, is_bool_or_byte_array, jbyte)
 __taload(caload, is_char_array, jchar)
 __taload(saload, is_short_array, jshort)
+#endif
 
 #endif //JVM_LOADS_H

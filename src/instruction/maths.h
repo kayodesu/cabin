@@ -10,7 +10,7 @@
 #include "../slot.h"
 
 #define ICAL(func_name, oper) \
-    static void func_name(struct frame *frame) \
+    static inline void func_name(struct frame *frame) \
     { \
         jint v2 = frame_stack_popi(frame); \
         jint v1 = frame_stack_popi(frame); \
@@ -29,7 +29,7 @@ ICAL(__ixor, ^)
 ////////////////////////////
 
 #define LCAL(func_name, oper) \
-    static void func_name(struct frame *frame) \
+    static inline void func_name(struct frame *frame) \
     { \
         jlong v2 = frame_stack_popl(frame); \
         jlong v1 = frame_stack_popl(frame); \
@@ -48,7 +48,7 @@ LCAL(__lxor, ^)
 ////////////////////////////
 
 #define FCAL(func_name, oper) \
-    static void func_name(struct frame *frame) \
+    static inline void func_name(struct frame *frame) \
     { \
         jfloat v2 = frame_stack_popf(frame); \
         jfloat v1 = frame_stack_popf(frame); \
@@ -60,7 +60,7 @@ FCAL(__fsub, -)
 FCAL(__fmul, *)
 FCAL(__fdiv, /)
 
-static void __frem(struct frame *frame)
+static inline void __frem(struct frame *frame)
 {
     jfloat v2 = frame_stack_popf(frame);
     jfloat v1 = frame_stack_popf(frame);
@@ -71,7 +71,7 @@ static void __frem(struct frame *frame)
 ////////////////////////////
 
 #define DCAL(func_name, oper) \
-    static void func_name(struct frame *frame) \
+    static inline void func_name(struct frame *frame) \
     { \
         jdouble v2 = frame_stack_popd(frame); \
         jdouble v1 = frame_stack_popd(frame); \
@@ -83,7 +83,7 @@ DCAL(__dsub, -)
 DCAL(__dmul, *)
 DCAL(__ddiv, /)
 
-static void __drem(struct frame *frame)
+static inline void __drem(struct frame *frame)
 {
     jdouble v2 = frame_stack_popd(frame);
     jdouble v1 = frame_stack_popd(frame);
@@ -92,7 +92,7 @@ static void __drem(struct frame *frame)
 }
 
 #define NEG(T) \
-static void T##neg(struct frame *frame) \
+static inline void T##neg(struct frame *frame) \
 { \
     frame_stack_push##T(frame, -frame_stack_pop##T(frame)); \
 }
@@ -102,7 +102,7 @@ NEG(l)
 NEG(f)
 NEG(d)
 
-static void ishl(struct frame *frame)
+static inline void ishl(struct frame *frame)
 {
     // 与0x1f是因为低5位表示位移距离，位移距离实际上被限制在0到31之间。
     jint shift =frame_stack_popi(frame) & 0x1f;
@@ -110,7 +110,7 @@ static void ishl(struct frame *frame)
     frame_stack_pushi(frame, value << shift);
 }
 
-static void lshl(struct frame *frame)
+static inline void lshl(struct frame *frame)
 {
     // 与0x3f是因为低6位表示位移距离，位移距离实际上被限制在0到63之间。
     jint shift = frame_stack_popi(frame) & 0x3f;
@@ -119,14 +119,14 @@ static void lshl(struct frame *frame)
 }
 
 // 逻辑右移 shift logical right
-static void ishr(struct frame *frame)
+static inline void ishr(struct frame *frame)
 {
     jint shift = frame_stack_popi(frame) & 0x1f;
     jint value = frame_stack_popi(frame);
     frame_stack_pushi(frame, (~(((jint)1) >> shift)) & (value >> shift));
 }
 
-static void lshr(struct frame *frame)
+static inline void lshr(struct frame *frame)
 {
     jint shift = frame_stack_popi(frame) & 0x3f;
     jlong value = frame_stack_popl(frame);
@@ -134,14 +134,14 @@ static void lshr(struct frame *frame)
 }
 
 // 算术右移 shift arithmetic right
-static void iushr(struct frame *frame)
+static inline void iushr(struct frame *frame)
 {
     jint shift = frame_stack_popi(frame) & 0x1f;
     jint value = frame_stack_popi(frame);
     frame_stack_pushi(frame, value >> shift);
 }
 
-static void lushr(struct frame *frame)
+static inline void lushr(struct frame *frame)
 {
     jint shift = frame_stack_popi(frame) & 0x3f;
     jlong value = frame_stack_popl(frame);
@@ -150,7 +150,7 @@ static void lushr(struct frame *frame)
 
 extern bool wide_extending;
 
-static void iinc(struct frame *frame)
+static inline void iinc(struct frame *frame)
 {
     jint index, value;
 

@@ -48,7 +48,7 @@ extern char user_jars[][PATH_MAX];
 
 
 // todo 说明
-extern struct classloader *bootstrap_loader;
+extern struct classloader *g_bootstrap_loader;
 
 #define CHECK_MALLOC_RESULT(point) do { if ((point) == NULL) vm_internal_error("malloc failed"); } while (false) // todo
 

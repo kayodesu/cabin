@@ -6,6 +6,7 @@
 #define JVM_EXTENDED_H
 
 #include "../rtda/thread/frame.h"
+#include "loads.h"
 
 /*
  * 创建多维数组
@@ -24,7 +25,6 @@ static void multianewarray(struct frame *frame)
         int len = frame_stack_popi(frame);
         if (len < 0) {  // todo 等于0的情况
             jthread_throw_negative_array_size_exception(frame->thread, len);
-            return;
         }
         arr_lens[i] = (size_t) len;
     }
@@ -34,39 +34,20 @@ static void multianewarray(struct frame *frame)
     frame_stack_pushr(frame, arr);
 }
 
-static void ifnull(struct frame *frame)
+static inline void ifnull(struct frame *frame)
 {
-    int offset = bcr_reads2(&frame->reader);
-
+    int offset = frame_reads2(frame);
     if (frame_stack_popr(frame) == NULL) {
         bcr_skip(&frame->reader, offset - 3); // minus instruction length
     }
 }
 
-static void ifnonnull(struct frame *frame)
+static inline void ifnonnull(struct frame *frame)
 {
-    int offset = bcr_reads2(&frame->reader);
-
+    int offset = frame_reads2(frame);
     if (frame_stack_popr(frame) != NULL) {
         bcr_skip(&frame->reader, offset - 3); // minus instruction length
     }
-}
-
-static void goto_w(struct frame *frame)
-{
-    vm_internal_error("goto_w 不支持"); // todo
-}
-
-static void jsr_w(struct frame *frame)
-{
-    vm_internal_error("jsr_w doesn't support after jdk 6.");
-}
-
-extern bool wide_extending;
-
-static void wide(struct frame *frame)
-{
-    wide_extending = true;
 }
 
 #endif //JVM_EXTENDED_H

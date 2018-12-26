@@ -604,7 +604,7 @@ static void invokedynamic(struct frame *frame)
     struct jobject *invoked_type = curr_thread->dyn.invoked_type;
     if (invoked_type == NULL) {
         need_again = true;
-        struct jclass *mt = classloader_load_class(bootstrap_loader, "java/lang/invoke/MethodType");
+        struct jclass *mt = classloader_load_class(g_bootstrap_loader, "java/lang/invoke/MethodType");
 
         // public static MethodType methodType(Class<?> rtype, Class<?>[] ptypes)
         struct jmethod *get_method_type = jclass_lookup_static_method(

@@ -210,7 +210,7 @@ struct classloader* classloader_create(bool is_bootstrap_loader)
 {
     VM_MALLOC(struct classloader, loader);
     if (is_bootstrap_loader) {
-        bootstrap_loader = loader;
+        g_bootstrap_loader = loader;
     }
 
     loader->loaded_class_pool = hashmap_create_str_key(false);

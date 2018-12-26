@@ -42,14 +42,14 @@ struct frame {
     struct slot locals[]; // local variables
 };
 
-#define frame_has_more(frame) bcr_has_more(&((frame)->reader))
-#define frame_skip(frame)     bcr_skip(&((frame)->reader))
 #define frame_readu1(frame)   bcr_readu1(&((frame)->reader))
 #define frame_reads1(frame)   bcr_reads1(&((frame)->reader))
 #define frame_readu2(frame)   bcr_readu2(&((frame)->reader))
 #define frame_reads2(frame)   bcr_reads2(&((frame)->reader))
 #define frame_readu4(frame)   bcr_readu4(&((frame)->reader))
 #define frame_reads4(frame)   bcr_reads4(&((frame)->reader))
+#define frame_has_more(frame) bcr_has_more(&((frame)->reader))
+#define frame_skip(frame, offset) bcr_skip(&((frame)->reader), offset)
 
 struct frame* frame_create_normal(struct jthread *thread, struct jmethod *method);
 
@@ -74,9 +74,9 @@ static inline void frame_locals_set(struct frame *f, int index, const struct slo
     assert(value != NULL);
 
     f->locals[index] = *value;
-    if (slot_is_category_two(value)) {
-        f->locals[++index] = phslot;
-    }
+//    if (slot_is_category_two(value)) {
+//        f->locals[++index] = phslot;
+//    }
 }
 
 #define frame_locals_get(f, index) ((f)->locals + (index))
@@ -216,6 +216,90 @@ static inline void frame_stack_push_slot(struct frame *f, const struct slot *s)
         jref:    frame_stack_pushr, \
         const struct slot *: frame_stack_push_slot \
     )(f, v)
+
+// ----- loads
+static inline void frame_iload(struct frame *f, int index)
+{
+    slot_ensure_type(f->locals + index, JINT);
+    f->stack[f->stack_top++] = f->locals[index];
+}
+
+static inline void frame_lload(struct frame *f, int index)
+{
+    slot_ensure_type(f->locals + index, JLONG);
+    f->stack[f->stack_top++] = f->locals[index];
+    f->stack[f->stack_top++] = phslot;
+}
+
+static inline void frame_fload(struct frame *f, int index)
+{
+    slot_ensure_type(f->locals + index, JFLOAT);
+    f->stack[f->stack_top++] = f->locals[index];
+}
+
+static inline void frame_dload(struct frame *f, int index)
+{
+    slot_ensure_type(f->locals + index, JDOUBLE);
+    f->stack[f->stack_top++] = f->locals[index];
+    f->stack[f->stack_top++] = phslot;
+}
+
+static inline void frame_aload(struct frame *f, int index)
+{
+    slot_ensure_type(f->locals + index, JREF);
+    f->stack[f->stack_top++] = f->locals[index];
+}
+
+void frame_iaload(struct frame *);
+void frame_faload(struct frame *);
+void frame_laload(struct frame *);
+void frame_daload(struct frame *);
+void frame_aaload(struct frame *);
+void frame_baload(struct frame *);
+void frame_caload(struct frame *);
+void frame_saload(struct frame *);
+
+// ----- stores
+static inline void frame_istore(struct frame *f, int index)
+{
+    slot_ensure_type(frame_stack_top(f), JINT);
+    f->locals[index] = f->stack[--(f->stack_top)];
+}
+
+static inline void frame_lstore(struct frame *f, int index)
+{
+    f->stack_top--; // jump placeholder
+    slot_ensure_type(frame_stack_top(f), JLONG);
+    f->locals[index] = f->stack[--(f->stack_top)];
+}
+
+static inline void frame_fstore(struct frame *f, int index)
+{
+    slot_ensure_type(frame_stack_top(f), JFLOAT);
+    f->locals[index] = f->stack[--(f->stack_top)];
+}
+
+static inline void frame_dstore(struct frame *f, int index)
+{
+    f->stack_top--; // jump placeholder
+    slot_ensure_type(frame_stack_top(f), JDOUBLE);
+    f->locals[index] = f->stack[--(f->stack_top)];
+}
+
+static inline void frame_astore(struct frame *f, int index)
+{
+    slot_ensure_type(frame_stack_top(f), JREF);
+    f->locals[index] = f->stack[--(f->stack_top)];
+}
+
+void frame_iastore(struct frame *);
+void frame_fastore(struct frame *);
+void frame_lastore(struct frame *);
+void frame_dastore(struct frame *);
+void frame_aastore(struct frame *);
+void frame_bastore(struct frame *);
+void frame_castore(struct frame *);
+void frame_sastore(struct frame *);
 
 
 static inline void frame_proc_exception(struct frame *f)

@@ -51,7 +51,7 @@ struct jobject* jclsobj_create(struct jclass *entity_class)
 {
     assert(entity_class != NULL);
 
-    struct jobject *o = jobject_create(classloader_get_jlclass(bootstrap_loader));
+    struct jobject *o = jobject_create(classloader_get_jlclass(g_bootstrap_loader));
     o->extra = entity_class;
     return o;
 }

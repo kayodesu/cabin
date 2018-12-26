@@ -5,21 +5,21 @@
 #include <mem.h>
 #include "slot.h"
 
-#define SLOT_GET(TYPE, type, t0) \
-type slot_get##t0(const struct slot *s) \
-{ \
-    assert(s != NULL); \
-    if (s->t == (TYPE)) { \
-        return s->v.t0; \
-    } \
-    jvm_abort("type mismatch. wants %s, gets %s\n", #type, get_jtype_name(s->t)); \
-}
-
-SLOT_GET(JINT, jint, i)
-SLOT_GET(JFLOAT, jfloat, f)
-SLOT_GET(JLONG, jlong, l)
-SLOT_GET(JDOUBLE, jdouble, d)
-SLOT_GET(JREF, jref, r)
+//#define SLOT_GET(TYPE, type, t0) \
+//type slot_get##t0(const struct slot *s) \
+//{ \
+//    assert(s != NULL); \
+//    if (s->t == (TYPE)) { \
+//        return s->v.t0; \
+//    } \
+//    jvm_abort("type mismatch. wants %s, gets %s\n", #type, get_jtype_name(s->t)); \
+//}
+//
+//SLOT_GET(JINT, jint, i)
+//SLOT_GET(JFLOAT, jfloat, f)
+//SLOT_GET(JLONG, jlong, l)
+//SLOT_GET(JDOUBLE, jdouble, d)
+//SLOT_GET(JREF, jref, r)
 
 char* slot_to_string(const struct slot *s)
 {

@@ -39,6 +39,16 @@ struct jobject {
 
 struct jobject* jobject_create(struct jclass *c);
 
+static inline bool jobject_is_array(const struct jobject *o)
+{
+    assert(o != NULL);
+    return jclass_is_array(o->jclass);
+}
+
+bool jobject_is_primitive(const struct jobject *o);
+bool jobject_is_jlstring(const struct jobject *o);
+bool jobject_is_jlclass(const struct jobject *o);
+
 // java/lang/Sting 对象操作函数
 struct jobject* jstrobj_create(const char *str);
 const char* jstrobj_value(struct jobject *so);
@@ -62,8 +72,26 @@ struct jobject *jarrobj_create(struct jclass *arr_class, jint arr_len);
  * todo 说明 c 是什么东西
  */
 struct jobject *jarrobj_create_multi(struct jclass *arr_class, size_t arr_dim, const size_t *arr_lens);
-jint jarrobj_len(const struct jobject *ao);
-void* jarrobj_data(const struct jobject *ao);
+
+#define ARR_ELE_SIZE(o) (*(jint *) ((o)->extra))
+#define ARR_LEN(o) (*(jint *) (((s1 *)((o)->extra)) + sizeof(jint)))
+#define ARR_DATA(o) (((s1 *)((o)->extra)) + 2 * sizeof(jint))
+
+static inline jint jarrobj_len(const struct jobject *o)
+{
+    assert(o != NULL);
+    assert(jobject_is_array(o));
+    assert(o->extra != NULL);
+    return ARR_LEN(o);
+}
+
+static inline void* jarrobj_data(const struct jobject *o)
+{
+    assert(o != NULL);
+    assert(jobject_is_array(o));
+    assert(o->extra != NULL);
+    return ARR_DATA(o);
+}
 
 /*
  * 判断两个数组是否是同一类型的数组
@@ -73,14 +101,21 @@ bool jarrobj_is_same_type(const struct jobject *one, const struct jobject *other
 
 bool jarrobj_check_bounds(const struct jobject *ao, jint index);
 
-void* jarrobj_index(const struct jobject *o, jint index);
+static inline void* jarrobj_index(const struct jobject *o, jint index)
+{
+    assert(o != NULL);
+    assert(jobject_is_array(o));
+    assert(o->extra != NULL);
+    assert(0 <= index && index < ARR_LEN(o));
+    return ARR_DATA(o) + ARR_ELE_SIZE(o) * index;
+}
+
 #define jarrobj_set(T, arrobj, index, data) (*(T *)jarrobj_index(arrobj, index) = (data))
 #define jarrobj_get(T, arrobj, index) (*(T *)jarrobj_index(arrobj, index))
 
 void jarrobj_copy(struct jobject *dst, jint dst_pos,
                   const struct jobject *src, jint src_pos,
                   jint len);
-
 
 /*
  * clone @src to @dest if @dest is not NULL,
@@ -99,11 +134,6 @@ const struct slot* get_instance_field_value_by_nt(const struct jobject *o, const
  * todo 说明
  */
 struct slot jpriobj_unbox(const struct jobject *po);
-
-bool jobject_is_array(const struct jobject *o);
-bool jobject_is_primitive(const struct jobject *o);
-bool jobject_is_jlstring(const struct jobject *o);
-bool jobject_is_jlclass(const struct jobject *o);
 
 void jobject_destroy(struct jobject *o);
 

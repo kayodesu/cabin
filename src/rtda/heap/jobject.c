@@ -61,12 +61,6 @@ struct jobject* jobject_clone(const struct jobject *src, struct jobject *dest)
     return o;
 }
 
-bool jobject_is_array(const struct jobject *o)
-{
-    assert(o != NULL);
-    return jclass_is_array(o->jclass);
-}
-
 bool jobject_is_primitive(const struct jobject *o)
 {
     assert(o != NULL);

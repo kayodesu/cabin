@@ -7,6 +7,7 @@
 
 #include "../rtda/thread/frame.h"
 
+#if 0
 jint fetch_index(struct frame *frame);
 
 static inline void __istore(struct frame *frame, int index)
@@ -139,5 +140,6 @@ __tstore(aastore, frame_stack_popr, is_ref_array, jref)
 __tstore(bastore, frame_stack_popi, is_bool_or_byte_array, jbyte)
 __tstore(castore, frame_stack_popi, is_char_array, jchar)
 __tstore(sastore, frame_stack_popi, is_short_array, jshort)
+#endif
 
 #endif //JVM_STORES_H

@@ -53,7 +53,7 @@ static void getPrimitiveClass(struct frame *frame)
     struct jobject *so = frame_locals_getr(frame, 0);
 
     const char *class_name = jstrobj_value(so); // 这里得到的 class_name 是诸如 "int~float" 之类的 primitive type
-    struct jclass *c = classloader_load_class(bootstrap_loader, class_name);
+    struct jclass *c = classloader_load_class(g_bootstrap_loader, class_name);
     frame_stack_pushr(frame, (jref) c->clsobj);
 }
 

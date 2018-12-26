@@ -7,14 +7,14 @@
 #include "../heap/jobject.h"
 #include "../../util/vector.h"
 
-struct jthread* jthread_create(struct classloader *loader, struct jobject *jl_thread_obj)
+struct jthread* jthread_create(struct classloader *loader, struct jobject *jlt_obj)
 {
     assert(loader != NULL);
 
     VM_MALLOC(struct jthread, thread);
 
     vector_init(&thread->vm_stack);
-    thread->jl_thread_obj = jl_thread_obj;
+    thread->jl_thread_obj = jlt_obj;
     for (int i = 0; i < FRMHUB_SLOTS_COUNT_MAX; i++) {
         vector_init(thread->frame_cache + i);
     }
@@ -115,10 +115,10 @@ struct frame* jthread_depth_frame(struct jthread *thread, int depth)
     return vector_rget(&thread->vm_stack, depth);
 }
 
-void jthread_pop_frame(struct jthread *thread)
+struct frame* jthread_pop_frame(struct jthread *thread)
 {
     assert(thread != NULL);
-    vector_pop_back(&thread->vm_stack);
+    return vector_pop_back(&thread->vm_stack);
 }
 
 void jthread_push_frame(struct jthread *thread, struct frame *frame)

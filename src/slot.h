@@ -42,11 +42,45 @@ static inline bool slot_is_null(const struct slot *s)
     return s->t == NAT;
 }
 
-jint    slot_geti(const struct slot *s);
-jfloat  slot_getf(const struct slot *s);
-jlong   slot_getl(const struct slot *s);
-jdouble slot_getd(const struct slot *s);
-jref    slot_getr(const struct slot *s);
+#if (JVM_DEBUG)
+static inline void slot_ensure_type(const struct slot *s, enum jtype t)
+{
+    if (s == NULL || s->t != t)
+        jvm_abort("type mismatch %d, %d", s->t, t); // todo
+}
+#else
+#define slot_ensure_type(s, t)
+#endif
+
+static inline jint slot_geti(const struct slot *s)
+{
+    slot_ensure_type(s, JINT);
+    return s->v.i;
+}
+
+static inline jfloat slot_getf(const struct slot *s)
+{
+    slot_ensure_type(s, JFLOAT);
+    return s->v.f;
+}
+
+static inline jlong slot_getl(const struct slot *s)
+{
+    slot_ensure_type(s, JLONG);
+    return s->v.l;
+}
+
+static inline jdouble slot_getd(const struct slot *s)
+{
+    slot_ensure_type(s, JDOUBLE);
+    return s->v.d;
+}
+
+static inline jref slot_getr(const struct slot *s)
+{
+    slot_ensure_type(s, JREF);
+    return s->v.r;
+}
 
 static inline bool slot_is_ph(const struct slot *s)
 {

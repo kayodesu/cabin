@@ -4,10 +4,6 @@
 
 #include "jobject.h"
 
-#define ELE_SIZE(o) (*(jint *) ((o)->extra))
-#define ARR_LEN(o) (*(jint *) (((s1 *)((o)->extra)) + sizeof(jint)))
-#define DATA(o) (((s1 *)((o)->extra)) + 2 * sizeof(jint))
-
 struct jobject *jarrobj_create(struct jclass *arr_class, jint arr_len)
 {
     if (arr_class == NULL || !jclass_is_array(arr_class)) {
@@ -36,7 +32,7 @@ struct jobject *jarrobj_create(struct jclass *arr_class, jint arr_len)
     // java数组创建后要赋默认值，0, 0.0, false,'\0', NULL 之类的 todo
     memset(o->extra, 0, len);
 
-    ELE_SIZE(o) = ele_size;
+    ARR_ELE_SIZE(o) = ele_size;
     ARR_LEN(o) = arr_len;
     return o;
 }
@@ -68,21 +64,6 @@ struct jobject *jarrobj_create_multi(struct jclass *arr_class, size_t arr_dim, c
     return o;
 }
 
-jint jarrobj_len(const struct jobject *o)
-{
-    assert(o != NULL);
-    assert(jobject_is_array(o));
-    assert(o->extra != NULL);
-    return ARR_LEN(o);
-}
-
-void* jarrobj_data(const struct jobject *o)
-{
-    assert(o != NULL);
-    assert(jobject_is_array(o));
-    assert(o->extra != NULL);
-    return DATA(o);
-}
 
 bool jarrobj_is_same_type(const struct jobject *one, const struct jobject *other)
 {
@@ -94,7 +75,7 @@ bool jarrobj_is_same_type(const struct jobject *one, const struct jobject *other
     assert(jobject_is_array(other));
     assert(other->extra != NULL);
 
-    return ELE_SIZE(one) == ELE_SIZE(other);  // todo 类型怎么判断
+    return ARR_ELE_SIZE(one) == ARR_ELE_SIZE(other);  // todo 类型怎么判断
 }
 
 bool jarrobj_check_bounds(const struct jobject *o, jint index)
@@ -108,20 +89,6 @@ bool jarrobj_check_bounds(const struct jobject *o, jint index)
         printvm("array index out of bounds. index is %d, array length is %d\n", index, ARR_LEN(o));
     }
     return b;
-}
-
-void* jarrobj_index(const struct jobject *o, jint index)
-{
-    assert(o != NULL);
-    assert(jobject_is_array(o));
-    assert(o->extra != NULL);
-
-    if (index < 0 || index >= ARR_LEN(o)) {
-        jvm_abort("len = %zd, index = %d\n", ARR_LEN(o), index);
-        return NULL;
-    }
-
-    return DATA(o) + ELE_SIZE(o) * index;
 }
 
 void jarrobj_copy(struct jobject *dst, jint dst_pos, const struct jobject *src, jint src_pos, jint len)
@@ -152,9 +119,9 @@ void jarrobj_copy(struct jobject *dst, jint dst_pos, const struct jobject *src, 
         jvm_abort("java.lang.IndexOutOfBoundsException\n");
     }
 
-    s1 *d = DATA(dst);
-    const s1 *s = DATA(src);
-    jint ele_size = ELE_SIZE(src);
+    s1 *d = ARR_DATA(dst);
+    const s1 *s = ARR_DATA(src);
+    jint ele_size = ARR_ELE_SIZE(src);
     memcpy(d + dst_pos * ele_size, s + src_pos * ele_size, len * ele_size);
 }
 
@@ -164,7 +131,7 @@ void* jarrobj_copy_data(const struct jobject *o)
     assert(jobject_is_array(o));
     assert(o->extra != NULL);
 
-    size_t data_len = 2 * sizeof(jint) + ELE_SIZE(o) * ARR_LEN(o);
+    size_t data_len = 2 * sizeof(jint) + ARR_ELE_SIZE(o) * ARR_LEN(o);
     void *copy = malloc(data_len);
     CHECK_MALLOC_RESULT(copy);
     return memcpy(copy, o->extra, data_len);
