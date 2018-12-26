@@ -17,7 +17,7 @@ typedef uint16_t u2;
 typedef uint32_t u4;
 //typedef uint64_t u8;
 
-struct jobject;
+struct object;
 
 /*
  * Java虚拟机中的整型类型的取值范围如下：
@@ -35,7 +35,7 @@ typedef int32_t  jint;
 typedef int64_t  jlong;
 typedef float   jfloat;
 typedef double  jdouble;
-typedef struct  jobject* jref; // JVM中的引用类型，只能指向一个jobject对象。
+typedef struct  object* jref; // JVM中的引用类型，只能指向一个jobject对象。
 
 // 各类型的代码
 enum jtype {

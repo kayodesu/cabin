@@ -8,8 +8,8 @@
 #include <stdbool.h>
 #include <assert.h>
 #include "../../slot.h"
-#include "../ma/jmethod.h"
-#include "jthread.h"
+#include "../ma/method.h"
+#include "thread.h"
 #include "../../util/bytecode_reader.h"
 
 enum frame_type {
@@ -20,13 +20,13 @@ enum frame_type {
 struct frame {
     enum frame_type type;
     union {
-        struct jmethod *method;
+        struct method *method;
 
         // just for shim frame
         void (* shim_action)(struct frame *);
     } m;
 
-    struct jthread *thread;
+    struct thread *thread;
 
     bool interrupted_status;
     bool exe_status; // todo 是否执行完毕
@@ -37,7 +37,7 @@ struct frame {
     u4 max_locals_and_stack; // max_stack(u2) + max_locals(u2)
 
     struct slot *stack; // operand stack
-    u2 stack_top;
+    int stack_top; // 指向栈顶，栈为空时为-1
 
     struct slot locals[]; // local variables
 };
@@ -51,21 +51,21 @@ struct frame {
 #define frame_has_more(frame) bcr_has_more(&((frame)->reader))
 #define frame_skip(frame, offset) bcr_skip(&((frame)->reader), offset)
 
-struct frame* frame_create_normal(struct jthread *thread, struct jmethod *method);
+struct frame* frame_create_normal(struct thread *thread, struct method *method);
 
 /*
  * create a shim stack frame.
  * @shim_action, could be NULL
  */
-struct frame* frame_create_shim(struct jthread *thread, void (* shim_action)(struct frame *));
+struct frame* frame_create_shim(struct thread *thread, void (* shim_action)(struct frame *));
 
-#define frame_create(thread, method) \
-    _Generic((method), \
-        struct jmethod *: frame_create_normal, \
+#define frame_create(thread, m) \
+    _Generic((m), \
+        struct method *: frame_create_normal, \
         void (*)(struct frame *): frame_create_shim \
-    )(thread, method)
+    )(thread, m)
 
-void frame_bind(struct frame *frame, struct jthread *thread, struct jmethod *method);
+void frame_bind(struct frame *frame, struct thread *thread, struct method *method);
 
 // ----------  locals
 static inline void frame_locals_set(struct frame *f, int index, const struct slot *value)
@@ -91,20 +91,24 @@ static inline void frame_locals_set(struct frame *f, int index, const struct slo
 static inline void frame_stack_clear(struct frame *f)
 {
     assert(f != NULL);
-    f->stack_top = 0;
+    f->stack_top = -1;
 }
+
+// Frame Stack From Top
+#define FSFT(frame, index) ((frame)->stack + (frame)->stack_top + (index))
 
 static inline struct slot* frame_stack_top(struct frame *f)
 {
     assert(f != NULL);
-    return f->stack + f->stack_top - 1;
+    assert(f->stack_top >= 0);
+    return f->stack + f->stack_top;
 }
 
 static inline struct slot* frame_stack_pop_slot(struct frame *f)
 {
     assert(f != NULL);
-    assert(f->stack_top > 0);
-    return f->stack + --(f->stack_top);
+    assert(f->stack_top >= 0);
+    return f->stack + (f->stack_top)--;
 }
 
 static inline jint frame_stack_popi(struct frame *f)
@@ -154,32 +158,32 @@ static inline jref frame_stack_popr(struct frame *f)
 static inline void frame_stack_pushi(struct frame *f, jint i)
 {
     assert(f != NULL);
-    f->stack[f->stack_top++] = islot(i);
+    f->stack[++(f->stack_top)] = islot(i);
 }
 static inline void frame_stack_pushf(struct frame *frame, jfloat f)
 {
     assert(frame != NULL);
-    frame->stack[frame->stack_top++] = fslot(f);
+    frame->stack[++(frame->stack_top)] = fslot(f);
 }
 
 static inline void frame_stack_pushl(struct frame *f, jlong l)
 {
     assert(f != NULL);
-    f->stack[f->stack_top++] = lslot(l);
-    f->stack[f->stack_top++] = phslot;
+    f->stack[++(f->stack_top)] = lslot(l);
+    f->stack[++(f->stack_top)] = phslot;
 }
 
 static inline void frame_stack_pushd(struct frame *f, jdouble d)
 {
     assert(f != NULL);
-    f->stack[f->stack_top++] = dslot(d);
-    f->stack[f->stack_top++] = phslot;
+    f->stack[++(f->stack_top)] = dslot(d);
+    f->stack[++(f->stack_top)] = phslot;
 }
 
 static inline void frame_stack_pushr(struct frame *f, jref r)
 {
     assert(f != NULL);
-    f->stack[f->stack_top++] = rslot(r);
+    f->stack[++(f->stack_top)] = rslot(r);
 }
 
 /*
@@ -189,7 +193,7 @@ static inline void frame_stack_push_slot_directly(struct frame *f, const struct 
 {
     assert(f != NULL);
     assert(s != NULL);
-    f->stack[f->stack_top++] = *s;
+    f->stack[++(f->stack_top)] = *s;
 }
 
 static inline void frame_stack_push_slot(struct frame *f, const struct slot *s)
@@ -221,33 +225,33 @@ static inline void frame_stack_push_slot(struct frame *f, const struct slot *s)
 static inline void frame_iload(struct frame *f, int index)
 {
     slot_ensure_type(f->locals + index, JINT);
-    f->stack[f->stack_top++] = f->locals[index];
+    f->stack[++(f->stack_top)] = f->locals[index];
 }
 
 static inline void frame_lload(struct frame *f, int index)
 {
     slot_ensure_type(f->locals + index, JLONG);
-    f->stack[f->stack_top++] = f->locals[index];
-    f->stack[f->stack_top++] = phslot;
+    f->stack[++(f->stack_top)] = f->locals[index];
+    f->stack[++(f->stack_top)] = phslot;
 }
 
 static inline void frame_fload(struct frame *f, int index)
 {
     slot_ensure_type(f->locals + index, JFLOAT);
-    f->stack[f->stack_top++] = f->locals[index];
+    f->stack[++(f->stack_top)] = f->locals[index];
 }
 
 static inline void frame_dload(struct frame *f, int index)
 {
     slot_ensure_type(f->locals + index, JDOUBLE);
-    f->stack[f->stack_top++] = f->locals[index];
-    f->stack[f->stack_top++] = phslot;
+    f->stack[++(f->stack_top)] = f->locals[index];
+    f->stack[++(f->stack_top)] = phslot;
 }
 
 static inline void frame_aload(struct frame *f, int index)
 {
     slot_ensure_type(f->locals + index, JREF);
-    f->stack[f->stack_top++] = f->locals[index];
+    f->stack[++(f->stack_top)] = f->locals[index];
 }
 
 void frame_iaload(struct frame *);
@@ -263,33 +267,33 @@ void frame_saload(struct frame *);
 static inline void frame_istore(struct frame *f, int index)
 {
     slot_ensure_type(frame_stack_top(f), JINT);
-    f->locals[index] = f->stack[--(f->stack_top)];
+    f->locals[index] = f->stack[(f->stack_top)--];
 }
 
 static inline void frame_lstore(struct frame *f, int index)
 {
     f->stack_top--; // jump placeholder
     slot_ensure_type(frame_stack_top(f), JLONG);
-    f->locals[index] = f->stack[--(f->stack_top)];
+    f->locals[index] = f->stack[(f->stack_top)--];
 }
 
 static inline void frame_fstore(struct frame *f, int index)
 {
     slot_ensure_type(frame_stack_top(f), JFLOAT);
-    f->locals[index] = f->stack[--(f->stack_top)];
+    f->locals[index] = f->stack[(f->stack_top)--];
 }
 
 static inline void frame_dstore(struct frame *f, int index)
 {
     f->stack_top--; // jump placeholder
     slot_ensure_type(frame_stack_top(f), JDOUBLE);
-    f->locals[index] = f->stack[--(f->stack_top)];
+    f->locals[index] = f->stack[(f->stack_top)--];
 }
 
 static inline void frame_astore(struct frame *f, int index)
 {
     slot_ensure_type(frame_stack_top(f), JREF);
-    f->locals[index] = f->stack[--(f->stack_top)];
+    f->locals[index] = f->stack[(f->stack_top)--];
 }
 
 void frame_iastore(struct frame *);

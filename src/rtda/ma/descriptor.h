@@ -51,7 +51,7 @@ VoidDescriptor:
 
 #define DESCRIPTOR_MAX_LEN 1023 // todo
 
-struct jobject;
+struct object;
 struct classloader;
 
 /*
@@ -59,21 +59,21 @@ struct classloader;
  * todo 说明
  * @len，即是输入参数又是输出参数。
  */
-char* type_to_descriptor(const struct jobject *type, char *descriptor, int *len);
-struct jobject *descriptor_to_type(struct classloader *loader, const char *descriptor);
+char* type_to_descriptor(const struct object *type, char *descriptor, int *len);
+struct object *descriptor_to_type(struct classloader *loader, const char *descriptor);
 
 /*
  * @types is a array object of java/lang/Class
  * todo 说明
  */
-const char* types_to_descriptor(const struct jobject *types);
+const char* types_to_descriptor(const struct object *types);
 
 // [xxx -> [xxx
 // Lx/y/z; -> x/y/z
 // I -> int, ...
 const char* descriptor_to_class_name(const char *descriptor, char *buf);
 
-struct jobject* method_descriptor_to_parameter_types(struct classloader *loader, const char *method_descriptor);
-struct jobject* method_descriptor_to_return_type(struct classloader *loader, const char *method_descriptor);
+struct object* method_descriptor_to_parameter_types(struct classloader *loader, const char *method_descriptor);
+struct object* method_descriptor_to_return_type(struct classloader *loader, const char *method_descriptor);
 
 #endif //JVM_DESCRIPTOR_H

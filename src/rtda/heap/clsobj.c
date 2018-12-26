@@ -2,7 +2,7 @@
  * Author: Jia Yang
  */
 
-#include "jobject.h"
+#include "object.h"
 
 /*
  * jdk8下的一些测试：
@@ -47,16 +47,16 @@
         true
  */
 
-struct jobject* jclsobj_create(struct jclass *entity_class)
+struct object* jclsobj_create(struct class *entity_class)
 {
     assert(entity_class != NULL);
 
-    struct jobject *o = jobject_create(classloader_get_jlclass(g_bootstrap_loader));
+    struct object *o = object_create(classloader_get_jlclass(g_bootstrap_loader));
     o->extra = entity_class;
     return o;
 }
 
-struct jclass* jclsobj_entity_class(const struct jobject *o)
+struct class* clsobj_entity_class(const struct object *o)
 {
     assert(o != NULL);
     assert(o->extra != NULL);

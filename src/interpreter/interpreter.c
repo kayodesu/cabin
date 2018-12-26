@@ -3,7 +3,7 @@
  */
 
 #include "../jvm.h"
-#include "../rtda/thread/jthread.h"
+#include "../rtda/thread/thread.h"
 #include "../rtda/thread/frame.h"
 #include "../instruction/constants.h"
 #include "../instruction/stacks.h"
@@ -116,7 +116,7 @@ jint fetch_index(struct frame *frame)
 void* interpret(void *thread0)
 {
     assert(thread0 != NULL);
-    struct jthread *thread = thread0;
+    struct thread *thread = thread0;
 
     while (!jthread_is_stack_empty(thread)) {
         struct frame *frame = jthread_top_frame(thread);
@@ -250,15 +250,15 @@ void* interpret(void *thread0)
                 case 0x56: frame_sastore(frame); break; // sastore
 
                 // Stack
-                case 0x57:  pop(frame); break; // pop
-                case 0x58:  pop2(frame); break; // pop2
-                case 0x59:  dup(frame); break; // dup
-                case 0x5a:  dup_x1(frame); break; // dup_x1
-                case 0x5b:  dup_x2(frame); break; // dup_x2
-                case 0x5c:  dup2(frame); break; // dup2
-                case 0x5d:  dup2_x1(frame); break; // dup2_x1
-                case 0x5e:  dup2_x2(frame); break; // dup2_x2
-                case 0x5f:  __swap(frame); break; // swap
+                case 0x57: frame->stack_top--; break;    // pop
+                case 0x58: frame->stack_top -= 2; break; // pop2
+                case 0x59: dup(frame); break;            // dup
+                case 0x5a: dup_x1(frame); break;         // dup_x1
+                case 0x5b: dup_x2(frame); break;         // dup_x2
+                case 0x5c: dup2(frame);  break;          // dup2
+                case 0x5d: dup2_x1(frame); break;        // dup2_x1
+                case 0x5e: dup2_x2(frame); break;        // dup2_x2
+                case 0x5f:  __swap(frame); break;        // swap
 
                 // Math
                 case 0x60:  __iadd(frame); break; // iadd

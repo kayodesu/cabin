@@ -5,13 +5,13 @@
 #include <sys/stat.h>
 #include <time.h>
 #include "loader/classloader.h"
-#include "rtda/thread/jthread.h"
+#include "rtda/thread/thread.h"
 #include "rtda/ma/access.h"
 #include "interpreter/interpreter.h"
 #include "rtda/heap/strpool.h"
 #include "jvm.h"
-#include "rtda/ma/jclass.h"
-#include "rtda/heap/jobject.h"
+#include "rtda/ma/class.h"
+#include "rtda/heap/object.h"
 #include "native/registry.h"
 
 
@@ -34,13 +34,13 @@ char user_jars[USER_JARS_MAX_COUNT][PATH_MAX];
 
 struct classloader *g_bootstrap_loader = NULL;
 
-struct jobject *system_thread_group = NULL;
-struct jthread *main_thread = NULL;
+struct object *system_thread_group = NULL;
+struct thread *main_thread = NULL;
 
-static void init_jvm(struct classloader *loader, struct jthread *main_thread)
+static void init_jvm(struct classloader *loader, struct thread *main_thread)
 {
     // 先加载 sun.mis.VM 类，然后执行其类初始化方法
-    struct jclass *vm_class = classloader_load_class(loader, "sun/misc/VM");
+    struct class *vm_class = classloader_load_class(loader, "sun/misc/VM");
     if (vm_class == NULL) {
         jvm_abort("vm_class is null\n");  // todo throw exception
         return;
@@ -57,11 +57,11 @@ static void init_jvm(struct classloader *loader, struct jthread *main_thread)
  */
 static void create_main_thread(struct classloader *loader)
 {
-    struct jclass *jltg_class = classloader_load_class(loader, "java/lang/ThreadGroup");
-    system_thread_group = jobject_create(jltg_class);
+    struct class *jltg_class = classloader_load_class(loader, "java/lang/ThreadGroup");
+    system_thread_group = object_create(jltg_class);
 
-    struct jclass *jlt_class = classloader_load_class(loader, "java/lang/Thread");
-    struct jobject *jlt_obj = jobject_create(jlt_class);
+    struct class *jlt_class = classloader_load_class(loader, "java/lang/Thread");
+    struct object *jlt_obj = object_create(jlt_class);
 
     // from java/lang/Thread.java
     // public final static int MIN_PRIORITY = 1;
@@ -70,15 +70,15 @@ static void create_main_thread(struct classloader *loader)
     struct slot value = islot(5);  // todo. why set this? I do not know. 参见 jvmgo/instructions/reserved/bootstrap.go
     set_instance_field_value_by_nt(jlt_obj, "priority", "I", &value);
 
-    main_thread = jthread_create(loader, jlt_obj);
+    main_thread = thread_create(loader, jlt_obj);
 
     // 调用 java/lang/Thread 的构造函数
-    struct jmethod *constructor
+    struct method *constructor
             = jclass_get_constructor(jlt_obj->jclass, "(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");
     struct slot args[] = {
             rslot(jlt_obj),
             rslot(system_thread_group),
-            rslot(jstrobj_create(MAIN_THREAD_NAME)) // thread name
+            rslot(strobj_create(MAIN_THREAD_NAME)) // thread name
     };
     jthread_invoke_method(main_thread, constructor, args);
     jclass_clinit(jlt_obj->jclass, main_thread); // 最后压栈，保证先执行。
@@ -108,8 +108,8 @@ static void start_jvm(const char *main_class_name)
     create_main_thread(loader);
     init_jvm(loader, main_thread);
 
-    struct jclass *main_class = classloader_load_class(loader, main_class_name);
-    struct jmethod *main_method = jclass_lookup_static_method(main_class, "main", "([Ljava/lang/String;)V");
+    struct class *main_class = classloader_load_class(loader, main_class_name);
+    struct method *main_method = jclass_lookup_static_method(main_class, "main", "([Ljava/lang/String;)V");
     if (main_method == NULL) {
         jvm_abort("can't find method main."); // todo
     } else {

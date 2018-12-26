@@ -6,7 +6,7 @@
 #include "../../registry.h"
 #include "../../../rtda/thread/frame.h"
 #include "../../../slot.h"
-#include "../../../rtda/heap/jobject.h"
+#include "../../../rtda/heap/object.h"
 #include "../../../interpreter/interpreter.h"
 
 /*
@@ -75,7 +75,7 @@ static void isAlive(struct frame *frame)
     // todo
 //    JObject *thisObj = frame->getLocalVar(0).getRef();
 //    frame->operandStack.push(0);  // todo wtf?
-//    struct jobject *this_obj = slot_getr(frame->local_vars);
+//    struct object *this_obj = slot_getr(frame->local_vars);
     frame_stack_pushi(frame, 0); // todo 为什么要设置成0，设置成1就状态错误
 }
 
@@ -125,10 +125,10 @@ static void start0(struct frame *frame)
     printvm("start thread: %s\n", name);
 #endif
 
-    struct jthread *new_thread = jthread_create(frame->m.method->jclass->loader, this);
+    struct thread *new_thread = thread_create(frame->m.method->jclass->loader, this);
 
     // create a stack frame to hold run method
-    struct jmethod *run = jclass_lookup_instance_method(this->jclass, "run", "()V");
+    struct method *run = jclass_lookup_instance_method(this->jclass, "run", "()V");
 //    struct frame *new_frame = frmhub_get(&new_thread->fh, run);//frame_create(new_thread, run);
     struct slot arg = rslot(this);
 

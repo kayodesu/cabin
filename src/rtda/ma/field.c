@@ -3,15 +3,15 @@
  */
 
 #include <stdlib.h>
-#include "jfield.h"
+#include "field.h"
 #include "rtcp.h"
-#include "jclass.h"
+#include "class.h"
 #include "../../util/util.h"
-#include "../heap/jobject.h"
+#include "../heap/object.h"
 #include "descriptor.h"
 
 
-void jfield_init(struct jfield *field, struct jclass *c, struct bytecode_reader *reader)
+void field_init(struct field *field, struct class *c, struct bytecode_reader *reader)
 {
     field->constant_value_index = INVALID_CONSTANT_VALUE_INDEX;
     field->jclass = c;
@@ -75,7 +75,7 @@ void jfield_init(struct jfield *field, struct jclass *c, struct bytecode_reader 
     }
 }
 
-bool jfield_is_accessible_to(const struct jfield *field, const struct jclass *visitor)
+bool jfield_is_accessible_to(const struct field *field, const struct class *visitor)
 {
     // todo  实现对不对
 
@@ -99,7 +99,7 @@ bool jfield_is_accessible_to(const struct jfield *field, const struct jclass *vi
     return strcmp(field->jclass->pkg_name, visitor->pkg_name) == 0;
 }
 
-struct jobject* jfield_get_type(struct jfield *field)
+struct object* jfield_get_type(struct field *field)
 {
     assert(field != NULL);
 
@@ -110,12 +110,12 @@ struct jobject* jfield_get_type(struct jfield *field)
     return field->type;
 }
 
-void jfield_release(struct jfield *field)
+void jfield_release(struct field *field)
 {
     // todo
 }
 
-char* jfield_to_string(const struct jfield *field)
+char* jfield_to_string(const struct field *field)
 {
 #define MAX_LEN 1023 // big enough
     VM_MALLOCS(char, MAX_LEN + 1, result);

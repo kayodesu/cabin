@@ -5,7 +5,7 @@
 #include "../../registry.h"
 #include "../../../rtda/heap/strpool.h"
 #include "../../../rtda/thread/frame.h"
-#include "../../../rtda/heap/jobject.h"
+#include "../../../rtda/heap/object.h"
 
 // todo 这函数是干嘛的
 // public native String intern();

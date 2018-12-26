@@ -9,17 +9,17 @@
 #include "access.h"
 #include "../../slot.h"
 
-struct jclass;
+struct class;
 struct bytecode_reader;
 
-struct jfield {
-    struct jclass *jclass; // which class this field belongs to
+struct field {
+    struct class *jclass; // which class this field belongs to
     const char *name;
     const char *descriptor;
     /*
      * the declared type(class object) of this field
      */
-    struct jobject *type;
+    struct object *type;
 
     u2 access_flags;
 
@@ -46,14 +46,14 @@ struct jfield {
 
 #define INVALID_CONSTANT_VALUE_INDEX (-1)
 
-void jfield_init(struct jfield *field, struct jclass *c, struct bytecode_reader *reader);
+void field_init(struct field *field, struct class *c, struct bytecode_reader *reader);
 
-bool jfield_is_accessible_to(const struct jfield *field, const struct jclass *visitor);
+bool jfield_is_accessible_to(const struct field *field, const struct class *visitor);
 
-struct jobject* jfield_get_type(struct jfield *field);
+struct object* jfield_get_type(struct field *field);
 
-void jfield_release(struct jfield *field);
+void jfield_release(struct field *field);
 
-char* jfield_to_string(const struct jfield *field);
+char* jfield_to_string(const struct field *field);
 
 #endif //JVM_JFIELD_H

@@ -4,13 +4,13 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include "jobject.h"
+#include "object.h"
 #include "mm/halloc.h"
-#include "../ma/jfield.h"
+#include "../ma/field.h"
 
-static inline struct jobject* jobject_alloc()
+static inline struct object* jobject_alloc()
 {
-    HEAP_ALLOC(struct jobject, o);
+    HEAP_ALLOC(struct object, o);
     if (o == NULL) {
         // todo 堆内存分配失败
         jvm_abort("堆溢出");
@@ -18,11 +18,11 @@ static inline struct jobject* jobject_alloc()
     return o;
 }
 
-struct jobject* jobject_create(struct jclass *c)
+struct object* object_create(struct class *c)
 {
     assert(c != NULL);
 
-    struct jobject *o = jobject_alloc();
+    struct object *o = jobject_alloc();
     o->jclass = c;
 
     if (jclass_is_array(c)) {  // todo
@@ -37,12 +37,12 @@ struct jobject* jobject_create(struct jclass *c)
     return o;
 }
 
-void* jarrobj_copy_data(const struct jobject *o);
+void* jarrobj_copy_data(const struct object *o);
 
-struct jobject* jobject_clone(const struct jobject *src, struct jobject *dest)
+struct object* jobject_clone(const struct object *src, struct object *dest)
 {
     assert(src != NULL);
-    struct jobject *o = dest != NULL ? dest : jobject_alloc();
+    struct object *o = dest != NULL ? dest : jobject_alloc();
 
     o->jclass = src->jclass;
     o->instance_fields_count = src->instance_fields_count;
@@ -61,7 +61,7 @@ struct jobject* jobject_clone(const struct jobject *src, struct jobject *dest)
     return o;
 }
 
-bool jobject_is_primitive(const struct jobject *o)
+bool jobject_is_primitive(const struct object *o)
 {
     assert(o != NULL);
     if (!jclass_is_primitive(o->jclass)) {
@@ -72,19 +72,19 @@ bool jobject_is_primitive(const struct jobject *o)
     return true;
 }
 
-bool jobject_is_jlstring(const struct jobject *o)
+bool jobject_is_jlstring(const struct object *o)
 {
     assert(o != NULL);
     return strcmp(o->jclass->class_name, "java/lang/String") == 0;
 }
 
-bool jobject_is_jlclass(const struct jobject *o)
+bool jobject_is_jlclass(const struct object *o)
 {
     assert(o != NULL);
     return strcmp(o->jclass->class_name, "java/lang/Class") == 0;
 }
 
-void set_instance_field_value_by_id(const struct jobject *o, int id, const struct slot *value)
+void set_instance_field_value_by_id(const struct object *o, int id, const struct slot *value)
 {
     assert(o != NULL && value != NULL);
     assert(id >= 0 && id < o->instance_fields_count);
@@ -95,12 +95,12 @@ void set_instance_field_value_by_id(const struct jobject *o, int id, const struc
     }
 }
 
-void set_instance_field_value_by_nt(const struct jobject *o,
+void set_instance_field_value_by_nt(const struct object *o,
                                   const char *name, const char *descriptor, const struct slot *value)
 {
     assert(o != NULL && name != NULL && descriptor != NULL && value != NULL);
 
-    struct jfield *f = jclass_lookup_field(o->jclass, name, descriptor);
+    struct field *f = jclass_lookup_field(o->jclass, name, descriptor);
     if (f == NULL) {
         jvm_abort("error\n"); // todo
     }
@@ -108,18 +108,18 @@ void set_instance_field_value_by_nt(const struct jobject *o,
     set_instance_field_value_by_id(o, f->id, value);
 }
 
-const struct slot* get_instance_field_value_by_id(const struct jobject *o, int id)
+const struct slot* get_instance_field_value_by_id(const struct object *o, int id)
 {
     assert(o != NULL);
     assert(id >= 0 && id < o->instance_fields_count);
     return o->instance_fields_values + id;
 }
 
-const struct slot* get_instance_field_value_by_nt(const struct jobject *o, const char *name, const char *descriptor)
+const struct slot* get_instance_field_value_by_nt(const struct object *o, const char *name, const char *descriptor)
 {
     assert(o != NULL && name != NULL && descriptor != NULL);
 
-    struct jfield *f = jclass_lookup_field(o->jclass, name, descriptor);
+    struct field *f = jclass_lookup_field(o->jclass, name, descriptor);
     if (f == NULL) {
         jvm_abort("error, %s, %s\n", name, descriptor); // todo
     }
@@ -127,14 +127,14 @@ const struct slot* get_instance_field_value_by_nt(const struct jobject *o, const
     return get_instance_field_value_by_id(o, f->id);
 }
 
-bool jobject_is_instance_of(const struct jobject *o, const struct jclass *c)
+bool jobject_is_instance_of(const struct object *o, const struct class *c)
 {
     if (o == NULL || c == NULL)  // todo
         return false;
     return jclass_is_subclass_of(o->jclass, c);
 }
 
-void jobject_destroy(struct jobject *o)
+void jobject_destroy(struct object *o)
 {
     if (o == NULL) {
         // todo
@@ -145,7 +145,7 @@ void jobject_destroy(struct jobject *o)
     hfree(o);
 }
 
-const char* jobject_to_string(const struct jobject *o)
+const char* jobject_to_string(const struct object *o)
 {
 #define MAX_LEN 1023 // big enough? todo
     VM_MALLOCS(char, MAX_LEN + 1, result);

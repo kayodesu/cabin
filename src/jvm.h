@@ -81,7 +81,7 @@ struct name_and_type {
 };
 
 // The system Thread group.
-extern struct jobject *system_thread_group;
+extern struct object *system_thread_group;
 
 // name of main thread
 #define MAIN_THREAD_NAME "main"

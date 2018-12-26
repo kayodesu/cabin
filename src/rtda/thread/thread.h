@@ -11,8 +11,8 @@
 
 struct classloader;
 struct frame;
-struct jmethod;
-struct jobject;
+struct method;
+struct object;
 struct slot;
 
 /*
@@ -26,48 +26,48 @@ struct slot;
 
 struct invokedynamic_temp_store {
     // java/lang/invoke/MethodType
-    struct jobject *invoked_type;
+    struct object *invoked_type;
 
     // java/lang/invoke/MethodHandles$Lookup
-    struct jobject *caller;
+    struct object *caller;
 
     // java/lang/invoke/CallSite
-    struct jobject *call_set;
+    struct object *call_set;
 
     // java/lang/invoke/MethodHandle
-    struct jobject *exact_method_handle;
+    struct object *exact_method_handle;
 };
 
 #define FRMHUB_SLOTS_COUNT_MAX 32
 
-struct jthread {
+struct thread {
     struct vector vm_stack; // 虚拟机栈，一个线程只有一个虚拟机栈
-//    struct jobject *this_obj; // object of java.lang.Thread   todo 干嘛用的
+//    struct object *this_obj; // object of java.lang.Thread   todo 干嘛用的
 
     struct vector frame_cache[FRMHUB_SLOTS_COUNT_MAX];
 
-    struct jobject *jl_thread_obj; // object of java/lang/Thread
+    struct object *jl_thread_obj; // object of java/lang/Thread
 
     struct invokedynamic_temp_store dyn;
 };
 
-struct jthread* jthread_create(struct classloader *loader, struct jobject *jl_thread_obj);
+struct thread* thread_create(struct classloader *loader, struct object *jl_thread_obj);
 
-struct jobject* jthread_get_jl_thread_obj(struct jthread *thread);
+struct object* jthread_get_jl_thread_obj(struct thread *thread);
 
-//void jthread_set_pc(struct jthread *thread, size_t new_pc);
-//size_t jthread_get_pc(const struct jthread *thread);
+//void jthread_set_pc(struct thread *thread, size_t new_pc);
+//size_t jthread_get_pc(const struct thread *thread);
 
-bool jthread_is_stack_empty(const struct jthread *thread);
+bool jthread_is_stack_empty(const struct thread *thread);
 
-int jthread_stack_depth(const struct jthread *thread);
+int jthread_stack_depth(const struct thread *thread);
 
-struct frame* jthread_top_frame(struct jthread *thread);
-struct frame* jthread_depth_frame(struct jthread *thread, int depth);
+struct frame* jthread_top_frame(struct thread *thread);
+struct frame* jthread_depth_frame(struct thread *thread, int depth);
 
-struct frame* jthread_pop_frame(struct jthread *thread);
+struct frame* jthread_pop_frame(struct thread *thread);
 
-void jthread_push_frame(struct jthread *thread, struct frame *frame);
+void jthread_push_frame(struct thread *thread, struct frame *frame);
 
 void jthread_recycle_frame(struct frame *frame);
 
@@ -76,7 +76,7 @@ void jthread_recycle_frame(struct frame *frame);
  * 顺序为由栈底到栈顶
  * 由调用者释放返回的 array of struct frame *
  */
-struct frame** jthread_get_frames(const struct jthread *thread, int *num);
+struct frame** jthread_get_frames(const struct thread *thread, int *num);
 
 /*
  * 生成包含@method的栈帧，并将其压入@thread的虚拟机栈中，
@@ -96,23 +96,23 @@ struct frame** jthread_get_frames(const struct jthread *thread, int *num);
  *
  * 综上：不支持在循环中调用 jthread_invoke_method 来执行带返回值的方法（@method）。
  */
-void jthread_invoke_method(struct jthread *thread, struct jmethod *method, const struct slot *args);
+void jthread_invoke_method(struct thread *thread, struct method *method, const struct slot *args);
 
 /*
  * 这个函数存在的意义是为了解决函数jthread_invoke_method无法在循环中执行带返回值的方法的问题，
  * 参加 jthread_invoke_method 的注释。
  */
-void jthread_invoke_method_with_shim(struct jthread *thread, struct jmethod *method, const struct slot *args,
+void jthread_invoke_method_with_shim(struct thread *thread, struct method *method, const struct slot *args,
                                      void (* shim_action)(struct frame *));
 
-void jthread_handle_uncaught_exception(struct jthread *thread, struct jobject *exception);
+void jthread_handle_uncaught_exception(struct thread *thread, struct object *exception);
 
-_Noreturn void jthread_throw_null_pointer_exception(struct jthread *thread);
-_Noreturn void jthread_throw_negative_array_size_exception(struct jthread *thread, int array_size);
-_Noreturn void jthread_throw_array_index_out_of_bounds_exception(struct jthread *thread, int index);
+_Noreturn void jthread_throw_null_pointer_exception(struct thread *thread);
+_Noreturn void jthread_throw_negative_array_size_exception(struct thread *thread, int array_size);
+_Noreturn void jthread_throw_array_index_out_of_bounds_exception(struct thread *thread, int index);
 _Noreturn void jthread_throw_class_cast_exception(
-        struct jthread *thread, const char *from_class_name, const char *to_class_name);
+        struct thread *thread, const char *from_class_name, const char *to_class_name);
 
-void jthread_destroy(struct jthread *thread);
+void jthread_destroy(struct thread *thread);
 
 #endif //JVM_JTHREAD_H

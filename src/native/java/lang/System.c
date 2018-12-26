@@ -5,7 +5,7 @@
 #include <time.h>
 #include "../../registry.h"
 #include "../../../rtda/thread/frame.h"
-#include "../../../rtda/heap/jobject.h"
+#include "../../../rtda/heap/object.h"
 
 /**
  * Maps a library name into a platform-specific string representing a native library.
@@ -32,7 +32,7 @@ static void mapLibraryName(struct frame *frame)
     strcpy(mapping_name, name);
     strcat(mapping_name, ".dll"); // todo ...........................
 //    printvm("mapLibraryName, %s\n", mapping_name);
-    frame_stack_pushr(frame, jstrobj_create(mapping_name));  // todo
+    frame_stack_pushr(frame, strobj_create(mapping_name));  // todo
 }
 
 // public static native void arraycopy(Object src, int srcPos, Object dest, int destPos, int length)
@@ -98,17 +98,17 @@ static void initProperties(struct frame *frame)
             { "sun.stderr.encoding",  "UTF-8" },
     };
 
-    struct jobject *props = frame_locals_getr(frame, 0);
+    struct object *props = frame_locals_getr(frame, 0);
 
     // todo init
-    struct jmethod *set_property = jclass_lookup_instance_method(
+    struct method *set_property = jclass_lookup_instance_method(
             props->jclass, "setProperty", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;");
 
     for (int i = 0; i < sizeof(sys_props) / sizeof(*sys_props); i++) {
         struct slot args[] = {
                 rslot(props),
-                rslot((jref) jstrobj_create(sys_props[i][0])),
-                rslot((jref) jstrobj_create(sys_props[i][1]))
+                rslot((jref) strobj_create(sys_props[i][0])),
+                rslot((jref) strobj_create(sys_props[i][1]))
         };
 
         jthread_invoke_method_with_shim(frame->thread, set_property, args, NULL);

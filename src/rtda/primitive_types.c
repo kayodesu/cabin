@@ -4,7 +4,7 @@
 
 #include <string.h>
 #include "primitive_types.h"
-#include "ma/jclass.h"
+#include "ma/class.h"
 
 /*
  * 基本类型的名称，描述符，等等
@@ -32,7 +32,7 @@ void pt_load_primitive_types()
 {
     // 加载基本类型（int, float, etc.）的 class
     for (int i = 0; i < PRIMITIVE_TYPE_COUNT; i++) {
-        struct jclass *c = jclass_create_primitive_class(g_bootstrap_loader, primitive_types[i].class_name);
+        struct class *c = jclass_create_primitive_class(g_bootstrap_loader, primitive_types[i].class_name);
         classloader_put_to_pool(g_bootstrap_loader, primitive_types[i].class_name, c);
     }
 }

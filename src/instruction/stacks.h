@@ -7,40 +7,29 @@
 
 #include "../rtda/thread/frame.h"
 
-// 弹出一个类型一的数据
-static inline void pop(struct frame *frame)
-{
-    assert(frame != NULL);
-    frame_stack_pop_slot(frame);
-}
-
-// 弹出两个类型一或一个类型二的数据
-static inline void pop2(struct frame *frame)
-{
-    assert(frame != NULL);
-    frame_stack_pop_slot(frame);
-    frame_stack_pop_slot(frame);
-}
+//// 弹出一个类型一的数据
+//static inline void pop(struct frame *frame)
+//{
+//    assert(frame != NULL);
+//    frame_stack_pop_slot(frame);
+//}
+//
+//// 弹出两个类型一或一个类型二的数据
+//static inline void pop2(struct frame *frame)
+//{
+//    assert(frame != NULL);
+//    frame_stack_pop_slot(frame);
+//    frame_stack_pop_slot(frame);
+//}
 
 // 复制栈顶数值（只支持分类一的数据）并将复制值压入栈顶。
 static inline void dup(struct frame *frame)
 {
     assert(frame != NULL);
-    const struct slot *s = frame_stack_top(frame);
-    frame_stack_push_slot_directly(frame, s);
-}
-
-// 复制栈顶一个（分类二类型)或两个（分类一类型）数值并将复制值压入栈顶。
-static inline void dup2(struct frame *frame)
-{
-    assert(frame != NULL);
-    const struct slot top1 = *frame_stack_pop_slot(frame);
-    const struct slot top2 = *frame_stack_pop_slot(frame);
-
-    frame_stack_push_slot_directly(frame, &top2);
-    frame_stack_push_slot_directly(frame, &top1);
-    frame_stack_push_slot_directly(frame, &top2);
-    frame_stack_push_slot_directly(frame, &top1);
+//    const struct slot *s = frame_stack_top(frame);
+//    frame_stack_push_slot_directly(frame, s);
+    frame->stack[frame->stack_top + 1] = frame->stack[frame->stack_top];
+    frame->stack_top++;
 }
 
 /*
@@ -53,12 +42,16 @@ static inline void dup2(struct frame *frame)
 static inline void dup_x1(struct frame *frame)
 {
     assert(frame != NULL);
-    const struct slot top1 = *frame_stack_pop_slot(frame);
-    const struct slot top2 = *frame_stack_pop_slot(frame);
-
-    frame_stack_push_slot_directly(frame, &top1);
-    frame_stack_push_slot_directly(frame, &top2);
-    frame_stack_push_slot_directly(frame, &top1);
+//    const struct slot top1 = *frame_stack_pop_slot(frame);
+//    const struct slot top2 = *frame_stack_pop_slot(frame);
+//
+//    frame_stack_push_slot_directly(frame, &top1);
+//    frame_stack_push_slot_directly(frame, &top2);
+//    frame_stack_push_slot_directly(frame, &top1);
+    frame->stack[frame->stack_top + 1] = frame->stack[frame->stack_top];
+    frame->stack[frame->stack_top] = frame->stack[frame->stack_top - 1];
+    frame->stack[frame->stack_top - 1] = frame->stack[frame->stack_top + 1];
+    frame->stack_top++;
 }
 
 // 复制操作数栈栈顶的值（类型一），
@@ -66,14 +59,33 @@ static inline void dup_x1(struct frame *frame)
 static inline void dup_x2(struct frame *frame)
 {
     assert(frame != NULL);
-    const struct slot top1 = *frame_stack_pop_slot(frame);
-    const struct slot top2 = *frame_stack_pop_slot(frame);
-    const struct slot top3 = *frame_stack_pop_slot(frame);
+//    const struct slot top1 = *frame_stack_pop_slot(frame);
+//    const struct slot top2 = *frame_stack_pop_slot(frame);
+//    const struct slot top3 = *frame_stack_pop_slot(frame);
+//
+//    frame_stack_push_slot_directly(frame, &top1);
+//    frame_stack_push_slot_directly(frame, &top3);
+//    frame_stack_push_slot_directly(frame, &top2);
+//    frame_stack_push_slot_directly(frame, &top1);
+    memmove(FSFT(frame, -1), FSFT(frame, -2), 3 * sizeof(*(frame->stack)));
+    frame->stack[frame->stack_top - 2] = frame->stack[frame->stack_top + 1];
+    frame->stack_top++;
 
-    frame_stack_push_slot_directly(frame, &top1);
-    frame_stack_push_slot_directly(frame, &top3);
-    frame_stack_push_slot_directly(frame, &top2);
-    frame_stack_push_slot_directly(frame, &top1);
+}
+
+// 复制栈顶一个（分类二类型)或两个（分类一类型）数值并将复制值压入栈顶。
+static inline void dup2(struct frame *frame)
+{
+    assert(frame != NULL);
+//    const struct slot top1 = *frame_stack_pop_slot(frame);
+//    const struct slot top2 = *frame_stack_pop_slot(frame);
+//
+//    frame_stack_push_slot_directly(frame, &top2);
+//    frame_stack_push_slot_directly(frame, &top1);
+//    frame_stack_push_slot_directly(frame, &top2);
+//    frame_stack_push_slot_directly(frame, &top1);
+    memcpy(FSFT(frame, 1), FSFT(frame, -1), 2 * sizeof(*(frame->stack)));
+    frame->stack_top += 2;
 }
 
 /*
@@ -93,15 +105,18 @@ static inline void dup_x2(struct frame *frame)
 static inline void dup2_x1(struct frame *frame)
 {
     assert(frame != NULL);
-    const struct slot top1 = *frame_stack_pop_slot(frame);  // todo 实现错误 ！！！ 返回的是指针不是值
-    const struct slot top2 = *frame_stack_pop_slot(frame);
-    const struct slot top3 = *frame_stack_pop_slot(frame);
-
-    frame_stack_push_slot_directly(frame, &top2);
-    frame_stack_push_slot_directly(frame, &top1);
-    frame_stack_push_slot_directly(frame, &top3);
-    frame_stack_push_slot_directly(frame, &top2);
-    frame_stack_push_slot_directly(frame, &top1);
+//    const struct slot top1 = *frame_stack_pop_slot(frame);
+//    const struct slot top2 = *frame_stack_pop_slot(frame);
+//    const struct slot top3 = *frame_stack_pop_slot(frame);
+//
+//    frame_stack_push_slot_directly(frame, &top2);
+//    frame_stack_push_slot_directly(frame, &top1);
+//    frame_stack_push_slot_directly(frame, &top3);
+//    frame_stack_push_slot_directly(frame, &top2);
+//    frame_stack_push_slot_directly(frame, &top1);
+    memmove(FSFT(frame, 0), FSFT(frame, -2), 3 * sizeof(*(frame->stack)));
+    memmove(FSFT(frame, -2), FSFT(frame, 1), 2 * sizeof(*(frame->stack)));
+    frame->stack_top += 2;
 }
 
 /*
@@ -132,17 +147,20 @@ static inline void dup2_x1(struct frame *frame)
 static inline void dup2_x2(struct frame *frame)
 {
     assert(frame != NULL);
-    const struct slot top1 = *frame_stack_pop_slot(frame);
-    const struct slot top2 = *frame_stack_pop_slot(frame);
-    const struct slot top3 = *frame_stack_pop_slot(frame);
-    const struct slot top4 = *frame_stack_pop_slot(frame);
-
-    frame_stack_push_slot_directly(frame, &top2);
-    frame_stack_push_slot_directly(frame, &top1);
-    frame_stack_push_slot_directly(frame, &top4);
-    frame_stack_push_slot_directly(frame, &top3);
-    frame_stack_push_slot_directly(frame, &top2);
-    frame_stack_push_slot_directly(frame, &top1);
+//    const struct slot top1 = *frame_stack_pop_slot(frame);
+//    const struct slot top2 = *frame_stack_pop_slot(frame);
+//    const struct slot top3 = *frame_stack_pop_slot(frame);
+//    const struct slot top4 = *frame_stack_pop_slot(frame);
+//
+//    frame_stack_push_slot_directly(frame, &top2);
+//    frame_stack_push_slot_directly(frame, &top1);
+//    frame_stack_push_slot_directly(frame, &top4);
+//    frame_stack_push_slot_directly(frame, &top3);
+//    frame_stack_push_slot_directly(frame, &top2);
+//    frame_stack_push_slot_directly(frame, &top1);
+    memmove(FSFT(frame, -1), FSFT(frame, -3), 3 * sizeof(*(frame->stack)));
+    memmove(FSFT(frame, -3), FSFT(frame, 1), 2 * sizeof(*(frame->stack)));
+    frame->stack_top += 2;
 }
 
 /*

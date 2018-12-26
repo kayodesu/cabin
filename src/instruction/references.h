@@ -6,10 +6,10 @@
 #define JVM_REFERENCES_H
 
 #include "../rtda/thread/frame.h"
-#include "../rtda/ma/jmethod.h"
-#include "../rtda/ma/jfield.h"
+#include "../rtda/ma/method.h"
+#include "../rtda/ma/field.h"
 #include "../util/encoding.h"
-#include "../rtda/heap/jobject.h"
+#include "../rtda/heap/object.h"
 #include "../rtda/ma/symref.h"
 #include "../rtda/ma/descriptor.h"
 #include "../classfile/constant.h"
@@ -35,7 +35,7 @@ static void __new(struct frame *frame)
     assert(class_name != NULL);
     assert(strlen(class_name) > 0);
 
-    struct jclass *c = resolve_class(frame->m.method->jclass, class_name);  // todo
+    struct class *c = resolve_class(frame->m.method->jclass, class_name);  // todo
     if (!c->inited) {
         jclass_clinit(c, frame->thread);
         reader->pc = saved_pc; // recover pc
@@ -49,7 +49,7 @@ static void __new(struct frame *frame)
     // todo java/lang/Class 会在这里创建，为什么会这样，怎么处理
 //    assert(strcmp(c->class_name, "java/lang/Class") == 0);
 
-    frame_stack_pushr(frame, jobject_create(c));
+    frame_stack_pushr(frame, object_create(c));
 //    os_pushr(frame->operand_stack, jobject_create(c));
 }
 
@@ -65,13 +65,13 @@ static void putstatic(struct frame *frame)
     struct bytecode_reader *reader = &frame->reader;
     size_t saved_pc = reader->pc - 1;
 
-    struct jclass *curr_class = frame->m.method->jclass;
+    struct class *curr_class = frame->m.method->jclass;
 
     int index = bcr_readu2(reader);
     struct field_ref *ref = rtcp_get_field_ref(curr_class->rtcp, index);
     resolve_static_field_ref(curr_class, ref);
 
-    struct jclass *cls = ref->resolved_field->jclass;
+    struct class *cls = ref->resolved_field->jclass;
 
     if (!cls->inited) {
         jclass_clinit(cls, frame->thread);
@@ -110,13 +110,13 @@ static void getstatic(struct frame *frame)
     struct bytecode_reader *reader = &frame->reader;
     size_t saved_pc = reader->pc - 1;
 
-    struct jclass *curr_class = frame->m.method->jclass;
+    struct class *curr_class = frame->m.method->jclass;
 
     int index = bcr_readu2(reader);
     struct field_ref *ref = rtcp_get_field_ref(curr_class->rtcp, index);
     resolve_static_field_ref(curr_class, ref);
 
-    struct jclass *cls = ref->resolved_field->jclass;
+    struct class *cls = ref->resolved_field->jclass;
 
     if (!cls->inited) {
         jclass_clinit(cls, frame->thread);
@@ -134,7 +134,7 @@ static void getstatic(struct frame *frame)
  */
 static void putfield(struct frame *frame)
 {
-    struct jclass *curr_class = frame->m.method->jclass;
+    struct class *curr_class = frame->m.method->jclass;
 
     int index = bcr_readu2(&frame->reader);
     struct field_ref *ref = rtcp_get_field_ref(curr_class->rtcp, index);
@@ -189,7 +189,7 @@ static void putfield(struct frame *frame)
  */
 static void getfield(struct frame *frame)
 {
-    struct jclass *curr_class = frame->m.method->jclass;
+    struct class *curr_class = frame->m.method->jclass;
 
     int index = bcr_readu2(&frame->reader);
     struct field_ref *ref = rtcp_get_field_ref(curr_class->rtcp, index);
@@ -225,7 +225,7 @@ static void athrow(struct frame *frame)
         jthread_throw_null_pointer_exception(frame->thread);
     }
 
-    struct jthread *curr_thread = frame->thread;
+    struct thread *curr_thread = frame->thread;
 
     // 遍历虚拟机栈找到可以处理此异常的方法
     while (!jthread_is_stack_empty(curr_thread)) {
@@ -270,7 +270,7 @@ static void instanceof(struct frame *frame)
     int index = bcr_readu2(&frame->reader);
     const char *class_name = rtcp_get_class_name(frame->m.method->jclass->rtcp, index);
 
-    struct jclass *jclass = classloader_load_class(frame->m.method->jclass->loader, class_name); // todo resolve_class ???
+    struct class *jclass = classloader_load_class(frame->m.method->jclass->loader, class_name); // todo resolve_class ???
 
     jref obj = frame_stack_popr(frame);  //os_popr(frame->operand_stack);
     if (obj == NULL) {
@@ -279,7 +279,7 @@ static void instanceof(struct frame *frame)
     }
 
     frame_stack_pushi(frame, jobject_is_instance_of(obj, jclass) ? 1 : 0);
-//    os_pushi(frame->operand_stack, (jint)(jobject_is_instance_of(obj, jclass) ? 1 : 0));
+//    os_pushi(frame->operand_stack, (jint)(jobject_is_instance_of(obj, class) ? 1 : 0));
 }
 
 /*
@@ -297,7 +297,7 @@ static void checkcast(struct frame *frame)
 
     const char *class_name = rtcp_get_class_name(frame->m.method->jclass->rtcp, index);
 
-    struct jclass *jclass = classloader_load_class(frame->m.method->jclass->loader, class_name); // todo resolve_class ???
+    struct class *jclass = classloader_load_class(frame->m.method->jclass->loader, class_name); // todo resolve_class ???
     if (!jobject_is_instance_of(obj, jclass)) {
         jthread_throw_class_cast_exception(frame->thread, obj->jclass->class_name, jclass->class_name);
     }
@@ -314,7 +314,7 @@ static void checkcast(struct frame *frame)
 static void invokestatic(struct frame *frame)
 {
     size_t saved_pc = frame->reader.pc - 1;
-    struct jclass *curr_class = frame->m.method->jclass;
+    struct class *curr_class = frame->m.method->jclass;
 
     int index = bcr_readu2(&frame->reader);
     struct method_ref *ref = rtcp_get_method_ref(curr_class->rtcp, index);
@@ -353,23 +353,23 @@ static void invokestatic(struct frame *frame)
  */
 static void invokespecial(struct frame *frame)
 {
-    struct jclass *curr_class = frame->m.method->jclass;
+    struct class *curr_class = frame->m.method->jclass;
 
     int index = bcr_readu2(&frame->reader);
     struct method_ref *ref = rtcp_get_method_ref(curr_class->rtcp, index);
 //    if (ref->resolved_method == NULL) {
-//        ref->resolved_class = classloader_load_class(frame->m.method->jclass->loader, ref->class_name);
+//        ref->resolved_class = classloader_load_class(frame->m.method->class->loader, ref->class_name);
 //        ref->resolved_method = jclass_get_declared_nonstatic_method(ref->resolved_class, ref->name, ref->descriptor);
 //    }
     resolve_non_static_method_ref(curr_class, ref);
 
     // 假定从方法符号引用中解析出来的类是C，方法是M。如果M是构造函数，则声明M的类必须是C，
-//    if (method->name == "<init>" && method->jclass != c) {
+//    if (method->name == "<init>" && method->class != c) {
 //        // todo java.lang.NoSuchMethodError
 //        jvm_abort("java.lang.NoSuchMethodError\n");
 //    }
 
-    struct jmethod *method = ref->resolved_method;
+    struct method *method = ref->resolved_method;
     /*
      * 如果调用的中超类中的函数，但不是构造函数，不是private 函数，且当前类的ACC_SUPER标志被设置，
      * 需要一个额外的过程查找最终要调用的方法；否则前面从方法符号引用中解析出来的方法就是要调用的方法。
@@ -405,12 +405,12 @@ static void invokespecial(struct frame *frame)
  */
 static void invokevirtual(struct frame *frame)
 {
-    struct jclass *curr_class = frame->m.method->jclass;
+    struct class *curr_class = frame->m.method->jclass;
 
     int index = bcr_readu2(&frame->reader);
     struct method_ref *ref = rtcp_get_method_ref(curr_class->rtcp, index);
 //    if (ref->resolved_method == NULL) {
-//        ref->resolved_class = classloader_load_class(frame->m.method->jclass->loader, ref->class_name);
+//        ref->resolved_class = classloader_load_class(frame->m.method->class->loader, ref->class_name);
 //        ref->resolved_method = jclass_get_declared_nonstatic_method(ref->resolved_class, ref->name, ref->descriptor);
 //    }
     resolve_non_static_method_ref(curr_class, ref);
@@ -420,13 +420,13 @@ static void invokevirtual(struct frame *frame)
         args[i] = *frame_stack_pop_slot(frame);
     }
 
-    struct jobject *obj = slot_getr(args); // args[0]
+    struct object *obj = slot_getr(args); // args[0]
     if (obj == NULL) {
         jthread_throw_null_pointer_exception(frame->thread);
     }
 
     // 从对象的类中查找真正要调用的方法
-    struct jmethod *method = jclass_lookup_method(obj->jclass, ref->name, ref->descriptor);
+    struct method *method = jclass_lookup_method(obj->jclass, ref->name, ref->descriptor);
     if (IS_ABSTRACT(method->access_flags)) {
         // todo java.lang.AbstractMethodError
         jvm_abort("java.lang.AbstractMethodError\n");
@@ -440,7 +440,7 @@ static void invokevirtual(struct frame *frame)
  */
 static void invokeinterface(struct frame *frame)
 {
-    struct jclass *curr_class = frame->m.method->jclass;
+    struct class *curr_class = frame->m.method->jclass;
     int index = frame_readu2(frame); //bcr_readu2(&frame->reader);
 
     /*
@@ -470,7 +470,7 @@ static void invokeinterface(struct frame *frame)
         jthread_throw_null_pointer_exception(frame->thread);
     }
 
-    struct jmethod *method = jclass_lookup_method(obj->jclass, ref->name, ref->descriptor);
+    struct method *method = jclass_lookup_method(obj->jclass, ref->name, ref->descriptor);
     if (method == NULL) {
         jvm_abort("error\n"); // todo
     }
@@ -581,8 +581,8 @@ static void invokedynamic(struct frame *frame)
 
     size_t saved_pc = frame->reader.pc - 1;
 
-    struct jclass *curr_class = frame->m.method->jclass;
-    struct jthread *curr_thread = frame->thread;
+    struct class *curr_class = frame->m.method->jclass;
+    struct thread *curr_thread = frame->thread;
 
     // The run-time constant pool item at that index must be a symbolic reference to a call site specifier.
     int index = bcr_readu2(&frame->reader); // CONSTANT_InvokeDynamic_info
@@ -595,19 +595,19 @@ static void invokedynamic(struct frame *frame)
     bool need_again = false;
 
     // create java/lang/invoke/MethodType of bootstrap method
-    struct jobject *parameter_types = method_descriptor_to_parameter_types(curr_class->loader, ref->nt->descriptor);
-    struct jobject *return_type = method_descriptor_to_return_type(curr_class->loader, ref->nt->descriptor);
+    struct object *parameter_types = method_descriptor_to_parameter_types(curr_class->loader, ref->nt->descriptor);
+    struct object *return_type = method_descriptor_to_return_type(curr_class->loader, ref->nt->descriptor);
 
 
-    //struct jclass *cc = jclsobj_entity_class(return_type);
+    //struct class *cc = jclsobj_entity_class(return_type);
 
-    struct jobject *invoked_type = curr_thread->dyn.invoked_type;
+    struct object *invoked_type = curr_thread->dyn.invoked_type;
     if (invoked_type == NULL) {
         need_again = true;
-        struct jclass *mt = classloader_load_class(g_bootstrap_loader, "java/lang/invoke/MethodType");
+        struct class *mt = classloader_load_class(g_bootstrap_loader, "java/lang/invoke/MethodType");
 
         // public static MethodType methodType(Class<?> rtype, Class<?>[] ptypes)
-        struct jmethod *get_method_type = jclass_lookup_static_method(
+        struct method *get_method_type = jclass_lookup_static_method(
                 mt, "methodType", "(Ljava/lang/Class;[Ljava/lang/Class;)Ljava/lang/invoke/MethodType;");
         struct slot args[] = { rslot(return_type), rslot(parameter_types) };
         jthread_invoke_method_with_shim(curr_thread, get_method_type, args, set_invoked_type);
@@ -625,7 +625,7 @@ static void invokedynamic(struct frame *frame)
     struct jobject *caller = curr_thread->dyn.caller;
     if (caller == NULL) {
         need_again = true;
-        struct jclass *mhs = classloader_load_class(bootstrap_loader, "java/lang/invoke/MethodHandles");
+        struct class *mhs = classloader_load_class(bootstrap_loader, "java/lang/invoke/MethodHandles");
 
         // Lookup(Class<?> lookupClass)
         struct jmethod *lookup = jclass_lookup_static_method(mhs, "lookup", "()Ljava/lang/invoke/MethodHandles$Lookup;");
@@ -661,7 +661,7 @@ static void invokedynamic(struct frame *frame)
             if (exact_method_handle != NULL) {
                 // public final Object invokeExact(Object... args) throws Throwable
                 struct jmethod *exact_method = jclass_lookup_instance_method(
-                        exact_method_handle->jclass, "invokeExact", "[Ljava/lang/Object;");
+                        exact_method_handle->class, "invokeExact", "[Ljava/lang/Object;");
                 // todo args
                 jvm_abort(""); ////////////////////////////////////////////////////
                 // invoke exact method, invokedynamic completely execute over.
@@ -670,7 +670,7 @@ static void invokedynamic(struct frame *frame)
             } else {
                 // public abstract MethodHandle dynamicInvoker()
                 struct jmethod *dynamicInvoker = jclass_lookup_instance_method(
-                        call_set->jclass, "dynamicInvoker", "()Ljava/lang/invoke/MethodHandle;");
+                        call_set->class, "dynamicInvoker", "()Ljava/lang/invoke/MethodHandle;");
                 struct slot arg = rslot(call_set);
                 jthread_invoke_method_with_shim(curr_thread, dynamicInvoker, &arg, set_exact_method_handle);
                 frame->reader.pc = saved_pc; // recover pc
@@ -682,7 +682,7 @@ static void invokedynamic(struct frame *frame)
 
         struct method_ref *mr = ref->handle->ref.mr;
 
-        struct jclass *bootstrap_class = classloader_load_class(frame->m.method->jclass->loader, mr->class_name);
+        struct class *bootstrap_class = classloader_load_class(frame->m.method->class->loader, mr->class_name);
         struct jmethod *bootstrap_method = jclass_lookup_static_method(bootstrap_class, mr->name, mr->descriptor);
         // todo 说明 bootstrap_method 的格式
         // bootstrap_method is static,  todo 对不对
@@ -760,9 +760,9 @@ static void newarray(struct frame *frame)
             return;
     }
 
-    struct jclass *c = classloader_load_class(frame->m.method->jclass->loader, arr_name);
+    struct class *c = classloader_load_class(frame->m.method->jclass->loader, arr_name);
     // 因为前面已经判断了 arr_len >= 0，所以 arr_len 转型为 size_t 是安全的
-    frame_stack_pushr(frame, jarrobj_create(c, (size_t) arr_len));
+    frame_stack_pushr(frame, arrobj_create(c, (size_t) arr_len));
     //os_pushr(frame->operand_stack, (jref) jarrobj_create(c, (size_t) arr_len));
 }
 
@@ -774,7 +774,7 @@ static void newarray(struct frame *frame)
  */
 static void anewarray(struct frame *frame)
 {
-    struct jclass *curr_class = frame->m.method->jclass;
+    struct class *curr_class = frame->m.method->jclass;
     jint arr_len = frame_stack_popi(frame);  //os_popi(frame->operand_stack);
     if (arr_len < 0) {
         jthread_throw_negative_array_size_exception(frame->thread, arr_len);
@@ -786,15 +786,15 @@ static void anewarray(struct frame *frame)
     int index = bcr_readu2(&frame->reader);
     const char *class_name = rtcp_get_class_name(frame->m.method->jclass->rtcp, index); // 数组元素的类
     char *arr_class_name = get_arr_class_name(class_name);
-    struct jclass *arr_class = classloader_load_class(curr_class->loader, arr_class_name);
+    struct class *arr_class = classloader_load_class(curr_class->loader, arr_class_name);
     free(arr_class_name);
-    frame_stack_pushr(frame, jarrobj_create(arr_class, (size_t) arr_len));
+    frame_stack_pushr(frame, arrobj_create(arr_class, (size_t) arr_len));
     //os_pushr(frame->operand_stack, (jref) jarrobj_create(arr_class, (size_t) arr_len));
 }
 
 static void arraylength(struct frame *frame)
 {
-    struct jobject *o = frame_stack_popr(frame); //os_popr(frame->operand_stack);
+    struct object *o = frame_stack_popr(frame); //os_popr(frame->operand_stack);
     if (o == NULL) {
         jthread_throw_null_pointer_exception(frame->thread);
     }

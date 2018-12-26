@@ -2,12 +2,12 @@
  * Author: Jia Yang
  */
 
-#include "jmethod.h"
+#include "method.h"
 #include "access.h"
-#include "../heap/jobject.h"
+#include "../heap/object.h"
 #include "descriptor.h"
 
-struct jobject* jmethod_get_parameter_types(struct jmethod *method)
+struct object* jmethod_get_parameter_types(struct method *method)
 {
     assert(method != NULL);
     if (method->parameter_types == NULL) {
@@ -16,7 +16,7 @@ struct jobject* jmethod_get_parameter_types(struct jmethod *method)
     return method->parameter_types;
 }
 
-struct jobject* jmethod_get_return_type(struct jmethod *method)
+struct object* jmethod_get_return_type(struct method *method)
 {
     assert(method != NULL);
     if (method->return_type == NULL) {
@@ -25,25 +25,25 @@ struct jobject* jmethod_get_return_type(struct jmethod *method)
     return method->return_type;
 }
 
-struct jobject* jmethod_get_exception_types(struct jmethod *method)
+struct object* jmethod_get_exception_types(struct method *method)
 {
     assert(method != NULL);
 
     if (method->exception_types == NULL) {
         int count = 0;
-        struct jobject **exception_types = malloc(sizeof(struct jobject **) * method->exception_tables_count);
+        struct object **exception_types = malloc(sizeof(struct object **) * method->exception_tables_count);
         CHECK_MALLOC_RESULT(exception_types);
         for (int i = 0; i < method->exception_tables_count; i++) {
-            struct jclass *c = method->exception_tables[i].catch_type;
+            struct class *c = method->exception_tables[i].catch_type;
             if (c != NULL) {
                 exception_types[count++] = c->clsobj;
             }
         }
 
         method->exception_types
-                = jarrobj_create(classloader_load_class(method->jclass->loader, "[Ljava/lang/Class;"), count);
+                = arrobj_create(classloader_load_class(method->jclass->loader, "[Ljava/lang/Class;"), count);
         for (int i = 0; i < count; i++) {
-            jarrobj_set(struct jobject *, method->exception_types, i, exception_types[i]);
+            jarrobj_set(struct object *, method->exception_types, i, exception_types[i]);
         }
     }
 
@@ -51,7 +51,7 @@ struct jobject* jmethod_get_exception_types(struct jmethod *method)
     return method->exception_types;
 }
 
-static void cal_arg_slot_count(struct jmethod *method)
+static void cal_arg_slot_count(struct method *method)
 {
     method->arg_slot_count = 0;
 
@@ -93,7 +93,7 @@ static void cal_arg_slot_count(struct jmethod *method)
 /*
  * 解析方法的 code 属性
  */
-static void parse_code_attr(struct jmethod *method, struct bytecode_reader *reader)
+static void parse_code_attr(struct method *method, struct bytecode_reader *reader)
 {
     assert(method != NULL);
     assert(reader != NULL);
@@ -178,7 +178,7 @@ static void parse_code_attr(struct jmethod *method, struct bytecode_reader *read
     }
 }
 
-void jmethod_init(struct jmethod *method, struct jclass *c, struct bytecode_reader *reader)
+void method_init(struct method *method, struct class *c, struct bytecode_reader *reader)
 {
     method->jclass = c;
 
@@ -318,7 +318,7 @@ void jmethod_init(struct jmethod *method, struct jclass *c, struct bytecode_read
     }
 }
 
-void jmethod_release(struct jmethod *m)
+void jmethod_release(struct method *m)
 {
     if (m == NULL) {
         // todo
@@ -329,7 +329,7 @@ void jmethod_release(struct jmethod *m)
 }
 
 
-bool jmethod_is_accessible_to(const struct jmethod *method, const struct jclass *visitor)
+bool jmethod_is_accessible_to(const struct method *method, const struct class *visitor)
 {
     // todo  实现对不对
 
@@ -354,7 +354,7 @@ bool jmethod_is_accessible_to(const struct jmethod *method, const struct jclass 
     return strcmp(method->jclass->pkg_name, visitor->pkg_name) == 0;
 }
 
-int jmethod_get_line_number(const struct jmethod *method, int pc)
+int jmethod_get_line_number(const struct method *method, int pc)
 {
     assert(method != NULL);
 
@@ -380,7 +380,7 @@ int jmethod_get_line_number(const struct jmethod *method, int pc)
     return -1;
 }
 
-int jmethod_find_exception_handler(struct jmethod *method, struct jclass *exception_type, size_t pc)
+int jmethod_find_exception_handler(struct method *method, struct class *exception_type, size_t pc)
 {
     for (int i = 0; i < method->exception_tables_count; i++) {
         const struct exception_table *t = method->exception_tables + i;
@@ -397,7 +397,7 @@ int jmethod_find_exception_handler(struct jmethod *method, struct jclass *except
     return -1;
 }
 
-char *jmethod_to_string(const struct jmethod *method)
+char *jmethod_to_string(const struct method *method)
 {
 #undef MAX_LEN
 #define MAX_LEN 1023 // big enough

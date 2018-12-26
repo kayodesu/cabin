@@ -17,8 +17,8 @@ struct field_ref {
     const char *name;
     const char *descriptor;
 
-    struct jclass *resolved_class;
-    struct jfield *resolved_field;
+    struct class *resolved_class;
+    struct field *resolved_field;
 };
 
 struct method_ref {
@@ -26,8 +26,8 @@ struct method_ref {
     const char *name;
     const char *descriptor;
 
-    struct jclass *resolved_class;
-    struct jmethod *resolved_method;
+    struct class *resolved_class;
+    struct method *resolved_method;
 };
 
 struct method_handle {
@@ -47,13 +47,13 @@ struct invoke_dynamic_ref {
     int args[]; // index in rtcp
 };
 
-struct jclass* resolve_class(const struct jclass *visitor, const char *class_name);
+struct class* resolve_class(const struct class *visitor, const char *class_name);
 
-struct jfield* resolve_static_field_ref(const struct jclass *visitor, struct field_ref *ref);
-struct jfield* resolve_non_static_field_ref(const struct jclass *visitor, struct field_ref *ref);
+struct field* resolve_static_field_ref(const struct class *visitor, struct field_ref *ref);
+struct field* resolve_non_static_field_ref(const struct class *visitor, struct field_ref *ref);
 
-struct jmethod* resolve_static_method_ref(const struct jclass *visitor, struct method_ref *ref);
-struct jmethod* resolve_non_static_method_ref(const struct jclass *visitor, struct method_ref *ref);
+struct method* resolve_static_method_ref(const struct class *visitor, struct method_ref *ref);
+struct method* resolve_non_static_method_ref(const struct class *visitor, struct method_ref *ref);
 
 
 #endif //JVM_SYMREF_H

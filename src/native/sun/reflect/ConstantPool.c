@@ -1,7 +1,7 @@
 #include "../../registry.h"
 #include "../../../jtypes.h"
 #include "../../../rtda/thread/frame.h"
-#include "../../../rtda/heap/jobject.h"
+#include "../../../rtda/heap/object.h"
 #include "../../../rtda/heap/strpool.h"
 
 /*

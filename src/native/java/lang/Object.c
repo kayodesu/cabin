@@ -4,7 +4,7 @@
 
 #include "../../registry.h"
 #include "../../../rtda/thread/frame.h"
-#include "../../../rtda/heap/jobject.h"
+#include "../../../rtda/heap/object.h"
 
 // public native int hashCode();
 static void hashCode(struct frame *frame)
@@ -17,7 +17,7 @@ static void hashCode(struct frame *frame)
 static void clone(struct frame *frame)
 {
     jref this = frame_locals_getr(frame, 0);
-    struct jclass *cloneable = classloader_load_class(frame->m.method->jclass->loader, "java/lang/Cloneable");
+    struct class *cloneable = classloader_load_class(frame->m.method->jclass->loader, "java/lang/Cloneable");
     if (!jclass_is_subclass_of(this->jclass, cloneable)) {
         jvm_abort("java.lang.CloneNotSupportedException"); // todo
     }

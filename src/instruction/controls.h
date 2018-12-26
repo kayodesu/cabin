@@ -104,55 +104,6 @@ static void lookupswitch(struct frame *frame)
     reader->pc = saved_pc + offset;
 }
 
-/*
- * todo
- * 要检查当前方法的返回类型
- * ireturn:
- The current method must have return type boolean, byte, short,
-char, or int. The value must be of type int. If the current method
-is a synchronized method, the monitor entered or reentered on
-invocation of the method is updated and possibly exited as if by
-execution of a monitorexit instruction (§monitorexit) in the current
-thread. If no exception is thrown, value is popped from the operand
-stack of the current frame (§2.6) and pushed onto the operand stack
-of the frame of the invoker. Any other values on the operand stack
-of the current method are discarded.
-The interpreter then returns control to the invoker of the method,
-reinstating the frame of the invoker.
-
- areturn:
- The objectref must be of type reference and must refer to an
-object of a type that is assignment compatible (JLS §5.2) with the
-type represented by the return descriptor (§4.3.3) of the current
-method. If the current method is a synchronized method, the
-monitor entered or reentered on invocation of the method is
-updated and possibly exited as if by execution of a monitorexit
-instruction (§monitorexit) in the current thread. If no exception is
-thrown, objectref is popped from the operand stack of the current
-frame (§2.6) and pushed onto the operand stack of the frame of
-the invoker. Any other values on the operand stack of the current
-method are discarded.
-The interpreter then reinstates the frame of the invoker and returns
-control to the invoker.
- */
-//#define TRETURN(func_name, T) \
-//static void func_name(struct frame *frame) \
-//{ \
-//    assert(frame == jthread_top_frame(frame->thread)); \
-//    jthread_pop_frame(frame->thread); \
-//    \
-//    struct frame *invoke_frame = jthread_top_frame(frame->thread); \
-//    assert(invoke_frame != NULL); \
-//    frame_stack_push##T(invoke_frame, frame_stack_pop##T(frame)); \
-//    frame_exe_over(frame); \
-//}
-//
-//TRETURN(ireturn, i)
-//TRETURN(lreturn, l)
-//TRETURN(freturn, f)
-//TRETURN(dreturn, d)
-//TRETURN(areturn, r)
-
 #define TRETURN(t) \
     do { \
         assert(frame == jthread_top_frame(frame->thread)); \
@@ -163,11 +114,6 @@ control to the invoker.
         frame_stack_push##t(invoke_frame, frame_stack_pop##t(frame)); \
         frame_exe_over(frame); \
     } while (false)
-
-static void __return(struct frame *frame)
-{
-    frame_exe_over(jthread_pop_frame(frame->thread));
-}
 
 
 #endif //JVM_CONTROLS_H

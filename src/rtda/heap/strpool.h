@@ -6,14 +6,14 @@
 #define JVM_STRPOOL_H
 
 struct classloader;
-struct jobject;
+struct object;
 
 void build_str_pool();
 
-struct jobject* put_str_to_pool(struct classloader *loader, const char *str0);
+struct object* put_str_to_pool(struct classloader *loader, const char *str0);
 
-struct jobject* put_so_to_pool(struct jobject *so);
+struct object* put_so_to_pool(struct object *so);
 
-struct jobject* get_str_from_pool(struct classloader *loader, const char *str0);
+struct object* get_str_from_pool(struct classloader *loader, const char *str0);
 
 #endif //JVM_STRPOOL_H

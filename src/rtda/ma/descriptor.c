@@ -3,16 +3,16 @@
  */
 
 #include "descriptor.h"
-#include "../heap/jobject.h"
+#include "../heap/object.h"
 
-char* type_to_descriptor(const struct jobject *type, char *descriptor, int *len)
+char* type_to_descriptor(const struct object *type, char *descriptor, int *len)
 {
     assert(type != NULL);
     assert(descriptor != NULL);
     assert(len != NULL);
     assert(jobject_is_jlclass(type)); // must be object of java/lang/Class
 
-    struct jclass *c = jclsobj_entity_class(type);
+    struct class *c = clsobj_entity_class(type);
     char d = pt_get_descriptor_by_class_name(c->class_name);
     if (d != 0) { // primitive type
         descriptor[0] = d;
@@ -43,7 +43,7 @@ char* type_to_descriptor(const struct jobject *type, char *descriptor, int *len)
     return descriptor;
 }
 
-struct jobject *descriptor_to_type(struct classloader *loader, const char *descriptor)
+struct object *descriptor_to_type(struct classloader *loader, const char *descriptor)
 {
     assert(loader != NULL);
     assert(descriptor != NULL);
@@ -52,7 +52,7 @@ struct jobject *descriptor_to_type(struct classloader *loader, const char *descr
     return classloader_load_class(loader, descriptor_to_class_name(descriptor, buf))->clsobj;
 }
 
-const char* types_to_descriptor(const struct jobject *types)
+const char* types_to_descriptor(const struct object *types)
 {
     assert(types != NULL);
     VM_MALLOCS(char, DESCRIPTOR_MAX_LEN + 1, descriptor);
@@ -64,7 +64,7 @@ const char* types_to_descriptor(const struct jobject *types)
         int i = 0;
         int arr_len = jarrobj_len(types);
         for (int t = 0; t < arr_len; t++) {
-            struct jobject *type = jarrobj_get(struct jobject *, types, t);
+            struct object *type = jarrobj_get(struct object *, types, t);
             int len = DESCRIPTOR_MAX_LEN - i;
             type_to_descriptor(type, descriptor + i, &len);
             i += len;
@@ -91,7 +91,7 @@ const char* descriptor_to_class_name(const char *descriptor, char *buf)
     }
 }
 
-struct jobject* method_descriptor_to_parameter_types(struct classloader *loader, const char *method_descriptor)
+struct object* method_descriptor_to_parameter_types(struct classloader *loader, const char *method_descriptor)
 {
     assert(loader != NULL);
     assert(method_descriptor != NULL);
@@ -100,7 +100,7 @@ struct jobject* method_descriptor_to_parameter_types(struct classloader *loader,
     char descriptor[dlen + 1];
     strcpy(descriptor, method_descriptor);
 
-    struct jobject* buf[METHOD_PARAMETERS_MAX_COUNT];
+    struct object* buf[METHOD_PARAMETERS_MAX_COUNT];
 
     int parameter_types_count = 0;
 
@@ -151,15 +151,15 @@ struct jobject* method_descriptor_to_parameter_types(struct classloader *loader,
 
     // todo parameter_types_count == 0 是不是要填一个 void.class
 
-    struct jobject *parameter_types
-            = jarrobj_create(classloader_load_class(loader, "[Ljava/lang/Class;"), parameter_types_count);
+    struct object *parameter_types
+            = arrobj_create(classloader_load_class(loader, "[Ljava/lang/Class;"), parameter_types_count);
     for (int i = 0; i < parameter_types_count; i++) {
-        jarrobj_set(struct jobject *, parameter_types, i, buf[i]);
+        jarrobj_set(struct object *, parameter_types, i, buf[i]);
     }
     return parameter_types;
 }
 
-struct jobject* method_descriptor_to_return_type(struct classloader *loader, const char *method_descriptor)
+struct object* method_descriptor_to_return_type(struct classloader *loader, const char *method_descriptor)
 {
     assert(loader != NULL);
     assert(method_descriptor != NULL);

@@ -6,7 +6,6 @@
 #define JVM_EXTENDED_H
 
 #include "../rtda/thread/frame.h"
-#include "loads.h"
 
 /*
  * 创建多维数组
@@ -14,7 +13,7 @@
  */
 static void multianewarray(struct frame *frame)
 {
-    struct jclass *curr_class = frame->m.method->jclass;
+    struct class *curr_class = frame->m.method->jclass;
     int index = bcr_readu2(&frame->reader);
     const char *class_name = rtcp_get_class_name(curr_class->rtcp, index); // 这里解析出来的直接就是数组类。
 //    printvm("multi array class name: %s\n", class_name);  ////////////////////////////////////////////
@@ -29,8 +28,8 @@ static void multianewarray(struct frame *frame)
         arr_lens[i] = (size_t) len;
     }
 
-    struct jclass *arr_class = classloader_load_class(curr_class->loader, class_name);
-    struct jobject *arr = jarrobj_create_multi(arr_class, arr_dim, arr_lens);
+    struct class *arr_class = classloader_load_class(curr_class->loader, class_name);
+    struct object *arr = arrobj_create_multi(arr_class, arr_dim, arr_lens);
     frame_stack_pushr(frame, arr);
 }
 

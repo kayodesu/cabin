@@ -5,7 +5,7 @@
 #ifndef JVM_JMETHOD_H
 #define JVM_JMETHOD_H
 
-#include "jclass.h"
+#include "class.h"
 #include "../../classfile/attribute.h"
 #include "../../native/registry.h"
 
@@ -18,22 +18,22 @@ struct exception_table {
     u2 start_pc;
     u2 end_pc;
     u2 handler_pc;
-    struct jclass *catch_type;
+    struct class *catch_type;
 };
 
-struct jmethod {
+struct method {
     /*
-     * jclass 表示定义此方法的类。
+     * class 表示定义此方法的类。
      * 对于一个子类，如果有一个方法是从父类中继承而来的，
-     * 那么此方法的 jclass 依然指向父类，即真正定义此方法的类。
+     * 那么此方法的 class 依然指向父类，即真正定义此方法的类。
      */
-    struct jclass *jclass;
+    struct class *jclass;
     const char *name;
     const char *descriptor;
 
-    struct jobject *parameter_types; // "[Ljava/lang/Class;"
-    struct jobject *return_type;     // java/lang/Class
-    struct jobject *exception_types; // "[Ljava/lang/Class;"
+    struct object *parameter_types; // "[Ljava/lang/Class;"
+    struct object *return_type;     // java/lang/Class
+    struct object *exception_types; // "[Ljava/lang/Class;"
 
     u2 access_flags;
     u2 max_stack;
@@ -78,24 +78,24 @@ struct jmethod {
 
 struct bytecode_reader;
 
-void jmethod_init(struct jmethod *method, struct jclass *c, struct bytecode_reader *reader);
+void method_init(struct method *method, struct class *c, struct bytecode_reader *reader);
 
-bool jmethod_is_accessible_to(const struct jmethod *method, const struct jclass *visitor);
+bool jmethod_is_accessible_to(const struct method *method, const struct class *visitor);
 
 // 查找 pc 所对应的行号
-int jmethod_get_line_number(const struct jmethod *method, int pc);
+int jmethod_get_line_number(const struct method *method, int pc);
 
-struct jobject* jmethod_get_parameter_types(struct jmethod *method);
-struct jobject* jmethod_get_return_type(struct jmethod *method);
-struct jobject* jmethod_get_exception_types(struct jmethod *method);
+struct object* jmethod_get_parameter_types(struct method *method);
+struct object* jmethod_get_return_type(struct method *method);
+struct object* jmethod_get_exception_types(struct method *method);
 
 /*
  * @pc, 发生异常的位置
  */
-int jmethod_find_exception_handler(struct jmethod *method, struct jclass *exception_type, size_t pc);
+int jmethod_find_exception_handler(struct method *method, struct class *exception_type, size_t pc);
 
-char *jmethod_to_string(const struct jmethod *method);
+char *jmethod_to_string(const struct method *method);
 
-void jmethod_release(struct jmethod *m);
+void jmethod_release(struct method *m);
 
 #endif //JVM_JMETHOD_H

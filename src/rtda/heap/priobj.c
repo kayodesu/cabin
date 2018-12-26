@@ -1,10 +1,10 @@
-#include "jobject.h"
+#include "object.h"
 
 /*
  * Author: Jia Yang
  */
 
-struct slot jpriobj_unbox(const struct jobject *po)
+struct slot jpriobj_unbox(const struct object *po)
 {
     assert(po != NULL);
     assert(jobject_is_primitive(po));

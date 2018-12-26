@@ -6,7 +6,7 @@
 #include "../../../jvm.h"
 #include "../../../rtda/thread/frame.h"
 #include "../../../slot.h"
-#include "../../../rtda/heap/jobject.h"
+#include "../../../rtda/heap/object.h"
 
 // native long find(String name);
 static void find(struct frame *frame)

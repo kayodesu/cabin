@@ -1,6 +1,6 @@
 #include "../../registry.h"
 #include "../../../slot.h"
-#include "../../../rtda/heap/jobject.h"
+#include "../../../rtda/heap/object.h"
 
 /*
  * Author: Jia Yang

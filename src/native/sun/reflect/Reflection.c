@@ -3,7 +3,7 @@
  */
 
 #include "../../registry.h"
-#include "../../../rtda/heap/jobject.h"
+#include "../../../rtda/heap/object.h"
 
 // public static native Class<?> getCallerClass(int level)
 static void getCallerClass0(struct frame *frame)
@@ -47,7 +47,7 @@ static void getCallerClass(struct frame *frame)
 // public static native int getClassAccessFlags(Class<?> type)
 static void getClassAccessFlags(struct frame *frame)
 {
-    struct jobject *type = frame_locals_getr(frame, 0);
+    struct object *type = frame_locals_getr(frame, 0);
     frame_stack_pushi(frame, type->jclass->access_flags);
 }
 

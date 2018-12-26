@@ -5,7 +5,7 @@
 #include "../../registry.h"
 #include "../../../jvm.h"
 #include "../../../rtda/thread/frame.h"
-#include "../../../rtda/heap/jobject.h"
+#include "../../../rtda/heap/object.h"
 
 // private native Class<?> defineClass0(String name, byte[] b, int off, int len, ProtectionDomain pd);
 static void defineClass0(struct frame *frame)
@@ -62,7 +62,7 @@ static void findBuiltinLib(struct frame *frame)
     if (strcmp(name, "zip.dll") == 0) {
         // C:\Program Files\Java\jre1.8.0_162\bin
         char buf[1024] = "C:\\Program Files\\Java\\jre1.8.0_162\\bin\\zip.dll";  // todo
-        frame_stack_pushr(frame, jstrobj_create(buf));    // todo
+        frame_stack_pushr(frame, strobj_create(buf));    // todo
     } else {
         jvm_abort(name);
     }

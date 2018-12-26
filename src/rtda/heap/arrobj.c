@@ -2,9 +2,9 @@
  * Author: Jia Yang
  */
 
-#include "jobject.h"
+#include "object.h"
 
-struct jobject *jarrobj_create(struct jclass *arr_class, jint arr_len)
+struct object *arrobj_create(struct class *arr_class, jint arr_len)
 {
     if (arr_class == NULL || !jclass_is_array(arr_class)) {
         // todo arr_class is NULL
@@ -25,7 +25,7 @@ struct jobject *jarrobj_create(struct jclass *arr_class, jint arr_len)
     else if (t == 'J') { ele_size = sizeof(jlong); }
     else if (t == 'D') { ele_size = sizeof(jdouble); }
 
-    struct jobject *o = jobject_create(arr_class);
+    struct object *o = object_create(arr_class);
     jint len = sizeof(jint) /* store ele_size */ + sizeof(jint) /* store arr_len */ + arr_len * ele_size /* data */;
     o->extra = malloc(len);
     CHECK_MALLOC_RESULT(o->extra);
@@ -37,7 +37,7 @@ struct jobject *jarrobj_create(struct jclass *arr_class, jint arr_len)
     return o;
 }
 
-struct jobject *jarrobj_create_multi(struct jclass *arr_class, size_t arr_dim, const size_t *arr_lens)
+struct object *arrobj_create_multi(struct class *arr_class, size_t arr_dim, const size_t *arr_lens)
 {
     assert(arr_class != NULL);
     assert(arr_lens != NULL);
@@ -49,15 +49,15 @@ struct jobject *jarrobj_create_multi(struct jclass *arr_class, size_t arr_dim, c
      * 先创建其第一维，第一维的每个元素也是一数组
      */
     size_t len = arr_lens[0];
-    struct jobject *o = jarrobj_create(arr_class, len);
+    struct object *o = arrobj_create(arr_class, len);
     if (arr_dim == 1) {
         return o;
     }
 
     // todo
-    struct jclass *ele_class = classloader_load_class(arr_class->loader, arr_class->class_name + 1); // jump '['
+    struct class *ele_class = classloader_load_class(arr_class->loader, arr_class->class_name + 1); // jump '['
     for (size_t i = 0; i < len; i++) {
-        jarrobj_set(struct jobject *, o, i, jarrobj_create_multi(ele_class, arr_dim - 1, arr_lens + 1));
+        jarrobj_set(struct object *, o, i, arrobj_create_multi(ele_class, arr_dim - 1, arr_lens + 1));
     }
 
     assert(o->extra != NULL);
@@ -65,7 +65,7 @@ struct jobject *jarrobj_create_multi(struct jclass *arr_class, size_t arr_dim, c
 }
 
 
-bool jarrobj_is_same_type(const struct jobject *one, const struct jobject *other)
+bool jarrobj_is_same_type(const struct object *one, const struct object *other)
 {
     assert(one != NULL);
     assert(jobject_is_array(one));
@@ -78,7 +78,7 @@ bool jarrobj_is_same_type(const struct jobject *one, const struct jobject *other
     return ARR_ELE_SIZE(one) == ARR_ELE_SIZE(other);  // todo 类型怎么判断
 }
 
-bool jarrobj_check_bounds(const struct jobject *o, jint index)
+bool jarrobj_check_bounds(const struct object *o, jint index)
 {
     assert(o != NULL);
     assert(jobject_is_array(o));
@@ -91,7 +91,7 @@ bool jarrobj_check_bounds(const struct jobject *o, jint index)
     return b;
 }
 
-void jarrobj_copy(struct jobject *dst, jint dst_pos, const struct jobject *src, jint src_pos, jint len)
+void jarrobj_copy(struct object *dst, jint dst_pos, const struct object *src, jint src_pos, jint len)
 {
     assert(src != NULL);
     assert(jobject_is_array(src));
@@ -125,7 +125,7 @@ void jarrobj_copy(struct jobject *dst, jint dst_pos, const struct jobject *src, 
     memcpy(d + dst_pos * ele_size, s + src_pos * ele_size, len * ele_size);
 }
 
-void* jarrobj_copy_data(const struct jobject *o)
+void* jarrobj_copy_data(const struct object *o)
 {
     assert(o != NULL);
     assert(jobject_is_array(o));

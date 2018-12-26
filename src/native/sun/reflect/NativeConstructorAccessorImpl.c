@@ -4,12 +4,12 @@
 
 #include "../../registry.h"
 #include "../../../rtda/thread/frame.h"
-#include "../../../rtda/heap/jobject.h"
+#include "../../../rtda/heap/object.h"
 #include "../../../rtda/ma/descriptor.h"
 
-struct slot* convert_args(jref this_obj, struct jmethod *m, jref args)
+struct slot* convert_args(jref this_obj, struct method *m, jref args)
 {
-    struct jobject *types = jmethod_get_parameter_types(m);
+    struct object *types = jmethod_get_parameter_types(m);
     int types_len = jarrobj_len(types);
     assert(types_len == jarrobj_len(args));
 
@@ -25,7 +25,7 @@ struct slot* convert_args(jref this_obj, struct jmethod *m, jref args)
         assert(clsobj != NULL);
         jref o = jarrobj_get(jref, args, i);
 
-        if (jclass_is_primitive(jclsobj_entity_class(clsobj))) {
+        if (jclass_is_primitive(clsobj_entity_class(clsobj))) {
             result[k] = jpriobj_unbox(o);
             if (slot_is_category_two(result + k)) {
                 result[++k] = phslot;
@@ -54,12 +54,12 @@ static void newInstance0(struct frame *frame)
     jref init_args = frame_locals_getr(frame, 1); // may be NULL
 
     // which class this constructor belongs to.
-    struct jclass *clazz = jclsobj_entity_class(
+    struct class *clazz = clsobj_entity_class(
             slot_getr(get_instance_field_value_by_nt(constructor_obj, "clazz", "Ljava/lang/Class;")));
-    struct jobject *this_obj = jobject_create(clazz);
+    struct object *this_obj = object_create(clazz);
     frame_stack_pushr(frame, this_obj); // return value
 
-    struct jmethod *constructor = NULL;
+    struct method *constructor = NULL;
     if (init_args == NULL) { // 构造函数没有参数
         constructor = jclass_get_constructor(clazz, "()V");
         assert(constructor != NULL);

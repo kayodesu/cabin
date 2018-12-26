@@ -13,7 +13,7 @@
 #include "symref.h"
 #include "../../classfile/attribute.h"
 #include "../../loader/classloader.h"
-#include "../heap/jobject.h"
+#include "../heap/object.h"
 
 /*
  * RunTime Constant Pool
@@ -434,7 +434,7 @@ struct slot rtc_to_slot(struct classloader *loader, const struct rtcp *rtcp, int
     switch (rtcp->pool[index].t) {
         case STRING_CONSTANT:
 //            c = classloader_load_class(bootstrap_loader, "java/lang/String");
-            return rslot(jstrobj_create(rtcp_get_str(rtcp, index)));
+            return rslot(strobj_create(rtcp_get_str(rtcp, index)));
         case CLASS_CONSTANT:
             return rslot(jclsobj_create(classloader_load_class(loader, rtcp_get_class_name(rtcp, index))));
         case INTEGER_CONSTANT:

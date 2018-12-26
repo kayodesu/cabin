@@ -4,7 +4,7 @@
 
 #include "../../registry.h"
 #include "../../../rtda/thread/frame.h"
-#include "../../../rtda/heap/jobject.h"
+#include "../../../rtda/heap/object.h"
 #include "../../../util/bigendian.h"
 
 /* todo

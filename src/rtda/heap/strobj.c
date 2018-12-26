@@ -3,10 +3,10 @@
  */
 
 #include <wchar.h>
-#include "jobject.h"
+#include "object.h"
 #include "../../util/encoding.h"
 #include "../ma/access.h"
-#include "../ma/jfield.h"
+#include "../ma/field.h"
 
 /*
  * jdk8下的一些测试：
@@ -45,14 +45,14 @@ StringBuilder等）类提供的，本节只实现一些辅助功能即可。
 
  todo 为什么要这么做， 而不是像其他类一样正常初始化
  */
-struct jobject* jstrobj_create(const char *str)
+struct object* strobj_create(const char *str)
 {
     assert(str != NULL);
-    struct jobject *o = jobject_create(classloader_get_jlstring(g_bootstrap_loader));
+    struct object *o = object_create(classloader_get_jlstring(g_bootstrap_loader));
 
     jchar *wstr = utf8_to_unicode(str);
     jint len = wcslen(wstr);
-    struct jobject *jchars = jarrobj_create(classloader_load_class(g_bootstrap_loader, "[C"), len);
+    struct object *jchars = arrobj_create(classloader_load_class(g_bootstrap_loader, "[C"), len);
     // 不要使用 wcscpy 直接字符串拷贝，
     // 因为 wcscpy 函数会自动添加字符串结尾 L'\0'，
     // 但 jchars 没有空间容纳字符串结尾符，因为 jchar 是字符数组，不是字符串
@@ -62,7 +62,7 @@ struct jobject* jstrobj_create(const char *str)
 
     // 给 java/lang/String 类的 value 变量赋值  todo
     for (int i = 0; i < o->jclass->fields_count; i++) {
-        struct jfield *field = o->jclass->fields + i;
+        struct field *field = o->jclass->fields + i;
         if (!IS_STATIC(field->access_flags)
             && strcmp(field->descriptor, "[C") == 0
             && strcmp(field->name, "value") == 0) {
@@ -75,13 +75,13 @@ struct jobject* jstrobj_create(const char *str)
     return o;
 }
 
-const char* jstrobj_value(struct jobject *o)
+const char* jstrobj_value(struct object *o)
 {
     assert(o != NULL);
     if (o->extra != NULL) {
         return o->extra;
     }
-    struct jobject *char_arr = slot_getr(get_instance_field_value_by_nt(o, "value", "[C"));
+    struct object *char_arr = slot_getr(get_instance_field_value_by_nt(o, "value", "[C"));
     o->extra = unicode_to_utf8(jarrobj_data(char_arr), jarrobj_len(char_arr));
     return o->extra;
 }

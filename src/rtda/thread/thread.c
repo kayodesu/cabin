@@ -3,15 +3,15 @@
  */
 
 #include <stdlib.h>
-#include "jthread.h"
-#include "../heap/jobject.h"
+#include "thread.h"
+#include "../heap/object.h"
 #include "../../util/vector.h"
 
-struct jthread* jthread_create(struct classloader *loader, struct jobject *jlt_obj)
+struct thread* thread_create(struct classloader *loader, struct object *jlt_obj)
 {
     assert(loader != NULL);
 
-    VM_MALLOC(struct jthread, thread);
+    VM_MALLOC(struct thread, thread);
 
     vector_init(&thread->vm_stack);
     thread->jl_thread_obj = jlt_obj;
@@ -19,7 +19,7 @@ struct jthread* jthread_create(struct classloader *loader, struct jobject *jlt_o
         vector_init(thread->frame_cache + i);
     }
 
-//    struct jclass *jlt_class = classloader_load_class(loader, "java/lang/Thread");
+//    struct class *jlt_class = classloader_load_class(loader, "java/lang/Thread");
 //    thread->this_obj = jobject_create(jlt_class);
 
 //    struct slot value = islot(1);  // todo. why 1? I do not know. 参见 jvmgo/instructions/reserved/bootstrap.go
@@ -85,56 +85,56 @@ static void JThread::joinToMainThreadGroup() {
 
 #endif
 
-struct jobject* jthread_get_jl_thread_obj(struct jthread *thread)
+struct object* jthread_get_jl_thread_obj(struct thread *thread)
 {
     assert(thread != NULL);
     return thread->jl_thread_obj;
 }
 
-bool jthread_is_stack_empty(const struct jthread *thread)
+bool jthread_is_stack_empty(const struct thread *thread)
 {
     assert(thread != NULL);
     return vector_len(&thread->vm_stack) == 0;
 }
 
-int jthread_stack_depth(const struct jthread *thread)
+int jthread_stack_depth(const struct thread *thread)
 {
     assert(thread != NULL);
     return vector_len(&thread->vm_stack);
 }
 
-struct frame* jthread_top_frame(struct jthread *thread)
+struct frame* jthread_top_frame(struct thread *thread)
 {
     assert(thread != NULL);
     return vector_back(&thread->vm_stack);
 }
 
-struct frame* jthread_depth_frame(struct jthread *thread, int depth)
+struct frame* jthread_depth_frame(struct thread *thread, int depth)
 {
     assert(thread != NULL);
     return vector_rget(&thread->vm_stack, depth);
 }
 
-struct frame* jthread_pop_frame(struct jthread *thread)
+struct frame* jthread_pop_frame(struct thread *thread)
 {
     assert(thread != NULL);
     return vector_pop_back(&thread->vm_stack);
 }
 
-void jthread_push_frame(struct jthread *thread, struct frame *frame)
+void jthread_push_frame(struct thread *thread, struct frame *frame)
 {
     assert(thread != NULL && frame != NULL);
     vector_push_back(&thread->vm_stack, frame);
 }
 
-struct frame** jthread_get_frames(const struct jthread *thread, int *num)
+struct frame** jthread_get_frames(const struct thread *thread, int *num)
 {
     assert(thread != NULL);
     assert(num != NULL);
     return (struct frame **) vector_to_array(&thread->vm_stack, num);
 }
 
-static struct frame* frame_cache_get(struct jthread *thread, struct jmethod *m)
+static struct frame* frame_cache_get(struct thread *thread, struct method *m)
 {
     assert(thread != NULL);
     assert(m != NULL);
@@ -163,7 +163,7 @@ void jthread_recycle_frame(struct frame *frame)
     }
 }
 
-void jthread_invoke_method(struct jthread *thread, struct jmethod *method, const struct slot *args)
+void jthread_invoke_method(struct thread *thread, struct method *method, const struct slot *args)
 {
     assert(thread != NULL && method != NULL);
 
@@ -206,7 +206,7 @@ void jthread_invoke_method(struct jthread *thread, struct jmethod *method, const
     // todo
 }
 
-void jthread_invoke_method_with_shim(struct jthread *thread, struct jmethod *method, const struct slot *args,
+void jthread_invoke_method_with_shim(struct thread *thread, struct method *method, const struct slot *args,
                                      void (* shim_action)(struct frame *))
 {
     jthread_invoke_method(thread, method, args);
@@ -219,13 +219,13 @@ void jthread_invoke_method_with_shim(struct jthread *thread, struct jmethod *met
     jthread_push_frame(thread, top);
 }
 
-void jthread_handle_uncaught_exception(struct jthread *thread, struct jobject *exception)
+void jthread_handle_uncaught_exception(struct thread *thread, struct object *exception)
 {
     assert(thread != NULL);
     assert(exception != NULL);
 
     vector_clear(&thread->vm_stack);
-    struct jmethod *pst = jclass_lookup_instance_method(exception->jclass, "printStackTrace", "()V");
+    struct method *pst = jclass_lookup_instance_method(exception->jclass, "printStackTrace", "()V");
 
     // call exception.printStackTrace()
     struct frame *frame = frame_cache_get(thread, pst);//frame_create(thread, pst);
@@ -233,21 +233,21 @@ void jthread_handle_uncaught_exception(struct jthread *thread, struct jobject *e
     jthread_push_frame(thread, frame);
 }
 
-_Noreturn void jthread_throw_null_pointer_exception(struct jthread *thread)
+_Noreturn void jthread_throw_null_pointer_exception(struct thread *thread)
 {
     assert(thread != NULL);
     // todo
     jvm_abort("");
 }
 
-_Noreturn void jthread_throw_negative_array_size_exception(struct jthread *thread, int array_size)
+_Noreturn void jthread_throw_negative_array_size_exception(struct thread *thread, int array_size)
 {
     assert(thread != NULL);
     // todo
     jvm_abort("");
 }
 
-_Noreturn void jthread_throw_array_index_out_of_bounds_exception(struct jthread *thread, int index)
+_Noreturn void jthread_throw_array_index_out_of_bounds_exception(struct thread *thread, int index)
 {
     assert(thread != NULL);
     // todo
@@ -255,7 +255,7 @@ _Noreturn void jthread_throw_array_index_out_of_bounds_exception(struct jthread 
 }
 
 _Noreturn void jthread_throw_class_cast_exception(
-        struct jthread *thread, const char *from_class_name, const char *to_class_name)
+        struct thread *thread, const char *from_class_name, const char *to_class_name)
 {
     assert(thread != NULL);
     assert(from_class_name != NULL);
@@ -265,7 +265,7 @@ _Noreturn void jthread_throw_class_cast_exception(
     jvm_abort("");
 }
 
-void jthread_destroy(struct jthread *thread)
+void jthread_destroy(struct thread *thread)
 {
     // todo
     assert(thread != NULL);

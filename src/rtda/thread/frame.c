@@ -6,9 +6,9 @@
 #include <assert.h>
 #include "frame.h"
 #include "../ma/access.h"
-#include "../heap/jobject.h"
+#include "../heap/object.h"
 
-struct frame* frame_create_shim(struct jthread *thread, void (* shim_action)(struct frame *))
+struct frame* frame_create_shim(struct thread *thread, void (* shim_action)(struct frame *))
 {
     assert(thread != NULL);
 
@@ -17,7 +17,7 @@ struct frame* frame_create_shim(struct jthread *thread, void (* shim_action)(str
     VM_MALLOC_EXT(struct frame, 1, sizeof(struct slot) * max_locals_stack, frame);
     frame->max_locals_and_stack = max_locals_stack;
     frame->stack = frame->locals;
-    frame->stack_top = 0;
+    frame->stack_top = -1;
 
     frame->type = SF_TYPE_SHIM;
     frame->m.shim_action = shim_action;
@@ -32,7 +32,7 @@ struct frame* frame_create_shim(struct jthread *thread, void (* shim_action)(str
     return frame;
 }
 
-void frame_bind(struct frame *frame, struct jthread *thread, struct jmethod *method)
+void frame_bind(struct frame *frame, struct thread *thread, struct method *method)
 {
     assert(frame != NULL);
     assert(thread != NULL);
@@ -40,7 +40,7 @@ void frame_bind(struct frame *frame, struct jthread *thread, struct jmethod *met
 
     frame->max_locals_and_stack = method->max_locals + method->max_stack;
     frame->stack = frame->locals + method->max_locals;
-    frame->stack_top = 0;
+    frame->stack_top = -1;
 
     frame->type = SF_TYPE_NORMAL;
     frame->m.method = method;
@@ -49,7 +49,7 @@ void frame_bind(struct frame *frame, struct jthread *thread, struct jmethod *met
     frame->interrupted_status = frame->exe_status = frame->proc_exception_status = false;
 }
 
-struct frame* frame_create_normal(struct jthread *thread, struct jmethod *method)
+struct frame* frame_create_normal(struct thread *thread, struct method *method)
 {
     assert(thread != NULL);
     assert(method != NULL);
