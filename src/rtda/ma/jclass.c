@@ -199,8 +199,6 @@ static void parse_attribute(struct jclass *c, struct bytecode_reader *reader)
         const char *attr_name = rtcp_get_str(c->rtcp, bcr_readu2(reader));
         u4 attr_len = bcr_readu4(reader);
 
-        // todo class attributes
-
         if (strcmp(Signature, attr_name) == 0) {
             c->signature = rtcp_get_str(c->rtcp, bcr_readu2(reader));
         } else if (strcmp(Synthetic, attr_name) == 0) {
@@ -234,50 +232,52 @@ static void parse_attribute(struct jclass *c, struct bytecode_reader *reader)
                     c->enclosing_info[2] = jstrobj_create(nt->descriptor);
                 }
             }
-        }
-#if 0
-        else if (strcmp(InnerClasses, attr_name) == 0) { // todo
+        } else if (strcmp(BootstrapMethods, attr_name) == 0) {
             u2 num = bcr_readu2(reader);
-            struct inner_class classes[num];
-            for (u2 k = 0; k < num; k++) {
-                classes[k].inner_class_info_index = bcr_readu2(reader);
-                classes[k].outer_class_info_index = bcr_readu2(reader);
-                classes[k].inner_name_index = bcr_readu2(reader);
-                classes[k].inner_class_access_flags = bcr_readu2(reader);
-            }
-        } else if (strcmp(SourceDebugExtension, attr_name) == 0) { // todo
-            u1 source_debug_extension[attr_len];
-            bcr_read_bytes(reader, source_debug_extension, attr_len);
-        } else if (strcmp(RuntimeVisibleAnnotations, attr_name) == 0) { // todo
-            u2 runtime_annotations_num = bcr_readu2(reader);
-            struct annotation annotations[runtime_annotations_num];
-            for (u2 k = 0; k < runtime_annotations_num; k++) {
-                read_annotation(reader, annotations + i);
-            }
-        } else if (strcmp(RuntimeInvisibleAnnotations, attr_name) == 0) { // todo
-            u2 runtime_annotations_num = bcr_readu2(reader);
-            struct annotation annotations[runtime_annotations_num];
-            for (u2 k = 0; k < runtime_annotations_num; k++) {
-                read_annotation(reader, annotations + i);
-            }
-        } else if (strcmp(BootstrapMethods, attr_name) == 0) { // todo
-            u2 bootstrap_methods_num = bcr_readu2(reader);
-            struct bootstrap_method methods[bootstrap_methods_num];
+            struct bootstrap_method methods[num];
 
-            for (u2 k = 0; k < bootstrap_methods_num; k++) {
-                methods[i].bootstrap_method_ref = bcr_readu2(reader);
-                methods[i].num_bootstrap_arguments = bcr_readu2(reader);
-                methods[i].bootstrap_arguments = malloc(sizeof(u2) * methods[i].num_bootstrap_arguments);
-                CHECK_MALLOC_RESULT(methods[i].bootstrap_arguments);
-                for (int j = 0; j < methods[i].num_bootstrap_arguments; j++) {
-                    methods[i].bootstrap_arguments[j] = bcr_readu2(reader);
+            for (u2 k = 0; k < num; k++) {
+                methods[k].bootstrap_method_ref = bcr_readu2(reader);
+                methods[k].num_bootstrap_arguments = bcr_readu2(reader);
+                methods[k].bootstrap_arguments = malloc(sizeof(u2) * methods[k].num_bootstrap_arguments); // todo 没有 free
+                CHECK_MALLOC_RESULT(methods[k].bootstrap_arguments);
+                for (int j = 0; j < methods[k].num_bootstrap_arguments; j++) {
+                    methods[k].bootstrap_arguments[j] = bcr_readu2(reader);
                 }
             }
+
+            rtcp_build_invoke_dynamic_constant(c->rtcp, methods);
+        } else if (strcmp(InnerClasses, attr_name) == 0) { // ignore
+//            u2 num = bcr_readu2(reader);
+//            struct inner_class classes[num];
+//            for (u2 k = 0; k < num; k++) {
+//                classes[k].inner_class_info_index = bcr_readu2(reader);
+//                classes[k].outer_class_info_index = bcr_readu2(reader);
+//                classes[k].inner_name_index = bcr_readu2(reader);
+//                classes[k].inner_class_access_flags = bcr_readu2(reader);
+//            }
+            bcr_skip(reader, attr_len);
+        } else if (strcmp(SourceDebugExtension, attr_name) == 0) { // ignore
+//            u1 source_debug_extension[attr_len];
+//            bcr_read_bytes(reader, source_debug_extension, attr_len);
+            bcr_skip(reader, attr_len);
+        } else if (strcmp(RuntimeVisibleAnnotations, attr_name) == 0) { // ignore
+//            u2 runtime_annotations_num = bcr_readu2(reader);
+//            struct annotation annotations[runtime_annotations_num];
+//            for (u2 k = 0; k < runtime_annotations_num; k++) {
+//                read_annotation(reader, annotations + i);
+//            }
+            bcr_skip(reader, attr_len);
+        } else if (strcmp(RuntimeInvisibleAnnotations, attr_name) == 0) { // ignore
+//            u2 runtime_annotations_num = bcr_readu2(reader);
+//            struct annotation annotations[runtime_annotations_num];
+//            for (u2 k = 0; k < runtime_annotations_num; k++) {
+//                read_annotation(reader, annotations + i);
+//            }
+            bcr_skip(reader, attr_len);
         }
-#endif
         else {
             // unknown attribute
-//            printvm("unknown attribute: %s\n", attr_name);
             bcr_skip(reader, attr_len);
         }
     }
@@ -303,7 +303,7 @@ struct jclass *jclass_create(struct classloader *loader, u1 *bytecode, size_t le
     u2 constant_pool_count = bcr_readu2(&reader);
     struct constant constant_pool[constant_pool_count];
     read_constant_pool(constant_pool, constant_pool_count, &reader);
-    c->rtcp = rtcp_create(constant_pool, constant_pool_count, NULL); // todo
+    c->rtcp = rtcp_create(constant_pool, constant_pool_count);
 
     c->access_flags = bcr_readu2(&reader);
 
@@ -391,7 +391,6 @@ struct jclass *jclass_create(struct classloader *loader, u1 *bytecode, size_t le
     parse_attribute(c, &reader); // parse class attributes
     return c;
 }
-
 
 static void jclass_clear(struct jclass *c)
 {
@@ -491,7 +490,7 @@ void jclass_clinit(struct jclass *c, struct jthread *thread)
         return;
     }
 
-    struct jmethod *method = jclass_get_method(c, "<clinit>", "()V"); // todo 并不是每个类都有<clinit>方法？？？？？
+    struct jmethod *method = jclass_get_declared_method(c, "<clinit>", "()V"); // todo 并不是每个类都有<clinit>方法？？？？？
     if (method != NULL) {
         if (!IS_STATIC(method->access_flags)) {
             // todo error
@@ -538,7 +537,7 @@ void jclass_clinit(struct jclass *c, struct jthread *thread)
 //    return fields;
 //}
 
-struct jfield* jclass_lookup_field(struct jclass *c, const char *name, const char *descriptor)
+struct jfield* jclass_lookup_field0(struct jclass *c, const char *name, const char *descriptor)
 {
     for (int i = 0; i < c->fields_count; i++) {
         if (strcmp(c->fields[i].name, name) == 0 && strcmp(c->fields[i].descriptor, descriptor) == 0) {
@@ -549,19 +548,27 @@ struct jfield* jclass_lookup_field(struct jclass *c, const char *name, const cha
     // todo 在父类中查找
     struct jfield *field;
     if (c->super_class != NULL) {
-        if ((field = jclass_lookup_field(c->super_class, name, descriptor)) != NULL)
+        if ((field = jclass_lookup_field0(c->super_class, name, descriptor)) != NULL)
             return field;
     }
 
     // todo 在父接口中查找
     for (int i = 0; i < c->interfaces_count; i++) {
-        if ((field = jclass_lookup_field(c->interfaces[i], name, descriptor)) != NULL)
+        if ((field = jclass_lookup_field0(c->interfaces[i], name, descriptor)) != NULL)
             return field;
     }
 
-    // java.lang.NoSuchFieldError  todo
-    printvm("java.lang.NoSuchFieldError. %s, %s, %s\n", c->class_name, name, descriptor);
     return NULL;
+}
+
+struct jfield* jclass_lookup_field(struct jclass *c, const char *name, const char *descriptor)
+{
+    struct jfield *f = jclass_lookup_field0(c, name, descriptor);
+    if (f == NULL) {
+        // java.lang.NoSuchFieldError  todo
+        jvm_abort("java.lang.NoSuchFieldError. %s, %s, %s\n", c->class_name, name, descriptor); // tood
+    }
+    return f;
 }
 
 struct jfield* jclass_lookup_static_field(struct jclass *c, const char *name, const char *descriptor)
@@ -586,11 +593,35 @@ struct jfield* jclass_lookup_instance_field(struct jclass *c, const char *name, 
     return field;
 }
 
-struct jmethod* jclass_get_method(struct jclass *c, const char *name, const char *descriptor)
+struct jmethod* jclass_get_declared_method(struct jclass *c, const char *name, const char *descriptor)
 {
     for (int i = 0; i < c->methods_count; i++) {
         if (strcmp(c->methods[i].name, name) == 0 && strcmp(c->methods[i].descriptor, descriptor) == 0) {
             return c->methods + i;
+        }
+    }
+
+    return NULL;
+}
+
+struct jmethod* jclass_get_declared_static_method(struct jclass *c, const char *name, const char *descriptor)
+{
+    for (int i = 0; i < c->methods_count; i++) {
+        struct jmethod *m = c->methods + i;
+        if (IS_STATIC(m->access_flags) && strcmp(m->name, name) == 0 && strcmp(m->descriptor, descriptor) == 0) {
+            return m;
+        }
+    }
+
+    return NULL;
+}
+
+struct jmethod* jclass_get_declared_nonstatic_method(struct jclass *c, const char *name, const char *descriptor)
+{
+    for (int i = 0; i < c->methods_count; i++) {
+        struct jmethod *m = c->methods + i;
+        if (!IS_STATIC(m->access_flags) && strcmp(m->name, name) == 0 && strcmp(m->descriptor, descriptor) == 0) {
+            return m;
         }
     }
 
@@ -618,7 +649,7 @@ struct jmethod** jclass_get_methods(struct jclass *c, const char *name, bool pub
 
 struct jmethod* jclass_get_constructor(struct jclass *c, const char *descriptor)
 {
-    return jclass_get_method(c, "<init>", descriptor);
+    return jclass_get_declared_method(c, "<init>", descriptor);
 }
 
 struct jmethod** jclass_get_constructors(struct jclass *c, bool public_only, int *count)
@@ -630,28 +661,36 @@ struct jmethod** jclass_get_constructors(struct jclass *c, bool public_only, int
     return constructors;
 }
 
-struct jmethod* jclass_lookup_method(struct jclass *c, const char *name, const char *descriptor)
+static struct jmethod* jclass_lookup_method0(struct jclass *c, const char *name, const char *descriptor)
 {
-    struct jmethod *method = jclass_get_method(c, name, descriptor);
+    struct jmethod *method = jclass_get_declared_method(c, name, descriptor);
     if (method != NULL) {
         return method;
     }
 
     // todo 在父类中查找
     if (c->super_class != NULL) {
-        if ((method = jclass_lookup_method(c->super_class, name, descriptor)) != NULL)
+        if ((method = jclass_lookup_method0(c->super_class, name, descriptor)) != NULL)
             return method;
     }
 
     // todo 在父接口中查找
     for (int i = 0; i < c->interfaces_count; i++) {
-        if ((method = jclass_lookup_method(c->interfaces[i], name, descriptor)) != NULL)
+        if ((method = jclass_lookup_method0(c->interfaces[i], name, descriptor)) != NULL)
             return method;
     }
 
-    // todo java.lang.NoSuchMethodError
-    VM_UNKNOWN_ERROR("can not find method. %s~%s~%s", c->class_name, name, descriptor);
     return NULL;
+}
+
+struct jmethod* jclass_lookup_method(struct jclass *c, const char *name, const char *descriptor)
+{
+    struct jmethod *m = jclass_lookup_method0(c, name, descriptor);
+    if (m == NULL) {
+        // todo java.lang.NoSuchMethodError
+        VM_UNKNOWN_ERROR("can not find method. %s~%s~%s", c->class_name, name, descriptor);
+    }
+    return m;
 }
 
 struct jmethod* jclass_lookup_static_method(struct jclass *c, const char *name, const char *descriptor)

@@ -12,6 +12,7 @@
 #include "../rtda/heap/jobject.h"
 #include "../rtda/ma/symref.h"
 #include "../rtda/ma/descriptor.h"
+#include "../classfile/constant.h"
 
 /*
  * 类的初始化在下列情况下触发：
@@ -317,31 +318,38 @@ static void invokestatic(struct frame *frame)
 
     int index = bcr_readu2(&frame->reader);
     struct method_ref *ref = rtcp_get_method_ref(curr_class->rtcp, index);
-    resolve_static_method_ref(curr_class, ref);
+    if (ref->resolved_method == NULL) {
+        ref->resolved_class = classloader_load_class(frame->m.method->jclass->loader, ref->class_name);
+        // 不用按类层次搜索，直接get
+        ref->resolved_method = jclass_get_declared_static_method(ref->resolved_class, ref->name, ref->descriptor);
+    }
+//    resolve_static_method_ref(curr_class, ref);
 
     if (IS_ABSTRACT(ref->resolved_method->access_flags)) {
         // todo java.lang.AbstractMethodError
         jvm_abort("java.lang.AbstractMethodError\n");
     }
 
-    if (!ref->resolved_class->inited) {
-        jclass_clinit(ref->resolved_class, frame->thread);
-        /* 将pc指向本条指令之前，初始化完类后，继续执行本条指令。*/
-//        bcr_set_pc(frame->reader, jthread_get_pc(frame->thread));
-        frame->reader.pc = saved_pc; // recover pc
-        return;
-    }
+//    if (!ref->resolved_class->inited) {
+//        jclass_clinit(ref->resolved_class, frame->thread);
+//        frame->reader.pc = saved_pc; // recover pc
+//        return;
+//    }
 
     struct slot args[ref->resolved_method->arg_slot_count];
     for (int i = ref->resolved_method->arg_slot_count - 1; i >= 0; i--) {
-        args[i] = *frame_stack_pop_slot(frame); //*os_pops(frame->operand_stack);
+        args[i] = *frame_stack_pop_slot(frame);
     }
 
     jthread_invoke_method(frame->thread, ref->resolved_method, args);
+
+    if (!ref->resolved_class->inited) {
+        jclass_clinit(ref->resolved_class, frame->thread);
+    }
 }
 
 /*
- * invokespecial指令用于调用一些需要特殊处理的实例方法，包括实例初始化方法、私有方法和父类方法。
+ * invokespecial指令用于调用一些需要特殊处理的实例方法，包括构造函数、私有方法和通过super关键字调用的超类方法。
  */
 static void invokespecial(struct frame *frame)
 {
@@ -349,6 +357,10 @@ static void invokespecial(struct frame *frame)
 
     int index = bcr_readu2(&frame->reader);
     struct method_ref *ref = rtcp_get_method_ref(curr_class->rtcp, index);
+//    if (ref->resolved_method == NULL) {
+//        ref->resolved_class = classloader_load_class(frame->m.method->jclass->loader, ref->class_name);
+//        ref->resolved_method = jclass_get_declared_nonstatic_method(ref->resolved_class, ref->name, ref->descriptor);
+//    }
     resolve_non_static_method_ref(curr_class, ref);
 
     // 假定从方法符号引用中解析出来的类是C，方法是M。如果M是构造函数，则声明M的类必须是C，
@@ -367,10 +379,7 @@ static void invokespecial(struct frame *frame)
             && !IS_PRIVATE(method->access_flags)
             && jclass_is_subclass_of(curr_class, ref->resolved_class) // todo
             && strcmp(ref->resolved_method->name, "<init>") != 0) {
-        struct jmethod *tmp = jclass_lookup_method(curr_class->super_class, ref->name, ref->descriptor);
-        if (tmp != NULL) {
-            method = tmp;
-        }
+        method = jclass_lookup_method(curr_class->super_class, ref->name, ref->descriptor);
     }
 
     if (IS_ABSTRACT(method->access_flags)) {
@@ -380,7 +389,7 @@ static void invokespecial(struct frame *frame)
 
     struct slot args[method->arg_slot_count];
     for (int i = method->arg_slot_count - 1; i >= 0; i--) {
-        args[i] = *frame_stack_pop_slot(frame); //*os_pops(frame->operand_stack);
+        args[i] = *frame_stack_pop_slot(frame);
     }
 
     jref obj = slot_getr(args); // args[0]
@@ -392,7 +401,7 @@ static void invokespecial(struct frame *frame)
 }
 
 /*
- * invokevirtual指令用于调用对象的实例方法，根据对象的实际类型进行分派（虚方法分派），这也是Java语言中最常见的方法分派方式。
+ * invokevirtual指令用于调用对象的实例方法，根据对象的实际类型进行分派（虚方法分派）。
  */
 static void invokevirtual(struct frame *frame)
 {
@@ -400,11 +409,15 @@ static void invokevirtual(struct frame *frame)
 
     int index = bcr_readu2(&frame->reader);
     struct method_ref *ref = rtcp_get_method_ref(curr_class->rtcp, index);
+//    if (ref->resolved_method == NULL) {
+//        ref->resolved_class = classloader_load_class(frame->m.method->jclass->loader, ref->class_name);
+//        ref->resolved_method = jclass_get_declared_nonstatic_method(ref->resolved_class, ref->name, ref->descriptor);
+//    }
     resolve_non_static_method_ref(curr_class, ref);
 
     struct slot args[ref->resolved_method->arg_slot_count];
     for (int i = ref->resolved_method->arg_slot_count - 1; i >= 0; i--) {
-        args[i] = *frame_stack_pop_slot(frame); //*os_pops(frame->operand_stack);
+        args[i] = *frame_stack_pop_slot(frame);
     }
 
     struct jobject *obj = slot_getr(args); // args[0]
@@ -428,28 +441,28 @@ static void invokevirtual(struct frame *frame)
 static void invokeinterface(struct frame *frame)
 {
     struct jclass *curr_class = frame->m.method->jclass;
-    int index = bcr_readu2(&frame->reader);
+    int index = frame_readu2(frame); //bcr_readu2(&frame->reader);
 
     /*
      * 此字节的值是给方法传递参数需要的slot数，
      * 其含义和给method结构体定义的arg_slot_count字段相同。
      * 这个数是可以根据方法描述符计算出来的，它的存在仅仅是因为历史原因。
      */
-    bcr_readu1(&frame->reader);
+    u1 arg_slot_count = frame_readu1(frame); //bcr_readu1(&frame->reader);
     /*
      * 此字节是留给Oracle的某些Java虚拟机实现用的，它的值必须是0。
      * 该字节的存在是为了保证Java虚拟机可以向后兼容。
      */
-    bcr_readu1(&frame->reader);
+    frame_readu1(frame); //bcr_readu1(&frame->reader);
 
     struct method_ref *ref = rtcp_get_interface_method_ref(curr_class->rtcp, index);
-    resolve_non_static_method_ref(curr_class, ref);
+//    resolve_non_static_method_ref(curr_class, ref);
 
     /* todo 本地方法 */
 
-    struct slot args[ref->resolved_method->arg_slot_count];
-    for (int i = ref->resolved_method->arg_slot_count - 1; i >= 0; i--) {
-        args[i] = *frame_stack_pop_slot(frame); //*os_pops(frame->operand_stack);
+    struct slot args[arg_slot_count];
+    for (int i = arg_slot_count - 1; i >= 0; i--) {
+        args[i] = *frame_stack_pop_slot(frame);
     }
 
     jref obj = slot_getr(args); // args[0]
@@ -480,19 +493,22 @@ static void invokeinterface(struct frame *frame)
 static void set_invoked_type(struct frame *frame)
 {
     assert(frame != NULL);
-    frame->thread->dyn.invoked_type = frame_stack_popr(frame); //os_popr(frame->operand_stack);
+    frame->thread->dyn.invoked_type = frame_stack_popr(frame);
+    int i = 3;
 }
 
 static void set_caller(struct frame *frame)
 {
     assert(frame != NULL);
-    frame->thread->dyn.caller = frame_stack_popr(frame); //os_popr(frame->operand_stack);
+    frame->thread->dyn.caller = frame_stack_popr(frame);
+    int i = 3;
 }
 
 static void set_call_set(struct frame *frame)
 {
     assert(frame != NULL);
-    frame->thread->dyn.call_set = frame_stack_popr(frame); //os_popr(frame->operand_stack);
+    frame->thread->dyn.call_set = frame_stack_popr(frame);
+    int i = 3;
 }
 
 static void set_exact_method_handle(struct frame *frame)
@@ -501,15 +517,75 @@ static void set_exact_method_handle(struct frame *frame)
     frame->thread->dyn.exact_method_handle = frame_stack_popr(frame); //os_popr(frame->operand_stack);
 }
 
+/*
+ *
+    struct {
+        // bootstrap_method_attr_index项的值必须是对当前Class文件中引导方法表的bootstrap_methods[]数组的有效索引。
+        u2 bootstrap_method_attr_index;
+        u2 name_and_type_index;
+    } invoke_dynamic_constant;
+
+    struct {
+        u2 num;
+        struct bootstrap_method *methods;
+    } bootstrap_methods;
+
+    struct bootstrap_method {
+        /*
+        * bootstrap_method_ref 项的值必须是一个对常量池的有效索引。
+        * 常量池在该索引处的值必须是一个CONSTANT_MethodHandle_info结构。
+        * 注意：此CONSTANT_MethodHandle_info结构的reference_kind项应为值6（REF_invokeStatic）或8（REF_newInvokeSpecial），
+        * 否则在invokedynamic指令解析调用点限定符时，引导方法会执行失败。
+        *
+        u2 bootstrap_method_ref;
+        u2 num_bootstrap_arguments;
+        /*
+        * bootstrap_arguments 数组的每个成员必须是一个对常量池的有效索引。
+        * 常量池在该索引出必须是下列结构之一：
+        * CONSTANT_String_info, CONSTANT_Class_info, CONSTANT_Integer_info, CONSTANT_Long_info,
+        * CONSTANT_Float_info, CONSTANT_Double_info, CONSTANT_MethodHandle_info, CONSTANT_MethodType_info。
+        *
+        u2 *bootstrap_arguments;
+    };
+
+    struct {
+        // reference_kind项的值必须在1至9之间（包括1和9），它决定了方法句柄的类型。
+        // 方法句柄类型的值表示方法句柄的字节码行为。
+        u1 reference_kind;
+
+        * 2. If the value of the reference_kind item is 5 (REF_invokeVirtual) or 8
+        *    (REF_newInvokeSpecial), then the constant_pool entry at that index must
+        *    be a CONSTANT_Methodref_info structure representing a class's
+        *    method or constructor for which a method handle is to be created.
+        * 3. If the value of the reference_kind item is 6 (REF_invokeStatic)
+        *    or 7 (REF_invokeSpecial), then if the class file version number
+        *    is less than 52.0, the constant_pool entry at that index must be
+        *    a CONSTANT_Methodref_info structure representing a class's method
+        *    for which a method handle is to be created; if the class file
+        *    version number is 52.0 or above, the constant_pool entry at that
+        *    index must be either a CONSTANT_Methodref_info structure or a
+        *    CONSTANT_InterfaceMethodref_info structure representing a
+        *    class's or interface's method for which a method handle is to be created.
+        u2 reference_index;
+    } method_handle_constant;
+
+    struct {
+        u2 class_index;
+        u2 name_and_type_index;
+    } ref_constant, field_ref_constant, method_ref_constant, interface_method_ref_constant;
+ */
+// 每一个 invokedynamic 指令都称为 Dynamic Call Site(动态调用点)
 static void invokedynamic(struct frame *frame)
 {
+  //  jvm_abort("invokedynamic not implement\n");  // todo
+
     size_t saved_pc = frame->reader.pc - 1;
 
     struct jclass *curr_class = frame->m.method->jclass;
     struct jthread *curr_thread = frame->thread;
 
     // The run-time constant pool item at that index must be a symbolic reference to a call site specifier.
-    int index = bcr_readu2(&frame->reader);
+    int index = bcr_readu2(&frame->reader); // CONSTANT_InvokeDynamic_info
 
     bcr_readu1(&frame->reader); // this byte must always be zero.
     bcr_readu1(&frame->reader); // this byte must always be zero.
@@ -521,6 +597,9 @@ static void invokedynamic(struct frame *frame)
     // create java/lang/invoke/MethodType of bootstrap method
     struct jobject *parameter_types = method_descriptor_to_parameter_types(curr_class->loader, ref->nt->descriptor);
     struct jobject *return_type = method_descriptor_to_return_type(curr_class->loader, ref->nt->descriptor);
+
+
+    //struct jclass *cc = jclsobj_entity_class(return_type);
 
     struct jobject *invoked_type = curr_thread->dyn.invoked_type;
     if (invoked_type == NULL) {
@@ -537,7 +616,12 @@ static void invokedynamic(struct frame *frame)
             jclass_clinit(mt, curr_thread);
         }
     }
+    if (need_again) {
+        frame->reader.pc = saved_pc; // recover pc
+        return;
+    }
 
+#if 0
     struct jobject *caller = curr_thread->dyn.caller;
     if (caller == NULL) {
         need_again = true;
@@ -632,6 +716,7 @@ static void invokedynamic(struct frame *frame)
     // todo rest thread.dyn 的值，下次调用时这个值要从新解析。
 
     jvm_abort("invokedynamic not implement\n");  // todo
+#endif
 }
 
 /*

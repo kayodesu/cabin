@@ -24,6 +24,10 @@ static void initIDs(struct frame *frame)
  *
  * private native void open0(String name, boolean append) throws FileNotFoundException;
  */
+static void open0(struct frame *frame)
+{
+    jvm_abort("error\n"); // todo
+}
 
 
 /**
@@ -35,6 +39,11 @@ static void initIDs(struct frame *frame)
  *
  * private native void write(int b, boolean append) throws IOException;
  */
+static void write(struct frame *frame)
+{
+    jvm_abort("error\n"); // todo
+}
+
 
 /**
  * Writes a sub array as a sequence of bytes.
@@ -78,6 +87,10 @@ static void writeBytes(struct frame *frame)
 }
 
 // private native void close0() throws IOException;
+static void close0(struct frame *frame)
+{
+    jvm_abort("error\n"); // todo
+}
 
 
 void java_io_FileOutputStream_registerNatives()
@@ -85,4 +98,7 @@ void java_io_FileOutputStream_registerNatives()
     register_native_method("java/io/FileOutputStream~registerNatives~()V", registerNatives);
     register_native_method("java/io/FileOutputStream~writeBytes~([BIIZ)V", writeBytes);
     register_native_method("java/io/FileOutputStream~initIDs~()V", initIDs);
+    register_native_method("java/io/FileOutputStream~open0~(Ljava/lang/String;Z)V", open0);
+    register_native_method("java/io/FileOutputStream~write~(IZ)V", write);
+    register_native_method("java/io/FileOutputStream~close0~()V", close0);
 }

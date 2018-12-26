@@ -18,6 +18,10 @@ static void initIDs(struct frame *frame)
  *
  * private native void open0(String name) throws FileNotFoundException;
  */
+static void open0(struct frame *frame)
+{
+    jvm_abort("\n"); // todo
+}
 
 /**
  * Reads a byte of data from this input stream. This method blocks
@@ -29,6 +33,10 @@ static void initIDs(struct frame *frame)
  *
  * private native int read0() throws IOException;
  */
+static void read0(struct frame *frame)
+{
+    jvm_abort("\n"); // todo
+}
 
 
 /**
@@ -40,6 +48,10 @@ static void initIDs(struct frame *frame)
  *
  * private native int readBytes(byte b[], int off, int len) throws IOException;
  */
+static void readBytes(struct frame *frame)
+{
+    jvm_abort("\n"); // todo
+}
 
 
 /**
@@ -66,8 +78,12 @@ static void initIDs(struct frame *frame)
  * @exception  IOException  if n is negative, if the stream does not
  *             support seek, or if an I/O error occurs.
  *
- * public native long skip(long n) throws IOException;
+ * private native long skip0(long n) throws IOException;
  */
+static void skip0(struct frame *frame)
+{
+    jvm_abort("\n"); // todo
+}
 
 /**
  * Returns an estimate of the number of remaining bytes that can be read (or
@@ -86,15 +102,30 @@ static void initIDs(struct frame *frame)
  * @exception  IOException  if this file input stream has been closed by calling
  *             {@code close} or an I/O error occurs.
  *
- * public native int available() throws IOException;
+private native int available0() throws IOException;
  */
+static void available0(struct frame *frame)
+{
+    jvm_abort("\n"); // todo
+}
 
 /*
  * private native void close0() throws IOException;
  */
+static void close0(struct frame *frame)
+{
+    jvm_abort("\n"); // todo
+}
 
 void java_io_FileInputStream_registerNatives()
 {
     register_native_method("java/io/FileInputStream~registerNatives~()V", registerNatives);
     register_native_method("java/io/FileInputStream~initIDs~()V", initIDs);
+
+    register_native_method("java/io/FileInputStream~open0~(Ljava/lang/String;)V", open0);
+    register_native_method("java/io/FileInputStream~read0~()I", read0);
+    register_native_method("java/io/FileInputStream~readBytes~([BII)I", readBytes);
+    register_native_method("java/io/FileInputStream~skip0~(J)J", skip0);
+    register_native_method("java/io/FileInputStream~available0~()I", available0);
+    register_native_method("java/io/FileInputStream~close0~()V", close0);
 }

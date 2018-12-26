@@ -12,9 +12,9 @@ struct jobject {
     /*
      * 对象头
      */
-    struct objhead {
+    struct objheader {
 
-    } head;
+    } header;
 
     // 保存所有实例变量的值
     // 包括此Object中定义的和从父类继承来的。
@@ -110,35 +110,5 @@ void jobject_destroy(struct jobject *o);
 bool jobject_is_instance_of(const struct jobject *o, const struct jclass *c);
 
 const char* jobject_to_string(const struct jobject *o);
-
-#define JOBJECT_CHECK_STROBJ(o) \
-    do { \
-        if ((o) == NULL) { \
-            jvm_abort("NULL point\n"); \
-        } \
-        if (!jobject_is_jlstring((const struct jobject *) (o))) { \
-            jvm_abort("%s\n", jobject_to_string((const struct jobject *) (o))); \
-        } \
-    } while (false)
-
-#define JOBJECT_CHECK_ARROBJ(o) \
-    do { \
-        if ((o) == NULL) { \
-            jvm_abort("NULL point\n"); \
-        } \
-        if (!jobject_is_array(o)) { \
-            jvm_abort("%s\n", jobject_to_string((const struct jobject *) (o))); \
-        } \
-    } while (false)
-
-#define JOBJECT_CHECK_CLSOBJ(o) \
-    do { \
-        if ((o) == NULL) { \
-            jvm_abort("NULL point\n"); \
-        } \
-        if (!jobject_is_jlclass((const struct jobject *) (o))) { \
-            jvm_abort("%s\n", jobject_to_string((const struct jobject *) (o))); \
-        } \
-    } while (false)
 
 #endif //JVM_JOBJECT_H

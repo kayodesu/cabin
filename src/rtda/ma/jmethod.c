@@ -133,7 +133,7 @@ static void parse_code_attr(struct jmethod *method, struct bytecode_reader *read
         }
     }
 
-    // parse attributes of code's attributes
+    // parse attributes of code's attribute
     u2 attr_count = bcr_readu2(reader);
     for (int k = 0; k < attr_count; k++) {
         const char *attr_name = rtcp_get_str(method->jclass->rtcp, bcr_readu2(reader));
@@ -147,37 +147,32 @@ static void parse_code_attr(struct jmethod *method, struct bytecode_reader *read
                 method->line_number_tables[i].start_pc = bcr_readu2(reader);
                 method->line_number_tables[i].line_number = bcr_readu2(reader);
             }
-        }
-#if 0
-        else if (strcmp(StackMapTable, attr_name) == 0) { // todo
-            u2 number_of_entries = bcr_readu2(reader);
-            // 跳过剩下的部分，先不处理。  todo
-            bcr_skip(reader, (int) attr_len - 2);
-        } else if (strcmp(LocalVariableTable, attr_name) == 0) { // todo
-            u2 num = bcr_readu2(reader);
-            struct local_variable_table tables[num];
-            for (int i = 0; i < num; i++) {
-                tables[i].start_pc = bcr_readu2(reader);
-                tables[i].length = bcr_readu2(reader);
-                tables[i].name_index = bcr_readu2(reader);
-                tables[i].descriptor_index = bcr_readu2(reader);
-                tables[i].index = bcr_readu2(reader);
-            }
-        } else if (strcmp(LocalVariableTypeTable, attr_name) == 0) { // todo
-            u2 num = bcr_readu2(reader);
-            struct local_variable_type_table tables[num];
-            for (int i = 0; i < num; i++) {
-                tables[i].start_pc = bcr_readu2(reader);
-                tables[i].length = bcr_readu2(reader);
-                tables[i].name_index = bcr_readu2(reader);
-                tables[i].signature_index = bcr_readu2(reader);
-                tables[i].index = bcr_readu2(reader);
-            }
-        }
-#endif
-        else {
+        } else if (strcmp(StackMapTable, attr_name) == 0) { // ignore
+            bcr_skip(reader, attr_len);
+        } else if (strcmp(LocalVariableTable, attr_name) == 0) { // ignore
+//            u2 num = bcr_readu2(reader);
+//            struct local_variable_table tables[num];
+//            for (int i = 0; i < num; i++) {
+//                tables[i].start_pc = bcr_readu2(reader);
+//                tables[i].length = bcr_readu2(reader);
+//                tables[i].name_index = bcr_readu2(reader);
+//                tables[i].descriptor_index = bcr_readu2(reader);
+//                tables[i].index = bcr_readu2(reader);
+//            }
+            bcr_skip(reader, attr_len);
+        } else if (strcmp(LocalVariableTypeTable, attr_name) == 0) { // ignore
+//            u2 num = bcr_readu2(reader);
+//            struct local_variable_type_table tables[num];
+//            for (int i = 0; i < num; i++) {
+//                tables[i].start_pc = bcr_readu2(reader);
+//                tables[i].length = bcr_readu2(reader);
+//                tables[i].name_index = bcr_readu2(reader);
+//                tables[i].signature_index = bcr_readu2(reader);
+//                tables[i].index = bcr_readu2(reader);
+//            }
+            bcr_skip(reader, attr_len);
+        } else {
             // unknown attribute
-//            printvm("unknown attribute: %s\n", attr_name);
             bcr_skip(reader, attr_len);
         }
     }
@@ -206,7 +201,7 @@ void jmethod_init(struct jmethod *method, struct jclass *c, struct bytecode_read
 
     cal_arg_slot_count(method);
 
-    // todo methods Attributes
+    // parse method's attributes
     for (int i = 0; i < attr_count; i++) {
         const char *attr_name = rtcp_get_str(c->rtcp, bcr_readu2(reader));
         u4 attr_len = bcr_readu4(reader);
@@ -219,70 +214,71 @@ void jmethod_init(struct jmethod *method, struct jclass *c, struct bytecode_read
             set_synthetic(&method->access_flags);
         } else if (strcmp(Signature, attr_name) == 0) {
             c->signature = rtcp_get_str(c->rtcp, bcr_readu2(reader));
-        }
-#if 0
-        else if (strcmp(MethodParameters, attr_name) == 0) { // todo
-            u1 num = bcr_readu1(reader); // 这里就是 u1，不是u2
-            struct parameter parameters[num];
-            for (u2 k = 0; k < num; k++) {
-                parameters[k].name_index = bcr_readu2(reader);
-                parameters[k].access_flags = bcr_readu2(reader);
-            }
-        } else if (strcmp(Exceptions, attr_name) == 0) { // todo
-            // todo 啥意思
-            method->exception_tables_count = bcr_readu2(reader);
-            u2 exception_index_table[num];
-            for (u2 k = 0; k < num; k++) {
-                exception_index_table[i] = bcr_readu2(reader);
-            }
-        } else if (strcmp(RuntimeVisibleParameterAnnotations, attr_name) == 0) { // todo
-            u2 num = method->runtime_visible_parameter_annotations_num = bcr_readu2(reader);
-            struct parameter_annotation *as
-                    = method->runtime_visible_parameter_annotations = malloc(sizeof(struct parameter_annotation) * num);
-            CHECK_MALLOC_RESULT(as);
-            for (u2 k = 0; k < num; k++) {
-                u2 nums = as[i].num_annotations = bcr_readu2(reader);
-                as[i].annotations = malloc(sizeof(struct annotation) * nums);
-                CHECK_MALLOC_RESULT(as[i].annotations);
-                for (int j = 0; j < nums; j++) {
-                    read_annotation(reader, as[i].annotations + j);
-                }
-            }
-        } else if (strcmp(RuntimeInvisibleParameterAnnotations, attr_name) == 0) { // todo
-            u2 num = method->runtime_invisible_parameter_annotations_num = bcr_readu2(reader);
-            struct parameter_annotation *as
-                    = method->runtime_invisible_parameter_annotations = malloc(sizeof(struct parameter_annotation) * num);
-            CHECK_MALLOC_RESULT(as);
-            for (u2 k = 0; k < num; k++) {
-                u2 nums = as[i].num_annotations = bcr_readu2(reader);
-                as[i].annotations = malloc(sizeof(struct annotation) * nums);
-                CHECK_MALLOC_RESULT(as[i].annotations);
-                for (int j = 0; j < nums; j++) {
-                    read_annotation(reader, as[i].annotations + j);
-                }
-            }
-        } else if (strcmp(RuntimeVisibleAnnotations, attr_name) == 0) { // todo
-            u2 num = method->runtime_visible_annotations_num = bcr_readu2(reader);
-            method->runtime_visible_annotations = malloc(sizeof(struct annotation) * num);
-            CHECK_MALLOC_RESULT(method->runtime_visible_annotations);
-            for (u2 k = 0; k < num; k++) {
-                read_annotation(reader, method->runtime_visible_annotations + i);
-            }
-        } else if (strcmp(RuntimeInvisibleAnnotations, attr_name) == 0) { // todo
-            u2 num = method->runtime_invisible_annotations_num = bcr_readu2(reader);
-            method->runtime_invisible_annotations = malloc(sizeof(struct annotation) * num);
-            CHECK_MALLOC_RESULT(method->runtime_invisible_annotations);
-            for (u2 k = 0; k < num; k++) {
-                read_annotation(reader, method->runtime_invisible_annotations + i);
-            }
-        } else if (strcmp(AnnotationDefault, attr_name) == 0) { // todo
-            struct element_value ev;
-            read_element_value(reader, &ev);
-        }
-#endif
-        else {
+        } else if (strcmp(MethodParameters, attr_name) == 0) { // ignore
+//            u1 num = bcr_readu1(reader); // 这里就是 u1，不是u2
+//            struct parameter parameters[num];
+//            for (u2 k = 0; k < num; k++) {
+//                parameters[k].name_index = bcr_readu2(reader);
+//                parameters[k].access_flags = bcr_readu2(reader);
+//            }
+            bcr_skip(reader, attr_len);
+        } else if (strcmp(Exceptions, attr_name) == 0) { // ignore
+//            method->exception_tables_count = bcr_readu2(reader);
+//            u2 exception_index_table[num];
+//            for (u2 k = 0; k < num; k++) {
+//                exception_index_table[i] = bcr_readu2(reader);
+//            }
+            bcr_skip(reader, attr_len);
+        } else if (strcmp(RuntimeVisibleParameterAnnotations, attr_name) == 0) { // ignore
+//            u2 num = method->runtime_visible_parameter_annotations_num = bcr_readu2(reader);
+//            struct parameter_annotation *as
+//                    = method->runtime_visible_parameter_annotations = malloc(sizeof(struct parameter_annotation) * num);
+//            CHECK_MALLOC_RESULT(as);
+//            for (u2 k = 0; k < num; k++) {
+//                u2 nums = as[i].num_annotations = bcr_readu2(reader);
+//                as[i].annotations = malloc(sizeof(struct annotation) * nums);
+//                CHECK_MALLOC_RESULT(as[i].annotations);
+//                for (int j = 0; j < nums; j++) {
+//                    read_annotation(reader, as[i].annotations + j);
+//                }
+//            }
+            bcr_skip(reader, attr_len);
+        } else if (strcmp(RuntimeInvisibleParameterAnnotations, attr_name) == 0) { // ignore
+//            u2 num = method->runtime_invisible_parameter_annotations_num = bcr_readu2(reader);
+//            struct parameter_annotation *as
+//                    = method->runtime_invisible_parameter_annotations = malloc(sizeof(struct parameter_annotation) * num);
+//            CHECK_MALLOC_RESULT(as);
+//            for (u2 k = 0; k < num; k++) {
+//                u2 nums = as[i].num_annotations = bcr_readu2(reader);
+//                as[i].annotations = malloc(sizeof(struct annotation) * nums);
+//                CHECK_MALLOC_RESULT(as[i].annotations);
+//                for (int j = 0; j < nums; j++) {
+//                    read_annotation(reader, as[i].annotations + j);
+//                }
+//            }
+            bcr_skip(reader, attr_len);
+        } else if (strcmp(RuntimeVisibleAnnotations, attr_name) == 0) { // ignore
+//            u2 num = method->runtime_visible_annotations_num = bcr_readu2(reader);
+//            method->runtime_visible_annotations = malloc(sizeof(struct annotation) * num);
+//            CHECK_MALLOC_RESULT(method->runtime_visible_annotations);
+//            for (u2 k = 0; k < num; k++) {
+//                read_annotation(reader, method->runtime_visible_annotations + i);
+//            }
+            bcr_skip(reader, attr_len);
+        } else if (strcmp(RuntimeInvisibleAnnotations, attr_name) == 0) { // ignore
+//            u2 num = method->runtime_invisible_annotations_num = bcr_readu2(reader);
+//            method->runtime_invisible_annotations = malloc(sizeof(struct annotation) * num);
+//            CHECK_MALLOC_RESULT(method->runtime_invisible_annotations);
+//            for (u2 k = 0; k < num; k++) {
+//                read_annotation(reader, method->runtime_invisible_annotations + i);
+//            }
+            bcr_skip(reader, attr_len);
+        } else if (strcmp(AnnotationDefault, attr_name) == 0) { // ignore
+//            struct element_value ev;
+//            read_element_value(reader, &ev);
+            bcr_skip(reader, attr_len);
+        } else {
             // unknown attribute
-//            printvm("unknown attribute: %s\n", attr_name);
             bcr_skip(reader, attr_len);
         }
     }
@@ -317,6 +313,8 @@ void jmethod_init(struct jmethod *method, struct jclass *c, struct bytecode_read
 
         method->code = code;
         method->code_length = code_len;
+
+        method->native_method = find_native_method(method->jclass->class_name, method->name, method->descriptor);
     }
 }
 

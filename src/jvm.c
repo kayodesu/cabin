@@ -3,6 +3,7 @@
  */
 #include <dirent.h>
 #include <sys/stat.h>
+#include <time.h>
 #include "loader/classloader.h"
 #include "rtda/thread/jthread.h"
 #include "rtda/ma/access.h"
@@ -175,6 +176,9 @@ static void find_jars(const char *path, char jars[][PATH_MAX], int *jars_count)
 
 int main(int argc, char* argv[])
 {
+    time_t time0;
+    time(&time0);
+
     char bootstrap_classpath[PATH_MAX] = { 0 };
     char extension_classpath[PATH_MAX] = { 0 };
     char user_classpath[PATH_MAX] = { 0 };
@@ -272,33 +276,40 @@ int main(int argc, char* argv[])
     }
 
     register_all_native_methods(); // todo 不要一次全注册，需要时再注册
+
+    time_t time2;
+    time(&time2);    
     start_jvm(main_class_name);
+
+    time_t time3;
+    time(&time3);
+    printf("run jvm: %lds\n", ((long)(time3)) - ((long)(time2)));
     return 0;
 }
 
 
-void vm_internal_error(const char *msg)
+_Noreturn void vm_internal_error(const char *msg)
 {
     assert(msg != NULL);
     // todo
     jvm_abort(msg);
 }
 
-void vm_out_of_memory_error(const char *msg)
+_Noreturn void vm_out_of_memory_error(const char *msg)
 {
     assert(msg != NULL);
     // todo
     jvm_abort(msg);
 }
 
-void vm_stack_overflow_error(const char *msg)
+_Noreturn void vm_stack_overflow_error(const char *msg)
 {
     assert(msg != NULL);
     // todo
     jvm_abort(msg);
 }
 
-void vm_unknown_error(const char *msg)
+_Noreturn void vm_unknown_error(const char *msg)
 {
     assert(msg != NULL);
     // todo

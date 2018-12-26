@@ -133,7 +133,10 @@ struct jfield* jclass_lookup_instance_field(struct jclass *c, const char *name, 
 /*
  * 有可能返回NULL todo
  */
-struct jmethod* jclass_get_method(struct jclass *c, const char *name, const char *descriptor);
+struct jmethod* jclass_get_declared_method(struct jclass *c, const char *name, const char *descriptor);
+struct jmethod* jclass_get_declared_static_method(struct jclass *c, const char *name, const char *descriptor);
+struct jmethod* jclass_get_declared_nonstatic_method(struct jclass *c, const char *name, const char *descriptor);
+
 struct jmethod** jclass_get_methods(struct jclass *c, const char *name, bool public_only, int *count);
 
 struct jmethod* jclass_get_constructor(struct jclass *c, const char *descriptor);

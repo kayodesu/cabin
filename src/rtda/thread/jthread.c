@@ -136,7 +136,7 @@ struct frame** jthread_get_frames(const struct jthread *thread, int *num)
 
 static struct frame* frame_cache_get(struct jthread *thread, struct jmethod *m)
 {
-    assert(fh != NULL);
+    assert(thread != NULL);
     assert(m != NULL);
 
     u4 max_locals_stack = m->max_locals + m->max_stack;
@@ -154,8 +154,7 @@ static struct frame* frame_cache_get(struct jthread *thread, struct jmethod *m)
 
 void jthread_recycle_frame(struct frame *frame)
 {
-    assert(thread != NULL);
-    assert(f != NULL);
+    assert(frame != NULL);
 
     if (frame->max_locals_and_stack >= FRMHUB_SLOTS_COUNT_MAX) {
         frame_destroy(frame); // too big, don't accept
@@ -234,28 +233,28 @@ void jthread_handle_uncaught_exception(struct jthread *thread, struct jobject *e
     jthread_push_frame(thread, frame);
 }
 
-void jthread_throw_null_pointer_exception(struct jthread *thread)
+_Noreturn void jthread_throw_null_pointer_exception(struct jthread *thread)
 {
     assert(thread != NULL);
     // todo
     jvm_abort("");
 }
 
-void jthread_throw_negative_array_size_exception(struct jthread *thread, int array_size)
+_Noreturn void jthread_throw_negative_array_size_exception(struct jthread *thread, int array_size)
 {
     assert(thread != NULL);
     // todo
     jvm_abort("");
 }
 
-void jthread_throw_array_index_out_of_bounds_exception(struct jthread *thread, int index)
+_Noreturn void jthread_throw_array_index_out_of_bounds_exception(struct jthread *thread, int index)
 {
     assert(thread != NULL);
     // todo
     jvm_abort("");
 }
 
-void jthread_throw_class_cast_exception(
+_Noreturn void jthread_throw_class_cast_exception(
         struct jthread *thread, const char *from_class_name, const char *to_class_name)
 {
     assert(thread != NULL);

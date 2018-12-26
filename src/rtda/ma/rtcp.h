@@ -15,9 +15,10 @@ struct method_handle;
 struct invoke_dynamic_ref;
 struct rtcp;
 struct constant;
-struct attribute;
+struct bootstrap_method;
 
-struct rtcp* rtcp_create(const struct constant *cfcp, size_t count, const struct attribute *bootstrap_methods_attribute);
+struct rtcp* rtcp_create(const struct constant *cfcp, size_t count);
+void rtcp_build_invoke_dynamic_constant(struct rtcp *rtcp, struct bootstrap_method *bsms);
 void rtcp_destroy(struct rtcp *rtcp);
 
 const u1 rtcp_get_type(const struct rtcp *rtcp, int index);

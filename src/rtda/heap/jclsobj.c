@@ -28,6 +28,23 @@
         ldc #5 <Test$T>
         astore_4
         return
+
+   2.
+        Object obj = new Object();
+        Class c1 = obj.getClass();
+        Class c2 = c1.getClass();
+        Class c3 = c2.getClass();
+        System.out.println(c1);
+        System.out.println(c2);
+        System.out.println(c3);
+        System.out.println(c2 == c1);
+        System.out.println(c2 == c3);
+        输出：
+        class java.lang.Object
+        class java.lang.Class
+        class java.lang.Class
+        false
+        true
  */
 
 struct jobject* jclsobj_create(struct jclass *entity_class)

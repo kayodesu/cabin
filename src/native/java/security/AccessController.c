@@ -21,7 +21,7 @@ static void doPrivileged(struct frame *frame)
      *     T run();
      * }
      */
-    struct jmethod *m = jclass_get_method(this->jclass, "run", "()Ljava/lang/Object;"); // todo getInstanceMethod
+    struct jmethod *m = jclass_get_declared_nonstatic_method(this->jclass, "run", "()Ljava/lang/Object;");
     struct slot args[] = { rslot(this) };
     jthread_invoke_method(frame->thread, m, args);
 }
@@ -58,6 +58,13 @@ static void getStackAccessControlContext(struct frame *frame)
     frame_stack_pushr(frame, NULL);
 }
 
+// static native AccessControlContext getInheritedAccessControlContext();
+static void getInheritedAccessControlContext(struct frame *frame)
+{
+    // todo
+    jvm_abort("");
+}
+
 void java_security_AccessController_registerNatives()
 {
     register_native_method("java/security/AccessController~registerNatives~()V", registerNatives);
@@ -65,6 +72,11 @@ void java_security_AccessController_registerNatives()
                                    "getStackAccessControlContext~"
                                    "()Ljava/security/AccessControlContext;",
                            getStackAccessControlContext);
+
+    register_native_method("java/security/AccessController~"
+                                   "getInheritedAccessControlContext~"
+                                   "()Ljava/security/AccessControlContext;",
+                           getInheritedAccessControlContext);
 
     register_native_method("java/security/AccessController~doPrivileged~"
                                    "(Ljava/security/PrivilegedAction;)Ljava/lang/Object;",

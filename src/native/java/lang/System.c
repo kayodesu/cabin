@@ -164,6 +164,12 @@ static void nanoTime(struct frame *frame)
     frame_stack_pushl(frame, (jlong)1);
 }
 
+// public static native long currentTimeMillis();
+static void currentTimeMillis(struct frame *frame)
+{
+    jvm_abort("error\n"); // todo
+}
+
 void java_lang_System_registerNatives()
 {
     register_native_method("java/lang/System~registerNatives~()V", registerNatives);
@@ -178,4 +184,5 @@ void java_lang_System_registerNatives()
     register_native_method("java/lang/System~setErr0~(Ljava/io/PrintStream;)V", setErr0);
 
     register_native_method("java/lang/System~nanoTime~()J", nanoTime);
+    register_native_method("java/lang/System~currentTimeMillis~()J", currentTimeMillis);
 }

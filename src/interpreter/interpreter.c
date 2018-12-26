@@ -9,7 +9,7 @@
 
 #if (JVM_DEBUG)
 // the mapping of instructions's code and name
-static char* code_names[] = {
+static char* instruction_names[] = {
         "nop",
 
         // Constants [0x01 ... 0x14]
@@ -106,9 +106,9 @@ void* interpret(void *thread0)
         }
 
         printvm_debug("executing frame(%p): %s, pc = %lu\n", frame, frame_to_string(frame), frame->reader.pc);
-        while (bcr_has_more(&frame->reader)) {
-            u1 opcode = bcr_readu1(&frame->reader);
-            printvm_debug("%d(0x%x), %s, pc = %lu\n", opcode, opcode, code_names[opcode], frame->reader.pc);
+        while (frame_has_more(frame)) {
+            u1 opcode = frame_readu1(frame);
+//            printvm_debug("%d(0x%x), %s, pc = %lu\n", opcode, opcode, instruction_names[opcode], frame->reader.pc);
             instructions[opcode](frame);
 
             if (frame_is_exe_over(frame)) {

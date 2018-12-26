@@ -38,6 +38,13 @@ static void notifyAll(struct frame *frame)
     // todo
 }
 
+// public final native void notify();
+static void notify(struct frame *frame)
+{
+//    jref this = frame_locals_getr(frame, 0);
+    // todo
+}
+
 // public final native void wait(long timeout) throws InterruptedException;
 static void wait(struct frame *frame)
 {
@@ -53,5 +60,6 @@ void java_lang_Object_registerNatives()
     register_native_method("java/lang/Object~getClass~()Ljava/lang/Class;", getClass);
     register_native_method("java/lang/Object~clone~()Ljava/lang/Object;", clone);
     register_native_method("java/lang/Object~notifyAll~()V", notifyAll);
+    register_native_method("java/lang/Object~notify~()V", notify);
     register_native_method("java/lang/Object~wait~(J)V", wait);
 }

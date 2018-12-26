@@ -42,6 +42,14 @@ struct frame {
     struct slot locals[]; // local variables
 };
 
+#define frame_has_more(frame) bcr_has_more(&((frame)->reader))
+#define frame_skip(frame)     bcr_skip(&((frame)->reader))
+#define frame_readu1(frame)   bcr_readu1(&((frame)->reader))
+#define frame_reads1(frame)   bcr_reads1(&((frame)->reader))
+#define frame_readu2(frame)   bcr_readu2(&((frame)->reader))
+#define frame_reads2(frame)   bcr_reads2(&((frame)->reader))
+#define frame_readu4(frame)   bcr_readu4(&((frame)->reader))
+#define frame_reads4(frame)   bcr_reads4(&((frame)->reader))
 
 struct frame* frame_create_normal(struct jthread *thread, struct jmethod *method);
 
@@ -86,7 +94,7 @@ static inline void frame_stack_clear(struct frame *f)
     f->stack_top = 0;
 }
 
-static inline const struct slot* frame_stack_top(struct frame *f)
+static inline struct slot* frame_stack_top(struct frame *f)
 {
     assert(f != NULL);
     return f->stack + f->stack_top - 1;

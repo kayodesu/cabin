@@ -34,11 +34,17 @@ static void load(struct frame *frame)
 //    printvm("-------- %s, %d\n", jstrobj_value(name), is_builtin);
 }
 
+// native void unload(String name, boolean isBuiltin);
+static void unload(struct frame *frame)
+{
+
+}
 
 void java_lang_ClassLoader$NativeLibrary_registerNatives()
 {
     register_native_method("java/lang/ClassLoader$NativeLibrary~registerNatives~()V", registerNatives);
     register_native_method("java/lang/ClassLoader$NativeLibrary~find~(Ljava/lang/String;)J", find);
     register_native_method("java/lang/ClassLoader$NativeLibrary~load~(Ljava/lang/String;Z)V", load);
+    register_native_method("java/lang/ClassLoader$NativeLibrary~unload~(Ljava/lang/String;Z)V", unload);
 }
 

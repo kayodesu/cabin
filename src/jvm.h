@@ -12,9 +12,9 @@
 #include "jtypes.h"
 
 /*
- * 是否开启调试模式
+ * 是否开启调试模式(true or false)
  */
-#define JVM_DEBUG false
+#define JVM_DEBUG 0
 
 #ifndef PATH_MAX
 #define PATH_MAX 260 // todo
@@ -117,7 +117,7 @@ extern struct jobject *system_thread_group;
  * a fault in the underlying host system software, or a fault in the hardware.
  * This error is delivered asynchronously when it is detected and may occur at any point in a program.
  */
-void vm_internal_error(const char *msg);
+_Noreturn void vm_internal_error(const char *msg);
 
 /*
  * java.lang.OutOfMemoryError
@@ -125,7 +125,7 @@ void vm_internal_error(const char *msg);
  * The Java Virtual Machine implementation has run out of either virtual or physical memory,
  * and the automatic storage manager was unable to reclaim enough memory to satisfy an object creation request.
  */
-void vm_out_of_memory_error(const char *msg);
+_Noreturn void vm_out_of_memory_error(const char *msg);
 
 /*
  * java.lang.StackOverflowError
@@ -134,7 +134,7 @@ void vm_out_of_memory_error(const char *msg);
  * typically because the thread is doing an unbounded number of recursive invocations
  * as a result of a fault in the executing program.
  */
-void vm_stack_overflow_error(const char *msg);
+_Noreturn void vm_stack_overflow_error(const char *msg);
 
 /*
  * java.lang.UnknownError
@@ -142,7 +142,7 @@ void vm_stack_overflow_error(const char *msg);
  * An exception or error has occurred, but the Java Virtual Machine
  * implementation is unable to report the actual exception or error.
  */
-void vm_unknown_error(const char *msg);
+_Noreturn void vm_unknown_error(const char *msg);
 
 #define VM_UNKNOWN_ERROR(...) \
         do { \

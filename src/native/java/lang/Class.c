@@ -170,7 +170,7 @@ static void getName0(struct frame *frame)
  */
 static void desiredAssertionStatus0(struct frame *frame)
 {
-    // todo 本书不讨论断言。desiredAssertionStatus0（）方法把false推入操作数栈顶
+    // todo 本vm不讨论断言。desiredAssertionStatus0（）方法把false推入操作数栈顶
     frame_stack_pushi(frame, 0);
 }
 
@@ -454,21 +454,21 @@ static void getModifiers(struct frame *frame)
  *          a primitive type or void.
  * @since   JDK1.1
  */
-//public native Object[] getSigners();
-//static void getSigners(struct frame *frame)
-//{
-//    jvm_abort("");
-//}
+// public native Object[] getSigners();
+static void getSigners(struct frame *frame)
+{
+    jvm_abort("");
+}
 
 
 /**
  * Set the signers of this class.
  */
-//native void setSigners(Object[] signers);
-//static void setSigners(struct frame *frame)
-//{
-//    jvm_abort("");
-//}
+// native void setSigners(Object[] signers);
+static void setSigners(struct frame *frame)
+{
+    jvm_abort("");
+}
 
 // private native Object[] getEnclosingMethod0();
 static void getEnclosingMethod0(struct frame *frame)
@@ -493,10 +493,10 @@ static void getEnclosingMethod0(struct frame *frame)
  * Returns the ProtectionDomain of this class.
  */
 //private native java.security.ProtectionDomain getProtectionDomain0();
-//static void getProtectionDomain0(struct frame *frame)
-//{
-//    jvm_abort("");
-//}
+static void getProtectionDomain0(struct frame *frame)
+{
+    jvm_abort("");
+}
 
 // Generic signature handling
 //private native String getGenericSignature0();
@@ -512,18 +512,11 @@ static void getRawAnnotations(struct frame *frame)
     jvm_abort("");
 }
 
-//// Since 1.8
-//native byte[] getRawTypeAnnotations();
-//static void getRawTypeAnnotations(struct frame *frame)
-//{
-//    jvm_abort("");
-//}
-
-
-//static byte[] getExecutableTypeAnnotationBytes(Executable ex) {
-//return getReflectionFactory().getExecutableTypeAnnotationBytes(ex);
-//}
-//
+// native byte[] getRawTypeAnnotations();
+static void getRawTypeAnnotations(struct frame *frame)
+{
+    jvm_abort("");
+}
 
 // native ConstantPool getConstantPool();
 static void getConstantPool(struct frame *frame)
@@ -680,6 +673,18 @@ static void getDeclaredConstructors0(struct frame *frame)
     }
 }
 
+/*
+ * getClasses和getDeclaredClasses的区别：
+ * getClasses得到该类及其父类所有的public的内部类。
+ * getDeclaredClasses得到该类所有的内部类，除去父类的。
+ *
+ * private native Class<?>[] getDeclaredClasses0();
+ */
+static void getDeclaredClasses0(struct frame *frame)
+{
+    jvm_abort("");
+}
+
 /**
  * If the class or interface represented by this {@code Class} object
  * is a member of another class, returns the {@code Class} object
@@ -724,19 +729,6 @@ static void getDeclaringClass0(struct frame *frame)
              (jref) classloader_load_class(frame->m.method->jclass->loader, declaring_class_name)->clsobj);
 }
 
-/*
- * getClasses和getDeclaredClasses的区别：
- * getClasses得到该类及其父类所有的public的内部类。
- * getDeclaredClasses得到该类所有的内部类，除去父类的。
- *
- * private native Class<?>[] getDeclaredClasses0();
- */
-//static void getDeclaredClasses0(struct frame *frame)
-//{
-//    jvm_abort("");
-//}
-
-
 void java_lang_Class_registerNatives()
 {
     register_native_method("java/lang/Class~registerNatives~()V", registerNatives);
@@ -761,11 +753,18 @@ void java_lang_Class_registerNatives()
     register_native_method("java/lang/Class~getEnclosingMethod0~()[Ljava/lang/Object;", getEnclosingMethod0);
     register_native_method("java/lang/Class~getDeclaringClass0~()Ljava/lang/Class;", getDeclaringClass0);
     register_native_method("java/lang/Class~getGenericSignature0~()Ljava/lang/String;", getGenericSignature0);
+    register_native_method("java/lang/Class~getProtectionDomain0~()Ljava/security/ProtectionDomain;", getProtectionDomain0);
     register_native_method("java/lang/Class~getConstantPool~()Lsun/reflect/ConstantPool;", getConstantPool);
 
+    register_native_method("java/lang/Class~getSigners~()[Ljava/lang/Object;", getSigners);
+    register_native_method("java/lang/Class~setSigners~([Ljava/lang/Object;)V", setSigners);
+
     register_native_method("java/lang/Class~getRawAnnotations~()[B", getRawAnnotations);
+    register_native_method("java/lang/Class~getRawTypeAnnotations~()[B", getRawTypeAnnotations);
 
     register_native_method("java/lang/Class~getDeclaredFields0~(Z)[Ljava/lang/reflect/Field;", getDeclaredFields0);
     register_native_method("java/lang/Class~getDeclaredMethods0~(Z)[Ljava/lang/reflect/Method;", getDeclaredMethods0);
     register_native_method("java/lang/Class~getDeclaredConstructors0~(Z)[Ljava/lang/reflect/Constructor;", getDeclaredConstructors0);
+    register_native_method("java/lang/Class~getDeclaredClasses0~()[Ljava/lang/Class;", getDeclaredClasses0);
 }
+////private native java.security.ProtectionDomain getProtectionDomain0();

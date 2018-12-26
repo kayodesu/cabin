@@ -6,7 +6,6 @@
 #define JVM_CONSTANT_H
 
 #include "../jtypes.h"
-#include "../util/bytecode_reader.h"
 
 #define INVALID_CONSTANT                0 // invalid constant
 #define UTF8_CONSTANT					1
@@ -104,8 +103,7 @@ struct constant {
              * If the value of the reference_kind item is 5 (REF_invokeVirtual), 6
              * (REF_invokeStatic), 7 (REF_invokeSpecial), or 9 (REF_invokeInterface),
              * the name of the method represented by a CONSTANT_Methodref_info structure
-             * or a CONSTANT_InterfaceMethodref_info structure must not be <init> or
-             * <clinit>.
+             * or a CONSTANT_InterfaceMethodref_info structure must not be <init> or <clinit>.
              * If the value is 8 (REF_newInvokeSpecial), the name of the method represented
              * by a CONSTANT_Methodref_info structure must be <init>.
              */

@@ -17,7 +17,12 @@ static void __##x##2##y(struct frame *frame) \
 x2y(i, l) x2y(i, f) x2y(i, d)
 x2y(l, i) x2y(l, f) x2y(l, d)
 x2y(f, i) x2y(f, l) x2y(f, d)
-x2y(d, i) x2y(d, l) x2y(d, f)
+x2y(d, i) x2y(d, l)
+//x2y(d, f)
+static void __d2f(struct frame *frame)
+{
+    frame_stack_top(frame)->v.f = d2f(frame_stack_top(frame)->v.d);
+}
 
 /*
  * The value on the top of the operand stack must be of type int.

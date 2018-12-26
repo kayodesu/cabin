@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "frame.h"
+#include "../ma/access.h"
 
 struct frame* frame_create_shim(struct jthread *thread, void (* shim_action)(struct frame *))
 {
@@ -60,7 +61,15 @@ struct frame* frame_create_normal(struct jthread *thread, struct jmethod *method
 char* frame_to_string(const struct frame *f)
 {
     assert(f != NULL);
-    return ""; // todo
+    int len = strlen(f->m.method->jclass->class_name) + strlen(f->m.method->name) + strlen(f->m.method->descriptor) + 16;
+    char *buf = malloc(sizeof(char) * len);
+    strcpy(buf, IS_NATIVE(f->m.method->access_flags) ? "(native)" : "");
+    strcat(buf, f->m.method->jclass->class_name);
+    strcat(buf, "~");
+    strcat(buf, f->m.method->name);
+    strcat(buf, "~");
+    strcat(buf, f->m.method->descriptor);
+    return buf; // todo
 }
 
 void frame_destroy(struct frame *f)

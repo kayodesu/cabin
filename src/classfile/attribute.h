@@ -9,25 +9,25 @@
 #include "../util/bytecode_reader.h"
 
 /* attribute name ******************************************************************** 可以出现的位置 */
-#define Code "Code"                                                                  //                 method
-#define ConstantValue "ConstantValue"                                                //           field
-#define Signature "Signature"                                                        // ClassFile field method
-#define Synthetic "Synthetic"                                                        // ClassFile       method
-#define Deprecated "Deprecated"                                                      // ClassFile field method
+#define Code "Code"                                                                  //              method
+#define ConstantValue "ConstantValue"                                                //        field
+#define Signature "Signature"                                                        // Class  field  method
+#define Synthetic "Synthetic"                                                        // Class         method
+#define Deprecated "Deprecated"                                                      // Class  field  method
 #define LineNumberTable "LineNumberTable"                                            //                        Code
 #define StackMapTable "StackMapTable"                                                //                        Code
 #define LocalVariableTable "LocalVariableTable"                                      //                        Code
 #define LocalVariableTypeTable "LocalVariableTypeTable"                              //                        Code
 #define Exceptions "Exceptions"                                                      //                 method
 #define AnnotationDefault "AnnotationDefault"                                        //                 method
-#define SourceFile "SourceFile"                                                      // ClassFile
-#define InnerClasses "InnerClasses"                                                  // ClassFile
-#define EnclosingMethod "EnclosingMethod"                                            // ClassFile
-#define SourceDebugExtension "SourceDebugExtension"                                  // ClassFile
-#define BootstrapMethods "BootstrapMethods"                                          // ClassFile
+#define SourceFile "SourceFile"                                                      // Class
+#define InnerClasses "InnerClasses"                                                  // Class
+#define EnclosingMethod "EnclosingMethod"                                            // Class
+#define SourceDebugExtension "SourceDebugExtension"                                  // Class
+#define BootstrapMethods "BootstrapMethods"                                          // Class
 #define MethodParameters "MethodParameters"                                          //                 method
-#define RuntimeVisibleAnnotations "RuntimeVisibleAnnotations"                        // ClassFile field method
-#define RuntimeInvisibleAnnotations "RuntimeInvisibleAnnotations"                    // ClassFile field method
+#define RuntimeVisibleAnnotations "RuntimeVisibleAnnotations"                        // Class   field   method
+#define RuntimeInvisibleAnnotations "RuntimeInvisibleAnnotations"                    // Class   field   method
 #define RuntimeVisibleParameterAnnotations "RuntimeVisibleParameterAnnotations"      //                 method
 #define RuntimeInvisibleParameterAnnotations "RuntimeInvisibleParameterAnnotations"  //                 method
 
@@ -548,267 +548,6 @@ table of a ClassFile structure.
 //    struct attribute_common common;
 //};
 
-/*****************************************************/
-//// 不认识的attr，忽略之。
-//struct unknown_attribute {
-//    struct attribute_common common;
-//};
-//
-
-
-struct attribute {
-//    enum attr_type type;
-
-    union {
-        /*
-         * The AnnotationDefault attribute is a variable-length attribute in the attributes
-         * table of certain method_info structures , namely those representing elements
-         * of annotation types . The AnnotationDefault attribute records the
-         * default value for the element represented by the method_info
-         * structure. The Java Virtual Machine must make this default value available so it
-         * can be applied by appropriate reflective APIs.
-
-         * There may be at most one AnnotationDefault attribute in the attributes table
-         * of a method_info structure which represents an element of an annotation type.
-         */
-        struct element_value annotation_default_value; // annotation default attribute
-
-        struct {
-            u2 num;
-            struct bootstrap_method *methods;
-        } bootstrap_methods;
-
-        struct {
-            u2 max_stack;
-            u2 max_locals;
-
-            u4 code_length;
-            u1 *code;
-            /*
-             * todo
-             * code[]数组给出了实现当前方法的Java虚拟机字节码。
-             * code[]数组以按字节寻址的方式读入机器内存，
-             * 如果code[]数组的第一个字节是按以4字节边界对齐的话，
-             * 那么tableswitch和lookupswitch指令中所有涉及到的32位偏移量也都是按4字节长度对齐的
-             * （关于code[]数组边界对齐对字节码的影响，请参考相关的指令描述）。
-             * 本规范对关于code[]数组内容的详细约束有很多，将在后面单独章节（§4.9）中列出。
-             */
-
-            u2 exception_tables_length;
-            /*
-             * exception_table[]数组的每个成员表示code[]数组中的一个异常处理器（Exception Handler）。
-             * exception_table[]数组中，异常处理器顺序是有意义的（不能随意更改），详细内容见2.10节。
-             */
-            struct code_attribute_exception_table *exception_tables;
-
-            u2 attributes_count;
-            struct attribute *attributes;
-        } code;
-
-        u2 constant_value_index; // constant value attribute
-
-        /*
-         * The EnclosingMethod attribute is a fixed-length attribute in the attributes table
-        of a ClassFile structure (§4.1). A class must have an EnclosingMethod attribute
-        if and only if it represents a local class or an anonymous class (JLS §14.3, JLS
-        §15.9.5).
-        There may be at most one EnclosingMethod attribute in the attributes table of
-        a ClassFile structure.
-         */
-        struct {
-            /*
-             * The value of the class_index item must be a valid index into the
-            constant_pool table. The constant_pool entry at that index must be a
-            CONSTANT_Class_info structure (§4.4.1) representing the innermost class that
-            encloses the declaration of the current class.
-             */
-            u2 class_index;
-            /*
-             * If the current class is not immediately enclosed by a method or constructor,
-            then the value of the method_index item must be zero.
-            Otherwise, the value of the method_index item must be a valid index into
-            the constant_pool table. The constant_pool entry at that index must be a
-            CONSTANT_NameAndType_info structure (§4.4.6) representing the name and
-            type of a method in the class referenced by the class_index attribute above.
-             */
-            u2 method_index;
-        } enclosing_method;
-
-        struct {
-            u2 num;
-            /*
-             * Each value in the exception_index_table array must be a valid index into the constant_pool table.
-             * The constant_pool entry at that index must be a CONSTANT_Class_info structure
-             * representing a class type that this method is declared to throw.
-             */
-            u2 *exception_index_table;
-        } exceptions;
-
-        struct {
-            u2 num;
-            struct inner_class *classes;
-        } inner_classes;
-
-        /*
-         * The LineNumberTable attribute is an optional variable-length attribute in the
-        attributes table of a Code attribute (ยง4.7.3). It may be used by debuggers to
-        determine which part of the code array corresponds to a given line number in the
-        original source file.
-        If multiple LineNumberTable attributes are present in the attributes table of a
-        Code attribute, then they may appear in any order.
-        There may be more than one LineNumberTable attribute per line of a source file
-        in the attributes table of a Code attribute. That is, LineNumberTable attributes
-        may together represent a given line of a source file, and need not be one-to-one
-        with source lines.
-         */
-        struct {
-            u2 num;
-            struct line_number_table *tables;
-        } line_number_table;
-
-        /*
-         * The LocalVariableTable attribute is an optional variable-length attribute in the
-        attributes table of a Code attribute (ยง4.7.3). It may be used by debuggers to
-        determine the value of a given local variable during the execution of a method.
-        If multiple LocalVariableTable attributes are present in the attributes table of
-        a Code attribute, then they may appear in any order.
-        There may be no more than one LocalVariableTable attribute per local variable
-        in the attributes table of a Code attribute.
-         */
-        struct {
-            u2 num;
-            struct local_variable_table *tables;
-        } local_variable_table;
-
-        /*
-         *The LocalVariableTypeTable attribute is an optional variable-length attribute in
-        the attributes table of a Code attribute (ยง4.7.3). It may be used by debuggers to
-        determine the value of a given local variable during the execution of a method.
-        If multiple LocalVariableTypeTable attributes are present in the attributes
-        table of a given Code attribute, then they may appear in any order.
-        There may be no more than one LocalVariableTypeTable attribute per local
-        variable in the attributes table of a Code attribute.
-        The LocalVariableTypeTable attribute differs from the LocalVariableTable
-        attribute (ยง4.7.13) in that it provides signature information rather than descriptor
-        information. This difference is only significant for variables whose type uses a type variable
-        or parameterized type. Such variables will appear in both tables, while variables of other
-        types will appear only in LocalVariableTable.
-         */
-        struct {
-            u2 num;
-            struct local_variable_type_table *tables;
-        } local_variable_type_table;
-
-        /*
-         * The MethodParameters attribute is a variable-length attribute in the attributes
-         * table of a method_info structure . A MethodParameters attribute records
-         * information about the formal parameters of a method, such as their names.
-         * There may be at most one MethodParameters attribute in the attributes table of a method_info structure.
-         */
-        struct {
-            u1 num; // 这里确实是 u1, 不是 u2
-            struct parameter *parameters;
-        } method_parameters;
-
-        /*
-         * The RuntimeVisibleAnnotations attribute records run-time visible
-         * annotations on the declaration of the corresponding class, field, or method.
-         * The Java Virtual Machine must make these annotations available so they can be
-         * returned by the appropriate reflective APIs.
-         *
-         * The RuntimeInvisibleAnnotations attribute records run-time
-         * invisible annotations on the declaration of the corresponding class, method, or field.
-         * There may be at most one RuntimeInvisibleAnnotations attribute in the
-         * attributes table of a ClassFile, field_info, or method_info structure.
-
-         * The RuntimeInvisibleAnnotations attribute is similar to the
-         * RuntimeVisibleAnnotations attribute (ยง4.7.16), except that the annotations
-         * represented by a RuntimeInvisibleAnnotations attribute must not be made available
-         * for return by reflective APIs, unless the Java Virtual Machine has been instructed to retain
-         * these annotations via some implementation-specific mechanism such as a command line
-         * flag. In the absence of such instructions, the Java Virtual Machine ignores this attribute.
-         */
-        struct {
-            u2 num;
-            struct annotation *annotations;
-        } runtime_annotations, runtime_visible_annotations, runtime_invisible_annotations;
-
-        /*
-         * The RuntimeVisibleParameterAnnotations attribute records run-time visible
-         * annotations on the declarations of formal parameters of the corresponding method.
-         * The Java Virtual Machine must make these annotations available so they can be
-         * returned by the appropriate reflective APIs.
-
-         * There may be at most one RuntimeVisibleParameterAnnotations attribute in
-         * the attributes table of a method_info structure.
-
-         * The RuntimeInvisibleParameterAnnotations attribute records run-time invisible
-         * annotations on the declarations of formal parameters of the corresponding method.
-
-         * There may be at most one RuntimeInvisibleParameterAnnotations attribute in
-         * the attributes table of a method_info structure.
-
-         * The RuntimeInvisibleParameterAnnotations attribute is similar to the
-         * RuntimeVisibleParameterAnnotations attribute (ยง4.7.18), except that the
-         * annotations represented by a RuntimeInvisibleParameterAnnotations attribute
-         * must not be made available for return by reflective APIs, unless the Java Virtual Machine
-         * has specifically been instructed to retain these annotations via some implementation-specific
-         * mechanism such as a command line flag. In the absence of such instructions, the
-         * Java Virtual Machine ignores this attribute.
-         */
-        struct {
-            u2 num;
-            struct parameter_annotation *parameter_annotations;
-        } runtime_parameter_annotations, runtime_visible_parameter_annotations, runtime_invisible_parameter_annotations;
-
-        /*
-         * The Signature attribute is a fixed-length attribute in the attributes table
-        of a ClassFile, field_info, or method_info structure (§4.1, §4.5, §4.6). A
-        Signature attribute records a signature (§4.7.9.1) for a class, interface, constructor,
-        method, or field whose declaration in the Java programming language uses type
-        variables or parameterized types. See The Java Language Specification, Java SE
-        8 Edition for details about these types.
-         */
-        /*
-             * the value of the signature_index item must be a valid index into the
-        constant_pool table. the constant_pool entry at that index must be a
-        constant_utf8_info structure (§4.4.7) representing a class signature if this
-        signature attribute is an attribute of a classfile structure; a method
-        signature if this signature attribute is an attribute of a method_info structure;
-        or a field signature otherwise.
-             */
-        u2 signature_index; // signature_attribute
-
-        /*
-         * The SourceDebugExtension attribute is an optional attribute in the attributes
-        table of a ClassFile structure (ยง4.1).
-        There may be at most one SourceDebugExtension attribute in the attributes
-        table of a ClassFile structure.
-         */
-        /*
-            * The debug_extension array holds extended debugging information which has
-       no semantic effect on the Java Virtual Machine. The information is represented
-       using a modified UTF-8 string (ยง4.4.7) with no terminating zero byte.
-
-       Note that the debug_extension array may denote a string longer than that which can be
-       represented with an instance of class String.
-            */
-        u1 *source_debug_extension; // source_debug_extension_attribute
-
-        u2 source_file_index; // source_file_attribute. 常量池索引， 指向CONSTANT_Utf8_info常量。
-
-
-        /*
-         * The StackMapTable attribute is a variable-length attribute
-         * in the attributes table of a Code attribute.
-         * A StackMapTable attribute is used during the process of verification by type checking
-         */
-        struct {
-            u2 number_of_entries;
-//          stack_map_frame entries[number_of_entries];   // todo
-        } stack_map_table;
-    } u;
-};
 
 void read_annotation(struct bytecode_reader *reader, struct annotation *a);
 void read_element_value(struct bytecode_reader *reader, struct element_value *ev);

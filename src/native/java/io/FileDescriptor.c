@@ -56,11 +56,15 @@ static void set(struct frame *frame)
  *
  * public native void sync() throws SyncFailedException;
  */
-
+static void sync(struct frame *frame)
+{
+    jvm_abort("error\n"); // todo
+}
 
 void java_io_FileDescriptor_registerNatives()
 {
     register_native_method("java/io/FileDescriptor~registerNatives~()V", registerNatives);
     register_native_method("java/io/FileDescriptor~initIDs~()V", initIDs);
     register_native_method("java/io/FileDescriptor~set~(I)J", set);
+    register_native_method("java/io/FileDescriptor~sync~()V", set);
 }

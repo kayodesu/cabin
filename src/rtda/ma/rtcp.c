@@ -27,12 +27,13 @@ struct rtcp {
             jfloat f;
             jlong l;
             jdouble d;
-
             void *p;
 
             struct name_and_type nt;
             struct field_ref fr;
             struct method_ref mr;
+
+            u2 u2s[2];
         } v;
     } *pool;
 
@@ -194,54 +195,67 @@ static void build_method_type_constant(struct rtcp *rtcp, const struct constant 
     rtcp->pool[index].v.p = (void *) rtcp_get_str(rtcp, cfcp[index].u.method_descriptor_index);
 }
 
-static void build_invoke_dynamic_constant(struct rtcp *rtcp,
-                                          const struct constant *cfcp, size_t index,
-                                          const struct attribute *bootstrap_methods_attribute)
+void rtcp_build_invoke_dynamic_constant(struct rtcp *rtcp, struct bootstrap_method *bsms)
 {
-    if (cfcp[index].u.invoke_dynamic_constant.bootstrap_method_attr_index >= bootstrap_methods_attribute->u.bootstrap_methods.num) {
-        jvm_abort("error\n"); // todo
-        return;
-    }
+    for (int i = 0; i < rtcp->count; i++) {
+        if (rtcp->pool[i].t == INVOKE_DYNAMIC_CONSTANT) {
+            u2 bootstrap_method_index = rtcp->pool[i].v.u2s[0];
+            u2 name_and_type_index = rtcp->pool[i].v.u2s[1];
+            struct bootstrap_method *bm = bsms + bootstrap_method_index;
 
-    struct bootstrap_method *bm
-            = bootstrap_methods_attribute->u.bootstrap_methods.methods + cfcp[index].u.invoke_dynamic_constant.bootstrap_method_attr_index;
+            VM_MALLOC_EXT(struct invoke_dynamic_ref, 1, sizeof(int) * bm->num_bootstrap_arguments, ref);
+            ref->argc = bm->num_bootstrap_arguments;
+            ref->handle = rtcp_get_method_handle(rtcp, bm->bootstrap_method_ref);
+            if (ref->handle->kind != REF_KIND_INVOKE_STATIC && ref->handle->kind != REF_KIND_NEW_INVOKE_SPECIAL) {
+                VM_UNKNOWN_ERROR("handle kind. %d", ref->handle->kind); // todo
+                return;
+            }
 
-    VM_MALLOC_EXT(struct invoke_dynamic_ref, 1, sizeof(int) * bm->num_bootstrap_arguments, ref);
-    ref->argc = bm->num_bootstrap_arguments;
-    ref->handle = rtcp_get_method_handle(rtcp, bm->bootstrap_method_ref);
-    if (ref->handle->kind != REF_KIND_INVOKE_STATIC && ref->handle->kind != REF_KIND_NEW_INVOKE_SPECIAL) {
-        VM_UNKNOWN_ERROR("handle kind. %d", ref->handle->kind); // todo
-        return;
-    }
+            for (int j = 0; j < ref->argc; j++) {
+                u2 k = bm->bootstrap_arguments[j]; // 在常量池（rtcp）中的索引
+                assert(k < rtcp->count);
+                // 常量池在该索引出必须是下列八种结构之一
+                // todo 如果这里直接转成slot需要load class，会不会导致递归调用
+                switch (rtcp->pool[k].t) {
+                    case STRING_CONSTANT:
+                    case CLASS_CONSTANT:
+                    case INTEGER_CONSTANT:
+                    case LONG_CONSTANT:
+                    case FLOAT_CONSTANT:
+                    case DOUBLE_CONSTANT:
+                    case METHOD_HANDLE_CONSTANT:
+                    case METHOD_TYPE_CONSTANT:
+                        ref->args[j] = k;
+                        break;
+                    default:
+                        VM_UNKNOWN_ERROR("unknown type. t = %d, index = %d\n", rtcp->pool[k].t, k);
+                }
+            }
 
-    for (int i = 0; i < ref->argc; i++) {
-        u2 k = bm->bootstrap_arguments[i]; // 在常量池（rtcp）中的索引
-        assert(k < rtcp->count);
-        // 常量池在该索引出必须是下列八种结构之一
-        // todo 如果这里直接转成slot需要load class，会不会导致递归调用
-        switch (rtcp->pool[k].t) {
-            case STRING_CONSTANT:
-            case CLASS_CONSTANT:
-            case INTEGER_CONSTANT:
-            case LONG_CONSTANT:
-            case FLOAT_CONSTANT:
-            case DOUBLE_CONSTANT:
-            case METHOD_HANDLE_CONSTANT:
-            case METHOD_TYPE_CONSTANT:
-                ref->args[i] = k;
-                break;
-            default:
-                VM_UNKNOWN_ERROR("unknown type. t = %d, index = %d\n", rtcp->pool[k].t, k);
+            ref->nt = rtcp_get_name_and_type(rtcp, name_and_type_index);
+
+            rtcp->pool[i].v.p = ref;
         }
     }
-
-    ref->nt = rtcp_get_name_and_type(rtcp, cfcp[index].u.invoke_dynamic_constant.name_and_type_index);
-
-    rtcp->pool[index].t = INVOKE_DYNAMIC_CONSTANT;
-    rtcp->pool[index].v.p = ref;
 }
 
-struct rtcp* rtcp_create(const struct constant *cfcp, size_t count, const struct attribute *bootstrap_methods_attribute)
+static void build_invoke_dynamic_constant(struct rtcp *rtcp, const struct constant *cfcp, size_t index)
+{
+//    if (cfcp[index].u.invoke_dynamic_constant.bootstrap_method_attr_index >= bootstrap_methods_attribute->u.bootstrap_methods.num) {
+//        jvm_abort("error\n"); // todo
+//        return;
+//    }
+//
+//    struct bootstrap_method *bm
+//            = bootstrap_methods_attribute->u.bootstrap_methods.methods + cfcp[index].u.invoke_dynamic_constant.bootstrap_method_attr_index;
+
+    // 由于此时 bootstrap_methods 表还没有建立，所以这里只记录下在 bootstrap_methods 表中的索引，及name_and_type的索引。
+    rtcp->pool[index].t = INVOKE_DYNAMIC_CONSTANT;
+    rtcp->pool[index].v.u2s[0] = cfcp[index].u.invoke_dynamic_constant.bootstrap_method_attr_index;
+    rtcp->pool[index].v.u2s[1] = cfcp[index].u.invoke_dynamic_constant.name_and_type_index;
+}
+
+struct rtcp* rtcp_create(const struct constant *cfcp, size_t count)
 {
     assert(cfcp != NULL);
 
@@ -257,11 +271,10 @@ struct rtcp* rtcp_create(const struct constant *cfcp, size_t count, const struct
      * 即 CONSTANT_A 依赖于 CONSTANT_B（如 STRING_CONSTANT 依赖于 UTF8_CONSTANT），
      * 则 CONSTANT_B 必须在 CONSTANT_A 之前 build。
      * 因此，将 all constants 分为四级，第0级没有依赖，第1级依赖于第0级，第2级依赖于第0级 或/和 第1级，以此类推。
-     * 第0级: UTF8_CONSTANT, INTEGER_CONSTANT, FLOAT_CONSTANT, LONG_CONSTANT, DOUBLE_CONSTANT, PLACEHOLDER_CONSTANT.
+     * 第0级: UTF8_CONSTANT, INTEGER_CONSTANT, FLOAT_CONSTANT, LONG_CONSTANT, DOUBLE_CONSTANT, PLACEHOLDER_CONSTANT, INVOKE_DYNAMIC_CONSTANT
      * 第1级: STRING_CONSTANT, CLASS_CONSTANT, NAME_AND_TYPE_CONSTANT, METHOD_TYPE_CONSTANT.
      * 第2级: FIELD_REF_CONSTANT, METHOD_REF_CONSTANT, INTERFACE_METHOD_REF_CONSTANT.
      * 第3级: METHOD_HANDLE_CONSTANT.
-     * 第4级: INVOKE_DYNAMIC_CONSTANT.
      */
     // 遍历第0级
     for (size_t i = 1; i < count; i++) {
@@ -279,6 +292,8 @@ struct rtcp* rtcp_create(const struct constant *cfcp, size_t count, const struct
             build_double_constant(rtcp, cfcp, i);
         } else if (tag == PLACEHOLDER_CONSTANT) {
             rtcp->pool[i].t = PLACEHOLDER_CONSTANT;
+        } else if (tag == INVOKE_DYNAMIC_CONSTANT) {
+            build_invoke_dynamic_constant(rtcp, cfcp, i);
         }
     }
 
@@ -315,17 +330,6 @@ struct rtcp* rtcp_create(const struct constant *cfcp, size_t count, const struct
         u1 tag = cfcp[i].tag;
         if (tag == METHOD_HANDLE_CONSTANT)
             build_method_handle_constant(rtcp, cfcp, i);
-    }
-
-    // 遍历第4级
-    for (size_t i = 1; i < count; i++) {
-        if (cfcp[i].tag == INVOKE_DYNAMIC_CONSTANT) {
-            if (bootstrap_methods_attribute == NULL) {
-//                VM_UNKNOWN_ERROR(""); // todo
-            } else {
-                build_invoke_dynamic_constant(rtcp, cfcp, i, bootstrap_methods_attribute);
-            }
-        }
     }
 
     return rtcp;

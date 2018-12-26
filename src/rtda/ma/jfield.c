@@ -52,27 +52,24 @@ void jfield_init(struct jfield *field, struct jclass *c, struct bytecode_reader 
             set_synthetic(&field->access_flags);
         } else if (strcmp(Signature, attr_name) == 0) {
             c->signature = rtcp_get_str(c->rtcp, bcr_readu2(reader));
-        }
-#if 0
-        else if (strcmp(RuntimeVisibleAnnotations, attr_name) == 0) { // todo
-            u2 num = field->runtime_visible_annotations_num = bcr_readu2(reader);
-            field->runtime_visible_annotations = malloc(sizeof(struct annotation) * num);
-            CHECK_MALLOC_RESULT(field->runtime_visible_annotations);
-            for (u2 k = 0; k < num; k++) {
-                read_annotation(reader, field->runtime_visible_annotations + i);
-            }
-        } else if (strcmp(RuntimeInvisibleAnnotations, attr_name) == 0) { // todo
-            u2 num = field->runtime_invisible_annotations_num = bcr_readu2(reader);
-            field->runtime_invisible_annotations = malloc(sizeof(struct annotation) * num);
-            CHECK_MALLOC_RESULT(field->runtime_invisible_annotations);
-            for (u2 k = 0; k < num; k++) {
-                read_annotation(reader, field->runtime_invisible_annotations + i);
-            }
-        }
-#endif
-        else {
+        } else if (strcmp(RuntimeVisibleAnnotations, attr_name) == 0) { // ignore
+//            u2 num = field->runtime_visible_annotations_num = bcr_readu2(reader);
+//            field->runtime_visible_annotations = malloc(sizeof(struct annotation) * num);
+//            CHECK_MALLOC_RESULT(field->runtime_visible_annotations);
+//            for (u2 k = 0; k < num; k++) {
+//                read_annotation(reader, field->runtime_visible_annotations + i);
+//            }
+            bcr_skip(reader, attr_len);
+        } else if (strcmp(RuntimeInvisibleAnnotations, attr_name) == 0) { // ignore
+//            u2 num = field->runtime_invisible_annotations_num = bcr_readu2(reader);
+//            field->runtime_invisible_annotations = malloc(sizeof(struct annotation) * num);
+//            CHECK_MALLOC_RESULT(field->runtime_invisible_annotations);
+//            for (u2 k = 0; k < num; k++) {
+//                read_annotation(reader, field->runtime_invisible_annotations + i);
+//            }
+            bcr_skip(reader, attr_len);
+        } else {
             // unknown attribute
-//            printvm("unknown attribute: %s\n", attr_name);
             bcr_skip(reader, attr_len);
         }
     }

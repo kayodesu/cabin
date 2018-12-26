@@ -5,10 +5,11 @@
 #include "../../registry.h"
 #include "../../../rtda/heap/jobject.h"
 
-//// public static native Class<?> getCallerClass(int level)
-//static void getCallerClass(StackFrame *frame) {
-//    // todo
-//}
+// public static native Class<?> getCallerClass(int level)
+static void getCallerClass0(struct frame *frame)
+{
+    jvm_abort(""); // todo
+}
 
 // public static native Class<?> getCallerClass()
 static void getCallerClass(struct frame *frame)
@@ -54,5 +55,6 @@ void sun_reflect_Reflection_registerNatives()
 {
     register_native_method("sun/reflect/Reflection~registerNatives~()V", registerNatives);
     register_native_method("sun/reflect/Reflection~getCallerClass~()Ljava/lang/Class;", getCallerClass);
+    register_native_method("sun/reflect/Reflection~getCallerClass~(I)Ljava/lang/Class;", getCallerClass0);
     register_native_method("sun/reflect/Reflection~getClassAccessFlags~(Ljava/lang/Class;)I", getClassAccessFlags);
 }

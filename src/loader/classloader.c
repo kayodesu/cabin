@@ -243,7 +243,7 @@ struct classloader* classloader_create(bool is_bootstrap_loader)
     hashmap_values(loader->loaded_class_pool, values);
     for (int i = 0; i < size; i++) {
         struct jclass *c = values[i];
-        c->clsobj = jclsobj_create(c);//get_jclass_obj_from_pool(loader, c->class_name);
+        c->clsobj = jclsobj_create(c);
     }
 
     // 缓存一下常见类
@@ -362,15 +362,12 @@ struct jclass* classloader_find_class(const struct classloader *loader, const ch
 
 struct jclass* classloader_load_class(struct classloader *loader, const char *class_name)
 {
-//    printvm("in\n"); ///////////////////////////////////////////////////
-
     assert(loader != NULL);
     assert(class_name != NULL);
 
     struct jclass *c = hashmap_find(loader->loaded_class_pool, class_name);
     if (c != NULL) {
         assert(strcmp(c->class_name, class_name) == 0);
- //       printvm("out 1\n"); ///////////////////////////////////////////////////
         return c;
     }
 
@@ -388,12 +385,10 @@ struct jclass* classloader_load_class(struct classloader *loader, const char *cl
     assert(strcmp(c->class_name, class_name) == 0);
 
     if (loader->jlclass != NULL) {
-        c->clsobj = jclsobj_create(c);//get_jclass_obj_from_pool(loader, class_name);
+        c->clsobj = jclsobj_create(c);
     }
 
     hashmap_put(loader->loaded_class_pool, c->class_name, c);
-
-//    printvm("out 2\n"); ///////////////////////////////////////////////////
     return c;
 }
 

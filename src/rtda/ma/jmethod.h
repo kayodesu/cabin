@@ -7,6 +7,7 @@
 
 #include "jclass.h"
 #include "../../classfile/attribute.h"
+#include "../../native/registry.h"
 
 /*
  * 异常处理表
@@ -55,6 +56,7 @@ struct jmethod {
     bool deprecated;
     const char *signature;
 
+    native_method_t native_method; // present only if native
 #if 0
     // 此方法可能会抛出的受检异常
     char *checked_exceptions;

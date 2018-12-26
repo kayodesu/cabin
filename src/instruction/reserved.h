@@ -24,12 +24,14 @@ static void breakpoint(struct frame *frame)
 // todo 此方法感觉实现的有毛病
 static void invoke_native_method(struct frame *frame)
 {
-    const char *class_name = frame->m.method->jclass->class_name;
-    const char *method_name = frame->m.method->name;
-    const char *method_descriptor = frame->m.method->descriptor;
+//    const char *class_name = frame->m.method->jclass->class_name;
+//    const char *method_name = frame->m.method->name;
+//    const char *method_descriptor = frame->m.method->descriptor;
 
     assert(IS_NATIVE(frame->m.method->access_flags));
-    find_native_method(class_name, method_name, method_descriptor)(frame);
+    assert(frame->m.method->native_method != NULL);
+    frame->m.method->native_method(frame);
+//    find_native_method(class_name, method_name, method_descriptor)(frame);
 
 //    assert(frame == jthread_top_frame(frame->thread));
 //    jthread_pop_frame(frame->thread);

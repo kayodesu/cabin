@@ -40,7 +40,7 @@ native_method_t find_native_method(const char *class_name, const char *method_na
     }
 
     // todo not find;   UnsatisfiedLinkError异常
-    jvm_abort("can't find native function: %s\n", key);
+//    jvm_abort("can't find native function: %s\n", key); /////////////////////////////////////////////// todo
     return NULL;
 }
 
@@ -53,6 +53,8 @@ void java_lang_String_registerNatives();
 void java_lang_Throwable_registerNatives();
 void java_lang_Thread_registerNatives();
 void java_lang_Runtime_registerNatives();
+void java_lang_reflect_Field_registerNatives();
+void java_lang_reflect_Executable_registerNatives();
 void java_lang_ClassLoader_registerNatives();
 void java_lang_ClassLoader$NativeLibrary_registerNatives();
 
@@ -61,9 +63,12 @@ void java_io_FileInputStream_registerNatives();
 void java_io_FileOutputStream_registerNatives();
 void java_io_WinNTFileSystem_registerNatives();
 
+void java_nio_Bits_registerNatives();
+
 void sun_misc_VM_registerNatives();
 void sun_misc_Unsafe_registerNatives();
 void sun_misc_Signal_registerNatives();
+void sun_misc_Version_registerNatives();
 void sun_io_Win32ErrorMode_registerNatives();
 
 void sun_reflect_Reflection_registerNatives();
@@ -88,6 +93,8 @@ void register_all_native_methods()
     java_lang_Throwable_registerNatives();
     java_lang_Thread_registerNatives();
     java_lang_Runtime_registerNatives();
+    java_lang_reflect_Field_registerNatives();
+    java_lang_reflect_Executable_registerNatives();
     java_lang_ClassLoader_registerNatives();
     java_lang_ClassLoader$NativeLibrary_registerNatives();
 
@@ -96,9 +103,12 @@ void register_all_native_methods()
     java_io_FileOutputStream_registerNatives();
     java_io_WinNTFileSystem_registerNatives();
 
+    java_nio_Bits_registerNatives();
+
     sun_misc_VM_registerNatives();
     sun_misc_Unsafe_registerNatives();
     sun_misc_Signal_registerNatives();
+    sun_misc_Version_registerNatives();
 
     sun_io_Win32ErrorMode_registerNatives();
 
