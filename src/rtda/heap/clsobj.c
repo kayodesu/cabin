@@ -2,6 +2,7 @@
  * Author: Jia Yang
  */
 
+#include "clsobj.h"
 #include "object.h"
 
 /*
@@ -47,20 +48,14 @@
         true
  */
 
-struct object* jclsobj_create(struct class *entity_class)
+struct object* clsobj_create(struct class *entity_class)
 {
     assert(entity_class != NULL);
 
     struct class *c = classloader_get_jlclass(g_bootstrap_loader);
     struct object *o = object_create(c);
-    o->extra = entity_class;
+    o->u.entity_class = entity_class;
 
     return o;
 }
 
-struct class* clsobj_entity_class(const struct object *o)
-{
-    assert(o != NULL);
-    assert(o->extra != NULL);
-    return o->extra;
-}

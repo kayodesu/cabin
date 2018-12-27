@@ -14,7 +14,7 @@ static void getLongAt0(struct frame *frame)
     // todo 对不对
     jref o = frame_locals_getr(frame, 1);
     jint i = frame_locals_geti(frame, 2);
-    jlong result = rtcp_get_long(o->jclass->rtcp, i);
+    jlong result = rtcp_get_long(o->clazz->rtcp, i);
     frame_stack_pushl(frame, result);
 }
 
@@ -24,7 +24,7 @@ static void getUTF8At0(struct frame *frame)
     // todo 对不对
     jref o = frame_locals_getr(frame, 1);
     jint i = frame_locals_geti(frame, 2);
-    jref result = get_str_from_pool(frame->m.method->jclass->loader, rtcp_get_str(o->jclass->rtcp, i));
+    jref result = get_str_from_pool(frame->m.method->jclass->loader, rtcp_get_str(o->clazz->rtcp, i));
     frame_stack_pushr(frame, result);
 }
 

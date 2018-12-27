@@ -6,6 +6,7 @@
 #define JVM_EXTENDED_H
 
 #include "../rtda/thread/frame.h"
+#include "../rtda/heap/arrobj.h"
 
 /*
  * 创建多维数组

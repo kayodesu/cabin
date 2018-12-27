@@ -107,9 +107,6 @@ static inline struct slot* frame_stack_top(struct frame *f)
 static inline struct slot* frame_stack_pop_slot(struct frame *f)
 {
     assert(f != NULL);
-    if (f->stack_top < 0) {
-        int i = 3;
-    }
     assert(f->stack_top >= 0);
     return f->stack + (f->stack_top)--;
 }

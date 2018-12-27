@@ -18,17 +18,17 @@ static void clone(struct frame *frame)
 {
     jref this = frame_locals_getr(frame, 0);
     struct class *cloneable = classloader_load_class(frame->m.method->jclass->loader, "java/lang/Cloneable");
-    if (!jclass_is_subclass_of(this->jclass, cloneable)) {
+    if (!class_is_subclass_of(this->clazz, cloneable)) {
         jvm_abort("java.lang.CloneNotSupportedException"); // todo
     }
-    frame_stack_pushr(frame, jobject_clone(this, NULL));
+    frame_stack_pushr(frame, object_clone(this, NULL));
 }
 
 // public final native Class<?> getClass();
 static void getClass(struct frame *frame)
 {
     jref this = frame_locals_getr(frame, 0);
-    frame_stack_pushr(frame, (jref) this->jclass->clsobj); // todo 对不对
+    frame_stack_pushr(frame, (jref) this->clazz->clsobj); // todo 对不对
 }
 
 // public final native void notifyAll();

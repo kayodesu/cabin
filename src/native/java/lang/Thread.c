@@ -128,7 +128,7 @@ static void start0(struct frame *frame)
     struct thread *new_thread = thread_create(frame->m.method->jclass->loader, this);
 
     // create a stack frame to hold run method
-    struct method *run = jclass_lookup_instance_method(this->jclass, "run", "()V");
+    struct method *run = class_lookup_instance_method(this->clazz, "run", "()V");
 //    struct frame *new_frame = frmhub_get(&new_thread->fh, run);//frame_create(new_thread, run);
     struct slot arg = rslot(this);
 

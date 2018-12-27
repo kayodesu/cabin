@@ -48,11 +48,11 @@ struct field {
 
 void field_init(struct field *field, struct class *c, struct bytecode_reader *reader);
 
-bool jfield_is_accessible_to(const struct field *field, const struct class *visitor);
+bool field_is_accessible_to(const struct field *field, const struct class *visitor);
 
 struct object* jfield_get_type(struct field *field);
 
-void jfield_release(struct field *field);
+void field_release(struct field *field);
 
 char* jfield_to_string(const struct field *field);
 

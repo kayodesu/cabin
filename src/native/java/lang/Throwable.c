@@ -4,8 +4,8 @@
 
 #include "../../registry.h"
 #include "../../../rtda/thread/frame.h"
-#include "../../../slot.h"
 #include "../../../rtda/heap/object.h"
+#include "../../../rtda/heap/strobj.h"
 
 
 struct stack_trace {
@@ -41,7 +41,7 @@ static void fillInStackTrace(struct frame *frame)
      * at java/lang/Throwable.fillInStackTrace(Native Method)
      */
     num -= 2; // 减去执行fillInStackTrace(int) 和 fillInStackTrace() 方法的frame
-    for (struct class *c = this->jclass; c != NULL; c = c->super_class) {
+    for (struct class *c = this->clazz; c != NULL; c = c->super_class) {
         num--; // 减去执行异常类的构造函数的frame
         if (strcmp(c->class_name, "java/lang/Throwable") == 0) {
             break; // 可以了，遍历到 Throwable 就行了，因为现在在执行 Throwable 的 fillInStackTrace 方法。
@@ -70,7 +70,7 @@ static void fillInStackTrace(struct frame *frame)
         struct slot file_name = rslot(strobj_create(frames[i]->m.method->jclass->source_file_name));
         struct slot class_name = rslot(strobj_create(frames[i]->m.method->jclass->class_name));
         struct slot method_name = rslot(strobj_create(frames[i]->m.method->name));
-        struct slot line_number = islot(jmethod_get_line_number(frames[i]->m.method, frames[i]->reader.pc - 1)); // todo why 减1？ 减去opcode的长度
+        struct slot line_number = islot(method_get_line_number(frames[i]->m.method, frames[i]->reader.pc - 1)); // todo why 减1？ 减去opcode的长度
 
         set_instance_field_value_by_nt(o, "fileName", "Ljava/lang/String;", &file_name);
         set_instance_field_value_by_nt(o, "declaringClass", "Ljava/lang/String;", &class_name);

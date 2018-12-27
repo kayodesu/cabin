@@ -128,7 +128,7 @@ struct frame* jthread_pop_frame(struct thread *thread)
     return vector_pop_back(&thread->vm_stack);
 }
 
-void jthread_push_frame(struct thread *thread, struct frame *frame)
+static void thread_push_frame(struct thread *thread, struct frame *frame)
 {
     assert(thread != NULL && frame != NULL);
     vector_push_back(&thread->vm_stack, frame);
@@ -159,7 +159,7 @@ static struct frame* frame_cache_get(struct thread *thread, struct method *m)
     return frame_create(thread, m);
 }
 
-void jthread_recycle_frame(struct frame *frame)
+void thread_recycle_frame(struct frame *frame)
 {
     assert(frame != NULL);
 
@@ -180,7 +180,7 @@ void jthread_invoke_method(struct thread *thread, struct method *method, const s
     }
 
     struct frame *new_frame = frame_cache_get(thread, method); // frame_create(thread, method);
-    jthread_push_frame(thread, new_frame);
+    thread_push_frame(thread, new_frame);
 
     if (method->arg_slot_count > 0 && args == NULL) {
         jvm_abort("do not find args, %d\n", method->arg_slot_count); // todo
@@ -222,8 +222,8 @@ void jthread_invoke_method_with_shim(struct thread *thread, struct method *metho
     jthread_pop_frame(thread);
 
     // 创建一个 shim stack frame 来接受函数method的返回值
-    jthread_push_frame(thread, frame_create(thread, shim_action));
-    jthread_push_frame(thread, top);
+    thread_push_frame(thread, frame_create(thread, shim_action));
+    thread_push_frame(thread, top);
 }
 
 void jthread_handle_uncaught_exception(struct thread *thread, struct object *exception)
@@ -232,12 +232,12 @@ void jthread_handle_uncaught_exception(struct thread *thread, struct object *exc
     assert(exception != NULL);
 
     vector_clear(&thread->vm_stack);
-    struct method *pst = jclass_lookup_instance_method(exception->jclass, "printStackTrace", "()V");
+    struct method *pst = class_lookup_instance_method(exception->clazz, "printStackTrace", "()V");
 
     // call exception.printStackTrace()
     struct frame *frame = frame_cache_get(thread, pst);//frame_create(thread, pst);
     frame->locals[0] = rslot(exception);
-    jthread_push_frame(thread, frame);
+    thread_push_frame(thread, frame);
 }
 
 _Noreturn void jthread_throw_null_pointer_exception(struct thread *thread)

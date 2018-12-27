@@ -16,12 +16,21 @@ struct object {
 
     } header;
 
-    // 保存所有实例变量的值
-    // 包括此Object中定义的和从父类继承来的。
-    int instance_fields_count;
-    struct slot *instance_fields_values;
+    struct class *clazz;
 
-    struct class *jclass;
+    union {
+        // effective if object of java/lang/Class
+        // save the entity class (class, interface, array class, primitive type, or void) represented by this object
+        struct class *entity_class;
+
+        // effective if object of java/lang/String
+        // 保存字符串的值。同时用作 key in string pool
+        char *str;
+
+        // effective if object of array
+        // 表示数组每个元素的大小
+        jint ele_size;
+    } u;
 
     /*
      * extra字段保持对象的额外信息。
@@ -35,6 +44,24 @@ struct object {
      * 4. 异常对象的extra字段中存放的就是Java虚拟机栈信息 todo 
      */
     void *extra;
+
+
+    // 保存所有实例变量的值
+    // 包括此Object中定义的和继承来的。
+    int instance_fields_count;
+    struct slot *instance_fields_values;
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+    
+    void (* set)(struct object *this, int id, void *value);
+    void* (* get)(const struct object *this, int id);
+    
+    // clone @src to @dest if @dest is not NULL,
+    // else clone @src and return new one.
+    struct object (* clone)(const struct object *src, struct object *dest);
+
+    int count; // count of data
+    struct slot *data;
 };
 
 struct object* object_create(struct class *c);
@@ -42,86 +69,19 @@ struct object* object_create(struct class *c);
 static inline bool jobject_is_array(const struct object *o)
 {
     assert(o != NULL);
-    return jclass_is_array(o->jclass);
+    return class_is_array(o->clazz);
 }
 
 bool jobject_is_primitive(const struct object *o);
 bool jobject_is_jlstring(const struct object *o);
 bool jobject_is_jlclass(const struct object *o);
 
-// java/lang/Sting 对象操作函数
-struct object* strobj_create(const char *str);
-const char* jstrobj_value(struct object *so);
-
-// java/lang/Class 对象操作函数
-/*
- * @entity_class: todo 说明
- */
-struct object* jclsobj_create(struct class *entity_class);
-struct class* clsobj_entity_class(const struct object *co);
-
-// 数组对象操作函数
-/*
- * 创建一维数组
- * todo 说明 c 是什么东西
- */
-struct object *arrobj_create(struct class *arr_class, jint arr_len);
-
-/*
- * 创建多维数组
- * todo 说明 c 是什么东西
- */
-struct object *arrobj_create_multi(struct class *arr_class, size_t arr_dim, const size_t *arr_lens);
-
-#define ARR_ELE_SIZE(o) (*(jint *) ((o)->extra))
-#define ARR_LEN(o) (*(jint *) (((s1 *)((o)->extra)) + sizeof(jint)))
-#define ARR_DATA(o) (((s1 *)((o)->extra)) + 2 * sizeof(jint))
-
-static inline jint jarrobj_len(const struct object *o)
-{
-    assert(o != NULL);
-    assert(jobject_is_array(o));
-    assert(o->extra != NULL);
-    return ARR_LEN(o);
-}
-
-static inline void* jarrobj_data(const struct object *o)
-{
-    assert(o != NULL);
-    assert(jobject_is_array(o));
-    assert(o->extra != NULL);
-    return ARR_DATA(o);
-}
-
-/*
- * 判断两个数组是否是同一类型的数组
- * todo 这里的判断略简陋
- */
-bool jarrobj_is_same_type(const struct object *one, const struct object *other);
-
-bool jarrobj_check_bounds(const struct object *ao, jint index);
-
-static inline void* jarrobj_index(const struct object *o, jint index)
-{
-    assert(o != NULL);
-    assert(jobject_is_array(o));
-    assert(o->extra != NULL);
-    assert(0 <= index && index < ARR_LEN(o));
-    return ARR_DATA(o) + ARR_ELE_SIZE(o) * index;
-}
-
-#define jarrobj_set(T, arrobj, index, data) (*(T *)jarrobj_index(arrobj, index) = (data))
-#define jarrobj_get(T, arrobj, index) (*(T *)jarrobj_index(arrobj, index))
-
-void jarrobj_copy(struct object *dst, jint dst_pos,
-                  const struct object *src, jint src_pos,
-                  jint len);
 
 /*
  * clone @src to @dest if @dest is not NULL,
  * else clone @src and return new one.
  */
-struct object* jobject_clone(const struct object *src, struct object *dest);
+struct object* object_clone(const struct object *src, struct object *dest);
 
 void set_instance_field_value_by_id(const struct object *o, int id, const struct slot *value);
 void set_instance_field_value_by_nt(const struct object *o,
@@ -133,7 +93,7 @@ const struct slot* get_instance_field_value_by_nt(const struct object *o, const 
 /*
  * todo 说明
  */
-struct slot jpriobj_unbox(const struct object *po);
+struct slot priobj_unbox(const struct object *po);
 
 void jobject_destroy(struct object *o);
 

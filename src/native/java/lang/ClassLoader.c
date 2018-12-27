@@ -57,7 +57,7 @@ static void findBuiltinLib(struct frame *frame)
     // todo
     jref name0 = frame_locals_getr(frame, 0);
 
-    const char *name = jstrobj_value(name0);
+    const char *name = strobj_value(name0);
 //    printvm("findBuiltinLib, %s\n", name);
     if (strcmp(name, "zip.dll") == 0) {
         // C:\Program Files\Java\jre1.8.0_162\bin

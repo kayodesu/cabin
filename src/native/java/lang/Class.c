@@ -9,6 +9,9 @@
 #include "../../../rtda/heap/strpool.h"
 #include "../../../util/util.h"
 #include "../../../rtda/primitive_types.h"
+#include "../../../rtda/heap/arrobj.h"
+#include "../../../rtda/heap/clsobj.h"
+#include "../../../rtda/heap/strobj.h"
 
 
 /*
@@ -21,7 +24,7 @@ static void forName0(struct frame *frame)
 {
     struct object *so = frame_locals_getr(frame, 0);
 
-    const char *class_name0 = jstrobj_value(so);
+    const char *class_name0 = strobj_value(so);
     char class_name[strlen(class_name0) + 1];
     strcpy(class_name, class_name0);
     // 这里class name 是形如 xxx.xx.xx的形式，将其替换为 xxx/xx/xx的形式
@@ -32,7 +35,7 @@ static void forName0(struct frame *frame)
     int initialize = frame_locals_geti(frame, 1);
     if (initialize && !c->inited) {
         // todo do init
-        jclass_clinit(c, frame->thread);
+        class_clinit(c, frame->thread);
 //        bcr_set_pc(frame->reader, jthread_get_pc(frame->thread));
     }
 
@@ -47,7 +50,7 @@ static void getPrimitiveClass(struct frame *frame)
 {
     struct object *so = frame_locals_getr(frame, 0);
 
-    const char *class_name = jstrobj_value(so); // 这里得到的 class_name 是诸如 "int~float" 之类的 primitive type
+    const char *class_name = strobj_value(so); // 这里得到的 class_name 是诸如 "int~float" 之类的 primitive type
     struct class *c = classloader_load_class(g_bootstrap_loader, class_name);
     frame_stack_pushr(frame, (jref) c->clsobj);
 }
@@ -108,7 +111,7 @@ static void getName0(struct frame *frame)
 {
     struct object *this = frame_locals_getr(frame, 0);
 
-    struct class *c = clsobj_entity_class(this);
+    struct class *c = this->u.entity_class;//clsobj_entity_class(this);
     char class_name[strlen(c->class_name) + 1];
     strcpy(class_name, c->class_name);
     // 这里需要的是 java.lang.Object 这样的类名，而非 java/lang/Object
@@ -207,7 +210,7 @@ static void isInstance(struct frame *frame)
 
     jref obj = frame_locals_getr(frame, 1);
     frame_stack_pushi(frame,
-             (obj != NULL && jobject_is_instance_of(obj, clsobj_entity_class(this))) ? 1 : 0);
+             (obj != NULL && jobject_is_instance_of(obj, this->u.entity_class)) ? 1 : 0);
 }
 
 /**
@@ -243,7 +246,8 @@ static void isAssignableFrom(struct frame *frame)
         jthread_throw_null_pointer_exception(frame->thread);
     }
 
-    bool b = jclass_is_subclass_of(clsobj_entity_class(cls), clsobj_entity_class(this));
+//    bool b = class_is_subclass_of(clsobj_entity_class(cls), clsobj_entity_class(this));
+    bool b = class_is_subclass_of(cls->u.entity_class, this->u.entity_class);
     frame_stack_pushi(frame, b ? 1 : 0);
 }
 
@@ -255,7 +259,7 @@ static void isAssignableFrom(struct frame *frame)
 static void isInterface(struct frame *frame)
 {
     struct object *this = frame_locals_getr(frame, 0);
-    frame_stack_pushi(frame, IS_INTERFACE(clsobj_entity_class(this)->access_flags) ? 1 : 0);
+    frame_stack_pushi(frame, IS_INTERFACE(this->u.entity_class->access_flags) ? 1 : 0);
 }
 
 /*
@@ -266,7 +270,7 @@ static void isInterface(struct frame *frame)
 static void isArray(struct frame *frame)
 {
     struct object *this = frame_locals_getr(frame, 0);
-    frame_stack_pushi(frame, jclass_is_array(clsobj_entity_class(this)) ? 1 : 0);  // todo
+    frame_stack_pushi(frame, class_is_array(this->u.entity_class) ? 1 : 0);  // todo
 }
 
 /**
@@ -302,7 +306,7 @@ static void isArray(struct frame *frame)
 static void isPrimitive(struct frame *frame)
 {
     struct object *this = frame_locals_getr(frame, 0);
-    bool b = jclass_is_primitive(clsobj_entity_class(this));
+    bool b = jclass_is_primitive(this->u.entity_class);
     frame_stack_pushi(frame, b ? 1 : 0);
 }
 
@@ -323,8 +327,7 @@ static void getSuperclass(struct frame *frame)
 {
     struct object *this = frame_locals_getr(frame, 0);
 
-    struct class *entity_class = clsobj_entity_class(this);
-    struct class *c = classloader_load_class(frame->m.method->jclass->loader, entity_class->class_name);
+    struct class *c = classloader_load_class(frame->m.method->jclass->loader, this->u.entity_class->class_name);
     frame_stack_pushr(frame, (jref) (c->super_class != NULL ? c->super_class->clsobj : NULL));
 }
 
@@ -377,7 +380,7 @@ static void getInterfaces0(struct frame *frame)
 {
     struct object *this = frame_locals_getr(frame, 0);
 
-    struct class *entity_class = clsobj_entity_class(this);
+    struct class *entity_class = this->u.entity_class;
     struct class *arr_cls = classloader_load_class(frame->m.method->jclass->loader, "[java/lang/Class;");
     struct object *interfaces = arrobj_create(arr_cls, entity_class->interfaces_count);
     for (int i = 0; i < entity_class->interfaces_count; i++) {
@@ -398,8 +401,7 @@ static void getComponentType(struct frame *frame)
 {
     struct object *this = frame_locals_getr(frame, 0);
 
-    struct class *entity_class = clsobj_entity_class(this);
-    struct class *component_cls = jclass_component_class(entity_class);
+    struct class *component_cls = class_component_class(this->u.entity_class);
     if (component_cls != NULL) {
         frame_stack_pushr(frame, component_cls->clsobj);
     } else {
@@ -438,7 +440,7 @@ static void getComponentType(struct frame *frame)
 static void getModifiers(struct frame *frame)
 {
     struct object *this = frame_locals_getr(frame, 0);
-    frame_stack_pushi(frame, clsobj_entity_class(this)->access_flags);
+    frame_stack_pushi(frame, this->u.entity_class->access_flags);
 }
 
 /**
@@ -470,7 +472,7 @@ static void getEnclosingMethod0(struct frame *frame)
 {
     jref this = frame_locals_getr(frame, 0);
 
-    struct class *c = clsobj_entity_class(this);
+    struct class *c = this->u.entity_class;
     if (c->enclosing_info[0] == NULL) {
         frame_stack_pushr(frame, NULL);
         return;
@@ -526,7 +528,7 @@ static void getDeclaredFields0(struct frame *frame)
     bool public_only = frame_locals_getz(frame, 1);
 
     struct classloader *loader = frame->m.method->jclass->loader;
-    struct class *cls = classloader_load_class(loader, clsobj_entity_class(this)->class_name);
+    struct class *cls = classloader_load_class(loader, this->u.entity_class->class_name);
 
     struct field *fields = cls->fields;
     jint fields_count = public_only ? cls->public_fields_count : cls->fields_count;
@@ -541,7 +543,7 @@ static void getDeclaredFields0(struct frame *frame)
      * Field(Class<?> declaringClass, String name, Class<?> type,
      *      int modifiers, int slot, String signature, byte[] annotations)
      */
-    struct method *field_constructor = jclass_get_constructor(jlrf_cls,
+    struct method *field_constructor = class_get_constructor(jlrf_cls,
             "(Ljava/lang/Class;" "Ljava/lang/String;" "Ljava/lang/Class;" "II" "Ljava/lang/String;" "[B)V");
     assert(field_constructor != NULL);
 
@@ -579,7 +581,7 @@ static void getDeclaredMethods0(struct frame *frame)
     bool public_only = frame_locals_getz(frame, 1);
 
     struct classloader *loader = frame->m.method->jclass->loader;
-    struct class *cls = classloader_load_class(loader, clsobj_entity_class(this)->class_name);
+    struct class *cls = classloader_load_class(loader, this->u.entity_class->class_name);
 
     struct method *methods = cls->methods;
     jint methods_count = public_only ? cls->public_methods_count : cls->methods_count;
@@ -595,7 +597,7 @@ static void getDeclaredMethods0(struct frame *frame)
      *      Class<?>[] checkedExceptions, int modifiers, int slot, String signature,
      *      byte[] annotations, byte[] parameterAnnotations, byte[] annotationDefault)
      */
-    struct method *method_constructor = jclass_get_constructor(jlrm_cls,
+    struct method *method_constructor = class_get_constructor(jlrm_cls,
                 "(Ljava/lang/Class;" "Ljava/lang/String;" "[Ljava/lang/Class;" "Ljava/lang/Class;"
                 "[Ljava/lang/Class;" "II" "Ljava/lang/String;" "[B[B[B)V");
     assert(method_constructor != NULL);
@@ -629,10 +631,10 @@ static void getDeclaredConstructors0(struct frame *frame)
     bool public_only = frame_locals_getz(frame, 1);
 
     struct classloader *loader = frame->m.method->jclass->loader;
-    struct class *cls = classloader_load_class(loader, clsobj_entity_class(this)->class_name);
+    struct class *cls = classloader_load_class(loader, this->u.entity_class->class_name);
 
     int constructors_count;
-    struct method **constructors = jclass_get_constructors(cls, public_only, &constructors_count);
+    struct method **constructors = class_get_constructors(cls, public_only, &constructors_count);
 
     struct class *jlrc_cls = classloader_load_class(loader, "java/lang/reflect/Constructor");
     char *arr_cls_name = get_arr_class_name(jlrc_cls->class_name);
@@ -645,7 +647,7 @@ static void getDeclaredConstructors0(struct frame *frame)
      *      Class<?>[] checkedExceptions, int modifiers, int slot,
      *      String signature, byte[] annotations, byte[] parameterAnnotations)
      */
-    struct method *constructor_constructor = jclass_get_constructor(jlrc_cls,
+    struct method *constructor_constructor = class_get_constructor(jlrc_cls,
                 "(Ljava/lang/Class;" "[Ljava/lang/Class;" "[Ljava/lang/Class;" "II" "Ljava/lang/String;" "[B[B)V");
     assert(constructor_constructor != NULL);
 
@@ -704,9 +706,9 @@ static void getDeclaredClasses0(struct frame *frame)
 static void getDeclaringClass0(struct frame *frame)
 {
     jref this = frame_locals_getr(frame, 0);
-    struct class *entity_class = clsobj_entity_class(this);
+    struct class *entity_class = this->u.entity_class;
 
-    if (jclass_is_array(entity_class) || is_primitive_array(entity_class)) {
+    if (class_is_array(entity_class) || is_primitive_array(entity_class)) {
         frame_stack_pushr(frame, NULL);
         return;
     }

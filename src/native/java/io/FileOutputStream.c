@@ -8,6 +8,7 @@
 #include "../../../slot.h"
 #include "../../../rtda/heap/object.h"
 #include "../../../output.h"
+#include "../../../rtda/heap/arrobj.h"
 
 
 // private static native void initIDs();
@@ -63,7 +64,7 @@ static void writeBytes(struct frame *frame)
     bool append = frame_locals_getz(frame, 4);
 
     // todo
-    jbyte *data = jarrobj_data(b);
+    jbyte *data = arrobj_data(b);
     write_bytes(this, data + off, len, append);
     /*
     fdObj := fosObj.GetFieldValue("fd~Ljava/io/FileDescriptor;").(*heap.Object)

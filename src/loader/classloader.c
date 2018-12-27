@@ -13,6 +13,7 @@
 #include "../rtda/heap/object.h"
 #include "../jtypes.h"
 #include "../rtda/primitive_types.h"
+#include "../rtda/heap/clsobj.h"
 
 struct classloader {
     struct hashmap *loaded_class_pool; // 保存 class *
@@ -243,7 +244,7 @@ struct classloader* classloader_create(bool is_bootstrap_loader)
     hashmap_values(loader->loaded_class_pool, values);
     for (int i = 0; i < size; i++) {
         struct class *c = values[i];
-        c->clsobj = jclsobj_create(c);
+        c->clsobj = clsobj_create(c);
     }
 
     // 缓存一下常见类
@@ -268,7 +269,7 @@ static struct class* loading(struct classloader *loader, const char *class_name)
     }
 
 //    return jclass_create_by_classfile(loader, classfile_create(content.bytecode, content.len));
-    return jclass_create(loader, content.bytecode, content.len);
+    return class_create(loader, content.bytecode, content.len);
 }
 
 static struct class* verification(struct class *c)
@@ -371,7 +372,7 @@ struct class* classloader_load_class(struct classloader *loader, const char *cla
     }
 
     if (class_name[0] == '[') {
-        c = jclass_create_arr_class(loader, class_name);
+        c = class_create_arr_class(loader, class_name);
     } else {
         c = load_non_arr_class(loader, class_name);
     }
@@ -384,7 +385,7 @@ struct class* classloader_load_class(struct classloader *loader, const char *cla
     assert(strcmp(c->class_name, class_name) == 0);
 
     if (loader->jlclass != NULL) {
-        c->clsobj = jclsobj_create(c);
+        c->clsobj = clsobj_create(c);
     }
 
     hashmap_put(loader->loaded_class_pool, c->class_name, c);
@@ -402,7 +403,7 @@ void classloader_destroy(struct classloader *loader)
 //        hashmap_destroy(loader->classobj_pool);
 //    }
     if (loader->jlclass != NULL) {
-        jclass_destroy(loader->jlclass);
+        class_destroy(loader->jlclass);
     }
 
     free(loader);

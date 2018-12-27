@@ -51,7 +51,7 @@ static void getCallerClass(struct frame *frame)
 static void getClassAccessFlags(struct frame *frame)
 {
     struct object *type = frame_locals_getr(frame, 0);
-    frame_stack_pushi(frame, type->jclass->access_flags);
+    frame_stack_pushi(frame, type->clazz->access_flags);
 }
 
 void sun_reflect_Reflection_registerNatives()

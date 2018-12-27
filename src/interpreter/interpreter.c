@@ -408,7 +408,7 @@ void* interpret(void *thread0)
 
             if (frame_is_exe_over(frame)) {
                 printvm_debug("frame(%p) exe over, destroy.\n", frame);
-                jthread_recycle_frame(frame);
+                thread_recycle_frame(frame);
                 break;
             }
 

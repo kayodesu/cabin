@@ -21,7 +21,7 @@ static void doPrivileged(struct frame *frame)
      *     T run();
      * }
      */
-    struct method *m = jclass_get_declared_nonstatic_method(this->jclass, "run", "()Ljava/lang/Object;");
+    struct method *m = jclass_get_declared_nonstatic_method(this->clazz, "run", "()Ljava/lang/Object;");
     struct slot args[] = { rslot(this) };
     jthread_invoke_method(frame->thread, m, args);
 }

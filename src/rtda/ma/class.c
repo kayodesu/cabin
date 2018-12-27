@@ -10,6 +10,8 @@
 #include "../heap/object.h"
 #include "../../util/util.h"
 #include "../../classfile/constant.h"
+#include "../heap/strobj.h"
+#include "../heap/clsobj.h"
 
 
 // 计算实例字段的个数，同时给它们编号
@@ -223,7 +225,7 @@ static void parse_attribute(struct class *c, struct bytecode_reader *reader)
             if (enclosing_class_index > 0) {
                 struct class *enclosing_class
                         = classloader_load_class(c->loader, rtcp_get_class_name(c->rtcp, enclosing_class_index));
-                c->enclosing_info[0] = jclsobj_create(enclosing_class);
+                c->enclosing_info[0] = clsobj_create(enclosing_class);
 
                 if (enclosing_method_index > 0) {
                     const struct name_and_type *nt = rtcp_get_name_and_type(c->rtcp, enclosing_method_index);
@@ -282,7 +284,7 @@ static void parse_attribute(struct class *c, struct bytecode_reader *reader)
     }
 }
 
-struct class *jclass_create(struct classloader *loader, u1 *bytecode, size_t len)
+struct class *class_create(struct classloader *loader, u1 *bytecode, size_t len)
 {
     assert(loader != NULL);
     assert(bytecode != NULL);
@@ -417,7 +419,7 @@ static void jclass_clear(struct class *c)
     c->enclosing_info[0] = c->enclosing_info[1] = c->enclosing_info[2] = NULL;
 }
 
-struct class* jclass_create_primitive_class(struct classloader *loader, const char *class_name)
+struct class* class_create_primitive_class(struct classloader *loader, const char *class_name)
 {
     assert(loader != NULL);
     assert(class_name != NULL);
@@ -438,7 +440,7 @@ struct class* jclass_create_primitive_class(struct classloader *loader, const ch
     return c;
 }
 
-struct class* jclass_create_arr_class(struct classloader *loader, const char *class_name)
+struct class* class_create_arr_class(struct classloader *loader, const char *class_name)
 {
     assert(loader != NULL);
     assert(class_name != NULL);
@@ -462,7 +464,7 @@ struct class* jclass_create_arr_class(struct classloader *loader, const char *cl
     return c;
 }
 
-void jclass_destroy(struct class *c)
+void class_destroy(struct class *c)
 {
     if (c == NULL) {
         // todo
@@ -470,11 +472,11 @@ void jclass_destroy(struct class *c)
     }
 
     for (int i = 0; i < c->methods_count; i++) {
-        jmethod_release(c->methods + i);
+        method_release(c->methods + i);
     }
 
     for (int i = 0; i < c->fields_count; i++) {
-        jfield_release(c->fields + i);
+        field_release(c->fields + i);
     }
 
     rtcp_destroy(c->rtcp);
@@ -484,13 +486,13 @@ void jclass_destroy(struct class *c)
     free(c);
 }
 
-void jclass_clinit(struct class *c, struct thread *thread)
+void class_clinit(struct class *c, struct thread *thread)
 {
     if (c->inited) {
         return;
     }
 
-    struct method *method = jclass_get_declared_method(c, "<clinit>", "()V"); // todo 并不是每个类都有<clinit>方法？？？？？
+    struct method *method = class_get_declared_method(c, "<clinit>", "()V"); // todo 并不是每个类都有<clinit>方法？？？？？
     if (method != NULL) {
         if (!IS_STATIC(method->access_flags)) {
             // todo error
@@ -508,7 +510,7 @@ void jclass_clinit(struct class *c, struct thread *thread)
      * 使超类初始化方法先于子类执行。
      */
     if (c->super_class != NULL) {
-        jclass_clinit(c->super_class, thread);
+        class_clinit(c->super_class, thread);
     }
 }
 
@@ -561,7 +563,7 @@ struct field* jclass_lookup_field0(struct class *c, const char *name, const char
     return NULL;
 }
 
-struct field* jclass_lookup_field(struct class *c, const char *name, const char *descriptor)
+struct field* class_lookup_field(struct class *c, const char *name, const char *descriptor)
 {
     struct field *f = jclass_lookup_field0(c, name, descriptor);
     if (f == NULL) {
@@ -571,9 +573,9 @@ struct field* jclass_lookup_field(struct class *c, const char *name, const char 
     return f;
 }
 
-struct field* jclass_lookup_static_field(struct class *c, const char *name, const char *descriptor)
+struct field* class_lookup_static_field(struct class *c, const char *name, const char *descriptor)
 {
-    struct field *field = jclass_lookup_field(c, name, descriptor);
+    struct field *field = class_lookup_field(c, name, descriptor);
     // todo field == nullptr
     if (!IS_STATIC(field->access_flags)) {
         // todo java.lang.IncompatibleClassChangeError
@@ -582,9 +584,9 @@ struct field* jclass_lookup_static_field(struct class *c, const char *name, cons
     return field;
 }
 
-struct field* jclass_lookup_instance_field(struct class *c, const char *name, const char *descriptor)
+struct field* class_lookup_instance_field(struct class *c, const char *name, const char *descriptor)
 {
-    struct field* field = jclass_lookup_field(c, name, descriptor);
+    struct field* field = class_lookup_field(c, name, descriptor);
     // todo field == nullptr
     if (IS_STATIC(field->access_flags)) {
         // todo java.lang.IncompatibleClassChangeError
@@ -593,7 +595,7 @@ struct field* jclass_lookup_instance_field(struct class *c, const char *name, co
     return field;
 }
 
-struct method* jclass_get_declared_method(struct class *c, const char *name, const char *descriptor)
+struct method* class_get_declared_method(struct class *c, const char *name, const char *descriptor)
 {
     for (int i = 0; i < c->methods_count; i++) {
         if (strcmp(c->methods[i].name, name) == 0 && strcmp(c->methods[i].descriptor, descriptor) == 0) {
@@ -604,7 +606,7 @@ struct method* jclass_get_declared_method(struct class *c, const char *name, con
     return NULL;
 }
 
-struct method* jclass_get_declared_static_method(struct class *c, const char *name, const char *descriptor)
+struct method* class_get_declared_static_method(struct class *c, const char *name, const char *descriptor)
 {
     for (int i = 0; i < c->methods_count; i++) {
         struct method *m = c->methods + i;
@@ -628,7 +630,7 @@ struct method* jclass_get_declared_nonstatic_method(struct class *c, const char 
     return NULL;
 }
 
-struct method** jclass_get_methods(struct class *c, const char *name, bool public_only, int *count)
+struct method** class_get_declared_methods(struct class *c, const char *name, bool public_only, int *count)
 {
     assert(c != NULL);
     assert(name != NULL);
@@ -647,45 +649,45 @@ struct method** jclass_get_methods(struct class *c, const char *name, bool publi
     return methods;
 }
 
-struct method* jclass_get_constructor(struct class *c, const char *descriptor)
+struct method* class_get_constructor(struct class *c, const char *descriptor)
 {
-    return jclass_get_declared_method(c, "<init>", descriptor);
+    return class_get_declared_method(c, "<init>", descriptor);
 }
 
-struct method** jclass_get_constructors(struct class *c, bool public_only, int *count)
+struct method** class_get_constructors(struct class *c, bool public_only, int *count)
 {
-    struct method **constructors = jclass_get_methods(c, "<init>", public_only, count);
+    struct method **constructors = class_get_declared_methods(c, "<init>", public_only, count);
     if (*count < 1) {
         jvm_abort("至少有一个constructor\n");
     }
     return constructors;
 }
 
-static struct method* jclass_lookup_method0(struct class *c, const char *name, const char *descriptor)
+static struct method* class_lookup_method0(struct class *c, const char *name, const char *descriptor)
 {
-    struct method *method = jclass_get_declared_method(c, name, descriptor);
+    struct method *method = class_get_declared_method(c, name, descriptor);
     if (method != NULL) {
         return method;
     }
 
     // todo 在父类中查找
     if (c->super_class != NULL) {
-        if ((method = jclass_lookup_method0(c->super_class, name, descriptor)) != NULL)
+        if ((method = class_lookup_method0(c->super_class, name, descriptor)) != NULL)
             return method;
     }
 
     // todo 在父接口中查找
     for (int i = 0; i < c->interfaces_count; i++) {
-        if ((method = jclass_lookup_method0(c->interfaces[i], name, descriptor)) != NULL)
+        if ((method = class_lookup_method0(c->interfaces[i], name, descriptor)) != NULL)
             return method;
     }
 
     return NULL;
 }
 
-struct method* jclass_lookup_method(struct class *c, const char *name, const char *descriptor)
+struct method* class_lookup_method(struct class *c, const char *name, const char *descriptor)
 {
-    struct method *m = jclass_lookup_method0(c, name, descriptor);
+    struct method *m = class_lookup_method0(c, name, descriptor);
     if (m == NULL) {
         // todo java.lang.NoSuchMethodError
         VM_UNKNOWN_ERROR("can not find method. %s~%s~%s", c->class_name, name, descriptor);
@@ -693,9 +695,9 @@ struct method* jclass_lookup_method(struct class *c, const char *name, const cha
     return m;
 }
 
-struct method* jclass_lookup_static_method(struct class *c, const char *name, const char *descriptor)
+struct method* class_lookup_static_method(struct class *c, const char *name, const char *descriptor)
 {
-    struct method *m = jclass_lookup_method(c, name, descriptor);
+    struct method *m = class_lookup_method(c, name, descriptor);
     if (!IS_STATIC(m->access_flags)) {
         // todo java.lang.IncompatibleClassChangeError
         jvm_abort("java.lang.IncompatibleClassChangeError");
@@ -703,9 +705,9 @@ struct method* jclass_lookup_static_method(struct class *c, const char *name, co
     return m;
 }
 
-struct method* jclass_lookup_instance_method(struct class *c, const char *name, const char *descriptor)
+struct method* class_lookup_instance_method(struct class *c, const char *name, const char *descriptor)
 {
-    struct method *m = jclass_lookup_method(c, name, descriptor);
+    struct method *m = class_lookup_method(c, name, descriptor);
     // todo m == nullptr
     if (IS_STATIC(m->access_flags)) {
         // todo java.lang.IncompatibleClassChangeError
@@ -714,16 +716,16 @@ struct method* jclass_lookup_instance_method(struct class *c, const char *name, 
     return m;
 }
 
-bool jclass_is_subclass_of(const struct class *c, const struct class *father)
+bool class_is_subclass_of(const struct class *c, const struct class *father)
 {
     if (c == father)
         return true;
 
-    if (c->super_class != NULL && jclass_is_subclass_of(c->super_class, father))
+    if (c->super_class != NULL && class_is_subclass_of(c->super_class, father))
         return true;
 
     for (int i = 0; i < c->interfaces_count; i++) {
-        if (jclass_is_subclass_of(c->interfaces[i], father))
+        if (class_is_subclass_of(c->interfaces[i], father))
             return true;
     }
 
@@ -765,7 +767,7 @@ void set_static_field_value_by_nt(struct class *c,
 {
     assert(c != NULL && name != NULL && descriptor != NULL && value != NULL);
 
-    struct field *f = jclass_lookup_field(c, name, descriptor);
+    struct field *f = class_lookup_field(c, name, descriptor);
     if (f == NULL) {
         jvm_abort("error\n"); // todo
     }
@@ -788,7 +790,7 @@ const struct slot* get_static_field_value_by_nt(const struct class *c, const cha
 {
     assert(c != NULL && name != NULL && descriptor != NULL);
 
-    struct field *f = jclass_lookup_field(c, name, descriptor);
+    struct field *f = class_lookup_field(c, name, descriptor);
     if (f == NULL) {
         jvm_abort("error\n"); // todo
     }
@@ -843,10 +845,10 @@ char* get_arr_class_name(const char *class_name)
 //    return classloader_load_class(c->loader, array_class_name);
 //}
 
-struct class* jclass_component_class(const struct class *arr_cls)
+struct class* class_component_class(const struct class *arr_cls)
 {
     assert(arr_cls != NULL);
-    if (!jclass_is_array(arr_cls)) {
+    if (!class_is_array(arr_cls)) {
         return NULL;
     }
 
@@ -871,7 +873,7 @@ struct class* jclass_component_class(const struct class *arr_cls)
     }
 }
 
-bool jclass_is_accessible_to(const struct class *c, const struct class *visitor)
+bool class_is_accessible_to(const struct class *c, const struct class *visitor)
 {
     // todo 实现对不对
     assert(c != NULL && visitor != NULL); // todo
@@ -885,7 +887,7 @@ bool jclass_is_accessible_to(const struct class *c, const struct class *visitor)
 
     // 字段是 protected，则只有 子类 和 同一个包下的类 可以访问
     if (IS_PROTECTED(c->access_flags)) {
-        return jclass_is_subclass_of(visitor, c) || strcmp(c->pkg_name, visitor->pkg_name) == 0;
+        return class_is_subclass_of(visitor, c) || strcmp(c->pkg_name, visitor->pkg_name) == 0;
     }
 
     // 字段有默认访问权限（非public，非protected，也非private），则只有同一个包下的类可以访问

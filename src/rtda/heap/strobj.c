@@ -3,10 +3,11 @@
  */
 
 #include <wchar.h>
-#include "object.h"
+#include "strobj.h"
 #include "../../util/encoding.h"
 #include "../ma/access.h"
 #include "../ma/field.h"
+#include "arrobj.h"
 
 /*
  * jdk8下的一些测试：
@@ -56,13 +57,13 @@ struct object* strobj_create(const char *str)
     // 不要使用 wcscpy 直接字符串拷贝，
     // 因为 wcscpy 函数会自动添加字符串结尾 L'\0'，
     // 但 jchars 没有空间容纳字符串结尾符，因为 jchar 是字符数组，不是字符串
-    memcpy(jarrobj_data(jchars), wstr, sizeof(jchar) * len);
+    memcpy(arrobj_data(jchars), wstr, sizeof(jchar) * len);
 
 // todo 要不要调用 <clinit>, <init>方法。
 
     // 给 java/lang/String 类的 value 变量赋值  todo
-    for (int i = 0; i < o->jclass->fields_count; i++) {
-        struct field *field = o->jclass->fields + i;
+    for (int i = 0; i < o->clazz->fields_count; i++) {
+        struct field *field = o->clazz->fields + i;
         if (!IS_STATIC(field->access_flags)
             && strcmp(field->descriptor, "[C") == 0
             && strcmp(field->name, "value") == 0) {
@@ -75,13 +76,13 @@ struct object* strobj_create(const char *str)
     return o;
 }
 
-const char* jstrobj_value(struct object *o)
+const char* strobj_value(struct object *o)
 {
     assert(o != NULL);
     if (o->extra != NULL) {
         return o->extra;
     }
     struct object *char_arr = slot_getr(get_instance_field_value_by_nt(o, "value", "[C"));
-    o->extra = unicode_to_utf8(jarrobj_data(char_arr), jarrobj_len(char_arr));
+    o->extra = unicode_to_utf8(arrobj_data(char_arr), arrobj_len(char_arr));
     return o->extra;
 }

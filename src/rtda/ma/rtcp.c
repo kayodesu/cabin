@@ -14,6 +14,8 @@
 #include "../../classfile/attribute.h"
 #include "../../loader/classloader.h"
 #include "../heap/object.h"
+#include "../heap/strobj.h"
+#include "../heap/clsobj.h"
 
 /*
  * RunTime Constant Pool
@@ -435,7 +437,7 @@ struct slot rtc_to_slot(struct classloader *loader, const struct rtcp *rtcp, int
         case STRING_CONSTANT:
             return rslot(strobj_create(rtcp_get_str(rtcp, index)));
         case CLASS_CONSTANT:
-            return rslot(jclsobj_create(classloader_load_class(loader, rtcp_get_class_name(rtcp, index))));
+            return rslot(clsobj_create(classloader_load_class(loader, rtcp_get_class_name(rtcp, index))));
         case INTEGER_CONSTANT:
             return islot(rtcp_get_int(rtcp, index));
         case LONG_CONSTANT:

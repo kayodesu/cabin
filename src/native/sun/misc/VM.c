@@ -16,7 +16,7 @@ static void initialize(struct frame *frame)
     // todo
     struct class *sys_class = classloader_load_class(frame->m.method->jclass->loader, "java/lang/System");
 //    sysClass->clinit(frame);  // todo
-    struct method *m = jclass_lookup_static_method(sys_class, "initializeSystemClass", "()V");
+    struct method *m = class_lookup_static_method(sys_class, "initializeSystemClass", "()V");
     if (m == NULL) {
         jvm_abort("not find initializeSystemClass\n");  // todo m == nullptr
     }

@@ -4,6 +4,8 @@
 
 #include "descriptor.h"
 #include "../heap/object.h"
+#include "../heap/arrobj.h"
+#include "../heap/clsobj.h"
 
 char* type_to_descriptor(const struct object *type, char *descriptor, int *len)
 {
@@ -12,7 +14,7 @@ char* type_to_descriptor(const struct object *type, char *descriptor, int *len)
     assert(len != NULL);
     assert(jobject_is_jlclass(type)); // must be object of java/lang/Class
 
-    struct class *c = clsobj_entity_class(type);
+    struct class *c = type->u.entity_class;
     char d = pt_get_descriptor_by_class_name(c->class_name);
     if (d != 0) { // primitive type
         descriptor[0] = d;
@@ -21,7 +23,7 @@ char* type_to_descriptor(const struct object *type, char *descriptor, int *len)
     }
 
     int desc_len = strlen(c->class_name);
-    if (jclass_is_array(c)) { // 数组
+    if (class_is_array(c)) { // 数组
         if (desc_len > *len) {
             jvm_abort("长度不够"); // todo
             return NULL;
@@ -59,10 +61,10 @@ const char* types_to_descriptor(const struct object *types)
 
     if (jobject_is_array(types)) {
         // must be array object of java/lang/Class
-        assert(strcmp(types->jclass->class_name, "[Ljava/lang/Class;") == 0);
+        assert(strcmp(types->clazz->class_name, "[Ljava/lang/Class;") == 0);
 
         int i = 0;
-        int arr_len = jarrobj_len(types);
+        int arr_len = arrobj_len(types);
         for (int t = 0; t < arr_len; t++) {
             struct object *type = jarrobj_get(struct object *, types, t);
             int len = DESCRIPTOR_MAX_LEN - i;

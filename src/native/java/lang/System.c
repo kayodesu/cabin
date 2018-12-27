@@ -27,7 +27,7 @@ static void mapLibraryName(struct frame *frame)
     }
 
 //    jvm_abort("%s\n", jstrobj_value(libname));
-    const char *name = jstrobj_value(libname);
+    const char *name = strobj_value(libname);
     char mapping_name[strlen(name) + 5];;
     strcpy(mapping_name, name);
     strcat(mapping_name, ".dll"); // todo ...........................
@@ -44,7 +44,7 @@ static void arraycopy(struct frame *frame)
     jint dest_pos = frame_locals_geti(frame, 3);
     jint length = frame_locals_geti(frame, 4);
 
-    jarrobj_copy(dest, dest_pos, src, src_pos, length);
+    arrobj_copy(dest, dest_pos, src, src_pos, length);
 }
 
 // public static native int identityHashCode(Object x);
@@ -101,8 +101,8 @@ static void initProperties(struct frame *frame)
     struct object *props = frame_locals_getr(frame, 0);
 
     // todo init
-    struct method *set_property = jclass_lookup_instance_method(
-            props->jclass, "setProperty", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;");
+    struct method *set_property = class_lookup_instance_method(
+            props->clazz, "setProperty", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;");
 
     for (int i = 0; i < sizeof(sys_props) / sizeof(*sys_props); i++) {
         struct slot args[] = {

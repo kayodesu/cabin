@@ -68,9 +68,7 @@ struct frame* thread_stack_frame_from_top(struct thread *thread, int from_top);
 
 struct frame* jthread_pop_frame(struct thread *thread);
 
-void jthread_push_frame(struct thread *thread, struct frame *frame);
-
-void jthread_recycle_frame(struct frame *frame);
+void thread_recycle_frame(struct frame *frame);
 
 /*
  * 返回完整的虚拟机栈

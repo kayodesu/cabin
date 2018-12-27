@@ -23,9 +23,9 @@ struct object* object_create(struct class *c)
     assert(c != NULL);
 
     struct object *o = jobject_alloc();
-    o->jclass = c;
+    o->clazz = c;
 
-    if (jclass_is_array(c)) {  // todo
+    if (class_is_array(c)) {  // todo
         o->instance_fields_count = 0;
         o->instance_fields_values = NULL;
     } else {
@@ -39,12 +39,12 @@ struct object* object_create(struct class *c)
 
 void* jarrobj_copy_data(const struct object *o);
 
-struct object* jobject_clone(const struct object *src, struct object *dest)
+struct object* object_clone(const struct object *src, struct object *dest)
 {
     assert(src != NULL);
     struct object *o = dest != NULL ? dest : jobject_alloc();
 
-    o->jclass = src->jclass;
+    o->clazz = src->clazz;
     o->instance_fields_count = src->instance_fields_count;
 
     if (jobject_is_array(src)) {
@@ -64,24 +64,24 @@ struct object* jobject_clone(const struct object *src, struct object *dest)
 bool jobject_is_primitive(const struct object *o)
 {
     assert(o != NULL);
-    if (!jclass_is_primitive(o->jclass)) {
+    if (!jclass_is_primitive(o->clazz)) {
         return false;
     }
 
-    assert(strcmp(o->jclass->class_name, "void") != 0); // 没有 void object
+    assert(strcmp(o->clazz->class_name, "void") != 0); // 没有 void object
     return true;
 }
 
 bool jobject_is_jlstring(const struct object *o)
 {
     assert(o != NULL);
-    return strcmp(o->jclass->class_name, "java/lang/String") == 0;
+    return strcmp(o->clazz->class_name, "java/lang/String") == 0;
 }
 
 bool jobject_is_jlclass(const struct object *o)
 {
     assert(o != NULL);
-    return strcmp(o->jclass->class_name, "java/lang/Class") == 0;
+    return strcmp(o->clazz->class_name, "java/lang/Class") == 0;
 }
 
 void set_instance_field_value_by_id(const struct object *o, int id, const struct slot *value)
@@ -100,7 +100,7 @@ void set_instance_field_value_by_nt(const struct object *o,
 {
     assert(o != NULL && name != NULL && descriptor != NULL && value != NULL);
 
-    struct field *f = jclass_lookup_field(o->jclass, name, descriptor);
+    struct field *f = class_lookup_field(o->clazz, name, descriptor);
     if (f == NULL) {
         jvm_abort("error\n"); // todo
     }
@@ -111,9 +111,6 @@ void set_instance_field_value_by_nt(const struct object *o,
 const struct slot* get_instance_field_value_by_id(const struct object *o, int id)
 {
     assert(o != NULL);
-    if (id >= o->instance_fields_count) {
-        int i = 3;
-    }
     assert(0 <= id && id < o->instance_fields_count);
     return o->instance_fields_values + id;
 }
@@ -122,7 +119,7 @@ const struct slot* get_instance_field_value_by_nt(const struct object *o, const 
 {
     assert(o != NULL && name != NULL && descriptor != NULL);
 
-    struct field *f = jclass_lookup_field(o->jclass, name, descriptor);
+    struct field *f = class_lookup_field(o->clazz, name, descriptor);
     if (f == NULL) {
         jvm_abort("error, %s, %s\n", name, descriptor); // todo
     }
@@ -134,7 +131,16 @@ bool jobject_is_instance_of(const struct object *o, const struct class *c)
 {
     if (o == NULL || c == NULL)  // todo
         return false;
-    return jclass_is_subclass_of(o->jclass, c);
+    return class_is_subclass_of(o->clazz, c);
+}
+
+struct slot priobj_unbox(const struct object *po)
+{
+    assert(po != NULL);
+    assert(jobject_is_primitive(po));
+
+    // value 的描述符就是基本类型的类名。比如，private final boolean value;
+    return *get_instance_field_value_by_nt(po, "value", po->clazz->class_name);
 }
 
 void jobject_destroy(struct object *o)
@@ -157,7 +163,7 @@ const char* jobject_to_string(const struct object *o)
         return result;
     }
 
-    int n = snprintf(result, MAX_LEN, "object(%p), %s", o, o->jclass->class_name);
+    int n = snprintf(result, MAX_LEN, "object(%p), %s", o, o->clazz->class_name);
     // todo extra
     assert(0 <= n && n <= MAX_LEN);
     result[n] = 0;

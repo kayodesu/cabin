@@ -75,11 +75,11 @@ void field_init(struct field *field, struct class *c, struct bytecode_reader *re
     }
 }
 
-bool jfield_is_accessible_to(const struct field *field, const struct class *visitor)
+bool field_is_accessible_to(const struct field *field, const struct class *visitor)
 {
     // todo  实现对不对
 
-    if (!jclass_is_accessible_to(field->jclass, visitor)) {
+    if (!class_is_accessible_to(field->jclass, visitor)) {
         return false;
     }
 
@@ -92,7 +92,7 @@ bool jfield_is_accessible_to(const struct field *field, const struct class *visi
 
     // 字段是protected，则只有 子类 和 同一个包下的类 可以访问
     if (IS_PROTECTED(field->access_flags)) {
-        return jclass_is_subclass_of(visitor, field->jclass) || strcmp(field->jclass->pkg_name, visitor->pkg_name) == 0;
+        return class_is_subclass_of(visitor, field->jclass) || strcmp(field->jclass->pkg_name, visitor->pkg_name) == 0;
     }
 
     // 字段有默认访问权限（非public，非protected，也非private），则只有同一个包下的类可以访问
@@ -110,7 +110,7 @@ struct object* jfield_get_type(struct field *field)
     return field->type;
 }
 
-void jfield_release(struct field *field)
+void field_release(struct field *field)
 {
     // todo
 }

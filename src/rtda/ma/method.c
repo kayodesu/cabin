@@ -6,6 +6,7 @@
 #include "access.h"
 #include "../heap/object.h"
 #include "descriptor.h"
+#include "../heap/arrobj.h"
 
 struct object* jmethod_get_parameter_types(struct method *method)
 {
@@ -318,7 +319,7 @@ void method_init(struct method *method, struct class *c, struct bytecode_reader 
     }
 }
 
-void jmethod_release(struct method *m)
+void method_release(struct method *m)
 {
     if (m == NULL) {
         // todo
@@ -329,11 +330,11 @@ void jmethod_release(struct method *m)
 }
 
 
-bool jmethod_is_accessible_to(const struct method *method, const struct class *visitor)
+bool method_is_accessible_to(const struct method *method, const struct class *visitor)
 {
     // todo  实现对不对
 
-    if (!jclass_is_accessible_to(method->jclass, visitor)) {
+    if (!class_is_accessible_to(method->jclass, visitor)) {
         return false;
     }
 
@@ -346,7 +347,7 @@ bool jmethod_is_accessible_to(const struct method *method, const struct class *v
 
     // 字段是protected，则只有 子类 和 同一个包下的类 可以访问
     if (IS_PROTECTED(method->access_flags)) {
-        return jclass_is_subclass_of(visitor, method->jclass)
+        return class_is_subclass_of(visitor, method->jclass)
                || strcmp(method->jclass->pkg_name, visitor->pkg_name) == 0;
     }
 
@@ -354,7 +355,7 @@ bool jmethod_is_accessible_to(const struct method *method, const struct class *v
     return strcmp(method->jclass->pkg_name, visitor->pkg_name) == 0;
 }
 
-int jmethod_get_line_number(const struct method *method, int pc)
+int method_get_line_number(const struct method *method, int pc)
 {
     assert(method != NULL);
 
@@ -380,7 +381,7 @@ int jmethod_get_line_number(const struct method *method, int pc)
     return -1;
 }
 
-int jmethod_find_exception_handler(struct method *method, struct class *exception_type, size_t pc)
+int method_find_exception_handler(struct method *method, struct class *exception_type, size_t pc)
 {
     for (int i = 0; i < method->exception_tables_count; i++) {
         const struct exception_table *t = method->exception_tables + i;
@@ -388,7 +389,7 @@ int jmethod_find_exception_handler(struct method *method, struct class *exceptio
             if (t->catch_type == NULL) {
                 return t->handler_pc;  // catch all
             }
-            if (jclass_is_subclass_of(exception_type, t->catch_type)) {
+            if (class_is_subclass_of(exception_type, t->catch_type)) {
                 return t->handler_pc;
             }
         }

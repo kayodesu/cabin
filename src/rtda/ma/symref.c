@@ -16,7 +16,7 @@ struct class* resolve_class(const struct class *visitor, const char *class_name)
 
     struct class *jclass = classloader_load_class(visitor->loader, class_name);
     // todo class 的有效性检查
-    if (jclass_is_accessible_to(jclass, visitor)) {
+    if (class_is_accessible_to(jclass, visitor)) {
         return jclass;
     }
 
@@ -31,7 +31,7 @@ static struct method* resolve_method_ref(const struct class *visitor, struct met
 
     if (ref->resolved_method == NULL) {
         ref->resolved_class = resolve_class(visitor, ref->class_name);
-        ref->resolved_method = jclass_lookup_method(ref->resolved_class, ref->name, ref->descriptor);
+        ref->resolved_method = class_lookup_method(ref->resolved_class, ref->name, ref->descriptor);
         if (ref->resolved_method == NULL) {
             jvm_abort("error\n"); // todo
         }
@@ -44,7 +44,7 @@ static struct method* resolve_method_ref(const struct class *visitor, struct met
         jvm_abort("java.lang.IncompatibleClassChangeError\n");
     }
 
-    if (!jmethod_is_accessible_to(ref->resolved_method, visitor)) {
+    if (!method_is_accessible_to(ref->resolved_method, visitor)) {
         //printvm("visitor is %s\n", jclass_to_string(visitor));
         //printvm("access to %s\n", jmethod_to_string(ref->resolved_method));
         jvm_abort("java.lang.IllegalAccessError\n"); // todo
@@ -70,7 +70,7 @@ static struct field* resolve_field_ref(const struct class *visitor, struct field
 
     if (ref->resolved_field == NULL) {
         ref->resolved_class = resolve_class(visitor, ref->class_name);
-        ref->resolved_field = jclass_lookup_field(ref->resolved_class, ref->name, ref->descriptor);
+        ref->resolved_field = class_lookup_field(ref->resolved_class, ref->name, ref->descriptor);
     }
 
     if (is_static != IS_STATIC(ref->resolved_field->access_flags)) {
@@ -79,7 +79,7 @@ static struct field* resolve_field_ref(const struct class *visitor, struct field
         jvm_abort("java.lang.IncompatibleClassChangeError, %d, %d\n", is_static, IS_STATIC(ref->resolved_field->access_flags));
     }
 
-    if (!jfield_is_accessible_to(ref->resolved_field, visitor)) {
+    if (!field_is_accessible_to(ref->resolved_field, visitor)) {
         // java.lang.IllegalAccessError   todo
         jvm_abort("java.lang.IllegalAccessError\n");
     }

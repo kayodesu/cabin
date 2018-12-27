@@ -80,10 +80,10 @@ struct bytecode_reader;
 
 void method_init(struct method *method, struct class *c, struct bytecode_reader *reader);
 
-bool jmethod_is_accessible_to(const struct method *method, const struct class *visitor);
+bool method_is_accessible_to(const struct method *method, const struct class *visitor);
 
 // 查找 pc 所对应的行号
-int jmethod_get_line_number(const struct method *method, int pc);
+int method_get_line_number(const struct method *method, int pc);
 
 struct object* jmethod_get_parameter_types(struct method *method);
 struct object* jmethod_get_return_type(struct method *method);
@@ -92,10 +92,10 @@ struct object* jmethod_get_exception_types(struct method *method);
 /*
  * @pc, 发生异常的位置
  */
-int jmethod_find_exception_handler(struct method *method, struct class *exception_type, size_t pc);
+int method_find_exception_handler(struct method *method, struct class *exception_type, size_t pc);
 
 char *jmethod_to_string(const struct method *method);
 
-void jmethod_release(struct method *m);
+void method_release(struct method *m);
 
 #endif //JVM_JMETHOD_H

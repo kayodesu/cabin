@@ -6,12 +6,14 @@
 #include "../../../rtda/thread/frame.h"
 #include "../../../rtda/heap/object.h"
 #include "../../../rtda/ma/descriptor.h"
+#include "../../../rtda/heap/arrobj.h"
+#include "../../../rtda/heap/clsobj.h"
 
 struct slot* convert_args(jref this_obj, struct method *m, jref args)
 {
     struct object *types = jmethod_get_parameter_types(m);
-    int types_len = jarrobj_len(types);
-    assert(types_len == jarrobj_len(args));
+    int types_len = arrobj_len(types);
+    assert(types_len == arrobj_len(args));
 
     // 因为有 category two 的存在，result 的长度最大为 types_len * 2 + this_obj
     VM_MALLOCS(struct slot, types_len * 2 + this_obj != NULL ? 1 : 0, result);
@@ -25,8 +27,8 @@ struct slot* convert_args(jref this_obj, struct method *m, jref args)
         assert(clsobj != NULL);
         jref o = jarrobj_get(jref, args, i);
 
-        if (jclass_is_primitive(clsobj_entity_class(clsobj))) {
-            result[k] = jpriobj_unbox(o);
+        if (jclass_is_primitive(clsobj->u.entity_class)) {
+            result[k] = priobj_unbox(o);
             if (slot_is_category_two(result + k)) {
                 result[++k] = phslot;
             }
@@ -54,14 +56,14 @@ static void newInstance0(struct frame *frame)
     jref init_args = frame_locals_getr(frame, 1); // may be NULL
 
     // which class this constructor belongs to.
-    struct class *clazz = clsobj_entity_class(
-            slot_getr(get_instance_field_value_by_nt(constructor_obj, "clazz", "Ljava/lang/Class;")));
+    struct class *clazz
+            =slot_getr(get_instance_field_value_by_nt(constructor_obj, "clazz", "Ljava/lang/Class;"))->u.entity_class;
     struct object *this_obj = object_create(clazz);
     frame_stack_pushr(frame, this_obj); // return value
 
     struct method *constructor = NULL;
     if (init_args == NULL) { // 构造函数没有参数
-        constructor = jclass_get_constructor(clazz, "()V");
+        constructor = class_get_constructor(clazz, "()V");
         assert(constructor != NULL);
         assert(constructor->arg_slot_count == 1); // this
         struct slot s = rslot(this_obj);
@@ -70,7 +72,7 @@ static void newInstance0(struct frame *frame)
         // parameter types of this constructor
         jref parameter_types
                 = slot_getr(get_instance_field_value_by_nt(constructor_obj, "parameterTypes", "[Ljava/lang/Class;"));
-        constructor = jclass_get_constructor(clazz, types_to_descriptor(parameter_types));
+        constructor = class_get_constructor(clazz, types_to_descriptor(parameter_types));
         assert(constructor != NULL);
 
         struct slot *args = convert_args(this_obj, constructor, init_args);
@@ -80,7 +82,7 @@ static void newInstance0(struct frame *frame)
 
     if (!constructor->jclass->inited) {
         // todo java.lang.reflect/Constructor 的 clinit
-        jclass_clinit(constructor_obj->jclass, frame->thread);
+        class_clinit(constructor_obj->clazz, frame->thread);
     }
 }
 

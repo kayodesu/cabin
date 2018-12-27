@@ -7,6 +7,7 @@
 #include "frame.h"
 #include "../ma/access.h"
 #include "../heap/object.h"
+#include "../heap/arrobj.h"
 
 struct frame* frame_create_shim(struct thread *thread, void (* shim_action)(struct frame *))
 {

@@ -48,7 +48,7 @@ static void init_jvm(struct classloader *loader, struct thread *main_thread)
 
     // VM类的 "initialize~()V" 方法需调用执行
     // 在VM类的类初始化方法中调用了 "initialize" 方法。
-    jclass_clinit(vm_class, main_thread);
+    class_clinit(vm_class, main_thread);
     interpret(main_thread);
 }
 
@@ -74,14 +74,14 @@ static void create_main_thread(struct classloader *loader)
 
     // 调用 java/lang/Thread 的构造函数
     struct method *constructor
-            = jclass_get_constructor(jlt_obj->jclass, "(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");
+            = class_get_constructor(jlt_obj->clazz, "(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");
     struct slot args[] = {
             rslot(jlt_obj),
             rslot(system_thread_group),
             rslot(strobj_create(MAIN_THREAD_NAME)) // thread name
     };
     jthread_invoke_method(main_thread, constructor, args);
-    jclass_clinit(jlt_obj->jclass, main_thread); // 最后压栈，保证先执行。
+    class_clinit(jlt_obj->clazz, main_thread); // 最后压栈，保证先执行。
 
 
     // 初始化 system_thread_group
@@ -89,8 +89,8 @@ static void create_main_thread(struct classloader *loader)
     // Creates an empty Thread group that is not in any Thread group.
     // This method is used to create the system Thread group.
     struct slot arg = rslot(system_thread_group);
-    jthread_invoke_method(main_thread, jclass_get_constructor(jltg_class, "()V"), &arg);
-    jclass_clinit(jltg_class, main_thread);
+    jthread_invoke_method(main_thread, class_get_constructor(jltg_class, "()V"), &arg);
+    class_clinit(jltg_class, main_thread);
 
     // 现在，main thread's vm stack 里面按将要执行的顺序（从栈顶到栈底）分别为：
     // java/lang/ThreadGroup~<clinit>
@@ -109,7 +109,7 @@ static void start_jvm(const char *main_class_name)
     init_jvm(loader, main_thread);
 
     struct class *main_class = classloader_load_class(loader, main_class_name);
-    struct method *main_method = jclass_lookup_static_method(main_class, "main", "([Ljava/lang/String;)V");
+    struct method *main_method = class_lookup_static_method(main_class, "main", "([Ljava/lang/String;)V");
     if (main_method == NULL) {
         jvm_abort("can't find method main."); // todo
     } else {

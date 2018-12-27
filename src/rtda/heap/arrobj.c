@@ -3,10 +3,11 @@
  */
 
 #include "object.h"
+#include "arrobj.h"
 
 struct object *arrobj_create(struct class *arr_class, jint arr_len)
 {
-    if (arr_class == NULL || !jclass_is_array(arr_class)) {
+    if (arr_class == NULL || !class_is_array(arr_class)) {
         // todo arr_class is NULL
         jvm_abort("error. is not array. %s\n", arr_class->class_name); // todo
     }
@@ -41,7 +42,7 @@ struct object *arrobj_create_multi(struct class *arr_class, size_t arr_dim, cons
 {
     assert(arr_class != NULL);
     assert(arr_lens != NULL);
-    if (!jclass_is_array(arr_class)) {
+    if (!class_is_array(arr_class)) {
         jvm_abort("error. is not array. %s\n", arr_class->class_name); // todo
     }
     /*
@@ -64,8 +65,7 @@ struct object *arrobj_create_multi(struct class *arr_class, size_t arr_dim, cons
     return o;
 }
 
-
-bool jarrobj_is_same_type(const struct object *one, const struct object *other)
+bool arrobj_is_same_type(const struct object *one, const struct object *other)
 {
     assert(one != NULL);
     assert(jobject_is_array(one));
@@ -91,7 +91,7 @@ bool jarrobj_check_bounds(const struct object *o, jint index)
     return b;
 }
 
-void jarrobj_copy(struct object *dst, jint dst_pos, const struct object *src, jint src_pos, jint len)
+void arrobj_copy(struct object *dst, jint dst_pos, const struct object *src, jint src_pos, jint len)
 {
     assert(src != NULL);
     assert(jobject_is_array(src));
@@ -105,7 +105,7 @@ void jarrobj_copy(struct object *dst, jint dst_pos, const struct object *src, ji
      * 首先确保src和dst都是数组，然后检查数组类型。
      * 如果两者都是引用数组，则可以拷贝，否则两者必须是相同类型的基本类型数组
      */
-    if (!jarrobj_is_same_type(src, dst)) {
+    if (!arrobj_is_same_type(src, dst)) {
         // todo error  ArrayStoreException
         printvm("ArrayStoreException\n");
     }

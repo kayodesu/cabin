@@ -84,6 +84,9 @@ struct class {
     int static_fields_count;
     struct slot *static_fields_values; // 保存所有类变量的值
 
+    void *vtable; // todo
+    void *itable; // todo
+
 //    struct bootstrap_methods_attribute *bootstrap_methods_attribute;
 
     // enclosing_info[0]: the immediately enclosing class
@@ -96,24 +99,24 @@ struct class {
     const char *source_file_name;
 };
 
-struct class *jclass_create(struct classloader *loader, u1 *bytecode, size_t len);
+struct class *class_create(struct classloader *loader, u1 *bytecode, size_t len);
 
 /*
  * 创建基本类型（int, float etc.）的 class.
  */
-struct class* jclass_create_primitive_class(struct classloader *loader, const char *class_name);
+struct class* class_create_primitive_class(struct classloader *loader, const char *class_name);
 
-struct class* jclass_create_arr_class(struct classloader *loader, const char *class_name);
+struct class* class_create_arr_class(struct classloader *loader, const char *class_name);
 
 void classloader_put_to_pool(struct classloader *loader, const char *class_name, struct class *c);
 
-void jclass_destroy(struct class *c);
+void class_destroy(struct class *c);
 
 /*
  * 调用类的类初始化方法。
  * clinit are the static initialization blocks for the class, and static field initialization.
  */
-void jclass_clinit(struct class *c, struct thread *thread);
+void class_clinit(struct class *c, struct thread *thread);
 
 struct slot* copy_inited_instance_fields_values(const struct class *c);
 
@@ -127,29 +130,33 @@ const struct slot* get_static_field_value_by_nt(const struct class *c, const cha
 
 //struct field* jclass_get_field(struct class *c, const char *name, const char *descriptor);
 //struct field** jclass_get_fields(struct class *c, bool public_only);
-struct field* jclass_lookup_field(struct class *c, const char *name, const char *descriptor);
-struct field* jclass_lookup_static_field(struct class *c, const char *name, const char *descriptor);
-struct field* jclass_lookup_instance_field(struct class *c, const char *name, const char *descriptor);
+struct field* class_lookup_field(struct class *c, const char *name, const char *descriptor);
+struct field* class_lookup_static_field(struct class *c, const char *name, const char *descriptor);
+struct field* class_lookup_instance_field(struct class *c, const char *name, const char *descriptor);
 
 /*
  * 有可能返回NULL todo
+ * get在本类中定义的类，不包括继承的。
  */
-struct method* jclass_get_declared_method(struct class *c, const char *name, const char *descriptor);
-struct method* jclass_get_declared_static_method(struct class *c, const char *name, const char *descriptor);
+struct method* class_get_declared_method(struct class *c, const char *name, const char *descriptor);
+struct method* class_get_declared_static_method(struct class *c, const char *name, const char *descriptor);
 struct method* jclass_get_declared_nonstatic_method(struct class *c, const char *name, const char *descriptor);
 
-struct method** jclass_get_methods(struct class *c, const char *name, bool public_only, int *count);
+struct method** class_get_declared_methods(struct class *c, const char *name, bool public_only, int *count);
 
-struct method* jclass_get_constructor(struct class *c, const char *descriptor);
-struct method** jclass_get_constructors(struct class *c, bool public_only, int *count);
+struct method* class_get_constructor(struct class *c, const char *descriptor);
+struct method** class_get_constructors(struct class *c, bool public_only, int *count);
 
-struct method* jclass_lookup_method(struct class *c, const char *name, const char *descriptor);
-struct method* jclass_lookup_static_method(struct class *c, const char *name, const char *descriptor);
-struct method* jclass_lookup_instance_method(struct class *c, const char *name, const char *descriptor);
+/*
+ * 在类的继承体系中查找方法
+ */
+struct method* class_lookup_method(struct class *c, const char *name, const char *descriptor);
+struct method* class_lookup_static_method(struct class *c, const char *name, const char *descriptor);
+struct method* class_lookup_instance_method(struct class *c, const char *name, const char *descriptor);
 
-bool jclass_is_subclass_of(const struct class *c, const struct class *father);
+bool class_is_subclass_of(const struct class *c, const struct class *father);
 
-bool jclass_is_accessible_to(const struct class *c, const struct class *visitor);
+bool class_is_accessible_to(const struct class *c, const struct class *visitor);
 
 /*
  * 计算一个类的继承深度。
@@ -174,22 +181,22 @@ char* get_arr_class_name(const char *class_name);
  * Returns the representing the component class of an array class.
  * If this class does not represent an array class this method returns null.
  */
-struct class* jclass_component_class(const struct class *arr_cls);
+struct class* class_component_class(const struct class *arr_cls);
 
-static inline bool jclass_is_array(const struct class *c)
+static inline bool class_is_array(const struct class *c)
 {
     return c != NULL && c->class_name[0] == '[';
 }
 
-static inline bool is_string(const struct class *c)
-{
-    return c != NULL && strcmp(c->class_name, "java/lang/String") == 0;  // todo 对不对
-}
-
-static inline bool is_class(const struct class *c)
-{
-    return c != NULL && strcmp(c->class_name, "java/lang/Class") == 0;  // todo 对不对
-}
+//static inline bool is_string(const struct class *c)
+//{
+//    return c != NULL && strcmp(c->class_name, "java/lang/String") == 0;  // todo 对不对
+//}
+//
+//static inline bool is_class(const struct class *c)
+//{
+//    return c != NULL && strcmp(c->class_name, "java/lang/Class") == 0;  // todo 对不对
+//}
 
 static inline bool jclass_is_primitive(const struct class *c)
 {
@@ -231,7 +238,7 @@ static inline bool is_one_dimension_ref_array(const struct class *c)
 static inline bool is_ref_array(const struct class *c) { return !is_primitive_array(c); }
 
 // 是否是多维数组
-static inline bool is_multi_array(const struct class *c) { return jclass_is_array(c) && !is_one_dimension_array(c); }
+static inline bool is_multi_array(const struct class *c) { return class_is_array(c) && !is_one_dimension_array(c); }
 
 static inline bool is_bool_array(const struct class *c) { return strcmp(c->class_name, "[Z") == 0; }
 

@@ -6,6 +6,7 @@
 #include "../../../rtda/thread/frame.h"
 #include "../../../rtda/heap/object.h"
 #include "../../../util/bigendian.h"
+#include "../../../rtda/heap/arrobj.h"
 
 /* todo
 http://www.docjar.com/docs/api/sun/misc/Unsafe.html#park%28boolean,%20long%29
@@ -310,7 +311,7 @@ static void getIntVolatile(struct frame *frame)
     jlong offset = frame_locals_getl(frame, 2);
 
     jint value;
-    if (jclass_is_array(o->jclass)) {
+    if (class_is_array(o->clazz)) {
         value = jarrobj_get(jint, o, offset);  // todo
     } else {
         value = slot_geti(get_instance_field_value_by_id(o, offset));  // todo
@@ -392,7 +393,7 @@ static void getObjectVolatile(struct frame *frame)
     jlong offset = frame_locals_getl(frame, 2);
 
     jref value;
-    if (jclass_is_array(o->jclass)) {
+    if (class_is_array(o->clazz)) {
         value = jarrobj_get(jref, o, offset);  // todo
     } else {
         value = slot_getr(get_instance_field_value_by_id(o, offset));  // todo
