@@ -447,11 +447,13 @@ struct slot rtc_to_slot(struct classloader *loader, const struct rtcp *rtcp, int
         case METHOD_HANDLE_CONSTANT: {
             struct method_handle *mh = rtcp_get_method_handle(rtcp, index);
             // todo
+            jvm_abort("");
             break;
         }
         case METHOD_TYPE_CONSTANT: {
             const char *descriptor = rtcp_get_method_type(rtcp, index);
             // todo
+            jvm_abort("");
             break;
         }
         default:

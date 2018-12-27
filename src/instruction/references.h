@@ -578,7 +578,7 @@ static void set_exact_method_handle(struct frame *frame)
 // 每一个 invokedynamic 指令都称为 Dynamic Call Site(动态调用点)
 static void invokedynamic(struct frame *frame)
 {
-  //  jvm_abort("invokedynamic not implement\n");  // todo
+    jvm_abort("invokedynamic not implement\n");  // todo
 
     size_t saved_pc = frame->reader.pc - 1;
 
@@ -593,11 +593,11 @@ static void invokedynamic(struct frame *frame)
 
     struct invoke_dynamic_ref *ref = rtcp_get_invoke_dynamic(curr_class->rtcp, index);
 
-    // create java/lang/invoke/MethodType of bootstrap method
-    struct object *parameter_types = method_descriptor_to_parameter_types(curr_class->loader, ref->nt->descriptor);
-    struct object *return_type = method_descriptor_to_return_type(curr_class->loader, ref->nt->descriptor);
     struct object *invoked_type = curr_thread->dyn.invoked_type;
     if (invoked_type == NULL) {
+        // create java/lang/invoke/MethodType of bootstrap method
+        struct object *parameter_types = method_descriptor_to_parameter_types(curr_class->loader, ref->nt->descriptor);
+        struct object *return_type = method_descriptor_to_return_type(curr_class->loader, ref->nt->descriptor);
         struct class *c = classloader_load_class(g_bootstrap_loader, "java/lang/invoke/MethodType");
 
         // public static MethodType methodType(Class<?> rtype, Class<?>[] ptypes)
@@ -634,7 +634,6 @@ static void invokedynamic(struct frame *frame)
         return;
     }
 
-#if 1
     struct object *call_set = curr_thread->dyn.call_set;
     struct object *exact_method_handle = curr_thread->dyn.exact_method_handle;
 
@@ -706,9 +705,6 @@ static void invokedynamic(struct frame *frame)
     }
 
     // todo rest thread.dyn 的值，下次调用时这个值要从新解析。
-
-//    jvm_abort("invokedynamic not implement\n");  // todo
-#endif
 }
 
 /*
