@@ -296,13 +296,13 @@ void* interpret(void *thread0)
                 case 0x7a:  ishr(frame); break; // ishr
                 case 0x7b:  lshr(frame); break; // lshr
 
-                case 0x7c:  iushr(frame); break; // iushr
-                case 0x7d:  lushr(frame); break; // lushr
+                case 0x7c:  iushr(frame); break;  // iushr
+                case 0x7d:  lushr(frame); break;  // lushr
                 case 0x7e:  __iand(frame); break; // iand
                 case 0x7f:  __land(frame); break; // land
 
-                case 0x80:  __ior(frame); break; // ior
-                case 0x81:  __lor(frame); break; // lor
+                case 0x80:  __ior(frame); break;  // ior
+                case 0x81:  __lor(frame); break;  // lor
                 case 0x82:  __ixor(frame); break; // ixor
                 case 0x83:  __lxor(frame); break; // lxor
 

@@ -63,7 +63,8 @@ bool jthread_is_stack_empty(const struct thread *thread);
 int jthread_stack_depth(const struct thread *thread);
 
 struct frame* jthread_top_frame(struct thread *thread);
-struct frame* jthread_depth_frame(struct thread *thread, int depth);
+//struct frame* jthread_depth_frame(struct thread *thread, int depth);
+struct frame* thread_stack_frame_from_top(struct thread *thread, int from_top);
 
 struct frame* jthread_pop_frame(struct thread *thread);
 

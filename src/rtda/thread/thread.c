@@ -109,11 +109,18 @@ struct frame* jthread_top_frame(struct thread *thread)
     return vector_back(&thread->vm_stack);
 }
 
-struct frame* jthread_depth_frame(struct thread *thread, int depth)
+//struct frame* jthread_depth_frame(struct thread *thread, int depth)
+//{
+//    assert(thread != NULL);
+//    return vector_rget(&thread->vm_stack, depth);
+//}
+
+struct frame* thread_stack_frame_from_top(struct thread *thread, int from_top)
 {
     assert(thread != NULL);
-    return vector_rget(&thread->vm_stack, depth);
+    return vector_rget(&thread->vm_stack, from_top);
 }
+
 
 struct frame* jthread_pop_frame(struct thread *thread)
 {

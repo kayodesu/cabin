@@ -4,27 +4,29 @@
 
 #include "../../registry.h"
 #include "../../../rtda/heap/object.h"
+#include "../../../rtda/thread/frame.h"
+
 
 // public static native Class<?> getCallerClass(int level)
 static void getCallerClass0(struct frame *frame)
 {
-    jvm_abort(""); // todo
+    jvm_abort("");
 }
 
 // public static native Class<?> getCallerClass()
 static void getCallerClass(struct frame *frame)
 {
-    // todo
-    // top0 is sun/reflect/Reflection
-    // top1 is the caller of getCallerClass()
-    // top2 is the caller of method
+    // top0, current frame is executing getCallerClass()
+    // top1, who called getCallerClass, the one who wants to know his caller.
+    // top2, the caller of top1, the result.
     struct frame *top0 = NULL;
     struct frame *top1 = NULL;
     struct frame *top2 = NULL;
 
     int depth = jthread_stack_depth(frame->thread);
     for (int i = 0; i < depth; i++) {
-        struct frame *sf = jthread_depth_frame(frame->thread, i);
+        // 过滤掉 shim frame
+        struct frame *sf = thread_stack_frame_from_top(frame->thread, i);
         if (sf->type == SF_TYPE_NORMAL) {
             if (top0 == NULL) {
                 top0 = sf;
@@ -41,7 +43,8 @@ static void getCallerClass(struct frame *frame)
         return;
     }
 
-    frame_stack_pushr(frame, top2->m.method->jclass->clsobj);
+    jref o = top2->m.method->jclass->clsobj;
+    frame_stack_pushr(frame, o);
 }
 
 // public static native int getClassAccessFlags(Class<?> type)

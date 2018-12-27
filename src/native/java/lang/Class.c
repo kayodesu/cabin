@@ -10,11 +10,6 @@
 #include "../../../util/util.h"
 #include "../../../rtda/primitive_types.h"
 
-// native ClassLoader getClassLoader0();
-static void getClassLoader0(struct frame *frame)
-{
-    jvm_abort("error\n");
-}
 
 /*
  * Called after security check for system loader access checks have been made.
@@ -483,7 +478,7 @@ static void getEnclosingMethod0(struct frame *frame)
 
     jref result = arrobj_create(classloader_load_class(frame->m.method->jclass->loader, "[Ljava/lang/Object;"), 3);
     for (int i = 0; i < 3; i++) {
-        jarrobj_set(struct object *, result, i, c->enclosing_info[i]);
+        jarrobj_set(jref, result, i, c->enclosing_info[i]);
     }
 
     frame_stack_pushr(frame, result);
@@ -732,7 +727,6 @@ static void getDeclaringClass0(struct frame *frame)
 void java_lang_Class_registerNatives()
 {
     register_native_method("java/lang/Class~registerNatives~()V", registerNatives);
-    register_native_method("java/lang/Class~getClassLoader0~()Ljava/lang/ClassLoader;", getClassLoader0);
     register_native_method("java/lang/Class~getPrimitiveClass~(Ljava/lang/String;)Ljava/lang/Class;", getPrimitiveClass);
     register_native_method("java/lang/Class~getName0~()Ljava/lang/String;", getName0);
     register_native_method("java/lang/Class~forName0~"

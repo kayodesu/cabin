@@ -220,7 +220,6 @@ static void parse_attribute(struct class *c, struct bytecode_reader *reader)
             u2 enclosing_class_index = bcr_readu2(reader);
             u2 enclosing_method_index = bcr_readu2(reader);
 
-            c->enclosing_info[0] = c->enclosing_info[1] = c->enclosing_info[2] = NULL;
             if (enclosing_class_index > 0) {
                 struct class *enclosing_class
                         = classloader_load_class(c->loader, rtcp_get_class_name(c->rtcp, enclosing_class_index));
@@ -295,6 +294,7 @@ struct class *jclass_create(struct classloader *loader, u1 *bytecode, size_t len
     c->loader = loader;
     c->inited = false;
     c->deprecated = false;
+    c->enclosing_info[0] = c->enclosing_info[1] = c->enclosing_info[2] = NULL;
 
     c->magic = bcr_readu4(&reader);
     c->minor_version = bcr_readu2(&reader);

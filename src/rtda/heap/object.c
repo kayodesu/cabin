@@ -111,7 +111,10 @@ void set_instance_field_value_by_nt(const struct object *o,
 const struct slot* get_instance_field_value_by_id(const struct object *o, int id)
 {
     assert(o != NULL);
-    assert(id >= 0 && id < o->instance_fields_count);
+    if (id >= o->instance_fields_count) {
+        int i = 3;
+    }
+    assert(0 <= id && id < o->instance_fields_count);
     return o->instance_fields_values + id;
 }
 

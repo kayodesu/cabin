@@ -288,7 +288,7 @@ static void instanceof(struct frame *frame)
  */
 static void checkcast(struct frame *frame)
 {
-    jref obj = slot_getr(frame_stack_top(frame));//os_top(frame->operand_stack)->v.r;
+    jref obj = slot_getr(frame_stack_top(frame));
     int index = bcr_readu2(&frame->reader);
     if (obj == NULL) {
         // 如果引用是null，则指令执行结束。也就是说，null 引用可以转换成任何类型
@@ -448,12 +448,12 @@ static void invokeinterface(struct frame *frame)
      * 其含义和给method结构体定义的arg_slot_count字段相同。
      * 这个数是可以根据方法描述符计算出来的，它的存在仅仅是因为历史原因。
      */
-    u1 arg_slot_count = frame_readu1(frame); //bcr_readu1(&frame->reader);
+    u1 arg_slot_count = frame_readu1(frame);
     /*
      * 此字节是留给Oracle的某些Java虚拟机实现用的，它的值必须是0。
      * 该字节的存在是为了保证Java虚拟机可以向后兼容。
      */
-    frame_readu1(frame); //bcr_readu1(&frame->reader);
+    frame_readu1(frame);
 
     struct method_ref *ref = rtcp_get_interface_method_ref(curr_class->rtcp, index);
 //    resolve_non_static_method_ref(curr_class, ref);
@@ -514,7 +514,8 @@ static void set_call_set(struct frame *frame)
 static void set_exact_method_handle(struct frame *frame)
 {
     assert(frame != NULL);
-    frame->thread->dyn.exact_method_handle = frame_stack_popr(frame); //os_popr(frame->operand_stack);
+    frame->thread->dyn.exact_method_handle = frame_stack_popr(frame);
+    int i = 3;
 }
 
 /*
@@ -592,57 +593,50 @@ static void invokedynamic(struct frame *frame)
 
     struct invoke_dynamic_ref *ref = rtcp_get_invoke_dynamic(curr_class->rtcp, index);
 
-    bool need_again = false;
-
     // create java/lang/invoke/MethodType of bootstrap method
     struct object *parameter_types = method_descriptor_to_parameter_types(curr_class->loader, ref->nt->descriptor);
     struct object *return_type = method_descriptor_to_return_type(curr_class->loader, ref->nt->descriptor);
-
-
-    //struct class *cc = jclsobj_entity_class(return_type);
-
     struct object *invoked_type = curr_thread->dyn.invoked_type;
     if (invoked_type == NULL) {
-        need_again = true;
-        struct class *mt = classloader_load_class(g_bootstrap_loader, "java/lang/invoke/MethodType");
+        struct class *c = classloader_load_class(g_bootstrap_loader, "java/lang/invoke/MethodType");
 
         // public static MethodType methodType(Class<?> rtype, Class<?>[] ptypes)
-        struct method *get_method_type = jclass_lookup_static_method(
-                mt, "methodType", "(Ljava/lang/Class;[Ljava/lang/Class;)Ljava/lang/invoke/MethodType;");
-        struct slot args[] = { rslot(return_type), rslot(parameter_types) };
-        jthread_invoke_method_with_shim(curr_thread, get_method_type, args, set_invoked_type);
+        if (jarrobj_len(parameter_types) > 0) {
+            struct method *get_method_type = jclass_lookup_static_method(
+                    c, "methodType", "(Ljava/lang/Class;[Ljava/lang/Class;)Ljava/lang/invoke/MethodType;");
 
-        if (!mt->inited) { // 后压栈，先执行
-            jclass_clinit(mt, curr_thread);
+            struct slot args[] = { rslot(return_type), rslot(parameter_types) };
+            jthread_invoke_method_with_shim(curr_thread, get_method_type, args, set_invoked_type);
+        } else {
+            struct method *get_method_type = jclass_lookup_static_method(
+                    c, "methodType", "(Ljava/lang/Class;)Ljava/lang/invoke/MethodType;");
+            struct slot args[] = { rslot(return_type) };
+            jthread_invoke_method_with_shim(curr_thread, get_method_type, args, set_invoked_type);
         }
-    }
-    if (need_again) {
+
+        if (!c->inited) { // 后压栈，先执行
+            jclass_clinit(c, curr_thread);
+        }
         frame->reader.pc = saved_pc; // recover pc
         return;
     }
 
-#if 0
-    struct jobject *caller = curr_thread->dyn.caller;
+    struct object *caller = curr_thread->dyn.caller;
     if (caller == NULL) {
-        need_again = true;
-        struct class *mhs = classloader_load_class(bootstrap_loader, "java/lang/invoke/MethodHandles");
-
-        // Lookup(Class<?> lookupClass)
-        struct jmethod *lookup = jclass_lookup_static_method(mhs, "lookup", "()Ljava/lang/invoke/MethodHandles$Lookup;");
+        struct class *c = classloader_load_class(g_bootstrap_loader, "java/lang/invoke/MethodHandles");
+        struct method *lookup = jclass_lookup_static_method(c, "lookup", "()Ljava/lang/invoke/MethodHandles$Lookup;");
         jthread_invoke_method_with_shim(curr_thread, lookup, NULL, set_caller);
 
-        if (!mhs->inited) { // 后压栈，先执行
-            jclass_clinit(mhs, curr_thread);
+        if (!c->inited) { // 后压栈，先执行
+            jclass_clinit(c, curr_thread);
         }
-    }
-
-    if (need_again) {
         frame->reader.pc = saved_pc; // recover pc
         return;
     }
 
-    struct jobject *call_set = curr_thread->dyn.call_set;
-    struct jobject *exact_method_handle = curr_thread->dyn.exact_method_handle;
+#if 1
+    struct object *call_set = curr_thread->dyn.call_set;
+    struct object *exact_method_handle = curr_thread->dyn.exact_method_handle;
 
     // todo
     switch (ref->handle->kind) {
@@ -660,8 +654,8 @@ static void invokedynamic(struct frame *frame)
         if (call_set != NULL) {
             if (exact_method_handle != NULL) {
                 // public final Object invokeExact(Object... args) throws Throwable
-                struct jmethod *exact_method = jclass_lookup_instance_method(
-                        exact_method_handle->class, "invokeExact", "[Ljava/lang/Object;");
+                struct method *exact_method = jclass_lookup_instance_method(
+                        exact_method_handle->jclass, "invokeExact", "[Ljava/lang/Object;");
                 // todo args
                 jvm_abort(""); ////////////////////////////////////////////////////
                 // invoke exact method, invokedynamic completely execute over.
@@ -669,21 +663,19 @@ static void invokedynamic(struct frame *frame)
                 return;
             } else {
                 // public abstract MethodHandle dynamicInvoker()
-                struct jmethod *dynamicInvoker = jclass_lookup_instance_method(
-                        call_set->class, "dynamicInvoker", "()Ljava/lang/invoke/MethodHandle;");
+                struct method *dynamic_invoker = jclass_lookup_instance_method(
+                        call_set->jclass, "dynamicInvoker", "()Ljava/lang/invoke/MethodHandle;");
                 struct slot arg = rslot(call_set);
-                jthread_invoke_method_with_shim(curr_thread, dynamicInvoker, &arg, set_exact_method_handle);
+                jthread_invoke_method_with_shim(curr_thread, dynamic_invoker, &arg, set_exact_method_handle);
                 frame->reader.pc = saved_pc; // recover pc
+                return;
             }
-
-            frame->reader.pc = saved_pc; // recover pc
-            return;
         }
 
         struct method_ref *mr = ref->handle->ref.mr;
 
-        struct class *bootstrap_class = classloader_load_class(frame->m.method->class->loader, mr->class_name);
-        struct jmethod *bootstrap_method = jclass_lookup_static_method(bootstrap_class, mr->name, mr->descriptor);
+        struct class *bootstrap_class = classloader_load_class(frame->m.method->jclass->loader, mr->class_name);
+        struct method *bootstrap_method = jclass_lookup_static_method(bootstrap_class, mr->name, mr->descriptor);
         // todo 说明 bootstrap_method 的格式
         // bootstrap_method is static,  todo 对不对
         // 前三个参数固定为 MethodHandles.Lookup caller, String invokedName, MethodType invokedType todo 对不对
@@ -691,7 +683,7 @@ static void invokedynamic(struct frame *frame)
         assert(ref->argc + 3 == bootstrap_method->arg_slot_count);
         struct slot args[bootstrap_method->arg_slot_count];
         args[0] = rslot(caller);
-        args[1] = rslot(jstrobj_create(mr->name));
+        args[1] = rslot(strobj_create(mr->name));
         args[2] = rslot(invoked_type);
         // parse remaining args
         for (int i = 0, j = 3; i < ref->argc; i++, j++) {
@@ -715,7 +707,7 @@ static void invokedynamic(struct frame *frame)
 
     // todo rest thread.dyn 的值，下次调用时这个值要从新解析。
 
-    jvm_abort("invokedynamic not implement\n");  // todo
+//    jvm_abort("invokedynamic not implement\n");  // todo
 #endif
 }
 
@@ -794,7 +786,7 @@ static void anewarray(struct frame *frame)
 
 static void arraylength(struct frame *frame)
 {
-    struct object *o = frame_stack_popr(frame); //os_popr(frame->operand_stack);
+    struct object *o = frame_stack_popr(frame);
     if (o == NULL) {
         jthread_throw_null_pointer_exception(frame->thread);
     }
@@ -802,7 +794,7 @@ static void arraylength(struct frame *frame)
         vm_unknown_error("not a array");
     }
 
-    frame_stack_pushi(frame, jarrobj_len(o)); //os_pushi(frame->operand_stack, jarrobj_len(o));
+    frame_stack_pushi(frame, jarrobj_len(o));
 }
 
 static void monitorenter(struct frame *frame)

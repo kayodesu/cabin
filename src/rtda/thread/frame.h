@@ -107,6 +107,9 @@ static inline struct slot* frame_stack_top(struct frame *f)
 static inline struct slot* frame_stack_pop_slot(struct frame *f)
 {
     assert(f != NULL);
+    if (f->stack_top < 0) {
+        int i = 3;
+    }
     assert(f->stack_top >= 0);
     return f->stack + (f->stack_top)--;
 }
@@ -267,6 +270,7 @@ void frame_saload(struct frame *);
 static inline void frame_istore(struct frame *f, int index)
 {
     slot_ensure_type(frame_stack_top(f), JINT);
+    assert(f->stack_top >= 0);
     f->locals[index] = f->stack[(f->stack_top)--];
 }
 
@@ -274,12 +278,14 @@ static inline void frame_lstore(struct frame *f, int index)
 {
     f->stack_top--; // jump placeholder
     slot_ensure_type(frame_stack_top(f), JLONG);
+    assert(f->stack_top >= 0);
     f->locals[index] = f->stack[(f->stack_top)--];
 }
 
 static inline void frame_fstore(struct frame *f, int index)
 {
     slot_ensure_type(frame_stack_top(f), JFLOAT);
+    assert(f->stack_top >= 0);
     f->locals[index] = f->stack[(f->stack_top)--];
 }
 
@@ -287,12 +293,14 @@ static inline void frame_dstore(struct frame *f, int index)
 {
     f->stack_top--; // jump placeholder
     slot_ensure_type(frame_stack_top(f), JDOUBLE);
+    assert(f->stack_top >= 0);
     f->locals[index] = f->stack[(f->stack_top)--];
 }
 
 static inline void frame_astore(struct frame *f, int index)
 {
     slot_ensure_type(frame_stack_top(f), JREF);
+    assert(f->stack_top >= 0);
     f->locals[index] = f->stack[(f->stack_top)--];
 }
 

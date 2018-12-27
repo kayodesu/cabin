@@ -50,54 +50,55 @@ static void compareAndSwapInt(struct frame *frame)
     jref o = frame_locals_getr(frame, 1); // first argument
     jlong offset = frame_locals_getl(frame, 2); // long 占两个Slot
     jint expected = frame_locals_geti(frame, 4);
-    jint x = frame_locals_geti(frame, 5);
+    jint new = frame_locals_geti(frame, 5);
 
-    jint value = slot_geti(get_instance_field_value_by_id(o, offset));
-    if (value == expected) {
-        struct slot s = islot(x);
-        set_instance_field_value_by_id(o, offset, &s);
-        frame_stack_pushi(frame, 1);
+    jint old;
+    if (jobject_is_array(o)) {
+        old = jarrobj_get(jint, o, offset);
     } else {
-        frame_stack_pushi(frame, 0);
+        old = slot_geti(get_instance_field_value_by_id(o, offset));
     }
+
+    bool b = __sync_bool_compare_and_swap(&old, expected, new);
+    frame_stack_pushi(frame, b ? 1 : 0);
 }
 
 // public final native boolean compareAndSwapLong(Object o, long offset, long expected, long x);
 static void compareAndSwapLong(struct frame *frame)
 {
-    //    jref this_obj = slot_getr(frame->local_vars);
     jref o = frame_locals_getr(frame, 1); // first argument
     jlong offset = frame_locals_getl(frame, 2); // long 占两个Slot
     jlong expected = frame_locals_getl(frame, 4);
-    jlong x = frame_locals_getl(frame, 6);
+    jlong new = frame_locals_getl(frame, 6);
 
-    jlong value = slot_getl(get_instance_field_value_by_id(o, offset));
-    if (value == expected) {
-        struct slot s = lslot(x);
-        set_instance_field_value_by_id(o, offset, &s);
-        frame_stack_pushi(frame, 1);
+    jlong old;
+    if (jobject_is_array(o)) {
+        old = jarrobj_get(jlong, o, offset);
     } else {
-        frame_stack_pushi(frame, 0);
+        old = slot_getl(get_instance_field_value_by_id(o, offset));
     }
+
+    bool b = __sync_bool_compare_and_swap(&old, expected, new);
+    frame_stack_pushi(frame, b ? 1 : 0);
 }
 
 // public final native boolean compareAndSwapObject(Object o, long offset, Object expected, Object x)
 static void compareAndSwapObject(struct frame *frame)
 {
-//    jref this_obj = slot_getr(frame->local_vars);
     jref o = frame_locals_getr(frame, 1); // first argument
     jlong offset = frame_locals_getl(frame, 2); // long 占两个Slot
     jref expected = frame_locals_getr(frame, 4);
-    jref x = frame_locals_getr(frame, 5);
+    jref new = frame_locals_getr(frame, 5);
 
-    jref value = slot_getr(get_instance_field_value_by_id(o, offset));
-    if (value == expected) {
-        struct slot s = rslot(x);
-        set_instance_field_value_by_id(o, offset, &s);
-        frame_stack_pushi(frame, 1);
+    jref old;
+    if (jobject_is_array(o)) {
+        old = jarrobj_get(jref, o, offset);
     } else {
-        frame_stack_pushi(frame, 0);
+        old = slot_getr(get_instance_field_value_by_id(o, offset));
     }
+
+    bool b = __sync_bool_compare_and_swap(&old, expected, new);
+    frame_stack_pushi(frame, b ? 1 : 0);
 }
 
 /*************************************    class    ************************************/
@@ -163,7 +164,7 @@ static void objectFieldOffset(struct frame *frame)
 //    jint offset = jlrFieldObj->getFieldValue("slot", "I").getInt();
 //    frame->operandStack.push((jlong)offset);
 
-    jref field_obj =frame_locals_getr(frame, 1);
+    jref field_obj = frame_locals_getr(frame, 1);
     jint offset = slot_geti(get_instance_field_value_by_nt(field_obj, "slot", "I")); // todo "slot", "I" 什么东西
 //    printvm("-------   %s, %d\n", jobject_to_string(field_obj), offset);
     frame_stack_pushl(frame, offset);

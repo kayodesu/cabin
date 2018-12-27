@@ -248,7 +248,6 @@ struct classloader* classloader_create(bool is_bootstrap_loader)
 
     // 缓存一下常见类
     loader->jlstring = classloader_load_class(loader, "java/lang/String");
-
     return loader;
 }
 

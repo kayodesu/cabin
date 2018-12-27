@@ -433,7 +433,6 @@ struct slot rtc_to_slot(struct classloader *loader, const struct rtcp *rtcp, int
 
     switch (rtcp->pool[index].t) {
         case STRING_CONSTANT:
-//            c = classloader_load_class(bootstrap_loader, "java/lang/String");
             return rslot(strobj_create(rtcp_get_str(rtcp, index)));
         case CLASS_CONSTANT:
             return rslot(jclsobj_create(classloader_load_class(loader, rtcp_get_class_name(rtcp, index))));
@@ -451,8 +450,8 @@ struct slot rtc_to_slot(struct classloader *loader, const struct rtcp *rtcp, int
             break;
         }
         case METHOD_TYPE_CONSTANT: {
-            // todo
             const char *descriptor = rtcp_get_method_type(rtcp, index);
+            // todo
             break;
         }
         default:
