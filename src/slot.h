@@ -119,6 +119,110 @@ static inline bool slots_are_category_one(int num, ...)
     return true;
 }
 
+#if 0
+static inline void slot_i2l(struct slot *s)
+{
+    slot_ensure_type(s, JINT);
+    s->t = JLONG;
+    s->v.l = i2l(s->v.i);
+}
+
+static inline void slot_i2f(struct slot *s)
+{
+    slot_ensure_type(s, JINT);
+    s->t = JFLOAT;
+    s->v.f = i2f(s->v.i);
+}
+
+static inline void slot_i2d(struct slot *s)
+{
+    slot_ensure_type(s, JINT);
+    s->t = JDOUBLE;
+    s->v.d = i2d(s->v.i);
+}
+
+static inline void slot_l2i(struct slot *s)
+{
+    slot_ensure_type(s, JLONG);
+    s->t = JINT;
+    s->v.i = l2i(s->v.l);
+}
+
+static inline void slot_l2f(struct slot *s)
+{
+    slot_ensure_type(s, JLONG);
+    s->t = JFLOAT;
+    s->v.f = l2f(s->v.l);
+}
+
+static inline void slot_l2d(struct slot *s)
+{
+    slot_ensure_type(s, JLONG);
+    s->t = JDOUBLE;
+    s->v.d = l2d(s->v.l);
+}
+
+static inline void slot_f2i(struct slot *s)
+{
+    slot_ensure_type(s, JFLOAT);
+    s->t = JINT;
+    s->v.i = f2i(s->v.f);
+}
+
+static inline void slot_f2l(struct slot *s)
+{
+    slot_ensure_type(s, JFLOAT);
+    s->t = JLONG;
+    s->v.l = f2l(s->v.f);
+}
+
+static inline void slot_f2d(struct slot *s)
+{
+    slot_ensure_type(s, JFLOAT);
+    s->t = JDOUBLE;
+    s->v.d = f2d(s->v.f);
+}
+
+static inline void slot_d2i(struct slot *s)
+{
+    slot_ensure_type(s, JDOUBLE);
+    s->t = JINT;
+    s->v.i = d2i(s->v.d);
+}
+
+static inline void slot_d2l(struct slot *s)
+{
+    slot_ensure_type(s, JDOUBLE);
+    s->t = JLONG;
+    s->v.l = d2l(s->v.d);
+}
+
+static inline void slot_d2f(struct slot *s)
+{
+    slot_ensure_type(s, JDOUBLE);
+    s->t = JFLOAT;
+    s->v.f = d2f(s->v.d);
+}
+
+static inline void slot_i2b(struct slot *s)
+{
+    slot_ensure_type(s, JINT);
+    s->v.i = i2b(s->v.i);
+}
+
+static inline void slot_i2c(struct slot *s)
+{
+    slot_ensure_type(s, JINT);
+    s->v.i = i2c(s->v.i);
+}
+
+static inline void slot_i2s(struct slot *s)
+{
+    slot_ensure_type(s, JINT);
+    s->v.i = i2s(s->v.i);
+}
+#endif
+
 /*
  * 由调用者 free result
  */

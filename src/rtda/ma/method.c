@@ -12,7 +12,7 @@ struct object* jmethod_get_parameter_types(struct method *method)
 {
     assert(method != NULL);
     if (method->parameter_types == NULL) {
-        method->parameter_types = method_descriptor_to_parameter_types(method->jclass->loader, method->descriptor);
+        method->parameter_types = method_descriptor_to_parameter_types(method->clazz->loader, method->descriptor);
     }
     return method->parameter_types;
 }
@@ -21,7 +21,7 @@ struct object* jmethod_get_return_type(struct method *method)
 {
     assert(method != NULL);
     if (method->return_type == NULL) {
-        method->return_type = method_descriptor_to_return_type(method->jclass->loader, method->descriptor);
+        method->return_type = method_descriptor_to_return_type(method->clazz->loader, method->descriptor);
     }
     return method->return_type;
 }
@@ -42,9 +42,9 @@ struct object* jmethod_get_exception_types(struct method *method)
         }
 
         method->exception_types
-                = arrobj_create(classloader_load_class(method->jclass->loader, "[Ljava/lang/Class;"), count);
+                = arrobj_create(classloader_load_class(method->clazz->loader, "[Ljava/lang/Class;"), count);
         for (int i = 0; i < count; i++) {
-            jarrobj_set(struct object *, method->exception_types, i, exception_types[i]);
+            arrobj_set(struct object *, method->exception_types, i, exception_types[i]);
         }
     }
 
@@ -103,9 +103,13 @@ static void parse_code_attr(struct method *method, struct bytecode_reader *reade
     method->max_locals = bcr_readu2(reader);
 
     method->code_length = bcr_readu4(reader);
-    method->code = malloc(sizeof(u1) * method->code_length);
-    CHECK_MALLOC_RESULT(method->code);
-    bcr_read_bytes(reader, method->code, method->code_length);
+
+//    method->code = malloc(sizeof(u1) * method->code_length);
+//    CHECK_MALLOC_RESULT(method->code);
+//    bcr_read_bytes(reader, method->code, method->code_length);
+
+    method->code = bcr_curr_pos(reader);
+    bcr_skip(reader, method->code_length);
 
     method->line_number_table_count = 0;
     method->line_number_tables = NULL;
@@ -128,8 +132,8 @@ static void parse_code_attr(struct method *method, struct bytecode_reader *reade
                 // 0 是无效的常量池索引，但是在这里 0 并非表示 catch-none，而是表示 catch-all。
                 t->catch_type = NULL;
             } else {
-                const char *class_name = rtcp_get_class_name(method->jclass->rtcp, catch_type);
-                t->catch_type = classloader_load_class(method->jclass->loader, class_name);
+                const char *class_name = rtcp_get_class_name(method->clazz->rtcp, catch_type);
+                t->catch_type = classloader_load_class(method->clazz->loader, class_name);
             }
         }
     }
@@ -137,7 +141,7 @@ static void parse_code_attr(struct method *method, struct bytecode_reader *reade
     // parse attributes of code's attribute
     u2 attr_count = bcr_readu2(reader);
     for (int k = 0; k < attr_count; k++) {
-        const char *attr_name = rtcp_get_str(method->jclass->rtcp, bcr_readu2(reader));
+        const char *attr_name = rtcp_get_str(method->clazz->rtcp, bcr_readu2(reader));
         u4 attr_len = bcr_readu4(reader);
 
         if (strcmp(LineNumberTable, attr_name) == 0) {
@@ -181,7 +185,7 @@ static void parse_code_attr(struct method *method, struct bytecode_reader *reade
 
 void method_init(struct method *method, struct class *c, struct bytecode_reader *reader)
 {
-    method->jclass = c;
+    method->clazz = c;
 
     method->access_flags = bcr_readu2(reader);
     method->name = rtcp_get_str(c->rtcp, bcr_readu2(reader));
@@ -315,7 +319,7 @@ void method_init(struct method *method, struct class *c, struct bytecode_reader 
         method->code = code;
         method->code_length = code_len;
 
-        method->native_method = find_native_method(method->jclass->class_name, method->name, method->descriptor);
+        method->native_method = find_native_method(method->clazz->class_name, method->name, method->descriptor);
     }
 }
 
@@ -334,11 +338,11 @@ bool method_is_accessible_to(const struct method *method, const struct class *vi
 {
     // todo  实现对不对
 
-    if (!class_is_accessible_to(method->jclass, visitor)) {
+    if (!class_is_accessible_to(method->clazz, visitor)) {
         return false;
     }
 
-    if (method->jclass == visitor || IS_PUBLIC(method->access_flags))  // todo 对不对
+    if (method->clazz == visitor || IS_PUBLIC(method->access_flags))  // todo 对不对
         return true;
 
     if (IS_PRIVATE(method->access_flags)) {
@@ -347,12 +351,12 @@ bool method_is_accessible_to(const struct method *method, const struct class *vi
 
     // 字段是protected，则只有 子类 和 同一个包下的类 可以访问
     if (IS_PROTECTED(method->access_flags)) {
-        return class_is_subclass_of(visitor, method->jclass)
-               || strcmp(method->jclass->pkg_name, visitor->pkg_name) == 0;
+        return class_is_subclass_of(visitor, method->clazz)
+               || strcmp(method->clazz->pkg_name, visitor->pkg_name) == 0;
     }
 
     // 字段有默认访问权限（非public，非protected，也非private），则只有同一个包下的类可以访问
-    return strcmp(method->jclass->pkg_name, visitor->pkg_name) == 0;
+    return strcmp(method->clazz->pkg_name, visitor->pkg_name) == 0;
 }
 
 int method_get_line_number(const struct method *method, int pc)
@@ -398,7 +402,7 @@ int method_find_exception_handler(struct method *method, struct class *exception
     return -1;
 }
 
-char *jmethod_to_string(const struct method *method)
+char *method_to_string(const struct method *method)
 {
 #undef MAX_LEN
 #define MAX_LEN 1023 // big enough
@@ -407,7 +411,7 @@ char *jmethod_to_string(const struct method *method)
     if (method != NULL) {
         int n = snprintf(result, MAX_LEN,
                          "method%s: %s~%s~%s", IS_NATIVE(method->access_flags) ? "(native)" : "",
-                         method->jclass->class_name, method->name, method->descriptor);
+                         method->clazz->class_name, method->name, method->descriptor);
         if (n < 0) {
             jvm_abort("snprintf 出错\n"); // todo
         }

@@ -30,7 +30,7 @@ static void forName0(struct frame *frame)
     // 这里class name 是形如 xxx.xx.xx的形式，将其替换为 xxx/xx/xx的形式
     vm_strrpl(class_name, '.', '/');
 
-    struct class *c = classloader_load_class(frame->m.method->jclass->loader, class_name);
+    struct class *c = classloader_load_class(frame->m.method->clazz->loader, class_name);
 
     int initialize = frame_locals_geti(frame, 1);
     if (initialize && !c->inited) {
@@ -327,7 +327,7 @@ static void getSuperclass(struct frame *frame)
 {
     struct object *this = frame_locals_getr(frame, 0);
 
-    struct class *c = classloader_load_class(frame->m.method->jclass->loader, this->u.entity_class->class_name);
+    struct class *c = classloader_load_class(frame->m.method->clazz->loader, this->u.entity_class->class_name);
     frame_stack_pushr(frame, (jref) (c->super_class != NULL ? c->super_class->clsobj : NULL));
 }
 
@@ -381,11 +381,11 @@ static void getInterfaces0(struct frame *frame)
     struct object *this = frame_locals_getr(frame, 0);
 
     struct class *entity_class = this->u.entity_class;
-    struct class *arr_cls = classloader_load_class(frame->m.method->jclass->loader, "[java/lang/Class;");
+    struct class *arr_cls = classloader_load_class(frame->m.method->clazz->loader, "[java/lang/Class;");
     struct object *interfaces = arrobj_create(arr_cls, entity_class->interfaces_count);
     for (int i = 0; i < entity_class->interfaces_count; i++) {
         assert(entity_class->interfaces[i] != NULL);
-        jarrobj_set(struct object *, interfaces, i, entity_class->interfaces[i]->clsobj);
+        arrobj_set(struct object *, interfaces, i, entity_class->interfaces[i]->clsobj);
     }
 
     frame_stack_pushr(frame, (jref) interfaces);
@@ -478,9 +478,9 @@ static void getEnclosingMethod0(struct frame *frame)
         return;
     }
 
-    jref result = arrobj_create(classloader_load_class(frame->m.method->jclass->loader, "[Ljava/lang/Object;"), 3);
+    jref result = arrobj_create(classloader_load_class(frame->m.method->clazz->loader, "[Ljava/lang/Object;"), 3);
     for (int i = 0; i < 3; i++) {
-        jarrobj_set(jref, result, i, c->enclosing_info[i]);
+        arrobj_set(jref, result, i, c->enclosing_info[i]);
     }
 
     frame_stack_pushr(frame, result);
@@ -527,7 +527,7 @@ static void getDeclaredFields0(struct frame *frame)
     jref this = frame_locals_getr(frame, 0);
     bool public_only = frame_locals_getz(frame, 1);
 
-    struct classloader *loader = frame->m.method->jclass->loader;
+    struct classloader *loader = frame->m.method->clazz->loader;
     struct class *cls = classloader_load_class(loader, this->u.entity_class->class_name);
 
     struct field *fields = cls->fields;
@@ -551,13 +551,13 @@ static void getDeclaredFields0(struct frame *frame)
     for (int i = 0; i < fields_count; i++) {
         struct object *jlrf_obj = object_create(jlrf_cls);
 //        *(struct object **)jobject_index(jlrf_arr, i) = jlrf_obj;
-        jarrobj_set(struct object *, jlrf_arr, i, jlrf_obj);
+        arrobj_set(struct object *, jlrf_arr, i, jlrf_obj);
 
         jthread_invoke_method(frame->thread, field_constructor, (struct slot[]) {
                 rslot(jlrf_obj), // this
                 rslot((jref) this), // declaring class
-                rslot((jref) get_str_from_pool(frame->m.method->jclass->loader, fields[i].name)), // name
-                rslot((jref) jfield_get_type(fields + i)), // type
+                rslot((jref) get_str_from_pool(frame->m.method->clazz->loader, fields[i].name)), // name
+                rslot((jref) field_get_type(fields + i)), // type
                 islot(fields[i].access_flags), // modifiers
                 islot(fields[i].id), // slot   todo
                 rslot(NULL), // signature  todo
@@ -580,7 +580,7 @@ static void getDeclaredMethods0(struct frame *frame)
     jref this = frame_locals_getr(frame, 0);
     bool public_only = frame_locals_getz(frame, 1);
 
-    struct classloader *loader = frame->m.method->jclass->loader;
+    struct classloader *loader = frame->m.method->clazz->loader;
     struct class *cls = classloader_load_class(loader, this->u.entity_class->class_name);
 
     struct method *methods = cls->methods;
@@ -605,12 +605,12 @@ static void getDeclaredMethods0(struct frame *frame)
     // invoke constructor of class java/lang/reflect/Method
     for (int i = 0; i < methods_count; i++) {
         struct object *jlrf_obj = object_create(jlrm_cls);
-        jarrobj_set(struct object *, jlrm_arr, i, jlrf_obj);
+        arrobj_set(struct object *, jlrm_arr, i, jlrf_obj);
 
         jthread_invoke_method(frame->thread, method_constructor, (struct slot[]) {
                 rslot(jlrf_obj),        // this
                 rslot((jref) this), // declaring class
-                rslot((jref) get_str_from_pool(frame->m.method->jclass->loader, methods[i].name)), // name
+                rslot((jref) get_str_from_pool(frame->m.method->clazz->loader, methods[i].name)), // name
                 rslot((jref) jmethod_get_parameter_types(methods + i)), // parameter types
                 rslot(jmethod_get_return_type(methods + i)),     // return type
                 rslot((jref) jmethod_get_exception_types(methods + i)), // checked exceptions
@@ -630,7 +630,7 @@ static void getDeclaredConstructors0(struct frame *frame)
     jref this = frame_locals_getr(frame, 0);
     bool public_only = frame_locals_getz(frame, 1);
 
-    struct classloader *loader = frame->m.method->jclass->loader;
+    struct classloader *loader = frame->m.method->clazz->loader;
     struct class *cls = classloader_load_class(loader, this->u.entity_class->class_name);
 
     int constructors_count;
@@ -654,7 +654,7 @@ static void getDeclaredConstructors0(struct frame *frame)
     // invoke constructor of class java/lang/reflect/Constructor
     for (int i = 0; i < constructors_count; i++) {
         struct object *jlrf_obj = object_create(jlrc_cls);
-        jarrobj_set(struct object *, jlrc_arr, i, jlrf_obj);
+        arrobj_set(struct object *, jlrc_arr, i, jlrf_obj);
 
         jthread_invoke_method(frame->thread, constructor_constructor, (struct slot[]) {
                 rslot(jlrf_obj), // this
@@ -723,7 +723,7 @@ static void getDeclaringClass0(struct frame *frame)
 
     *last_dollar = 0;
     frame_stack_pushr(frame,
-             (jref) classloader_load_class(frame->m.method->jclass->loader, declaring_class_name)->clsobj);
+             (jref) classloader_load_class(frame->m.method->clazz->loader, declaring_class_name)->clsobj);
 }
 
 void java_lang_Class_registerNatives()

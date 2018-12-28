@@ -6,7 +6,6 @@
 #include "field.h"
 #include "rtcp.h"
 #include "class.h"
-#include "../../util/util.h"
 #include "../heap/object.h"
 #include "descriptor.h"
 
@@ -14,7 +13,7 @@
 void field_init(struct field *field, struct class *c, struct bytecode_reader *reader)
 {
     field->constant_value_index = INVALID_CONSTANT_VALUE_INDEX;
-    field->jclass = c;
+    field->clazz = c;
     field->deprecated = false;
     field->access_flags = bcr_readu2(reader);
     field->name = rtcp_get_str(c->rtcp, bcr_readu2(reader));
@@ -79,11 +78,11 @@ bool field_is_accessible_to(const struct field *field, const struct class *visit
 {
     // todo  实现对不对
 
-    if (!class_is_accessible_to(field->jclass, visitor)) {
+    if (!class_is_accessible_to(field->clazz, visitor)) {
         return false;
     }
 
-    if (field->jclass == visitor || IS_PUBLIC(field->access_flags))  // todo 对不对
+    if (field->clazz == visitor || IS_PUBLIC(field->access_flags))  // todo 对不对
         return true;
 
     if (IS_PRIVATE(field->access_flags)) {
@@ -92,19 +91,19 @@ bool field_is_accessible_to(const struct field *field, const struct class *visit
 
     // 字段是protected，则只有 子类 和 同一个包下的类 可以访问
     if (IS_PROTECTED(field->access_flags)) {
-        return class_is_subclass_of(visitor, field->jclass) || strcmp(field->jclass->pkg_name, visitor->pkg_name) == 0;
+        return class_is_subclass_of(visitor, field->clazz) || strcmp(field->clazz->pkg_name, visitor->pkg_name) == 0;
     }
 
     // 字段有默认访问权限（非public，非protected，也非private），则只有同一个包下的类可以访问
-    return strcmp(field->jclass->pkg_name, visitor->pkg_name) == 0;
+    return strcmp(field->clazz->pkg_name, visitor->pkg_name) == 0;
 }
 
-struct object* jfield_get_type(struct field *field)
+struct object* field_get_type(struct field *field)
 {
     assert(field != NULL);
 
     if (field->type == NULL) {
-        field->type = descriptor_to_type(field->jclass->loader, field->descriptor);
+        field->type = descriptor_to_type(field->clazz->loader, field->descriptor);
     }
 
     return field->type;
@@ -122,7 +121,7 @@ char* jfield_to_string(const struct field *field)
 
     if (field != NULL) {
         int n = snprintf(
-                result, MAX_LEN, "field: %s~%s~%s", field->jclass->class_name, field->name, field->descriptor);
+                result, MAX_LEN, "field: %s~%s~%s", field->clazz->class_name, field->name, field->descriptor);
         if (n < 0) {
             jvm_abort("snprintf 出错\n"); // todo
         }

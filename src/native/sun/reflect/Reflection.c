@@ -43,7 +43,7 @@ static void getCallerClass(struct frame *frame)
         return;
     }
 
-    jref o = top2->m.method->jclass->clsobj;
+    jref o = top2->m.method->clazz->clsobj;
     frame_stack_pushr(frame, o);
 }
 

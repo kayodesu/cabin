@@ -4,10 +4,16 @@
 
 #include <stdlib.h>
 #include "halloc.h"
+#include "../../../jvm.h"
 
 void *halloc(size_t len)
 {
-    return calloc(1, len);  // todo 暂时先这么搞
+    void *p = calloc(len, 1);  // todo 暂时先这么搞
+//    printf("-------------------------            %p, %d\n", p, len);
+    if (p == NULL) {
+        vm_stack_overflow_error();
+    }
+    return p;
 }
 
 void hfree(void *p)

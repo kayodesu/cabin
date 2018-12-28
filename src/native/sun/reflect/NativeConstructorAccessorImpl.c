@@ -23,9 +23,9 @@ struct slot* convert_args(jref this_obj, struct method *m, jref args)
     }
 
     for (int i = 0; i < types_len; i++) {
-        jref clsobj = jarrobj_get(jref, types, i);
+        jref clsobj = arrobj_get(jref, types, i);
         assert(clsobj != NULL);
-        jref o = jarrobj_get(jref, args, i);
+        jref o = arrobj_get(jref, args, i);
 
         if (jclass_is_primitive(clsobj->u.entity_class)) {
             result[k] = priobj_unbox(o);
@@ -80,7 +80,7 @@ static void newInstance0(struct frame *frame)
         free(args);
     }
 
-    if (!constructor->jclass->inited) {
+    if (!constructor->clazz->inited) {
         // todo java.lang.reflect/Constructor 的 clinit
         class_clinit(constructor_obj->clazz, frame->thread);
     }

@@ -113,6 +113,13 @@ void classloader_put_to_pool(struct classloader *loader, const char *class_name,
 void class_destroy(struct class *c);
 
 /*
+ * 类的初始化在下列情况下触发：
+ * 1. 执行new指令创建类实例，但类还没有被初始化。
+ * 2. 执行 putstatic、getstatic 指令存取类的静态变量，但声明该字段的类还没有被初始化。
+ * 3. 执行 invokestatic 调用类的静态方法，但声明该方法的类还没有被初始化。
+ * 4. 当初始化一个类时，如果类的超类还没有被初始化，要先初始化类的超类。
+ * 5. 执行某些反射操作时。
+ *
  * 调用类的类初始化方法。
  * clinit are the static initialization blocks for the class, and static field initialization.
  */

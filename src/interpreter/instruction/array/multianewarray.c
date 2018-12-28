@@ -2,19 +2,16 @@
  * Author: Jia Yang
  */
 
-#ifndef JVM_EXTENDED_H
-#define JVM_EXTENDED_H
-
-#include "../rtda/thread/frame.h"
-#include "../rtda/heap/arrobj.h"
+#include "../../../rtda/thread/frame.h"
+#include "../../../rtda/heap/arrobj.h"
 
 /*
  * 创建多维数组
  * todo 注意这种情况，基本类型的多维数组 int[][][]
  */
-static void multianewarray(struct frame *frame)
+void multianewarray(struct frame *frame)
 {
-    struct class *curr_class = frame->m.method->jclass;
+    struct class *curr_class = frame->m.method->clazz;
     int index = bcr_readu2(&frame->reader);
     const char *class_name = rtcp_get_class_name(curr_class->rtcp, index); // 这里解析出来的直接就是数组类。
 //    printvm("multi array class name: %s\n", class_name);  ////////////////////////////////////////////
@@ -33,21 +30,3 @@ static void multianewarray(struct frame *frame)
     struct object *arr = arrobj_create_multi(arr_class, arr_dim, arr_lens);
     frame_stack_pushr(frame, arr);
 }
-
-static inline void ifnull(struct frame *frame)
-{
-    int offset = frame_reads2(frame);
-    if (frame_stack_popr(frame) == NULL) {
-        bcr_skip(&frame->reader, offset - 3); // minus instruction length
-    }
-}
-
-static inline void ifnonnull(struct frame *frame)
-{
-    int offset = frame_reads2(frame);
-    if (frame_stack_popr(frame) != NULL) {
-        bcr_skip(&frame->reader, offset - 3); // minus instruction length
-    }
-}
-
-#endif //JVM_EXTENDED_H

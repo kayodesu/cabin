@@ -13,18 +13,15 @@ struct class;
 struct bytecode_reader;
 
 struct field {
-    struct class *jclass; // which class this field belongs to
+    struct class *clazz; // which class this field belongs to
     const char *name;
     const char *descriptor;
-    /*
-     * the declared type(class object) of this field
-     */
-    struct object *type;
+
+    // the declared type(class object) of this field
+    // like, int k; the type of k is int.class
+    NO_ACCESS struct object *type;
 
     u2 access_flags;
-
-    // todo type_name 是什么东西
-    const char *type_name;
     bool category_two;
 
     int id;
@@ -50,7 +47,7 @@ void field_init(struct field *field, struct class *c, struct bytecode_reader *re
 
 bool field_is_accessible_to(const struct field *field, const struct class *visitor);
 
-struct object* jfield_get_type(struct field *field);
+struct object* field_get_type(struct field *field);
 
 void field_release(struct field *field);
 

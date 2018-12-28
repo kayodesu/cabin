@@ -88,6 +88,8 @@ static inline void frame_locals_set(struct frame *f, int index, const struct slo
 #define frame_locals_getr(f, index) slot_getr(frame_locals_get(f, index))
 
 // ----------- operand stack
+#define frame_stack_empty(frame) ((frame)->stack_top < 0)
+
 static inline void frame_stack_clear(struct frame *f)
 {
     assert(f != NULL);
@@ -114,45 +116,38 @@ static inline struct slot* frame_stack_pop_slot(struct frame *f)
 static inline jint frame_stack_popi(struct frame *f)
 {
     assert(f != NULL);
-    struct slot *s = frame_stack_pop_slot(f);
-    assert(s != NULL && s->t == JINT);
-    return s->v.i;
+    assert(f->stack_top >= 0);
+    return slot_geti(frame_stack_pop_slot(f));
 }
 
 static inline jfloat frame_stack_popf(struct frame *f)
 {
     assert(f != NULL);
-    struct slot *s = frame_stack_pop_slot(f);
-    assert(s != NULL && s->t == JFLOAT);
-    return s->v.f;
+    assert(f->stack_top >= 0);
+    return slot_getf(frame_stack_pop_slot(f));
 }
 
 static inline jlong frame_stack_popl(struct frame *f)
 {
     assert(f != NULL);
-
+    assert(f->stack_top >= 1);
     frame_stack_pop_slot(f); // pop placeholder
-    struct slot *s = frame_stack_pop_slot(f);
-    assert(s != NULL && s->t == JLONG);
-    return s->v.l;
+    return slot_getl(frame_stack_pop_slot(f));
 }
 
 static inline jdouble frame_stack_popd(struct frame *f)
 {
     assert(f != NULL);
-
+    assert(f->stack_top >= 1);
     frame_stack_pop_slot(f); // pop placeholder
-    struct slot *s = frame_stack_pop_slot(f);
-    assert(s != NULL && s->t == JDOUBLE);
-    return s->v.d;
+    return slot_getd(frame_stack_pop_slot(f));
 }
 
 static inline jref frame_stack_popr(struct frame *f)
 {
     assert(f != NULL);
-    struct slot *s = frame_stack_pop_slot(f);
-    assert(s != NULL && s->t == JREF);
-    return s->v.r;
+    assert(f->stack_top >= 0);
+    return slot_getr(frame_stack_pop_slot(f));
 }
 
 static inline void frame_stack_pushi(struct frame *f, jint i)

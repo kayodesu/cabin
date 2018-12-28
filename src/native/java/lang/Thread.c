@@ -8,6 +8,7 @@
 #include "../../../slot.h"
 #include "../../../rtda/heap/object.h"
 #include "../../../interpreter/interpreter.h"
+#include "../../../rtda/heap/strobj.h"
 
 /*
  * Returns a reference to the currently executing thread object.
@@ -121,11 +122,11 @@ static void start0(struct frame *frame)
     jref this = frame_locals_getr(frame, 0);
 
 #if (JVM_DEBUG)
-    const char *name = jstrobj_value(slot_getr(get_instance_field_value_by_nt(this, "name", "Ljava/lang/String;")));
+    const char *name = strobj_value(slot_getr(get_instance_field_value_by_nt(this, "name", "Ljava/lang/String;")));
     printvm("start thread: %s\n", name);
 #endif
 
-    struct thread *new_thread = thread_create(frame->m.method->jclass->loader, this);
+    struct thread *new_thread = thread_create(frame->m.method->clazz->loader, this);
 
     // create a stack frame to hold run method
     struct method *run = class_lookup_instance_method(this->clazz, "run", "()V");

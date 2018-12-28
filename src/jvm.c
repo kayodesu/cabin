@@ -13,6 +13,7 @@
 #include "rtda/ma/class.h"
 #include "rtda/heap/object.h"
 #include "native/registry.h"
+#include "rtda/heap/strobj.h"
 
 
 #define JRE_LIB_JARS_MAX_COUNT 64 // big enough
@@ -293,11 +294,10 @@ _Noreturn void vm_out_of_memory_error(const char *msg)
     jvm_abort(msg);
 }
 
-_Noreturn void vm_stack_overflow_error(const char *msg)
+_Noreturn void vm_stack_overflow_error()
 {
-    assert(msg != NULL);
     // todo
-    jvm_abort(msg);
+    jvm_abort("");
 }
 
 _Noreturn void vm_unknown_error(const char *msg)

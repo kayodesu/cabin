@@ -39,6 +39,12 @@ static inline struct bytecode_reader* bcr_create(const u1 *bytecode, size_t len)
     return reader;
 }
 
+static inline const u1* bcr_curr_pos(struct bytecode_reader *reader)
+{
+    assert(reader != NULL);
+    return  reader->bytecode + reader->pc;
+}
+
 static inline bool bcr_has_more(const struct bytecode_reader *reader)
 {
     assert(reader != NULL);

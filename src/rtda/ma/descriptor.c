@@ -66,7 +66,7 @@ const char* types_to_descriptor(const struct object *types)
         int i = 0;
         int arr_len = arrobj_len(types);
         for (int t = 0; t < arr_len; t++) {
-            struct object *type = jarrobj_get(struct object *, types, t);
+            struct object *type = arrobj_get(struct object *, types, t);
             int len = DESCRIPTOR_MAX_LEN - i;
             type_to_descriptor(type, descriptor + i, &len);
             i += len;
@@ -156,7 +156,7 @@ struct object* method_descriptor_to_parameter_types(struct classloader *loader, 
     struct object *parameter_types
             = arrobj_create(classloader_load_class(loader, "[Ljava/lang/Class;"), parameter_types_count);
     for (int i = 0; i < parameter_types_count; i++) {
-        jarrobj_set(struct object *, parameter_types, i, buf[i]);
+        arrobj_set(struct object *, parameter_types, i, buf[i]);
     }
     return parameter_types;
 }

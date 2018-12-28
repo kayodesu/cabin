@@ -8,57 +8,44 @@
 #include "mm/halloc.h"
 #include "../ma/field.h"
 
-static inline struct object* jobject_alloc()
-{
-    HEAP_ALLOC(struct object, o);
-    if (o == NULL) {
-        // todo 堆内存分配失败
-        jvm_abort("堆溢出");
-    }
-    return o;
-}
 
 struct object* object_create(struct class *c)
 {
     assert(c != NULL);
+    assert(!class_is_array(c));
 
-    struct object *o = jobject_alloc();
+    size_t size = sizeof(struct object) + c->instance_fields_count * sizeof(struct slot);
+    struct object *o = halloc(size);
     o->clazz = c;
-
-    if (class_is_array(c)) {  // todo
-        o->instance_fields_count = 0;
-        o->instance_fields_values = NULL;
-    } else {
-        o->instance_fields_count = c->instance_fields_count;
-        o->instance_fields_values = copy_inited_instance_fields_values(c);
-    }
-
-    o->extra = NULL;
+    o->size = size;
+    memcpy(o->data, c->inited_instance_fields_values, c->instance_fields_count * sizeof(struct slot));
     return o;
 }
 
-void* jarrobj_copy_data(const struct object *o);
+//void* jarrobj_copy_data(const struct object *o);
 
-struct object* object_clone(const struct object *src, struct object *dest)
+struct object* object_clone(const struct object *src)
 {
     assert(src != NULL);
-    struct object *o = dest != NULL ? dest : jobject_alloc();
-
-    o->clazz = src->clazz;
-    o->instance_fields_count = src->instance_fields_count;
-
-    if (jobject_is_array(src)) {
-        o->instance_fields_values = NULL;
-        o->extra = jarrobj_copy_data(src);
-    } else { // todo 其他情况，异常对象的情况
-        size_t len = sizeof(struct slot) * o->instance_fields_count;
-        o->instance_fields_values = malloc(len);
-        CHECK_MALLOC_RESULT(o->instance_fields_values);
-        memcpy(o->instance_fields_values, src->instance_fields_values, len);
-        o->extra = src->extra;
-    }
-//    printvm("create object: %s\n", jobject_to_string(o));
+    struct object *o = halloc(src->size);
+    memcpy(o, src, src->size);
     return o;
+
+//    o->clazz = src->clazz;
+//    o->instance_fields_count = src->instance_fields_count;
+//
+//    if (jobject_is_array(src)) {
+//        o->instance_fields_values = NULL;
+//        o->extra = jarrobj_copy_data(src);
+//    } else { // todo 其他情况，异常对象的情况
+//        size_t len = sizeof(struct slot) * o->instance_fields_count;
+//        o->instance_fields_values = malloc(len);
+//        CHECK_MALLOC_RESULT(o->instance_fields_values);
+//        memcpy(o->instance_fields_values, src->instance_fields_values, len);
+//        o->extra = src->extra;
+//    }
+//    printvm("create object: %s\n", jobject_to_string(o));
+//    return o;
 }
 
 bool jobject_is_primitive(const struct object *o)
@@ -84,18 +71,18 @@ bool jobject_is_jlclass(const struct object *o)
     return strcmp(o->clazz->class_name, "java/lang/Class") == 0;
 }
 
-void set_instance_field_value_by_id(const struct object *o, int id, const struct slot *value)
+void set_instance_field_value_by_id(struct object *o, int id, const struct slot *value)
 {
     assert(o != NULL && value != NULL);
-    assert(id >= 0 && id < o->instance_fields_count);
-    o->instance_fields_values[id] = *value;
+    assert(id >= 0 && id < o->clazz->instance_fields_count);
+    o->data[id] = *value;
     if (slot_is_category_two(value)) {
-        assert(id + 1 < o->instance_fields_count);
-        o->instance_fields_values[id + 1] = phslot;
+        assert(id + 1 < o->clazz->instance_fields_count);
+        o->data[id + 1] = phslot;
     }
 }
 
-void set_instance_field_value_by_nt(const struct object *o,
+void set_instance_field_value_by_nt(struct object *o,
                                   const char *name, const char *descriptor, const struct slot *value)
 {
     assert(o != NULL && name != NULL && descriptor != NULL && value != NULL);
@@ -111,8 +98,8 @@ void set_instance_field_value_by_nt(const struct object *o,
 const struct slot* get_instance_field_value_by_id(const struct object *o, int id)
 {
     assert(o != NULL);
-    assert(0 <= id && id < o->instance_fields_count);
-    return o->instance_fields_values + id;
+    assert(0 <= id && id < o->clazz->instance_fields_count);
+    return o->data + id;
 }
 
 const struct slot* get_instance_field_value_by_nt(const struct object *o, const char *name, const char *descriptor)

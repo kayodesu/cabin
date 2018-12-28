@@ -8,6 +8,7 @@
 #include "../ma/access.h"
 #include "../ma/field.h"
 #include "arrobj.h"
+#include "object.h"
 
 /*
  * jdk8下的一些测试：
@@ -62,16 +63,19 @@ struct object* strobj_create(const char *str)
 // todo 要不要调用 <clinit>, <init>方法。
 
     // 给 java/lang/String 类的 value 变量赋值  todo
-    for (int i = 0; i < o->clazz->fields_count; i++) {
-        struct field *field = o->clazz->fields + i;
-        if (!IS_STATIC(field->access_flags)
-            && strcmp(field->descriptor, "[C") == 0
-            && strcmp(field->name, "value") == 0) {
-            struct slot s = rslot(jchars);
-            set_instance_field_value_by_id(o, field->id, &s);
-            break;
-        }
-    }
+    struct field *field = class_lookup_instance_field(o->clazz, "value", "[C");
+    struct slot s = rslot(jchars);
+    set_instance_field_value_by_id(o, field->id, &s);
+//    for (int i = 0; i < o->clazz->fields_count; i++) {
+//        struct field *field = o->clazz->fields + i;
+//        if (!IS_STATIC(field->access_flags)
+//            && strcmp(field->descriptor, "[C") == 0
+//            && strcmp(field->name, "value") == 0) {
+//            struct slot s = rslot(jchars);
+//            set_instance_field_value_by_id(o, field->id, &s);
+//            break;
+//        }
+//    }
 
     return o;
 }
@@ -79,10 +83,9 @@ struct object* strobj_create(const char *str)
 const char* strobj_value(struct object *o)
 {
     assert(o != NULL);
-    if (o->extra != NULL) {
-        return o->extra;
+    if (o->u.str == NULL) {
+        struct object *char_arr = slot_getr(get_instance_field_value_by_nt(o, "value", "[C"));
+        o->u.str = unicode_to_utf8(arrobj_data(char_arr), arrobj_len(char_arr));
     }
-    struct object *char_arr = slot_getr(get_instance_field_value_by_nt(o, "value", "[C"));
-    o->extra = unicode_to_utf8(arrobj_data(char_arr), arrobj_len(char_arr));
-    return o->extra;
+    return o->u.str;
 }

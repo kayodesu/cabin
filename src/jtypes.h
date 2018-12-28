@@ -27,19 +27,19 @@ struct object;
  * 4. 对于long类型， 取值范围[-2e63, 2e63 - 1]。
  * 5. 对于char类型， 取值范围[0, 65535]。
  */
-typedef int8_t   jbyte;
-typedef jbyte    jbool; // 本虚拟机实现，byte和bool用同一类型
-typedef uint16_t jchar;
-typedef int16_t  jshort;
-typedef int32_t  jint;
-typedef int64_t  jlong;
-typedef float   jfloat;
-typedef double  jdouble;
-typedef struct  object* jref; // JVM中的引用类型，只能指向一个jobject对象。
+typedef int8_t          jbyte;
+typedef jbyte           jbool; // 本虚拟机实现，byte和bool用同一类型
+typedef uint16_t        jchar;
+typedef int16_t         jshort;
+typedef int32_t         jint;
+typedef int64_t         jlong;
+typedef float          jfloat;
+typedef double         jdouble;
+typedef struct object* jref; // JVM中的引用类型，只能指向一个jobject对象。
 
 // 各类型的代码
 enum jtype {
-    JBYTE,
+    JBYTE = 1,
     JBOOL,
     JCHAR,
     JSHORT,

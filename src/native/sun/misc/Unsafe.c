@@ -55,7 +55,7 @@ static void compareAndSwapInt(struct frame *frame)
 
     jint old;
     if (jobject_is_array(o)) {
-        old = jarrobj_get(jint, o, offset);
+        old = arrobj_get(jint, o, offset);
     } else {
         old = slot_geti(get_instance_field_value_by_id(o, offset));
     }
@@ -74,7 +74,7 @@ static void compareAndSwapLong(struct frame *frame)
 
     jlong old;
     if (jobject_is_array(o)) {
-        old = jarrobj_get(jlong, o, offset);
+        old = arrobj_get(jlong, o, offset);
     } else {
         old = slot_getl(get_instance_field_value_by_id(o, offset));
     }
@@ -93,7 +93,7 @@ static void compareAndSwapObject(struct frame *frame)
 
     jref old;
     if (jobject_is_array(o)) {
-        old = jarrobj_get(jref, o, offset);
+        old = arrobj_get(jref, o, offset);
     } else {
         old = slot_getr(get_instance_field_value_by_id(o, offset));
     }
@@ -312,7 +312,7 @@ static void getIntVolatile(struct frame *frame)
 
     jint value;
     if (class_is_array(o->clazz)) {
-        value = jarrobj_get(jint, o, offset);  // todo
+        value = arrobj_get(jint, o, offset);  // todo
     } else {
         value = slot_geti(get_instance_field_value_by_id(o, offset));  // todo
     }
@@ -394,7 +394,7 @@ static void getObjectVolatile(struct frame *frame)
 
     jref value;
     if (class_is_array(o->clazz)) {
-        value = jarrobj_get(jref, o, offset);  // todo
+        value = arrobj_get(jref, o, offset);  // todo
     } else {
         value = slot_getr(get_instance_field_value_by_id(o, offset));  // todo
     }

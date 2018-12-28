@@ -17,19 +17,22 @@ struct object {
     } header;
 
     struct class *clazz;
+    size_t size; // size of this object
 
     union {
-        // effective if object of java/lang/Class
+        // effective only if object of java/lang/Class
         // save the entity class (class, interface, array class, primitive type, or void) represented by this object
         struct class *entity_class;
 
-        // effective if object of java/lang/String
+        // effective only if object of java/lang/String
         // 保存字符串的值。同时用作 key in string pool
-        char *str;
+        NO_ACCESS char *str;
 
-        // effective if object of array
-        // 表示数组每个元素的大小
-        jint ele_size;
+        // effective only if object of array
+        struct {
+            size_t ele_size; // 表示数组每个元素的大小
+            size_t len; // 数组的长度
+        } a;
     } u;
 
     /*
@@ -48,20 +51,8 @@ struct object {
 
     // 保存所有实例变量的值
     // 包括此Object中定义的和继承来的。
-    int instance_fields_count;
-    struct slot *instance_fields_values;
-
-    ///////////////////////////////////////////////////////////////////////////////////////
-    
-    void (* set)(struct object *this, int id, void *value);
-    void* (* get)(const struct object *this, int id);
-    
-    // clone @src to @dest if @dest is not NULL,
-    // else clone @src and return new one.
-    struct object (* clone)(const struct object *src, struct object *dest);
-
-    int count; // count of data
-    struct slot *data;
+    // 特殊的，对于数组对象，保存数组的值
+    struct slot data[];
 };
 
 struct object* object_create(struct class *c);
@@ -76,15 +67,10 @@ bool jobject_is_primitive(const struct object *o);
 bool jobject_is_jlstring(const struct object *o);
 bool jobject_is_jlclass(const struct object *o);
 
+struct object* object_clone(const struct object *srct);
 
-/*
- * clone @src to @dest if @dest is not NULL,
- * else clone @src and return new one.
- */
-struct object* object_clone(const struct object *src, struct object *dest);
-
-void set_instance_field_value_by_id(const struct object *o, int id, const struct slot *value);
-void set_instance_field_value_by_nt(const struct object *o,
+void set_instance_field_value_by_id(struct object *o, int id, const struct slot *value);
+void set_instance_field_value_by_nt(struct object *o,
                                     const char *name, const char *descriptor, const struct slot *value);
 
 const struct slot* get_instance_field_value_by_id(const struct object *o, int id);

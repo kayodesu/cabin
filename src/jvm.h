@@ -69,6 +69,11 @@ extern struct classloader *g_bootstrap_loader;
  */
 #define METHOD_PARAMETERS_MAX_COUNT 255
 
+/*
+ * struct 中标记为 NO_ACCESS 的成员拒绝直接访问，
+ * 应通过对应的 get function 获取（比如此成员可能因为效率原因采用了延迟加载）。
+ */
+#define NO_ACCESS
 
 /*
  * 用来表示字段和方法。
@@ -134,7 +139,7 @@ _Noreturn void vm_out_of_memory_error(const char *msg);
  * typically because the thread is doing an unbounded number of recursive invocations
  * as a result of a fault in the executing program.
  */
-_Noreturn void vm_stack_overflow_error(const char *msg);
+_Noreturn void vm_stack_overflow_error();
 
 /*
  * java.lang.UnknownError

@@ -8,7 +8,7 @@
 const char* get_jtype_name(enum jtype t)
 {
     static const char* names[] = {
-        "jbyte", "jbool", "jchar", "jshort", "jint",
+        "error_type", "jbyte", "jbool", "jchar", "jshort", "jint",
         "jlong", "jfloat", "jdouble", "jref", "placeholder", "not a tpe"
     };
 

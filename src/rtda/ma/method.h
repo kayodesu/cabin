@@ -27,13 +27,13 @@ struct method {
      * 对于一个子类，如果有一个方法是从父类中继承而来的，
      * 那么此方法的 class 依然指向父类，即真正定义此方法的类。
      */
-    struct class *jclass;
+    struct class *clazz;
     const char *name;
     const char *descriptor;
 
-    struct object *parameter_types; // "[Ljava/lang/Class;"
-    struct object *return_type;     // java/lang/Class
-    struct object *exception_types; // "[Ljava/lang/Class;"
+    NO_ACCESS struct object *parameter_types; // "[Ljava/lang/Class;"
+    NO_ACCESS struct object *return_type;     // java/lang/Class
+    NO_ACCESS struct object *exception_types; // "[Ljava/lang/Class;"
 
     u2 access_flags;
     u2 max_stack;
@@ -50,7 +50,7 @@ struct method {
     u4 line_number_table_count;
     struct line_number_table *line_number_tables;
 
-    u1 *code;
+    const u1 *code;
     size_t code_length;
 
     bool deprecated;
@@ -94,7 +94,7 @@ struct object* jmethod_get_exception_types(struct method *method);
  */
 int method_find_exception_handler(struct method *method, struct class *exception_type, size_t pc);
 
-char *jmethod_to_string(const struct method *method);
+char *method_to_string(const struct method *method);
 
 void method_release(struct method *m);
 

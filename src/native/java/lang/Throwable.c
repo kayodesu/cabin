@@ -67,8 +67,8 @@ static void fillInStackTrace(struct frame *frame)
         // public StackTraceElement(String declaringClass, String methodName, String fileName, int lineNumber)
         // may be should call <init>, but 直接赋值 is also ok.
 
-        struct slot file_name = rslot(strobj_create(frames[i]->m.method->jclass->source_file_name));
-        struct slot class_name = rslot(strobj_create(frames[i]->m.method->jclass->class_name));
+        struct slot file_name = rslot(strobj_create(frames[i]->m.method->clazz->source_file_name));
+        struct slot class_name = rslot(strobj_create(frames[i]->m.method->clazz->class_name));
         struct slot method_name = rslot(strobj_create(frames[i]->m.method->name));
         struct slot line_number = islot(method_get_line_number(frames[i]->m.method, frames[i]->reader.pc - 1)); // todo why 减1？ 减去opcode的长度
 
