@@ -20,7 +20,7 @@ static void fillInStackTrace(struct frame *frame)
     frame_stack_pushr(frame, this);
 
     int num;
-    struct frame **frames = jthread_get_frames(frame->thread, &num);
+    struct frame **frames = thread_get_frames(frame->thread, &num);
     /*
      * 栈顶两帧正在执行 fillInStackTrace(int) 和 fillInStackTrace() 方法，所以需要跳过这两帧。
      * 这两帧下面的几帧正在执行异常类的构造函数，所以也要跳过。

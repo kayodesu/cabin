@@ -499,7 +499,7 @@ void class_clinit(struct class *c, struct thread *thread)
             printvm("error\n");
         }
 
-        jthread_invoke_method(thread, method, NULL);
+        thread_invoke_method(thread, method, NULL);
     }
 
     c->inited = true;

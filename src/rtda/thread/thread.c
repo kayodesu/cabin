@@ -7,14 +7,14 @@
 #include "../heap/object.h"
 #include "../../util/vector.h"
 
-struct thread* thread_create(struct classloader *loader, struct object *jlt_obj)
+struct thread* thread_create(struct classloader *loader, struct object *jltobj)
 {
     assert(loader != NULL);
 
     VM_MALLOC(struct thread, thread);
 
     vector_init(&thread->vm_stack);
-    thread->jl_thread_obj = jlt_obj;
+    thread->jltobj = jltobj;
     for (int i = 0; i < FRMHUB_SLOTS_COUNT_MAX; i++) {
         vector_init(thread->frame_cache + i);
     }
@@ -85,25 +85,19 @@ static void JThread::joinToMainThreadGroup() {
 
 #endif
 
-struct object* jthread_get_jl_thread_obj(struct thread *thread)
-{
-    assert(thread != NULL);
-    return thread->jl_thread_obj;
-}
-
-bool jthread_is_stack_empty(const struct thread *thread)
+bool thread_is_stack_empty(const struct thread *thread)
 {
     assert(thread != NULL);
     return vector_len(&thread->vm_stack) == 0;
 }
 
-int jthread_stack_depth(const struct thread *thread)
+int thread_stack_depth(const struct thread *thread)
 {
     assert(thread != NULL);
     return vector_len(&thread->vm_stack);
 }
 
-struct frame* jthread_top_frame(struct thread *thread)
+struct frame* thread_top_frame(struct thread *thread)
 {
     assert(thread != NULL);
     return vector_back(&thread->vm_stack);
@@ -122,7 +116,7 @@ struct frame* thread_stack_frame_from_top(struct thread *thread, int from_top)
 }
 
 
-struct frame* jthread_pop_frame(struct thread *thread)
+struct frame* thread_pop_frame(struct thread *thread)
 {
     assert(thread != NULL);
     return vector_pop_back(&thread->vm_stack);
@@ -134,7 +128,7 @@ static void thread_push_frame(struct thread *thread, struct frame *frame)
     vector_push_back(&thread->vm_stack, frame);
 }
 
-struct frame** jthread_get_frames(const struct thread *thread, int *num)
+struct frame** thread_get_frames(const struct thread *thread, int *num)
 {
     assert(thread != NULL);
     assert(num != NULL);
@@ -170,11 +164,11 @@ void thread_recycle_frame(struct frame *frame)
     }
 }
 
-void jthread_invoke_method(struct thread *thread, struct method *method, const struct slot *args)
+void thread_invoke_method(struct thread *thread, struct method *method, const struct slot *args)
 {
     assert(thread != NULL && method != NULL);
 
-    struct frame *top_frame = jthread_top_frame(thread);
+    struct frame *top_frame = thread_top_frame(thread);
     if (top_frame == NULL) {
         // todo 没有调用者，那么是每个线程的启动函数（主线程的启动函数就是main）
     }
@@ -213,20 +207,20 @@ void jthread_invoke_method(struct thread *thread, struct method *method, const s
     // todo
 }
 
-void jthread_invoke_method_with_shim(struct thread *thread, struct method *method, const struct slot *args,
+void thread_invoke_method_with_shim(struct thread *thread, struct method *method, const struct slot *args,
                                      void (* shim_action)(struct frame *))
 {
-    jthread_invoke_method(thread, method, args);
+    thread_invoke_method(thread, method, args);
 
-    struct frame *top = jthread_top_frame(thread);
-    jthread_pop_frame(thread);
+    struct frame *top = thread_top_frame(thread);
+    thread_pop_frame(thread);
 
     // 创建一个 shim stack frame 来接受函数method的返回值
     thread_push_frame(thread, frame_create(thread, shim_action));
     thread_push_frame(thread, top);
 }
 
-void jthread_handle_uncaught_exception(struct thread *thread, struct object *exception)
+void thread_handle_uncaught_exception(struct thread *thread, struct object *exception)
 {
     assert(thread != NULL);
     assert(exception != NULL);
@@ -240,28 +234,28 @@ void jthread_handle_uncaught_exception(struct thread *thread, struct object *exc
     thread_push_frame(thread, frame);
 }
 
-_Noreturn void jthread_throw_null_pointer_exception(struct thread *thread)
+_Noreturn void thread_throw_null_pointer_exception(struct thread *thread)
 {
     assert(thread != NULL);
     // todo
     jvm_abort("");
 }
 
-_Noreturn void jthread_throw_negative_array_size_exception(struct thread *thread, int array_size)
+_Noreturn void thread_throw_negative_array_size_exception(struct thread *thread, int array_size)
 {
     assert(thread != NULL);
     // todo
     jvm_abort("");
 }
 
-_Noreturn void jthread_throw_array_index_out_of_bounds_exception(struct thread *thread, int index)
+_Noreturn void thread_throw_array_index_out_of_bounds_exception(struct thread *thread, int index)
 {
     assert(thread != NULL);
     // todo
     jvm_abort("");
 }
 
-_Noreturn void jthread_throw_class_cast_exception(
+_Noreturn void thread_throw_class_cast_exception(
         struct thread *thread, const char *from_class_name, const char *to_class_name)
 {
     assert(thread != NULL);
@@ -272,7 +266,7 @@ _Noreturn void jthread_throw_class_cast_exception(
     jvm_abort("");
 }
 
-void jthread_destroy(struct thread *thread)
+void thread_destroy(struct thread *thread)
 {
     // todo
     assert(thread != NULL);

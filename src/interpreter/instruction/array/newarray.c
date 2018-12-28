@@ -17,7 +17,7 @@ void newarray(struct frame *frame)
 {
     jint arr_len = frame_stack_popi(frame);  //os_popi(frame->operand_stack);
     if (arr_len < 0) {
-        jthread_throw_negative_array_size_exception(frame->thread, arr_len);
+        thread_throw_negative_array_size_exception(frame->thread, arr_len);
         return;
     }
 

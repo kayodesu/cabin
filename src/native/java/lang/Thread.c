@@ -18,7 +18,7 @@
 static void currentThread(struct frame *frame)
 {
     // push a object of java/lang/Thread of current thread
-    frame_stack_pushr(frame, jthread_get_jl_thread_obj(frame->thread));
+    frame_stack_pushr(frame, frame->thread->jltobj);
 }
 
 // public static native void yield();
@@ -136,7 +136,7 @@ static void start0(struct frame *frame)
 //    frame_locals_set(new_frame, 0, &arg);
 //    jthread_push_frame(new_thread, new_frame);
 
-    jthread_invoke_method(new_thread, run, &arg);
+    thread_invoke_method(new_thread, run, &arg);
 
 //    pthread_t pid;
 //    int ret = pthread_create(&pid, NULL, interpret, new_thread);

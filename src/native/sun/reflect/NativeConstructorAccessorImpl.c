@@ -67,7 +67,7 @@ static void newInstance0(struct frame *frame)
         assert(constructor != NULL);
         assert(constructor->arg_slot_count == 1); // this
         struct slot s = rslot(this_obj);
-        jthread_invoke_method(frame->thread, constructor, &s);
+        thread_invoke_method(frame->thread, constructor, &s);
     } else {
         // parameter types of this constructor
         jref parameter_types
@@ -76,7 +76,7 @@ static void newInstance0(struct frame *frame)
         assert(constructor != NULL);
 
         struct slot *args = convert_args(this_obj, constructor, init_args);
-        jthread_invoke_method(frame->thread, constructor, args);
+        thread_invoke_method(frame->thread, constructor, args);
         free(args);
     }
 

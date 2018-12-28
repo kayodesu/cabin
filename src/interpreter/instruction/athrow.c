@@ -9,14 +9,14 @@ void athrow(struct frame *frame)
 {
     jref exception = frame_stack_popr(frame);
     if (exception == NULL) {
-        jthread_throw_null_pointer_exception(frame->thread);
+        thread_throw_null_pointer_exception(frame->thread);
     }
 
     struct thread *curr_thread = frame->thread;
 
     // 遍历虚拟机栈找到可以处理此异常的方法
-    while (!jthread_is_stack_empty(curr_thread)) {
-        struct frame *top = jthread_top_frame(curr_thread);
+    while (!thread_is_stack_empty(curr_thread)) {
+        struct frame *top = thread_top_frame(curr_thread);
         if (top->type == SF_TYPE_NORMAL) {
             int handler_pc = method_find_exception_handler(top->m.method, exception->clazz, top->reader.pc - 1); // instruction length todo 好像是错的
             if (handler_pc >= 0) {  // todo 可以等于0吗
@@ -35,7 +35,7 @@ void athrow(struct frame *frame)
         }
 
         // top frame 无法处理异常，弹出
-        jthread_pop_frame(curr_thread);
+        thread_pop_frame(curr_thread);
         if (top == frame) {
             // 当前执行的 frame 不能直接销毁，设置成执行完毕即可，由解释器销毁
             frame_exe_over(frame);
@@ -44,5 +44,5 @@ void athrow(struct frame *frame)
         }
     }
 
-    jthread_handle_uncaught_exception(curr_thread, exception);
+    thread_handle_uncaught_exception(curr_thread, exception);
 }

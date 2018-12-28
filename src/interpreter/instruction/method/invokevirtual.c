@@ -32,7 +32,7 @@ void invokevirtual(struct frame *frame)
 
     struct object *obj = slot_getr(args); // args[0]
     if (obj == NULL) {
-        jthread_throw_null_pointer_exception(frame->thread);
+        thread_throw_null_pointer_exception(frame->thread);
     }
 
     // 从对象的类中查找真正要调用的方法
@@ -42,5 +42,5 @@ void invokevirtual(struct frame *frame)
         jvm_abort("java.lang.AbstractMethodError\n");
     }
 
-    jthread_invoke_method(frame->thread, method, args);
+    thread_invoke_method(frame->thread, method, args);
 }

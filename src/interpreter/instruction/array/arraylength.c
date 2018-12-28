@@ -11,7 +11,7 @@ void arraylength(struct frame *frame)
 {
     struct object *o = frame_stack_popr(frame);
     if (o == NULL) {
-        jthread_throw_null_pointer_exception(frame->thread);
+        thread_throw_null_pointer_exception(frame->thread);
     }
     if (!jobject_is_array(o)) {
         vm_unknown_error("not a array");

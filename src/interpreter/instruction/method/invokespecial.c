@@ -55,8 +55,8 @@ void invokespecial(struct frame *frame)
 
     jref obj = slot_getr(args); // args[0]
     if (obj == NULL) {
-        jthread_throw_null_pointer_exception(frame->thread);
+        thread_throw_null_pointer_exception(frame->thread);
     }
 
-    jthread_invoke_method(frame->thread, method, args);
+    thread_invoke_method(frame->thread, method, args);
 }

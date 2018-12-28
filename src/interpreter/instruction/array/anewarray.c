@@ -16,7 +16,7 @@ void anewarray(struct frame *frame)
     struct class *curr_class = frame->m.method->clazz;
     jint arr_len = frame_stack_popi(frame);
     if (arr_len < 0) {
-        jthread_throw_negative_array_size_exception(frame->thread, arr_len);
+        thread_throw_array_index_out_of_bounds_exception(frame->thread, arr_len);
         return;
     }
 

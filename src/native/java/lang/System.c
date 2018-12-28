@@ -25,7 +25,7 @@ static void mapLibraryName(struct frame *frame)
 {
     jref libname = frame_locals_getr(frame, 0);
     if (libname == NULL) {
-        jthread_throw_null_pointer_exception(frame->thread);
+        thread_throw_null_pointer_exception(frame->thread);
     }
 
 //    jvm_abort("%s\n", jstrobj_value(libname));
@@ -113,7 +113,7 @@ static void initProperties(struct frame *frame)
                 rslot((jref) strobj_create(sys_props[i][1]))
         };
 
-        jthread_invoke_method_with_shim(frame->thread, set_property, args, NULL);
+        thread_invoke_method_with_shim(frame->thread, set_property, args, NULL);
     }
 
     // 返回参数

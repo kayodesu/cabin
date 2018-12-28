@@ -42,7 +42,7 @@ void invokeinterface(struct frame *frame)
 
     jref obj = slot_getr(args); // args[0]
     if (obj == NULL) {
-        jthread_throw_null_pointer_exception(frame->thread);
+        thread_throw_null_pointer_exception(frame->thread);
     }
 
     struct method *method = class_lookup_method(obj->clazz, ref->name, ref->descriptor);
@@ -59,6 +59,6 @@ void invokeinterface(struct frame *frame)
         jvm_abort("java.lang.IllegalAccessError\n");
     }
 
-    jthread_invoke_method(frame->thread, method, args);
+    thread_invoke_method(frame->thread, method, args);
 }
 

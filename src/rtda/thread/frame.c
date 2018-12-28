@@ -64,9 +64,9 @@ struct frame* frame_create_normal(struct thread *thread, struct method *method)
     jint index = frame_stack_popi(frame); \
     jref arr = frame_stack_popr(frame); \
     if ((arr) == NULL) \
-        jthread_throw_null_pointer_exception(frame->thread); \
+        thread_throw_null_pointer_exception(frame->thread); \
     if (!arrobj_check_bounds(arr, index)) \
-        jthread_throw_array_index_out_of_bounds_exception(frame->thread, index);
+        thread_throw_array_index_out_of_bounds_exception(frame->thread, index);
 
 // ----- loads
 void frame_iaload(struct frame *frame)

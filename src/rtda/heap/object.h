@@ -36,15 +36,7 @@ struct object {
     } u;
 
     /*
-     * extra字段保持对象的额外信息。
-     * 1. 对于 java/lang/Class 对象，extra字段类型为 struct class*, 保存
-     *    The entity class (class, interface, array class, primitive type, or void) represented by this object
-     * 2. 对于 java/lang/String 对象，extra字段类型为 char *, 保存字符串的值。同时用作 key in string pool
-     * 3. 对于数组对象，
-     *    前 sizeof(jint) 个字节表示数组每个元素的大小，
-     *    紧接着的 sizeof(jint) 个字节表示数组的长度，
-     *    再后面是数组的数据。
-     * 4. 异常对象的extra字段中存放的就是Java虚拟机栈信息 todo 
+     * 异常对象的extra字段中存放的就是Java虚拟机栈信息 todo
      */
     void *extra;
 

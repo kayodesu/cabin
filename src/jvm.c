@@ -81,7 +81,7 @@ static void create_main_thread(struct classloader *loader)
             rslot(system_thread_group),
             rslot(strobj_create(MAIN_THREAD_NAME)) // thread name
     };
-    jthread_invoke_method(main_thread, constructor, args);
+    thread_invoke_method(main_thread, constructor, args);
     class_clinit(jlt_obj->clazz, main_thread); // 最后压栈，保证先执行。
 
 
@@ -90,7 +90,7 @@ static void create_main_thread(struct classloader *loader)
     // Creates an empty Thread group that is not in any Thread group.
     // This method is used to create the system Thread group.
     struct slot arg = rslot(system_thread_group);
-    jthread_invoke_method(main_thread, class_get_constructor(jltg_class, "()V"), &arg);
+    thread_invoke_method(main_thread, class_get_constructor(jltg_class, "()V"), &arg);
     class_clinit(jltg_class, main_thread);
 
     // 现在，main thread's vm stack 里面按将要执行的顺序（从栈顶到栈底）分别为：
@@ -123,7 +123,7 @@ static void start_jvm(const char *main_class_name)
     }
 
     struct slot args[] = { islot(0), rslot(NULL) }; // todo
-    jthread_invoke_method(main_thread, main_method, args);
+    thread_invoke_method(main_thread, main_method, args);
 
     // 开始在主线程中执行 main 方法
     interpret(main_thread);
@@ -131,7 +131,7 @@ static void start_jvm(const char *main_class_name)
     // todo 如果有其他的非后台线程在执行，则main线程需要在此wait
 
     // main_thread 退出，做一些清理工作。
-    jthread_destroy(main_thread);
+    thread_destroy(main_thread);
     classloader_destroy(loader);
 }
 

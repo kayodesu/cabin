@@ -243,7 +243,7 @@ static void isAssignableFrom(struct frame *frame)
     struct object *this = frame_locals_getr(frame, 0);
     struct object *cls = (struct object *) frame_locals_getr(frame, 1);
     if (cls == NULL) {
-        jthread_throw_null_pointer_exception(frame->thread);
+        thread_throw_null_pointer_exception(frame->thread);
     }
 
 //    bool b = class_is_subclass_of(clsobj_entity_class(cls), clsobj_entity_class(this));
@@ -553,7 +553,7 @@ static void getDeclaredFields0(struct frame *frame)
 //        *(struct object **)jobject_index(jlrf_arr, i) = jlrf_obj;
         arrobj_set(struct object *, jlrf_arr, i, jlrf_obj);
 
-        jthread_invoke_method(frame->thread, field_constructor, (struct slot[]) {
+        thread_invoke_method(frame->thread, field_constructor, (struct slot[]) {
                 rslot(jlrf_obj), // this
                 rslot((jref) this), // declaring class
                 rslot((jref) get_str_from_pool(frame->m.method->clazz->loader, fields[i].name)), // name
@@ -607,7 +607,7 @@ static void getDeclaredMethods0(struct frame *frame)
         struct object *jlrf_obj = object_create(jlrm_cls);
         arrobj_set(struct object *, jlrm_arr, i, jlrf_obj);
 
-        jthread_invoke_method(frame->thread, method_constructor, (struct slot[]) {
+        thread_invoke_method(frame->thread, method_constructor, (struct slot[]) {
                 rslot(jlrf_obj),        // this
                 rslot((jref) this), // declaring class
                 rslot((jref) get_str_from_pool(frame->m.method->clazz->loader, methods[i].name)), // name
@@ -656,7 +656,7 @@ static void getDeclaredConstructors0(struct frame *frame)
         struct object *jlrf_obj = object_create(jlrc_cls);
         arrobj_set(struct object *, jlrc_arr, i, jlrf_obj);
 
-        jthread_invoke_method(frame->thread, constructor_constructor, (struct slot[]) {
+        thread_invoke_method(frame->thread, constructor_constructor, (struct slot[]) {
                 rslot(jlrf_obj), // this
                 rslot((jref) this), // declaring class
                 rslot((jref) jmethod_get_parameter_types(constructors[i])),  // parameter types

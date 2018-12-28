@@ -21,7 +21,7 @@ static void initialize(struct frame *frame)
         jvm_abort("not find initializeSystemClass\n");  // todo m == nullptr
     }
 
-    jthread_invoke_method(frame->thread, m, NULL);
+    thread_invoke_method(frame->thread, m, NULL);
 }
 
 /*

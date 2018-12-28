@@ -23,7 +23,7 @@ static void getCallerClass(struct frame *frame)
     struct frame *top1 = NULL;
     struct frame *top2 = NULL;
 
-    int depth = jthread_stack_depth(frame->thread);
+    int depth = thread_stack_depth(frame->thread);
     for (int i = 0; i < depth; i++) {
         // 过滤掉 shim frame
         struct frame *sf = thread_stack_frame_from_top(frame->thread, i);

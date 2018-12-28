@@ -21,7 +21,7 @@ void multianewarray(struct frame *frame)
     for (int i = arr_dim - 1; i >= 0; i--) {
         int len = frame_stack_popi(frame);
         if (len < 0) {  // todo 等于0的情况
-            jthread_throw_negative_array_size_exception(frame->thread, len);
+            thread_throw_negative_array_size_exception(frame->thread, len);
         }
         arr_lens[i] = (size_t) len;
     }

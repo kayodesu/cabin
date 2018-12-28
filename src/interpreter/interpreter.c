@@ -516,14 +516,14 @@ void* interpret(void *thread0)
     assert(thread0 != NULL);
     struct thread *thread = thread0;
 
-    while (!jthread_is_stack_empty(thread)) {
-        struct frame *frame = jthread_top_frame(thread);
+    while (!thread_is_stack_empty(thread)) {
+        struct frame *frame = thread_top_frame(thread);
         if (frame->type == SF_TYPE_SHIM) {
             if (frame->m.shim_action != NULL) {
                 frame->m.shim_action(frame);
             }
 
-            jthread_pop_frame(thread);
+            thread_pop_frame(thread);
             frame_destroy(frame);
             printvm_debug("shim frame(%p) exe over, destroy.\n", frame);
             continue;
@@ -802,10 +802,10 @@ void* interpret(void *thread0)
 #undef TRETURN
 #define TRETURN(t) \
     do { \
-        assert(frame == jthread_top_frame(frame->thread)); \
-        jthread_pop_frame(frame->thread); \
+        assert(frame == thread_top_frame(frame->thread)); \
+        thread_pop_frame(frame->thread); \
         \
-        struct frame *invoke_frame = jthread_top_frame(frame->thread); \
+        struct frame *invoke_frame = thread_top_frame(frame->thread); \
         assert(invoke_frame != NULL); \
         frame_stack_push##t(invoke_frame, frame_stack_pop##t(frame)); \
         frame_exe_over(frame); \
@@ -815,7 +815,7 @@ void* interpret(void *thread0)
                 case 0xae: TRETURN(f); break; // freturn
                 case 0xaf: TRETURN(d); break; // dreturn
                 case 0xb0: TRETURN(r); break; // areturn
-                case 0xb1: frame_exe_over(jthread_pop_frame(frame->thread)); break; // return
+                case 0xb1: frame_exe_over(thread_pop_frame(frame->thread)); break; // return
 
                 // References
                 case 0xb2: getstatic(frame); break; // getstatic

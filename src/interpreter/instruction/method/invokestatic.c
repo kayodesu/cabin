@@ -41,7 +41,7 @@ void invokestatic(struct frame *frame)
         args[i] = *frame_stack_pop_slot(frame);
     }
 
-    jthread_invoke_method(frame->thread, ref->resolved_method, args);
+    thread_invoke_method(frame->thread, ref->resolved_method, args);
 
     if (!ref->resolved_class->inited) {
         class_clinit(ref->resolved_class, frame->thread);

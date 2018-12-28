@@ -23,7 +23,7 @@ static void doPrivileged(struct frame *frame)
      */
     struct method *m = jclass_get_declared_nonstatic_method(this->clazz, "run", "()Ljava/lang/Object;");
     struct slot args[] = { rslot(this) };
-    jthread_invoke_method(frame->thread, m, args);
+    thread_invoke_method(frame->thread, m, args);
 }
 
 // @CallerSensitive

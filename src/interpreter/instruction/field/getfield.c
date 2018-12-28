@@ -22,7 +22,7 @@ void getfield(struct frame *frame)
 
     jref obj = frame_stack_popr(frame);
     if (obj == NULL) {
-        jthread_throw_null_pointer_exception(frame->thread);
+        thread_throw_null_pointer_exception(frame->thread);
     }
 
     const struct slot *s = get_instance_field_value_by_id(obj, ref->resolved_field->id);

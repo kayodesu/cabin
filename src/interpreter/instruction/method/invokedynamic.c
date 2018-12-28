@@ -132,12 +132,12 @@ void invokedynamic(struct frame *frame)
                     c, "methodType", "(Ljava/lang/Class;[Ljava/lang/Class;)Ljava/lang/invoke/MethodType;");
 
             struct slot args[] = { rslot(return_type), rslot(parameter_types) };
-            jthread_invoke_method_with_shim(curr_thread, get_method_type, args, set_invoked_type);
+            thread_invoke_method_with_shim(curr_thread, get_method_type, args, set_invoked_type);
         } else {
             struct method *get_method_type = class_lookup_static_method(
                     c, "methodType", "(Ljava/lang/Class;)Ljava/lang/invoke/MethodType;");
             struct slot args[] = { rslot(return_type) };
-            jthread_invoke_method_with_shim(curr_thread, get_method_type, args, set_invoked_type);
+            thread_invoke_method_with_shim(curr_thread, get_method_type, args, set_invoked_type);
         }
 
         if (!c->inited) { // 后压栈，先执行
@@ -151,7 +151,7 @@ void invokedynamic(struct frame *frame)
     if (caller == NULL) {
         struct class *c = classloader_load_class(g_bootstrap_loader, "java/lang/invoke/MethodHandles");
         struct method *lookup = class_lookup_static_method(c, "lookup", "()Ljava/lang/invoke/MethodHandles$Lookup;");
-        jthread_invoke_method_with_shim(curr_thread, lookup, NULL, set_caller);
+        thread_invoke_method_with_shim(curr_thread, lookup, NULL, set_caller);
 
         if (!c->inited) { // 后压栈，先执行
             class_clinit(c, curr_thread);
@@ -184,14 +184,14 @@ void invokedynamic(struct frame *frame)
                     // todo args
                     jvm_abort(""); ////////////////////////////////////////////////////
                     // invoke exact method, invokedynamic completely execute over.
-                    jthread_invoke_method(curr_thread, exact_method, NULL);
+                    thread_invoke_method(curr_thread, exact_method, NULL);
                     return;
                 } else {
                     // public abstract MethodHandle dynamicInvoker()
                     struct method *dynamic_invoker = class_lookup_instance_method(
                             call_set->clazz, "dynamicInvoker", "()Ljava/lang/invoke/MethodHandle;");
                     struct slot arg = rslot(call_set);
-                    jthread_invoke_method_with_shim(curr_thread, dynamic_invoker, &arg, set_exact_method_handle);
+                    thread_invoke_method_with_shim(curr_thread, dynamic_invoker, &arg, set_exact_method_handle);
                     frame->reader.pc = saved_pc; // recover pc
                     return;
                 }
@@ -215,7 +215,7 @@ void invokedynamic(struct frame *frame)
                 args[j] = rtc_to_slot(curr_class->loader, curr_class->rtcp, ref->args[i]); // todo 用哪个类的 rtcp
             }
 
-            jthread_invoke_method_with_shim(curr_thread, bootstrap_method, args, set_call_set);
+            thread_invoke_method_with_shim(curr_thread, bootstrap_method, args, set_call_set);
             frame->reader.pc = saved_pc; // recover pc
             return;
         }

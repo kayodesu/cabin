@@ -23,6 +23,6 @@ void checkcast(struct frame *frame)
 
     struct class *jclass = classloader_load_class(frame->m.method->clazz->loader, class_name); // todo resolve_class ???
     if (!jobject_is_instance_of(obj, jclass)) {
-        jthread_throw_class_cast_exception(frame->thread, obj->clazz->class_name, jclass->class_name);
+        thread_throw_class_cast_exception(frame->thread, obj->clazz->class_name, jclass->class_name);
     }
 }
