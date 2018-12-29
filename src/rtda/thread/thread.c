@@ -25,7 +25,7 @@ struct thread* thread_create(struct classloader *loader, struct object *jltobj)
 //    struct slot value = islot(1);  // todo. why 1? I do not know. 参见 jvmgo/instructions/reserved/bootstrap.go
 //    set_instance_field_value_by_nt(thread->this_obj, "priority", "I", &value);
 
-    thread->dyn.caller = thread->dyn.invoked_type = thread->dyn.call_set = thread->dyn.exact_method_handle = NULL;
+    thread->dyn.bootstrap_method_type = thread->dyn.lookup = thread->dyn.call_set = thread->dyn.exact_method_handle = NULL;
 
     /*
     auto jlThreadClass = classLoader->loadClass("java/lang/Thread");

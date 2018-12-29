@@ -447,7 +447,16 @@ struct slot rtc_to_slot(struct classloader *loader, const struct rtcp *rtcp, int
         case DOUBLE_CONSTANT:
             return dslot(rtcp_get_double(rtcp, index));
         case METHOD_HANDLE_CONSTANT: {
+//            CONSTANT_MethodHandle_info {
+//                u1 tag;
+//                u1 reference_kind;
+//                u2 reference_index;
+//            }
+            // https://docs.oracle.com/javase/7/docs/api/java/lang/invoke/MethodHandle.html
+            // MethodHandle MethodHandle.lookup().findStatic(Class<?> refc, String name, MethodType type)
+            //                                    findVirtual ... 等等一推find
             struct method_handle *mh = rtcp_get_method_handle(rtcp, index);
+
             // todo
             jvm_abort("");
             break;

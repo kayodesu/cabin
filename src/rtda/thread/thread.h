@@ -26,10 +26,10 @@ struct slot;
 
 struct invokedynamic_temp_store {
     // java/lang/invoke/MethodType
-    struct object *invoked_type;
+    struct object *bootstrap_method_type;
 
     // java/lang/invoke/MethodHandles$Lookup
-    struct object *caller;
+    struct object *lookup;
 
     // java/lang/invoke/CallSite
     struct object *call_set;

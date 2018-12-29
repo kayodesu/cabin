@@ -12,37 +12,8 @@
 #include "../../../rtda/heap/arrobj.h"
 #include "../../../classfile/constant.h"
 #include "../../../rtda/heap/strobj.h"
+#include "../../../rtda/heap/clsobj.h"
 
-/*
- * todo 说明 invokedynamic!!!!!!!
- */
-static void set_invoked_type(struct frame *frame)
-{
-    assert(frame != NULL);
-    frame->thread->dyn.invoked_type = frame_stack_popr(frame);
-    int i = 3;
-}
-
-static void set_caller(struct frame *frame)
-{
-    assert(frame != NULL);
-    frame->thread->dyn.caller = frame_stack_popr(frame);
-    int i = 3;
-}
-
-static void set_call_set(struct frame *frame)
-{
-    assert(frame != NULL);
-    frame->thread->dyn.call_set = frame_stack_popr(frame);
-    int i = 3;
-}
-
-static void set_exact_method_handle(struct frame *frame)
-{
-    assert(frame != NULL);
-    frame->thread->dyn.exact_method_handle = frame_stack_popr(frame);
-    int i = 3;
-}
 
 /*
  *
@@ -101,6 +72,133 @@ static void set_exact_method_handle(struct frame *frame)
         u2 name_and_type_index;
     } ref_constant, field_ref_constant, method_ref_constant, interface_method_ref_constant;
  */
+
+static void set_bootstrap_method_type(struct frame *frame)
+{
+    assert(frame != NULL);
+    frame->thread->dyn.bootstrap_method_type = frame_stack_popr(frame);
+    int i = 3;
+}
+
+static void set_lookup(struct frame *frame)
+{
+    assert(frame != NULL);
+    frame->thread->dyn.lookup = frame_stack_popr(frame);
+    int i = 3;
+}
+
+static void set_call_set0(struct frame *frame)
+{
+    assert(frame != NULL);
+    frame->thread->dyn.call_set = frame_stack_popr(frame);
+    int i = 3;
+}
+
+static void set_exact_method_handle(struct frame *frame)
+{
+    assert(frame != NULL);
+    frame->thread->dyn.exact_method_handle = frame_stack_popr(frame);
+    int i = 3;
+}
+
+static void parse_bootstrap_method_type(
+        struct class *curr_class, struct thread *curr_thread, struct invoke_dynamic_ref *ref)
+{
+// todo 注意有一个这个方法： MethodType.fromMethodDescriptorString 更方便
+    struct object *parameter_types = method_descriptor_to_parameter_types(curr_class->loader, ref->nt->descriptor);
+    struct object *return_type = method_descriptor_to_return_type(curr_class->loader, ref->nt->descriptor);
+    struct class *c = classloader_load_class(g_bootstrap_loader, "java/lang/invoke/MethodType");
+
+    // public static MethodType methodType(Class<?> rtype, Class<?>[] ptypes)
+    if (arrobj_len(parameter_types) > 0) {
+        struct method *get_method_type = class_lookup_static_method(
+                c, "methodType", "(Ljava/lang/Class;[Ljava/lang/Class;)Ljava/lang/invoke/MethodType;");
+
+        struct slot args[] = { rslot(return_type), rslot(parameter_types) };
+        thread_invoke_method_with_shim(curr_thread, get_method_type, args, set_bootstrap_method_type);
+    } else {
+        struct method *get_method_type = class_lookup_static_method(
+                c, "methodType", "(Ljava/lang/Class;)Ljava/lang/invoke/MethodType;");
+        struct slot args[] = { rslot(return_type) };
+        thread_invoke_method_with_shim(curr_thread, get_method_type, args, set_bootstrap_method_type);
+    }
+
+    if (!c->inited) { // 后压栈，先执行
+        class_clinit(c, curr_thread);
+    }
+}
+
+static void get_lookup(struct thread *curr_thread)
+{
+    struct class *c = classloader_load_class(g_bootstrap_loader, "java/lang/invoke/MethodHandles");
+    struct method *m = class_lookup_static_method(c, "lookup", "()Ljava/lang/invoke/MethodHandles$Lookup;");
+    thread_invoke_method_with_shim(curr_thread, m, NULL, set_lookup);
+
+    if (!c->inited) { // 后压栈，先执行
+        class_clinit(c, curr_thread);
+    }
+}
+
+//static struct slot rtc_to_slot(struct classloader *loader, const struct rtcp *rtcp, int index)
+//{
+//    assert(rtcp != NULL);
+//
+//    switch (rtcp->pool[index].t) {
+//        case STRING_CONSTANT:
+//            return rslot(strobj_create(rtcp_get_str(rtcp, index)));
+//        case CLASS_CONSTANT:
+//            return rslot(clsobj_create(classloader_load_class(loader, rtcp_get_class_name(rtcp, index))));
+//        case INTEGER_CONSTANT:
+//            return islot(rtcp_get_int(rtcp, index));
+//        case LONG_CONSTANT:
+//            return lslot(rtcp_get_long(rtcp, index));
+//        case FLOAT_CONSTANT:
+//            return fslot(rtcp_get_float(rtcp, index));
+//        case DOUBLE_CONSTANT:
+//            return dslot(rtcp_get_double(rtcp, index));
+//        case METHOD_HANDLE_CONSTANT: {
+//            struct method_handle *mh = rtcp_get_method_handle(rtcp, index);
+//            // todo
+//            jvm_abort("");
+//            break;
+//        }
+//        case METHOD_TYPE_CONSTANT: {
+//            const char *descriptor = rtcp_get_method_type(rtcp, index);
+//            // todo
+//            jvm_abort("");
+//            break;
+//        }
+//        default:
+//            VM_UNKNOWN_ERROR("unknown type. t = %d, index = %d\n", rtcp->pool[index].t, index);
+//            break;
+//    }
+//}
+
+static void set_call_set(struct class *curr_class, struct thread *curr_thread,
+                        struct classloader *loader, struct invoke_dynamic_ref *ref)
+{
+
+    struct method_ref *mr = ref->handle->ref.mr;
+
+    struct class *bootstrap_class = classloader_load_class(loader, mr->class_name);
+    struct method *bootstrap_method = class_lookup_static_method(bootstrap_class, mr->name, mr->descriptor);
+    // todo 说明 bootstrap_method 的格式
+    // bootstrap_method is static,  todo 对不对
+    // 前三个参数固定为 MethodHandles.Lookup caller, String invokedName, MethodType invokedType todo 对不对
+    // 后续的参数由 ref->argc and ref->args 决定
+    assert(ref->argc + 3 == bootstrap_method->arg_slot_count);
+    struct slot args[bootstrap_method->arg_slot_count];
+    args[0] = rslot(curr_thread->dyn.lookup);
+    args[1] = rslot(strobj_create(mr->name));
+    args[2] = rslot(curr_thread->dyn.bootstrap_method_type);
+    // parse remaining args
+    for (int i = 0, j = 3; i < ref->argc; i++, j++) {
+        args[j] = rtc_to_slot(curr_class->loader, curr_class->rtcp, ref->args[i]); // todo 用哪个类的 rtcp
+    }
+
+    thread_invoke_method_with_shim(curr_thread, bootstrap_method, args, set_call_set0);
+}
+
 // 每一个 invokedynamic 指令都称为 Dynamic Call Site(动态调用点)
 void invokedynamic(struct frame *frame)
 {
@@ -119,43 +217,16 @@ void invokedynamic(struct frame *frame)
 
     struct invoke_dynamic_ref *ref = rtcp_get_invoke_dynamic(curr_class->rtcp, index);
 
-    struct object *invoked_type = curr_thread->dyn.invoked_type;
-    if (invoked_type == NULL) {
-        // create java/lang/invoke/MethodType of bootstrap method
-        struct object *parameter_types = method_descriptor_to_parameter_types(curr_class->loader, ref->nt->descriptor);
-        struct object *return_type = method_descriptor_to_return_type(curr_class->loader, ref->nt->descriptor);
-        struct class *c = classloader_load_class(g_bootstrap_loader, "java/lang/invoke/MethodType");
-
-        // public static MethodType methodType(Class<?> rtype, Class<?>[] ptypes)
-        if (arrobj_len(parameter_types) > 0) {
-            struct method *get_method_type = class_lookup_static_method(
-                    c, "methodType", "(Ljava/lang/Class;[Ljava/lang/Class;)Ljava/lang/invoke/MethodType;");
-
-            struct slot args[] = { rslot(return_type), rslot(parameter_types) };
-            thread_invoke_method_with_shim(curr_thread, get_method_type, args, set_invoked_type);
-        } else {
-            struct method *get_method_type = class_lookup_static_method(
-                    c, "methodType", "(Ljava/lang/Class;)Ljava/lang/invoke/MethodType;");
-            struct slot args[] = { rslot(return_type) };
-            thread_invoke_method_with_shim(curr_thread, get_method_type, args, set_invoked_type);
-        }
-
-        if (!c->inited) { // 后压栈，先执行
-            class_clinit(c, curr_thread);
-        }
+    struct object *bootstrap_method_type = curr_thread->dyn.bootstrap_method_type;
+    if (bootstrap_method_type == NULL) {
+        parse_bootstrap_method_type(curr_class, curr_thread, ref);
         frame->reader.pc = saved_pc; // recover pc
         return;
     }
 
-    struct object *caller = curr_thread->dyn.caller;
-    if (caller == NULL) {
-        struct class *c = classloader_load_class(g_bootstrap_loader, "java/lang/invoke/MethodHandles");
-        struct method *lookup = class_lookup_static_method(c, "lookup", "()Ljava/lang/invoke/MethodHandles$Lookup;");
-        thread_invoke_method_with_shim(curr_thread, lookup, NULL, set_caller);
-
-        if (!c->inited) { // 后压栈，先执行
-            class_clinit(c, curr_thread);
-        }
+    struct object *lookup = curr_thread->dyn.lookup;
+    if (lookup == NULL) {
+        get_lookup(curr_thread);
         frame->reader.pc = saved_pc; // recover pc
         return;
     }
@@ -176,48 +247,30 @@ void invokedynamic(struct frame *frame)
         case REF_KIND_INVOKE_VIRTUAL:
             break;
         case REF_KIND_INVOKE_STATIC: {
-            if (call_set != NULL) {
-                if (exact_method_handle != NULL) {
-                    // public final Object invokeExact(Object... args) throws Throwable
-                    struct method *exact_method = class_lookup_instance_method(
-                            exact_method_handle->clazz, "invokeExact", "[Ljava/lang/Object;");
-                    // todo args
-                    jvm_abort(""); ////////////////////////////////////////////////////
-                    // invoke exact method, invokedynamic completely execute over.
-                    thread_invoke_method(curr_thread, exact_method, NULL);
-                    return;
-                } else {
-                    // public abstract MethodHandle dynamicInvoker()
-                    struct method *dynamic_invoker = class_lookup_instance_method(
-                            call_set->clazz, "dynamicInvoker", "()Ljava/lang/invoke/MethodHandle;");
-                    struct slot arg = rslot(call_set);
-                    thread_invoke_method_with_shim(curr_thread, dynamic_invoker, &arg, set_exact_method_handle);
-                    frame->reader.pc = saved_pc; // recover pc
-                    return;
-                }
+            if (call_set == NULL) {
+                set_call_set(curr_class, curr_thread, frame->m.method->clazz->loader, ref);
+                frame->reader.pc = saved_pc; // recover pc
+                return;
             }
 
-            struct method_ref *mr = ref->handle->ref.mr;
-
-            struct class *bootstrap_class = classloader_load_class(frame->m.method->clazz->loader, mr->class_name);
-            struct method *bootstrap_method = class_lookup_static_method(bootstrap_class, mr->name, mr->descriptor);
-            // todo 说明 bootstrap_method 的格式
-            // bootstrap_method is static,  todo 对不对
-            // 前三个参数固定为 MethodHandles.Lookup caller, String invokedName, MethodType invokedType todo 对不对
-            // 后续的参数由 ref->argc and ref->args 决定
-            assert(ref->argc + 3 == bootstrap_method->arg_slot_count);
-            struct slot args[bootstrap_method->arg_slot_count];
-            args[0] = rslot(caller);
-            args[1] = rslot(strobj_create(mr->name));
-            args[2] = rslot(invoked_type);
-            // parse remaining args
-            for (int i = 0, j = 3; i < ref->argc; i++, j++) {
-                args[j] = rtc_to_slot(curr_class->loader, curr_class->rtcp, ref->args[i]); // todo 用哪个类的 rtcp
+            if (exact_method_handle != NULL) {
+                // public final Object invokeExact(Object... args) throws Throwable
+                struct method *exact_method = class_lookup_instance_method(
+                        exact_method_handle->clazz, "invokeExact", "[Ljava/lang/Object;");
+                // todo args
+                jvm_abort(""); ////////////////////////////////////////////////////
+                // invoke exact method, invokedynamic completely execute over.
+                thread_invoke_method(curr_thread, exact_method, NULL);
+                return;
+            } else {
+                // public abstract MethodHandle dynamicInvoker()
+                struct method *dynamic_invoker = class_lookup_instance_method(
+                        call_set->clazz, "dynamicInvoker", "()Ljava/lang/invoke/MethodHandle;");
+                struct slot arg = rslot(call_set);
+                thread_invoke_method_with_shim(curr_thread, dynamic_invoker, &arg, set_exact_method_handle);
+                frame->reader.pc = saved_pc; // recover pc
+                return;
             }
-
-            thread_invoke_method_with_shim(curr_thread, bootstrap_method, args, set_call_set);
-            frame->reader.pc = saved_pc; // recover pc
-            return;
         }
         case REF_KIND_INVOKE_SPECIAL:
             break;
