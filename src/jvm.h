@@ -64,6 +64,14 @@ extern struct classloader *g_bootstrap_loader;
 
 #define VM_MALLOC(type, var_name) VM_MALLOCS(type, 1, var_name)
 
+static inline void* vm_malloc(size_t size)
+{
+    void *p = malloc(size);
+    if (p == NULL)
+        vm_out_of_memory_error("malloc failed");
+    return p;
+}
+
 /*
  * jvms规定函数最多有255个参数，this也算，long和double占两个长度
  */

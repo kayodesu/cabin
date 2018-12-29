@@ -84,7 +84,14 @@ struct class {
     int static_fields_count;
     struct slot *static_fields_values; // 保存所有类变量的值
 
-    void *vtable; // todo
+    // vtable 只保存虚方法。
+    struct {
+        const char *name; // method name
+        const char *descriptor; // method descriptor
+        struct method *method;
+    } *vtable; // todo
+    int vtable_len;
+
     void *itable; // todo
 
 //    struct bootstrap_methods_attribute *bootstrap_methods_attribute;

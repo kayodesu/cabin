@@ -78,6 +78,7 @@
       <w>unbox</w>
       <w>unpark</w>
       <w>valist</w>
+      <w>vtable</w>
       <w>wcscpy</w>
       <w>wstr</w>
     </words>

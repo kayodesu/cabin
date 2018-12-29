@@ -284,6 +284,67 @@ static void parse_attribute(struct class *c, struct bytecode_reader *reader)
     }
 }
 
+static void create_vtable(struct class *c)
+{
+    assert(c != NULL);
+    if (c->super_class == NULL) {
+        int vtable_len = c->methods_count;
+        c->vtable = vm_malloc(sizeof(struct method *) * vtable_len);
+        c->vtable_len = 0;
+
+        for (int i = 0; i < c->methods_count; i++) {
+            struct method *m = c->methods + i;
+            if (IS_PRIVATE(m->access_flags)
+                || IS_STATIC(m->access_flags)
+                || strcmp(m->name, "<clinit>") == 0
+                || strcmp(m->name, "<init>") == 0) {
+                continue;
+            }
+
+            c->vtable[c->vtable_len].name = m->name;
+            c->vtable[c->vtable_len].descriptor = m->descriptor;
+            c->vtable[c->vtable_len].method = m;
+            m->vtable_index = c->vtable_len;
+            c->vtable_len++;
+        }
+
+        return;
+    }
+
+    int vtable_len = c->super_class->vtable_len + c->methods_count;
+    c->vtable = vm_malloc(sizeof(struct method *) * vtable_len);
+    memcpy(c->vtable, c->super_class->vtable, c->super_class->vtable_len * sizeof(*(c->vtable)));
+    c->vtable_len = c->super_class->vtable_len;
+
+    for (int i = 0; i < c->methods_count; i++) {
+        struct method *m = c->methods + i;
+        if (IS_PRIVATE(m->access_flags)
+            || IS_STATIC(m->access_flags)
+            || strcmp(m->name, "<clinit>") == 0
+            || strcmp(m->name, "<init>") == 0) {
+            continue;
+        }
+
+        int j = 0;
+        for (j = 0; j < c->super_class->vtable_len; j++) {
+            if (strcmp(m->name, c->vtable[j].name) == 0 && strcmp(m->descriptor, c->vtable[j].descriptor) == 0) {
+                // 重写了父类的方法，更新
+                c->vtable[j].method = m;
+                m->vtable_index = j;
+                break;
+            }
+        }
+        if (j == c->vtable_len) {
+            // 子类定义了要给新方法，加到 vtable 后面
+            c->vtable[c->vtable_len].name = m->name;
+            c->vtable[c->vtable_len].descriptor = m->descriptor;
+            c->vtable[c->vtable_len].method = m;
+            m->vtable_index = c->vtable_len;
+            c->vtable_len++;
+        }
+    }
+}
+
 struct class *class_create(struct classloader *loader, u1 *bytecode, size_t len)
 {
     assert(loader != NULL);
@@ -391,6 +452,7 @@ struct class *class_create(struct classloader *loader, u1 *bytecode, size_t len)
     }
 
     parse_attribute(c, &reader); // parse class attributes
+//    create_vtable(c);
     return c;
 }
 
@@ -460,6 +522,9 @@ struct class* class_create_arr_class(struct classloader *loader, const char *cla
     c->interfaces = malloc(sizeof(struct class *) * 2);
     c->interfaces[0] = classloader_load_class(loader, "java/lang/Cloneable");
     c->interfaces[1] = classloader_load_class(loader, "java/io/Serializable");
+
+    c->vtable_len = 0;
+    c->vtable = NULL;
 
     return c;
 }

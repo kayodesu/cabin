@@ -15,6 +15,12 @@
  */
 void invokevirtual(struct frame *frame)
 {
+    // todo 为什么下面的会在这里调用，不应该啊
+    // java/lang/Math~<clinit>~()V
+    // java/util/HashMap~<init>~(Ljava/util/Map;)V
+    // sun/misc/Unsafe~<clinit>~()V
+    printf("invokevirtual: %s~%s~%s\n", frame->m.method->clazz->class_name, frame->m.method->name, frame->m.method->descriptor);
+
     struct class *curr_class = frame->m.method->clazz;
 
     int index = bcr_readu2(&frame->reader);
@@ -35,8 +41,13 @@ void invokevirtual(struct frame *frame)
         thread_throw_null_pointer_exception(frame->thread);
     }
 
-    // 从对象的类中查找真正要调用的方法
-    struct method *method = class_lookup_method(obj->clazz, ref->name, ref->descriptor);
+    // 下面这样写对不对 todo
+    struct method *method = ref->resolved_method;
+    if (obj->clazz != curr_class) {
+        // 从对象的类中查找真正要调用的方法
+        method = class_lookup_method(obj->clazz, ref->name, ref->descriptor);
+    }
+//    struct method *method = obj->clazz->vtable[ref->resolved_method->vtable_index].method;
     if (IS_ABSTRACT(method->access_flags)) {
         // todo java.lang.AbstractMethodError
         jvm_abort("java.lang.AbstractMethodError\n");

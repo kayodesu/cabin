@@ -30,6 +30,7 @@ struct method {
     struct class *clazz;
     const char *name;
     const char *descriptor;
+    int vtable_index;
 
     NO_ACCESS struct object *parameter_types; // "[Ljava/lang/Class;"
     NO_ACCESS struct object *return_type;     // java/lang/Class
