@@ -15,12 +15,6 @@
  */
 void invokevirtual(struct frame *frame)
 {
-    // todo 为什么下面的会在这里调用，不应该啊
-    // java/lang/Math~<clinit>~()V
-    // java/util/HashMap~<init>~(Ljava/util/Map;)V
-    // sun/misc/Unsafe~<clinit>~()V
-    printf("invokevirtual: %s~%s~%s\n", frame->m.method->clazz->class_name, frame->m.method->name, frame->m.method->descriptor);
-
     struct class *curr_class = frame->m.method->clazz;
 
     int index = bcr_readu2(&frame->reader);
@@ -47,11 +41,19 @@ void invokevirtual(struct frame *frame)
         // 从对象的类中查找真正要调用的方法
         method = class_lookup_method(obj->clazz, ref->name, ref->descriptor);
     }
-//    struct method *method = obj->clazz->vtable[ref->resolved_method->vtable_index].method;
-    if (IS_ABSTRACT(method->access_flags)) {
-        // todo java.lang.AbstractMethodError
-        jvm_abort("java.lang.AbstractMethodError\n");
-    }
+
+//    struct method *method = ref->resolved_method;
+//    if (!IS_FINAL(method->access_flags)) {
+//        method = class_search_vtable(obj->clazz, method->vtable_index);
+//        if (method == NULL) {
+////            class_search_vtable(obj->clazz, ref->resolved_method->vtable_index);
+////            printvm("method->vtable_index   %d\n", ref->resolved_method->vtable_index);
+////            printvm("%d, %d, %d, %d\n", IS_PRIVATE(ref->resolved_method->access_flags), IS_STATIC(ref->resolved_method->access_flags), IS_FINAL(ref->resolved_method->access_flags), IS_ABSTRACT(ref->resolved_method->access_flags));
+////            printvm("---   %s\n, ", obj->clazz->class_name); // todo
+////            jvm_abort("++++ %s~%s~%s\n, ", ref->class_name, ref->name, ref->descriptor); // todo
+//            jvm_abort("");
+//        }
+//    }
 
     thread_invoke_method(frame->thread, method, args);
 }

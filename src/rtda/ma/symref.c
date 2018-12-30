@@ -15,6 +15,10 @@ struct class* resolve_class(const struct class *visitor, const char *class_name)
     }
 
     struct class *jclass = classloader_load_class(visitor->loader, class_name);
+//    if (strcmp(jclass->class_name, class_name) != 0) { // todo debug check
+//        jvm_abort("%s, %s\n", jclass->class_name, class_name);
+//    }
+
     // todo class 的有效性检查
     if (class_is_accessible_to(jclass, visitor)) {
         return jclass;

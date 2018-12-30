@@ -37,6 +37,7 @@ struct class {
     // 必须是全限定类名，用作 hash 表中的 key
     const char *class_name;
 
+    // 如果类没有<clinit>方法，是不是inited直接职位true  todo
     bool inited; // 此类是否被初始化过了（是否调用了<clinit>方法）。
 
     struct classloader *loader; // todo
@@ -85,6 +86,7 @@ struct class {
     struct slot *static_fields_values; // 保存所有类变量的值
 
     // vtable 只保存虚方法。
+    // 该类所有函数自有函数（除了private, static, final, abstract）和 父类的函数虚拟表。
     struct {
         const char *name; // method name
         const char *descriptor; // method descriptor
@@ -160,6 +162,15 @@ struct method** class_get_declared_methods(struct class *c, const char *name, bo
 
 struct method* class_get_constructor(struct class *c, const char *descriptor);
 struct method** class_get_constructors(struct class *c, bool public_only, int *count);
+
+static inline struct method* class_search_vtable(struct class *c, int vtable_index)
+{
+    assert(c != NULL);
+    if (0 <= vtable_index && vtable_index < c->vtable_len) {
+        return c->vtable[vtable_index].method;
+    }
+    return NULL;
+}
 
 /*
  * 在类的继承体系中查找方法

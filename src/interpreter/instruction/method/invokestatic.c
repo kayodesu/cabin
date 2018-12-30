@@ -29,6 +29,10 @@ void invokestatic(struct frame *frame)
         // todo java.lang.AbstractMethodError
         jvm_abort("java.lang.AbstractMethodError\n");
     }
+    if (!IS_STATIC(ref->resolved_method->access_flags)) {
+        // todo java.lang.IncompatibleClassChangeError
+        jvm_abort("java.lang.IncompatibleClassChangeError\n");
+    }
 
 //    if (!ref->resolved_class->inited) {
 //        jclass_clinit(ref->resolved_class, frame->thread);

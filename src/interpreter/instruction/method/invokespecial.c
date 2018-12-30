@@ -47,6 +47,10 @@ void invokespecial(struct frame *frame)
         // todo java.lang.AbstractMethodError
         jvm_abort("java.lang.AbstractMethodError\n");
     }
+    if (IS_STATIC(method->access_flags)) {
+        // todo java.lang.IncompatibleClassChangeError
+        jvm_abort("java.lang.IncompatibleClassChangeError\n");
+    }
 
     struct slot args[method->arg_slot_count];
     for (int i = method->arg_slot_count - 1; i >= 0; i--) {

@@ -289,15 +289,16 @@ static void create_vtable(struct class *c)
     assert(c != NULL);
     if (c->super_class == NULL) {
         int vtable_len = c->methods_count;
-        c->vtable = vm_malloc(sizeof(struct method *) * vtable_len);
+        c->vtable = vm_malloc(sizeof(*(c->vtable)) * vtable_len);
         c->vtable_len = 0;
 
         for (int i = 0; i < c->methods_count; i++) {
             struct method *m = c->methods + i;
             if (IS_PRIVATE(m->access_flags)
                 || IS_STATIC(m->access_flags)
-                || strcmp(m->name, "<clinit>") == 0
-                || strcmp(m->name, "<init>") == 0) {
+                || IS_FINAL(m->access_flags)
+                || IS_ABSTRACT(m->access_flags)
+                || strcmp(m->name, "<clinit>") == 0) {  //  todo strcmp(m->name, "<init>") == 0
                 continue;
             }
 
@@ -306,13 +307,14 @@ static void create_vtable(struct class *c)
             c->vtable[c->vtable_len].method = m;
             m->vtable_index = c->vtable_len;
             c->vtable_len++;
+ //           printf("444444     %s~%s~%s\n", m->clazz->class_name, m->name, m->descriptor);//////////////////////////
         }
 
         return;
     }
 
     int vtable_len = c->super_class->vtable_len + c->methods_count;
-    c->vtable = vm_malloc(sizeof(struct method *) * vtable_len);
+    c->vtable = vm_malloc(sizeof(*(c->vtable)) * vtable_len);
     memcpy(c->vtable, c->super_class->vtable, c->super_class->vtable_len * sizeof(*(c->vtable)));
     c->vtable_len = c->super_class->vtable_len;
 
@@ -320,8 +322,10 @@ static void create_vtable(struct class *c)
         struct method *m = c->methods + i;
         if (IS_PRIVATE(m->access_flags)
             || IS_STATIC(m->access_flags)
-            || strcmp(m->name, "<clinit>") == 0
-            || strcmp(m->name, "<init>") == 0) {
+            || IS_FINAL(m->access_flags)
+            || IS_ABSTRACT(m->access_flags)
+            || strcmp(m->name, "<clinit>") == 0) {  //  todo strcmp(m->name, "<init>") == 0
+//            printf("1111111     %s~%s~%s\n", m->clazz->class_name, m->name, m->descriptor);//////////////////////////
             continue;
         }
 
@@ -331,17 +335,27 @@ static void create_vtable(struct class *c)
                 // 重写了父类的方法，更新
                 c->vtable[j].method = m;
                 m->vtable_index = j;
+   //             printf("222222    %s~%s~%s\n", m->clazz->class_name, m->name, m->descriptor);//////////////////////////
                 break;
             }
         }
-        if (j == c->vtable_len) {
+        if (j == c->super_class->vtable_len) {
             // 子类定义了要给新方法，加到 vtable 后面
             c->vtable[c->vtable_len].name = m->name;
             c->vtable[c->vtable_len].descriptor = m->descriptor;
             c->vtable[c->vtable_len].method = m;
             m->vtable_index = c->vtable_len;
+    //        printf("33333     %s~%s~%s\n", m->clazz->class_name, m->name, m->descriptor);//////////////////////////
             c->vtable_len++;
         }
+    }
+}
+
+static void print_vtable(const struct class *c)
+{
+    assert(c != NULL);
+    for (int i = 0; i < c->vtable_len; i++) {
+        printvm("%s~%s~%s\n", c->class_name, c->vtable[i].name, c->vtable[i].descriptor);
     }
 }
 
@@ -453,6 +467,8 @@ struct class *class_create(struct classloader *loader, u1 *bytecode, size_t len)
 
     parse_attribute(c, &reader); // parse class attributes
 //    create_vtable(c);
+//    if (strcmp(c->class_name, "sun/util/PreHashedMap") == 0)
+//        print_vtable(c);
     return c;
 }
 
