@@ -19,7 +19,7 @@ struct thread;
 struct field;
 
 struct class {
-    struct clshead {
+    struct clsheader {
         // todo
     } head;
 
@@ -76,8 +76,9 @@ struct class {
     // instance_field_count 有可能大于 fields_count，因为 instance_field_count 包含了继承过来的 field.
     // 类型二统计为两个数量
     int instance_fields_count;
+
     // 已经按变量类型初始化好的变量值，供创建此类的对象时使用。
-    struct slot *inited_instance_fields_values;
+//    struct slot *inited_instance_fields_values;
 
     /*
      * 类型二统计为两个数量
@@ -134,7 +135,7 @@ void class_destroy(struct class *c);
  */
 void class_clinit(struct class *c, struct thread *thread);
 
-struct slot* copy_inited_instance_fields_values(const struct class *c);
+//struct slot* copy_inited_instance_fields_values(const struct class *c);
 
 void set_static_field_value_by_id(struct class *c, int id, const struct slot *value);
 void set_static_field_value_by_nt(struct class *c,

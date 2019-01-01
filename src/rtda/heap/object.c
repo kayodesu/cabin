@@ -18,7 +18,7 @@ struct object* object_create(struct class *c)
     struct object *o = halloc(size);
     o->clazz = c;
     o->size = size;
-    memcpy(o->data, c->inited_instance_fields_values, c->instance_fields_count * sizeof(struct slot));
+//    memcpy(o->data, c->inited_instance_fields_values, c->instance_fields_count * sizeof(struct slot));
     return o;
 }
 

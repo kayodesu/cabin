@@ -37,46 +37,44 @@ static void calc_instance_field_id(struct class *c)
     assert(id >= 0);
     c->instance_fields_count = id;
 
-    VM_MALLOCS(struct slot, c->instance_fields_count, values);
-    c->inited_instance_fields_values = values;
-
-    // 将父类中的变量拷贝过来
-    if (c->super_class != NULL) {
-        memcpy(values, c->super_class->inited_instance_fields_values,
-               c->super_class->instance_fields_count * sizeof(struct slot));
-    }
-    // 初始化本类中的实例变量
-    for (int i = 0; i < c->fields_count; i++) {
-        struct field *field = c->fields + i;
-        if (!IS_STATIC(field->access_flags)) {
-            assert(field->id < c->instance_fields_count);
-            switch (field->descriptor[0]) {
-                case 'B':
-                case 'C':
-                case 'I':
-                case 'S':
-                case 'Z':
-                    values[field->id] = islot(0);
-                    break;
-                case 'F':
-                    values[field->id] = fslot(0.0f);
-                    break;
-                case 'J':
-                    values[field->id] = lslot(0L);
-                    values[field->id + 1] = phslot;
-                    break;
-                case 'D':
-                    values[field->id] = dslot(0.0);
-                    values[field->id + 1] = phslot;
-                    break;
-                default:
-                    values[field->id] = rslot(NULL);
-                    break;
-            }
-        }
-    }
-
-    // todo 保证 values 的每一项都被初始化了
+//    VM_MALLOCS(struct slot, c->instance_fields_count, values);
+//    c->inited_instance_fields_values = values;
+//
+//    // 将父类中的变量拷贝过来
+//    if (c->super_class != NULL) {
+//        memcpy(values, c->super_class->inited_instance_fields_values,
+//               c->super_class->instance_fields_count * sizeof(struct slot));
+//    }
+//    // 初始化本类中的实例变量
+//    for (int i = 0; i < c->fields_count; i++) {
+//        struct field *field = c->fields + i;
+//        if (!IS_STATIC(field->access_flags)) {
+//            assert(field->id < c->instance_fields_count);
+//            switch (field->descriptor[0]) {
+//                case 'B':
+//                case 'C':
+//                case 'I':
+//                case 'S':
+//                case 'Z':
+//                    values[field->id] = islot(0);
+//                    break;
+//                case 'F':
+//                    values[field->id] = fslot(0.0f);
+//                    break;
+//                case 'J':
+//                    values[field->id] = lslot(0L);
+//                    values[field->id + 1] = phslot;
+//                    break;
+//                case 'D':
+//                    values[field->id] = dslot(0.0);
+//                    values[field->id + 1] = phslot;
+//                    break;
+//                default:
+//                    values[field->id] = rslot(NULL);
+//                    break;
+//            }
+//        }
+//    }
 }
 
 // 计算静态字段的个数，同时给它们编号
@@ -486,7 +484,7 @@ static void jclass_clear(struct class *c)
     c->clsobj = NULL;
     c->rtcp = NULL;
     c->super_class = NULL;
-    c->inited_instance_fields_values = NULL;
+//    c->inited_instance_fields_values = NULL;
     c->static_fields_values = NULL;
     c->instance_fields_count = c->static_fields_count = c->fields_count = c->public_fields_count = 0;
     c->interfaces_count = c->methods_count = c->public_methods_count = 0;
@@ -824,13 +822,13 @@ int jclass_inherited_depth(const struct class *c)
     return depth;
 }
 
-struct slot* copy_inited_instance_fields_values(const struct class *c)
-{
-    assert(c != NULL);
-    VM_MALLOCS(struct slot, c->instance_fields_count, copy);
-    memcpy(copy, c->inited_instance_fields_values, c->instance_fields_count * sizeof(struct slot));
-    return copy;
-}
+//struct slot* copy_inited_instance_fields_values(const struct class *c)
+//{
+//    assert(c != NULL);
+//    VM_MALLOCS(struct slot, c->instance_fields_count, copy);
+//    memcpy(copy, c->inited_instance_fields_values, c->instance_fields_count * sizeof(struct slot));
+//    return copy;
+//}
 
 void set_static_field_value_by_id(struct class *c, int id, const struct slot *value)
 {
