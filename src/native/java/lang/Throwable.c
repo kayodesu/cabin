@@ -104,8 +104,10 @@ static void getStackTraceDepth(struct frame *frame)
 
 void java_lang_Throwable_registerNatives()
 {
-    register_native_method("java/lang/Throwable~registerNatives~()V", registerNatives);
-    register_native_method("java/lang/Throwable~fillInStackTrace~(I)Ljava/lang/Throwable;", fillInStackTrace);
-    register_native_method("java/lang/Throwable~getStackTraceElement~(I)Ljava/lang/StackTraceElement;", getStackTraceElement);
-    register_native_method("java/lang/Throwable~getStackTraceDepth~()I", getStackTraceDepth);
+#undef C
+#define C "java/lang/Throwable~"
+    register_native_method(C"registerNatives~()V", registerNatives);
+    register_native_method(C"fillInStackTrace~(I)Ljava/lang/Throwable;", fillInStackTrace);
+    register_native_method(C"getStackTraceElement~(I)Ljava/lang/StackTraceElement;", getStackTraceElement);
+    register_native_method(C"getStackTraceDepth~()I", getStackTraceDepth);
 }

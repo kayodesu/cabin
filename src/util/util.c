@@ -35,8 +35,7 @@ char* vm_strdup(const char *s)
 {
     assert(s != NULL);
 
-    char *ns = malloc(sizeof(char) * strlen(s) + 1);
-    CHECK_MALLOC_RESULT(ns);
+    char *ns = vm_malloc(sizeof(char) * strlen(s) + 1);
     strcpy(ns, s);
     return ns;
 }

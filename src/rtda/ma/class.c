@@ -170,8 +170,7 @@ static void read_constant_pool(struct constant pool[], u2 count, struct bytecode
                 break;
             case UTF8_CONSTANT:
                 c->u.utf8_constant.length = bcr_readu2(reader);
-                c->u.utf8_constant.bytes = malloc(c->u.utf8_constant.length);
-                CHECK_MALLOC_RESULT(c->u.utf8_constant.bytes);
+                c->u.utf8_constant.bytes = vm_malloc(c->u.utf8_constant.length);
                 bcr_read_bytes(reader, c->u.utf8_constant.bytes, c->u.utf8_constant.length);
                 break;
             case METHOD_HANDLE_CONSTANT:
@@ -238,8 +237,7 @@ static void parse_attribute(struct class *c, struct bytecode_reader *reader)
             for (u2 k = 0; k < num; k++) {
                 methods[k].bootstrap_method_ref = bcr_readu2(reader);
                 methods[k].num_bootstrap_arguments = bcr_readu2(reader);
-                methods[k].bootstrap_arguments = malloc(sizeof(u2) * methods[k].num_bootstrap_arguments); // todo 没有 free
-                CHECK_MALLOC_RESULT(methods[k].bootstrap_arguments);
+                methods[k].bootstrap_arguments = vm_malloc(sizeof(u2) * methods[k].num_bootstrap_arguments); // todo 没有 free
                 for (int j = 0; j < methods[k].num_bootstrap_arguments; j++) {
                     methods[k].bootstrap_arguments[j] = bcr_readu2(reader);
                 }
@@ -409,8 +407,7 @@ struct class *class_create(struct classloader *loader, u1 *bytecode, size_t len)
     if (c->interfaces_count == 0) {
         c->interfaces = NULL;
     } else {
-        c->interfaces = malloc(sizeof(struct class *) * c->interfaces_count);
-        CHECK_MALLOC_RESULT(c->interfaces);
+        c->interfaces = vm_malloc(sizeof(struct class *) * c->interfaces_count);
 
         for (int i = 0; i < c->interfaces_count; i++) {
             const char *interface_name = rtcp_get_class_name(c->rtcp, bcr_readu2(&reader));
@@ -428,8 +425,7 @@ struct class *class_create(struct classloader *loader, u1 *bytecode, size_t len)
     if (c->fields_count == 0) {
         c->fields = NULL;
     } else {
-        c->fields = malloc(sizeof(struct field) * c->fields_count);
-        CHECK_MALLOC_RESULT(c->fields);
+        c->fields = vm_malloc(sizeof(struct field) * c->fields_count);
         for (int i = 0, back = c->fields_count - 1; i < c->fields_count; i++) {
             u2 access_flags = bcr_peeku2(&reader);
             // 保证所有的 public fields 放在前面
@@ -450,8 +446,7 @@ struct class *class_create(struct classloader *loader, u1 *bytecode, size_t len)
     if (c->methods_count == 0) {
         c->methods = NULL;
     } else {
-        c->methods = malloc(sizeof(struct method) * c->methods_count);
-        CHECK_MALLOC_RESULT(c->methods);
+        c->methods = vm_malloc(sizeof(struct method) * c->methods_count);
         for (int i = 0, back = c->methods_count - 1; i < c->methods_count; i++) {
             u2 access_flags = bcr_peeku2(&reader);
             // 保证所有的 public methods 放在前面
@@ -697,7 +692,7 @@ struct method* class_get_declared_static_method(struct class *c, const char *nam
     return NULL;
 }
 
-struct method* jclass_get_declared_nonstatic_method(struct class *c, const char *name, const char *descriptor)
+struct method* class_get_declared_nonstatic_method(struct class *c, const char *name, const char *descriptor)
 {
     for (int i = 0; i < c->methods_count; i++) {
         struct method *m = c->methods + i;
@@ -811,7 +806,7 @@ bool class_is_subclass_of(const struct class *c, const struct class *father)
     return false;
 }
 
-int jclass_inherited_depth(const struct class *c)
+int class_inherited_depth(const struct class *c)
 {
     assert(c != NULL);
 
@@ -973,7 +968,7 @@ bool class_is_accessible_to(const struct class *c, const struct class *visitor)
     return strcmp(c->pkg_name, visitor->pkg_name) == 0;
 }
 
-char *jclass_to_string(const struct class *c)
+char *class_to_string(const struct class *c)
 {
     VM_MALLOCS(char, PATH_MAX, result);
     strcpy(result, "class: ");

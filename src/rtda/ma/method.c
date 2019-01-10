@@ -32,8 +32,7 @@ struct object* jmethod_get_exception_types(struct method *method)
 
     if (method->exception_types == NULL) {
         int count = 0;
-        struct object **exception_types = malloc(sizeof(struct object **) * method->exception_tables_count);
-        CHECK_MALLOC_RESULT(exception_types);
+        struct object **exception_types = vm_malloc(sizeof(struct object **) * method->exception_tables_count);
         for (int i = 0; i < method->exception_tables_count; i++) {
             struct class *c = method->exception_tables[i].catch_type;
             if (c != NULL) {
@@ -119,8 +118,7 @@ static void parse_code_attr(struct method *method, struct bytecode_reader *reade
     if (method->exception_tables_count == 0) {
         method->exception_tables = NULL;
     } else {
-        method->exception_tables = malloc(sizeof(struct exception_table) * method->exception_tables_count);
-        CHECK_MALLOC_RESULT(method->exception_tables);
+        method->exception_tables = vm_malloc(sizeof(struct exception_table) * method->exception_tables_count);
         for (int i = 0; i < method->exception_tables_count; i++) {
             struct exception_table *t = method->exception_tables + i;
             t->start_pc = bcr_readu2(reader);
@@ -146,8 +144,7 @@ static void parse_code_attr(struct method *method, struct bytecode_reader *reade
 
         if (strcmp(LineNumberTable, attr_name) == 0) {
             method->line_number_table_count = bcr_readu2(reader);
-            method->line_number_tables = malloc(sizeof(struct line_number_table) * method->line_number_table_count);
-            CHECK_MALLOC_RESULT(method->line_number_tables);
+            method->line_number_tables = vm_malloc(sizeof(struct line_number_table) * method->line_number_table_count);
             for (int i = 0; i < method->line_number_table_count; i++) {
                 method->line_number_tables[i].start_pc = bcr_readu2(reader);
                 method->line_number_tables[i].line_number = bcr_readu2(reader);

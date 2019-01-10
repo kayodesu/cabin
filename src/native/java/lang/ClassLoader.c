@@ -6,6 +6,7 @@
 #include "../../../jvm.h"
 #include "../../../rtda/thread/frame.h"
 #include "../../../rtda/heap/object.h"
+#include "../../../rtda/heap/strobj.h"
 
 // private native Class<?> defineClass0(String name, byte[] b, int off, int len, ProtectionDomain pd);
 static void defineClass0(struct frame *frame)
@@ -78,20 +79,22 @@ static void retrieveDirectives(struct frame *frame)
 
 void java_lang_ClassLoader_registerNatives()
 {
-    register_native_method("java/lang/ClassLoader~registerNatives~()V", registerNatives);
-    register_native_method("java/lang/ClassLoader~defineClass0~"
+#undef C
+#define C "java/lang/ClassLoader~"
+    register_native_method(C"registerNatives~()V", registerNatives);
+    register_native_method(C"defineClass0~"
              "(Ljava/lang/String;[BIILjava/security/ProtectionDomain;)Ljava/lang/Class;",
                            defineClass0);
-    register_native_method("java/lang/ClassLoader~defineClass1~"
+    register_native_method(C"defineClass1~"
              "(Ljava/lang/String;[BIILjava/security/ProtectionDomain;Ljava/lang/String;)Ljava/lang/Class;",
                            defineClass1);
-    register_native_method("java/lang/ClassLoader~defineClass2~"
+    register_native_method(C"defineClass2~"
              "(Ljava/lang/String;Ljava/nio/ByteBuffer;IILjava/security/ProtectionDomain;Ljava/lang/String;)Ljava/lang/Class;",
                            defineClass2);
-    register_native_method("java/lang/ClassLoader~resolveClass0~(Ljava/lang/Class;)V", resolveClass0);
-    register_native_method("java/lang/ClassLoader~findBootstrapClass~(Ljava/lang/String;)Ljava/lang/Class;", findBootstrapClass);
-    register_native_method("java/lang/ClassLoader~findLoadedClass0~(Ljava/lang/String;)Ljava/lang/Class;", findLoadedClass0);
-    register_native_method("java/lang/ClassLoader~findBuiltinLib~(Ljava/lang/String;)Ljava/lang/String;", findBuiltinLib);
-    register_native_method("java/lang/ClassLoader~retrieveDirectives~()Ljava/lang/AssertionStatusDirectives;", retrieveDirectives);
+    register_native_method(C"resolveClass0~(Ljava/lang/Class;)V", resolveClass0);
+    register_native_method(C"findBootstrapClass~(Ljava/lang/String;)Ljava/lang/Class;", findBootstrapClass);
+    register_native_method(C"findLoadedClass0~(Ljava/lang/String;)Ljava/lang/Class;", findLoadedClass0);
+    register_native_method(C"findBuiltinLib~(Ljava/lang/String;)Ljava/lang/String;", findBuiltinLib);
+    register_native_method(C"retrieveDirectives~()Ljava/lang/AssertionStatusDirectives;", retrieveDirectives);
 }
 

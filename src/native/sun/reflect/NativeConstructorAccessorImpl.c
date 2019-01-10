@@ -27,7 +27,7 @@ struct slot* convert_args(jref this_obj, struct method *m, jref args)
         assert(clsobj != NULL);
         jref o = arrobj_get(jref, args, i);
 
-        if (jclass_is_primitive(clsobj->u.entity_class)) {
+        if (class_is_primitive(clsobj->u.entity_class)) {
             result[k] = priobj_unbox(o);
             if (slot_is_category_two(result + k)) {
                 result[++k] = phslot;

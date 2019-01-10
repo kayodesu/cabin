@@ -174,17 +174,19 @@ static void currentTimeMillis(struct frame *frame)
 
 void java_lang_System_registerNatives()
 {
-    register_native_method("java/lang/System~registerNatives~()V", registerNatives);
+#undef C
+#define C "java/lang/System~"
+    register_native_method(C"registerNatives~()V", registerNatives);
 
-    register_native_method("java/lang/System~mapLibraryName~(Ljava/lang/String;)Ljava/lang/String;", mapLibraryName);
-    register_native_method("java/lang/System~arraycopy~(Ljava/lang/Object;ILjava/lang/Object;II)V", arraycopy);
-    register_native_method("java/lang/System~identityHashCode~(Ljava/lang/Object;)I", identityHashCode);
-    register_native_method("java/lang/System~initProperties~(Ljava/util/Properties;)Ljava/util/Properties;", initProperties);
+    register_native_method(C"mapLibraryName~(Ljava/lang/String;)"LSTR, mapLibraryName);
+    register_native_method(C"arraycopy~(Ljava/lang/Object;ILjava/lang/Object;II)V", arraycopy);
+    register_native_method(C"identityHashCode~(Ljava/lang/Object;)I", identityHashCode);
+    register_native_method(C"initProperties~(Ljava/util/Properties;)Ljava/util/Properties;", initProperties);
 
-    register_native_method("java/lang/System~setIn0~(Ljava/io/InputStream;)V", setIn0);
-    register_native_method("java/lang/System~setOut0~(Ljava/io/PrintStream;)V", setOut0);
-    register_native_method("java/lang/System~setErr0~(Ljava/io/PrintStream;)V", setErr0);
+    register_native_method(C"setIn0~(Ljava/io/InputStream;)V", setIn0);
+    register_native_method(C"setOut0~(Ljava/io/PrintStream;)V", setOut0);
+    register_native_method(C"setErr0~(Ljava/io/PrintStream;)V", setErr0);
 
-    register_native_method("java/lang/System~nanoTime~()J", nanoTime);
-    register_native_method("java/lang/System~currentTimeMillis~()J", currentTimeMillis);
+    register_native_method(C"nanoTime~()J", nanoTime);
+    register_native_method(C"currentTimeMillis~()J", currentTimeMillis);
 }

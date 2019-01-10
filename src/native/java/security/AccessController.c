@@ -21,7 +21,7 @@ static void doPrivileged(struct frame *frame)
      *     T run();
      * }
      */
-    struct method *m = jclass_get_declared_nonstatic_method(this->clazz, "run", "()Ljava/lang/Object;");
+    struct method *m = class_get_declared_nonstatic_method(this->clazz, "run", "()Ljava/lang/Object;");
     struct slot args[] = { rslot(this) };
     thread_invoke_method(frame->thread, m, args);
 }
@@ -67,30 +67,25 @@ static void getInheritedAccessControlContext(struct frame *frame)
 
 void java_security_AccessController_registerNatives()
 {
-    register_native_method("java/security/AccessController~registerNatives~()V", registerNatives);
-    register_native_method("java/security/AccessController~"
-                                   "getStackAccessControlContext~"
-                                   "()Ljava/security/AccessControlContext;",
+#undef C
+#define C "java/security/AccessController~"
+    register_native_method(C"registerNatives~()V", registerNatives);
+    register_native_method(C"getStackAccessControlContext~()Ljava/security/AccessControlContext;",
                            getStackAccessControlContext);
 
-    register_native_method("java/security/AccessController~"
-                                   "getInheritedAccessControlContext~"
-                                   "()Ljava/security/AccessControlContext;",
+    register_native_method(C"getInheritedAccessControlContext~()Ljava/security/AccessControlContext;",
                            getInheritedAccessControlContext);
 
-    register_native_method("java/security/AccessController~doPrivileged~"
-                                   "(Ljava/security/PrivilegedAction;)Ljava/lang/Object;",
-                         doPrivileged);
+    register_native_method(C"doPrivileged~(Ljava/security/PrivilegedAction;)"LOBJ, doPrivileged);
 
-    register_native_method("java/security/AccessController~doPrivileged~"
-             "(Ljava/security/PrivilegedAction;Ljava/security/AccessControlContext;)Ljava/lang/Object;",
+    register_native_method(C"doPrivileged~"
+             "(Ljava/security/PrivilegedAction;Ljava/security/AccessControlContext;)"LOBJ,
                          doPrivileged1);
 
-    register_native_method("java/security/AccessController~doPrivileged~"
-                                   "(Ljava/security/PrivilegedExceptionAction;)Ljava/lang/Object;",
+    register_native_method(C"doPrivileged~(Ljava/security/PrivilegedExceptionAction;)"LOBJ,
                          doPrivileged2);
 
-    register_native_method("java/security/AccessController~doPrivileged~"
-             "(Ljava/security/PrivilegedExceptionAction;Ljava/security/AccessControlContext;)Ljava/lang/Object;",
+    register_native_method(C"doPrivileged~"
+             "(Ljava/security/PrivilegedExceptionAction;Ljava/security/AccessControlContext;)"LOBJ,
                            doPrivileged3);
 }

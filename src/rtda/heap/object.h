@@ -49,17 +49,17 @@ struct object {
 
 struct object* object_create(struct class *c);
 
-static inline bool jobject_is_array(const struct object *o)
+static inline bool object_is_array(const struct object *o)
 {
     assert(o != NULL);
     return class_is_array(o->clazz);
 }
 
-bool jobject_is_primitive(const struct object *o);
-bool jobject_is_jlstring(const struct object *o);
-bool jobject_is_jlclass(const struct object *o);
+bool object_is_primitive(const struct object *o);
+bool object_is_jlstring(const struct object *o);
+bool object_is_jlclass(const struct object *o);
 
-struct object* object_clone(const struct object *srct);
+struct object* object_clone(const struct object *src);
 
 void set_instance_field_value_by_id(struct object *o, int id, const struct slot *value);
 void set_instance_field_value_by_nt(struct object *o,
@@ -73,10 +73,10 @@ const struct slot* get_instance_field_value_by_nt(const struct object *o, const 
  */
 struct slot priobj_unbox(const struct object *po);
 
-void jobject_destroy(struct object *o);
+void object_destroy(struct object *o);
 
-bool jobject_is_instance_of(const struct object *o, const struct class *c);
+bool object_is_instance_of(const struct object *o, const struct class *c);
 
-const char* jobject_to_string(const struct object *o);
+const char* object_to_string(const struct object *o);
 
 #endif //JVM_JOBJECT_H

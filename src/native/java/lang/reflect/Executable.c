@@ -19,7 +19,9 @@ static void getTypeAnnotationBytes0(struct frame *frame)
 
 void java_lang_reflect_Executable_registerNatives()
 {
-    register_native_method("java/lang/reflect/Executable~registerNatives~()V", registerNatives);
-    register_native_method("java/lang/reflect/Executable~getParameters0~()[Ljava/lang/reflect/Parameter;", getParameters0);
-    register_native_method("java/lang/reflect/Executable~getTypeAnnotationBytes0~()[B", getTypeAnnotationBytes0);
+#undef C
+#define C "java/lang/reflect/Executable~"
+    register_native_method(C"registerNatives~()V", registerNatives);
+    register_native_method(C"getParameters0~()[Ljava/lang/reflect/Parameter;", getParameters0);
+    register_native_method(C"getTypeAnnotationBytes0~()[B", getTypeAnnotationBytes0);
 }

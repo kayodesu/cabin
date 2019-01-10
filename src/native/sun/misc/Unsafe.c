@@ -54,7 +54,7 @@ static void compareAndSwapInt(struct frame *frame)
     jint new = frame_locals_geti(frame, 5);
 
     jint old;
-    if (jobject_is_array(o)) {
+    if (object_is_array(o)) {
         old = arrobj_get(jint, o, offset);
     } else {
         old = slot_geti(get_instance_field_value_by_id(o, offset));
@@ -73,7 +73,7 @@ static void compareAndSwapLong(struct frame *frame)
     jlong new = frame_locals_getl(frame, 6);
 
     jlong old;
-    if (jobject_is_array(o)) {
+    if (object_is_array(o)) {
         old = arrobj_get(jlong, o, offset);
     } else {
         old = slot_getl(get_instance_field_value_by_id(o, offset));
@@ -92,7 +92,7 @@ static void compareAndSwapObject(struct frame *frame)
     jref new = frame_locals_getr(frame, 5);
 
     jref old;
-    if (jobject_is_array(o)) {
+    if (object_is_array(o)) {
         old = arrobj_get(jref, o, offset);
     } else {
         old = slot_getr(get_instance_field_value_by_id(o, offset));
@@ -743,112 +743,107 @@ static void fullFence(struct frame *frame)
 
 void sun_misc_Unsafe_registerNatives()
 {
-    register_native_method("sun/misc/Unsafe~registerNatives~()V", registerNatives);
+#undef C
+#define C "sun/misc/Unsafe~"
+    register_native_method(C"registerNatives~()V", registerNatives);
 
-    register_native_method("sun/misc/Unsafe~park~(ZJ)V", park);
-    register_native_method("sun/misc/Unsafe~unpark~(Ljava/lang/Object;)V", unpark);
+    register_native_method(C"park~(ZJ)V", park);
+    register_native_method(C"unpark~(Ljava/lang/Object;)V", unpark);
 
     // compare and swap
-    register_native_method("sun/misc/Unsafe~compareAndSwapInt~(Ljava/lang/Object;JII)Z", compareAndSwapInt);
-    register_native_method("sun/misc/Unsafe~compareAndSwapLong~(Ljava/lang/Object;JJJ)Z", compareAndSwapLong);
-    register_native_method("sun/misc/Unsafe~"
-                                   "compareAndSwapObject~"
-                                   "(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z",
-                           compareAndSwapObject);
+    register_native_method(C"compareAndSwapInt~(Ljava/lang/Object;JII)Z", compareAndSwapInt);
+    register_native_method(C"compareAndSwapLong~(Ljava/lang/Object;JJJ)Z", compareAndSwapLong);
+    register_native_method(C"compareAndSwapObject~("LOBJ"J"LOBJ LOBJ")Z", compareAndSwapObject);
 
     // class
-    register_native_method("sun/misc/Unsafe~allocateInstance~(Ljava/lang/Class;)Ljava/lang/Object;", allocateInstance);
-    register_native_method("sun/misc/Unsafe~defineClass~"
-                    "(Ljava/lang/String;[BIILjava/lang/ClassLoader;Ljava/security/ProtectionDomain;)Ljava/lang/Class;",
-                           defineClass);
-    register_native_method("sun/misc/Unsafe~ensureClassInitialized~(Ljava/lang/Class;)V", ensureClassInitialized);
-    register_native_method("sun/misc/Unsafe~staticFieldOffset~(Ljava/lang/reflect/Field;)J", staticFieldOffset);
-    register_native_method("sun/misc/Unsafe~staticFieldBase~(Ljava/lang/reflect/Field;)Ljava/lang/Object;", staticFieldBase);
+    register_native_method(C"allocateInstance~(Ljava/lang/Class;)Ljava/lang/Object;", allocateInstance);
+    register_native_method(C"defineClass~("LSTR"[BII"LCLD"Ljava/security/ProtectionDomain;)"LCLS,defineClass);
+    register_native_method(C"ensureClassInitialized~(Ljava/lang/Class;)V", ensureClassInitialized);
+    register_native_method(C"staticFieldOffset~(Ljava/lang/reflect/Field;)J", staticFieldOffset);
+    register_native_method(C"staticFieldBase~(Ljava/lang/reflect/Field;)"LOBJ, staticFieldBase);
 
     // object
-    register_native_method("sun/misc/Unsafe~arrayBaseOffset~(Ljava/lang/Class;)I", arrayBaseOffset);
-    register_native_method("sun/misc/Unsafe~arrayIndexScale~(Ljava/lang/Class;)I", arrayIndexScale);
-    register_native_method("sun/misc/Unsafe~objectFieldOffset~(Ljava/lang/reflect/Field;)J", objectFieldOffset);
+    register_native_method(C"arrayBaseOffset~(Ljava/lang/Class;)I", arrayBaseOffset);
+    register_native_method(C"arrayIndexScale~(Ljava/lang/Class;)I", arrayIndexScale);
+    register_native_method(C"objectFieldOffset~(Ljava/lang/reflect/Field;)J", objectFieldOffset);
     
-    register_native_method("sun/misc/Unsafe~getBoolean~(Ljava/lang/Object;J)Z", getBoolean);
-    register_native_method("sun/misc/Unsafe~putBoolean~(Ljava/lang/Object;JZ)V", putBoolean);
-    register_native_method("sun/misc/Unsafe~getByte~(Ljava/lang/Object;J)B", obj_getByte);
-    register_native_method("sun/misc/Unsafe~putByte~(Ljava/lang/Object;JB)V", obj_putByte);
-    register_native_method("sun/misc/Unsafe~getChar~(Ljava/lang/Object;J)C", obj_getChar);
-    register_native_method("sun/misc/Unsafe~putChar~(Ljava/lang/Object;JC)V", obj_putChar);
-    register_native_method("sun/misc/Unsafe~getShort~(Ljava/lang/Object;J)S", obj_getShort);
-    register_native_method("sun/misc/Unsafe~putShort~(Ljava/lang/Object;JS)V", obj_putShort);
-    register_native_method("sun/misc/Unsafe~getInt~(Ljava/lang/Object;J)I", obj_getInt);
-    register_native_method("sun/misc/Unsafe~putInt~(Ljava/lang/Object;JI)V", obj_putInt);
-    register_native_method("sun/misc/Unsafe~getLong~(Ljava/lang/Object;J)J", obj_getLong);
-    register_native_method("sun/misc/Unsafe~putLong~(Ljava/lang/Object;JJ)V", obj_putLong);
-    register_native_method("sun/misc/Unsafe~getFloat~(Ljava/lang/Object;J)F", obj_getFloat);
-    register_native_method("sun/misc/Unsafe~putFloat~(Ljava/lang/Object;JF)V", obj_putFloat);
-    register_native_method("sun/misc/Unsafe~getDouble~(Ljava/lang/Object;J)D", obj_getDouble);
-    register_native_method("sun/misc/Unsafe~putDouble~(Ljava/lang/Object;JD)V", obj_putDouble);
-    register_native_method("sun/misc/Unsafe~getObject~(Ljava/lang/Object;J)Ljava/lang/Object;", getObject);
-    register_native_method("sun/misc/Unsafe~putObject~(Ljava/lang/Object;JLjava/lang/Object;)V", putObject);
-    register_native_method("sun/misc/Unsafe~getObjectVolatile~(Ljava/lang/Object;J)Ljava/lang/Object;", getObjectVolatile);
-    register_native_method("sun/misc/Unsafe~putObjectVolatile~(Ljava/lang/Object;JLjava/lang/Object;)V", putObjectVolatile);
-    register_native_method("sun/misc/Unsafe~getOrderedObject~(Ljava/lang/Object;J)Ljava/lang/Object;", getOrderedObject);
-    register_native_method("sun/misc/Unsafe~putOrderedObject~(Ljava/lang/Object;JLjava/lang/Object;)V", putOrderedObject);
-    register_native_method("sun/misc/Unsafe~putOrderedInt~(Ljava/lang/Object;JI)V", putOrderedInt);
-    register_native_method("sun/misc/Unsafe~putOrderedLong~(Ljava/lang/Object;JJ)V", putOrderedLong);
+    register_native_method(C"getBoolean~(Ljava/lang/Object;J)Z", getBoolean);
+    register_native_method(C"putBoolean~(Ljava/lang/Object;JZ)V", putBoolean);
+    register_native_method(C"getByte~(Ljava/lang/Object;J)B", obj_getByte);
+    register_native_method(C"putByte~(Ljava/lang/Object;JB)V", obj_putByte);
+    register_native_method(C"getChar~(Ljava/lang/Object;J)C", obj_getChar);
+    register_native_method(C"putChar~(Ljava/lang/Object;JC)V", obj_putChar);
+    register_native_method(C"getShort~(Ljava/lang/Object;J)S", obj_getShort);
+    register_native_method(C"putShort~(Ljava/lang/Object;JS)V", obj_putShort);
+    register_native_method(C"getInt~(Ljava/lang/Object;J)I", obj_getInt);
+    register_native_method(C"putInt~(Ljava/lang/Object;JI)V", obj_putInt);
+    register_native_method(C"getLong~(Ljava/lang/Object;J)J", obj_getLong);
+    register_native_method(C"putLong~(Ljava/lang/Object;JJ)V", obj_putLong);
+    register_native_method(C"getFloat~(Ljava/lang/Object;J)F", obj_getFloat);
+    register_native_method(C"putFloat~(Ljava/lang/Object;JF)V", obj_putFloat);
+    register_native_method(C"getDouble~(Ljava/lang/Object;J)D", obj_getDouble);
+    register_native_method(C"putDouble~(Ljava/lang/Object;JD)V", obj_putDouble);
+    register_native_method(C"getObject~(Ljava/lang/Object;J)Ljava/lang/Object;", getObject);
+    register_native_method(C"putObject~(Ljava/lang/Object;JLjava/lang/Object;)V", putObject);
+    register_native_method(C"getObjectVolatile~(Ljava/lang/Object;J)Ljava/lang/Object;", getObjectVolatile);
+    register_native_method(C"putObjectVolatile~(Ljava/lang/Object;JLjava/lang/Object;)V", putObjectVolatile);
+    register_native_method(C"getOrderedObject~(Ljava/lang/Object;J)Ljava/lang/Object;", getOrderedObject);
+    register_native_method(C"putOrderedObject~(Ljava/lang/Object;JLjava/lang/Object;)V", putOrderedObject);
+    register_native_method(C"putOrderedInt~(Ljava/lang/Object;JI)V", putOrderedInt);
+    register_native_method(C"putOrderedLong~(Ljava/lang/Object;JJ)V", putOrderedLong);
 
-    register_native_method("sun/misc/Unsafe~putIntVolatile~(Ljava/lang/Object;JI)V", putIntVolatile);
-    register_native_method("sun/misc/Unsafe~putBooleanVolatile~(Ljava/lang/Object;JZ)V", putBooleanVolatile);
-    register_native_method("sun/misc/Unsafe~putByteVolatile~(Ljava/lang/Object;JB)V", putByteVolatile);
-    register_native_method("sun/misc/Unsafe~putShortVolatile~(Ljava/lang/Object;JS)V", putShortVolatile);
-    register_native_method("sun/misc/Unsafe~putCharVolatile~(Ljava/lang/Object;JC)V", putCharVolatile);
-    register_native_method("sun/misc/Unsafe~putLongVolatile~(Ljava/lang/Object;JJ)V", putLongVolatile);
-    register_native_method("sun/misc/Unsafe~putFloatVolatile~(Ljava/lang/Object;JF)V", putFloatVolatile);
-    register_native_method("sun/misc/Unsafe~putDoubleVolatile~(Ljava/lang/Object;JD)V", putDoubleVolatile);
+    register_native_method(C"putIntVolatile~(Ljava/lang/Object;JI)V", putIntVolatile);
+    register_native_method(C"putBooleanVolatile~(Ljava/lang/Object;JZ)V", putBooleanVolatile);
+    register_native_method(C"putByteVolatile~(Ljava/lang/Object;JB)V", putByteVolatile);
+    register_native_method(C"putShortVolatile~(Ljava/lang/Object;JS)V", putShortVolatile);
+    register_native_method(C"putCharVolatile~(Ljava/lang/Object;JC)V", putCharVolatile);
+    register_native_method(C"putLongVolatile~(Ljava/lang/Object;JJ)V", putLongVolatile);
+    register_native_method(C"putFloatVolatile~(Ljava/lang/Object;JF)V", putFloatVolatile);
+    register_native_method(C"putDoubleVolatile~(Ljava/lang/Object;JD)V", putDoubleVolatile);
 
-    register_native_method("sun/misc/Unsafe~getIntVolatile~(Ljava/lang/Object;J)I", getIntVolatile);
-    register_native_method("sun/misc/Unsafe~getBooleanVolatile~(Ljava/lang/Object;J)Z", getBooleanVolatile);
-    register_native_method("sun/misc/Unsafe~getByteVolatile~(Ljava/lang/Object;J)B", getByteVolatile);
-    register_native_method("sun/misc/Unsafe~getShortVolatile~(Ljava/lang/Object;J)S", getShortVolatile);
-    register_native_method("sun/misc/Unsafe~getCharVolatile~(Ljava/lang/Object;J)C", getCharVolatile);
-    register_native_method("sun/misc/Unsafe~getLongVolatile~(Ljava/lang/Object;J)J", getLongVolatile);
-    register_native_method("sun/misc/Unsafe~getFloatVolatile~(Ljava/lang/Object;J)F", getFloatVolatile);
-    register_native_method("sun/misc/Unsafe~getDoubleVolatile~(Ljava/lang/Object;J)D", getDoubleVolatile);
+    register_native_method(C"getIntVolatile~(Ljava/lang/Object;J)I", getIntVolatile);
+    register_native_method(C"getBooleanVolatile~(Ljava/lang/Object;J)Z", getBooleanVolatile);
+    register_native_method(C"getByteVolatile~(Ljava/lang/Object;J)B", getByteVolatile);
+    register_native_method(C"getShortVolatile~(Ljava/lang/Object;J)S", getShortVolatile);
+    register_native_method(C"getCharVolatile~(Ljava/lang/Object;J)C", getCharVolatile);
+    register_native_method(C"getLongVolatile~(Ljava/lang/Object;J)J", getLongVolatile);
+    register_native_method(C"getFloatVolatile~(Ljava/lang/Object;J)F", getFloatVolatile);
+    register_native_method(C"getDoubleVolatile~(Ljava/lang/Object;J)D", getDoubleVolatile);
 
     // unsafe memory
-    register_native_method("sun/misc/Unsafe~allocateMemory~(J)J", allocateMemory);
-    register_native_method("sun/misc/Unsafe~reallocateMemory~(JJ)J", reallocateMemory);
-    register_native_method("sun/misc/Unsafe~setMemory~(Ljava/lang/Object;JJB)V", setMemory);
-    register_native_method("sun/misc/Unsafe~copyMemory~(Ljava/lang/Object;JLjava/lang/Object;JJ)V", copyMemory);
-    register_native_method("sun/misc/Unsafe~freeMemory~(J)V", freeMemory);
-    register_native_method("sun/misc/Unsafe~addressSize~()I", addressSize);
-    register_native_method("sun/misc/Unsafe~putAddress~(JJ)V", putAddress);
-    register_native_method("sun/misc/Unsafe~getAddress~(J)J", getAddress);
-    register_native_method("sun/misc/Unsafe~putByte~(JB)V", putByte);
-    register_native_method("sun/misc/Unsafe~getByte~(J)B", getByte);
-    register_native_method("sun/misc/Unsafe~putShort~(JS)V", putShort);
-    register_native_method("sun/misc/Unsafe~getShort~(J)S", getShort);
-    register_native_method("sun/misc/Unsafe~putChar~(JC)V", putChar);
-    register_native_method("sun/misc/Unsafe~getChar~(J)C", getChar);
-    register_native_method("sun/misc/Unsafe~putInt~(JI)V", putInt);
-    register_native_method("sun/misc/Unsafe~getInt~(J)I", getInt);
-    register_native_method("sun/misc/Unsafe~putLong~(JJ)V", putLong);
-    register_native_method("sun/misc/Unsafe~getLong~(J)J", getLong);
-    register_native_method("sun/misc/Unsafe~putFloat~(JF)V", putFloat);
-    register_native_method("sun/misc/Unsafe~getFloat~(J)F", getFloat);
-    register_native_method("sun/misc/Unsafe~putDouble~(JD)V", putDouble);
-    register_native_method("sun/misc/Unsafe~getDouble~(J)D", getDouble);
+    register_native_method(C"allocateMemory~(J)J", allocateMemory);
+    register_native_method(C"reallocateMemory~(JJ)J", reallocateMemory);
+    register_native_method(C"setMemory~(Ljava/lang/Object;JJB)V", setMemory);
+    register_native_method(C"copyMemory~(Ljava/lang/Object;JLjava/lang/Object;JJ)V", copyMemory);
+    register_native_method(C"freeMemory~(J)V", freeMemory);
+    register_native_method(C"addressSize~()I", addressSize);
+    register_native_method(C"putAddress~(JJ)V", putAddress);
+    register_native_method(C"getAddress~(J)J", getAddress);
+    register_native_method(C"putByte~(JB)V", putByte);
+    register_native_method(C"getByte~(J)B", getByte);
+    register_native_method(C"putShort~(JS)V", putShort);
+    register_native_method(C"getShort~(J)S", getShort);
+    register_native_method(C"putChar~(JC)V", putChar);
+    register_native_method(C"getChar~(J)C", getChar);
+    register_native_method(C"putInt~(JI)V", putInt);
+    register_native_method(C"getInt~(J)I", getInt);
+    register_native_method(C"putLong~(JJ)V", putLong);
+    register_native_method(C"getLong~(J)J", getLong);
+    register_native_method(C"putFloat~(JF)V", putFloat);
+    register_native_method(C"getFloat~(J)F", getFloat);
+    register_native_method(C"putDouble~(JD)V", putDouble);
+    register_native_method(C"getDouble~(J)D", getDouble);
 
-    register_native_method("sun/misc/Unsafe~shouldBeInitialized~(Ljava/lang/Class;)Z", shouldBeInitialized);
-    register_native_method("sun/misc/Unsafe~getLoadAverage~([DI)I", getLoadAverage);
-    register_native_method("sun/misc/Unsafe~pageSize~()I", pageSize);
-    register_native_method(
-            "sun/misc/Unsafe~defineAnonymousClass~(Ljava/lang/Class;[B[Ljava/lang/Object;)Ljava/lang/Class;",
-            defineAnonymousClass);
-    register_native_method("sun/misc/Unsafe~monitorEnter~(Ljava/lang/Object;)V", monitorEnter);
-    register_native_method("sun/misc/Unsafe~monitorExit~(Ljava/lang/Object;)V", monitorExit);
-    register_native_method("sun/misc/Unsafe~tryMonitorEnter~(Ljava/lang/Object;)Z", tryMonitorEnter);
-    register_native_method("sun/misc/Unsafe~throwException~(Ljava/lang/Throwable;)V", throwException);
+    register_native_method(C"shouldBeInitialized~(Ljava/lang/Class;)Z", shouldBeInitialized);
+    register_native_method(C"getLoadAverage~([DI)I", getLoadAverage);
+    register_native_method(C"pageSize~()I", pageSize);
+    register_native_method(C"defineAnonymousClass~(Ljava/lang/Class;[B[Ljava/lang/Object;)"LCLS, defineAnonymousClass);
+    register_native_method(C"monitorEnter~(Ljava/lang/Object;)V", monitorEnter);
+    register_native_method(C"monitorExit~(Ljava/lang/Object;)V", monitorExit);
+    register_native_method(C"tryMonitorEnter~(Ljava/lang/Object;)Z", tryMonitorEnter);
+    register_native_method(C"throwException~(Ljava/lang/Throwable;)V", throwException);
 
-    register_native_method("sun/misc/Unsafe~loadFence~()V", loadFence);
-    register_native_method("sun/misc/Unsafe~storeFence~()V", storeFence);
-    register_native_method("sun/misc/Unsafe~fullFence~()V", fullFence);
+    register_native_method(C"loadFence~()V", loadFence);
+    register_native_method(C"storeFence~()V", storeFence);
+    register_native_method(C"fullFence~()V", fullFence);
 }

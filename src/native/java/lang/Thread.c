@@ -213,21 +213,23 @@ static void setNativeName(struct frame *frame)
 
 void java_lang_Thread_registerNatives()
 {
-    register_native_method("java/lang/Thread~registerNatives~()V", registerNatives);
-    register_native_method("java/lang/Thread~currentThread~()Ljava/lang/Thread;", currentThread);
-    register_native_method("java/lang/Thread~yield~()V", yield);
-    register_native_method("java/lang/Thread~sleep~(J)V", sleep);
-    register_native_method("java/lang/Thread~interrupt0~()V", interrupt0);
-    register_native_method("java/lang/Thread~isInterrupted~(Z)Z", isInterrupted);
-    register_native_method("java/lang/Thread~isAlive~()Z", isAlive);
-    register_native_method("java/lang/Thread~start0~()V", start0);
-    register_native_method("java/lang/Thread~countStackFrames~()I", countStackFrames);
-    register_native_method("java/lang/Thread~holdsLock~(Ljava/lang/Object;)Z", holdsLock);
-    register_native_method("java/lang/Thread~dumpThreads~([Ljava/lang/Thread;)[[Ljava/lang/StackTraceElement;", dumpThreads);
-    register_native_method("java/lang/Thread~getThreads~()[Ljava/lang/Thread;", getThreads);
-    register_native_method("java/lang/Thread~setPriority0~(I)V", setPriority0);
-    register_native_method("java/lang/Thread~stop0~(Ljava/lang/Object;)V", stop0);
-    register_native_method("java/lang/Thread~suspend0~()V", suspend0);
-    register_native_method("java/lang/Thread~resume0~()V", resume0);
-    register_native_method("java/lang/Thread~setNativeName~(Ljava/lang/String;)V", setNativeName);
+#undef C
+#define C "java/lang/Thread~"
+    register_native_method(C"registerNatives~()V", registerNatives);
+    register_native_method(C"currentThread~()Ljava/lang/Thread;", currentThread);
+    register_native_method(C"yield~()V", yield);
+    register_native_method(C"sleep~(J)V", sleep);
+    register_native_method(C"interrupt0~()V", interrupt0);
+    register_native_method(C"isInterrupted~(Z)Z", isInterrupted);
+    register_native_method(C"isAlive~()Z", isAlive);
+    register_native_method(C"start0~()V", start0);
+    register_native_method(C"countStackFrames~()I", countStackFrames);
+    register_native_method(C"holdsLock~(Ljava/lang/Object;)Z", holdsLock);
+    register_native_method(C"dumpThreads~([Ljava/lang/Thread;)[[Ljava/lang/StackTraceElement;", dumpThreads);
+    register_native_method(C"getThreads~()[Ljava/lang/Thread;", getThreads);
+    register_native_method(C"setPriority0~(I)V", setPriority0);
+    register_native_method(C"stop0~(Ljava/lang/Object;)V", stop0);
+    register_native_method(C"suspend0~()V", suspend0);
+    register_native_method(C"resume0~()V", resume0);
+    register_native_method(C"setNativeName~(Ljava/lang/String;)V", setNativeName);
 }

@@ -13,7 +13,7 @@ void arraylength(struct frame *frame)
     if (o == NULL) {
         thread_throw_null_pointer_exception(frame->thread);
     }
-    if (!jobject_is_array(o)) {
+    if (!object_is_array(o)) {
         vm_unknown_error("not a array");
     }
 

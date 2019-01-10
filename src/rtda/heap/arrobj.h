@@ -24,21 +24,21 @@ struct object *arrobj_create_multi(struct class *arr_class, size_t arr_dim, cons
 static inline jint arrobj_len(const struct object *o)
 {
     assert(o != NULL);
-    assert(jobject_is_array(o));
+    assert(object_is_array(o));
     return o->u.a.len;
 }
 
 static inline void* arrobj_data(const struct object *o)
 {
     assert(o != NULL);
-    assert(jobject_is_array(o));
+    assert(object_is_array(o));
     return o->data;
 }
 
 static inline bool arrobj_check_bounds(const struct object *o, jint index)
 {
     assert(o != NULL);
-    assert(jobject_is_array(o));
+    assert(object_is_array(o));
     return 0 <= index && index < o->u.a.len;
 }
 

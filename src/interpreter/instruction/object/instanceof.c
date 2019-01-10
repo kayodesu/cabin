@@ -21,6 +21,6 @@ void instanceof(struct frame *frame)
         return;
     }
 
-    frame_stack_pushi(frame, jobject_is_instance_of(obj, jclass) ? 1 : 0);
+    frame_stack_pushi(frame, object_is_instance_of(obj, jclass) ? 1 : 0);
 //    os_pushi(frame->operand_stack, (jint)(jobject_is_instance_of(obj, class) ? 1 : 0));
 }

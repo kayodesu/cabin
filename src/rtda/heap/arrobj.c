@@ -84,10 +84,10 @@ struct object *arrobj_create_multi(struct class *arr_class, size_t arr_dim, cons
 void arrobj_copy(struct object *dst, jint dst_pos, const struct object *src, jint src_pos, jint len)
 {
     assert(src != NULL);
-    assert(jobject_is_array(src));
+    assert(object_is_array(src));
 
     assert(dst != NULL);
-    assert(jobject_is_array(dst));
+    assert(object_is_array(dst));
 
     /*
      * 首先确保src和dst都是数组，然后检查数组类型。

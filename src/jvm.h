@@ -11,11 +11,6 @@
 #include <limits.h>
 #include "jtypes.h"
 
-/*
- * 是否开启调试模式(true or false)
- */
-#define JVM_DEBUG 0
-
 #ifndef PATH_MAX
 #define PATH_MAX 260 // todo
 #endif
@@ -46,23 +41,21 @@ extern int user_jars_count;
 extern char user_dirs[][PATH_MAX];
 extern char user_jars[][PATH_MAX];
 
+// 初始堆大小
+extern size_t g_initial_heap_size;
+
 
 // todo 说明
 extern struct classloader *g_bootstrap_loader;
 
-#define CHECK_MALLOC_RESULT(point) do { if ((point) == NULL) vm_internal_error("malloc failed"); } while (false) // todo
+#define OBJ "java/lang/Object"
+#define CLS "java/lang/Class"
+#define STR "java/lang/String"
 
-/*
- * 下面申请内存的宏会检查申请是否成功
- * 使用时要小心，这些宏展开后是多条语句而不是一条。
- */
-#define VM_MALLOC_EXT(type, count, extra_len, var_name) \
-                        type *(var_name) = malloc(sizeof(type) * (count) + (extra_len)); \
-                        CHECK_MALLOC_RESULT(var_name)
-
-#define VM_MALLOCS(type, count, var_name) VM_MALLOC_EXT(type, count, 0, var_name)
-
-#define VM_MALLOC(type, var_name) VM_MALLOCS(type, 1, var_name)
+#define LOBJ "Ljava/lang/Object;"
+#define LCLS "Ljava/lang/Class;"
+#define LSTR "Ljava/lang/String;"
+#define LCLD "Ljava/lang/ClassLoader;"
 
 static inline void* vm_malloc(size_t size)
 {
@@ -71,6 +64,20 @@ static inline void* vm_malloc(size_t size)
         vm_out_of_memory_error("malloc failed");
     return p;
 }
+
+static inline void* vm_calloc(size_t n, size_t size)
+{
+    void *p = calloc(n, size);
+    if (p == NULL)
+        vm_out_of_memory_error("malloc failed");
+    return p;
+}
+
+#define VM_MALLOC_EXT(type, count, extra_len, var_name) type *(var_name) = vm_malloc(sizeof(type) * (count) + (extra_len));
+
+#define VM_MALLOCS(type, count, var_name) VM_MALLOC_EXT(type, count, 0, var_name)
+
+#define VM_MALLOC(type, var_name) VM_MALLOCS(type, 1, var_name)
 
 /*
  * jvms规定函数最多有255个参数，this也算，long和double占两个长度
@@ -101,14 +108,43 @@ extern struct object *system_thread_group;
 
 #define printvm(...) do { printf("%s: %d: ", __FILE__, __LINE__); printf(__VA_ARGS__); } while(false)
 
-#if (JVM_DEBUG)
-#define printvm_debug(...) printvm(__VA_ARGS__)
+/*
+ * 是否开启调试模式(true or false)
+ */
+#define JVM_DEBUG 0
+
+/*
+ * print level.
+ * 0: only print errors.
+ * 1: print warnings.
+ * 2: print 函数调用
+ * 3: print every instructions
+ */
+#define PRINT_LEVEL 0
+
+#define print0(...) do { printvm("fatal error. "); printf(__VA_ARGS__); } while(false)
+
+#if (PRINT_LEVEL >= 1)
+#define print1 printvm
 #else
-#define printvm_debug(...)
+#define print1(...)
 #endif
 
+#if (PRINT_LEVEL >= 2)
+#define print2 printvm
+#else
+#define print2(...)
+#endif
+
+#if (PRINT_LEVEL >= 3)
+#define print3 printvm
+#else
+#define print3(...)
+#endif
+
+
 // 出现异常，退出jvm
-#define jvm_abort(...) do { printvm("fatal error. "); printf(__VA_ARGS__); exit(-1); } while(false)
+#define jvm_abort(...) do { print0(__VA_ARGS__); exit(-1); } while(false)
 
 /*
  * Virtual Machine Errors

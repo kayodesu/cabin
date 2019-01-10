@@ -157,7 +157,7 @@ struct field* class_lookup_instance_field(struct class *c, const char *name, con
  */
 struct method* class_get_declared_method(struct class *c, const char *name, const char *descriptor);
 struct method* class_get_declared_static_method(struct class *c, const char *name, const char *descriptor);
-struct method* jclass_get_declared_nonstatic_method(struct class *c, const char *name, const char *descriptor);
+struct method* class_get_declared_nonstatic_method(struct class *c, const char *name, const char *descriptor);
 
 struct method** class_get_declared_methods(struct class *c, const char *name, bool public_only, int *count);
 
@@ -189,12 +189,12 @@ bool class_is_accessible_to(const struct class *c, const struct class *visitor);
  * 如：java.lang.Object的继承的深度为0
  * java.lang.Number继承自java.lang.Object, java.lang.Number的继承深度为1.
  */
-int jclass_inherited_depth(const struct class *c);
+int class_inherited_depth(const struct class *c);
 
 /*
  * 参数@c可以为空
  */
-char *jclass_to_string(const struct class *c);
+char *class_to_string(const struct class *c);
 
 /*
  * 需要调用者释放返回值(free())
@@ -224,7 +224,7 @@ static inline bool class_is_array(const struct class *c)
 //    return c != NULL && strcmp(c->class_name, "java/lang/Class") == 0;  // todo 对不对
 //}
 
-static inline bool jclass_is_primitive(const struct class *c)
+static inline bool class_is_primitive(const struct class *c)
 {
     assert(c != NULL);
     return pt_is_primitive_class_name(c->class_name);

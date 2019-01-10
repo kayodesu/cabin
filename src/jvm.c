@@ -32,6 +32,7 @@ int user_jars_count = 0;
 char user_dirs[USER_DIRS_MAX_COUNT][PATH_MAX];
 char user_jars[USER_JARS_MAX_COUNT][PATH_MAX];
 
+size_t g_initial_heap_size = 67108864; // 64Mb
 
 struct classloader *g_bootstrap_loader = NULL;
 

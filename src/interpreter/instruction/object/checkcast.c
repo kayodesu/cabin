@@ -22,7 +22,7 @@ void checkcast(struct frame *frame)
     const char *class_name = rtcp_get_class_name(frame->m.method->clazz->rtcp, index);
 
     struct class *jclass = classloader_load_class(frame->m.method->clazz->loader, class_name); // todo resolve_class ???
-    if (!jobject_is_instance_of(obj, jclass)) {
+    if (!object_is_instance_of(obj, jclass)) {
         thread_throw_class_cast_exception(frame->thread, obj->clazz->class_name, jclass->class_name);
     }
 }

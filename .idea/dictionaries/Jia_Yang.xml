@@ -7,6 +7,7 @@
       <w>arrobj</w>
       <w>bigendian</w>
       <w>bsms</w>
+      <w>calloc</w>
       <w>cfcp</w>
       <w>clsobj</w>
       <w>delim</w>
@@ -41,8 +42,12 @@
       <w>jpriobj</w>
       <w>jstrobj</w>
       <w>jvms</w>
+      <w>lcld</w>
+      <w>lcls</w>
       <w>llen</w>
+      <w>lobj</w>
       <w>lslot</w>
+      <w>lstr</w>
       <w>lsun</w>
       <w>mallocs</w>
       <w>methodref</w>

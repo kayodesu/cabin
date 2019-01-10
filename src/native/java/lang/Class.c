@@ -210,7 +210,7 @@ static void isInstance(struct frame *frame)
 
     jref obj = frame_locals_getr(frame, 1);
     frame_stack_pushi(frame,
-             (obj != NULL && jobject_is_instance_of(obj, this->u.entity_class)) ? 1 : 0);
+             (obj != NULL && object_is_instance_of(obj, this->u.entity_class)) ? 1 : 0);
 }
 
 /**
@@ -306,7 +306,7 @@ static void isArray(struct frame *frame)
 static void isPrimitive(struct frame *frame)
 {
     struct object *this = frame_locals_getr(frame, 0);
-    bool b = jclass_is_primitive(this->u.entity_class);
+    bool b = class_is_primitive(this->u.entity_class);
     frame_stack_pushi(frame, b ? 1 : 0);
 }
 
@@ -728,39 +728,41 @@ static void getDeclaringClass0(struct frame *frame)
 
 void java_lang_Class_registerNatives()
 {
-    register_native_method("java/lang/Class~registerNatives~()V", registerNatives);
-    register_native_method("java/lang/Class~getPrimitiveClass~(Ljava/lang/String;)Ljava/lang/Class;", getPrimitiveClass);
-    register_native_method("java/lang/Class~getName0~()Ljava/lang/String;", getName0);
-    register_native_method("java/lang/Class~forName0~"
+#undef C
+#define C "java/lang/Class~"
+    register_native_method(C"registerNatives~()V", registerNatives);
+    register_native_method(C"getPrimitiveClass~(Ljava/lang/String;)Ljava/lang/Class;", getPrimitiveClass);
+    register_native_method(C"getName0~()Ljava/lang/String;", getName0);
+    register_native_method(C"forName0~"
                                    "(Ljava/lang/String;ZLjava/lang/ClassLoader;Ljava/lang/Class;)Ljava/lang/Class;",
                            forName0);
-    register_native_method("java/lang/Class~desiredAssertionStatus0~(Ljava/lang/Class;)Z", desiredAssertionStatus0);
+    register_native_method(C"desiredAssertionStatus0~(Ljava/lang/Class;)Z", desiredAssertionStatus0);
 
-    register_native_method("java/lang/Class~isInstance~(Ljava/lang/Object;)Z", isInstance);
-    register_native_method("java/lang/Class~isAssignableFrom~(Ljava/lang/Class;)Z", isAssignableFrom);
-    register_native_method("java/lang/Class~isInterface~()Z", isInterface);
-    register_native_method("java/lang/Class~isArray~()Z", isArray);
-    register_native_method("java/lang/Class~isPrimitive~()Z", isPrimitive);
+    register_native_method(C"isInstance~(Ljava/lang/Object;)Z", isInstance);
+    register_native_method(C"isAssignableFrom~(Ljava/lang/Class;)Z", isAssignableFrom);
+    register_native_method(C"isInterface~()Z", isInterface);
+    register_native_method(C"isArray~()Z", isArray);
+    register_native_method(C"isPrimitive~()Z", isPrimitive);
 
-    register_native_method("java/lang/Class~getSuperclass~()Ljava/lang/Class;", getSuperclass);
-    register_native_method("java/lang/Class~getInterfaces0~()[Ljava/lang/Class;", getInterfaces0);
-    register_native_method("java/lang/Class~getComponentType~()Ljava/lang/Class;", getComponentType);
-    register_native_method("java/lang/Class~getModifiers~()I", getModifiers);
-    register_native_method("java/lang/Class~getEnclosingMethod0~()[Ljava/lang/Object;", getEnclosingMethod0);
-    register_native_method("java/lang/Class~getDeclaringClass0~()Ljava/lang/Class;", getDeclaringClass0);
-    register_native_method("java/lang/Class~getGenericSignature0~()Ljava/lang/String;", getGenericSignature0);
-    register_native_method("java/lang/Class~getProtectionDomain0~()Ljava/security/ProtectionDomain;", getProtectionDomain0);
-    register_native_method("java/lang/Class~getConstantPool~()Lsun/reflect/ConstantPool;", getConstantPool);
+    register_native_method(C"getSuperclass~()"LCLS, getSuperclass);
+    register_native_method(C"getInterfaces0~()[Ljava/lang/Class;", getInterfaces0);
+    register_native_method(C"getComponentType~()Ljava/lang/Class;", getComponentType);
+    register_native_method(C"getModifiers~()I", getModifiers);
+    register_native_method(C"getEnclosingMethod0~()[Ljava/lang/Object;", getEnclosingMethod0);
+    register_native_method(C"getDeclaringClass0~()"LCLS, getDeclaringClass0);
+    register_native_method(C"getGenericSignature0~()"LSTR, getGenericSignature0);
+    register_native_method(C"getProtectionDomain0~()Ljava/security/ProtectionDomain;", getProtectionDomain0);
+    register_native_method(C"getConstantPool~()Lsun/reflect/ConstantPool;", getConstantPool);
 
-    register_native_method("java/lang/Class~getSigners~()[Ljava/lang/Object;", getSigners);
-    register_native_method("java/lang/Class~setSigners~([Ljava/lang/Object;)V", setSigners);
+    register_native_method(C"getSigners~()[Ljava/lang/Object;", getSigners);
+    register_native_method(C"setSigners~([Ljava/lang/Object;)V", setSigners);
 
-    register_native_method("java/lang/Class~getRawAnnotations~()[B", getRawAnnotations);
-    register_native_method("java/lang/Class~getRawTypeAnnotations~()[B", getRawTypeAnnotations);
+    register_native_method(C"getRawAnnotations~()[B", getRawAnnotations);
+    register_native_method(C"getRawTypeAnnotations~()[B", getRawTypeAnnotations);
 
-    register_native_method("java/lang/Class~getDeclaredFields0~(Z)[Ljava/lang/reflect/Field;", getDeclaredFields0);
-    register_native_method("java/lang/Class~getDeclaredMethods0~(Z)[Ljava/lang/reflect/Method;", getDeclaredMethods0);
-    register_native_method("java/lang/Class~getDeclaredConstructors0~(Z)[Ljava/lang/reflect/Constructor;", getDeclaredConstructors0);
-    register_native_method("java/lang/Class~getDeclaredClasses0~()[Ljava/lang/Class;", getDeclaredClasses0);
+    register_native_method(C"getDeclaredFields0~(Z)[Ljava/lang/reflect/Field;", getDeclaredFields0);
+    register_native_method(C"getDeclaredMethods0~(Z)[Ljava/lang/reflect/Method;", getDeclaredMethods0);
+    register_native_method(C"getDeclaredConstructors0~(Z)[Ljava/lang/reflect/Constructor;", getDeclaredConstructors0);
+    register_native_method(C"getDeclaredClasses0~()[Ljava/lang/Class;", getDeclaredClasses0);
 }
 ////private native java.security.ProtectionDomain getProtectionDomain0();

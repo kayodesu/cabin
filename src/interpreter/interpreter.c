@@ -9,7 +9,7 @@
 #include "../classfile/constant.h"
 #include "../rtda/heap/arrobj.h"
 
-#if (JVM_DEBUG)
+#if (PRINT_LEVEL >= 3)
 // the mapping of instructions's code and name
 static char* instruction_names[] = {
         "nop",
@@ -525,15 +525,15 @@ void* interpret(void *thread0)
 
             thread_pop_frame(thread);
             frame_destroy(frame);
-            printvm_debug("shim frame(%p) exe over, destroy.\n", frame);
+            print2("shim frame(%p) exe over, destroy.\n", frame);
             continue;
         }
 
-        printvm_debug("executing frame(%p): %s, pc = %lu\n", frame, frame_to_string(frame), frame->reader.pc);
+                print2("executing frame(%p): %s, pc = %lu\n", frame, frame_to_string(frame), frame->reader.pc);
         while (frame_has_more(frame)) {
             u1 opcode = frame_readu1(frame);
 
-            printvm_debug("%d(0x%x), %s, pc = %lu\n", opcode, opcode, instruction_names[opcode], frame->reader.pc);
+                    print3("%d(0x%x), %s, pc = %lu\n", opcode, opcode, instruction_names[opcode], frame->reader.pc);
 
             switch (opcode) {
                 case 0x00: break; // nop
@@ -858,18 +858,18 @@ void* interpret(void *thread0)
             }
 
             if (frame_is_exe_over(frame)) {
-                printvm_debug("frame(%p) exe over, destroy.\n", frame);
+                print2("frame(%p) exe over, destroy.\n", frame);
                 thread_recycle_frame(frame);
                 break;
             }
 
             if (frame_interrupted(frame)) {
-                printvm_debug("frame(%p) interrupted.\n", frame);
+                print2("frame(%p) interrupted.\n", frame);
                 break; // 当前函数执行被中断。跳出循环，终止当前 frame 的执行。
             }
         }
     }
 
-    printvm_debug("interpret exit.\n");
+   print2("interpret exit.\n");
     return NULL; // todo
 }

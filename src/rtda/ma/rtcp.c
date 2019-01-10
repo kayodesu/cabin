@@ -263,8 +263,7 @@ struct rtcp* rtcp_create(const struct constant *cfcp, size_t count)
 
     VM_MALLOC(struct rtcp, rtcp);
     rtcp->count = count;
-    rtcp->pool = calloc(sizeof(*(rtcp->pool)), count);
-    CHECK_MALLOC_RESULT(rtcp->pool);
+    rtcp->pool = vm_calloc(sizeof(*(rtcp->pool)), count);
 
     rtcp->pool[0].t = 0; // todo 第0位该怎么处理。
 

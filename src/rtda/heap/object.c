@@ -48,10 +48,10 @@ struct object* object_clone(const struct object *src)
 //    return o;
 }
 
-bool jobject_is_primitive(const struct object *o)
+bool object_is_primitive(const struct object *o)
 {
     assert(o != NULL);
-    if (!jclass_is_primitive(o->clazz)) {
+    if (!class_is_primitive(o->clazz)) {
         return false;
     }
 
@@ -59,16 +59,16 @@ bool jobject_is_primitive(const struct object *o)
     return true;
 }
 
-bool jobject_is_jlstring(const struct object *o)
+bool object_is_jlstring(const struct object *o)
 {
     assert(o != NULL);
-    return strcmp(o->clazz->class_name, "java/lang/String") == 0;
+    return strcmp(o->clazz->class_name, STR) == 0;
 }
 
-bool jobject_is_jlclass(const struct object *o)
+bool object_is_jlclass(const struct object *o)
 {
     assert(o != NULL);
-    return strcmp(o->clazz->class_name, "java/lang/Class") == 0;
+    return strcmp(o->clazz->class_name, CLS) == 0;
 }
 
 void set_instance_field_value_by_id(struct object *o, int id, const struct slot *value)
@@ -114,7 +114,7 @@ const struct slot* get_instance_field_value_by_nt(const struct object *o, const 
     return get_instance_field_value_by_id(o, f->id);
 }
 
-bool jobject_is_instance_of(const struct object *o, const struct class *c)
+bool object_is_instance_of(const struct object *o, const struct class *c)
 {
     if (o == NULL || c == NULL)  // todo
         return false;
@@ -130,7 +130,7 @@ struct slot priobj_unbox(const struct object *po)
     return *get_instance_field_value_by_nt(po, "value", po->clazz->class_name);
 }
 
-void jobject_destroy(struct object *o)
+void object_destroy(struct object *o)
 {
     if (o == NULL) {
         // todo
@@ -141,7 +141,7 @@ void jobject_destroy(struct object *o)
     hfree(o);
 }
 
-const char* jobject_to_string(const struct object *o)
+const char* object_to_string(const struct object *o)
 {
 #define MAX_LEN 1023 // big enough? todo
     VM_MALLOCS(char, MAX_LEN + 1, result);

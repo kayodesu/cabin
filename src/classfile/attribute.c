@@ -16,12 +16,10 @@ void read_annotation(struct bytecode_reader *reader, struct annotation *a)
 
     a->type_index = bcr_readu2(reader);
     a->num_element_value_pairs = bcr_readu2(reader);
-    a->element_value_pairs = malloc(sizeof(struct element_value_pair) * a->num_element_value_pairs);
-    CHECK_MALLOC_RESULT(a->element_value_pairs);
+    a->element_value_pairs = vm_malloc(sizeof(struct element_value_pair) * a->num_element_value_pairs);
     for (int i = 0; i < a->num_element_value_pairs; i++) {
         a->element_value_pairs[i].element_name_index = bcr_readu2(reader);
-        a->element_value_pairs[i].value = malloc(sizeof(struct element_value));
-        CHECK_MALLOC_RESULT(a->element_value_pairs[i].value);
+        a->element_value_pairs[i].value = vm_malloc(sizeof(struct element_value));
         read_element_value(reader, a->element_value_pairs[i].value);
     }
 }
@@ -55,8 +53,7 @@ void read_element_value(struct bytecode_reader *reader, struct element_value *ev
             break;
         case '[':
             ev->value.array_value.num_values = bcr_readu2(reader);
-            ev->value.array_value.values = malloc(sizeof(struct element_value) * ev->value.array_value.num_values);
-            CHECK_MALLOC_RESULT(ev->value.array_value.values);
+            ev->value.array_value.values = vm_malloc(sizeof(struct element_value) * ev->value.array_value.num_values);
             for (int i = 0; i < ev->value.array_value.num_values; i++) {
                 read_element_value(reader, ev->value.array_value.values + i);
             }
