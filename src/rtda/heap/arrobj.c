@@ -4,7 +4,7 @@
 
 #include "object.h"
 #include "arrobj.h"
-#include "mm/halloc.h"
+#include "mgr/heap_mgr.h"
 
 struct object *arrobj_create(struct class *arr_class, jint arr_len)
 {
@@ -28,7 +28,7 @@ struct object *arrobj_create(struct class *arr_class, jint arr_len)
 
     size_t mem_len = ele_size * arr_len;
     size_t size = sizeof(struct object) + mem_len;
-    struct object *o = halloc(size);
+    struct object *o = hm_get(&g_heap_mgr, size);
     o->clazz = arr_class;
     o->size = size;
     o->u.a.ele_size = ele_size;

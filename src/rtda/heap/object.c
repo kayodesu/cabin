@@ -5,9 +5,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include "object.h"
-#include "mm/halloc.h"
 #include "../ma/field.h"
-
+#include "mgr/heap_mgr.h"
 
 struct object* object_create(struct class *c)
 {
@@ -15,7 +14,7 @@ struct object* object_create(struct class *c)
     assert(!class_is_array(c));
 
     size_t size = sizeof(struct object) + c->instance_fields_count * sizeof(struct slot);
-    struct object *o = halloc(size);
+    struct object *o = hm_get(&g_heap_mgr, size);
     o->clazz = c;
     o->size = size;
 //    memcpy(o->data, c->inited_instance_fields_values, c->instance_fields_count * sizeof(struct slot));
@@ -27,7 +26,7 @@ struct object* object_create(struct class *c)
 struct object* object_clone(const struct object *src)
 {
     assert(src != NULL);
-    struct object *o = halloc(src->size);
+    struct object *o = hm_get(&g_heap_mgr, src->size);
     memcpy(o, src, src->size);
     return o;
 
@@ -137,8 +136,6 @@ void object_destroy(struct object *o)
     }
 
     // todo
-
-    hfree(o);
 }
 
 const char* object_to_string(const struct object *o)

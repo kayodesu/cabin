@@ -14,6 +14,7 @@
 #include "rtda/heap/object.h"
 #include "native/registry.h"
 #include "rtda/heap/strobj.h"
+#include "rtda/heap/mgr/heap_mgr.h"
 
 
 #define JRE_LIB_JARS_MAX_COUNT 64 // big enough
@@ -33,6 +34,7 @@ char user_dirs[USER_DIRS_MAX_COUNT][PATH_MAX];
 char user_jars[USER_JARS_MAX_COUNT][PATH_MAX];
 
 size_t g_initial_heap_size = 67108864; // 64Mb
+struct heap_mgr g_heap_mgr;
 
 struct classloader *g_bootstrap_loader = NULL;
 
@@ -104,6 +106,7 @@ static void create_main_thread(struct classloader *loader)
 
 static void start_jvm(const char *main_class_name)
 {
+    hm_init(&g_heap_mgr);
     build_str_pool();
 
     struct classloader *loader = classloader_create(true);

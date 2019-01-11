@@ -44,6 +44,7 @@ extern char user_jars[][PATH_MAX];
 // 初始堆大小
 extern size_t g_initial_heap_size;
 
+extern struct heap_mgr g_heap_mgr;
 
 // todo 说明
 extern struct classloader *g_bootstrap_loader;
@@ -172,7 +173,7 @@ _Noreturn void vm_internal_error(const char *msg);
  * java.lang.OutOfMemoryError
  *
  * The Java Virtual Machine implementation has run out of either virtual or physical memory,
- * and the automatic storage manager was unable to reclaim enough memory to satisfy an object creation request.
+ * and the automatic storage mgr was unable to reclaim enough memory to satisfy an object creation request.
  */
 _Noreturn void vm_out_of_memory_error(const char *msg);
 

@@ -68,6 +68,7 @@
       <w>pushi</w>
       <w>pushl</w>
       <w>pushr</w>
+      <w>redundance</w>
       <w>rget</w>
       <w>rindex</w>
       <w>rslot</w>
