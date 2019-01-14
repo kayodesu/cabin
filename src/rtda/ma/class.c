@@ -12,6 +12,7 @@
 #include "../../classfile/constant.h"
 #include "../heap/strobj.h"
 #include "../heap/clsobj.h"
+#include "../../symbol.h"
 
 
 // 计算实例字段的个数，同时给它们编号
@@ -198,13 +199,13 @@ static void parse_attribute(struct class *c, struct bytecode_reader *reader)
         const char *attr_name = rtcp_get_str(c->rtcp, bcr_readu2(reader));
         u4 attr_len = bcr_readu4(reader);
 
-        if (strcmp(Signature, attr_name) == 0) {
+        if (SYMBOL(Signature) == attr_name) {
             c->signature = rtcp_get_str(c->rtcp, bcr_readu2(reader));
-        } else if (strcmp(Synthetic, attr_name) == 0) {
+        } else if (SYMBOL(Synthetic) == attr_name) {
             set_synthetic(&c->access_flags);
-        } else if (strcmp(Deprecated, attr_name) == 0) {
+        } else if (SYMBOL(Deprecated) == attr_name) {
             c->deprecated = true;
-        } else if (strcmp(SourceFile, attr_name) == 0) {
+        } else if (SYMBOL(SourceFile) == attr_name) {
             u2 source_file_index = bcr_readu2(reader);
             if (source_file_index >= 0) {
                 c->source_file_name = rtcp_get_str(c->rtcp, source_file_index);
@@ -215,7 +216,7 @@ static void parse_attribute(struct class *c, struct bytecode_reader *reader)
                  */
                 c->source_file_name = "Unknown source file";
             }
-        } else if (strcmp(EnclosingMethod, attr_name) == 0) {
+        } else if (SYMBOL(EnclosingMethod) == attr_name) {
             u2 enclosing_class_index = bcr_readu2(reader);
             u2 enclosing_method_index = bcr_readu2(reader);
 
@@ -230,7 +231,7 @@ static void parse_attribute(struct class *c, struct bytecode_reader *reader)
                     c->enclosing_info[2] = strobj_create(nt->descriptor);
                 }
             }
-        } else if (strcmp(BootstrapMethods, attr_name) == 0) {
+        } else if (SYMBOL(BootstrapMethods) == attr_name) {
             u2 num = bcr_readu2(reader);
             struct bootstrap_method methods[num];
 
@@ -244,7 +245,7 @@ static void parse_attribute(struct class *c, struct bytecode_reader *reader)
             }
 
             rtcp_build_invoke_dynamic_constant(c->rtcp, methods);
-        } else if (strcmp(InnerClasses, attr_name) == 0) { // ignore
+        } else if (SYMBOL(InnerClasses) == attr_name) { // ignore
 //            u2 num = bcr_readu2(reader);
 //            struct inner_class classes[num];
 //            for (u2 k = 0; k < num; k++) {
@@ -254,18 +255,18 @@ static void parse_attribute(struct class *c, struct bytecode_reader *reader)
 //                classes[k].inner_class_access_flags = bcr_readu2(reader);
 //            }
             bcr_skip(reader, attr_len);
-        } else if (strcmp(SourceDebugExtension, attr_name) == 0) { // ignore
+        } else if (SYMBOL(SourceDebugExtension) == attr_name) { // ignore
 //            u1 source_debug_extension[attr_len];
 //            bcr_read_bytes(reader, source_debug_extension, attr_len);
             bcr_skip(reader, attr_len);
-        } else if (strcmp(RuntimeVisibleAnnotations, attr_name) == 0) { // ignore
+        } else if (SYMBOL(RuntimeVisibleAnnotations) == attr_name) { // ignore
 //            u2 runtime_annotations_num = bcr_readu2(reader);
 //            struct annotation annotations[runtime_annotations_num];
 //            for (u2 k = 0; k < runtime_annotations_num; k++) {
 //                read_annotation(reader, annotations + i);
 //            }
             bcr_skip(reader, attr_len);
-        } else if (strcmp(RuntimeInvisibleAnnotations, attr_name) == 0) { // ignore
+        } else if (SYMBOL(RuntimeInvisibleAnnotations) == attr_name) { // ignore
 //            u2 runtime_annotations_num = bcr_readu2(reader);
 //            struct annotation annotations[runtime_annotations_num];
 //            for (u2 k = 0; k < runtime_annotations_num; k++) {

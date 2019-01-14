@@ -16,6 +16,7 @@
 #include "../heap/object.h"
 #include "../heap/strobj.h"
 #include "../heap/clsobj.h"
+#include "../../utf8.h"
 
 /*
  * RunTime Constant Pool
@@ -59,10 +60,16 @@ do { \
 static void build_utf8_constant(struct rtcp *rtcp, const struct constant *cfcp, size_t index)
 {
     u2 len = cfcp[index].u.utf8_constant.length;
-    VM_MALLOCS(char, len + 1, utf8);
+//    VM_MALLOCS(char, len + 1, utf8);
+    char *utf8;
+    char *buf = vm_malloc(len + 1);
+    memcpy(buf, cfcp[index].u.utf8_constant.bytes, len);
+    buf[len] = 0;
 
     rtcp->pool[index].t = UTF8_CONSTANT;
-    rtcp->pool[index].v.p = decode_mutf8(cfcp[index].u.utf8_constant.bytes, len, utf8);
+    rtcp->pool[index].v.p = utf8 = new_utf8(buf);//decode_mutf8(cfcp[index].u.utf8_constant.bytes, len, utf8);
+    if (utf8 != buf) // use hashed utf8
+        free(buf);
 }
 
 static void build_string_constant(struct rtcp *rtcp, const struct constant *cfcp, size_t index)

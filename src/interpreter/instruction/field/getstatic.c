@@ -25,6 +25,5 @@ void getstatic(struct frame *frame)
         return;
     }
     frame_stack_push_slot(frame, get_static_field_value_by_id(cls, ref->resolved_field->id));
-//    os_pushs(frame->operand_stack, get_static_field_value_by_id(cls, ref->resolved_field->id));
 }
 

@@ -15,6 +15,7 @@
 #include "native/registry.h"
 #include "rtda/heap/strobj.h"
 #include "rtda/heap/mgr/heap_mgr.h"
+#include "utf8.h"
 
 
 #define JRE_LIB_JARS_MAX_COUNT 64 // big enough
@@ -40,6 +41,8 @@ struct classloader *g_bootstrap_loader = NULL;
 
 struct object *system_thread_group = NULL;
 struct thread *main_thread = NULL;
+
+void init_symbol();
 
 static void init_jvm(struct classloader *loader, struct thread *main_thread)
 {
@@ -106,6 +109,9 @@ static void create_main_thread(struct classloader *loader)
 
 static void start_jvm(const char *main_class_name)
 {
+    // Initialise the VM modules -- ordering is important!
+    utf8_init();
+    init_symbol();
     hm_init(&g_heap_mgr);
     build_str_pool();
 

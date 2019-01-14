@@ -27,20 +27,4 @@ void getfield(struct frame *frame)
 
     const struct slot *s = get_instance_field_value_by_id(obj, ref->resolved_field->id);
     frame_stack_push_slot(frame, s);
-
-
-#if 0
-    // 检查 slot 的类型与 field 的类型是否匹配  todo
-    char d = *ref->resolved_field->descriptor;
-    if (((d == 'B' || d == 'C' || d == 'I' || d == 'S' || d == 'Z') && s->t == JINT)
-        || (d == 'F' && s->t == JFLOAT)
-        || (d == 'J' && s->t == JLONG)
-        || (d == 'D' && s->t == JDOUBLE)
-        || ((d  == 'L' || d  == '[') && s->t == JREF)) {
-        os_pushs(frame->operand_stack, s);
-    } else {
-        VM_UNKNOWN_ERROR("type mismatch error. field's descriptor is %s, but slot is %s",
-                  ref->resolved_field->descriptor, slot_to_string(s));
-    }
-#endif
 }

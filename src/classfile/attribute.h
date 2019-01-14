@@ -9,27 +9,27 @@
 #include "../util/bytecode_reader.h"
 
 /* attribute name ******************************************************************** 可以出现的位置 */
-#define Code "Code"                                                                  //              method
-#define ConstantValue "ConstantValue"                                                //        field
-#define Signature "Signature"                                                        // Class  field  method
-#define Synthetic "Synthetic"                                                        // Class         method
-#define Deprecated "Deprecated"                                                      // Class  field  method
-#define LineNumberTable "LineNumberTable"                                            //                        Code
-#define StackMapTable "StackMapTable"                                                //                        Code
-#define LocalVariableTable "LocalVariableTable"                                      //                        Code
-#define LocalVariableTypeTable "LocalVariableTypeTable"                              //                        Code
-#define Exceptions "Exceptions"                                                      //                 method
-#define AnnotationDefault "AnnotationDefault"                                        //                 method
-#define SourceFile "SourceFile"                                                      // Class
-#define InnerClasses "InnerClasses"                                                  // Class
-#define EnclosingMethod "EnclosingMethod"                                            // Class
-#define SourceDebugExtension "SourceDebugExtension"                                  // Class
-#define BootstrapMethods "BootstrapMethods"                                          // Class
-#define MethodParameters "MethodParameters"                                          //                 method
-#define RuntimeVisibleAnnotations "RuntimeVisibleAnnotations"                        // Class   field   method
-#define RuntimeInvisibleAnnotations "RuntimeInvisibleAnnotations"                    // Class   field   method
-#define RuntimeVisibleParameterAnnotations "RuntimeVisibleParameterAnnotations"      //                 method
-#define RuntimeInvisibleParameterAnnotations "RuntimeInvisibleParameterAnnotations"  //                 method
+//#define Code "Code"                                                                  //              method
+//#define ConstantValue "ConstantValue"                                                //        field
+//#define Signature "Signature"                                                        // Class  field  method
+//#define Synthetic "Synthetic"                                                        // Class         method
+//#define Deprecated "Deprecated"                                                      // Class  field  method
+//#define LineNumberTable "LineNumberTable"                                            //                        Code
+//#define StackMapTable "StackMapTable"                                                //                        Code
+//#define LocalVariableTable "LocalVariableTable"                                      //                        Code
+//#define LocalVariableTypeTable "LocalVariableTypeTable"                              //                        Code
+//#define Exceptions "Exceptions"                                                      //                 method
+//#define AnnotationDefault "AnnotationDefault"                                        //                 method
+//#define SourceFile "SourceFile"                                                      // Class
+//#define InnerClasses "InnerClasses"                                                  // Class
+//#define EnclosingMethod "EnclosingMethod"                                            // Class
+//#define SourceDebugExtension "SourceDebugExtension"                                  // Class
+//#define BootstrapMethods "BootstrapMethods"                                          // Class
+//#define MethodParameters "MethodParameters"                                          //                 method
+//#define RuntimeVisibleAnnotations "RuntimeVisibleAnnotations"                        // Class   field   method
+//#define RuntimeInvisibleAnnotations "RuntimeInvisibleAnnotations"                    // Class   field   method
+//#define RuntimeVisibleParameterAnnotations "RuntimeVisibleParameterAnnotations"      //                 method
+//#define RuntimeInvisibleParameterAnnotations "RuntimeInvisibleParameterAnnotations"  //                 method
 
 /*****************************************************/
 struct element_value;

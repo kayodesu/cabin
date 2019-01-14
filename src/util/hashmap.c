@@ -57,7 +57,7 @@ struct hashmap* hashmap_create(int (*hash)(const void *), int (* cmp)(const void
 
     VM_MALLOC(struct hashmap, map);
     map->length = DEFAULT_INITIAL_CAPACITY;
-    map->table = calloc(sizeof(*(map->table)), map->length); // todo NULL
+    map->table = vm_calloc(sizeof(*(map->table)), map->length);
     map->size = 0;
     map->hash = hash;
     map->cmp = cmp;

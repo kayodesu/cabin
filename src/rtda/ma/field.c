@@ -8,6 +8,7 @@
 #include "class.h"
 #include "../heap/object.h"
 #include "descriptor.h"
+#include "../../symbol.h"
 
 
 void field_init(struct field *field, struct class *c, struct bytecode_reader *reader)
@@ -34,9 +35,9 @@ void field_init(struct field *field, struct class *c, struct bytecode_reader *re
         const char *attr_name = rtcp_get_str(c->rtcp, bcr_readu2(reader));
         u4 attr_len = bcr_readu4(reader);
 
-        if (strcmp(Deprecated, attr_name) == 0) {
+        if (SYMBOL(Deprecated) == attr_name) {
             field->deprecated = true;
-        } else if (strcmp(ConstantValue, attr_name) == 0) {
+        } else if (SYMBOL(ConstantValue) == attr_name) {
             /*
              * ConstantValue属性表示一个常量字段的值。
              * 在一个field_info结构的属性表中最多只能有一个ConstantValue属性。
@@ -47,11 +48,11 @@ void field_init(struct field *field, struct class *c, struct bytecode_reader *re
             if (IS_STATIC(field->access_flags)) {  // todo
                 field->constant_value_index = index;
             }
-        } else if (strcmp(Synthetic, attr_name) == 0) {
+        } else if (SYMBOL(Synthetic) == attr_name) {
             set_synthetic(&field->access_flags);
-        } else if (strcmp(Signature, attr_name) == 0) {
+        } else if (SYMBOL(Signature) == attr_name) {
             c->signature = rtcp_get_str(c->rtcp, bcr_readu2(reader));
-        } else if (strcmp(RuntimeVisibleAnnotations, attr_name) == 0) { // ignore
+        } else if (SYMBOL(RuntimeVisibleAnnotations) == attr_name) { // ignore
 //            u2 num = field->runtime_visible_annotations_num = bcr_readu2(reader);
 //            field->runtime_visible_annotations = malloc(sizeof(struct annotation) * num);
 //            CHECK_MALLOC_RESULT(field->runtime_visible_annotations);
@@ -59,7 +60,7 @@ void field_init(struct field *field, struct class *c, struct bytecode_reader *re
 //                read_annotation(reader, field->runtime_visible_annotations + i);
 //            }
             bcr_skip(reader, attr_len);
-        } else if (strcmp(RuntimeInvisibleAnnotations, attr_name) == 0) { // ignore
+        } else if (SYMBOL(RuntimeInvisibleAnnotations) == attr_name) { // ignore
 //            u2 num = field->runtime_invisible_annotations_num = bcr_readu2(reader);
 //            field->runtime_invisible_annotations = malloc(sizeof(struct annotation) * num);
 //            CHECK_MALLOC_RESULT(field->runtime_invisible_annotations);

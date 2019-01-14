@@ -7,6 +7,7 @@
 #include "../heap/object.h"
 #include "descriptor.h"
 #include "../heap/arrobj.h"
+#include "../../symbol.h"
 
 struct object* jmethod_get_parameter_types(struct method *method)
 {
@@ -142,16 +143,16 @@ static void parse_code_attr(struct method *method, struct bytecode_reader *reade
         const char *attr_name = rtcp_get_str(method->clazz->rtcp, bcr_readu2(reader));
         u4 attr_len = bcr_readu4(reader);
 
-        if (strcmp(LineNumberTable, attr_name) == 0) {
+        if (SYMBOL(LineNumberTable) == attr_name) {
             method->line_number_table_count = bcr_readu2(reader);
             method->line_number_tables = vm_malloc(sizeof(struct line_number_table) * method->line_number_table_count);
             for (int i = 0; i < method->line_number_table_count; i++) {
                 method->line_number_tables[i].start_pc = bcr_readu2(reader);
                 method->line_number_tables[i].line_number = bcr_readu2(reader);
             }
-        } else if (strcmp(StackMapTable, attr_name) == 0) { // ignore
+        } else if (SYMBOL(StackMapTable) == attr_name) { // ignore
             bcr_skip(reader, attr_len);
-        } else if (strcmp(LocalVariableTable, attr_name) == 0) { // ignore
+        } else if (SYMBOL(LocalVariableTable) == attr_name) { // ignore
 //            u2 num = bcr_readu2(reader);
 //            struct local_variable_table tables[num];
 //            for (int i = 0; i < num; i++) {
@@ -162,7 +163,7 @@ static void parse_code_attr(struct method *method, struct bytecode_reader *reade
 //                tables[i].index = bcr_readu2(reader);
 //            }
             bcr_skip(reader, attr_len);
-        } else if (strcmp(LocalVariableTypeTable, attr_name) == 0) { // ignore
+        } else if (SYMBOL(LocalVariableTypeTable) == attr_name) { // ignore
 //            u2 num = bcr_readu2(reader);
 //            struct local_variable_type_table tables[num];
 //            for (int i = 0; i < num; i++) {
@@ -208,15 +209,15 @@ void method_init(struct method *method, struct class *c, struct bytecode_reader 
         const char *attr_name = rtcp_get_str(c->rtcp, bcr_readu2(reader));
         u4 attr_len = bcr_readu4(reader);
 
-        if (strcmp(Code, attr_name) == 0) {
+        if (SYMBOL(Code) == attr_name) {
             parse_code_attr(method, reader);
-        } else if (strcmp(Deprecated, attr_name) == 0) {
+        } else if (SYMBOL(Deprecated) == attr_name) {
             method->deprecated = true;
-        } else if (strcmp(Synthetic, attr_name) == 0) {
+        } else if (SYMBOL(Synthetic) == attr_name) {
             set_synthetic(&method->access_flags);
-        } else if (strcmp(Signature, attr_name) == 0) {
+        } else if (SYMBOL(Signature) == attr_name) {
             c->signature = rtcp_get_str(c->rtcp, bcr_readu2(reader));
-        } else if (strcmp(MethodParameters, attr_name) == 0) { // ignore
+        } else if (SYMBOL(MethodParameters) == attr_name) { // ignore
 //            u1 num = bcr_readu1(reader); // 这里就是 u1，不是u2
 //            struct parameter parameters[num];
 //            for (u2 k = 0; k < num; k++) {
@@ -224,14 +225,14 @@ void method_init(struct method *method, struct class *c, struct bytecode_reader 
 //                parameters[k].access_flags = bcr_readu2(reader);
 //            }
             bcr_skip(reader, attr_len);
-        } else if (strcmp(Exceptions, attr_name) == 0) { // ignore
+        } else if (SYMBOL(Exceptions) == attr_name) { // ignore
 //            method->exception_tables_count = bcr_readu2(reader);
 //            u2 exception_index_table[num];
 //            for (u2 k = 0; k < num; k++) {
 //                exception_index_table[i] = bcr_readu2(reader);
 //            }
             bcr_skip(reader, attr_len);
-        } else if (strcmp(RuntimeVisibleParameterAnnotations, attr_name) == 0) { // ignore
+        } else if (SYMBOL(RuntimeVisibleParameterAnnotations) == attr_name) { // ignore
 //            u2 num = method->runtime_visible_parameter_annotations_num = bcr_readu2(reader);
 //            struct parameter_annotation *as
 //                    = method->runtime_visible_parameter_annotations = malloc(sizeof(struct parameter_annotation) * num);
@@ -245,7 +246,7 @@ void method_init(struct method *method, struct class *c, struct bytecode_reader 
 //                }
 //            }
             bcr_skip(reader, attr_len);
-        } else if (strcmp(RuntimeInvisibleParameterAnnotations, attr_name) == 0) { // ignore
+        } else if (SYMBOL(RuntimeInvisibleParameterAnnotations) == attr_name) { // ignore
 //            u2 num = method->runtime_invisible_parameter_annotations_num = bcr_readu2(reader);
 //            struct parameter_annotation *as
 //                    = method->runtime_invisible_parameter_annotations = malloc(sizeof(struct parameter_annotation) * num);
@@ -259,7 +260,7 @@ void method_init(struct method *method, struct class *c, struct bytecode_reader 
 //                }
 //            }
             bcr_skip(reader, attr_len);
-        } else if (strcmp(RuntimeVisibleAnnotations, attr_name) == 0) { // ignore
+        } else if (SYMBOL(RuntimeVisibleAnnotations) == attr_name) { // ignore
 //            u2 num = method->runtime_visible_annotations_num = bcr_readu2(reader);
 //            method->runtime_visible_annotations = malloc(sizeof(struct annotation) * num);
 //            CHECK_MALLOC_RESULT(method->runtime_visible_annotations);
@@ -267,7 +268,7 @@ void method_init(struct method *method, struct class *c, struct bytecode_reader 
 //                read_annotation(reader, method->runtime_visible_annotations + i);
 //            }
             bcr_skip(reader, attr_len);
-        } else if (strcmp(RuntimeInvisibleAnnotations, attr_name) == 0) { // ignore
+        } else if (SYMBOL(RuntimeInvisibleAnnotations) == attr_name) { // ignore
 //            u2 num = method->runtime_invisible_annotations_num = bcr_readu2(reader);
 //            method->runtime_invisible_annotations = malloc(sizeof(struct annotation) * num);
 //            CHECK_MALLOC_RESULT(method->runtime_invisible_annotations);
@@ -275,7 +276,7 @@ void method_init(struct method *method, struct class *c, struct bytecode_reader 
 //                read_annotation(reader, method->runtime_invisible_annotations + i);
 //            }
             bcr_skip(reader, attr_len);
-        } else if (strcmp(AnnotationDefault, attr_name) == 0) { // ignore
+        } else if (SYMBOL(AnnotationDefault) == attr_name) { // ignore
 //            struct element_value ev;
 //            read_element_value(reader, &ev);
             bcr_skip(reader, attr_len);
