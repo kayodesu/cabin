@@ -3,8 +3,8 @@
  */
 
 #include "../../../rtda/thread/frame.h"
-#include "../../../rtda/ma/symref.h"
 #include "../../../rtda/ma/field.h"
+#include "../../../rtda/ma/resolve.h"
 
 /*
  * putstatic指令给类的某个静态变量赋值，它需要两个操作数。
@@ -21,39 +21,22 @@ void putstatic(struct frame *frame)
     struct class *curr_class = frame->m.method->clazz;
 
     int index = bcr_readu2(reader);
-    struct field_ref *ref = rtcp_get_field_ref(curr_class->rtcp, index);
-    resolve_static_field_ref(curr_class, ref);
+//    struct field_ref *ref = rtcp_get_field_ref(curr_class->rtcp, index);
+//    resolve_static_field_ref(curr_class, ref);
+//
+//    struct class *cls = ref->resolved_field->clazz;
+    struct field *f = resolve_field(curr_class, index);
 
-    struct class *cls = ref->resolved_field->clazz;
-
-    if (!cls->inited) {
-        class_clinit(cls, frame->thread);
+    if (!f->clazz->inited) {
+        class_clinit(f->clazz, frame->thread);
         reader->pc = saved_pc; // recover pc
         return;
     }
 
-#if 0
-    // todo
-    char d = *ref->resolved_field->descriptor;
-    struct slot s;
-    if (d == 'B' || d == 'C' || d == 'I' || d == 'S' || d == 'Z') {
-        s = islot(os_popi(frame->operand_stack));
-    } else if (d == 'F') {
-        s = fslot(os_popf(frame->operand_stack));
-    } else if (d == 'J') {
-        s = lslot(os_popl(frame->operand_stack));
-    } else if (d == 'D') {
-        s = dslot(os_popd(frame->operand_stack));
-    } else if (d  == 'L' || d  == '[') {
-        s = rslot(os_popr(frame->operand_stack));
-    } else {
-        VM_UNKNOWN_ERROR("field's descriptor error. %s", ref->resolved_field->descriptor);
-    }
-    set_static_field_value_by_id(cls, ref->resolved_field->id, &s);
-#endif
     struct slot *s = frame_stack_pop_slot(frame);
     if (slot_is_ph(s)) {
         s = frame_stack_pop_slot(frame);
     }
-    set_static_field_value_by_id(cls, ref->resolved_field->id, s);
+
+    set_static_field_value_by_id(f->clazz, f->id, s);
 }

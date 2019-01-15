@@ -8,7 +8,6 @@
 #include <stdbool.h>
 #include <string.h>
 #include "../../jtypes.h"
-#include "rtcp.h"
 #include "../../loader/classloader.h"
 #include "../thread/frame.h"
 #include "../primitive_types.h"
@@ -17,6 +16,41 @@ struct object;
 struct stack_frame;
 struct thread;
 struct field;
+
+struct constant_pool {
+    u1 *type;
+    uintptr_t *info;
+};
+
+// Macros for accessing constant pool entries
+#define CP_TYPE(cp, i)                   ((cp)->type[i])
+#define CP_INFO(cp, i)                   ((cp)->info[i])
+
+//#define CP_METHOD_CLASS(cp, i)           (u2)(cp)->info[i]
+//#define CP_METHOD_NAME_TYPE(cp, i)       (u2)((cp)->info[i]>>16)
+#define CP_INTERFACE_CLASS(cp, i)        (u2)(cp)->info[i]
+#define CP_INTERFACE_NAME_TYPE(cp, i)    (u2)((cp)->info[i]>>16)
+
+#define CP_UTF8(cp, i)                   (char *)((cp)->info[i])
+#define CP_STRING(cp, i)                 CP_UTF8(cp, (u2)(cp)->info[i])
+#define CP_CLASS_NAME(cp, i)             CP_UTF8(cp, (u2)(cp)->info[i])
+#define CP_NAME_TYPE_NAME(cp, i)         CP_UTF8(cp, (u2)(cp)->info[i])
+#define CP_NAME_TYPE_TYPE(cp, i)         CP_UTF8(cp, (u2)((cp)->info[i]>>16))
+
+#define CP_FIELD_CLASS(cp, i)       (u2)(cp)->info[i]
+#define CP_FIELD_CLASS_NAME(cp, i)       CP_UTF8(cp, (u2)(cp)->info[i])
+#define CP_FIELD_NAME(cp, i)        CP_NAME_TYPE_NAME(cp, (u2)((cp)->info[i]>>16))
+#define CP_FIELD_TYPE(cp, i)        CP_NAME_TYPE_TYPE(cp, (u2)((cp)->info[i]>>16))
+
+#define CP_METHOD_CLASS CP_FIELD_CLASS
+#define CP_METHOD_CLASS_NAME CP_FIELD_CLASS_NAME
+#define CP_METHOD_NAME CP_FIELD_NAME
+#define CP_METHOD_TYPE CP_FIELD_TYPE
+
+#define CP_INT(cp, i)                    *(jint *) &((cp)->info[i])
+#define CP_FLOAT(cp, i)                  *(jfloat *) &((cp)->info[i])
+#define CP_LONG(cp, i)                   *(jlong *) &((cp)->info[i])
+#define CP_DOUBLE(cp, i)                 *(jdouble *) &((cp)->info[i])
 
 struct class {
     struct clsheader {
@@ -27,6 +61,9 @@ struct class {
     u4 magic;
     u2 minor_version;
     u2 major_version;
+
+    struct constant_pool constant_pool;
+    int cp_count;
 
     // object of java/lang/Class of this class
     // 通过此字段，每个Class结构体实例都与一个类对象关联。
@@ -47,7 +84,7 @@ struct class {
     struct class **interfaces;
     u2 interfaces_count;
 
-    struct rtcp *rtcp;
+//    struct rtcp *rtcp;
 
     /*
      * 本类中定义的所有方法（不包括继承而来的）

@@ -120,6 +120,22 @@ static inline u4 bcr_readu4(struct bytecode_reader *reader)
     return (u4) bytes_to_int32(buf);  // should be bytesToUint32  todo
 }
 
+static inline u8 bcr_readu8(struct bytecode_reader *reader)
+{
+    assert(reader != NULL);
+    const u1 *p = reader->bytecode;
+    u8 v = ((u8)(p)[0]<<56)
+           |((u8)(p)[1]<<48)
+           |((u8)(p)[2]<<40)
+           |((u8)(p)[3]<<32)
+           |((u8)(p)[4]<<24)
+           |((u8)(p)[5]<<16)
+           |((u8)(p)[6]<<8)
+           |(u8)(p)[7];
+    reader->pc += 8;
+    return v;
+}
+
 static inline s4 bcr_reads4(struct bytecode_reader *reader)
 {
     assert(reader != NULL);

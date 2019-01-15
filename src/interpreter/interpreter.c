@@ -8,6 +8,7 @@
 #include "../rtda/heap/strpool.h"
 #include "../classfile/constant.h"
 #include "../rtda/heap/arrobj.h"
+#include "../rtda/ma/resolve.h"
 
 #if (PRINT_LEVEL >= 3)
 // the mapping of instructions's code and name
@@ -109,22 +110,25 @@ static jint fetch_wide_index(struct frame *frame)
 }
 
 // constant instructions -----------------------------------------------------------------------------------------------
-void __ldc(struct frame *frame, int index)
+static void __ldc(struct frame *frame, int index)
 {
-    struct rtcp *rtcp = frame->m.method->clazz->rtcp;
-    u1 type = rtcp_get_type(rtcp, index);
+//    struct rtcp *rtcp = frame->m.method->clazz->rtcp;
+//    u1 type = rtcp_get_type(rtcp, index);
+    struct constant_pool *cp = &frame->m.method->clazz->constant_pool;
+    resolve_single_constant(frame->m.method->clazz, index);
+    u1 type = CP_TYPE(cp, index);
 
-    if (type == INTEGER_CONSTANT) {
-        frame_stack_pushi(frame, rtcp_get_int(rtcp, index));
-    } else if (type == FLOAT_CONSTANT) {
-        frame_stack_pushf(frame, rtcp_get_float(rtcp, index));
-    } else if (type == STRING_CONSTANT) {
-        const char *str = rtcp_get_str(rtcp, index);
-        struct object *so = get_str_from_pool(frame->m.method->clazz->loader, str);
-        frame_stack_pushr(frame, so);
-    } else if (type == CLASS_CONSTANT) {
-        const char *class_name = rtcp_get_class_name(rtcp, index);
-        struct class *c = classloader_load_class(frame->m.method->clazz->loader, class_name);
+    if (type == CONSTANT_Integer) {
+        frame_stack_pushi(frame, CP_INT(cp, index));//rtcp_get_int(rtcp, index));
+    } else if (type == CONSTANT_Float) {
+        frame_stack_pushf(frame, CP_FLOAT(cp, index));//rtcp_get_float(rtcp, index));
+    } else if (type == CONSTANT_ResolvedString) {
+//        const char *str = CP_STRING(cp, index);//rtcp_get_str(rtcp, index);
+//        struct object *so = get_str_from_pool(frame->m.method->clazz->loader, str);
+        frame_stack_pushr(frame, (jref) CP_INFO(cp, index));
+    } else if (type == CONSTANT_ResolvedClass) {
+//        const char *class_name = CP_CLASS_NAME(cp, index);//rtcp_get_class_name(rtcp, index);
+        struct class *c = (struct class *) CP_INFO(cp, index);//classloader_load_class(frame->m.method->clazz->loader, class_name);
         frame_stack_pushr(frame, c->clsobj);
     } else {
         VM_UNKNOWN_ERROR("unknown type: %d", type);
@@ -134,13 +138,15 @@ void __ldc(struct frame *frame, int index)
 void ldc2_w(struct frame *frame)
 {
     int index = bcr_readu2(&frame->reader);
-    struct rtcp *rtcp = frame->m.method->clazz->rtcp;
-    u1 type = rtcp_get_type(rtcp, index);
+//    struct rtcp *rtcp = frame->m.method->clazz->rtcp;
+//    u1 type = rtcp_get_type(rtcp, index);
+    struct constant_pool *cp = &frame->m.method->clazz->constant_pool;
+    u1 type = CP_TYPE(cp, index);
 
-    if (type == LONG_CONSTANT) {
-        frame_stack_pushl(frame, rtcp_get_long(rtcp, index));
-    } else if (type == DOUBLE_CONSTANT) {
-        frame_stack_pushd(frame, rtcp_get_double(rtcp, index));
+    if (type == CONSTANT_Long) {
+        frame_stack_pushl(frame, CP_LONG(cp, index));//rtcp_get_long(rtcp, index));
+    } else if (type == CONSTANT_Double) {
+        frame_stack_pushd(frame, CP_DOUBLE(cp, index));//rtcp_get_double(rtcp, index));
     } else {
         jvm_abort("error. %d\n", type);
     }

@@ -3,10 +3,8 @@
  */
 
 #include "../../../util/bytecode_reader.h"
-#include "../../../rtda/ma/rtcp.h"
 #include "../../../loader/classloader.h"
 #include "../../../rtda/ma/class.h"
-#include "../../../rtda/ma/symref.h"
 #include "../../../rtda/heap/object.h"
 #include "../../../rtda/ma/descriptor.h"
 #include "../../../rtda/heap/arrobj.h"
@@ -73,6 +71,7 @@
     } ref_constant, field_ref_constant, method_ref_constant, interface_method_ref_constant;
  */
 
+#if 0
 static void set_bootstrap_method_type(struct frame *frame)
 {
     assert(frame != NULL);
@@ -198,12 +197,14 @@ static void set_call_set(struct class *curr_class, struct thread *curr_thread,
 
     thread_invoke_method_with_shim(curr_thread, bootstrap_method, args, set_call_set0);
 }
+#endif
 
 // 每一个 invokedynamic 指令都称为 Dynamic Call Site(动态调用点)
 void invokedynamic(struct frame *frame)
 {
     jvm_abort("invokedynamic not implement\n");  // todo
 
+#if 0
     size_t saved_pc = frame->reader.pc - 1;
 
     struct class *curr_class = frame->m.method->clazz;
@@ -284,4 +285,5 @@ void invokedynamic(struct frame *frame)
     }
 
     // todo rest thread.dyn 的值，下次调用时这个值要从新解析。
+#endif
 }

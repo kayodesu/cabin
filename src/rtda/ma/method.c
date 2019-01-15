@@ -8,6 +8,7 @@
 #include "descriptor.h"
 #include "../heap/arrobj.h"
 #include "../../symbol.h"
+#include "../../classfile/constant.h"
 
 struct object* jmethod_get_parameter_types(struct method *method)
 {
@@ -131,8 +132,12 @@ static void parse_code_attr(struct method *method, struct bytecode_reader *reade
                 // 0 是无效的常量池索引，但是在这里 0 并非表示 catch-none，而是表示 catch-all。
                 t->catch_type = NULL;
             } else {
-                const char *class_name = rtcp_get_class_name(method->clazz->rtcp, catch_type);
-                t->catch_type = classloader_load_class(method->clazz->loader, class_name);
+                if (CP_TYPE(&method->clazz->constant_pool, catch_type) == CONSTANT_ResolvedClass)
+                    t->catch_type = (struct class *) CP_INFO(&method->clazz->constant_pool, catch_type);
+                else {
+                    const char *class_name = CP_CLASS_NAME(&method->clazz->constant_pool, catch_type);
+                    t->catch_type = classloader_load_class(method->clazz->loader, class_name);
+                }
             }
         }
     }
@@ -140,7 +145,7 @@ static void parse_code_attr(struct method *method, struct bytecode_reader *reade
     // parse attributes of code's attribute
     u2 attr_count = bcr_readu2(reader);
     for (int k = 0; k < attr_count; k++) {
-        const char *attr_name = rtcp_get_str(method->clazz->rtcp, bcr_readu2(reader));
+        const char *attr_name = CP_UTF8(&method->clazz->constant_pool, bcr_readu2(reader));//rtcp_get_str(method->clazz->rtcp, bcr_readu2(reader));
         u4 attr_len = bcr_readu4(reader);
 
         if (SYMBOL(LineNumberTable) == attr_name) {
@@ -184,10 +189,11 @@ static void parse_code_attr(struct method *method, struct bytecode_reader *reade
 void method_init(struct method *method, struct class *c, struct bytecode_reader *reader)
 {
     method->clazz = c;
+    struct constant_pool *cp = &c->constant_pool;
 
     method->access_flags = bcr_readu2(reader);
-    method->name = rtcp_get_str(c->rtcp, bcr_readu2(reader));
-    method->descriptor = rtcp_get_str(c->rtcp, bcr_readu2(reader));
+    method->name = CP_UTF8(cp, bcr_readu2(reader));//rtcp_get_str(c->rtcp, bcr_readu2(reader));
+    method->descriptor = CP_UTF8(cp, bcr_readu2(reader));//rtcp_get_str(c->rtcp, bcr_readu2(reader));
     u2 attr_count = bcr_readu2(reader);
 
     method->max_stack = method->max_locals = method->exception_tables_count = 0;
@@ -206,7 +212,7 @@ void method_init(struct method *method, struct class *c, struct bytecode_reader 
 
     // parse method's attributes
     for (int i = 0; i < attr_count; i++) {
-        const char *attr_name = rtcp_get_str(c->rtcp, bcr_readu2(reader));
+        const char *attr_name = CP_UTF8(cp, bcr_readu2(reader));//rtcp_get_str(c->rtcp, bcr_readu2(reader));
         u4 attr_len = bcr_readu4(reader);
 
         if (SYMBOL(Code) == attr_name) {
@@ -216,7 +222,7 @@ void method_init(struct method *method, struct class *c, struct bytecode_reader 
         } else if (SYMBOL(Synthetic) == attr_name) {
             set_synthetic(&method->access_flags);
         } else if (SYMBOL(Signature) == attr_name) {
-            c->signature = rtcp_get_str(c->rtcp, bcr_readu2(reader));
+            c->signature = CP_UTF8(cp, bcr_readu2(reader));//rtcp_get_str(c->rtcp, bcr_readu2(reader));
         } else if (SYMBOL(MethodParameters) == attr_name) { // ignore
 //            u1 num = bcr_readu1(reader); // 这里就是 u1，不是u2
 //            struct parameter parameters[num];

@@ -3,12 +3,11 @@
  */
 
 #include "../../../util/bytecode_reader.h"
-#include "../../../rtda/ma/rtcp.h"
 #include "../../../loader/classloader.h"
 #include "../../../rtda/ma/class.h"
 #include "../../../rtda/ma/access.h"
-#include "../../../rtda/ma/symref.h"
 #include "../../../rtda/heap/object.h"
+#include "../../../rtda/ma/resolve.h"
 
 /*
  * invokeinterface指令用于调用接口方法，它会在运行时搜索一个实现了这个接口方法的对象，找出适合的方法进行调用。
@@ -30,8 +29,9 @@ void invokeinterface(struct frame *frame)
      */
     frame_readu1(frame);
 
-    struct method_ref *ref = rtcp_get_interface_method_ref(curr_class->rtcp, index);
+//    struct method_ref *ref = rtcp_get_interface_method_ref(curr_class->rtcp, index);
 //    resolve_non_static_method_ref(curr_class, ref);
+    struct method *m = resolve_method(curr_class, index);
 
     /* todo 本地方法 */
 
@@ -45,7 +45,7 @@ void invokeinterface(struct frame *frame)
         thread_throw_null_pointer_exception(frame->thread);
     }
 
-    struct method *method = class_lookup_method(obj->clazz, ref->name, ref->descriptor);
+    struct method *method = class_lookup_method(obj->clazz, m->name, m->descriptor);
     if (method == NULL) {
         jvm_abort("error\n"); // todo
     }

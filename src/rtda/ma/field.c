@@ -4,7 +4,6 @@
 
 #include <stdlib.h>
 #include "field.h"
-#include "rtcp.h"
 #include "class.h"
 #include "../heap/object.h"
 #include "descriptor.h"
@@ -17,8 +16,8 @@ void field_init(struct field *field, struct class *c, struct bytecode_reader *re
     field->clazz = c;
     field->deprecated = false;
     field->access_flags = bcr_readu2(reader);
-    field->name = rtcp_get_str(c->rtcp, bcr_readu2(reader));
-    field->descriptor = rtcp_get_str(c->rtcp, bcr_readu2(reader));
+    field->name = CP_UTF8(&(c->constant_pool), bcr_readu2(reader));//rtcp_get_str(c->rtcp, bcr_readu2(reader));
+    field->descriptor = CP_UTF8(&(c->constant_pool), bcr_readu2(reader));//rtcp_get_str(c->rtcp, bcr_readu2(reader));
 
     char d = field->descriptor[0];
     if (d == 'J' || d == 'D') {
@@ -32,7 +31,7 @@ void field_init(struct field *field, struct class *c, struct bytecode_reader *re
     // parse field's attributes
     u2 attr_count = bcr_readu2(reader);
     for (int i = 0; i < attr_count; i++) {
-        const char *attr_name = rtcp_get_str(c->rtcp, bcr_readu2(reader));
+        const char *attr_name = CP_UTF8(&(c->constant_pool), bcr_readu2(reader));//rtcp_get_str(c->rtcp, bcr_readu2(reader));
         u4 attr_len = bcr_readu4(reader);
 
         if (SYMBOL(Deprecated) == attr_name) {
@@ -51,7 +50,7 @@ void field_init(struct field *field, struct class *c, struct bytecode_reader *re
         } else if (SYMBOL(Synthetic) == attr_name) {
             set_synthetic(&field->access_flags);
         } else if (SYMBOL(Signature) == attr_name) {
-            c->signature = rtcp_get_str(c->rtcp, bcr_readu2(reader));
+            c->signature = CP_UTF8(&(c->constant_pool), bcr_readu2(reader));//rtcp_get_str(c->rtcp, bcr_readu2(reader));
         } else if (SYMBOL(RuntimeVisibleAnnotations) == attr_name) { // ignore
 //            u2 num = field->runtime_visible_annotations_num = bcr_readu2(reader);
 //            field->runtime_visible_annotations = malloc(sizeof(struct annotation) * num);

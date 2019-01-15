@@ -3,6 +3,7 @@
 #include "../../../rtda/thread/frame.h"
 #include "../../../rtda/heap/object.h"
 #include "../../../rtda/heap/strpool.h"
+#include "../../../rtda/ma/resolve.h"
 
 /*
  * Author: Jia Yang
@@ -14,7 +15,7 @@ static void getLongAt0(struct frame *frame)
     // todo 对不对
     jref o = frame_locals_getr(frame, 1);
     jint i = frame_locals_geti(frame, 2);
-    jlong result = rtcp_get_long(o->clazz->rtcp, i);
+    jlong result = CP_LONG(&(o->clazz->constant_pool), i);//rtcp_get_long(o->clazz->rtcp, i);
     frame_stack_pushl(frame, result);
 }
 
@@ -24,8 +25,10 @@ static void getUTF8At0(struct frame *frame)
     // todo 对不对
     jref o = frame_locals_getr(frame, 1);
     jint i = frame_locals_geti(frame, 2);
-    jref result = get_str_from_pool(frame->m.method->clazz->loader, rtcp_get_str(o->clazz->rtcp, i));
-    frame_stack_pushr(frame, result);
+
+    resolve_single_constant(o->clazz, i);
+//    jref result = get_str_from_pool(frame->m.method->clazz->loader, CP_STRING(&(o->clazz->constant_pool), i));//rtcp_get_str(o->clazz->rtcp, i));
+    frame_stack_pushr(frame, (jref) CP_INFO(&o->clazz->constant_pool, i));
 }
 
 void sun_reflect_ConstantPool_registerNatives()

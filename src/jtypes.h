@@ -8,14 +8,14 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-typedef int8_t s1;  // s: signed
+typedef int8_t  s1;  // s: signed
 typedef int16_t s2;
 typedef int32_t s4;
 
-typedef uint8_t u1;  // u: unsigned
+typedef uint8_t  u1;  // u: unsigned
 typedef uint16_t u2;
 typedef uint32_t u4;
-//typedef uint64_t u8;
+typedef uint64_t u8;
 
 struct object;
 

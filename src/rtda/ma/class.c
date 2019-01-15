@@ -13,6 +13,8 @@
 #include "../heap/strobj.h"
 #include "../heap/clsobj.h"
 #include "../../symbol.h"
+#include "../../utf8.h"
+#include "resolve.h"
 
 
 // 计算实例字段的个数，同时给它们编号
@@ -130,77 +132,17 @@ static void calc_static_field_id(struct class *c)
     // todo 保证 values 的每一项都被初始化了
 }
 
-static void read_constant_pool(struct constant pool[], u2 count, struct bytecode_reader *reader)
-{
-    // constant pool 从 1 开始计数，第0位无效
-    pool[0] = (struct constant) { .tag = INVALID_CONSTANT };
-    for (int i = 1; i < count; i++) {
-        struct constant *c = pool + i;
-
-        c->tag = bcr_readu1(reader);
-        switch (c->tag) {
-            case CLASS_CONSTANT:
-                c->u.class_name_index = bcr_readu2(reader);
-                break;
-            case FIELD_REF_CONSTANT:
-            case METHOD_REF_CONSTANT:
-            case INTERFACE_METHOD_REF_CONSTANT:
-                c->u.ref_constant.class_index = bcr_readu2(reader);
-                c->u.ref_constant.name_and_type_index = bcr_readu2(reader);
-                break;
-            case STRING_CONSTANT:
-                c->u.string_index = bcr_readu2(reader);
-                break;
-            case INTEGER_CONSTANT:
-            case FLOAT_CONSTANT:
-                bcr_read_bytes(reader, c->u.bytes4, 4);
-                break;
-            case LONG_CONSTANT:
-            case DOUBLE_CONSTANT:
-                bcr_read_bytes(reader, c->u.bytes8, 8);
-                // 在Class文件的常量池中，所有的8字节的常量都占两个表成员（项）的空间。
-                // 如果一个 CONSTANT_Long_info 或 CONSTANT_Double_info 结构的项在常量池中的索引为 n，
-                // 则常量池中下一个有效的项的索引为 n + 2，此时常量池中索引为n+1的项有效但必须被认为不可用
-                i++;
-                assert(i < count);
-                pool[i] = (struct constant) { .tag = PLACEHOLDER_CONSTANT };
-                break;
-            case NAME_AND_TYPE_CONSTANT:
-                c->u.name_and_type_constant.name_index = bcr_readu2(reader);
-                c->u.name_and_type_constant.descriptor_index = bcr_readu2(reader);
-                break;
-            case UTF8_CONSTANT:
-                c->u.utf8_constant.length = bcr_readu2(reader);
-                c->u.utf8_constant.bytes = vm_malloc(c->u.utf8_constant.length);
-                bcr_read_bytes(reader, c->u.utf8_constant.bytes, c->u.utf8_constant.length);
-                break;
-            case METHOD_HANDLE_CONSTANT:
-                c->u.method_handle_constant.reference_kind = bcr_readu1(reader);
-                c->u.method_handle_constant.reference_index = bcr_readu2(reader);
-                break;
-            case METHOD_TYPE_CONSTANT:
-                c->u.method_descriptor_index = bcr_readu2(reader);
-                break;
-            case INVOKE_DYNAMIC_CONSTANT:
-                c->u.invoke_dynamic_constant.bootstrap_method_attr_index = bcr_readu2(reader);
-                c->u.invoke_dynamic_constant.name_and_type_index = bcr_readu2(reader);
-                break;
-            default:
-                jvm_abort("error. unknown constant tag: %d\n", c->tag);
-        }
-    }
-}
-
 static void parse_attribute(struct class *c, struct bytecode_reader *reader)
 {
     u2 attr_count = bcr_readu2(reader);
+    struct constant_pool *cp = &c->constant_pool;
 
     for (int i = 0; i < attr_count; i++) {
-        const char *attr_name = rtcp_get_str(c->rtcp, bcr_readu2(reader));
+        const char *attr_name = CP_UTF8(cp, bcr_readu2(reader));//rtcp_get_str(c->rtcp, bcr_readu2(reader));
         u4 attr_len = bcr_readu4(reader);
 
         if (SYMBOL(Signature) == attr_name) {
-            c->signature = rtcp_get_str(c->rtcp, bcr_readu2(reader));
+            c->signature = CP_UTF8(cp, bcr_readu2(reader));//rtcp_get_str(c->rtcp, bcr_readu2(reader));
         } else if (SYMBOL(Synthetic) == attr_name) {
             set_synthetic(&c->access_flags);
         } else if (SYMBOL(Deprecated) == attr_name) {
@@ -208,7 +150,7 @@ static void parse_attribute(struct class *c, struct bytecode_reader *reader)
         } else if (SYMBOL(SourceFile) == attr_name) {
             u2 source_file_index = bcr_readu2(reader);
             if (source_file_index >= 0) {
-                c->source_file_name = rtcp_get_str(c->rtcp, source_file_index);
+                c->source_file_name = CP_UTF8(cp, source_file_index);//rtcp_get_str(c->rtcp, source_file_index);
             } else {
                 /*
                  * 并不是每个class文件中都有源文件信息，这个因编译时的编译器选项而异。
@@ -222,13 +164,13 @@ static void parse_attribute(struct class *c, struct bytecode_reader *reader)
 
             if (enclosing_class_index > 0) {
                 struct class *enclosing_class
-                        = classloader_load_class(c->loader, rtcp_get_class_name(c->rtcp, enclosing_class_index));
+                        = classloader_load_class(c->loader, CP_CLASS_NAME(cp, enclosing_class_index));//rtcp_get_class_name(c->rtcp, enclosing_class_index));
                 c->enclosing_info[0] = clsobj_create(enclosing_class);
 
                 if (enclosing_method_index > 0) {
-                    const struct name_and_type *nt = rtcp_get_name_and_type(c->rtcp, enclosing_method_index);
-                    c->enclosing_info[1] = strobj_create(nt->name);
-                    c->enclosing_info[2] = strobj_create(nt->descriptor);
+//                    const struct name_and_type *nt = rtcp_get_name_and_type(c->rtcp, enclosing_method_index);
+                    c->enclosing_info[1] = strobj_create(CP_NAME_TYPE_NAME(cp, enclosing_method_index));//(nt->name);
+                    c->enclosing_info[2] = strobj_create(CP_NAME_TYPE_TYPE(cp, enclosing_method_index));//(nt->descriptor);
                 }
             }
         } else if (SYMBOL(BootstrapMethods) == attr_name) {
@@ -244,7 +186,7 @@ static void parse_attribute(struct class *c, struct bytecode_reader *reader)
                 }
             }
 
-            rtcp_build_invoke_dynamic_constant(c->rtcp, methods);
+//            rtcp_build_invoke_dynamic_constant(c->rtcp, methods);  todo
         } else if (SYMBOL(InnerClasses) == attr_name) { // ignore
 //            u2 num = bcr_readu2(reader);
 //            struct inner_class classes[num];
@@ -374,14 +316,106 @@ struct class *class_create(struct classloader *loader, u1 *bytecode, size_t len)
     c->minor_version = bcr_readu2(&reader);
     c->major_version = bcr_readu2(&reader);
 
-    u2 constant_pool_count = bcr_readu2(&reader);
-    struct constant constant_pool[constant_pool_count];
-    read_constant_pool(constant_pool, constant_pool_count, &reader);
-    c->rtcp = rtcp_create(constant_pool, constant_pool_count);
+    u2 cp_count = bcr_readu2(&reader);
+    c->cp_count = cp_count;
+//    struct constant constant_pool[cp_count];
+//    read_constant_pool(constant_pool, cp_count, &reader);
+//    c->rtcp = rtcp_create(constant_pool, cp_count);
+
+    c->constant_pool.type = vm_malloc(cp_count * sizeof(u1));
+    c->constant_pool.info = vm_malloc(cp_count * sizeof(uintptr_t));
+    struct constant_pool *cp = &c->constant_pool;
+
+    // constant pool 从 1 开始计数，第0位无效
+    CP_TYPE(cp, 0) = CONSTANT_Invalid;
+    for (int i = 1; i < cp_count; i++) {
+        u1 tag = CP_TYPE(cp, i) = bcr_readu1(&reader);
+        switch (tag) {
+            case CONSTANT_Class:
+            case CONSTANT_String:
+            case CONSTANT_MethodType:
+                CP_INFO(cp, i) = bcr_readu2(&reader);
+                break;
+            case CONSTANT_NameAndType:
+            case CONSTANT_Fieldref:
+            case CONSTANT_Methodref:
+            case CONSTANT_InterfaceMethodref:
+            case CONSTANT_Dynamic:
+            case CONSTANT_InvokeDynamic: {
+                u2 index1 = bcr_readu2(&reader); // class_index
+                u2 index2 = bcr_readu2(&reader); // name_and_type_index
+                CP_INFO(cp, i) = (index2 << 16) + index1;
+                break;
+            }
+            case CONSTANT_Integer: {
+                u1 bytes[4];
+                bcr_read_bytes(&reader, bytes, 4);
+                CP_INT(cp, i) = bytes_to_int32(bytes);
+                break;
+            }
+            case CONSTANT_Float: {
+                u1 bytes[4];
+                bcr_read_bytes(&reader, bytes, 4);
+//                *(jfloat *)&((cp)->info[i]) = bytes_to_float(bytes);
+                CP_FLOAT(cp, i) = bytes_to_float(bytes);
+                break;
+            }
+            case CONSTANT_Long: {
+                u1 bytes[8];
+                bcr_read_bytes(&reader, bytes, 8);
+//                *(jlong *) &(CP_INFO(cp, i)) = bytes_to_int64(bytes);
+                CP_LONG(cp, i) = bytes_to_int64(bytes);
+
+                i++;
+                CP_TYPE(cp, i) = CONSTANT_Placeholder;
+                break;
+            }
+            case CONSTANT_Double: {
+                u1 bytes[8];
+                bcr_read_bytes(&reader, bytes, 8);
+//                *(jdouble *) &(CP_INFO(cp, i)) = bytes_to_double(bytes);
+                CP_DOUBLE(cp, i) = bytes_to_double(bytes);
+
+                i++;
+                CP_TYPE(cp, i) = CONSTANT_Placeholder;
+                break;
+            }
+            case CONSTANT_Utf8: {
+                u2 utf8_len = bcr_readu2(&reader);
+                char *buf = vm_malloc(utf8_len + 1);
+                bcr_read_bytes(&reader, (u1 *) buf, utf8_len);
+                buf[utf8_len] = 0;
+
+                char *utf8;
+                CP_INFO(cp,i) = (uintptr_t) (utf8 = new_utf8(buf));
+                if (utf8 != buf) // use hashed utf8
+                    free(buf);
+
+                break;
+            }
+            case CONSTANT_MethodHandle: {
+                u2 index1 = bcr_readu1(&reader); // 这里确实是 bcr_readu1  reference_kind
+                u2 index2 = bcr_readu2(&reader); // reference_index
+                CP_INFO(cp, i) = (index2 << 16) + index1;
+                break;
+            }
+//            case CONSTANT_MethodType:
+//                c->u.method_descriptor_index = bcr_readu2(reader);
+//                break;
+//            case CONSTANT_Dynamic:
+//            case CONSTANT_InvokeDynamic:
+//                c->u.invoke_dynamic_constant.bootstrap_method_attr_index = bcr_readu2(reader);
+//                c->u.invoke_dynamic_constant.name_and_type_index = bcr_readu2(reader);
+//                break;
+            default:
+                // java_lang_ClassFormatError todo
+                jvm_abort("error. bad constant tag: %d\n", tag);
+        }
+    }
 
     c->access_flags = bcr_readu2(&reader);
 
-    c->class_name = rtcp_get_class_name(c->rtcp, bcr_readu2(&reader));
+    c->class_name = CP_CLASS_NAME(cp, bcr_readu2(&reader));//rtcp_get_class_name(c->rtcp, bcr_readu2(&reader));
     c->pkg_name = vm_strdup(c->class_name);
     char *p = strrchr(c->pkg_name, '/');
     if (p == NULL) {
@@ -394,7 +428,8 @@ struct class *class_create(struct classloader *loader, u1 *bytecode, size_t len)
     if (super_class == 0) { // why 0
         c->super_class = NULL; // 可以没有父类
     } else {
-        c->super_class = classloader_load_class(loader, rtcp_get_class_name(c->rtcp, super_class));
+        c->super_class = resolve_class(c, super_class);
+//        c->super_class = classloader_load_class(loader, CP_CLASS_NAME(cp, super_class));//rtcp_get_class_name(c->rtcp, super_class));
         // 从父类中拷贝继承来的field   todo 要不要从新new个field不然delete要有问题，继承过来的field的类名问题
 //        for_each(superClass->instanceFields.begin(), superClass->instanceFields.end(), [](JField *f) {
 //            if (!f->isPrivate()) {
@@ -411,12 +446,13 @@ struct class *class_create(struct classloader *loader, u1 *bytecode, size_t len)
         c->interfaces = vm_malloc(sizeof(struct class *) * c->interfaces_count);
 
         for (int i = 0; i < c->interfaces_count; i++) {
-            const char *interface_name = rtcp_get_class_name(c->rtcp, bcr_readu2(&reader));
-            if (interface_name[0] == 0) { // empty
-                printvm("error\n"); // todo
-            } else {
-                c->interfaces[i] = classloader_load_class(loader, interface_name);
-            }
+//            const char *interface_name = CP_CLASS_NAME(cp, bcr_readu2(&reader));//rtcp_get_class_name(c->rtcp, bcr_readu2(&reader));
+//            if (interface_name[0] == 0) { // empty
+//                printvm("error\n"); // todo
+//            } else {
+//                c->interfaces[i] = classloader_load_class(loader, interface_name);
+//            }
+            c->interfaces[i] = resolve_class(c, bcr_readu2(&reader));
         }
     }
 
@@ -478,7 +514,7 @@ static void jclass_clear(struct class *c)
     c->deprecated = false;
 
     c->clsobj = NULL;
-    c->rtcp = NULL;
+//    c->rtcp = NULL;
     c->super_class = NULL;
 //    c->inited_instance_fields_values = NULL;
     c->static_fields_values = NULL;
@@ -554,7 +590,7 @@ void class_destroy(struct class *c)
         field_release(c->fields + i);
     }
 
-    rtcp_destroy(c->rtcp);
+//    rtcp_destroy(c->rtcp);
 
     // todo
 

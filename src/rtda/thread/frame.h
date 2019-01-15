@@ -178,6 +178,8 @@ static inline void frame_stack_pushd(struct frame *f, jdouble d)
 static inline void frame_stack_pushr(struct frame *f, jref r)
 {
     assert(f != NULL);
+//    if (r == NULL)
+//        printvm("dddddddddddddd\n");
     f->stack[++(f->stack_top)] = rslot(r);
 }
 

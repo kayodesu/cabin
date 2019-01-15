@@ -4,6 +4,7 @@
 
 #include "../../../rtda/thread/frame.h"
 #include "../../../rtda/heap/arrobj.h"
+#include "../../../classfile/constant.h"
 
 /*
  * todo
@@ -23,7 +24,18 @@ void anewarray(struct frame *frame)
     // todo arrLen == 0 的情况
 
     int index = bcr_readu2(&frame->reader);
-    const char *class_name = rtcp_get_class_name(frame->m.method->clazz->rtcp, index); // 数组元素的类
+    struct constant_pool *cp = &frame->m.method->clazz->constant_pool;
+
+    const char *class_name;
+    u1 type = CP_TYPE(cp, index);
+    if (type == CONSTANT_ResolvedClass) {
+        struct class *c = (struct class *) CP_INFO(cp, index);
+        class_name = c->class_name;
+    } else {
+        class_name = CP_CLASS_NAME(cp, index);//rtcp_get_class_name(frame->m.method->clazz->rtcp, index);
+    }
+
+//    const char *class_name = CP_CLASS_NAME((&(frame->m.method->clazz->constant_pool)), index);//rtcp_get_class_name(frame->m.method->clazz->rtcp, index); // 数组元素的类
     char *arr_class_name = get_arr_class_name(class_name);
     struct class *arr_class = classloader_load_class(curr_class->loader, arr_class_name);
     free(arr_class_name);

@@ -2,6 +2,8 @@
  * Author: Jia Yang
  */
 #include "../../../rtda/heap/object.h"
+#include "../../../classfile/constant.h"
+#include "../../../rtda/ma/resolve.h"
 
 /*
  * instanceof指令需要两个操作数。
@@ -11,16 +13,14 @@
 void instanceof(struct frame *frame)
 {
     int index = bcr_readu2(&frame->reader);
-    const char *class_name = rtcp_get_class_name(frame->m.method->clazz->rtcp, index);
+    resolve_single_constant(frame->m.method->clazz, index);
+    struct class *c = (struct class *) CP_INFO(&frame->m.method->clazz->constant_pool, index);
 
-    struct class *jclass = classloader_load_class(frame->m.method->clazz->loader, class_name); // todo resolve_class ???
-
-    jref obj = frame_stack_popr(frame);  //os_popr(frame->operand_stack);
+    jref obj = frame_stack_popr(frame);
     if (obj == NULL) {
-        frame_stack_pushi(frame, 0); //os_pushi(frame->operand_stack, 0);
+        frame_stack_pushi(frame, 0);
         return;
     }
 
-    frame_stack_pushi(frame, object_is_instance_of(obj, jclass) ? 1 : 0);
-//    os_pushi(frame->operand_stack, (jint)(jobject_is_instance_of(obj, class) ? 1 : 0));
+    frame_stack_pushi(frame, object_is_instance_of(obj, c) ? 1 : 0);
 }
