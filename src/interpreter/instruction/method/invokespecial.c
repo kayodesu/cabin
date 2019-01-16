@@ -16,12 +16,6 @@ void invokespecial(struct frame *frame)
     struct class *curr_class = frame->m.method->clazz;
 
     int index = bcr_readu2(&frame->reader);
-//    struct method_ref *ref = rtcp_get_method_ref(curr_class->rtcp, index);
-////    if (ref->resolved_method == NULL) {
-////        ref->resolved_class = classloader_load_class(frame->m.method->class->loader, ref->class_name);
-////        ref->resolved_method = jclass_get_declared_nonstatic_method(ref->resolved_class, ref->name, ref->descriptor);
-////    }
-//    resolve_non_static_method_ref(curr_class, ref);
 //
 //    // 假定从方法符号引用中解析出来的类是C，方法是M。如果M是构造函数，则声明M的类必须是C，
 ////    if (method->name == "<init>" && method->class != c) {
@@ -53,11 +47,8 @@ void invokespecial(struct frame *frame)
         jvm_abort("java.lang.IncompatibleClassChangeError\n");
     }
 
-    struct slot args[m->arg_slot_count];
-    for (int i = m->arg_slot_count - 1; i >= 0; i--) {
-        args[i] = *frame_stack_pop_slot(frame);
-    }
-
+    frame->stack_top -= m->arg_slot_count;
+    struct slot *args = frame->stack + frame->stack_top + 1;
     jref obj = slot_getr(args); // args[0]
     if (obj == NULL) {
         thread_throw_null_pointer_exception(frame->thread);

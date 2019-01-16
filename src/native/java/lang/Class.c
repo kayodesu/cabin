@@ -533,7 +533,7 @@ static void getDeclaredFields0(struct frame *frame)
     struct field *fields = cls->fields;
     jint fields_count = public_only ? cls->public_fields_count : cls->fields_count;
 
-    struct class *jlrf_cls = classloader_load_class(loader, "java/lang/reflect/Field");
+    struct class *jlrf_cls = load_sys_class("java/lang/reflect/Field");
     char *arr_cls_name = get_arr_class_name(jlrf_cls->class_name);
     struct object *jlrf_arr = arrobj_create(classloader_load_class(loader, arr_cls_name), fields_count);
     frame_stack_pushr(frame, (jref) jlrf_arr);
@@ -586,7 +586,7 @@ static void getDeclaredMethods0(struct frame *frame)
     struct method *methods = cls->methods;
     jint methods_count = public_only ? cls->public_methods_count : cls->methods_count;
 
-    struct class *jlrm_cls = classloader_load_class(loader, "java/lang/reflect/Method");
+    struct class *jlrm_cls = load_sys_class("java/lang/reflect/Method");
     char *arr_cls_name = get_arr_class_name(jlrm_cls->class_name);
     struct object *jlrm_arr = arrobj_create(classloader_load_class(loader, arr_cls_name), methods_count);
     frame_stack_pushr(frame, (jref) jlrm_arr);
@@ -636,7 +636,7 @@ static void getDeclaredConstructors0(struct frame *frame)
     int constructors_count;
     struct method **constructors = class_get_constructors(cls, public_only, &constructors_count);
 
-    struct class *jlrc_cls = classloader_load_class(loader, "java/lang/reflect/Constructor");
+    struct class *jlrc_cls = load_sys_class("java/lang/reflect/Constructor");
     char *arr_cls_name = get_arr_class_name(jlrc_cls->class_name);
     struct object *jlrc_arr = arrobj_create(classloader_load_class(loader, arr_cls_name), constructors_count);
     frame_stack_pushr(frame, (jref) jlrc_arr);

@@ -17,7 +17,7 @@ static void hashCode(struct frame *frame)
 static void clone(struct frame *frame)
 {
     jref this = frame_locals_getr(frame, 0);
-    struct class *cloneable = classloader_load_class(frame->m.method->clazz->loader, "java/lang/Cloneable");
+    struct class *cloneable = load_sys_class("java/lang/Cloneable");
     if (!class_is_subclass_of(this->clazz, cloneable)) {
         jvm_abort("java.lang.CloneNotSupportedException"); // todo
     }

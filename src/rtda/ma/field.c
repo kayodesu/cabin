@@ -8,6 +8,7 @@
 #include "../heap/object.h"
 #include "descriptor.h"
 #include "../../symbol.h"
+#include "resolve.h"
 
 
 void field_init(struct field *field, struct class *c, struct bytecode_reader *reader)
@@ -16,8 +17,8 @@ void field_init(struct field *field, struct class *c, struct bytecode_reader *re
     field->clazz = c;
     field->deprecated = false;
     field->access_flags = bcr_readu2(reader);
-    field->name = CP_UTF8(&(c->constant_pool), bcr_readu2(reader));//rtcp_get_str(c->rtcp, bcr_readu2(reader));
-    field->descriptor = CP_UTF8(&(c->constant_pool), bcr_readu2(reader));//rtcp_get_str(c->rtcp, bcr_readu2(reader));
+    field->name = CP_UTF8(&(c->constant_pool), bcr_readu2(reader));
+    field->descriptor = CP_UTF8(&(c->constant_pool), bcr_readu2(reader));
 
     char d = field->descriptor[0];
     if (d == 'J' || d == 'D') {
@@ -46,6 +47,7 @@ void field_init(struct field *field, struct class *c, struct bytecode_reader *re
             u2 index = bcr_readu2(reader);
             if (IS_STATIC(field->access_flags)) {  // todo
                 field->constant_value_index = index;
+//                field->v.static_value.u = resolve_single_constant(c, index);  // todo
             }
         } else if (SYMBOL(Synthetic) == attr_name) {
             set_synthetic(&field->access_flags);
@@ -114,7 +116,7 @@ void field_release(struct field *field)
     // todo
 }
 
-char* jfield_to_string(const struct field *field)
+char* field_to_string(const struct field *field)
 {
 #define MAX_LEN 1023 // big enough
     VM_MALLOCS(char, MAX_LEN + 1, result);

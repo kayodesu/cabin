@@ -12,18 +12,9 @@
 // 如果类还没有被初始化，会触发类的初始化。
 void invokestatic(struct frame *frame)
 {
-    size_t saved_pc = frame->reader.pc - 1;
     struct class *curr_class = frame->m.method->clazz;
 
     int index = bcr_readu2(&frame->reader);
-//    struct method_ref *ref = rtcp_get_method_ref(curr_class->rtcp, index);
-//    if (ref->resolved_method == NULL) {
-//        ref->resolved_class = classloader_load_class(frame->m.method->clazz->loader, ref->class_name);
-//        // 不用按类层次搜索，直接get
-//        ref->resolved_method = class_get_declared_static_method(ref->resolved_class, ref->name, ref->descriptor);
-//    }
-
-//    resolve_static_method_ref(curr_class, ref);
 
     struct method *m = resolve_method(curr_class, index);
 
@@ -36,16 +27,8 @@ void invokestatic(struct frame *frame)
         jvm_abort("java.lang.IncompatibleClassChangeError\n");
     }
 
-//    if (!ref->resolved_class->inited) {
-//        jclass_clinit(ref->resolved_class, frame->thread);
-//        frame->reader.pc = saved_pc; // recover pc
-//        return;
-//    }
-
-    struct slot args[m->arg_slot_count];
-    for (int i = m->arg_slot_count - 1; i >= 0; i--) {
-        args[i] = *frame_stack_pop_slot(frame);
-    }
+    frame->stack_top -= m->arg_slot_count;
+    struct slot *args = frame->stack + frame->stack_top + 1;
 
     thread_invoke_method(frame->thread, m, args);
 

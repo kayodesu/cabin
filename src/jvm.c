@@ -47,7 +47,7 @@ void init_symbol();
 static void init_jvm(struct classloader *loader, struct thread *main_thread)
 {
     // 先加载 sun.mis.VM 类，然后执行其类初始化方法
-    struct class *vm_class = classloader_load_class(loader, "sun/misc/VM");
+    struct class *vm_class = load_sys_class("sun/misc/VM");
     if (vm_class == NULL) {
         jvm_abort("vm_class is null\n");  // todo throw exception
         return;
@@ -64,10 +64,10 @@ static void init_jvm(struct classloader *loader, struct thread *main_thread)
  */
 static void create_main_thread(struct classloader *loader)
 {
-    struct class *jltg_class = classloader_load_class(loader, "java/lang/ThreadGroup");
+    struct class *jltg_class = load_sys_class("java/lang/ThreadGroup");
     system_thread_group = object_create(jltg_class);
 
-    struct class *jlt_class = classloader_load_class(loader, "java/lang/Thread");
+    struct class *jlt_class = load_sys_class("java/lang/Thread");
     struct object *jlt_obj = object_create(jlt_class);
 
     // from java/lang/Thread.java

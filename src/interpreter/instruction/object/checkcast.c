@@ -21,8 +21,9 @@ void checkcast(struct frame *frame)
         return;
     }
 
-    resolve_single_constant(frame->m.method->clazz, index);
-    struct class *c = (struct class *) CP_INFO(&frame->m.method->clazz->constant_pool, index);
+//    resolve_single_constant(frame->m.method->clazz, index);
+
+    struct class *c = resolve_class(frame->m.method->clazz, index);
     if (!object_is_instance_of(obj, c)) {
         thread_throw_class_cast_exception(frame->thread, obj->clazz->class_name, c->class_name);
     }

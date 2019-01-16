@@ -11,9 +11,7 @@
 struct class* resolve_class(struct class *visitor, int cp_index)
 {
     struct constant_pool *cp = &visitor->constant_pool;
-    u1 type = CP_TYPE(cp, cp_index);
-
-    if (type == CONSTANT_ResolvedClass) {
+    if (CP_TYPE(cp, cp_index) == CONSTANT_ResolvedClass) {
         return (struct class *) CP_INFO(cp, cp_index);
     }
 
@@ -70,26 +68,28 @@ struct field* resolve_field(struct class *visitor, int cp_index)
     return f;
 }
 
+struct object* resolve_string(struct class *c, int cp_index)
+{
+    struct constant_pool *cp = &c->constant_pool;
+    if (CP_TYPE(cp, cp_index) == CONSTANT_ResolvedString) {
+        return (struct object *) CP_INFO(cp, cp_index);
+    }
+
+    const char *str = CP_STRING(cp, cp_index);
+    struct object *so = get_str_from_pool(c->loader, str);
+    CP_INFO(cp, cp_index) = (uintptr_t) so;
+    CP_TYPE(cp, cp_index) = CONSTANT_ResolvedString;
+
+    return so;
+}
+
 uintptr_t resolve_single_constant(struct class *c, int cp_index)
 {
     struct constant_pool *cp = &c->constant_pool;
 
     switch(CP_TYPE(cp, cp_index)) {
-        case CONSTANT_Class:
-            resolve_class(c, cp_index);
-            break;
-
-        case CONSTANT_String: {
-            const char *str = CP_STRING(cp, cp_index);
-            struct object *so = get_str_from_pool(c->loader, str);
-            CP_INFO(cp, cp_index) = (uintptr_t) so;
-            CP_TYPE(cp, cp_index) = CONSTANT_ResolvedString;
-            break;
-        }
-
-        default:
-            break;
+        case CONSTANT_Class: return (uintptr_t) resolve_class(c, cp_index);
+        case CONSTANT_String: return (uintptr_t) resolve_string(c, cp_index);
+        default: return CP_INFO(cp, cp_index);
     }
-
-    return CP_INFO(cp, cp_index);
 }

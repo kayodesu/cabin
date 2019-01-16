@@ -562,12 +562,12 @@ struct class* class_create_arr_class(struct classloader *loader, const char *cla
     c->class_name = vm_strdup(class_name);
     c->loader = loader;
     c->inited = true; // 数组类不需要初始化
-    c->super_class = classloader_load_class(loader, "java/lang/Object");
+    c->super_class = load_sys_class("java/lang/Object");
 
     c->interfaces_count = 2;
     c->interfaces = malloc(sizeof(struct class *) * 2);
-    c->interfaces[0] = classloader_load_class(loader, "java/lang/Cloneable");
-    c->interfaces[1] = classloader_load_class(loader, "java/io/Serializable");
+    c->interfaces[0] = load_sys_class("java/lang/Cloneable");
+    c->interfaces[1] = load_sys_class("java/io/Serializable");
 
     c->vtable_len = 0;
     c->vtable = NULL;

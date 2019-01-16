@@ -24,6 +24,8 @@ struct classloader* classloader_create(bool is_bootstrap_loader);
  */
 struct class* classloader_load_class(struct classloader *loader, const char *class_name);
 
+#define load_sys_class(class_name) classloader_load_class(g_bootstrap_loader, class_name)
+
 struct class* classloader_find_class(const struct classloader *loader, const char *class_name);
 struct class* classloader_get_jlclass(struct classloader *loader);
 struct class* classloader_get_jlstring(struct classloader *loader);

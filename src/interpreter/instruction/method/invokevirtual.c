@@ -16,18 +16,10 @@ void invokevirtual(struct frame *frame)
     struct class *curr_class = frame->m.method->clazz;
 
     int index = bcr_readu2(&frame->reader);
-//    struct method_ref *ref = rtcp_get_method_ref(curr_class->rtcp, index);
-//    if (ref->resolved_method == NULL) {
-//        ref->resolved_class = classloader_load_class(frame->m.method->class->loader, ref->class_name);
-//        ref->resolved_method = jclass_get_declared_nonstatic_method(ref->resolved_class, ref->name, ref->descriptor);
-//    }
-//    resolve_non_static_method_ref(curr_class, ref);
     struct method *m = resolve_method(curr_class, index);
 
-    struct slot args[m->arg_slot_count];
-    for (int i = m->arg_slot_count - 1; i >= 0; i--) {
-        args[i] = *frame_stack_pop_slot(frame);
-    }
+    frame->stack_top -= m->arg_slot_count;
+    struct slot *args = frame->stack + frame->stack_top + 1;
 
     struct object *obj = slot_getr(args); // args[0]
     if (obj == NULL) {

@@ -3,9 +3,78 @@
  */
 
 #include <stdlib.h>
+#include <pthread.h>
 #include "thread.h"
 #include "../heap/object.h"
-#include "../../util/vector.h"
+#include "../heap/strobj.h"
+
+#if 0
+// Thread specific key holding a thread
+static pthread_key_t thread_key;
+
+struct thread *main_thread = NULL;
+
+struct thread* thread_self()
+{
+    return (struct thread *) pthread_getspecific(thread_key);
+}
+
+static inline void set_thread_self(struct thread *thread)
+{
+    pthread_setspecific(thread_key, thread);
+}
+
+/*
+ * main thread 由虚拟机启动。
+ */
+static void create_main_thread(struct classloader *loader)
+{
+    pthread_key_create(&thread_key, NULL);
+
+    struct class *jltg_class = load_sys_class("java/lang/ThreadGroup");
+    system_thread_group = object_create(jltg_class);
+
+    struct class *jlt_class = load_sys_class("java/lang/Thread");
+    struct object *jlt_obj = object_create(jlt_class);
+
+    // from java/lang/Thread.java
+    // public final static int MIN_PRIORITY = 1;
+    // public final static int NORM_PRIORITY = 5;
+    // public final static int MAX_PRIORITY = 10;
+    struct slot value = islot(5);  // todo. why set this? I do not know. 参见 jvmgo/instructions/reserved/bootstrap.go
+    set_instance_field_value_by_nt(jlt_obj, "priority", "I", &value);
+
+    main_thread = thread_create(loader, jlt_obj);
+    set_thread_self(main_thread);
+
+    // 调用 java/lang/Thread 的构造函数
+    struct method *constructor
+            = class_get_constructor(jlt_obj->clazz, "(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");
+    struct slot args[] = {
+            rslot(jlt_obj),
+            rslot(system_thread_group),
+            rslot(strobj_create(MAIN_THREAD_NAME)) // thread name
+    };
+    thread_invoke_method(main_thread, constructor, args);
+    class_clinit(jlt_obj->clazz, main_thread); // 最后压栈，保证先执行。
+
+
+    // 初始化 system_thread_group
+    // java/lang/ThreadGroup 的无参数构造函数主要用来：
+    // Creates an empty Thread group that is not in any Thread group.
+    // This method is used to create the system Thread group.
+    struct slot arg = rslot(system_thread_group);
+    thread_invoke_method(main_thread, class_get_constructor(jltg_class, "()V"), &arg);
+    class_clinit(jltg_class, main_thread);
+
+    // 现在，main thread's vm stack 里面按将要执行的顺序（从栈顶到栈底）分别为：
+    // java/lang/ThreadGroup~<clinit>
+    // java/lang/ThreadGroup~<init>~()V
+    // java/lang/Thread~<clinit>
+    // java/lang/Thread~<init>~(Ljava/lang/ThreadGroup;Ljava/lang/String;)V
+    interpret(main_thread);
+}
+#endif
 
 struct thread* thread_create(struct classloader *loader, struct object *jltobj)
 {

@@ -35,10 +35,8 @@ void invokeinterface(struct frame *frame)
 
     /* todo 本地方法 */
 
-    struct slot args[arg_slot_count];
-    for (int i = arg_slot_count - 1; i >= 0; i--) {
-        args[i] = *frame_stack_pop_slot(frame);
-    }
+    frame->stack_top -= m->arg_slot_count;
+    struct slot *args = frame->stack + frame->stack_top + 1;
 
     jref obj = slot_getr(args); // args[0]
     if (obj == NULL) {

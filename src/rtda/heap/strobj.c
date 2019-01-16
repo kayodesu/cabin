@@ -54,7 +54,7 @@ struct object* strobj_create(const char *str)
 
     jchar *wstr = utf8_to_unicode(str);
     jint len = wcslen(wstr);
-    struct object *jchars = arrobj_create(classloader_load_class(g_bootstrap_loader, "[C"), len);
+    struct object *jchars = arrobj_create(load_sys_class("[C"), len);
     // 不要使用 wcscpy 直接字符串拷贝，
     // 因为 wcscpy 函数会自动添加字符串结尾 L'\0'，
     // 但 jchars 没有空间容纳字符串结尾符，因为 jchar 是字符数组，不是字符串

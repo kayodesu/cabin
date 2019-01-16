@@ -54,7 +54,7 @@ static void fillInStackTrace(struct frame *frame)
     VM_MALLOC_EXT(struct stack_trace, 1, sizeof(jref) * num, trace);
     trace->count = 0;
 
-    struct class *c = classloader_load_class(g_bootstrap_loader, "java/lang/StackTraceElement");
+    struct class *c = load_sys_class("java/lang/StackTraceElement");
     for (int i = num - 1; i >= 0; i--) {
         // jump shim frame
         if (frames[i]->type == SF_TYPE_SHIM) {

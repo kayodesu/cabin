@@ -11,6 +11,8 @@ A JVM written in C.
 * pthread lib
 * jre8 lib
 
+## Features
+
 ## Run
 Ensure your Java version is Java8.
 

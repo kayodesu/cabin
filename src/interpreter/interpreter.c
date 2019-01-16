@@ -112,23 +112,21 @@ static jint fetch_wide_index(struct frame *frame)
 // constant instructions -----------------------------------------------------------------------------------------------
 static void __ldc(struct frame *frame, int index)
 {
-//    struct rtcp *rtcp = frame->m.method->clazz->rtcp;
-//    u1 type = rtcp_get_type(rtcp, index);
     struct constant_pool *cp = &frame->m.method->clazz->constant_pool;
-    resolve_single_constant(frame->m.method->clazz, index);
     u1 type = CP_TYPE(cp, index);
 
     if (type == CONSTANT_Integer) {
-        frame_stack_pushi(frame, CP_INT(cp, index));//rtcp_get_int(rtcp, index));
+        frame_stack_pushi(frame, CP_INT(cp, index));
     } else if (type == CONSTANT_Float) {
-        frame_stack_pushf(frame, CP_FLOAT(cp, index));//rtcp_get_float(rtcp, index));
+        frame_stack_pushf(frame, CP_FLOAT(cp, index));
+    } else if (type == CONSTANT_String) {
+        frame_stack_pushr(frame, resolve_string(frame->m.method->clazz, index));
     } else if (type == CONSTANT_ResolvedString) {
-//        const char *str = CP_STRING(cp, index);//rtcp_get_str(rtcp, index);
-//        struct object *so = get_str_from_pool(frame->m.method->clazz->loader, str);
         frame_stack_pushr(frame, (jref) CP_INFO(cp, index));
+    } else if (type == CONSTANT_Class) {
+        frame_stack_pushr(frame, resolve_class(frame->m.method->clazz, index)->clsobj);
     } else if (type == CONSTANT_ResolvedClass) {
-//        const char *class_name = CP_CLASS_NAME(cp, index);//rtcp_get_class_name(rtcp, index);
-        struct class *c = (struct class *) CP_INFO(cp, index);//classloader_load_class(frame->m.method->clazz->loader, class_name);
+        struct class *c = (struct class *) CP_INFO(cp, index);
         frame_stack_pushr(frame, c->clsobj);
     } else {
         VM_UNKNOWN_ERROR("unknown type: %d", type);
@@ -138,8 +136,6 @@ static void __ldc(struct frame *frame, int index)
 void ldc2_w(struct frame *frame)
 {
     int index = bcr_readu2(&frame->reader);
-//    struct rtcp *rtcp = frame->m.method->clazz->rtcp;
-//    u1 type = rtcp_get_type(rtcp, index);
     struct constant_pool *cp = &frame->m.method->clazz->constant_pool;
     u1 type = CP_TYPE(cp, index);
 
@@ -517,6 +513,14 @@ void monitorenter(struct frame *);
 void monitorexit(struct frame *);
 
 // --------------------------------------------------------
+/*
+ * execute a Java function
+ */
+void exec_java_func()
+{
+
+}
+
 void* interpret(void *thread0)
 {
     assert(thread0 != NULL);
@@ -535,11 +539,10 @@ void* interpret(void *thread0)
             continue;
         }
 
-                print2("executing frame(%p): %s, pc = %lu\n", frame, frame_to_string(frame), frame->reader.pc);
+        print2("executing frame(%p): %s, pc = %lu\n", frame, frame_to_string(frame), frame->reader.pc);
         while (frame_has_more(frame)) {
             u1 opcode = frame_readu1(frame);
-
-                    print3("%d(0x%x), %s, pc = %lu\n", opcode, opcode, instruction_names[opcode], frame->reader.pc);
+            print3("%d(0x%x), %s, pc = %lu\n", opcode, opcode, instruction_names[opcode], frame->reader.pc);
 
             switch (opcode) {
                 case 0x00: break; // nop
@@ -876,6 +879,6 @@ void* interpret(void *thread0)
         }
     }
 
-   print2("interpret exit.\n");
+    print2("interpret exit.\n");
     return NULL; // todo
 }

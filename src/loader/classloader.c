@@ -222,7 +222,7 @@ struct classloader* classloader_create(bool is_bootstrap_loader)
      * 这又会触发java.lang.Object等类和接口的加载。
      */
     loader->jlclass = NULL; // 不要胡乱删除这句。因为classloader_load_class中要判断loader->jclass_class是否为NULL。
-    loader->jlclass = classloader_load_class(loader, "java/lang/Class");
+    loader->jlclass = load_sys_class("java/lang/Class");
 
     // 加载基本类型（int, float, etc.）的 class
     pt_load_primitive_types();
@@ -248,7 +248,7 @@ struct classloader* classloader_create(bool is_bootstrap_loader)
     }
 
     // 缓存一下常见类
-    loader->jlstring = classloader_load_class(loader, "java/lang/String");
+    loader->jlstring = load_sys_class("java/lang/String");
     return loader;
 }
 

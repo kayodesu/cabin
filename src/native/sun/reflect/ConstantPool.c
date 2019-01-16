@@ -26,9 +26,9 @@ static void getUTF8At0(struct frame *frame)
     jref o = frame_locals_getr(frame, 1);
     jint i = frame_locals_geti(frame, 2);
 
-    resolve_single_constant(o->clazz, i);
+//    resolve_single_constant(o->clazz, i);
 //    jref result = get_str_from_pool(frame->m.method->clazz->loader, CP_STRING(&(o->clazz->constant_pool), i));//rtcp_get_str(o->clazz->rtcp, i));
-    frame_stack_pushr(frame, (jref) CP_INFO(&o->clazz->constant_pool, i));
+    frame_stack_pushr(frame, resolve_string(o->clazz, i));
 }
 
 void sun_reflect_ConstantPool_registerNatives()
