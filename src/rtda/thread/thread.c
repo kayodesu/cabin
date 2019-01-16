@@ -94,7 +94,7 @@ struct thread* thread_create(struct classloader *loader, struct object *jltobj)
 //    struct slot value = islot(1);  // todo. why 1? I do not know. 参见 jvmgo/instructions/reserved/bootstrap.go
 //    set_instance_field_value_by_nt(thread->this_obj, "priority", "I", &value);
 
-    thread->dyn.bootstrap_method_type = thread->dyn.lookup = thread->dyn.call_set = thread->dyn.exact_method_handle = NULL;
+//    thread->dyn.bootstrap_method_type = thread->dyn.lookup = thread->dyn.call_set = thread->dyn.exact_method_handle = NULL;
 
     /*
     auto jlThreadClass = classLoader->loadClass("java/lang/Thread");
@@ -219,7 +219,7 @@ static struct frame* frame_cache_get(struct thread *thread, struct method *m)
         }
     }
 
-    return frame_create(thread, m);
+    return frame_create_normal(thread, m);
 }
 
 void thread_recycle_frame(struct frame *frame)
@@ -276,8 +276,7 @@ void thread_invoke_method(struct thread *thread, struct method *method, const st
     // todo
 }
 
-void thread_invoke_method_with_shim(struct thread *thread, struct method *method, const struct slot *args,
-                                     void (* shim_action)(struct frame *))
+void thread_invoke_method_with_shim(struct thread *thread, struct method *method, const struct slot *args)
 {
     thread_invoke_method(thread, method, args);
 
@@ -285,7 +284,7 @@ void thread_invoke_method_with_shim(struct thread *thread, struct method *method
     thread_pop_frame(thread);
 
     // 创建一个 shim stack frame 来接受函数method的返回值
-    thread_push_frame(thread, frame_create(thread, shim_action));
+    thread_push_frame(thread, frame_create_shim(thread));
     thread_push_frame(thread, top);
 }
 

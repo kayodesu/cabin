@@ -18,7 +18,7 @@ void athrow(struct frame *frame)
     while (!thread_is_stack_empty(curr_thread)) {
         struct frame *top = thread_top_frame(curr_thread);
         if (top->type == SF_TYPE_NORMAL) {
-            int handler_pc = method_find_exception_handler(top->m.method, exception->clazz, top->reader.pc - 1); // instruction length todo 好像是错的
+            int handler_pc = method_find_exception_handler(top->method, exception->clazz, top->reader.pc - 1); // instruction length todo 好像是错的
             if (handler_pc >= 0) {  // todo 可以等于0吗
                 /*
                  * 找到可以处理的函数了

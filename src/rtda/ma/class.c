@@ -317,13 +317,9 @@ struct class *class_create(struct classloader *loader, u1 *bytecode, size_t len)
     c->major_version = bcr_readu2(&reader);
 
     u2 cp_count = bcr_readu2(&reader);
-    c->cp_count = cp_count;
-//    struct constant constant_pool[cp_count];
-//    read_constant_pool(constant_pool, cp_count, &reader);
-//    c->rtcp = rtcp_create(constant_pool, cp_count);
 
     c->constant_pool.type = vm_malloc(cp_count * sizeof(u1));
-    c->constant_pool.info = vm_malloc(cp_count * sizeof(uintptr_t));
+    vm_data_init(c->constant_pool.info, cp_count);
     struct constant_pool *cp = &c->constant_pool;
 
     // constant pool 从 1 开始计数，第0位无效

@@ -14,7 +14,7 @@
  */
 void getfield(struct frame *frame)
 {
-    struct class *curr_class = frame->m.method->clazz;
+    struct class *curr_class = frame->method->clazz;
 
     int index = bcr_readu2(&frame->reader);
 //    struct field_ref *ref = rtcp_get_field_ref(curr_class->rtcp, index);

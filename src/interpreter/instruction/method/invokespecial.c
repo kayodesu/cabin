@@ -13,7 +13,7 @@
  */
 void invokespecial(struct frame *frame)
 {
-    struct class *curr_class = frame->m.method->clazz;
+    struct class *curr_class = frame->method->clazz;
 
     int index = bcr_readu2(&frame->reader);
 //

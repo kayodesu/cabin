@@ -112,7 +112,7 @@ static jint fetch_wide_index(struct frame *frame)
 // constant instructions -----------------------------------------------------------------------------------------------
 static void __ldc(struct frame *frame, int index)
 {
-    struct constant_pool *cp = &frame->m.method->clazz->constant_pool;
+    struct constant_pool *cp = &frame->method->clazz->constant_pool;
     u1 type = CP_TYPE(cp, index);
 
     if (type == CONSTANT_Integer) {
@@ -120,11 +120,11 @@ static void __ldc(struct frame *frame, int index)
     } else if (type == CONSTANT_Float) {
         frame_stack_pushf(frame, CP_FLOAT(cp, index));
     } else if (type == CONSTANT_String) {
-        frame_stack_pushr(frame, resolve_string(frame->m.method->clazz, index));
+        frame_stack_pushr(frame, resolve_string(frame->method->clazz, index));
     } else if (type == CONSTANT_ResolvedString) {
         frame_stack_pushr(frame, (jref) CP_INFO(cp, index));
     } else if (type == CONSTANT_Class) {
-        frame_stack_pushr(frame, resolve_class(frame->m.method->clazz, index)->clsobj);
+        frame_stack_pushr(frame, resolve_class(frame->method->clazz, index)->clsobj);
     } else if (type == CONSTANT_ResolvedClass) {
         struct class *c = (struct class *) CP_INFO(cp, index);
         frame_stack_pushr(frame, c->clsobj);
@@ -136,7 +136,7 @@ static void __ldc(struct frame *frame, int index)
 void ldc2_w(struct frame *frame)
 {
     int index = bcr_readu2(&frame->reader);
-    struct constant_pool *cp = &frame->m.method->clazz->constant_pool;
+    struct constant_pool *cp = &frame->method->clazz->constant_pool;
     u1 type = CP_TYPE(cp, index);
 
     if (type == CONSTANT_Long) {
@@ -529,10 +529,6 @@ void* interpret(void *thread0)
     while (!thread_is_stack_empty(thread)) {
         struct frame *frame = thread_top_frame(thread);
         if (frame->type == SF_TYPE_SHIM) {
-            if (frame->m.shim_action != NULL) {
-                frame->m.shim_action(frame);
-            }
-
             thread_pop_frame(thread);
             frame_destroy(frame);
             print2("shim frame(%p) exe over, destroy.\n", frame);
@@ -859,7 +855,7 @@ void* interpret(void *thread0)
 
                 // Reserved
                 case 0xca: jvm_abort("debugger used instructions. %s\n", frame_to_string(frame)); break; // breakpoint, // debugger used instruction// todo
-                case 0xfe: frame->m.method->native_method(frame); break; // jvm used instruction，本 jvm 用来调用本地方法。
+                case 0xfe: frame->method->native_method(frame); break; // jvm used instruction，本 jvm 用来调用本地方法。
                 case 0xff: jvm_abort("jvm used instruction, not used in this jvm. %s", frame_to_string(frame)); // todo
                 default:
                     jvm_abort("This instruction isn't used. %s\n", frame_to_string(frame));

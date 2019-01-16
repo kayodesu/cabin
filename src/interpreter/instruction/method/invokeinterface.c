@@ -14,7 +14,7 @@
  */
 void invokeinterface(struct frame *frame)
 {
-    struct class *curr_class = frame->m.method->clazz;
+    struct class *curr_class = frame->method->clazz;
     int index = frame_readu2(frame); //bcr_readu2(&frame->reader);
 
     /*

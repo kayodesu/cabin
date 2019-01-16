@@ -113,7 +113,7 @@ static void initProperties(struct frame *frame)
                 rslot((jref) strobj_create(sys_props[i][1]))
         };
 
-        thread_invoke_method_with_shim(frame->thread, set_property, args, NULL);
+        thread_invoke_method_with_shim(frame->thread, set_property, args);
     }
 
     // 返回参数
@@ -125,7 +125,7 @@ static void setIn0(struct frame *frame)
 {
     jref in = frame_locals_getr(frame, 0);
     struct slot s = rslot(in);
-    set_static_field_value_by_nt(frame->m.method->clazz, "in", "Ljava/io/InputStream;", &s);
+    set_static_field_value_by_nt(frame->method->clazz, "in", "Ljava/io/InputStream;", &s);
 }
 
 // private static native void setOut0(PrintStream out);
@@ -133,7 +133,7 @@ static void setOut0(struct frame *frame)
 {
     jref out = frame_locals_getr(frame, 0);
     struct slot s = rslot(out);
-    set_static_field_value_by_nt(frame->m.method->clazz, "out", "Ljava/io/PrintStream;", &s);
+    set_static_field_value_by_nt(frame->method->clazz, "out", "Ljava/io/PrintStream;", &s);
 }
 
 // private static native void setErr0(PrintStream err);
@@ -141,7 +141,7 @@ static void setErr0(struct frame *frame)
 {
     jref err = frame_locals_getr(frame, 0);
     struct slot s = rslot(err);
-    set_static_field_value_by_nt(frame->m.method->clazz, "err", "Ljava/io/PrintStream;", &s);
+    set_static_field_value_by_nt(frame->method->clazz, "err", "Ljava/io/PrintStream;", &s);
 }
 
 /*

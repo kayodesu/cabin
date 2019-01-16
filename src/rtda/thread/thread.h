@@ -24,19 +24,19 @@ struct slot;
  */
 
 
-struct invokedynamic_temp_store {
-    // java/lang/invoke/MethodType
-    struct object *bootstrap_method_type;
-
-    // java/lang/invoke/MethodHandles$Lookup
-    struct object *lookup;
-
-    // java/lang/invoke/CallSite
-    struct object *call_set;
-
-    // java/lang/invoke/MethodHandle
-    struct object *exact_method_handle;
-};
+//struct invokedynamic_temp_store {
+//    // java/lang/invoke/MethodType
+//    struct object *bootstrap_method_type;
+//
+//    // java/lang/invoke/MethodHandles$Lookup
+//    struct object *lookup;
+//
+//    // java/lang/invoke/CallSite
+//    struct object *call_set;
+//
+//    // java/lang/invoke/MethodHandle
+//    struct object *exact_method_handle;
+//};
 
 #define FRMHUB_SLOTS_COUNT_MAX 32
 
@@ -48,7 +48,7 @@ struct thread {
 
     struct object *jltobj; // object of java/lang/Thread
 
-    struct invokedynamic_temp_store dyn;
+//    struct invokedynamic_temp_store dyn;
 };
 
 struct thread* thread_create(struct classloader *loader, struct object *jl_thread_obj);
@@ -100,8 +100,7 @@ void thread_invoke_method(struct thread *thread, struct method *method, const st
  * 这个函数存在的意义是为了解决函数jthread_invoke_method无法在循环中执行带返回值的方法的问题，
  * 参加 jthread_invoke_method 的注释。
  */
-void thread_invoke_method_with_shim(struct thread *thread, struct method *method, const struct slot *args,
-                                     void (* shim_action)(struct frame *));
+void thread_invoke_method_with_shim(struct thread *thread, struct method *method, const struct slot *args);
 
 void thread_handle_uncaught_exception(struct thread *thread, struct object *exception);
 

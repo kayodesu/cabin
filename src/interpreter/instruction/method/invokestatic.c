@@ -12,7 +12,7 @@
 // 如果类还没有被初始化，会触发类的初始化。
 void invokestatic(struct frame *frame)
 {
-    struct class *curr_class = frame->m.method->clazz;
+    struct class *curr_class = frame->method->clazz;
 
     int index = bcr_readu2(&frame->reader);
 

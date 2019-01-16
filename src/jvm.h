@@ -42,7 +42,7 @@ extern char user_dirs[][PATH_MAX];
 extern char user_jars[][PATH_MAX];
 
 // 初始堆大小
-extern size_t g_initial_heap_size;
+//extern size_t g_initial_heap_size;
 
 extern struct heap_mgr g_heap_mgr;
 

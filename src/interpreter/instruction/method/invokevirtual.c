@@ -13,7 +13,7 @@
  */
 void invokevirtual(struct frame *frame)
 {
-    struct class *curr_class = frame->m.method->clazz;
+    struct class *curr_class = frame->method->clazz;
 
     int index = bcr_readu2(&frame->reader);
     struct method *m = resolve_method(curr_class, index);

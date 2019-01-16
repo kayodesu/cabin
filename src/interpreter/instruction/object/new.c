@@ -21,7 +21,7 @@ void new(struct frame *frame)
 //    assert(class_name != NULL);
 //    assert(strlen(class_name) > 0);
 
-    struct class *c = resolve_class(frame->m.method->clazz, bcr_readu2(reader));  // todo
+    struct class *c = resolve_class(frame->method->clazz, bcr_readu2(reader));  // todo
     if (!c->inited) {
         class_clinit(c, frame->thread);
         reader->pc = saved_pc; // recover pc

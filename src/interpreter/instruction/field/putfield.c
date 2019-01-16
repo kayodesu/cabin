@@ -14,7 +14,7 @@
  */
 void putfield(struct frame *frame)
 {
-    struct class *curr_class = frame->m.method->clazz;
+    struct class *curr_class = frame->method->clazz;
 
     int index = bcr_readu2(&frame->reader);
 //    struct field_ref *ref = rtcp_get_field_ref(curr_class->rtcp, index);
@@ -27,7 +27,7 @@ void putfield(struct frame *frame)
      */
     if (IS_FINAL(f->access_flags)) {
         // todo
-        if (frame->m.method->clazz != f->clazz || strcmp(frame->m.method->name, "<init>") != 0) {
+        if (frame->method->clazz != f->clazz || strcmp(frame->method->name, "<init>") != 0) {
             jvm_abort("java.lang.IllegalAccessError\n"); // todo
         }
     }

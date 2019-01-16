@@ -19,12 +19,7 @@ enum frame_type {
 
 struct frame {
     enum frame_type type;
-    union {
-        struct method *method;
-
-        // just for shim frame
-        void (* shim_action)(struct frame *);
-    } m;
+    struct method *method;
 
     struct thread *thread;
 
@@ -57,13 +52,7 @@ struct frame* frame_create_normal(struct thread *thread, struct method *method);
  * create a shim stack frame.
  * @shim_action, could be NULL
  */
-struct frame* frame_create_shim(struct thread *thread, void (* shim_action)(struct frame *));
-
-#define frame_create(thread, m) \
-    _Generic((m), \
-        struct method *: frame_create_normal, \
-        void (*)(struct frame *): frame_create_shim \
-    )(thread, m)
+struct frame* frame_create_shim(struct thread *thread);
 
 void frame_bind(struct frame *frame, struct thread *thread, struct method *method);
 

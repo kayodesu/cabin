@@ -11,6 +11,7 @@
 #include "../../loader/classloader.h"
 #include "../thread/frame.h"
 #include "../primitive_types.h"
+#include "../../vm_data.h"
 
 struct object;
 struct stack_frame;
@@ -19,7 +20,7 @@ struct field;
 
 struct constant_pool {
     u1 *type;
-    uintptr_t *info;
+    vm_data info;
 };
 
 // Macros for accessing constant pool entries
@@ -47,10 +48,10 @@ struct constant_pool {
 #define CP_METHOD_NAME CP_FIELD_NAME
 #define CP_METHOD_TYPE CP_FIELD_TYPE
 
-#define CP_INT(cp, i)                    *(jint *) &((cp)->info[i])
-#define CP_FLOAT(cp, i)                  *(jfloat *) &((cp)->info[i])
-#define CP_LONG(cp, i)                   *(jlong *) &((cp)->info[i])
-#define CP_DOUBLE(cp, i)                 *(jdouble *) &((cp)->info[i])
+#define CP_INT(cp, i)                    VM_DATA_INT((cp)->info, i)
+#define CP_FLOAT(cp, i)                  VM_DATA_FLOAT((cp)->info, i)
+#define CP_LONG(cp, i)                   VM_DATA_LONG((cp)->info, i)
+#define CP_DOUBLE(cp, i)                 VM_DATA_DOUBLE((cp)->info, i)
 
 struct class {
     struct clsheader {
@@ -63,7 +64,6 @@ struct class {
     u2 major_version;
 
     struct constant_pool constant_pool;
-    int cp_count;
 
     // object of java/lang/Class of this class
     // 通过此字段，每个Class结构体实例都与一个类对象关联。

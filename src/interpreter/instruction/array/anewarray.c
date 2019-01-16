@@ -14,7 +14,7 @@
  */
 void anewarray(struct frame *frame)
 {
-    struct class *curr_class = frame->m.method->clazz;
+    struct class *curr_class = frame->method->clazz;
     jint arr_len = frame_stack_popi(frame);
     if (arr_len < 0) {
         thread_throw_array_index_out_of_bounds_exception(frame->thread, arr_len);
@@ -24,7 +24,7 @@ void anewarray(struct frame *frame)
     // todo arrLen == 0 的情况
 
     int index = bcr_readu2(&frame->reader);
-    struct constant_pool *cp = &frame->m.method->clazz->constant_pool;
+    struct constant_pool *cp = &frame->method->clazz->constant_pool;
 
     const char *class_name;
     u1 type = CP_TYPE(cp, index);

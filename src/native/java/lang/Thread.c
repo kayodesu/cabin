@@ -126,7 +126,7 @@ static void start0(struct frame *frame)
     printvm("start thread: %s\n", name);
 #endif
 
-    struct thread *new_thread = thread_create(frame->m.method->clazz->loader, this);
+    struct thread *new_thread = thread_create(frame->method->clazz->loader, this);
 
     // create a stack frame to hold run method
     struct method *run = class_lookup_instance_method(this->clazz, "run", "()V");

@@ -49,7 +49,7 @@ void newarray(struct frame *frame)
             return;
     }
 
-    struct class *c = classloader_load_class(frame->m.method->clazz->loader, arr_name);
+    struct class *c = classloader_load_class(frame->method->clazz->loader, arr_name);
     frame_stack_pushr(frame, arrobj_create(c, (size_t) arr_len));
     //os_pushr(frame->operand_stack, (jref) jarrobj_create(c, (size_t) arr_len));
 }

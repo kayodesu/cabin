@@ -9,7 +9,7 @@
 #include "../heap/object.h"
 #include "../heap/arrobj.h"
 
-struct frame* frame_create_shim(struct thread *thread, void (* shim_action)(struct frame *))
+struct frame* frame_create_shim(struct thread *thread)
 {
     assert(thread != NULL);
 
@@ -21,7 +21,6 @@ struct frame* frame_create_shim(struct thread *thread, void (* shim_action)(stru
     frame->stack_top = -1;
 
     frame->type = SF_TYPE_SHIM;
-    frame->m.shim_action = shim_action;
 
     frame->thread = thread;
 //    frame->operand_stack = os_create(2); // 2 is big enough, 只是用来接收函数返回值，at most 2 slots
@@ -44,7 +43,7 @@ void frame_bind(struct frame *frame, struct thread *thread, struct method *metho
     frame->stack_top = -1;
 
     frame->type = SF_TYPE_NORMAL;
-    frame->m.method = method;
+    frame->method = method;
     frame->thread = thread;
     bcr_init(&frame->reader, method->code, method->code_length);
     frame->interrupted_status = frame->exe_status = frame->proc_exception_status = false;
@@ -177,14 +176,14 @@ void frame_sastore(struct frame *frame)
 char* frame_to_string(const struct frame *f)
 {
     assert(f != NULL);
-    int len = strlen(f->m.method->clazz->class_name) + strlen(f->m.method->name) + strlen(f->m.method->descriptor) + 16;
+    int len = strlen(f->method->clazz->class_name) + strlen(f->method->name) + strlen(f->method->descriptor) + 16;
     char *buf = malloc(sizeof(char) * len);
-    strcpy(buf, IS_NATIVE(f->m.method->access_flags) ? "(native)" : "");
-    strcat(buf, f->m.method->clazz->class_name);
+    strcpy(buf, IS_NATIVE(f->method->access_flags) ? "(native)" : "");
+    strcat(buf, f->method->clazz->class_name);
     strcat(buf, "~");
-    strcat(buf, f->m.method->name);
+    strcat(buf, f->method->name);
     strcat(buf, "~");
-    strcat(buf, f->m.method->descriptor);
+    strcat(buf, f->method->descriptor);
     return buf; // todo
 }
 
