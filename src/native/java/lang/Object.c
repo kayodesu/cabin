@@ -28,7 +28,7 @@ static void clone(struct frame *frame)
 static void getClass(struct frame *frame)
 {
     jref this = frame_locals_getr(frame, 0);
-    frame_stack_pushr(frame, (jref) this->clazz->clsobj); // todo 对不对
+    frame_stack_pushr(frame, this->clazz->clsobj); // todo 对不对
 }
 
 // public final native void notifyAll();

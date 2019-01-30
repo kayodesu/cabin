@@ -13,7 +13,7 @@ struct object* object_create(struct class *c)
     assert(c != NULL);
     assert(!class_is_array(c));
 
-    size_t size = sizeof(struct object) + c->instance_fields_count * sizeof(struct slot);
+    size_t size = sizeof(struct object) + c->instance_fields_count * sizeof(slot_t);
     struct object *o = hm_get(&g_heap_mgr, size);
     o->clazz = c;
     o->size = size;
@@ -70,38 +70,41 @@ bool object_is_jlclass(const struct object *o)
     return strcmp(o->clazz->class_name, CLS) == 0;
 }
 
-void set_instance_field_value_by_id(struct object *o, int id, const struct slot *value)
+void set_instance_field_value(struct object *o, struct field *f, const slot_t *value)
 {
-    assert(o != NULL && value != NULL);
-    assert(id >= 0 && id < o->clazz->instance_fields_count);
-    o->data[id] = *value;
-    if (slot_is_category_two(value)) {
-        assert(id + 1 < o->clazz->instance_fields_count);
-        o->data[id + 1] = phslot;
+//    o->data[id] = *value;
+//    if (slot_is_category_two(value)) {
+//        assert(id + 1 < o->clazz->instance_fields_count);
+//        o->data[id + 1] = phslot;
+//    }
+    assert(o != NULL && f != NULL && value != NULL);
+
+    o->data[f->id] =  value[0];
+    if (f->category_two) {
+        o->data[f->id + 1] = value[1];
     }
 }
 
-void set_instance_field_value_by_nt(struct object *o,
-                                  const char *name, const char *descriptor, const struct slot *value)
-{
-    assert(o != NULL && name != NULL && descriptor != NULL && value != NULL);
+//void set_instance_field_value_by_nt(struct object *o, const char *name, const char *descriptor, const slot_t *value)
+//{
+//    assert(o != NULL && name != NULL && descriptor != NULL && value != NULL);
+//
+//    struct field *f = class_lookup_field(o->clazz, name, descriptor);
+//    if (f == NULL) {
+//        jvm_abort("error\n"); // todo
+//    }
+//
+//    set_instance_field_value_by_id(o, f->id, value);
+//}
 
-    struct field *f = class_lookup_field(o->clazz, name, descriptor);
-    if (f == NULL) {
-        jvm_abort("error\n"); // todo
-    }
-
-    set_instance_field_value_by_id(o, f->id, value);
-}
-
-const struct slot* get_instance_field_value_by_id(const struct object *o, int id)
+const slot_t* get_instance_field_value_by_id(const struct object *o, int id)
 {
     assert(o != NULL);
     assert(0 <= id && id < o->clazz->instance_fields_count);
     return o->data + id;
 }
 
-const struct slot* get_instance_field_value_by_nt(const struct object *o, const char *name, const char *descriptor)
+const slot_t* get_instance_field_value_by_nt(const struct object *o, const char *name, const char *descriptor)
 {
     assert(o != NULL && name != NULL && descriptor != NULL);
 
@@ -120,13 +123,13 @@ bool object_is_instance_of(const struct object *o, const struct class *c)
     return class_is_subclass_of(o->clazz, c);
 }
 
-struct slot priobj_unbox(const struct object *po)
+const slot_t* priobj_unbox(const struct object *po)
 {
     assert(po != NULL);
     assert(object_is_primitive(po));
 
     // value 的描述符就是基本类型的类名。比如，private final boolean value;
-    return *get_instance_field_value_by_nt(po, "value", po->clazz->class_name);
+    return get_instance_field_value_by_nt(po, "value", po->clazz->class_name);
 }
 
 void object_destroy(struct object *o)

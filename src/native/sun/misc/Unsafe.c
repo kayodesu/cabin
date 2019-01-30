@@ -57,7 +57,7 @@ static void compareAndSwapInt(struct frame *frame)
     if (object_is_array(o)) {
         old = arrobj_get(jint, o, offset);
     } else {
-        old = slot_geti(get_instance_field_value_by_id(o, offset));
+        old = ISLOT(get_instance_field_value_by_id(o, offset));
     }
 
     bool b = __sync_bool_compare_and_swap(&old, expected, new);
@@ -76,7 +76,7 @@ static void compareAndSwapLong(struct frame *frame)
     if (object_is_array(o)) {
         old = arrobj_get(jlong, o, offset);
     } else {
-        old = slot_getl(get_instance_field_value_by_id(o, offset));
+        old = LSLOT(get_instance_field_value_by_id(o, offset));
     }
 
     bool b = __sync_bool_compare_and_swap(&old, expected, new);
@@ -95,7 +95,7 @@ static void compareAndSwapObject(struct frame *frame)
     if (object_is_array(o)) {
         old = arrobj_get(jref, o, offset);
     } else {
-        old = slot_getr(get_instance_field_value_by_id(o, offset));
+        old = RSLOT(get_instance_field_value_by_id(o, offset));
     }
 
     bool b = __sync_bool_compare_and_swap(&old, expected, new);
@@ -166,7 +166,7 @@ static void objectFieldOffset(struct frame *frame)
 //    frame->operandStack.push((jlong)offset);
 
     jref field_obj = frame_locals_getr(frame, 1);
-    jint offset = slot_geti(get_instance_field_value_by_nt(field_obj, "slot", "I")); // todo "slot", "I" 什么东西
+    jint offset = ISLOT(get_instance_field_value_by_nt(field_obj, "slot", "I")); // todo "slot", "I" 什么东西
 //    printvm("-------   %s, %d\n", jobject_to_string(field_obj), offset);
     frame_stack_pushl(frame, offset);
 }
@@ -314,7 +314,7 @@ static void getIntVolatile(struct frame *frame)
     if (class_is_array(o->clazz)) {
         value = arrobj_get(jint, o, offset);  // todo
     } else {
-        value = slot_geti(get_instance_field_value_by_id(o, offset));  // todo
+        value = ISLOT(get_instance_field_value_by_id(o, offset));  // todo
     }
     frame_stack_pushi(frame, value);
 }
@@ -396,7 +396,7 @@ static void getObjectVolatile(struct frame *frame)
     if (class_is_array(o->clazz)) {
         value = arrobj_get(jref, o, offset);  // todo
     } else {
-        value = slot_getr(get_instance_field_value_by_id(o, offset));  // todo
+        value = RSLOT(get_instance_field_value_by_id(o, offset));  // todo
     }
     frame_stack_pushr(frame, value);
 }

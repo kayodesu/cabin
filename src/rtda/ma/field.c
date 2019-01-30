@@ -118,6 +118,7 @@ void field_release(struct field *field)
 
 char* field_to_string(const struct field *field)
 {
+#undef MAX_LEN
 #define MAX_LEN 1023 // big enough
     VM_MALLOCS(char, MAX_LEN + 1, result);
 
@@ -134,5 +135,4 @@ char* field_to_string(const struct field *field)
     }
 
     return result;
-#undef MAX_LEN
 }

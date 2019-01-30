@@ -15,6 +15,7 @@
 #include "../../symbol.h"
 #include "../../utf8.h"
 #include "resolve.h"
+#include "../../interpreter/interpreter.h"
 
 
 // 计算实例字段的个数，同时给它们编号
@@ -95,41 +96,7 @@ static void calc_static_field_id(struct class *c)
         }
     }
     c->static_fields_count = id;
-
-    VM_MALLOCS(struct slot, c->static_fields_count, values);
-    c->static_fields_values = values;
-    // 初始化本类中的静态变量
-    for (int i = 0; i < c->fields_count; i++) {
-        struct field *field = c->fields + i;
-        if (IS_STATIC(field->access_flags)) {
-            assert(field->id < c->static_fields_count);
-            switch (field->descriptor[0]) {
-                case 'B':
-                case 'C':
-                case 'I':
-                case 'S':
-                case 'Z':
-                    values[field->id] = islot(0);
-                    break;
-                case 'F':
-                    values[field->id] = fslot(0.0f);
-                    break;
-                case 'J':
-                    values[field->id] = lslot(0L);
-                    values[field->id + 1] = phslot;
-                    break;
-                case 'D':
-                    values[field->id] = dslot(0.0);
-                    values[field->id + 1] = phslot;
-                    break;
-                default:
-                    values[field->id] = rslot(NULL);
-                    break;
-            }
-        }
-    }
-
-    // todo 保证 values 的每一项都被初始化了
+    c->static_fields_values = vm_calloc(c->static_fields_count, sizeof(slot_t));
 }
 
 static void parse_attribute(struct class *c, struct bytecode_reader *reader)
@@ -319,7 +286,7 @@ struct class *class_create(struct classloader *loader, u1 *bytecode, size_t len)
     u2 cp_count = bcr_readu2(&reader);
 
     c->constant_pool.type = vm_malloc(cp_count * sizeof(u1));
-    vm_data_init(c->constant_pool.info, cp_count);
+    c->constant_pool.info = vm_malloc(cp_count * sizeof(slot_t));
     struct constant_pool *cp = &c->constant_pool;
 
     // constant pool 从 1 开始计数，第0位无效
@@ -413,6 +380,7 @@ struct class *class_create(struct classloader *loader, u1 *bytecode, size_t len)
 
     c->class_name = CP_CLASS_NAME(cp, bcr_readu2(&reader));//rtcp_get_class_name(c->rtcp, bcr_readu2(&reader));
     c->pkg_name = vm_strdup(c->class_name);
+
     char *p = strrchr(c->pkg_name, '/');
     if (p == NULL) {
         c->pkg_name[0] = 0; // 包名可以为空
@@ -593,58 +561,37 @@ void class_destroy(struct class *c)
     free(c);
 }
 
-void class_clinit(struct class *c, struct thread *thread)
+static void class_clinit0(struct class *c, bool vm_invoke)
 {
     if (c->inited) {
         return;
     }
 
-    struct method *method = class_get_declared_method(c, "<clinit>", "()V"); // todo 并不是每个类都有<clinit>方法？？？？？
-    if (method != NULL) {
+    if (c->super_class != NULL && !c->super_class->inited) {
+        class_clinit0(c->super_class, vm_invoke);
+    }
+
+    // 在这里先行 set inited true, 如不这样，后面执行<clinit>时，
+    // 可能调用putstatic等函数也会触发<clinit>的调用造成死循环。
+    c->inited = true;
+
+    struct method *method = class_get_declared_method(c, "<clinit>", "()V");
+    if (method != NULL) { // 有的类没有<clinit>方法
         if (!IS_STATIC(method->access_flags)) {
             // todo error
             printvm("error\n");
         }
 
-        thread_invoke_method(thread, method, NULL);
-    }
-
-    c->inited = true;
-
-    /*
-     * 超类放在最后判断，
-     * 这样可以保证超类的初始化方法对应的帧在子类上面，
-     * 使超类初始化方法先于子类执行。
-     */
-    if (c->super_class != NULL) {
-        class_clinit(c->super_class, thread);
+//        thread_invoke_method(thread, method, NULL);
+        exec_java_func(method, NULL, vm_invoke);
     }
 }
 
-//struct field* jclass_get_field(struct class *c, const char *name, const char *descriptor)
-//{
-//    for (int i = 0; i < c->fields_count; i++) {
-//        if (strcmp(c->fields[i]->name, name) == 0 && strcmp(c->fields[i]->descriptor, descriptor) == 0) {
-//            return c->fields[i];
-//        }
-//    }
-//    return NULL;
-//}
-//
-//struct field** jclass_get_fields(struct class *c, bool public_only)
-//{
-//    VM_MALLOCS(struct field *, c->fields_count + 1, fields);  // add 1 for NULL to end the array
-//
-//    struct field **f = fields;
-//    for (int i = 0; i < c->fields_count; i++) {
-//        if (!public_only || IS_PUBLIC(c->fields[i]->access_flags)) {
-//            *f++ = c->fields[i];
-//        }
-//    }
-//    *f = NULL; // end of this array
-//
-//    return fields;
-//}
+void class_clinit(struct class *c)
+{
+    class_clinit0(c, true);
+//    printvm("clinit over! %s\n", c->class_name);
+}
 
 struct field* jclass_lookup_field0(struct class *c, const char *name, const char *descriptor)
 {
@@ -850,59 +797,19 @@ int class_inherited_depth(const struct class *c)
     return depth;
 }
 
-//struct slot* copy_inited_instance_fields_values(const struct class *c)
-//{
-//    assert(c != NULL);
-//    VM_MALLOCS(struct slot, c->instance_fields_count, copy);
-//    memcpy(copy, c->inited_instance_fields_values, c->instance_fields_count * sizeof(struct slot));
-//    return copy;
-//}
-
-void set_static_field_value_by_id(struct class *c, int id, const struct slot *value)
+void set_static_field_value(struct class *c, struct field *f, slot_t *value)
 {
-    assert(c != NULL && value != NULL);
-    assert(id >= 0 && id < c->static_fields_count);
-    c->static_fields_values[id] = *value;
-    if (slot_is_category_two(value)) {
-        assert(id + 1 < c->static_fields_count);
-        c->static_fields_values[id + 1] = phslot;
+    assert(c != NULL && f != NULL && value != NULL);
+
+    c->static_fields_values[f->id] =  value[0];
+    if (f->category_two) {
+        c->static_fields_values[f->id + 1] = value[1];
     }
 }
 
-void set_static_field_value_by_nt(struct class *c,
-                  const char *name, const char *descriptor, const struct slot *value)
+const slot_t* get_static_field_value(const struct class *c, const struct field *f)
 {
-    assert(c != NULL && name != NULL && descriptor != NULL && value != NULL);
-
-    struct field *f = class_lookup_field(c, name, descriptor);
-    if (f == NULL) {
-        jvm_abort("error\n"); // todo
-    }
-
-    set_static_field_value_by_id(c, f->id, value);
-}
-
-const struct slot* get_static_field_value_by_id(const struct class *c, int id)
-{
-    assert(c != NULL);
-    if (!(id >= 0 && id < c->static_fields_count)) {
-        printvm("-------------  %d, %d, %s\n", id, c->static_fields_count, c->class_name);
-    }
-    assert(id >= 0 && id < c->static_fields_count);
-
-    return c->static_fields_values + id;
-}
-
-const struct slot* get_static_field_value_by_nt(const struct class *c, const char *name, const char *descriptor)
-{
-    assert(c != NULL && name != NULL && descriptor != NULL);
-
-    struct field *f = class_lookup_field(c, name, descriptor);
-    if (f == NULL) {
-        jvm_abort("error\n"); // todo
-    }
-
-    return get_static_field_value_by_id(c, f->id);
+    return c->static_fields_values + f->id;
 }
 
 char* get_arr_class_name(const char *class_name)

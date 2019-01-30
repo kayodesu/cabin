@@ -33,18 +33,16 @@ struct object {
             size_t ele_size; // 表示数组每个元素的大小
             size_t len; // 数组的长度
         } a;
+
+        // effective only if object of java/lang/Throwable
+        // 存放的就是Java虚拟机栈信息
+        void *stack_trace;
     } u;
-
-    /*
-     * 异常对象的extra字段中存放的就是Java虚拟机栈信息 todo
-     */
-    void *extra;
-
 
     // 保存所有实例变量的值
     // 包括此Object中定义的和继承来的。
     // 特殊的，对于数组对象，保存数组的值
-    struct slot data[];
+    slot_t data[];
 };
 
 struct object* object_create(struct class *c);
@@ -61,17 +59,17 @@ bool object_is_jlclass(const struct object *o);
 
 struct object* object_clone(const struct object *src);
 
-void set_instance_field_value_by_id(struct object *o, int id, const struct slot *value);
-void set_instance_field_value_by_nt(struct object *o,
-                                    const char *name, const char *descriptor, const struct slot *value);
+void set_instance_field_value(struct object *o, struct field *f, const slot_t *value);
+//void set_instance_field_value_by_nt(struct object *o,
+//                                    const char *name, const char *descriptor, const slot_t *value);
 
-const struct slot* get_instance_field_value_by_id(const struct object *o, int id);
-const struct slot* get_instance_field_value_by_nt(const struct object *o, const char *name, const char *descriptor);
+const slot_t* get_instance_field_value_by_id(const struct object *o, int id);
+const slot_t* get_instance_field_value_by_nt(const struct object *o, const char *name, const char *descriptor);
 
 /*
  * todo 说明
  */
-struct slot priobj_unbox(const struct object *po);
+const slot_t* priobj_unbox(const struct object *po);
 
 void object_destroy(struct object *o);
 

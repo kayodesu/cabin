@@ -10,11 +10,13 @@
       <w>calloc</w>
       <w>cfcp</w>
       <w>clsobj</w>
+      <w>ddata</w>
       <w>delim</w>
       <w>dlen</w>
       <w>dslot</w>
       <w>eles</w>
       <w>endianness</w>
+      <w>fdata</w>
       <w>fieldvalues</w>
       <w>frmhub</w>
       <w>fsft</w>
@@ -29,6 +31,7 @@
       <w>hashset</w>
       <w>hashtable</w>
       <w>hfree</w>
+      <w>idata</w>
       <w>islot</w>
       <w>jarrobj</w>
       <w>jchars</w>
@@ -45,6 +48,7 @@
       <w>jvms</w>
       <w>lcld</w>
       <w>lcls</w>
+      <w>ldata</w>
       <w>llen</w>
       <w>lobj</w>
       <w>lslot</w>
@@ -69,9 +73,11 @@
       <w>pushi</w>
       <w>pushl</w>
       <w>pushr</w>
+      <w>rdata</w>
       <w>redundance</w>
       <w>rget</w>
       <w>rindex</w>
+      <w>rload</w>
       <w>rslot</w>
       <w>slen</w>
       <w>statbuf</w>

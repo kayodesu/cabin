@@ -4,6 +4,7 @@
 
 #include "../../../rtda/thread/frame.h"
 #include "../../../rtda/heap/arrobj.h"
+#include "../../../rtda/thread/thread.h"
 
 /*
  * 创建多维数组
@@ -21,12 +22,12 @@ void multianewarray(struct frame *frame)
     for (int i = arr_dim - 1; i >= 0; i--) {
         int len = frame_stack_popi(frame);
         if (len < 0) {  // todo 等于0的情况
-            thread_throw_negative_array_size_exception(frame->thread, len);
+            thread_throw_negative_array_size_exception(len);
         }
         arr_lens[i] = (size_t) len;
     }
 
     struct class *arr_class = classloader_load_class(curr_class->loader, class_name);
-    struct object *arr = arrobj_create_multi(arr_class, arr_dim, arr_lens);
+    jref arr = arrobj_create_multi(arr_class, arr_dim, arr_lens);
     frame_stack_pushr(frame, arr);
 }

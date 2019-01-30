@@ -4,6 +4,7 @@
 
 #include "../../registry.h"
 #include "../../../rtda/thread/frame.h"
+#include "../../../interpreter/interpreter.h"
 
 // private static native void initialize();
 static void initialize(struct frame *frame)
@@ -21,7 +22,8 @@ static void initialize(struct frame *frame)
         jvm_abort("not find initializeSystemClass\n");  // todo m == nullptr
     }
 
-    thread_invoke_method(frame->thread, m, NULL);
+//    thread_invoke_method(frame->thread, m, NULL);
+    exec_java_func(m, NULL, true);
 }
 
 /*

@@ -28,8 +28,8 @@ static void load(struct frame *frame)
     // todo load
 
     // set boolean loaded is true
-    struct slot s = islot(1);
-    set_instance_field_value_by_nt(this, "loaded", "Z", &s);
+    slot_t s = 1;
+    set_instance_field_value(this, class_lookup_field(this->clazz, "loaded", "Z"), &s);
 
 //    printvm("-------- %s, %d\n", jstrobj_value(name), is_builtin);
 }

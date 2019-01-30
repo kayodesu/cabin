@@ -4,8 +4,6 @@
  * Author: Jia Yang
  */
 
-
-
 void monitorenter(struct frame *frame)
 {
     jref o = frame_stack_popr(frame); //os_popr(frame->operand_stack);

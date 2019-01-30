@@ -8,6 +8,8 @@
 #include "../../../rtda/heap/object.h"
 #include "../../../rtda/heap/strobj.h"
 #include "../../../rtda/heap/arrobj.h"
+#include "../../../interpreter/interpreter.h"
+#include "../../../rtda/thread/thread.h"
 
 /**
  * Maps a library name into a platform-specific string representing a native library.
@@ -25,7 +27,7 @@ static void mapLibraryName(struct frame *frame)
 {
     jref libname = frame_locals_getr(frame, 0);
     if (libname == NULL) {
-        thread_throw_null_pointer_exception(frame->thread);
+        thread_throw_null_pointer_exception();
     }
 
 //    jvm_abort("%s\n", jstrobj_value(libname));
@@ -107,13 +109,14 @@ static void initProperties(struct frame *frame)
             props->clazz, "setProperty", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;");
 
     for (int i = 0; i < sizeof(sys_props) / sizeof(*sys_props); i++) {
-        struct slot args[] = {
-                rslot(props),
-                rslot((jref) strobj_create(sys_props[i][0])),
-                rslot((jref) strobj_create(sys_props[i][1]))
+        slot_t args[] = {
+                props,
+                strobj_create(sys_props[i][0]),
+                strobj_create(sys_props[i][1])
         };
 
-        thread_invoke_method_with_shim(frame->thread, set_property, args);
+//        thread_invoke_method_with_shim(frame->thread, set_property, args);
+        exec_java_func(set_property, args, true);
     }
 
     // 返回参数
@@ -124,24 +127,25 @@ static void initProperties(struct frame *frame)
 static void setIn0(struct frame *frame)
 {
     jref in = frame_locals_getr(frame, 0);
-    struct slot s = rslot(in);
-    set_static_field_value_by_nt(frame->method->clazz, "in", "Ljava/io/InputStream;", &s);
+//    struct slot s = rslot(in);
+    struct class *c = frame->method->clazz;
+    set_static_field_value(c, class_lookup_field(c, "in", "Ljava/io/InputStream;"), (slot_t *) &in);
 }
 
 // private static native void setOut0(PrintStream out);
 static void setOut0(struct frame *frame)
 {
     jref out = frame_locals_getr(frame, 0);
-    struct slot s = rslot(out);
-    set_static_field_value_by_nt(frame->method->clazz, "out", "Ljava/io/PrintStream;", &s);
+    struct class *c = frame->method->clazz;
+    set_static_field_value(c, class_lookup_field(c, "out", "Ljava/io/PrintStream;"), (slot_t *) &out);
 }
 
 // private static native void setErr0(PrintStream err);
 static void setErr0(struct frame *frame)
 {
     jref err = frame_locals_getr(frame, 0);
-    struct slot s = rslot(err);
-    set_static_field_value_by_nt(frame->method->clazz, "err", "Ljava/io/PrintStream;", &s);
+    struct class *c = frame->method->clazz;
+    set_static_field_value(c, class_lookup_field(c, "err", "Ljava/io/PrintStream;"), (slot_t *) &err);
 }
 
 /*

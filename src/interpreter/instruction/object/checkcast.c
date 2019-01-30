@@ -5,7 +5,6 @@
 
 #include "../../../rtda/thread/thread.h"
 #include "../../../rtda/heap/object.h"
-#include "../../../classfile/constant.h"
 #include "../../../rtda/ma/resolve.h"
 
 /*
@@ -14,7 +13,7 @@
  */
 void checkcast(struct frame *frame)
 {
-    jref obj = slot_getr(frame_stack_top(frame));
+    jref obj = RSLOT(frame->stack - 1); // 不改变操作数栈
     int index = bcr_readu2(&frame->reader);
     if (obj == NULL) {
         // 如果引用是null，则指令执行结束。也就是说，null 引用可以转换成任何类型
@@ -25,6 +24,6 @@ void checkcast(struct frame *frame)
 
     struct class *c = resolve_class(frame->method->clazz, index);
     if (!object_is_instance_of(obj, c)) {
-        thread_throw_class_cast_exception(frame->thread, obj->clazz->class_name, c->class_name);
+        thread_throw_class_cast_exception(obj->clazz->class_name, c->class_name);
     }
 }

@@ -39,13 +39,75 @@ struct heap_mgr g_heap_mgr;
 
 struct classloader *g_bootstrap_loader = NULL;
 
-struct object *system_thread_group = NULL;
-struct thread *main_thread = NULL;
+//struct object *system_thread_group = NULL;
+//struct thread *main_thread = NULL;
 
 void init_symbol();
 
-static void init_jvm(struct classloader *loader, struct thread *main_thread)
+static void init_jvm()
 {
+    // Initialise the VM modules -- ordering is important!
+    utf8_init();
+    init_symbol();
+    hm_init(&g_heap_mgr);
+    build_str_pool();
+}
+
+///*
+// * main thread 由虚拟机启动。
+// */
+//static void create_main_thread(struct classloader *loader)
+//{
+//
+//    main_thread = thread_create(loader, NULL);
+//
+//    struct class *jltg_class = load_sys_class("java/lang/ThreadGroup");
+//    system_thread_group = object_create(jltg_class);
+//
+//    struct class *jlt_class = load_sys_class("java/lang/Thread");
+//    struct object *jlt_obj = object_create(jlt_class);
+//
+//    main_thread->jltobj = jlt_obj;
+//
+//    // 初始化 system_thread_group
+//    // java/lang/ThreadGroup 的无参数构造函数主要用来：
+//    // Creates an empty Thread group that is not in any Thread group.
+//    // This method is used to create the system Thread group.
+////    struct slot arg = rslot(system_thread_group);
+////    thread_invoke_method(main_thread, class_get_constructor(jltg_class, "()V"), &arg);
+//    class_clinit(jltg_class);
+//
+//    exec_java_func(class_get_constructor(jltg_class, "()V"), (slot_t *) &system_thread_group);
+//
+//    // from java/lang/Thread.java
+//    // public final static int MIN_PRIORITY = 1;
+//    // public final static int NORM_PRIORITY = 5;
+//    // public final static int MAX_PRIORITY = 10;
+//    slot_t value = 5;  // todo. why set this? I do not know. 参见 jvmgo/instructions/reserved/bootstrap.go
+////    set_instance_field_value_by_nt(jlt_obj, "priority", "I", &value);
+//    set_instance_field_value(jlt_obj, class_lookup_field(jlt_obj->clazz, "priority", "I"), &value);
+//
+//
+//    // 调用 java/lang/Thread 的构造函数
+//    struct method *constructor
+//            = class_get_constructor(jlt_obj->clazz, "(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");
+//    intptr_t args[] = {
+//            jlt_obj,
+//            system_thread_group,
+//            strobj_create(MAIN_THREAD_NAME) // thread name
+//    };
+////    thread_invoke_method(main_thread, constructor, args);
+//    class_clinit(jlt_class);
+//    exec_java_func(constructor, args);
+//}
+
+static void start_jvm(const char *main_class_name)
+{
+    init_jvm();
+
+    struct classloader *loader = classloader_create(true);
+    create_main_thread(loader);
+
     // 先加载 sun.mis.VM 类，然后执行其类初始化方法
     struct class *vm_class = load_sys_class("sun/misc/VM");
     if (vm_class == NULL) {
@@ -55,69 +117,7 @@ static void init_jvm(struct classloader *loader, struct thread *main_thread)
 
     // VM类的 "initialize~()V" 方法需调用执行
     // 在VM类的类初始化方法中调用了 "initialize" 方法。
-    class_clinit(vm_class, main_thread);
-    interpret(main_thread);
-}
-
-/*
- * main thread 由虚拟机启动。
- */
-static void create_main_thread(struct classloader *loader)
-{
-    struct class *jltg_class = load_sys_class("java/lang/ThreadGroup");
-    system_thread_group = object_create(jltg_class);
-
-    struct class *jlt_class = load_sys_class("java/lang/Thread");
-    struct object *jlt_obj = object_create(jlt_class);
-
-    // from java/lang/Thread.java
-    // public final static int MIN_PRIORITY = 1;
-    // public final static int NORM_PRIORITY = 5;
-    // public final static int MAX_PRIORITY = 10;
-    struct slot value = islot(5);  // todo. why set this? I do not know. 参见 jvmgo/instructions/reserved/bootstrap.go
-    set_instance_field_value_by_nt(jlt_obj, "priority", "I", &value);
-
-    main_thread = thread_create(loader, jlt_obj);
-
-    // 调用 java/lang/Thread 的构造函数
-    struct method *constructor
-            = class_get_constructor(jlt_obj->clazz, "(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");
-    struct slot args[] = {
-            rslot(jlt_obj),
-            rslot(system_thread_group),
-            rslot(strobj_create(MAIN_THREAD_NAME)) // thread name
-    };
-    thread_invoke_method(main_thread, constructor, args);
-    class_clinit(jlt_obj->clazz, main_thread); // 最后压栈，保证先执行。
-
-
-    // 初始化 system_thread_group
-    // java/lang/ThreadGroup 的无参数构造函数主要用来：
-    // Creates an empty Thread group that is not in any Thread group.
-    // This method is used to create the system Thread group.
-    struct slot arg = rslot(system_thread_group);
-    thread_invoke_method(main_thread, class_get_constructor(jltg_class, "()V"), &arg);
-    class_clinit(jltg_class, main_thread);
-
-    // 现在，main thread's vm stack 里面按将要执行的顺序（从栈顶到栈底）分别为：
-    // java/lang/ThreadGroup~<clinit>
-    // java/lang/ThreadGroup~<init>~()V
-    // java/lang/Thread~<clinit>
-    // java/lang/Thread~<init>~(Ljava/lang/ThreadGroup;Ljava/lang/String;)V
-    interpret(main_thread);
-}
-
-static void start_jvm(const char *main_class_name)
-{
-    // Initialise the VM modules -- ordering is important!
-    utf8_init();
-    init_symbol();
-    hm_init(&g_heap_mgr);
-    build_str_pool();
-
-    struct classloader *loader = classloader_create(true);
-    create_main_thread(loader);
-    init_jvm(loader, main_thread);
+    class_clinit(vm_class);
 
     struct class *main_class = classloader_load_class(loader, main_class_name);
     struct method *main_method = class_lookup_static_method(main_class, "main", "([Ljava/lang/String;)V");
@@ -132,16 +132,16 @@ static void start_jvm(const char *main_class_name)
         }
     }
 
-    struct slot args[] = { islot(0), rslot(NULL) }; // todo
-    thread_invoke_method(main_thread, main_method, args);
+    slot_t args[] = { 0, NULL }; // todo
+//    thread_invoke_method(main_thread, main_method, args);
+    exec_java_func(main_method, args, true);
 
     // 开始在主线程中执行 main 方法
-    interpret(main_thread);
+//    interpret(main_thread);
 
     // todo 如果有其他的非后台线程在执行，则main线程需要在此wait
 
     // main_thread 退出，做一些清理工作。
-    thread_destroy(main_thread);
     classloader_destroy(loader);
 }
 
@@ -226,7 +226,6 @@ int main(int argc, char* argv[])
         char *java_home = getenv("JAVA_HOME"); // JAVA_HOME 是 JDK 的目录
         if (java_home == NULL) {
             vm_internal_error("no java lib"); // todo
-            return -1;
         }
         strcpy(bootstrap_classpath, java_home);
         strcat(bootstrap_classpath, "/jre/lib");

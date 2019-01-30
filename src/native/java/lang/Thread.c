@@ -9,6 +9,7 @@
 #include "../../../rtda/heap/object.h"
 #include "../../../interpreter/interpreter.h"
 #include "../../../rtda/heap/strobj.h"
+#include "../../../rtda/thread/thread.h"
 
 /*
  * Returns a reference to the currently executing thread object.
@@ -18,7 +19,7 @@
 static void currentThread(struct frame *frame)
 {
     // push a object of java/lang/Thread of current thread
-    frame_stack_pushr(frame, frame->thread->jltobj);
+    frame_stack_pushr(frame, thread_self()->jltobj);
 }
 
 // public static native void yield();
@@ -115,6 +116,18 @@ static void setPriority0(struct frame *frame)
 //    set_instance_field_value_by_nt(this, "priority", "I", &priority);
 }
 
+/* execute new thread's run function */
+void *exec_new_thread_run(void *arg)
+{
+//    struct thread *new_thread = thread_create(frame->method->clazz->loader, this);
+
+    // todo
+//    jref this = arg;
+//    struct method *run = class_lookup_instance_method(this->clazz, "run", "()V");
+//    exec_java_func(run, (slot_t *) &this, true);
+    return NULL;
+}
+
 // private native void start0();
 static void start0(struct frame *frame)
 {
@@ -122,27 +135,15 @@ static void start0(struct frame *frame)
     jref this = frame_locals_getr(frame, 0);
 
 #if (JVM_DEBUG)
-    const char *name = strobj_value(slot_getr(get_instance_field_value_by_nt(this, "name", "Ljava/lang/String;")));
+    const char *name = strobj_value(RSLOT(get_instance_field_value_by_nt(this, "name", "Ljava/lang/String;")));
     printvm("start thread: %s\n", name);
 #endif
 
-    struct thread *new_thread = thread_create(frame->method->clazz->loader, this);
-
-    // create a stack frame to hold run method
-    struct method *run = class_lookup_instance_method(this->clazz, "run", "()V");
-//    struct frame *new_frame = frmhub_get(&new_thread->fh, run);//frame_create(new_thread, run);
-    struct slot arg = rslot(this);
-
-//    frame_locals_set(new_frame, 0, &arg);
-//    jthread_push_frame(new_thread, new_frame);
-
-    thread_invoke_method(new_thread, run, &arg);
-
-//    pthread_t pid;
-//    int ret = pthread_create(&pid, NULL, interpret, new_thread);
-//    if (ret != 0) {
-//        vm_internal_error("create thread failed");
-//    }
+    pthread_t pid;
+    int ret = pthread_create(&pid, NULL, exec_new_thread_run, this);
+    if (ret != 0) {
+        vm_internal_error("create thread failed");
+    }
 
     /*
      * 	vars := frame.LocalVars()

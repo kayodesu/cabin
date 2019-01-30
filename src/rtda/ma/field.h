@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include "access.h"
 #include "../../slot.h"
+#include "../../jvm.h"
 
 struct class;
 struct bytecode_reader;
@@ -25,17 +26,6 @@ struct field {
     bool category_two;
 
     int id;
-//    union {
-//        union {
-//            jint i;
-//            jfloat f;
-//            jlong l;
-//            jdouble d;
-//            jref r;
-//            uintptr_t u;
-//        } static_value;
-//        u4 offset;
-//    } v; // value
 
     // 如果field的值已经在常量池中了，@constant_value_index 表示值在常量池中的索引。
     int constant_value_index;

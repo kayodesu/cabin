@@ -6,6 +6,7 @@
 #include "../../../rtda/thread/frame.h"
 #include "../../../rtda/heap/object.h"
 #include "../../../rtda/heap/strobj.h"
+#include "../../../rtda/thread/thread.h"
 
 
 struct stack_trace {
@@ -19,8 +20,7 @@ static void fillInStackTrace(struct frame *frame)
     jref this = frame_locals_getr(frame, 0);
     frame_stack_pushr(frame, this);
 
-    int num;
-    struct frame **frames = thread_get_frames(frame->thread, &num);
+    int num = vm_stack_depth();
     /*
      * 栈顶两帧正在执行 fillInStackTrace(int) 和 fillInStackTrace() 方法，所以需要跳过这两帧。
      * 这两帧下面的几帧正在执行异常类的构造函数，所以也要跳过。
@@ -40,46 +40,38 @@ static void fillInStackTrace(struct frame *frame)
      * at java/lang/Throwable.fillInStackTrace(Throwable.java:783)
      * at java/lang/Throwable.fillInStackTrace(Native Method)
      */
-    num -= 2; // 减去执行fillInStackTrace(int) 和 fillInStackTrace() 方法的frame
+    struct frame *f = frame->prev->prev;
+//    num -= 2; // 减去执行fillInStackTrace(int) 和 fillInStackTrace() 方法的frame
+
     for (struct class *c = this->clazz; c != NULL; c = c->super_class) {
-        num--; // 减去执行异常类的构造函数的frame
+        f = f->prev; // jump 执行异常类的构造函数的frame
         if (strcmp(c->class_name, "java/lang/Throwable") == 0) {
             break; // 可以了，遍历到 Throwable 就行了，因为现在在执行 Throwable 的 fillInStackTrace 方法。
         }
     }
-    if (num < 0) {
-        jvm_abort("Never goes here. num = %d", num);
-    }
 
-    VM_MALLOC_EXT(struct stack_trace, 1, sizeof(jref) * num, trace);
+    struct stack_trace *trace = vm_malloc(sizeof(struct stack_trace) + sizeof(jref) * num);
     trace->count = 0;
 
     struct class *c = load_sys_class("java/lang/StackTraceElement");
-    for (int i = num - 1; i >= 0; i--) {
-        // jump shim frame
-        if (frames[i]->type == SF_TYPE_SHIM) {
-            continue;
-        }
-
+    for (; f != NULL; f = f->prev) {
         struct object *o = object_create(c);
         trace->eles[trace->count++] = o;
 
         // public StackTraceElement(String declaringClass, String methodName, String fileName, int lineNumber)
-        // may be should call <init>, but 直接赋值 is also ok.
+        // may be should call <init>, but 直接赋值 is also ok. todo
 
-        struct slot file_name = rslot(strobj_create(frames[i]->method->clazz->source_file_name));
-        struct slot class_name = rslot(strobj_create(frames[i]->method->clazz->class_name));
-        struct slot method_name = rslot(strobj_create(frames[i]->method->name));
-        struct slot line_number = islot(method_get_line_number(frames[i]->method, frames[i]->reader.pc - 1)); // todo why 减1？ 减去opcode的长度
+        jref file_name = strobj_create(f->method->clazz->source_file_name);
+        jref class_name = strobj_create(f->method->clazz->class_name);
+        jref method_name = strobj_create(f->method->name);
+        int line_number = method_get_line_number(f->method, f->reader.pc - 1); // todo why 减1？ 减去opcode的长度
 
-        set_instance_field_value_by_nt(o, "fileName", "Ljava/lang/String;", &file_name);
-        set_instance_field_value_by_nt(o, "declaringClass", "Ljava/lang/String;", &class_name);
-        set_instance_field_value_by_nt(o, "methodName", "Ljava/lang/String;", &method_name);
-        set_instance_field_value_by_nt(o, "lineNumber", "I", &line_number);
+        set_instance_field_value(o, class_lookup_field(c, "fileName", "Ljava/lang/String;"), (const slot_t *) &file_name);
+        set_instance_field_value(o, class_lookup_field(c, "declaringClass", "Ljava/lang/String;"), (const slot_t *) &class_name);
+        set_instance_field_value(o, class_lookup_field(c, "methodName", "Ljava/lang/String;"), (const slot_t *) &method_name);
+        set_instance_field_value(o, class_lookup_field(c, "lineNumber", "I"), (const slot_t *) &line_number);
     }
-
-    free(frames);
-    this->extra = trace;
+    this->u.stack_trace = trace;
 }
 
 // native StackTraceElement getStackTraceElement(int index);
@@ -88,7 +80,7 @@ static void getStackTraceElement(struct frame *frame)
     jref throwable = frame_locals_getr(frame, 0);
     jint index = frame_locals_geti(frame, 1);
 
-    struct stack_trace *trace = throwable->extra;
+    struct stack_trace *trace = throwable->u.stack_trace;
     assert(trace != NULL);
     frame_stack_pushr(frame, trace->eles[index]);
 }
@@ -97,7 +89,7 @@ static void getStackTraceElement(struct frame *frame)
 static void getStackTraceDepth(struct frame *frame)
 {
     jref this = frame_locals_getr(frame, 0);
-    struct stack_trace *trace = this->extra;
+    struct stack_trace *trace = this->u.stack_trace;
     assert(trace != NULL);
     frame_stack_pushi(frame, trace->count);
 }

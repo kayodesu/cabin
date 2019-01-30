@@ -6,13 +6,14 @@
 #include "../../../rtda/thread/frame.h"
 #include "../../../slot.h"
 #include "../../../rtda/heap/object.h"
+#include "../../../interpreter/interpreter.h"
 
 // @CallerSensitive
 // public static native <T> T doPrivileged(PrivilegedAction<T> action);
 static void doPrivileged(struct frame *frame)
 {
     // todo 这个函数干什么用的。。。。
-    struct object *this = frame_locals_getr(frame, 0);
+    jref this = frame_locals_getr(frame, 0);
 
     /*
      * run 函数返回 T类型 的对象
@@ -22,8 +23,11 @@ static void doPrivileged(struct frame *frame)
      * }
      */
     struct method *m = class_get_declared_nonstatic_method(this->clazz, "run", "()Ljava/lang/Object;");
-    struct slot args[] = { rslot(this) };
-    thread_invoke_method(frame->thread, m, args);
+//    struct slot args[] = { rslot(this) };
+//    thread_invoke_method(frame->thread, m, args);
+//    slot_t args[] = { this };
+    slot_t *s = exec_java_func(m, (slot_t *) &this, true);
+    frame_stack_pushr(frame, RSLOT(s));
 }
 
 // @CallerSensitive

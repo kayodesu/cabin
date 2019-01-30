@@ -10,7 +10,7 @@
 #include "../../symbol.h"
 #include "../../classfile/constant.h"
 
-struct object* jmethod_get_parameter_types(struct method *method)
+struct object* method_get_parameter_types(struct method *method)
 {
     assert(method != NULL);
     if (method->parameter_types == NULL) {
@@ -19,7 +19,7 @@ struct object* jmethod_get_parameter_types(struct method *method)
     return method->parameter_types;
 }
 
-struct object* jmethod_get_return_type(struct method *method)
+struct object* method_get_return_type(struct method *method)
 {
     assert(method != NULL);
     if (method->return_type == NULL) {
@@ -28,7 +28,7 @@ struct object* jmethod_get_return_type(struct method *method)
     return method->return_type;
 }
 
-struct object* jmethod_get_exception_types(struct method *method)
+struct object* method_get_exception_types(struct method *method)
 {
     assert(method != NULL);
 
@@ -297,7 +297,8 @@ void method_init(struct method *method, struct class *c, struct bytecode_reader 
         method->max_locals = method->arg_slot_count; // todo 因为本地方法帧的局部变量表只用来存放参数值，所以把argSlotCount赋给maxLocals字段刚好。
 
         size_t code_len = 2;
-        VM_MALLOCS(u1, code_len, code);
+//        VM_MALLOCS(u1, code_len, code);
+        u1 *code = vm_malloc(code_len * sizeof(u1));
         code[0] = 0xfe;  // 0xfe 是 "impdep1" 指令的代码，用这条指令来执行 native 方法。
         const char *t = strchr(method->descriptor, ')'); // find return
         if (t == NULL) {
@@ -336,7 +337,6 @@ void method_release(struct method *m)
 
     // todo
 }
-
 
 bool method_is_accessible_to(const struct method *method, const struct class *visitor)
 {
@@ -426,5 +426,4 @@ char *method_to_string(const struct method *method)
     }
 
     return result;
-#undef MAX_LEN
 }

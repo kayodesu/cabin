@@ -12,6 +12,8 @@
 #include "../../../rtda/heap/arrobj.h"
 #include "../../../rtda/heap/clsobj.h"
 #include "../../../rtda/heap/strobj.h"
+#include "../../../interpreter/interpreter.h"
+#include "../../../rtda/thread/thread.h"
 
 
 /*
@@ -35,7 +37,7 @@ static void forName0(struct frame *frame)
     int initialize = frame_locals_geti(frame, 1);
     if (initialize && !c->inited) {
         // todo do init
-        class_clinit(c, frame->thread);
+        class_clinit(c);
 //        bcr_set_pc(frame->reader, jthread_get_pc(frame->thread));
     }
 
@@ -52,7 +54,7 @@ static void getPrimitiveClass(struct frame *frame)
 
     const char *class_name = strobj_value(so); // 这里得到的 class_name 是诸如 "int~float" 之类的 primitive type
     struct class *c = classloader_load_class(g_bootstrap_loader, class_name);
-    frame_stack_pushr(frame, (jref) c->clsobj);
+    frame_stack_pushr(frame, c->clsobj);
 }
 
 /**
@@ -117,7 +119,7 @@ static void getName0(struct frame *frame)
     // 这里需要的是 java.lang.Object 这样的类名，而非 java/lang/Object
     // 所以需要进行一下替换
     vm_strrpl(class_name, '/', '.');
-    frame_stack_pushr(frame, (jref) strobj_create(class_name));
+    frame_stack_pushr(frame, strobj_create(class_name));
 }
 
 /**
@@ -209,8 +211,7 @@ static void isInstance(struct frame *frame)
     struct object *this = frame_locals_getr(frame, 0);
 
     jref obj = frame_locals_getr(frame, 1);
-    frame_stack_pushi(frame,
-             (obj != NULL && object_is_instance_of(obj, this->u.entity_class)) ? 1 : 0);
+    frame_stack_pushi(frame, (obj != NULL && object_is_instance_of(obj, this->u.entity_class)) ? 1 : 0);
 }
 
 /**
@@ -243,7 +244,7 @@ static void isAssignableFrom(struct frame *frame)
     struct object *this = frame_locals_getr(frame, 0);
     struct object *cls = (struct object *) frame_locals_getr(frame, 1);
     if (cls == NULL) {
-        thread_throw_null_pointer_exception(frame->thread);
+        thread_throw_null_pointer_exception();
     }
 
 //    bool b = class_is_subclass_of(clsobj_entity_class(cls), clsobj_entity_class(this));
@@ -328,7 +329,7 @@ static void getSuperclass(struct frame *frame)
     struct object *this = frame_locals_getr(frame, 0);
 
     struct class *c = classloader_load_class(frame->method->clazz->loader, this->u.entity_class->class_name);
-    frame_stack_pushr(frame, (jref) (c->super_class != NULL ? c->super_class->clsobj : NULL));
+    frame_stack_pushr(frame, c->super_class != NULL ? c->super_class->clsobj : NULL);
 }
 
 /**
@@ -388,7 +389,7 @@ static void getInterfaces0(struct frame *frame)
         arrobj_set(struct object *, interfaces, i, entity_class->interfaces[i]->clsobj);
     }
 
-    frame_stack_pushr(frame, (jref) interfaces);
+    frame_stack_pushr(frame, interfaces);
 }
 
 /*
@@ -536,7 +537,7 @@ static void getDeclaredFields0(struct frame *frame)
     struct class *jlrf_cls = load_sys_class("java/lang/reflect/Field");
     char *arr_cls_name = get_arr_class_name(jlrf_cls->class_name);
     struct object *jlrf_arr = arrobj_create(classloader_load_class(loader, arr_cls_name), fields_count);
-    frame_stack_pushr(frame, (jref) jlrf_arr);
+    frame_stack_pushr(frame, jlrf_arr);
     free(arr_cls_name);
 
     /*
@@ -553,16 +554,19 @@ static void getDeclaredFields0(struct frame *frame)
 //        *(struct object **)jobject_index(jlrf_arr, i) = jlrf_obj;
         arrobj_set(struct object *, jlrf_arr, i, jlrf_obj);
 
-        thread_invoke_method(frame->thread, field_constructor, (struct slot[]) {
-                rslot(jlrf_obj), // this
-                rslot((jref) this), // declaring class
-                rslot((jref) get_str_from_pool(frame->method->clazz->loader, fields[i].name)), // name
-                rslot((jref) field_get_type(fields + i)), // type
-                islot(fields[i].access_flags), // modifiers
-                islot(fields[i].id), // slot   todo
-                rslot(NULL), // signature  todo
-                rslot(NULL), // annotations  todo
-        });
+        slot_t args[] = {
+                jlrf_obj, // this
+                this, // declaring class
+                get_str_from_pool(frame->method->clazz->loader, fields[i].name), // name
+                field_get_type(fields + i), // type
+                fields[i].access_flags, // modifiers
+                fields[i].id, // slot   todo
+                NULL, // signature  todo
+                NULL, // annotations  todo
+        };
+//        thread_invoke_method(frame->thread, field_constructor, );
+
+        exec_java_func(field_constructor, args, true);
     }
 }
 
@@ -589,7 +593,7 @@ static void getDeclaredMethods0(struct frame *frame)
     struct class *jlrm_cls = load_sys_class("java/lang/reflect/Method");
     char *arr_cls_name = get_arr_class_name(jlrm_cls->class_name);
     struct object *jlrm_arr = arrobj_create(classloader_load_class(loader, arr_cls_name), methods_count);
-    frame_stack_pushr(frame, (jref) jlrm_arr);
+    frame_stack_pushr(frame, jlrm_arr);
     free(arr_cls_name);
 
     /*
@@ -607,20 +611,23 @@ static void getDeclaredMethods0(struct frame *frame)
         struct object *jlrf_obj = object_create(jlrm_cls);
         arrobj_set(struct object *, jlrm_arr, i, jlrf_obj);
 
-        thread_invoke_method(frame->thread, method_constructor, (struct slot[]) {
-                rslot(jlrf_obj),        // this
-                rslot((jref) this), // declaring class
-                rslot((jref) get_str_from_pool(frame->method->clazz->loader, methods[i].name)), // name
-                rslot((jref) jmethod_get_parameter_types(methods + i)), // parameter types
-                rslot(jmethod_get_return_type(methods + i)),     // return type
-                rslot((jref) jmethod_get_exception_types(methods + i)), // checked exceptions
-                islot(methods[i].access_flags), // modifiers
-                islot(0), // slot   todo
-                rslot(NULL), // signature  todo
-                rslot(NULL), // annotations  todo
-                rslot(NULL), // parameter annotations  todo
-                rslot(NULL), // annotation default  todo
-        });
+        slot_t args[] = {
+                jlrf_obj,        // this
+                this, // declaring class
+                get_str_from_pool(frame->method->clazz->loader, methods[i].name), // name
+                method_get_parameter_types(methods + i), // parameter types
+                method_get_return_type(methods + i),     // return type
+                method_get_exception_types(methods + i), // checked exceptions
+                methods[i].access_flags, // modifiers
+                0, // slot   todo
+                NULL, // signature  todo
+                NULL, // annotations  todo
+                NULL, // parameter annotations  todo
+                NULL, // annotation default  todo
+        };
+//        thread_invoke_method(frame->thread, method_constructor, );
+
+        exec_java_func(method_constructor, args, true);
     }
 }
 
@@ -639,7 +646,7 @@ static void getDeclaredConstructors0(struct frame *frame)
     struct class *jlrc_cls = load_sys_class("java/lang/reflect/Constructor");
     char *arr_cls_name = get_arr_class_name(jlrc_cls->class_name);
     struct object *jlrc_arr = arrobj_create(classloader_load_class(loader, arr_cls_name), constructors_count);
-    frame_stack_pushr(frame, (jref) jlrc_arr);
+    frame_stack_pushr(frame, jlrc_arr);
     free(arr_cls_name);
 
     /*
@@ -656,17 +663,20 @@ static void getDeclaredConstructors0(struct frame *frame)
         struct object *jlrf_obj = object_create(jlrc_cls);
         arrobj_set(struct object *, jlrc_arr, i, jlrf_obj);
 
-        thread_invoke_method(frame->thread, constructor_constructor, (struct slot[]) {
-                rslot(jlrf_obj), // this
-                rslot((jref) this), // declaring class
-                rslot((jref) jmethod_get_parameter_types(constructors[i])),  // parameter types
-                rslot((jref) jmethod_get_exception_types(constructors[i])),  // checked exceptions
-                islot(constructors[i]->access_flags), // modifiers
-                islot(0), // slot   todo
-                rslot(NULL), // signature  todo
-                rslot(NULL), // annotations  todo
-                rslot(NULL), // parameter annotations  todo
-        });
+        slot_t args[] = {
+                jlrf_obj, // this
+                this, // declaring class
+                method_get_parameter_types(constructors[i]),  // parameter types
+                method_get_exception_types(constructors[i]),  // checked exceptions
+                constructors[i]->access_flags, // modifiers
+                0, // slot   todo
+                NULL, // signature  todo
+                NULL, // annotations  todo
+                NULL, // parameter annotations  todo
+        };
+//        thread_invoke_method(frame->thread, constructor_constructor, );
+
+        exec_java_func(constructor_constructor, args, true);
     }
 }
 
@@ -722,8 +732,7 @@ static void getDeclaringClass0(struct frame *frame)
     }
 
     *last_dollar = 0;
-    frame_stack_pushr(frame,
-             (jref) classloader_load_class(frame->method->clazz->loader, declaring_class_name)->clsobj);
+    frame_stack_pushr(frame, classloader_load_class(frame->method->clazz->loader, declaring_class_name)->clsobj);
 }
 
 void java_lang_Class_registerNatives()

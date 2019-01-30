@@ -86,9 +86,9 @@ bool method_is_accessible_to(const struct method *method, const struct class *vi
 // 查找 pc 所对应的行号
 int method_get_line_number(const struct method *method, int pc);
 
-struct object* jmethod_get_parameter_types(struct method *method);
-struct object* jmethod_get_return_type(struct method *method);
-struct object* jmethod_get_exception_types(struct method *method);
+struct object* method_get_parameter_types(struct method *method);
+struct object* method_get_return_type(struct method *method);
+struct object* method_get_exception_types(struct method *method);
 
 /*
  * @pc, 发生异常的位置

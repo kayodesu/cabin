@@ -37,22 +37,7 @@ typedef float          jfloat;
 typedef double         jdouble;
 typedef struct object* jref; // JVM中的引用类型，只能指向一个jobject对象。
 
-// 各类型的代码
-enum jtype {
-    JBYTE = 1,
-    JBOOL,
-    JCHAR,
-    JSHORT,
-    JINT,
-    JLONG,
-    JFLOAT,
-    JDOUBLE,
-    JREF, // reference
-    PH,   // placeholder of long and double
-    NAT,  // Not A Type
-};
-
-const char* get_jtype_name(enum jtype t);
+#define SLOTS(type) ((sizeof(type) + 3)/4) //_Generic((type), jlong: 2, jdouble: 2, default: 1)
 
 static inline jlong i2l(jint i)
 {  // todo

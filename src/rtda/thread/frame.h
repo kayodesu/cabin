@@ -9,33 +9,28 @@
 #include <assert.h>
 #include "../../slot.h"
 #include "../ma/method.h"
-#include "thread.h"
 #include "../../util/bytecode_reader.h"
 
-enum frame_type {
-    SF_TYPE_NORMAL,
-    SF_TYPE_SHIM
-};
-
 struct frame {
-    enum frame_type type;
     struct method *method;
-
-    struct thread *thread;
-
-    bool interrupted_status;
-    bool exe_status; // todo 是否执行完毕
-    bool proc_exception_status; // 处理异常
-
     struct bytecode_reader reader;
+    struct frame *prev;
 
-    u4 max_locals_and_stack; // max_stack(u2) + max_locals(u2)
+    /*
+     * this frame 执行的函数是否由虚拟机调用
+     * 由虚拟机调用的函数不会将返回值压入下层frame的栈中，
+     * 也不会后续执行其下层frame，而是直接返回。
+     */
+    bool vm_invoke;
 
-    struct slot *stack; // operand stack
-    int stack_top; // 指向栈顶，栈为空时为-1
+    slot_t *stack; // operand stack
 
-    struct slot locals[]; // local variables
+    slot_t locals[]; // local variables
 };
+
+#define FRAME_SIZE(method) (sizeof(struct frame) \
+                            + ((method)->max_stack * sizeof(slot_t)) \
+                            + ((method)->max_locals * sizeof(slot_t)))
 
 #define frame_readu1(frame)   bcr_readu1(&((frame)->reader))
 #define frame_reads1(frame)   bcr_reads1(&((frame)->reader))
@@ -46,199 +41,26 @@ struct frame {
 #define frame_has_more(frame) bcr_has_more(&((frame)->reader))
 #define frame_skip(frame, offset) bcr_skip(&((frame)->reader), offset)
 
-struct frame* frame_create_normal(struct thread *thread, struct method *method);
 
-/*
- * create a shim stack frame.
- * @shim_action, could be NULL
- */
-struct frame* frame_create_shim(struct thread *thread);
+#define frame_locals_geti(f, index) ISLOT((f)->locals + (index))
+#define frame_locals_getz(f, index) (ISLOT((f)->locals + (index)) != 0)
+#define frame_locals_getf(f, index) FSLOT((f)->locals + (index))
+#define frame_locals_getl(f, index) LSLOT((f)->locals + (index))
+#define frame_locals_getd(f, index) DSLOT((f)->locals + (index))
+#define frame_locals_getr(f, index) RSLOT((f)->locals + (index))
 
-void frame_bind(struct frame *frame, struct thread *thread, struct method *method);
 
-// ----------  locals
-static inline void frame_locals_set(struct frame *f, int index, const struct slot *value)
-{
-    assert(f != NULL);
-    assert(value != NULL);
+static inline void frame_stack_pushi(struct frame *f, jint value)    { *(jint *) f->stack = value; f->stack++; }
+static inline void frame_stack_pushf(struct frame *f, jfloat value)  { *(jfloat *) f->stack = value; f->stack++; }
+static inline void frame_stack_pushl(struct frame *f, jlong value)   { *(jlong *) f->stack = value; f->stack += 2; }
+static inline void frame_stack_pushd(struct frame *f, jdouble value) { *(jdouble *) f->stack = value; f->stack += 2; }
+static inline void frame_stack_pushr(struct frame *f, jref value)    { *(jref *) f->stack = value; f->stack++; }
 
-    f->locals[index] = *value;
-//    if (slot_is_category_two(value)) {
-//        f->locals[++index] = phslot;
-//    }
-}
-
-#define frame_locals_get(f, index) ((f)->locals + (index))
-#define frame_locals_geti(f, index) slot_geti(frame_locals_get(f, index))
-#define frame_locals_getz(f, index) (frame_locals_geti(f, index) != 0)
-#define frame_locals_getf(f, index) slot_getf(frame_locals_get(f, index))
-#define frame_locals_getl(f, index) slot_getl(frame_locals_get(f, index))
-#define frame_locals_getd(f, index) slot_getd(frame_locals_get(f, index))
-#define frame_locals_getr(f, index) slot_getr(frame_locals_get(f, index))
-
-// ----------- operand stack
-#define frame_stack_empty(frame) ((frame)->stack_top < 0)
-
-static inline void frame_stack_clear(struct frame *f)
-{
-    assert(f != NULL);
-    f->stack_top = -1;
-}
-
-// Frame Stack From Top
-#define FSFT(frame, index) ((frame)->stack + (frame)->stack_top + (index))
-
-static inline struct slot* frame_stack_top(struct frame *f)
-{
-    assert(f != NULL);
-    assert(f->stack_top >= 0);
-    return f->stack + f->stack_top;
-}
-
-static inline struct slot* frame_stack_pop_slot(struct frame *f)
-{
-    assert(f != NULL);
-    assert(f->stack_top >= 0);
-    return f->stack + (f->stack_top)--;
-}
-
-static inline jint frame_stack_popi(struct frame *f)
-{
-    assert(f != NULL);
-    assert(f->stack_top >= 0);
-    return slot_geti(frame_stack_pop_slot(f));
-}
-
-static inline jfloat frame_stack_popf(struct frame *f)
-{
-    assert(f != NULL);
-    assert(f->stack_top >= 0);
-    return slot_getf(frame_stack_pop_slot(f));
-}
-
-static inline jlong frame_stack_popl(struct frame *f)
-{
-    assert(f != NULL);
-    assert(f->stack_top >= 1);
-    frame_stack_pop_slot(f); // pop placeholder
-    return slot_getl(frame_stack_pop_slot(f));
-}
-
-static inline jdouble frame_stack_popd(struct frame *f)
-{
-    assert(f != NULL);
-    assert(f->stack_top >= 1);
-    frame_stack_pop_slot(f); // pop placeholder
-    return slot_getd(frame_stack_pop_slot(f));
-}
-
-static inline jref frame_stack_popr(struct frame *f)
-{
-    assert(f != NULL);
-    assert(f->stack_top >= 0);
-    return slot_getr(frame_stack_pop_slot(f));
-}
-
-static inline void frame_stack_pushi(struct frame *f, jint i)
-{
-    assert(f != NULL);
-    f->stack[++(f->stack_top)] = islot(i);
-}
-static inline void frame_stack_pushf(struct frame *frame, jfloat f)
-{
-    assert(frame != NULL);
-    frame->stack[++(frame->stack_top)] = fslot(f);
-}
-
-static inline void frame_stack_pushl(struct frame *f, jlong l)
-{
-    assert(f != NULL);
-    f->stack[++(f->stack_top)] = lslot(l);
-    f->stack[++(f->stack_top)] = phslot;
-}
-
-static inline void frame_stack_pushd(struct frame *f, jdouble d)
-{
-    assert(f != NULL);
-    f->stack[++(f->stack_top)] = dslot(d);
-    f->stack[++(f->stack_top)] = phslot;
-}
-
-static inline void frame_stack_pushr(struct frame *f, jref r)
-{
-    assert(f != NULL);
-//    if (r == NULL)
-//        printvm("dddddddddddddd\n");
-    f->stack[++(f->stack_top)] = rslot(r);
-}
-
-/*
- * 不判断 slot 的类型直接 push
- */
-static inline void frame_stack_push_slot_directly(struct frame *f, const struct slot *s)
-{
-    assert(f != NULL);
-    assert(s != NULL);
-    f->stack[++(f->stack_top)] = *s;
-}
-
-static inline void frame_stack_push_slot(struct frame *f, const struct slot *s)
-{
-    frame_stack_push_slot_directly(f, s);
-    if (slot_is_category_two(s)) {
-        struct slot phs = phslot;
-        frame_stack_push_slot(f, &phs);
-    }
-}
-
-// 将一个值推入操作栈中
-// os: 要推入值的 operand_stack 的地址
-// v: 值
-#define frame_stack_push(f, v) \
-    _Generic((v), \
-        jbyte:   frame_stack_pushi, \
-        jchar:   frame_stack_pushi, \
-        jshort:  frame_stack_pushi, \
-        jint:    frame_stack_pushi, \
-        jfloat:  frame_stack_pushf, \
-        jlong:   frame_stack_pushl, \
-        jdouble: frame_stack_pushd, \
-        jref:    frame_stack_pushr, \
-        const struct slot *: frame_stack_push_slot \
-    )(f, v)
-
-// ----- loads
-static inline void frame_iload(struct frame *f, int index)
-{
-    slot_ensure_type(f->locals + index, JINT);
-    f->stack[++(f->stack_top)] = f->locals[index];
-}
-
-static inline void frame_lload(struct frame *f, int index)
-{
-    slot_ensure_type(f->locals + index, JLONG);
-    f->stack[++(f->stack_top)] = f->locals[index];
-    f->stack[++(f->stack_top)] = phslot;
-}
-
-static inline void frame_fload(struct frame *f, int index)
-{
-    slot_ensure_type(f->locals + index, JFLOAT);
-    f->stack[++(f->stack_top)] = f->locals[index];
-}
-
-static inline void frame_dload(struct frame *f, int index)
-{
-    slot_ensure_type(f->locals + index, JDOUBLE);
-    f->stack[++(f->stack_top)] = f->locals[index];
-    f->stack[++(f->stack_top)] = phslot;
-}
-
-static inline void frame_aload(struct frame *f, int index)
-{
-    slot_ensure_type(f->locals + index, JREF);
-    f->stack[++(f->stack_top)] = f->locals[index];
-}
+static inline jint    frame_stack_popi(struct frame *f) { f->stack--; return *(jint *)f->stack; }
+static inline jfloat  frame_stack_popf(struct frame *f) { f->stack--; return *(jfloat *)f->stack; }
+static inline jlong   frame_stack_popl(struct frame *f) { f->stack -= 2; return *(jlong *)f->stack; }
+static inline jdouble frame_stack_popd(struct frame *f) { f->stack -= 2; return *(jdouble *)f->stack; }
+static inline jref    frame_stack_popr(struct frame *f) { f->stack--; return *(jref *)f->stack; }
 
 void frame_iaload(struct frame *);
 void frame_faload(struct frame *);
@@ -249,43 +71,6 @@ void frame_baload(struct frame *);
 void frame_caload(struct frame *);
 void frame_saload(struct frame *);
 
-// ----- stores
-static inline void frame_istore(struct frame *f, int index)
-{
-    slot_ensure_type(frame_stack_top(f), JINT);
-    assert(f->stack_top >= 0);
-    f->locals[index] = f->stack[(f->stack_top)--];
-}
-
-static inline void frame_lstore(struct frame *f, int index)
-{
-    f->stack_top--; // jump placeholder
-    slot_ensure_type(frame_stack_top(f), JLONG);
-    assert(f->stack_top >= 0);
-    f->locals[index] = f->stack[(f->stack_top)--];
-}
-
-static inline void frame_fstore(struct frame *f, int index)
-{
-    slot_ensure_type(frame_stack_top(f), JFLOAT);
-    assert(f->stack_top >= 0);
-    f->locals[index] = f->stack[(f->stack_top)--];
-}
-
-static inline void frame_dstore(struct frame *f, int index)
-{
-    f->stack_top--; // jump placeholder
-    slot_ensure_type(frame_stack_top(f), JDOUBLE);
-    assert(f->stack_top >= 0);
-    f->locals[index] = f->stack[(f->stack_top)--];
-}
-
-static inline void frame_astore(struct frame *f, int index)
-{
-    slot_ensure_type(frame_stack_top(f), JREF);
-    assert(f->stack_top >= 0);
-    f->locals[index] = f->stack[(f->stack_top)--];
-}
 
 void frame_iastore(struct frame *);
 void frame_fastore(struct frame *);
@@ -295,59 +80,6 @@ void frame_aastore(struct frame *);
 void frame_bastore(struct frame *);
 void frame_castore(struct frame *);
 void frame_sastore(struct frame *);
-
-
-static inline void frame_proc_exception(struct frame *f)
-{
-    assert(f != NULL);
-    f->proc_exception_status = true;
-}
-
-/*
- * todo 正在处理异常？ 用 sf_is_procing_exception 会不会好一点
- */
-static inline bool frame_is_proc_exception(struct frame *f)
-{
-    assert(f != NULL);
-    return f->proc_exception_status;
-}
-
-static inline void frame_exe_over(struct frame *f)
-{
-    assert(f != NULL);
-    f->exe_status = true;
-}
-
-static inline bool frame_is_exe_over(struct frame *f)
-{
-    assert(f != NULL);
-    return f->exe_status;
-}
-
-/*
- * Interrupts the function of this StackFrame.
- */
-static inline void frame_interrupt(struct frame *f)
-{
-    assert(f != NULL);
-    f->interrupted_status = true;
-}
-
-/*
- * Tests whether the current StackFrame has been interrupted.
- * The interrupted status of the StackFrame is cleared by this method.
- *
- * return: true if the current StackFrame has been interrupted;
- *         false otherwise.
- */
-static inline bool frame_interrupted(struct frame *f)
-{
-    assert(f != NULL);
-
-    bool tmp = f->interrupted_status;
-    f->interrupted_status = false;
-    return tmp;
-}
 
 char* frame_to_string(const struct frame *f);
 

@@ -91,16 +91,6 @@ static inline void* vm_calloc(size_t n, size_t size)
  */
 #define NO_ACCESS
 
-/*
- * 用来表示字段和方法。
- * name_and_type 的名称来源于 Java 虚拟机规范文档.
- * todo 字段的描述符形式，方法的描述符形式
- */
-struct name_and_type {
-    const char *name;
-    const char *descriptor;
-};
-
 // The system Thread group.
 extern struct object *system_thread_group;
 

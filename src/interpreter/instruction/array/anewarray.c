@@ -5,6 +5,7 @@
 #include "../../../rtda/thread/frame.h"
 #include "../../../rtda/heap/arrobj.h"
 #include "../../../classfile/constant.h"
+#include "../../../rtda/thread/thread.h"
 
 /*
  * todo
@@ -17,8 +18,7 @@ void anewarray(struct frame *frame)
     struct class *curr_class = frame->method->clazz;
     jint arr_len = frame_stack_popi(frame);
     if (arr_len < 0) {
-        thread_throw_array_index_out_of_bounds_exception(frame->thread, arr_len);
-        return;
+        thread_throw_array_index_out_of_bounds_exception(arr_len);
     }
 
     // todo arrLen == 0 的情况

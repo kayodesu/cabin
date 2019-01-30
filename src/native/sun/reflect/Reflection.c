@@ -19,25 +19,29 @@ static void getCallerClass(struct frame *frame)
     // top0, current frame is executing getCallerClass()
     // top1, who called getCallerClass, the one who wants to know his caller.
     // top2, the caller of top1, the result.
-    struct frame *top0 = NULL;
-    struct frame *top1 = NULL;
-    struct frame *top2 = NULL;
-
-    int depth = thread_stack_depth(frame->thread);
-    for (int i = 0; i < depth; i++) {
-        // 过滤掉 shim frame
-        struct frame *sf = thread_stack_frame_from_top(frame->thread, i);
-        if (sf->type == SF_TYPE_NORMAL) {
-            if (top0 == NULL) {
-                top0 = sf;
-            } else if (top1 == NULL) {
-                top1 = sf;
-            } else {
-                top2 = sf;
-                break;
-            }
-        }
+//    struct frame *top0 = NULL;
+    struct frame *top1 = frame->prev;
+    if (top1 == NULL) {
+        VM_UNKNOWN_ERROR(""); // todo
+        return;
     }
+    struct frame *top2 = top1->prev;
+
+//    int depth = thread_stack_depth(frame->thread);
+//    for (int i = 0; i < depth; i++) {
+//        // 过滤掉 shim frame
+//        struct frame *sf = thread_stack_frame_from_top(frame->thread, i);
+////        if (sf->type == SF_TYPE_NORMAL) {
+//            if (top0 == NULL) {
+//                top0 = sf;
+//            } else if (top1 == NULL) {
+//                top1 = sf;
+//            } else {
+//                top2 = sf;
+//                break;
+//            }
+////        }
+//    }
     if (top2 == NULL) {
         VM_UNKNOWN_ERROR(""); // todo
         return;

@@ -11,7 +11,6 @@
 #include "../../loader/classloader.h"
 #include "../thread/frame.h"
 #include "../primitive_types.h"
-#include "../../vm_data.h"
 
 struct object;
 struct stack_frame;
@@ -20,7 +19,7 @@ struct field;
 
 struct constant_pool {
     u1 *type;
-    vm_data info;
+    slot_t *info;
 };
 
 // Macros for accessing constant pool entries
@@ -48,10 +47,10 @@ struct constant_pool {
 #define CP_METHOD_NAME CP_FIELD_NAME
 #define CP_METHOD_TYPE CP_FIELD_TYPE
 
-#define CP_INT(cp, i)                    VM_DATA_INT((cp)->info, i)
-#define CP_FLOAT(cp, i)                  VM_DATA_FLOAT((cp)->info, i)
-#define CP_LONG(cp, i)                   VM_DATA_LONG((cp)->info, i)
-#define CP_DOUBLE(cp, i)                 VM_DATA_DOUBLE((cp)->info, i)
+#define CP_INT(cp, i)                    ISLOT((cp)->info + (i))
+#define CP_FLOAT(cp, i)                  FSLOT((cp)->info + (i))
+#define CP_LONG(cp, i)                   LSLOT((cp)->info + (i))
+#define CP_DOUBLE(cp, i)                 DSLOT((cp)->info + (i))
 
 struct class {
     struct clsheader {
@@ -121,7 +120,7 @@ struct class {
      * 类型二统计为两个数量
      */
     int static_fields_count;
-    struct slot *static_fields_values; // 保存所有类变量的值
+    slot_t *static_fields_values; // 保存所有类变量的值
 
     // vtable 只保存虚方法。
     // 该类所有函数自有函数（除了private, static, final, abstract）和 父类的函数虚拟表。
@@ -170,20 +169,22 @@ void class_destroy(struct class *c);
  * 调用类的类初始化方法。
  * clinit are the static initialization blocks for the class, and static field initialization.
  */
-void class_clinit(struct class *c, struct thread *thread);
+void class_clinit(struct class *c);
 
-//struct slot* copy_inited_instance_fields_values(const struct class *c);
+//struct slot* copy_inited_instance_fields_values(const Class *c);
 
-void set_static_field_value_by_id(struct class *c, int id, const struct slot *value);
-void set_static_field_value_by_nt(struct class *c,
-                                  const char *name, const char *descriptor, const struct slot *value);
+void set_static_field_value(struct class *c, struct field *f, slot_t *value);
 
-const struct slot* get_static_field_value_by_id(const struct class *c, int id);
-const struct slot* get_static_field_value_by_nt(const struct class *c, const char *name, const char *descriptor);
+//void set_static_field_value_by_id(Class *c, int id, const struct slot *value);
+//void set_static_field_value_by_nt(Class *c,
+//                                  const char *name, const char *descriptor, const struct slot *value);
+
+const slot_t* get_static_field_value(const struct class *c, const struct field *f);
+//const struct slot* get_static_field_value_by_nt(const Class *c, const char *name, const char *descriptor);
 
 
-//struct field* jclass_get_field(struct class *c, const char *name, const char *descriptor);
-//struct field** jclass_get_fields(struct class *c, bool public_only);
+//struct field* jclass_get_field(Class *c, const char *name, const char *descriptor);
+//struct field** jclass_get_fields(Class *c, bool public_only);
 struct field* class_lookup_field(struct class *c, const char *name, const char *descriptor);
 struct field* class_lookup_static_field(struct class *c, const char *name, const char *descriptor);
 struct field* class_lookup_instance_field(struct class *c, const char *name, const char *descriptor);
@@ -199,7 +200,7 @@ struct method* class_get_declared_nonstatic_method(struct class *c, const char *
 struct method** class_get_declared_methods(struct class *c, const char *name, bool public_only, int *count);
 
 struct method* class_get_constructor(struct class *c, const char *descriptor);
-struct method** class_get_constructors(struct class *c, bool public_only, int *count);
+struct method** class_get_constructors(struct class*c, bool public_only, int *count);
 
 static inline struct method* class_search_vtable(struct class *c, int vtable_index)
 {
@@ -238,7 +239,7 @@ char *class_to_string(const struct class *c);
  */
 char* get_arr_class_name(const char *class_name);
 
-//struct class* jclass_array_class(struct class *c);
+//Class* jclass_array_class(Class *c);
 
 /*
  * Returns the representing the component class of an array class.
@@ -251,12 +252,12 @@ static inline bool class_is_array(const struct class *c)
     return c != NULL && c->class_name[0] == '[';
 }
 
-//static inline bool is_string(const struct class *c)
+//static inline bool is_string(const Class *c)
 //{
 //    return c != NULL && strcmp(c->class_name, "java/lang/String") == 0;  // todo 对不对
 //}
 //
-//static inline bool is_class(const struct class *c)
+//static inline bool is_class(const Class *c)
 //{
 //    return c != NULL && strcmp(c->class_name, "java/lang/Class") == 0;  // todo 对不对
 //}
