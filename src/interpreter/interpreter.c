@@ -90,27 +90,6 @@ static char* instruction_names[] = {
 };
 #endif
 
-
-/*
- * 标识当前指令是否有 wide 扩展。
- * 只对
- * iload, fload, aload, lload, dload,
- * istore, fstore, astore, lstore, dstore,
- * ret, iinc
- * 有效。
- * 以上指令执行前需检查此标志，执行后需复位（置为false）此标志。
- */
-static bool wide_extending = false; // todo 多线程并发访问有问题！！！！！！！！！！
-
-static jint fetch_wide_index(struct frame *frame)
-{
-    if (wide_extending) {
-        wide_extending = false; // recover
-        return bcr_readu2(&frame->reader);
-    }
-    return bcr_readu1(&frame->reader);
-}
-
 // constant instructions -----------------------------------------------------------------------------------------------
 static void __ldc(struct frame *frame, int index)
 {
@@ -338,22 +317,6 @@ static inline void lushr(struct frame *frame)
     frame_stack_pushl(frame, value >> shift);
 }
 
-static inline void iinc(struct frame *frame)
-{
-    jint index, value;
-
-    if (wide_extending) {
-        index = bcr_readu2(&frame->reader);
-        value = bcr_reads2(&frame->reader);
-        wide_extending = false;
-    } else {
-        index = bcr_readu1(&frame->reader);
-        value = bcr_reads1(&frame->reader);
-    }
-
-    ISLOT(frame->locals + index) = ISLOT(frame->locals + index) + value;
-}
-
 // extended instructions -----------------------------------------------------------------------------------------------
 void multianewarray(struct frame *frame);
 
@@ -391,6 +354,16 @@ void monitorexit(struct frame *);
 // --------------------------------------------------------
 static slot_t * exec()
 {
+    /*
+     * 标识当前指令是否有 wide 扩展。
+     * 只对
+     * iload, fload, aload, lload, dload,
+     * istore, fstore, astore, lstore, dstore,
+     * ret, iinc
+     * 有效。
+     * 以上指令执行前需检查此标志，执行后需复位（置为false）此标志。
+     */
+    bool wide_extending = false;
     struct thread *thread = thread_self();
 
     struct method *resolved_method;
@@ -472,105 +445,68 @@ static slot_t * exec()
                 ldc2_w(frame);
                 break;
 
-#undef ILOAD
-#undef LLOAD
-#undef FLOAD
-#undef DLOAD
-#undef ALOAD
-#define ILOAD(index) frame_stack_pushi(frame, ISLOT(frame->locals + index))
-#define LLOAD(index) frame_stack_pushl(frame, LSLOT(frame->locals + index))
-#define FLOAD(index) frame_stack_pushf(frame, FSLOT(frame->locals + index))
-#define DLOAD(index) frame_stack_pushd(frame, DSLOT(frame->locals + index))
-#define ALOAD(index) frame_stack_pushr(frame, RSLOT(frame->locals + index))
-            case OPC_ILOAD: // iload
-                ILOAD(fetch_wide_index(frame));
+#define FETCH_WIDE_INDEX \
+    int index; \
+    if (wide_extending) { \
+        wide_extending = false; /* recover */  \
+        index = bcr_readu2(&frame->reader); \
+    } else { \
+        index = bcr_readu1(&frame->reader); \
+    }
+            case OPC_ILOAD:
+            case OPC_FLOAD:
+            case OPC_ALOAD: {
+                FETCH_WIDE_INDEX
+                *frame->stack++ = frame->locals[index];
                 break;
-            case OPC_LLOAD: // lload
-                LLOAD(fetch_wide_index(frame));
+            }
+            case OPC_LLOAD:
+            case OPC_DLOAD: {
+                FETCH_WIDE_INDEX
+                *frame->stack++ = frame->locals[index];
+                *frame->stack++ = frame->locals[index + 1];
                 break;
-            case OPC_FLOAD: // fload
-                FLOAD(fetch_wide_index(frame));
-                break;
-            case OPC_DLOAD: // dload
-                DLOAD(fetch_wide_index(frame));
-                break;
-            case OPC_ALOAD: // aload
-                ALOAD(fetch_wide_index(frame));
-                break;
-//tload:
-//{
-//    int index;
-//    if (wide_extending) {
-//        wide_extending = false; // recover
-//        index = bcr_readu2(&frame->reader);
-//    } else {
-//        index = bcr_readu1(&frame->reader);
-//    }
-//    break;
-//}
+            }
             case OPC_ILOAD_0:
-                ILOAD(0);
+            case OPC_FLOAD_0:
+            case OPC_ALOAD_0:
+                *frame->stack++ = frame->locals[0];
                 break;
             case OPC_ILOAD_1:
-                ILOAD(1);
+            case OPC_FLOAD_1:
+            case OPC_ALOAD_1:
+                *frame->stack++ = frame->locals[1];
                 break;
             case OPC_ILOAD_2:
-                ILOAD(2);
+            case OPC_FLOAD_2:
+            case OPC_ALOAD_2:
+                *frame->stack++ = frame->locals[2];
                 break;
             case OPC_ILOAD_3:
-                ILOAD(3);
+            case OPC_FLOAD_3:
+            case OPC_ALOAD_3:
+                *frame->stack++ = frame->locals[3];
                 break;
 
             case OPC_LLOAD_0:
-                LLOAD(0);
+            case OPC_DLOAD_0:
+                *frame->stack++ = frame->locals[0];
+                *frame->stack++ = frame->locals[1];
                 break;
             case OPC_LLOAD_1:
-                LLOAD(1);
+            case OPC_DLOAD_1:
+                *frame->stack++ = frame->locals[1];
+                *frame->stack++ = frame->locals[2];
                 break;
             case OPC_LLOAD_2:
-                LLOAD(2);
+            case OPC_DLOAD_2:
+                *frame->stack++ = frame->locals[2];
+                *frame->stack++ = frame->locals[3];
                 break;
             case OPC_LLOAD_3:
-                LLOAD(3);
-                break;
-
-            case OPC_FLOAD_0:
-                FLOAD(0);
-                break;
-            case OPC_FLOAD_1:
-                FLOAD(1);
-                break;
-            case OPC_FLOAD_2:
-                FLOAD(2);
-                break;
-            case OPC_FLOAD_3:
-                FLOAD(3);
-                break;
-
-            case OPC_DLOAD_0:
-                DLOAD(0);
-                break;
-            case OPC_DLOAD_1:
-                DLOAD(1);
-                break;
-            case OPC_DLOAD_2:
-                DLOAD(2);
-                break;
             case OPC_DLOAD_3:
-                DLOAD(3);
-                break;
-
-            case OPC_ALOAD_0:
-                ALOAD(0);
-                break;
-            case OPC_ALOAD_1:
-                ALOAD(1);
-                break;
-            case OPC_ALOAD_2:
-                ALOAD(2);
-                break;
-            case OPC_ALOAD_3:
-                ALOAD(3);
+                *frame->stack++ = frame->locals[3];
+                *frame->stack++ = frame->locals[4];
                 break;
 
             case OPC_IALOAD: {
@@ -599,95 +535,60 @@ static slot_t * exec()
                 frame_saload(frame);
                 break;
 
-#undef ISTORE
-#undef LSTORE
-#undef FSTORE
-#undef DSTORE
-#undef ASTORE
-#define ISTORE(index) ISLOT(frame->locals + index) = frame_stack_popi(frame)
-#define LSTORE(index) LSLOT(frame->locals + index) = frame_stack_popl(frame)
-#define FSTORE(index) FSLOT(frame->locals + index) = frame_stack_popf(frame)
-#define DSTORE(index) DSLOT(frame->locals + index) = frame_stack_popd(frame)
-#define ASTORE(index) RSLOT(frame->locals + index) = frame_stack_popr(frame)
             case OPC_ISTORE:
-                ISTORE(fetch_wide_index(frame));
-                break;
-            case OPC_LSTORE:
-                LSTORE(fetch_wide_index(frame));
-                break;
             case OPC_FSTORE:
-                FSTORE(fetch_wide_index(frame));
+            case OPC_ASTORE: {
+                FETCH_WIDE_INDEX
+                frame->locals[index] = *--frame->stack;
                 break;
-            case OPC_DSTORE:
-                DSTORE(fetch_wide_index(frame));
+            }
+            case OPC_LSTORE:
+            case OPC_DSTORE: {
+                FETCH_WIDE_INDEX
+                frame->locals[index + 1] = *--frame->stack;
+                frame->locals[index] = *--frame->stack;
                 break;
-            case OPC_ASTORE:
-                ASTORE(fetch_wide_index(frame));
-                break;
-
+            }
             case OPC_ISTORE_0:
-                ISTORE(0);
+            case OPC_FSTORE_0:
+            case OPC_ASTORE_0:
+                frame->locals[0] = *--frame->stack;
                 break;
             case OPC_ISTORE_1:
-                ISTORE(1);
+            case OPC_FSTORE_1:
+            case OPC_ASTORE_1:
+                frame->locals[1] = *--frame->stack;
                 break;
             case OPC_ISTORE_2:
-                ISTORE(2);
+            case OPC_FSTORE_2:
+            case OPC_ASTORE_2:
+                frame->locals[2] = *--frame->stack;
                 break;
             case OPC_ISTORE_3:
-                ISTORE(3);
+            case OPC_FSTORE_3:
+            case OPC_ASTORE_3:
+                frame->locals[3] = *--frame->stack;
                 break;
 
             case OPC_LSTORE_0:
-                LSTORE(0);
+            case OPC_DSTORE_0:
+                frame->locals[1] = *--frame->stack;
+                frame->locals[0] = *--frame->stack;
                 break;
             case OPC_LSTORE_1:
-                LSTORE(1);
+            case OPC_DSTORE_1:
+                frame->locals[2] = *--frame->stack;
+                frame->locals[1] = *--frame->stack;
                 break;
             case OPC_LSTORE_2:
-                LSTORE(2);
+            case OPC_DSTORE_2:
+                frame->locals[3] = *--frame->stack;
+                frame->locals[2] = *--frame->stack;
                 break;
             case OPC_LSTORE_3:
-                LSTORE(3);
-                break;
-
-            case OPC_FSTORE_0:
-                FSTORE(0);
-                break;
-            case OPC_FSTORE_1:
-                FSTORE(1);
-                break;
-            case OPC_FSTORE_2:
-                FSTORE(2);
-                break;
-            case OPC_FSTORE_3:
-                FSTORE(3);
-                break;
-
-            case OPC_DSTORE_0:
-                DSTORE(0);
-                break;
-            case OPC_DSTORE_1:
-                DSTORE(1);
-                break;
-            case OPC_DSTORE_2:
-                DSTORE(2);
-                break;
             case OPC_DSTORE_3:
-                DSTORE(3);
-                break;
-
-            case OPC_ASTORE_0:
-                ASTORE(0);
-                break;
-            case OPC_ASTORE_1:
-                ASTORE(1);
-                break;
-            case OPC_ASTORE_2:
-                ASTORE(2);
-                break;
-            case OPC_ASTORE_3:
-                ASTORE(3);
+                frame->locals[4] = *--frame->stack;
+                frame->locals[3] = *--frame->stack;
                 break;
 
             case OPC_IASTORE:
@@ -897,9 +798,21 @@ do { \
                 BINARY_OP(jlong, ^);
                 break;
 
-            case OPC_IINC:
-                iinc(frame);
+            case OPC_IINC: {
+                jint index, value;
+
+                if (wide_extending) {
+                    index = bcr_readu2(&frame->reader);
+                    value = bcr_reads2(&frame->reader);
+                    wide_extending = false;
+                } else {
+                    index = bcr_readu1(&frame->reader);
+                    value = bcr_reads1(&frame->reader);
+                }
+
+                ISLOT(frame->locals + index) = ISLOT(frame->locals + index) + value;
                 break;
+            }
 
 #undef x2y
 #define x2y(x, y) frame_stack_push##y(frame, x##2##y(frame_stack_pop##x(frame)))
