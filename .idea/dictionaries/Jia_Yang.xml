@@ -57,6 +57,7 @@
       <w>lstr</w>
       <w>lsun</w>
       <w>mallocs</w>
+      <w>memcpy</w>
       <w>methodref</w>
       <w>nullslot</w>
       <w>oper</w>

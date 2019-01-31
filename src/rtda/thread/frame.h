@@ -24,7 +24,6 @@ struct frame {
     bool vm_invoke;
 
     slot_t *stack; // operand stack
-
     slot_t locals[]; // local variables
 };
 
@@ -62,27 +61,6 @@ static inline jlong   frame_stack_popl(struct frame *f) { f->stack -= 2; return 
 static inline jdouble frame_stack_popd(struct frame *f) { f->stack -= 2; return *(jdouble *)f->stack; }
 static inline jref    frame_stack_popr(struct frame *f) { f->stack--; return *(jref *)f->stack; }
 
-void frame_iaload(struct frame *);
-void frame_faload(struct frame *);
-void frame_laload(struct frame *);
-void frame_daload(struct frame *);
-void frame_aaload(struct frame *);
-void frame_baload(struct frame *);
-void frame_caload(struct frame *);
-void frame_saload(struct frame *);
-
-
-void frame_iastore(struct frame *);
-void frame_fastore(struct frame *);
-void frame_lastore(struct frame *);
-void frame_dastore(struct frame *);
-void frame_aastore(struct frame *);
-void frame_bastore(struct frame *);
-void frame_castore(struct frame *);
-void frame_sastore(struct frame *);
-
 char* frame_to_string(const struct frame *f);
-
-void frame_destroy(struct frame *f);
 
 #endif //JVM_STACK_FRAME_H
