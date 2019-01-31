@@ -15,17 +15,15 @@
  */
 void getfield(struct frame *frame)
 {
-    struct class *curr_class = frame->method->clazz;
-
     int index = bcr_readu2(&frame->reader);
-    struct field *f = resolve_field(curr_class, index);
+    struct field *f = resolve_field(frame->method->clazz, index);
 
     jref obj = frame_stack_popr(frame);
     if (obj == NULL) {
         thread_throw_null_pointer_exception();
     }
 
-    const slot_t *value = get_instance_field_value_by_id(obj, f->id);
+    const slot_t *value = get_instance_field_value(obj, f);
     *frame->stack++ = value[0];
     if (f->category_two) {
         *frame->stack++ = value[1];

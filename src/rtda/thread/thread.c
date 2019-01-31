@@ -50,7 +50,7 @@ void create_main_thread(struct classloader *loader)
 //    thread_invoke_method(main_thread, class_get_constructor(jltg_class, "()V"), &arg);
     class_clinit(jltg_class);
 
-    exec_java_func(class_get_constructor(jltg_class, "()V"), (slot_t *) &system_thread_group, true);
+    exec_java_func(class_get_constructor(jltg_class, "()V"), (slot_t *) &system_thread_group);
 
     // from java/lang/Thread.java
     // public final static int MIN_PRIORITY = 1;
@@ -73,7 +73,7 @@ void create_main_thread(struct classloader *loader)
     };
 //    thread_invoke_method(main_thread, constructor, args);
     class_clinit(jlt_class);
-    exec_java_func(constructor, args, true);
+    exec_java_func(constructor, args);
 }
 #endif
 
@@ -84,12 +84,7 @@ struct thread *thread_create(struct classloader *loader, struct object *jltobj)
     assert(loader != NULL);
 
     struct thread *thread = vm_malloc(sizeof( struct thread));
-//    vector_init(&thread->vm_stack);
     thread->jltobj = jltobj;
-    for (int i = 0; i < FRMHUB_SLOTS_COUNT_MAX; i++) {
-//        vector_init(thread->frame_cache + i);
-    }
-
     thread->top_frame = NULL;
 
 //    struct class *jlt_class = classloader_load_class(loader, "java/lang/Thread");
@@ -211,7 +206,7 @@ void thread_handle_uncaught_exception(struct object *exception)
 //    vector_clear(&thread->vm_stack);
     thread->top_frame = NULL; // clear vm_stack
     struct method *pst = class_lookup_instance_method(exception->clazz, "printStackTrace", "()V");
-    exec_java_func(pst, (slot_t *) &exception, true);
+    exec_java_func(pst, (slot_t *) &exception);
 }
 
 _Noreturn void thread_throw_null_pointer_exception()

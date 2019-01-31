@@ -115,8 +115,7 @@ static void initProperties(struct frame *frame)
                 strobj_create(sys_props[i][1])
         };
 
-//        thread_invoke_method_with_shim(frame->thread, set_property, args);
-        exec_java_func(set_property, args, true);
+        exec_java_func(set_property, args);
     }
 
     // 返回参数
@@ -127,7 +126,6 @@ static void initProperties(struct frame *frame)
 static void setIn0(struct frame *frame)
 {
     jref in = frame_locals_getr(frame, 0);
-//    struct slot s = rslot(in);
     struct class *c = frame->method->clazz;
     set_static_field_value(c, class_lookup_field(c, "in", "Ljava/io/InputStream;"), (slot_t *) &in);
 }

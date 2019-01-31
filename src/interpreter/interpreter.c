@@ -10,6 +10,7 @@
 #include "../rtda/heap/arrobj.h"
 #include "../rtda/ma/resolve.h"
 #include "../rtda/ma/access.h"
+#include "interpreter.h"
 
 #if (PRINT_LEVEL >= 3)
 // the mapping of instructions's code and name
@@ -394,86 +395,83 @@ static slot_t * exec()
 
     struct method *resolved_method;
     slot_t *args;
+    int ret_value_slot_count;
 
     struct frame *frame = thread->top_frame;
     print2("executing frame(%p): %s, pc = %lu\n", frame, frame_to_string(frame), frame->reader.pc);
 
     while (frame_has_more(frame)) {
         u1 opcode = frame_readu1(frame);
-                print3("%d(0x%x), %s, pc = %lu\n", opcode, opcode, instruction_names[opcode], frame->reader.pc);
+        print3("%d(0x%x), %s, pc = %lu\n", opcode, opcode, instruction_names[opcode], frame->reader.pc);
 
         switch (opcode) {
-            case 0x00:
-                break; // nop
-
-                // Constants
-            case 0x01:
+            case OPC_NOP:
+                break;
+            case OPC_ACONST_NULL:
                 frame_stack_pushr(frame, NULL);
-                break; // aconst_null
-
-            case 0x02:
+                break;
+            case OPC_ICONST_M1:
                 frame_stack_pushi(frame, -1);
-                break;   // iconst_m1
-            case 0x03:
+                break;
+            case OPC_ICONST_0:
                 frame_stack_pushi(frame, 0);
-                break; // iconst_0
-            case 0x04:
+                break;
+            case OPC_ICONST_1:
                 frame_stack_pushi(frame, 1);
-                break; // iconst_1
-            case 0x05:
+                break;
+            case OPC_ICONST_2:
                 frame_stack_pushi(frame, 2);
-                break; // iconst_2
-            case 0x06:
+                break;
+            case OPC_ICONST_3:
                 frame_stack_pushi(frame, 3);
-                break; // iconst_3
-            case 0x07:
+                break;
+            case OPC_ICONST_4:
                 frame_stack_pushi(frame, 4);
-                break; // iconst_4
-            case 0x08:
+                break;
+            case OPC_ICONST_5:
                 frame_stack_pushi(frame, 5);
-                break; // iconst_5
+                break;
 
-            case 0x09:
+            case OPC_LCONST_0:
                 frame_stack_pushl(frame, 0);
-                break; // lconst_0
-            case 0x0a:
+                break;
+            case OPC_LCONST_1:
                 frame_stack_pushl(frame, 1);
-                break; // lconst_1
+                break;
 
-            case 0x0b:
+            case OPC_FCONST_0:
                 frame_stack_pushf(frame, 0);
-                break; // fconst_0
-            case 0x0c:
+                break;
+            case OPC_FCONST_1:
                 frame_stack_pushf(frame, 1);
-                break; // fconst_1
-            case 0x0d:
+                break;
+            case OPC_FCONST_2:
                 frame_stack_pushf(frame, 2);
-                break; // fconst_2
+                break;
 
-            case 0x0e:
+            case OPC_DCONST_0:
                 frame_stack_pushd(frame, 0);
-                break; // dconst_0
-            case 0x0f:
+                break;
+            case OPC_DCONST_1:
                 frame_stack_pushd(frame, 1);
-                break; // dconst_1
+                break;
 
-            case 0x10:
+            case OPC_BIPUSH: // Byte Integer push
                 frame_stack_pushi(frame, frame_readu1(frame));
-                break; // bipush, Byte Integer push
-            case 0x11:
+                break;
+            case OPC_SIPUSH: // Short Integer push
                 frame_stack_pushi(frame, frame_readu2(frame));
-                break; // sipush, Short Integer push
-            case 0x12:
+                break;
+            case OPC_LDC:
                 __ldc(frame, frame_readu1(frame));
-                break; // ldc
-            case 0x13:
+                break;
+            case OPC_LDC_W:
                 __ldc(frame, frame_readu2(frame));
-                break; // ldc_w
-            case 0x14:
+                break;
+            case OPC_LDC2_W:
                 ldc2_w(frame);
-                break; // ldc2_w
+                break;
 
-                // Loads
 #undef ILOAD
 #undef LLOAD
 #undef FLOAD
@@ -484,113 +482,123 @@ static slot_t * exec()
 #define FLOAD(index) frame_stack_pushf(frame, FSLOT(frame->locals + index))
 #define DLOAD(index) frame_stack_pushd(frame, DSLOT(frame->locals + index))
 #define ALOAD(index) frame_stack_pushr(frame, RSLOT(frame->locals + index))
-            case 0x15:
+            case OPC_ILOAD: // iload
                 ILOAD(fetch_wide_index(frame));
-                break; // iload
-            case 0x16:
+                break;
+            case OPC_LLOAD: // lload
                 LLOAD(fetch_wide_index(frame));
-                break; // lload
-            case 0x17:
+                break;
+            case OPC_FLOAD: // fload
                 FLOAD(fetch_wide_index(frame));
-                break; // fload
-            case 0x18:
+                break;
+            case OPC_DLOAD: // dload
                 DLOAD(fetch_wide_index(frame));
-                break; // dload
-            case 0x19:
+                break;
+            case OPC_ALOAD: // aload
                 ALOAD(fetch_wide_index(frame));
-                break; // aload
-
-            case 0x1a:
+                break;
+//tload:
+//{
+//    int index;
+//    if (wide_extending) {
+//        wide_extending = false; // recover
+//        index = bcr_readu2(&frame->reader);
+//    } else {
+//        index = bcr_readu1(&frame->reader);
+//    }
+//    break;
+//}
+            case OPC_ILOAD_0:
                 ILOAD(0);
-                break; // iload_0
-            case 0x1b:
+                break;
+            case OPC_ILOAD_1:
                 ILOAD(1);
-                break; // iload_1
-            case 0x1c:
+                break;
+            case OPC_ILOAD_2:
                 ILOAD(2);
-                break; // iload_2
-            case 0x1d:
+                break;
+            case OPC_ILOAD_3:
                 ILOAD(3);
-                break; // iload_3
+                break;
 
-            case 0x1e:
+            case OPC_LLOAD_0:
                 LLOAD(0);
-                break; // lload_0
-            case 0x1f:
+                break;
+            case OPC_LLOAD_1:
                 LLOAD(1);
-                break; // lload_1
-            case 0x20:
+                break;
+            case OPC_LLOAD_2:
                 LLOAD(2);
-                break; // lload_2
-            case 0x21:
+                break;
+            case OPC_LLOAD_3:
                 LLOAD(3);
-                break; // lload_3
+                break;
 
-            case 0x22:
+            case OPC_FLOAD_0:
                 FLOAD(0);
-                break; // fload_0
-            case 0x23:
+                break;
+            case OPC_FLOAD_1:
                 FLOAD(1);
-                break; // fload_1
-            case 0x24:
+                break;
+            case OPC_FLOAD_2:
                 FLOAD(2);
-                break; // fload_2
-            case 0x25:
+                break;
+            case OPC_FLOAD_3:
                 FLOAD(3);
-                break; // fload_3
+                break;
 
-            case 0x26:
+            case OPC_DLOAD_0:
                 DLOAD(0);
-                break; // dload_0
-            case 0x27:
+                break;
+            case OPC_DLOAD_1:
                 DLOAD(1);
-                break; // dload_1
-            case 0x28:
+                break;
+            case OPC_DLOAD_2:
                 DLOAD(2);
-                break; // dload_2
-            case 0x29:
+                break;
+            case OPC_DLOAD_3:
                 DLOAD(3);
-                break; // dload_3
+                break;
 
-            case 0x2a:
+            case OPC_ALOAD_0:
                 ALOAD(0);
-                break; // aload_0
-            case 0x2b:
+                break;
+            case OPC_ALOAD_1:
                 ALOAD(1);
-                break; // aload_1
-            case 0x2c:
+                break;
+            case OPC_ALOAD_2:
                 ALOAD(2);
-                break; // aload_2
-            case 0x2d:
+                break;
+            case OPC_ALOAD_3:
                 ALOAD(3);
-                break; // aload_3
+                break;
 
-            case 0x2e:
+            case OPC_IALOAD: {
                 frame_iaload(frame);
-                break; // iaload
-            case 0x2f:
+                break;
+            }
+            case OPC_LALOAD:
                 frame_laload(frame);
-                break; // laload
-            case 0x30:
+                break;
+            case OPC_FALOAD:
                 frame_faload(frame);
-                break; // faload
-            case 0x31:
+                break;
+            case OPC_DALOAD:
                 frame_daload(frame);
-                break; // daload
-            case 0x32:
+                break;
+            case OPC_AALOAD:
                 frame_aaload(frame);
-                break; // aaload
-            case 0x33:
+                break;
+            case OPC_BALOAD:
                 frame_baload(frame);
-                break; // baload
-            case 0x34:
+                break;
+            case OPC_CALOAD:
                 frame_caload(frame);
-                break; // caload
-            case 0x35:
+                break;
+            case OPC_SALOAD:
                 frame_saload(frame);
-                break; // saload
+                break;
 
-                // Stores
 #undef ISTORE
 #undef LSTORE
 #undef FSTORE
@@ -601,146 +609,141 @@ static slot_t * exec()
 #define FSTORE(index) FSLOT(frame->locals + index) = frame_stack_popf(frame)
 #define DSTORE(index) DSLOT(frame->locals + index) = frame_stack_popd(frame)
 #define ASTORE(index) RSLOT(frame->locals + index) = frame_stack_popr(frame)
-            case 0x36:
+            case OPC_ISTORE:
                 ISTORE(fetch_wide_index(frame));
-                break; // istore
-            case 0x37:
+                break;
+            case OPC_LSTORE:
                 LSTORE(fetch_wide_index(frame));
-                break; // lstore
-            case 0x38:
+                break;
+            case OPC_FSTORE:
                 FSTORE(fetch_wide_index(frame));
-                break; // fstore
-            case 0x39:
+                break;
+            case OPC_DSTORE:
                 DSTORE(fetch_wide_index(frame));
-                break; // dstore
-            case 0x3a:
+                break;
+            case OPC_ASTORE:
                 ASTORE(fetch_wide_index(frame));
-                break; // astore
+                break;
 
-            case 0x3b:
+            case OPC_ISTORE_0:
                 ISTORE(0);
-                break; // istore_0
-            case 0x3c:
+                break;
+            case OPC_ISTORE_1:
                 ISTORE(1);
-                break; // istore_1
-            case 0x3d:
+                break;
+            case OPC_ISTORE_2:
                 ISTORE(2);
-                break; // istore_2
-            case 0x3e:
+                break;
+            case OPC_ISTORE_3:
                 ISTORE(3);
-                break; // istore_3
+                break;
 
-            case 0x3f:
+            case OPC_LSTORE_0:
                 LSTORE(0);
-                break; // lstore_0
-            case 0x40:
+                break;
+            case OPC_LSTORE_1:
                 LSTORE(1);
-                break; // lstore_1
-            case 0x41:
+                break;
+            case OPC_LSTORE_2:
                 LSTORE(2);
-                break; // lstore_2
-            case 0x42:
+                break;
+            case OPC_LSTORE_3:
                 LSTORE(3);
-                break; // lstore_3
+                break;
 
-            case 0x43:
+            case OPC_FSTORE_0:
                 FSTORE(0);
-                break; // fstore_0
-            case 0x44:
+                break;
+            case OPC_FSTORE_1:
                 FSTORE(1);
-                break; // fstore_1
-            case 0x45:
+                break;
+            case OPC_FSTORE_2:
                 FSTORE(2);
-                break; // fstore_2
-            case 0x46:
+                break;
+            case OPC_FSTORE_3:
                 FSTORE(3);
-                break; // fstore_3
+                break;
 
-            case 0x47:
+            case OPC_DSTORE_0:
                 DSTORE(0);
-                break; // dstore_0
-            case 0x48:
+                break;
+            case OPC_DSTORE_1:
                 DSTORE(1);
-                break; // dstore_1
-            case 0x49:
+                break;
+            case OPC_DSTORE_2:
                 DSTORE(2);
-                break; // dstore_2
-            case 0x4a:
+                break;
+            case OPC_DSTORE_3:
                 DSTORE(3);
-                break; // dstore_3
+                break;
 
-            case 0x4b:
+            case OPC_ASTORE_0:
                 ASTORE(0);
-                break; // astore_0
-            case 0x4c:
+                break;
+            case OPC_ASTORE_1:
                 ASTORE(1);
-                break; // astore_1
-            case 0x4d:
+                break;
+            case OPC_ASTORE_2:
                 ASTORE(2);
-                break; // astore_2
-            case 0x4e:
+                break;
+            case OPC_ASTORE_3:
                 ASTORE(3);
-                break; // astore_3
+                break;
 
-            case 0x4f:
+            case OPC_IASTORE:
                 frame_iastore(frame);
-                break; // iastore
-            case 0x50:
+                break;
+            case OPC_LASTORE:
                 frame_lastore(frame);
-                break; // lastore
-            case 0x51:
+                break;
+            case OPC_FASTORE:
                 frame_fastore(frame);
-                break; // fastore
-            case 0x52:
+                break;
+            case OPC_DASTORE:
                 frame_dastore(frame);
-                break; // dastore
-            case 0x53:
+                break;
+            case OPC_AASTORE:
                 frame_aastore(frame);
-                break; // aastore
-            case 0x54:
+                break;
+            case OPC_BASTORE:
                 frame_bastore(frame);
-                break; // bastore
-            case 0x55:
+                break;
+            case OPC_CASTORE:
                 frame_castore(frame);
-                break; // castore
-            case 0x56:
+                break;
+            case OPC_SASTORE:
                 frame_sastore(frame);
-                break; // sastore
+                break;
 
-                // Stack
-            case 0x57:
+            case OPC_POP:
                 frame->stack--;
-                break;    // pop
-            case 0x58:
+                break;
+            case OPC_POP2:
                 frame->stack -= 2;
-                break; // pop2
-            case 0x59:
+                break;
+            case OPC_DUP:
                 frame->stack[0] = frame->stack[-1];
                 frame->stack++;
-//                dup(frame);
-                break;            // dup
-            case 0x5a:
+                break;
+            case OPC_DUP_X1:
                 frame->stack[0] = frame->stack[-1];
                 frame->stack[-1] = frame->stack[-2];
                 frame->stack[-2] = frame->stack[0];
                 frame->stack++;
-//                dup_x1(frame);
-                break;         // dup_x1
-            case 0x5b:
+                break;
+            case OPC_DUP_X2:
                 frame->stack[0] = frame->stack[-1];
                 frame->stack[-1] = frame->stack[-2];
                 frame->stack[-2] = frame->stack[-3];
                 frame->stack[-3] = frame->stack[0];
                 frame->stack++;
-//                dup_x2(frame);
-                break;         // dup_x2
-            case 0x5c:
+                break;
+            case OPC_DUP2:
                 frame->stack[0] = frame->stack[-2];
                 frame->stack[1] = frame->stack[-1];
                 frame->stack += 2;
-//                dup2(frame);
-                break;          // dup2
-            case 0x5d:
+                break;
+            case OPC_DUP2_X1:
                 // ..., value3, value2, value1 →
                 // ..., value2, value1, value3, value2, value1
                 frame->stack[1] = frame->stack[-1];
@@ -749,9 +752,8 @@ static slot_t * exec()
                 frame->stack[-2] = frame->stack[1];
                 frame->stack[-3] = frame->stack[0];
                 frame->stack += 2;
-//                dup2_x1(frame);
-                break;        // dup2_x1
-            case 0x5e:
+                break;
+            case OPC_DUP2_X2:
                 // ..., value4, value3, value2, value1 →
                 // ..., value2, value1, value4, value3, value2, value1
                 frame->stack[1] = frame->stack[-1];
@@ -761,381 +763,366 @@ static slot_t * exec()
                 frame->stack[-3] = frame->stack[1];
                 frame->stack[-4] = frame->stack[0];
                 frame->stack += 2;
-//                dup2_x2(frame);
-                break;        // dup2_x2
-            case 0x5f: {
+                break;
+            case OPC_SWAP: {
                 slot_t tmp = frame->stack[-1];
                 frame->stack[-1] = frame->stack[-2];
                 frame->stack[-2] = tmp;
-//                __swap(frame);
                 break;
-            } // swap
+            }
 
-                // Math
 #undef BINARY_OP
 #define BINARY_OP(type, oper) \
 do { \
-frame->stack -= SLOTS(type);\
-((type *) frame->stack)[-1] = ((type *) frame->stack)[-1] oper ((type *) frame->stack)[0]; \
+    frame->stack -= SLOTS(type);\
+    ((type *) frame->stack)[-1] = ((type *) frame->stack)[-1] oper ((type *) frame->stack)[0]; \
 } while(false)
-            case 0x60:
+            case OPC_IADD:
                 BINARY_OP(jint, +);
-                break; // iadd
-            case 0x61:
+                break;
+            case OPC_LADD:
                 BINARY_OP(jlong, +);
-                break; // ladd
-            case 0x62:
+                break;
+            case OPC_FADD:
                 BINARY_OP(jfloat, +);
-                break;  // fadd
-            case 0x63:
+                break;
+            case OPC_DADD:
                 BINARY_OP(jdouble, +);
-                break; // dadd
+                break;
 
-            case 0x64:
+            case OPC_ISUB:
                 BINARY_OP(jint, -);
-                break;    // isub
-            case 0x65:
+                break;
+            case OPC_LSUB:
                 BINARY_OP(jlong, -);
-                break;   // lsub
-            case 0x66:
+                break;
+            case OPC_FSUB:
                 BINARY_OP(jfloat, -);
-                break;  // fsub
-            case 0x67:
+                break;
+            case OPC_DSUB:
                 BINARY_OP(jdouble, -);
-                break; // dsub
+                break;
 
-            case 0x68:
+            case OPC_IMUL:
                 BINARY_OP(jint, *);
-                break;    // imul
-            case 0x69:
+                break;
+            case OPC_LMUL:
                 BINARY_OP(jlong, *);
-                break;   // lmul
-            case 0x6a:
+                break;
+            case OPC_FMUL:
                 BINARY_OP(jfloat, *);
-                break;  // fmul
-            case 0x6b:
+                break;
+            case OPC_DMUL:
                 BINARY_OP(jdouble, *);
-                break; // dmul
+                break;
 
-            case 0x6c:
+            case OPC_IDIV:
                 BINARY_OP(jint, /);
-                break;    // idiv
-            case 0x6d:
+                break;
+            case OPC_LDIV:
                 BINARY_OP(jlong, /);
-                break;   // ldiv
-            case 0x6e:
+                break;
+            case OPC_FDIV:
                 BINARY_OP(jfloat, /);
-                break;  // fdiv
-            case 0x6f:
+                break;
+            case OPC_DDIV:
                 BINARY_OP(jdouble, /);
-                break; // ddiv
+                break;
 
-            case 0x70:
+            case OPC_IREM:
                 BINARY_OP(jint, %);
-                break;  // irem
-            case 0x71:
+                break;
+            case OPC_LREM:
                 BINARY_OP(jlong, %);
-                break; // lrem
-            case 0x72:
+                break;
+            case OPC_FREM:
                 __frem(frame);
-                break; // frem
-            case 0x73:
+                break;
+            case OPC_DREM:
                 __drem(frame);
-                break; // drem
+                break;
 
-            case 0x74:
+            case OPC_INEG:
                 frame_stack_pushi(frame, -frame_stack_popi(frame));
-                break; // ineg
-            case 0x75:
+                break;
+            case OPC_LNEG:
                 frame_stack_pushl(frame, -frame_stack_popl(frame));
-                break; // lneg
-            case 0x76:
+                break;
+            case OPC_FNEG:
                 frame_stack_pushf(frame, -frame_stack_popf(frame));
-                break; // fneg
-            case 0x77:
+                break;
+            case OPC_DNEG:
                 frame_stack_pushd(frame, -frame_stack_popd(frame));
-                break; // dneg
+                break;
 
-            case 0x78:
+            case OPC_ISHL:
                 ishl(frame);
-                break; // ishl
-            case 0x79:
+                break;
+            case OPC_LSHL:
                 lshl(frame);
-                break; // lshl
+                break;
 
-            case 0x7a:
+            case OPC_ISHR:
                 ishr(frame);
-                break; // ishr
-            case 0x7b:
+                break;
+            case OPC_LSHR:
                 lshr(frame);
-                break; // lshr
+                break;
 
-            case 0x7c:
+            case OPC_IUSHR:
                 iushr(frame);
-                break;  // iushr
-            case 0x7d:
+                break;
+            case OPC_LUSHR:
                 lushr(frame);
-                break;  // lushr
+                break;
 
-            case 0x7e:
+            case OPC_IAND:
                 BINARY_OP(jint, &);
-                break; // iand
-            case 0x7f:
+                break;
+            case OPC_LAND:
                 BINARY_OP(jlong, &);
-                break; // land
+                break;
 
-            case 0x80:
+            case OPC_IOR:
                 BINARY_OP(jint, |);
-                break;  // ior
-            case 0x81:
+                break;
+            case OPC_LOR:
                 BINARY_OP(jlong, |);
-                break;  // lor
+                break;
 
-            case 0x82:
+            case OPC_IXOR:
                 BINARY_OP(jint, ^);
-                break; // ixor
-            case 0x83:
+                break;
+            case OPC_LXOR:
                 BINARY_OP(jlong, ^);
-                break; // lxor
+                break;
 
-            case 0x84:
+            case OPC_IINC:
                 iinc(frame);
-                break; // iinc
+                break;
 
-                // Conversions
 #undef x2y
 #define x2y(x, y) frame_stack_push##y(frame, x##2##y(frame_stack_pop##x(frame)))
-            case 0x85:
+            case OPC_I2L:
                 x2y(i, l);
-                break; // i2l
-            case 0x86:
+                break;
+            case OPC_I2F:
                 x2y(i, f);
-                break; // i2f
-            case 0x87:
+                break;
+            case OPC_I2D:
                 x2y(i, d);
-                break; // i2d
+                break;
 
-            case 0x88:
+            case OPC_L2I:
                 x2y(l, i);
-                break; // l2i
-            case 0x89:
+                break;
+            case OPC_L2F:
                 x2y(l, f);
-                break; // l2f
-            case 0x8a:
+                break;
+            case OPC_L2D:
                 x2y(l, d);
-                break; // l2d
+                break;
 
-            case 0x8b:
+            case OPC_F2I:
                 x2y(f, i);
-                break; // f2i
-            case 0x8c:
+                break;
+            case OPC_F2L:
                 x2y(f, l);
-                break; // f2l
-            case 0x8d:
+                break;
+            case OPC_F2D:
                 x2y(f, d);
-                break; // f2d
+                break;
 
-            case 0x8e:
+            case OPC_D2I:
                 x2y(d, i);
-                break; // d2i
-            case 0x8f:
+                break;
+            case OPC_D2L:
                 x2y(d, l);
-                break; // d2l
-            case 0x90:
+                break;
+            case OPC_D2F:
                 x2y(d, f);
-                break; // d2f
+                break;
 
-            case 0x91:
+            case OPC_I2B:
                 frame_stack_pushi(frame, i2b(frame_stack_popi(frame)));
-                break; // i2b
-            case 0x92:
+                break;
+            case OPC_I2C:
                 frame_stack_pushi(frame, i2c(frame_stack_popi(frame)));
-                break; // i2c
-            case 0x93:
+                break;
+            case OPC_I2S:
                 frame_stack_pushi(frame, i2s(frame_stack_popi(frame)));
-                break; // i2s
+                break;
 
-                // Comparisons
-            case 0x94:
+            case OPC_LCMP:
                 lcmp(frame);
-                break; // lcmp
-            case 0x95:
+                break;
+            case OPC_FCMPL:
                 fcmpl(frame);
-                break; // fcmpl
-            case 0x96:
+                break;
+            case OPC_FCMPG:
                 fcmpg(frame);
-                break; // fcmpg
-            case 0x97:
+                break;
+            case OPC_DCMPL:
                 dcmpl(frame);
-                break; // dcmpl
-            case 0x98:
+                break;
+            case OPC_DCMPG:
                 dcmpg(frame);
-                break; // dcmpg
+                break;
 
 #undef IF_COND
 #define IF_COND(cond) \
 do { \
-jint v = frame_stack_popi(frame); \
-jint offset = frame_reads2(frame); \
-if (v cond 0) \
-    frame_skip(frame, offset - 3);  /* minus instruction length */ \
+    jint v = frame_stack_popi(frame); \
+    jint offset = frame_reads2(frame); \
+    if (v cond 0) \
+        frame_skip(frame, offset - 3);  /* minus instruction length */ \
 } while(false)
-            case 0x99:
+            case OPC_IFEQ:
                 IF_COND(==);
-                break; // ifeq
-            case 0x9a:
+                break;
+            case OPC_IFNE:
                 IF_COND(!=);
-                break; // ifne
-            case 0x9b:
+                break;
+            case OPC_IFLT:
                 IF_COND(<);
-                break; // iflt
-            case 0x9c:
+                break;
+            case OPC_IFGE:
                 IF_COND(>=);
-                break; // ifge
-            case 0x9d:
+                break;
+            case OPC_IFGT:
                 IF_COND(>);
-                break; // ifgt
-            case 0x9e:
+                break;
+            case OPC_IFLE:
                 IF_COND(<=);
-                break; // ifle
+                break;
 
 #undef IF_ICMP_COND
 #define IF_ICMP_COND(cond) \
 do { \
-frame->stack -= 2;\
-jint offset = frame_reads2(frame); \
-if (ISLOT(frame->stack) cond ISLOT(frame->stack + 1)) \
-    frame_skip(frame, offset - 3); /* minus instruction length */ \
+    frame->stack -= 2;\
+    jint offset = frame_reads2(frame); \
+    if (ISLOT(frame->stack) cond ISLOT(frame->stack + 1)) \
+        frame_skip(frame, offset - 3); /* minus instruction length */ \
 } while(false)
-            case 0x9f:
+            case OPC_IF_ICMPEQ:
                 IF_ICMP_COND(==);
-                break; // if_icmpeq
-            case 0xa0:
+                break;
+            case OPC_IF_ICMPNE:
                 IF_ICMP_COND(!=);
-                break; // if_icmpne
-            case 0xa1:
+                break;
+            case OPC_IF_ICMPLT:
                 IF_ICMP_COND(<);
-                break; // if_icmplt
-            case 0xa2:
+                break;
+            case OPC_IF_ICMPGE:
                 IF_ICMP_COND(>=);
-                break; // if_icmpge
-            case 0xa3:
+                break;
+            case OPC_IF_ICMPGT:
                 IF_ICMP_COND(>);
-                break; // if_icmpgt
-            case 0xa4:
+                break;
+            case OPC_IF_ICMPLE:
                 IF_ICMP_COND(<=);
-                break; // if_icmple
+                break;
 
 #undef IF_ACMP_COND
 #define IF_ACMP_COND(cond) \
 do { \
-frame->stack -= 2;\
-jint offset = frame_reads2(frame); \
-if (RSLOT(frame->stack) cond RSLOT(frame->stack + 1)) \
-    frame_skip(frame, offset - 3);  /* minus instruction length */ \
+    frame->stack -= 2;\
+    jint offset = frame_reads2(frame); \
+    if (RSLOT(frame->stack) cond RSLOT(frame->stack + 1)) \
+        frame_skip(frame, offset - 3);  /* minus instruction length */ \
 } while (false)
-            case 0xa5: // if_acmpeq
+            case OPC_IF_ACMPEQ:
                 IF_ACMP_COND(==);
                 break;
-            case 0xa6: // if_acmpne
+            case OPC_IF_ACMPNE:
                 IF_ACMP_COND(!=);
                 break;
 
-                // Controls
-            case 0xa7: // goto
+            case OPC_GOTO:
                 __goto(frame);
                 break;
 
                 // 在Java 6之前，Oracle的Java编译器使用 jsr, jsr_w 和 ret 指令来实现 finally 子句。
                 // 从Java 6开始，已经不再使用这些指令
-            case 0xa8: // jsr
+            case OPC_JSR:
                 vm_internal_error("jsr doesn't support after jdk 6.");
                 break;
-            case 0xa9: // ret
+            case OPC_RET:
                 vm_internal_error("ret doesn't support after jdk 6.");
                 break;
-            case 0xaa: // tableswitch
+            case OPC_TABLESWITCH:
                 tableswitch(frame);
                 break;
-            case 0xab: // lookupswitch
+            case OPC_LOOKUPSWITCH:
                 lookupswitch(frame);
                 break;
 
-#undef TRETURN
-#define TRETURN(__type, t, __s) \
-{ \
-struct frame *invoke_frame = thread->top_frame = frame->prev; \
-if (frame->vm_invoke || invoke_frame == NULL) { \
-    frame->stack -= (__s); \
-    return frame->stack; \
-} else { \
-    __type value = frame_stack_pop##t(frame); \
-    frame_stack_push##t(invoke_frame, value); \
-    frame = invoke_frame; \
-} \
-break; \
+            case OPC_IRETURN:
+            case OPC_FRETURN:
+            case OPC_ARETURN:
+                ret_value_slot_count = 1;
+                goto method_return;
+            case OPC_LRETURN:
+            case OPC_DRETURN:
+                ret_value_slot_count = 2;
+                goto method_return;
+            case OPC_RETURN:
+                ret_value_slot_count = 0;
+                goto method_return;
+method_return:
+{
+    struct frame *invoke_frame = thread->top_frame = frame->prev;
+    frame->stack -= ret_value_slot_count;
+
+    if (frame->vm_invoke || invoke_frame == NULL) {
+        return frame->stack;
+    } else {
+        slot_t *ret_value = frame->stack;
+        for (int i = 0; i < ret_value_slot_count; i++) {
+            *invoke_frame->stack++ = *ret_value++;
+        }
+        frame = invoke_frame;
+    }
+    break;
 }
-            case 0xac: TRETURN(jint, i, 1); // ireturn
-            case 0xad: TRETURN(jlong, l, 2); // lreturn
-            case 0xae: TRETURN(jfloat, f, 1); // freturn
-            case 0xaf: TRETURN(jdouble, d, 2); // dreturn
-            case 0xb0: TRETURN(jref, r, 1); // areturn
-            case 0xb1: { // return
-                struct frame *invoke_frame = thread->top_frame = frame->prev;
-                if (frame->vm_invoke) {
-                    return NULL;
-                }
-
-                if (invoke_frame == NULL) {
-                    return NULL; // todo
-                }
-
-                frame = invoke_frame;
-                break;
-            }
-                // References
-            case 0xb2: // getstatic
+            case OPC_GETSTATIC:
                 getstatic(frame);
                 break;
-            case 0xb3: // putstatic
+            case OPC_PUTSTATIC:
                 putstatic(frame);
                 break;
-            case 0xb4: // getfield
+            case OPC_GETFIELD:
                 getfield(frame);
                 break;
-            case 0xb5: // putfield
+            case OPC_PUTFIELD:
                 putfield(frame);
                 break;
 
-            case 0xb6: { // invokevirtual
+            case OPC_INVOKEVIRTUAL: {
                 // invokevirtual指令用于调用对象的实例方法，根据对象的实际类型进行分派（虚方法分派）。
-                struct class *curr_class = frame->method->clazz;
-
                 int index = bcr_readu2(&frame->reader);
-                struct method *m = resolve_method(curr_class, index);
+                struct method *m = resolve_method(frame->method->clazz, index);
 
                 frame->stack -= m->arg_slot_count;
                 args = frame->stack;
-
                 struct object *obj = (struct object *) args[0];
                 if (obj == NULL) {
                     thread_throw_null_pointer_exception();
                 }
 
                 // 下面这样写对不对 todo
-//    if (obj->clazz != curr_class) {
-                // 从对象的类中查找真正要调用的方法
-                m = class_lookup_method(obj->clazz, m->name, m->descriptor);
-//    }
+//                if (obj->clazz != frame->method->clazz) {
+                    // 从对象的类中查找真正要调用的方法
+                    m = class_lookup_method(obj->clazz, m->name, m->descriptor);
+//                }
 
                 resolved_method = m;
                 goto invoke_method;
             }
-            case 0xb7: { // invokespecial
+            case OPC_INVOKESPECIAL: {
                 // invokespecial指令用于调用一些需要特殊处理的实例方法，
                 // 包括构造函数、私有方法和通过super关键字调用的超类方法。
                 struct class *curr_class = frame->method->clazz;
-
                 int index = bcr_readu2(&frame->reader);
 //
 //    // 假定从方法符号引用中解析出来的类是C，方法是M。如果M是构造函数，则声明M的类必须是C，
@@ -1143,8 +1130,6 @@ break; \
 ////        // todo java.lang.NoSuchMethodError
 ////        jvm_abort("java.lang.NoSuchMethodError\n");
 ////    }
-//
-//    struct method *method = ref->resolved_method;
 
                 struct method *m = resolve_method(curr_class, index);
                 /*
@@ -1178,7 +1163,7 @@ break; \
                 resolved_method = m;
                 goto invoke_method;
             }
-            case 0xb8: { // invokestatic
+            case OPC_INVOKESTATIC: {
                 // invokestatic指令用来调用静态方法。
                 // 如果类还没有被初始化，会触发类的初始化。
                 struct class *curr_class = frame->method->clazz;
@@ -1205,7 +1190,7 @@ break; \
                 resolved_method = m;
                 goto invoke_method;
             }
-            case 0xb9: { // invokeinterface
+            case OPC_INVOKEINTERFACE: {
                 struct class *curr_class = frame->method->clazz;
                 int index = frame_readu2(frame); //bcr_readu2(&frame->reader);
 
@@ -1255,7 +1240,7 @@ break; \
                 break;
 invoke_method:
 {
-    struct frame *new_frame = alloc_frame(resolved_method, false);//frame_create(method, args);
+    struct frame *new_frame = alloc_frame(resolved_method, false);
     if (resolved_method->arg_slot_count > 0 && args == NULL) {
         jvm_abort("do not find args, %d\n", resolved_method->arg_slot_count); // todo
     }
@@ -1271,20 +1256,20 @@ invoke_method:
     break;
 }
 
-            case 0xbb: // new
+            case OPC_NEW:
                 new(frame);
                 break;
-            case 0xbc: // newarray
+            case OPC_NEWARRAY:
                 newarray(frame);
                 break;
-            case 0xbd: // anewarray
+            case OPC_ANEWARRAY:
                 anewarray(frame);
                 break;
-            case 0xbe: // arraylength
+            case OPC_ARRAYLENGTH:
                 arraylength(frame);
                 break;
 
-            case 0xbf: { // athrow
+            case OPC_ATHROW: {
                 jref exception = frame_stack_popr(frame);
                 if (exception == NULL) {
                     thread_throw_null_pointer_exception();
@@ -1315,66 +1300,50 @@ invoke_method:
                 thread_handle_uncaught_exception(exception);
                 return NULL; // todo
             }
-            case 0xc0:
+            case OPC_CHECKCAST:
                 checkcast(frame);
-                break;    // checkcast
-            case 0xc1:
+                break;
+            case OPC_INSTANCEOF:
                 instanceof(frame);
-                break;   // instanceof
-            case 0xc2:
+                break;
+            case OPC_MONITORENTER:
                 monitorenter(frame);
-                break; // monitorenter
-            case 0xc3:
+                break;
+            case OPC_MONITOREXIT:
                 monitorexit(frame);
-                break;  // monitorexit
+                break;
 
-                // Extended
-            case 0xc4:
+            case OPC_WIDE:
                 wide_extending = true;
-                break; // wide
-            case 0xc5:
+                break;
+            case OPC_MULTIANEWARRAY:
                 multianewarray(frame);
-                break; // multianewarray
-            case 0xc6:
+                break;
+            case OPC_IFNULL:
                 ifnull(frame);
-                break; // ifnull
-            case 0xc7:
+                break;
+            case OPC_IFNONNULL:
                 ifnonnull(frame);
-                break; // ifnonnull
-            case 0xc8:
+                break;
+            case OPC_GOTO_W: // todo
                 vm_internal_error("goto_w doesn't support");
-                break; // goto_w  // todo
-            case 0xc9:
-                vm_internal_error("jsr_w doesn't support after jdk 6."); // jsr_w // todo
-
-                // Reserved
-            case 0xca:
-                jvm_abort("debugger used instructions. %s\n", frame_to_string(frame));
-                break; // breakpoint, // debugger used instruction// todo
-            case 0xfe:
+                break;
+            case OPC_JSR_W: // todo
+                vm_internal_error("jsr_w doesn't support after jdk 6.");
+            case OPC_INVOKENATIVE: // jvm used instruction，本 jvm 用来调用本地方法。
                 frame->method->native_method(frame);
-                break; // jvm used instruction，本 jvm 用来调用本地方法。
-            case 0xff:
-                jvm_abort("jvm used instruction, not used in this jvm. %s", frame_to_string(frame)); // todo
+                break;
             default:
-//                jvm_abort("This instruction isn't used. %d, %s\n", opcode, frame_to_string(frame));
                 jvm_abort("This instruction isn't used. %d(0x%x)\n", opcode, opcode); // todo
-                return NULL;
         }
     }
 
     jvm_abort("Never goes here!");
 }
 
-/*
- * execute a Java function
- */
-slot_t *exec_java_func(struct method *method, const slot_t *args, bool vm_invoke)
+slot_t *exec_java_func(struct method *method, const slot_t *args)
 {
-//    if (IS_NATIVE(method->access_flags)) {
-//        printvm("\n");
-//    }
-    struct frame *frame = alloc_frame(method, vm_invoke);
+    struct frame *frame = alloc_frame(method, true);
     if (method->arg_slot_count > 0 && args == NULL) {
         jvm_abort("do not find args, %d\n", method->arg_slot_count); // todo
     }
@@ -1382,7 +1351,6 @@ slot_t *exec_java_func(struct method *method, const slot_t *args, bool vm_invoke
     // 准备参数
     for (int i = 0; i < method->arg_slot_count; i++) {
         // 传递参数到被调用的函数。
-//        frame_locals_set(frame, i, args + i);
         frame->locals[i] = args[i];
     }
 

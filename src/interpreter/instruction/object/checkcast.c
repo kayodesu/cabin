@@ -20,8 +20,6 @@ void checkcast(struct frame *frame)
         return;
     }
 
-//    resolve_single_constant(frame->m.method->clazz, index);
-
     struct class *c = resolve_class(frame->method->clazz, index);
     if (!object_is_instance_of(obj, c)) {
         thread_throw_class_cast_exception(obj->clazz->class_name, c->class_name);

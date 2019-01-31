@@ -561,14 +561,14 @@ void class_destroy(struct class *c)
     free(c);
 }
 
-static void class_clinit0(struct class *c, bool vm_invoke)
+void class_clinit(struct class *c)
 {
     if (c->inited) {
         return;
     }
 
     if (c->super_class != NULL && !c->super_class->inited) {
-        class_clinit0(c->super_class, vm_invoke);
+        class_clinit(c->super_class);
     }
 
     // 在这里先行 set inited true, 如不这样，后面执行<clinit>时，
@@ -583,14 +583,8 @@ static void class_clinit0(struct class *c, bool vm_invoke)
         }
 
 //        thread_invoke_method(thread, method, NULL);
-        exec_java_func(method, NULL, vm_invoke);
+        exec_java_func(method, NULL);
     }
-}
-
-void class_clinit(struct class *c)
-{
-    class_clinit0(c, true);
-//    printvm("clinit over! %s\n", c->class_name);
 }
 
 struct field* jclass_lookup_field0(struct class *c, const char *name, const char *descriptor)

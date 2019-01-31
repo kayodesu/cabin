@@ -63,6 +63,8 @@ void set_instance_field_value(struct object *o, struct field *f, const slot_t *v
 //void set_instance_field_value_by_nt(struct object *o,
 //                                    const char *name, const char *descriptor, const slot_t *value);
 
+const slot_t* get_instance_field_value(const struct object *o, struct field *f);
+
 const slot_t* get_instance_field_value_by_id(const struct object *o, int id);
 const slot_t* get_instance_field_value_by_nt(const struct object *o, const char *name, const char *descriptor);
 

@@ -566,7 +566,7 @@ static void getDeclaredFields0(struct frame *frame)
         };
 //        thread_invoke_method(frame->thread, field_constructor, );
 
-        exec_java_func(field_constructor, args, true);
+        exec_java_func(field_constructor, args);
     }
 }
 
@@ -627,7 +627,7 @@ static void getDeclaredMethods0(struct frame *frame)
         };
 //        thread_invoke_method(frame->thread, method_constructor, );
 
-        exec_java_func(method_constructor, args, true);
+        exec_java_func(method_constructor, args);
     }
 }
 
@@ -676,7 +676,7 @@ static void getDeclaredConstructors0(struct frame *frame)
         };
 //        thread_invoke_method(frame->thread, constructor_constructor, );
 
-        exec_java_func(constructor_constructor, args, true);
+        exec_java_func(constructor_constructor, args);
     }
 }
 

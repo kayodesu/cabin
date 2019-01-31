@@ -26,7 +26,7 @@ static void doPrivileged(struct frame *frame)
 //    struct slot args[] = { rslot(this) };
 //    thread_invoke_method(frame->thread, m, args);
 //    slot_t args[] = { this };
-    slot_t *s = exec_java_func(m, (slot_t *) &this, true);
+    slot_t *s = exec_java_func(m, (slot_t *) &this);
     frame_stack_pushr(frame, RSLOT(s));
 }
 

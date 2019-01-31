@@ -15,11 +15,6 @@
 void new(struct frame *frame)
 {
     struct bytecode_reader *reader = &frame->reader;
-
-//    const char *class_name = CP_CLASS_NAME(&frame->m.method->clazz->constant_pool, bcr_readu2(reader));//rtcp_get_class_name(frame->m.method->clazz->rtcp, bcr_readu2(reader)); // todo reads2  ?????
-//    assert(class_name != NULL);
-//    assert(strlen(class_name) > 0);
-
     struct class *c = resolve_class(frame->method->clazz, bcr_readu2(reader));  // todo
     if (!c->inited) {
         class_clinit(c);

@@ -104,6 +104,13 @@ const slot_t* get_instance_field_value_by_id(const struct object *o, int id)
     return o->data + id;
 }
 
+const slot_t* get_instance_field_value(const struct object *o, struct field *f)
+{
+    assert(o != NULL);
+    assert(f != NULL);
+    return o->data + f->id;
+}
+
 const slot_t* get_instance_field_value_by_nt(const struct object *o, const char *name, const char *descriptor)
 {
     assert(o != NULL && name != NULL && descriptor != NULL);
@@ -113,7 +120,7 @@ const slot_t* get_instance_field_value_by_nt(const struct object *o, const char 
         jvm_abort("error, %s, %s\n", name, descriptor); // todo
     }
 
-    return get_instance_field_value_by_id(o, f->id);
+    return get_instance_field_value(o, f);
 }
 
 bool object_is_instance_of(const struct object *o, const struct class *c)

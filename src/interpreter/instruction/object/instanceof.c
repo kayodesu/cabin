@@ -13,8 +13,7 @@
 void instanceof(struct frame *frame)
 {
     int index = bcr_readu2(&frame->reader);
-//    resolve_single_constant(frame->m.method->clazz, index);
-    struct class *c = resolve_class(frame->method->clazz, index);//struct class *) CP_INFO(&frame->m.method->clazz->constant_pool, index);
+    struct class *c = resolve_class(frame->method->clazz, index);
 
     jref obj = frame_stack_popr(frame);
     if (obj == NULL) {

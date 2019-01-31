@@ -9,6 +9,7 @@
 #include "../heap/arrobj.h"
 #include "../../symbol.h"
 #include "../../classfile/constant.h"
+#include "../../interpreter/interpreter.h"
 
 struct object* method_get_parameter_types(struct method *method)
 {
@@ -299,7 +300,7 @@ void method_init(struct method *method, struct class *c, struct bytecode_reader 
         size_t code_len = 2;
 //        VM_MALLOCS(u1, code_len, code);
         u1 *code = vm_malloc(code_len * sizeof(u1));
-        code[0] = 0xfe;  // 0xfe 是 "impdep1" 指令的代码，用这条指令来执行 native 方法。
+        code[0] = OPC_INVOKENATIVE;
         const char *t = strchr(method->descriptor, ')'); // find return
         if (t == NULL) {
             //todo error

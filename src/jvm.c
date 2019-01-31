@@ -134,7 +134,7 @@ static void start_jvm(const char *main_class_name)
 
     slot_t args[] = { 0, NULL }; // todo
 //    thread_invoke_method(main_thread, main_method, args);
-    exec_java_func(main_method, args, true);
+    exec_java_func(main_method, args);
 
     // 开始在主线程中执行 main 方法
 //    interpret(main_thread);

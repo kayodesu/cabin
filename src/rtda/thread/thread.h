@@ -24,35 +24,13 @@ struct object;
  * 但是内存已经耗尽，会导致OutOfMemoryError异常抛出。
  */
 
-
-//struct invokedynamic_temp_store {
-//    // java/lang/invoke/MethodType
-//    struct object *bootstrap_method_type;
-//
-//    // java/lang/invoke/MethodHandles$Lookup
-//    struct object *lookup;
-//
-//    // java/lang/invoke/CallSite
-//    struct object *call_set;
-//
-//    // java/lang/invoke/MethodHandle
-//    struct object *exact_method_handle;
-//};
-
-#define FRMHUB_SLOTS_COUNT_MAX 32
-
 struct thread {
-//    struct vector vm_stack; // 虚拟机栈，一个线程只有一个虚拟机栈
     struct object *this_obj; // object of java.lang.Thread   todo 干嘛用的
 
-//    struct vector frame_cache[FRMHUB_SLOTS_COUNT_MAX];
-
     struct object *jltobj; // object of java/lang/Thread
-    u1 vm_stack[VM_STACK_SIZE];
-//    int vm_stack_top;
-    struct frame *top_frame;
 
-//    struct invokedynamic_temp_store dyn;
+    u1 vm_stack[VM_STACK_SIZE]; // 虚拟机栈，一个线程只有一个虚拟机栈
+    struct frame *top_frame;
 };
 
 void create_main_thread(struct classloader *loader);
