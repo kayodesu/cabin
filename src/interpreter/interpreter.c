@@ -8,8 +8,8 @@
 #include "../rtda/heap/strpool.h"
 #include "../classfile/constant.h"
 #include "../rtda/heap/arrobj.h"
+#include "../rtda/ma/field.h"
 #include "../rtda/ma/resolve.h"
-#include "../rtda/ma/access.h"
 #include "interpreter.h"
 
 #if (PRINT_LEVEL >= 3)
@@ -127,56 +127,6 @@ void ldc2_w(struct frame *frame)
     } else {
         jvm_abort("error. %d\n", type);
     }
-}
-
-// comparison instructions ---------------------------------------------------------------------------------------------
-/*
- * NAN 与正常的的浮点数无法比较，即 即不大于 也不小于 也不等于。
- * 两个 NAN 之间也无法比较，即 即不大于 也不小于 也不等于。
- */
-#define CMP_RESULT(v1, v2, default_value) \
-            (jint)((v1) > (v2) ? 1 : ((v1) == (v2) ? 0 : ((v1) < (v2) ? -1 : (default_value))))
-
-static inline void lcmp(struct frame *frame)
-{
-    jlong v2 = frame_stack_popl(frame);
-    jlong v1 = frame_stack_popl(frame);
-    frame_stack_pushi(frame, CMP_RESULT(v1, v2, -1));
-}
-
-static inline void fcmpl(struct frame *frame)
-{
-    jfloat v2 = frame_stack_popf(frame);
-    jfloat v1 = frame_stack_popf(frame);
-    frame_stack_pushi(frame, CMP_RESULT(v1, v2, -1));
-}
-
-static inline void fcmpg(struct frame *frame)
-{
-    jfloat v2 = frame_stack_popf(frame);
-    jfloat v1 = frame_stack_popf(frame);
-    frame_stack_pushi(frame, CMP_RESULT(v1, v2, 1));
-}
-
-static inline void dcmpl(struct frame *frame)
-{
-    jdouble v2 = frame_stack_popd(frame);
-    jdouble v1 = frame_stack_popd(frame);
-    frame_stack_pushi(frame, CMP_RESULT(v1, v2, -1));
-}
-
-static inline void dcmpg(struct frame *frame)
-{
-    jdouble v2 = frame_stack_popd(frame);
-    jdouble v1 = frame_stack_popd(frame);
-    frame_stack_pushi(frame, CMP_RESULT(v1, v2, 1));
-}
-
-// control instructions ------------------------------------------------------------------------------------------------
-static void inline __goto(struct frame *frame)
-{
-    int offset = bcr_reads2(&frame->reader);
-    bcr_skip(&frame->reader, offset - 3);  // minus instruction length
 }
 
 /*
@@ -320,38 +270,11 @@ static inline void lushr(struct frame *frame)
 // extended instructions -----------------------------------------------------------------------------------------------
 void multianewarray(struct frame *frame);
 
-static inline void ifnull(struct frame *frame)
-{
-    int offset = frame_reads2(frame);
-    if (frame_stack_popr(frame) == NULL) {
-        bcr_skip(&frame->reader, offset - 3); // minus instruction length
-    }
-}
-
-static inline void ifnonnull(struct frame *frame)
-{
-    int offset = frame_reads2(frame);
-    if (frame_stack_popr(frame) != NULL) {
-        bcr_skip(&frame->reader, offset - 3); // minus instruction length
-    }
-}
-
 // reference instructions ----------------------------------------------------------------------------------------------
-void new(struct frame *);
-void putstatic(struct frame *);
-void getstatic(struct frame *);
-void putfield(struct frame *);
-void getfield(struct frame *);
-void instanceof(struct frame *);
-void checkcast(struct frame *);
 void invokedynamic(struct frame *);
 void newarray(struct frame *);
 void anewarray(struct frame *);
-void arraylength(struct frame *);
-void monitorenter(struct frame *);
-void monitorexit(struct frame *);
 
-// --------------------------------------------------------
 
 #define CASE(x, body) case x: { body; break; }
 #define CASE2(x, y, body) case x: case y: { body; break; }
@@ -668,11 +591,25 @@ static slot_t * exec()
             CASE(OPC_I2C, frame_stack_pushi(frame, i2c(frame_stack_popi(frame))))
             CASE(OPC_I2S, frame_stack_pushi(frame, i2s(frame_stack_popi(frame))))
 
-            CASE(OPC_LCMP, lcmp(frame))
-            CASE(OPC_FCMPL, fcmpl(frame))
-            CASE(OPC_FCMPG, fcmpg(frame))
-            CASE(OPC_DCMPL, dcmpl(frame))
-            CASE(OPC_DCMPG, dcmpg(frame))
+/*
+ * NAN 与正常的的浮点数无法比较，即 即不大于 也不小于 也不等于。
+ * 两个 NAN 之间也无法比较，即 即不大于 也不小于 也不等于。
+ */
+#define DO_CMP(v1, v2, default_value) \
+            (jint)((v1) > (v2) ? 1 : ((v1) == (v2) ? 0 : ((v1) < (v2) ? -1 : (default_value))))
+
+#define CMP(type, t, cmp_result) \
+{ \
+    type v2 = frame_stack_pop##t(frame); \
+    type v1 = frame_stack_pop##t(frame); \
+    frame_stack_pushi(frame, cmp_result); \
+}
+
+            CASE(OPC_LCMP, CMP(jlong, l, DO_CMP(v1, v2, -1)))
+            CASE(OPC_FCMPL, CMP(jfloat, f, DO_CMP(v1, v2, -1)))
+            CASE(OPC_FCMPG, CMP(jfloat, f, DO_CMP(v1, v2, 1)))
+            CASE(OPC_DCMPL, CMP(jdouble, d, DO_CMP(v1, v2, -1)))
+            CASE(OPC_DCMPG, CMP(jdouble, d, DO_CMP(v1, v2, 1)))
 
 #define IF_COND(cond) \
 { \
@@ -713,7 +650,10 @@ static slot_t * exec()
             CASE(OPC_IF_ACMPEQ, IF_ACMP_COND(==))
             CASE(OPC_IF_ACMPNE, IF_ACMP_COND(!=))
 
-            CASE(OPC_GOTO, __goto(frame))
+            CASE(OPC_GOTO, {
+                int offset = bcr_reads2(&frame->reader);
+                bcr_skip(&frame->reader, offset - 3);  // minus instruction length
+            })
 
             // 在Java 6之前，Oracle的Java编译器使用 jsr, jsr_w 和 ret 指令来实现 finally 子句。
             // 从Java 6开始，已经不再使用这些指令
@@ -750,10 +690,82 @@ static slot_t * exec()
             CASE2(OPC_LRETURN, OPC_DRETURN, METHOD_RETURN(2))
             CASE(OPC_RETURN, METHOD_RETURN(0))
 
-            CASE(OPC_GETSTATIC, getstatic(frame))
-            CASE(OPC_PUTSTATIC, putstatic(frame))
-            CASE(OPC_GETFIELD, getfield(frame))
-            CASE(OPC_PUTFIELD, putfield(frame))
+            CASE(OPC_GETSTATIC, {
+                struct bytecode_reader *reader = &frame->reader;
+                int index = bcr_readu2(reader);
+                struct field *f = resolve_field(frame->method->clazz, index);
+
+                if (!f->clazz->inited) {
+                    class_clinit(f->clazz);
+                }
+
+                const slot_t *value = get_static_field_value(f->clazz, f);
+                *frame->stack++ = value[0];
+                if (f->category_two) {
+                    *frame->stack++ = value[1];
+                }
+            })
+
+            CASE(OPC_PUTSTATIC, {
+                struct bytecode_reader *reader = &frame->reader;
+                int index = bcr_readu2(reader);
+                struct field *f = resolve_field(frame->method->clazz, index);
+
+                if (!f->clazz->inited) {
+                    class_clinit(f->clazz);
+                }
+
+                if (f->category_two) {
+                    frame->stack -= 2;
+                } else {
+                    frame->stack--;
+                }
+
+                set_static_field_value(f->clazz, f, frame->stack);
+            })
+
+            CASE(OPC_GETFIELD, {
+                int index = bcr_readu2(&frame->reader);
+                struct field *f = resolve_field(frame->method->clazz, index);
+
+                jref obj = frame_stack_popr(frame);
+                if (obj == NULL) {
+                    thread_throw_null_pointer_exception();
+                }
+
+                const slot_t *value = get_instance_field_value(obj, f);
+                *frame->stack++ = value[0];
+                if (f->category_two) {
+                    *frame->stack++ = value[1];
+                }
+            })
+
+            CASE(OPC_PUTFIELD, {
+                int index = bcr_readu2(&frame->reader);
+                struct field *f = resolve_field(frame->method->clazz, index);
+
+                // 如果是final字段，则只能在构造函数中初始化，否则抛出java.lang.IllegalAccessError。
+                if (IS_FINAL(f->access_flags)) {
+                    // todo
+                    if (frame->method->clazz != f->clazz || strcmp(frame->method->name, "<init>") != 0) {
+                        jvm_abort("java.lang.IllegalAccessError\n"); // todo
+                    }
+                }
+
+                if (f->category_two) {
+                    frame->stack -= 2;
+                } else {
+                    frame->stack--;
+                }
+                slot_t *value = frame->stack;
+
+                jref obj = frame_stack_popr(frame);
+                if (obj == NULL) {
+                    thread_throw_null_pointer_exception();
+                }
+
+                set_instance_field_value(obj, f, value);
+            })
 
             case OPC_INVOKEVIRTUAL: {
                 // invokevirtual指令用于调用对象的实例方法，根据对象的实际类型进行分派（虚方法分派）。
@@ -776,6 +788,7 @@ static slot_t * exec()
                 resolved_method = m;
                 goto invoke_method;
             }
+
             case OPC_INVOKESPECIAL: {
                 // invokespecial指令用于调用一些需要特殊处理的实例方法，
                 // 包括构造函数、私有方法和通过super关键字调用的超类方法。
@@ -913,10 +926,37 @@ invoke_method:
     break;
 }
 
-            CASE(OPC_NEW, new(frame))
+            CASE(OPC_NEW, {
+                // new指令专门用来创建类实例。数组由专门的指令创建
+                // 如果类还没有被初始化，会触发类的初始化。
+                struct bytecode_reader *reader = &frame->reader;
+                struct class *c = resolve_class(frame->method->clazz, bcr_readu2(reader));  // todo
+                if (!c->inited)
+                    class_clinit(c);
+
+                if (IS_INTERFACE(c->access_flags) || IS_ABSTRACT(c->access_flags)) {
+                    jvm_abort("java.lang.InstantiationError\n");  // todo 抛出 InstantiationError 异常
+                }
+
+                // todo java/lang/Class 会在这里创建，为什么会这样，怎么处理
+                //    assert(strcmp(c->class_name, "java/lang/Class") == 0);
+
+                frame_stack_pushr(frame, object_create(c));
+            })
+
             CASE(OPC_NEWARRAY, newarray(frame))
             CASE(OPC_ANEWARRAY, anewarray(frame))
-            CASE(OPC_ARRAYLENGTH, arraylength(frame))
+
+            CASE(OPC_ARRAYLENGTH, {
+                struct object *o = frame_stack_popr(frame);
+                if (o == NULL) {
+                    thread_throw_null_pointer_exception();
+                }
+                if (!object_is_array(o)) {
+                    vm_unknown_error("not a array");
+                }
+                frame_stack_pushi(frame, arrobj_len(o));
+            })
 
             case OPC_ATHROW: {
                 jref exception = frame_stack_popr(frame);
@@ -950,14 +990,56 @@ invoke_method:
                 return NULL; // todo
             }
 
-            CASE(OPC_CHECKCAST, checkcast(frame))
-            CASE(OPC_INSTANCEOF, instanceof(frame))
-            CASE(OPC_MONITORENTER, monitorenter(frame))
-            CASE(OPC_MONITOREXIT, monitorexit(frame))
+            CASE(OPC_CHECKCAST, {
+                jref obj = RSLOT(frame->stack - 1); // 不改变操作数栈
+                int index = bcr_readu2(&frame->reader);
+
+                // 如果引用是null，则指令执行结束。也就是说，null 引用可以转换成任何类型
+                if (obj != NULL) {
+                    struct class *c = resolve_class(frame->method->clazz, index);
+                    if (!object_is_instance_of(obj, c)) {
+                        thread_throw_class_cast_exception(obj->clazz->class_name, c->class_name);
+                    }
+                }
+            })
+
+            CASE(OPC_INSTANCEOF, {
+                int index = bcr_readu2(&frame->reader);
+                struct class *c = resolve_class(frame->method->clazz, index);
+
+                jref obj = frame_stack_popr(frame);
+                if (obj == NULL)
+                    frame_stack_pushi(frame, 0);
+                else
+                    frame_stack_pushi(frame, object_is_instance_of(obj, c) ? 1 : 0);
+            })
+
+            CASE(OPC_MONITORENTER, {
+                jref o = frame_stack_popr(frame);
+                // todo
+            })
+
+            CASE(OPC_MONITOREXIT, {
+                jref o = frame_stack_popr(frame);
+                // todo
+            })
+
             CASE(OPC_WIDE, wide_extending = true)
             CASE(OPC_MULTIANEWARRAY, multianewarray(frame))
-            CASE(OPC_IFNULL, ifnull(frame))
-            CASE(OPC_IFNONNULL, ifnonnull(frame))
+
+            CASE(OPC_IFNULL, {
+                int offset = frame_reads2(frame);
+                if (frame_stack_popr(frame) == NULL) {
+                    bcr_skip(&frame->reader, offset - 3); // minus instruction length
+                }
+            })
+
+            CASE(OPC_IFNONNULL, {
+                int offset = frame_reads2(frame);
+                if (frame_stack_popr(frame) != NULL) {
+                    bcr_skip(&frame->reader, offset - 3); // minus instruction length
+                }
+            })
 
             case OPC_GOTO_W: // todo
                 vm_internal_error("goto_w doesn't support");
