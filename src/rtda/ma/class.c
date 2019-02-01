@@ -130,8 +130,7 @@ static void parse_attribute(struct class *c, struct bytecode_reader *reader)
             u2 enclosing_method_index = bcr_readu2(reader);
 
             if (enclosing_class_index > 0) {
-                struct class *enclosing_class
-                        = classloader_load_class(c->loader, CP_CLASS_NAME(cp, enclosing_class_index));//rtcp_get_class_name(c->rtcp, enclosing_class_index));
+                struct class *enclosing_class = load_class(c->loader, CP_CLASS_NAME(cp, enclosing_class_index));
                 c->enclosing_info[0] = clsobj_create(enclosing_class);
 
                 if (enclosing_method_index > 0) {
@@ -273,7 +272,7 @@ struct class *class_create(struct classloader *loader, u1 *bytecode, size_t len)
     struct bytecode_reader reader;
     bcr_init(&reader, bytecode, len);
 
-    VM_MALLOC(struct class, c);
+    struct class *c = vm_malloc(sizeof(struct class));
     c->loader = loader;
     c->inited = false;
     c->deprecated = false;
@@ -498,7 +497,7 @@ struct class* class_create_primitive_class(struct classloader *loader, const cha
 
     // todo class_name 是不是基本类型
 
-    VM_MALLOC(struct class, c);
+    struct class *c = vm_malloc(sizeof(struct class));
     jclass_clear(c);
 
     c->access_flags = ACC_PUBLIC;
@@ -518,7 +517,7 @@ struct class* class_create_arr_class(struct classloader *loader, const char *cla
     assert(class_name != NULL);
 
     // todo class_name 是不是 array
-    VM_MALLOC(struct class, c);
+    struct class *c = vm_malloc(sizeof(struct class));
     jclass_clear(c);
 
     c->access_flags = ACC_PUBLIC;
@@ -684,7 +683,7 @@ struct method** class_get_declared_methods(struct class *c, const char *name, bo
     assert(name != NULL);
     assert(count != NULL);
 
-    VM_MALLOCS(struct method *, c->methods_count, methods);
+    struct method **methods = vm_malloc(sizeof(struct method *) * c->methods_count);
     *count = 0;
 
     for (int i = 0; i < c->methods_count; i++) {
@@ -809,8 +808,7 @@ const slot_t* get_static_field_value(const struct class *c, const struct field *
 char* get_arr_class_name(const char *class_name)
 {
     assert(class_name != NULL);
-
-    VM_MALLOCS(char, strlen(class_name) + 8 /* big enough */, array_class_name);
+    char *array_class_name = vm_malloc(sizeof(char)*(strlen(class_name) + 8 /* big enough */));
 
     // 数组
     if (class_name[0] == '[') {
@@ -864,7 +862,7 @@ struct class* class_component_class(const struct class *arr_cls)
     for (; *component_name == '['; component_name++);
 
     if (*component_name != 'L') {
-        return classloader_load_class(arr_cls->loader, component_name);
+        return load_class(arr_cls->loader, component_name);
     }
 
     component_name++;
@@ -877,7 +875,7 @@ struct class* class_component_class(const struct class *arr_cls)
         char buf[last + 1];
         strncpy(buf, component_name, (size_t) last);
         buf[last] = 0;
-        return classloader_load_class(arr_cls->loader, buf);
+        return load_class(arr_cls->loader, buf);
     }
 }
 
@@ -904,7 +902,7 @@ bool class_is_accessible_to(const struct class *c, const struct class *visitor)
 
 char *class_to_string(const struct class *c)
 {
-    VM_MALLOCS(char, PATH_MAX, result);
+    char *result = vm_malloc(sizeof(char) * PATH_MAX);
     strcpy(result, "class: ");
     strcat(result, c == NULL ? "NULL" : c->class_name);
     return result;

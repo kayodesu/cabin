@@ -51,13 +51,13 @@ struct object *descriptor_to_type(struct classloader *loader, const char *descri
     assert(descriptor != NULL);
 
     char buf[strlen(descriptor) + 1];
-    return classloader_load_class(loader, descriptor_to_class_name(descriptor, buf))->clsobj;
+    return load_class(loader, descriptor_to_class_name(descriptor, buf))->clsobj;
 }
 
 const char* types_to_descriptor(const struct object *types)
 {
     assert(types != NULL);
-    VM_MALLOCS(char, DESCRIPTOR_MAX_LEN + 1, descriptor);
+    char *descriptor = vm_malloc(sizeof(char)*(DESCRIPTOR_MAX_LEN + 1));
 
     if (object_is_array(types)) {
         // must be array object of java/lang/Class
@@ -123,7 +123,7 @@ struct object* method_descriptor_to_parameter_types(struct classloader *loader, 
             }
 
             *t = 0;   // end string
-            buf[parameter_types_count++] = classloader_load_class(loader, b + 1 /* jump 'L' */)->clsobj;
+            buf[parameter_types_count++] = load_class(loader, b + 1 /* jump 'L' */)->clsobj;
             *t = ';'; // recover
             b = t;
         } else if (*b == '[') { // array reference, 描述符形如 [B 或 [[Ljava/lang/String; 的形式
@@ -139,12 +139,12 @@ struct object* method_descriptor_to_parameter_types(struct classloader *loader, 
 
             char k = *(++t);
             *t = 0; // end string
-            buf[parameter_types_count++] = classloader_load_class(loader, b)->clsobj;
+            buf[parameter_types_count++] = load_class(loader, b)->clsobj;
             *t = k; // recover
             b = t;
         } else if (pt_is_primitive_descriptor(*b)) {
             const char *class_name = pt_get_class_name_by_descriptor(*b);
-            buf[parameter_types_count++] = classloader_load_class(loader, class_name)->clsobj;
+            buf[parameter_types_count++] = load_class(loader, class_name)->clsobj;
         } else {
             VM_UNKNOWN_ERROR("descriptor error %s", descriptor);
             return NULL;
@@ -154,7 +154,7 @@ struct object* method_descriptor_to_parameter_types(struct classloader *loader, 
     // todo parameter_types_count == 0 是不是要填一个 void.class
 
     struct object *parameter_types
-            = arrobj_create(classloader_load_class(loader, "[Ljava/lang/Class;"), parameter_types_count);
+            = arrobj_create(load_class(loader, "[Ljava/lang/Class;"), parameter_types_count);
     for (int i = 0; i < parameter_types_count; i++) {
         arrobj_set(struct object *, parameter_types, i, buf[i]);
     }

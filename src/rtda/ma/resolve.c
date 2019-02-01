@@ -15,7 +15,7 @@ struct class* resolve_class(struct class *visitor, int cp_index)
         return (struct class *) CP_INFO(cp, cp_index);
     }
 
-    struct class *c = classloader_load_class(visitor->loader, CP_CLASS_NAME(cp, cp_index));
+    struct class *c = load_class(visitor->loader, CP_CLASS_NAME(cp, cp_index));
     if (!class_is_accessible_to(c, visitor)) {
         // todo  java.lang.IllegalAccessError
         jvm_abort("java.lang.IllegalAccessError\n");

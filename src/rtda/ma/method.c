@@ -44,7 +44,7 @@ struct object* method_get_exception_types(struct method *method)
         }
 
         method->exception_types
-                = arrobj_create(classloader_load_class(method->clazz->loader, "[Ljava/lang/Class;"), count);
+                = arrobj_create(load_class(method->clazz->loader, "[Ljava/lang/Class;"), count);
         for (int i = 0; i < count; i++) {
             arrobj_set(struct object *, method->exception_types, i, exception_types[i]);
         }
@@ -137,7 +137,7 @@ static void parse_code_attr(struct method *method, struct bytecode_reader *reade
                     t->catch_type = (struct class *) CP_INFO(&method->clazz->constant_pool, catch_type);
                 else {
                     const char *class_name = CP_CLASS_NAME(&method->clazz->constant_pool, catch_type);
-                    t->catch_type = classloader_load_class(method->clazz->loader, class_name);
+                    t->catch_type = load_class(method->clazz->loader, class_name);
                 }
             }
         }
@@ -409,9 +409,8 @@ int method_find_exception_handler(struct method *method, struct class *exception
 
 char *method_to_string(const struct method *method)
 {
-#undef MAX_LEN
 #define MAX_LEN 1023 // big enough
-    VM_MALLOCS(char, MAX_LEN + 1, result);
+    char *result = vm_malloc(sizeof(char)*(MAX_LEN + 1));
 
     if (method != NULL) {
         int n = snprintf(result, MAX_LEN,

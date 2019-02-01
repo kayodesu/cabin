@@ -445,7 +445,7 @@ static void putOrderedLong(struct frame *frame)
 static void allocateMemory(struct frame *frame)
 {
     jlong bytes = frame_locals_getl(frame, 1);
-    VM_MALLOCS(u1, bytes, p);
+    u1 *p = vm_malloc(sizeof(char)*bytes);
     frame_stack_pushl(frame, (jlong) (intptr_t) p);
 }
 

@@ -25,7 +25,6 @@ static inline void set_thread_self(struct thread *thread)
     pthread_setspecific(thread_key, thread);
 }
 
-#if 1
 /*
  * main thread 由虚拟机启动。
  */
@@ -75,10 +74,7 @@ void create_main_thread(struct classloader *loader)
     class_clinit(jlt_class);
     exec_java_func(constructor, args);
 }
-#endif
 
-//#define INVALID_VM_STACK_TOP -1
-//
 struct thread *thread_create(struct classloader *loader, struct object *jltobj)
 {
     assert(loader != NULL);

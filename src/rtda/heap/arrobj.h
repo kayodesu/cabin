@@ -17,10 +17,6 @@ struct object *arrobj_create(struct class *arr_class, jint arr_len);
  */
 struct object *arrobj_create_multi(struct class *arr_class, size_t arr_dim, const size_t *arr_lens);
 
-//#define ARR_ELE_SIZE(o) (*(jint *) ((o)->extra))
-//#define ARR_LEN(o) (*(jint *) (((s1 *)((o)->extra)) + sizeof(jint)))
-//#define ARR_DATA(o) (((s1 *)((o)->extra)) + 2 * sizeof(jint))
-
 static inline jint arrobj_len(const struct object *o)
 {
     assert(o != NULL);
@@ -41,13 +37,6 @@ static inline bool arrobj_check_bounds(const struct object *o, jint index)
     assert(object_is_array(o));
     return 0 <= index && index < o->u.a.len;
 }
-
-//static inline void* arrobj_index(struct object *arrobj, jint index)
-//{
-//    u1 *p = (u1 *) arrobj->data;
-//    printvm("+++++++++++++++++++++++++++++++++++++++             %p, %d, %d\n", p, arrobj->u.a.ele_size, index);
-//    return p + arrobj->u.a.ele_size * index;
-//}
 
 #define arrobj_index(arrobj, index) ( ((u1 *) ((arrobj)->data)) + (arrobj)->u.a.ele_size * (index) )
 

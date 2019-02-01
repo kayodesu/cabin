@@ -64,7 +64,7 @@ struct object *arrobj_create_multi(struct class *arr_class, size_t arr_dim, cons
     }
 
     // todo
-    struct class *ele_class = classloader_load_class(arr_class->loader, arr_class->class_name + 1); // jump '['
+    struct class *ele_class = load_class(arr_class->loader, arr_class->class_name + 1); // jump '['
     for (size_t i = 0; i < len; i++) {
         arrobj_set(jref, o, i, arrobj_create_multi(ele_class, arr_dim - 1, arr_lens + 1));
     }

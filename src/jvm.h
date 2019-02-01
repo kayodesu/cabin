@@ -74,12 +74,6 @@ static inline void* vm_calloc(size_t n, size_t size)
     return p;
 }
 
-#define VM_MALLOC_EXT(type, count, extra_len, var_name) type *(var_name) = vm_malloc(sizeof(type) * (count) + (extra_len));
-
-#define VM_MALLOCS(type, count, var_name) VM_MALLOC_EXT(type, count, 0, var_name)
-
-#define VM_MALLOC(type, var_name) VM_MALLOCS(type, 1, var_name)
-
 /*
  * jvms规定函数最多有255个参数，this也算，long和double占两个长度
  */

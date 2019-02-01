@@ -25,6 +25,4 @@ void register_native_method(const char *key, native_method_t method);
  */
 native_method_t find_native_method(const char *class_name, const char *method_name, const char *method_descriptor);
 
-//void print_registered_native_methods();
-
 #endif //JVM_REGISTRY_H

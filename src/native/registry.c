@@ -40,7 +40,7 @@ native_method_t find_native_method(const char *class_name, const char *method_na
     }
 
     // todo not find;   UnsatisfiedLinkError异常
-//    jvm_abort("can't find native function: %s\n", key); /////////////////////////////////////////////// todo
+//    jvm_abort("can't find native function: %s\n", key); /////////////// todo
     return NULL;
 }
 

@@ -29,16 +29,6 @@ static inline void bcr_init(struct bytecode_reader *reader, const u1 *bytecode, 
     reader->pc = 0;
 }
 
-static inline struct bytecode_reader* bcr_create(const u1 *bytecode, size_t len)
-{
-    assert(bytecode != NULL);
-
-    VM_MALLOC(struct bytecode_reader, reader);
-    bcr_init(reader, bytecode, len);
-
-    return reader;
-}
-
 static inline const u1* bcr_curr_pos(struct bytecode_reader *reader)
 {
     assert(reader != NULL);

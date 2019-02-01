@@ -44,40 +44,6 @@ void pop_frame();
 
 int vm_stack_depth();
 
-
-/*
- * 返回完整的虚拟机栈
- * 顺序为由栈底到栈顶
- * 由调用者释放返回的 array of struct frame *
- */
-//struct frame** thread_get_frames(const struct thread *thread, int *num);
-
-/*
- * 生成包含@method的栈帧，并将其压入@thread的虚拟机栈中，
- * 同时中断当前虚拟机栈栈顶的栈帧，以期执行@method所对应的新生成的栈帧。
- *
- * Note：这里只是生成栈帧并压栈，如果在一个循环中调用此方法，会造成联系压入多个栈帧，如：
- * 当前虚拟机栈：
- * ...|top frame|
- * 执行下面语句
- *      for(int i = 0; i < 3; i++) jthread_invoke_method(...);
- * 后的虚拟机栈：
- * ...|top frame|new frame 1|new frame 2|new frame 3|
- * top frame中断后会执行new frame 3，但是如果@method方法有返回值，
- * 执行new frame 3后，其返回值会压入new frame 2，这是错误的，
- * 因为不是new frame 2调用的它，是top frame调用的。
- * 这种错误的压入会造成new frame 2的操作栈溢出（错误的压入new frame 3的返回值所致）。
- *
- * 综上：不支持在循环中调用 jthread_invoke_method 来执行带返回值的方法（@method）。
- */
-//void thread_invoke_method(struct thread *thread, struct method *method, const struct slot *args);
-
-/*
- * 这个函数存在的意义是为了解决函数jthread_invoke_method无法在循环中执行带返回值的方法的问题，
- * 参加 jthread_invoke_method 的注释。
- */
-//void thread_invoke_method_with_shim(struct thread *thread, struct method *method, const struct slot *args);
-
 void thread_handle_uncaught_exception(struct object *exception);
 
 _Noreturn void thread_throw_null_pointer_exception();

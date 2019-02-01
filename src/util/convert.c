@@ -7,17 +7,11 @@
 union fi {
     jint i;
     jfloat f;
-
-//    explicit FI(jint i): i(i) { }
-//    explicit FI(jfloat f): f(f) { }
 };
 
 union dl {
     jlong l;
     jdouble d;
-
-//    explicit DL(jlong l): l(l) { }
-//    explicit DL(jdouble d): d(d) { }
 };
 
 int32_t bytes_to_int32(const uint8_t bytes[4])

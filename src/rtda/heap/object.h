@@ -9,13 +9,6 @@
 #include "../ma/class.h"
 
 struct object {
-    /*
-     * 对象头
-     */
-    struct objheader {
-
-    } header;
-
     struct class *clazz;
     size_t size; // size of this object
 
@@ -60,8 +53,6 @@ bool object_is_jlclass(const struct object *o);
 struct object* object_clone(const struct object *src);
 
 void set_instance_field_value(struct object *o, struct field *f, const slot_t *value);
-//void set_instance_field_value_by_nt(struct object *o,
-//                                    const char *name, const char *descriptor, const slot_t *value);
 
 const slot_t* get_instance_field_value(const struct object *o, struct field *f);
 

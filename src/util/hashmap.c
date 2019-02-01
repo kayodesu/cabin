@@ -15,7 +15,7 @@ struct item {
 
 static inline struct item* item_create(int hash, const void *key, void *value, struct item *next)
 {
-    VM_MALLOC(struct item, item);
+    struct item *item = vm_malloc(sizeof(struct item));
     item->hash = hash;
     item->key = key;
     item->value = value;
@@ -55,7 +55,7 @@ struct hashmap* hashmap_create(int (*hash)(const void *), int (* cmp)(const void
     assert(hash != NULL);
     assert(cmp != NULL);
 
-    VM_MALLOC(struct hashmap, map);
+    struct hashmap *map = vm_malloc(sizeof(struct hashmap));
     map->length = DEFAULT_INITIAL_CAPACITY;
     map->table = vm_calloc(sizeof(*(map->table)), map->length);
     map->size = 0;

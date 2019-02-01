@@ -225,7 +225,7 @@ static void multianewarray(struct frame *frame)
         arr_lens[i] = (size_t) len;
     }
 
-    struct class *arr_class = classloader_load_class(curr_class->loader, class_name);
+    struct class *arr_class = load_class(curr_class->loader, class_name);
     jref arr = arrobj_create_multi(arr_class, arr_dim, arr_lens);
     frame_stack_pushr(frame, arr);
 }
@@ -270,7 +270,7 @@ static void newarray(struct frame *frame)
             return;
     }
 
-    struct class *c = classloader_load_class(frame->method->clazz->loader, arr_name);
+    struct class *c = load_class(frame->method->clazz->loader, arr_name);
     frame_stack_pushr(frame, arrobj_create(c, (size_t) arr_len));
 }
 
@@ -302,7 +302,7 @@ static void anewarray(struct frame *frame)
     }
 
     char *arr_class_name = get_arr_class_name(class_name);
-    struct class *arr_class = classloader_load_class(frame->method->clazz->loader, arr_class_name);
+    struct class *arr_class = load_class(frame->method->clazz->loader, arr_class_name);
     free(arr_class_name);
     frame_stack_pushr(frame, arrobj_create(arr_class, (size_t) arr_len));
 }
@@ -401,7 +401,7 @@ static void parse_bootstrap_method_type(
 // todo 注意有一个这个方法： MethodType.fromMethodDescriptorString 更方便
     struct object *parameter_types = method_descriptor_to_parameter_types(curr_class->loader, ref->nt->descriptor);
     struct object *return_type = method_descriptor_to_return_type(curr_class->loader, ref->nt->descriptor);
-    struct class *c = classloader_load_class(g_bootstrap_loader, "java/lang/invoke/MethodType");
+    struct class *c = load_class(g_bootstrap_loader, "java/lang/invoke/MethodType");
 
     // public static MethodType methodType(Class<?> rtype, Class<?>[] ptypes)
     if (arrobj_len(parameter_types) > 0) {
@@ -424,7 +424,7 @@ static void parse_bootstrap_method_type(
 
 static void get_lookup(struct thread *curr_thread)
 {
-    struct class *c = classloader_load_class(g_bootstrap_loader, "java/lang/invoke/MethodHandles");
+    struct class *c = load_class(g_bootstrap_loader, "java/lang/invoke/MethodHandles");
     struct method *m = class_lookup_static_method(c, "lookup", "()Ljava/lang/invoke/MethodHandles$Lookup;");
     thread_invoke_method_with_shim(curr_thread, m, NULL, set_lookup);
 
@@ -441,7 +441,7 @@ static void get_lookup(struct thread *curr_thread)
 //        case STRING_CONSTANT:
 //            return rslot(strobj_create(rtcp_get_str(rtcp, index)));
 //        case CLASS_CONSTANT:
-//            return rslot(clsobj_create(classloader_load_class(loader, rtcp_get_class_name(rtcp, index))));
+//            return rslot(clsobj_create(load_class(loader, rtcp_get_class_name(rtcp, index))));
 //        case INTEGER_CONSTANT:
 //            return islot(rtcp_get_int(rtcp, index));
 //        case LONG_CONSTANT:
@@ -474,7 +474,7 @@ static void set_call_set(struct class *curr_class, struct thread *curr_thread,
 
     struct method_ref *mr = ref->handle->ref.mr;
 
-    struct class *bootstrap_class = classloader_load_class(loader, mr->class_name);
+    struct class *bootstrap_class = load_class(loader, mr->class_name);
     struct method *bootstrap_method = class_lookup_static_method(bootstrap_class, mr->name, mr->descriptor);
     // todo 说明 bootstrap_method 的格式
     // bootstrap_method is static,  todo 对不对
@@ -583,8 +583,6 @@ void invokedynamic(struct frame *frame)
 #endif
 }
 
-
-
 #define CASE(x, body) case x: { body; break; }
 #define CASE2(x, y, body) case x: case y: { body; break; }
 #define CASE3(x, y, z, body) case x: case y: case z: { body; break; }
@@ -601,6 +599,16 @@ static slot_t * exec()
      * 以上指令执行前需检查此标志，执行后需复位（置为false）此标志。
      */
     bool wide_extending = false;
+
+#define FETCH_WIDE_INDEX \
+    int index; \
+    if (wide_extending) { \
+        wide_extending = false; /* recover */  \
+        index = bcr_readu2(&frame->reader); \
+    } else { \
+        index = bcr_readu1(&frame->reader); \
+    }
+
     struct thread *thread = thread_self();
 
     struct method *resolved_method;
@@ -641,14 +649,6 @@ static slot_t * exec()
             CASE(OPC_LDC_W, __ldc(frame, frame_readu2(frame)))
             CASE(OPC_LDC2_W, ldc2_w(frame))
 
-#define FETCH_WIDE_INDEX \
-    int index; \
-    if (wide_extending) { \
-        wide_extending = false; /* recover */  \
-        index = bcr_readu2(&frame->reader); \
-    } else { \
-        index = bcr_readu1(&frame->reader); \
-    }
             CASE3(OPC_ILOAD, OPC_FLOAD, OPC_ALOAD, {
                 FETCH_WIDE_INDEX
                 *frame->stack++ = frame->locals[index];

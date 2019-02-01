@@ -151,7 +151,7 @@ void object_destroy(struct object *o)
 const char* object_to_string(const struct object *o)
 {
 #define MAX_LEN 1023 // big enough? todo
-    VM_MALLOCS(char, MAX_LEN + 1, result);
+    char *result = vm_malloc(sizeof(char)*(MAX_LEN + 1));
     if (o == NULL) {
         strcpy(result, "object is null");
         return result;

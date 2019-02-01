@@ -8,8 +8,6 @@
 #include <stddef.h>
 #include "../jtypes.h"
 
-void* decode_mutf8(const uint8_t *src_bytes, size_t len, char dest[len + 1]);
-
 jchar* utf8_to_unicode(const const char *str);
 
 char* unicode_to_utf8(const const jchar arr[], size_t len);

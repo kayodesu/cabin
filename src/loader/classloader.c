@@ -94,7 +94,7 @@ static struct bytecode_content read_class_from_jar(const char *jar_path, const c
                 }
 
                 size_t uncompressed_size = file_info.uncompressed_size;
-                VM_MALLOCS(s1, uncompressed_size, bytecode);
+                s1 *bytecode = vm_malloc(sizeof(s1) * uncompressed_size);
                 if (unzReadCurrentFile(jar_file, bytecode, (unsigned int) uncompressed_size) != uncompressed_size) {
                     // todo error
                     unzCloseCurrentFile(jar_file);  // todo 干嘛的
@@ -137,7 +137,7 @@ static struct bytecode_content read_class_from_dir(const char *dir_path, const c
         fseek(f, 0, SEEK_END); //定位到文件末
         size_t file_len = (size_t) ftell(f); //文件长度
 
-        VM_MALLOCS(s1, file_len, bytecode);
+        s1 *bytecode = vm_malloc(sizeof(s1) * file_len);
         fseek(f, 0, SEEK_SET);
         fread(bytecode, 1, file_len, f);
         fclose(f);
@@ -209,7 +209,7 @@ static struct bytecode_content read_class(const char *class_name)
 
 struct classloader* classloader_create(bool is_bootstrap_loader)
 {
-    VM_MALLOC(struct classloader, loader);
+    struct classloader *loader = vm_malloc(sizeof(struct classloader));
     if (is_bootstrap_loader) {
         g_bootstrap_loader = loader;
     }
@@ -353,14 +353,7 @@ static struct class* load_non_arr_class(struct classloader *loader, const char *
     return initialization(resolution(preparation(verification(c))));
 }
 
-struct class* classloader_find_class(const struct classloader *loader, const char *class_name)
-{
-    assert(loader != NULL);
-    assert(class_name != NULL);
-    return hashmap_find(loader->loaded_class_pool, class_name);
-}
-
-struct class* classloader_load_class(struct classloader *loader, const char *class_name)
+struct class* load_class(struct classloader *loader, const char *class_name)
 {
     assert(loader != NULL);
     assert(class_name != NULL);

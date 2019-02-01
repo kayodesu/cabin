@@ -23,7 +23,7 @@ struct frame {
      */
     bool vm_invoke;
 
-    slot_t *stack; // operand stack
+    slot_t *stack;   // operand stack
     slot_t locals[]; // local variables
 };
 
@@ -40,14 +40,12 @@ struct frame {
 #define frame_has_more(frame) bcr_has_more(&((frame)->reader))
 #define frame_skip(frame, offset) bcr_skip(&((frame)->reader), offset)
 
-
 #define frame_locals_geti(f, index) ISLOT((f)->locals + (index))
 #define frame_locals_getz(f, index) (ISLOT((f)->locals + (index)) != 0)
 #define frame_locals_getf(f, index) FSLOT((f)->locals + (index))
 #define frame_locals_getl(f, index) LSLOT((f)->locals + (index))
 #define frame_locals_getd(f, index) DSLOT((f)->locals + (index))
 #define frame_locals_getr(f, index) RSLOT((f)->locals + (index))
-
 
 static inline void frame_stack_pushi(struct frame *f, jint value)    { *(jint *) f->stack = value; f->stack++; }
 static inline void frame_stack_pushf(struct frame *f, jfloat value)  { *(jfloat *) f->stack = value; f->stack++; }

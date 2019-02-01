@@ -119,7 +119,7 @@ static void start_jvm(const char *main_class_name)
     // 在VM类的类初始化方法中调用了 "initialize" 方法。
     class_clinit(vm_class);
 
-    struct class *main_class = classloader_load_class(loader, main_class_name);
+    struct class *main_class = load_class(loader, main_class_name);
     struct method *main_method = class_lookup_static_method(main_class, "main", "([Ljava/lang/String;)V");
     if (main_method == NULL) {
         jvm_abort("can't find method main."); // todo
