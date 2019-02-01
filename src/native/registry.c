@@ -44,80 +44,46 @@ native_method_t find_native_method(const char *class_name, const char *method_na
     return NULL;
 }
 
-void java_lang_Class_registerNatives();
-void java_lang_Float_registerNatives();
-void java_lang_System_registerNatives();
-void java_lang_Double_registerNatives();
-void java_lang_Object_registerNatives();
-void java_lang_String_registerNatives();
-void java_lang_Throwable_registerNatives();
-void java_lang_Thread_registerNatives();
-void java_lang_Runtime_registerNatives();
-void java_lang_reflect_Field_registerNatives();
-void java_lang_reflect_Executable_registerNatives();
-void java_lang_ClassLoader_registerNatives();
-void java_lang_ClassLoader$NativeLibrary_registerNatives();
-
-void java_io_FileDescriptor_registerNatives();
-void java_io_FileInputStream_registerNatives();
-void java_io_FileOutputStream_registerNatives();
-void java_io_WinNTFileSystem_registerNatives();
-
-void java_nio_Bits_registerNatives();
-
-void sun_misc_VM_registerNatives();
-void sun_misc_Unsafe_registerNatives();
-void sun_misc_Signal_registerNatives();
-void sun_misc_Version_registerNatives();
-void sun_io_Win32ErrorMode_registerNatives();
-
-void sun_reflect_Reflection_registerNatives();
-void sun_reflect_NativeConstructorAccessorImpl_registerNatives();
-void sun_reflect_NativeMethodAccessorImpl_registerNatives();
-void sun_reflect_ConstantPool_registerNatives();
-
-void java_security_AccessController_registerNatives();
-
-void java_util_concurrent_atomic_AtomicLong_registerNatives();
+#define DECLARE_AND_INVOKE(func_name) void func_name(); func_name()
 
 void register_all_native_methods()
 {
     native_methods = hashmap_create_str_key(false);
 
-    java_lang_Class_registerNatives();
-    java_lang_Float_registerNatives();
-    java_lang_System_registerNatives();
-    java_lang_Double_registerNatives();
-    java_lang_Object_registerNatives();
-    java_lang_String_registerNatives();
-    java_lang_Throwable_registerNatives();
-    java_lang_Thread_registerNatives();
-    java_lang_Runtime_registerNatives();
-    java_lang_reflect_Field_registerNatives();
-    java_lang_reflect_Executable_registerNatives();
-    java_lang_ClassLoader_registerNatives();
-    java_lang_ClassLoader$NativeLibrary_registerNatives();
+    DECLARE_AND_INVOKE(java_lang_Class_registerNatives);
+    DECLARE_AND_INVOKE(java_lang_Float_registerNatives);
+    DECLARE_AND_INVOKE(java_lang_System_registerNatives);
+    DECLARE_AND_INVOKE(java_lang_Double_registerNatives);
+    DECLARE_AND_INVOKE(java_lang_Object_registerNatives);
+    DECLARE_AND_INVOKE(java_lang_String_registerNatives);
+    DECLARE_AND_INVOKE(java_lang_Throwable_registerNatives);
+    DECLARE_AND_INVOKE(java_lang_Thread_registerNatives);
+    DECLARE_AND_INVOKE(java_lang_Runtime_registerNatives);
+    DECLARE_AND_INVOKE(java_lang_reflect_Field_registerNatives);
+    DECLARE_AND_INVOKE(java_lang_reflect_Executable_registerNatives);
+    DECLARE_AND_INVOKE(java_lang_ClassLoader_registerNatives);
+    DECLARE_AND_INVOKE(java_lang_ClassLoader$NativeLibrary_registerNatives);
 
-    java_io_FileDescriptor_registerNatives();
-    java_io_FileInputStream_registerNatives();
-    java_io_FileOutputStream_registerNatives();
-    java_io_WinNTFileSystem_registerNatives();
+    DECLARE_AND_INVOKE(java_io_FileDescriptor_registerNatives);
+    DECLARE_AND_INVOKE(java_io_FileInputStream_registerNatives);
+    DECLARE_AND_INVOKE(java_io_FileOutputStream_registerNatives);
+    DECLARE_AND_INVOKE(java_io_WinNTFileSystem_registerNatives);
 
-    java_nio_Bits_registerNatives();
+    DECLARE_AND_INVOKE(java_nio_Bits_registerNatives);
 
-    sun_misc_VM_registerNatives();
-    sun_misc_Unsafe_registerNatives();
-    sun_misc_Signal_registerNatives();
-    sun_misc_Version_registerNatives();
+    DECLARE_AND_INVOKE(sun_misc_VM_registerNatives);
+    DECLARE_AND_INVOKE(sun_misc_Unsafe_registerNatives);
+    DECLARE_AND_INVOKE(sun_misc_Signal_registerNatives);
+    DECLARE_AND_INVOKE(sun_misc_Version_registerNatives);
 
-    sun_io_Win32ErrorMode_registerNatives();
+    DECLARE_AND_INVOKE(sun_io_Win32ErrorMode_registerNatives);
 
-    sun_reflect_Reflection_registerNatives();
-    sun_reflect_NativeConstructorAccessorImpl_registerNatives();
-    sun_reflect_NativeMethodAccessorImpl_registerNatives();
-    sun_reflect_ConstantPool_registerNatives();
+    DECLARE_AND_INVOKE(sun_reflect_Reflection_registerNatives);
+    DECLARE_AND_INVOKE(sun_reflect_NativeConstructorAccessorImpl_registerNatives);
+    DECLARE_AND_INVOKE(sun_reflect_NativeMethodAccessorImpl_registerNatives);
+    DECLARE_AND_INVOKE(sun_reflect_ConstantPool_registerNatives);
 
-    java_security_AccessController_registerNatives();
+    DECLARE_AND_INVOKE(java_security_AccessController_registerNatives);
 
-    java_util_concurrent_atomic_AtomicLong_registerNatives();
+    DECLARE_AND_INVOKE(java_util_concurrent_atomic_AtomicLong_registerNatives);
 }
