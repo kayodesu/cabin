@@ -121,11 +121,11 @@ void ldc2_w(struct frame *frame)
     u1 type = CP_TYPE(cp, index);
 
     if (type == CONSTANT_Long) {
-        frame_stack_pushl(frame, CP_LONG(cp, index));//rtcp_get_long(rtcp, index));
+        frame_stack_pushl(frame, CP_LONG(cp, index));
     } else if (type == CONSTANT_Double) {
-        frame_stack_pushd(frame, CP_DOUBLE(cp, index));//rtcp_get_double(rtcp, index));
+        frame_stack_pushd(frame, CP_DOUBLE(cp, index));
     } else {
-        jvm_abort("error. %d\n", type);
+        VM_UNKNOWN_ERROR("unknown type: %d", type);
     }
 }
 
@@ -203,77 +203,386 @@ static void lookupswitch(struct frame *frame)
     reader->pc = saved_pc + offset;
 }
 
-// math instructions ---------------------------------------------------------------------------------------------------
-static inline void __frem(struct frame *frame)
-{
-    jfloat v2 = frame_stack_popf(frame);
-    jfloat v1 = frame_stack_popf(frame);
-    jvm_abort("not implement\n");
-//    os_pushf(frame->operand_stack, dremf(v1, v2)); /* todo 相加溢出的问题 */
-}
-
-
-static inline void __drem(struct frame *frame)
-{
-    jdouble v2 = frame_stack_popd(frame);
-    jdouble v1 = frame_stack_popd(frame);
-    jvm_abort("未实现\n");
-//    os_pushd(frame->operand_stack, drem(v1, v2)); /* todo 相加溢出的问题 */
-}
-
-static inline void ishl(struct frame *frame)
-{
-    // 与0x1f是因为低5位表示位移距离，位移距离实际上被限制在0到31之间。
-    jint shift = frame_stack_popi(frame) & 0x1f;
-    jint value = frame_stack_popi(frame);
-    frame_stack_pushi(frame, value << shift);
-}
-
-static inline void lshl(struct frame *frame)
-{
-    // 与0x3f是因为低6位表示位移距离，位移距离实际上被限制在0到63之间。
-    jint shift = frame_stack_popi(frame) & 0x3f;
-    jlong value = frame_stack_popl(frame);
-    frame_stack_pushl(frame, value << shift);
-}
-
-// 逻辑右移 shift logical right
-static inline void ishr(struct frame *frame)
-{
-    jint shift = frame_stack_popi(frame) & 0x1f;
-    jint value = frame_stack_popi(frame);
-    frame_stack_pushi(frame, (~(((jint)1) >> shift)) & (value >> shift));
-}
-
-static inline void lshr(struct frame *frame)
-{
-    jint shift = frame_stack_popi(frame) & 0x3f;
-    jlong value = frame_stack_popl(frame);
-    frame_stack_pushl(frame, (~(((jlong)1) >> shift)) & (value >> shift));
-}
-
-// 算术右移 shift arithmetic right
-static inline void iushr(struct frame *frame)
-{
-    jint shift = frame_stack_popi(frame) & 0x1f;
-    jint value = frame_stack_popi(frame);
-    frame_stack_pushi(frame, value >> shift);
-}
-
-static inline void lushr(struct frame *frame)
-{
-    jint shift = frame_stack_popi(frame) & 0x3f;
-    jlong value = frame_stack_popl(frame);
-    frame_stack_pushl(frame, value >> shift);
-}
 
 // extended instructions -----------------------------------------------------------------------------------------------
-void multianewarray(struct frame *frame);
+/*
+ * 创建多维数组
+ * todo 注意这种情况，基本类型的多维数组 int[][][]
+ */
+static void multianewarray(struct frame *frame)
+{
+    struct class *curr_class = frame->method->clazz;
+    int index = bcr_readu2(&frame->reader);
+    const char *class_name = CP_UTF8(&curr_class->constant_pool, index); // 这里解析出来的直接就是数组类。
 
-// reference instructions ----------------------------------------------------------------------------------------------
-void invokedynamic(struct frame *);
-void newarray(struct frame *);
-void anewarray(struct frame *);
+    int arr_dim = bcr_readu1(&frame->reader); // 多维数组的维度
+    size_t arr_lens[arr_dim]; // 每一维数组的长度
+    for (int i = arr_dim - 1; i >= 0; i--) {
+        int len = frame_stack_popi(frame);
+        if (len < 0) {  // todo 等于0的情况
+            thread_throw_negative_array_size_exception(len);
+        }
+        arr_lens[i] = (size_t) len;
+    }
+
+    struct class *arr_class = classloader_load_class(curr_class->loader, class_name);
+    jref arr = arrobj_create_multi(arr_class, arr_dim, arr_lens);
+    frame_stack_pushr(frame, arr);
+}
+
+/*
+ * 创建一维基本类型数组。包括 boolean[], byte[], char[], short[], int[], long[], float[] 和 double[] 8种。
+ * 显然基本类型数组肯定都是一维数组，
+ * 如果引用类型数组的元素也是数组，那么它就是多维数组。
+ */
+static void newarray(struct frame *frame)
+{
+    jint arr_len = frame_stack_popi(frame);
+    if (arr_len < 0) {
+        thread_throw_negative_array_size_exception(arr_len);
+    }
+
+    // todo arrLen == 0 的情况
+
+    /*
+     * AT_BOOLEAN = 4
+     * AT_CHAR    = 5
+     * AT_FLOAT   = 6
+     * AT_DOUBLE  = 7
+     * AT_BYTE    = 8
+     * AT_SHORT   = 9
+     * AT_INT     = 10
+     * AT_LONG    = 11
+     */
+    int arr_type = bcr_readu1(&frame->reader);
+    char *arr_name;
+    switch (arr_type) {
+        case 4: arr_name = "[Z"; break;
+        case 5: arr_name = "[C"; break;
+        case 6: arr_name = "[F"; break;
+        case 7: arr_name = "[D"; break;
+        case 8: arr_name = "[B"; break;
+        case 9: arr_name = "[S"; break;
+        case 10: arr_name = "[I"; break;
+        case 11: arr_name = "[J"; break;
+        default:
+            VM_UNKNOWN_ERROR("error. Invalid array type: %d", arr_type);
+            return;
+    }
+
+    struct class *c = classloader_load_class(frame->method->clazz->loader, arr_name);
+    frame_stack_pushr(frame, arrobj_create(c, (size_t) arr_len));
+}
+
+/*
+ * todo
+ * 这函数是干嘛的，
+ * 实现完全错误
+ * 创建一维引用类型数组
+ */
+static void anewarray(struct frame *frame)
+{
+    jint arr_len = frame_stack_popi(frame);
+    if (arr_len < 0) {
+        thread_throw_array_index_out_of_bounds_exception(arr_len);
+    }
+
+    // todo arrLen == 0 的情况
+
+    int index = bcr_readu2(&frame->reader);
+    struct constant_pool *cp = &frame->method->clazz->constant_pool;
+
+    const char *class_name;
+    u1 type = CP_TYPE(cp, index);
+    if (type == CONSTANT_ResolvedClass) {
+        struct class *c = (struct class *) CP_INFO(cp, index);
+        class_name = c->class_name;
+    } else {
+        class_name = CP_CLASS_NAME(cp, index);
+    }
+
+    char *arr_class_name = get_arr_class_name(class_name);
+    struct class *arr_class = classloader_load_class(frame->method->clazz->loader, arr_class_name);
+    free(arr_class_name);
+    frame_stack_pushr(frame, arrobj_create(arr_class, (size_t) arr_len));
+}
+
+
+/*
+ *
+    struct {
+        // bootstrap_method_attr_index项的值必须是对当前Class文件中引导方法表的bootstrap_methods[]数组的有效索引。
+        u2 bootstrap_method_attr_index;
+        u2 name_and_type_index;
+    } invoke_dynamic_constant;
+
+    struct {
+        u2 num;
+        struct bootstrap_method *methods;
+    } bootstrap_methods;
+
+    struct bootstrap_method {
+        /*
+        * bootstrap_method_ref 项的值必须是一个对常量池的有效索引。
+        * 常量池在该索引处的值必须是一个CONSTANT_MethodHandle_info结构。
+        * 注意：此CONSTANT_MethodHandle_info结构的reference_kind项应为值6（REF_invokeStatic）或8（REF_newInvokeSpecial），
+        * 否则在invokedynamic指令解析调用点限定符时，引导方法会执行失败。
+        *
+        u2 bootstrap_method_ref;
+        u2 num_bootstrap_arguments;
+        /*
+        * bootstrap_arguments 数组的每个成员必须是一个对常量池的有效索引。
+        * 常量池在该索引出必须是下列结构之一：
+        * CONSTANT_String_info, CONSTANT_Class_info, CONSTANT_Integer_info, CONSTANT_Long_info,
+        * CONSTANT_Float_info, CONSTANT_Double_info, CONSTANT_MethodHandle_info, CONSTANT_MethodType_info。
+        *
+        u2 *bootstrap_arguments;
+    };
+
+    struct {
+        // reference_kind项的值必须在1至9之间（包括1和9），它决定了方法句柄的类型。
+        // 方法句柄类型的值表示方法句柄的字节码行为。
+        u1 reference_kind;
+
+        * 2. If the value of the reference_kind item is 5 (REF_invokeVirtual) or 8
+        *    (REF_newInvokeSpecial), then the constant_pool entry at that index must
+        *    be a CONSTANT_Methodref_info structure representing a class's
+        *    method or constructor for which a method handle is to be created.
+        * 3. If the value of the reference_kind item is 6 (REF_invokeStatic)
+        *    or 7 (REF_invokeSpecial), then if the class file version number
+        *    is less than 52.0, the constant_pool entry at that index must be
+        *    a CONSTANT_Methodref_info structure representing a class's method
+        *    for which a method handle is to be created; if the class file
+        *    version number is 52.0 or above, the constant_pool entry at that
+        *    index must be either a CONSTANT_Methodref_info structure or a
+        *    CONSTANT_InterfaceMethodref_info structure representing a
+        *    class's or interface's method for which a method handle is to be created.
+        u2 reference_index;
+    } method_handle_constant;
+
+    struct {
+        u2 class_index;
+        u2 name_and_type_index;
+    } ref_constant, field_ref_constant, method_ref_constant, interface_method_ref_constant;
+ */
+
+#if 0
+static void set_bootstrap_method_type(struct frame *frame)
+{
+    assert(frame != NULL);
+    frame->thread->dyn.bootstrap_method_type = frame_stack_popr(frame);
+    int i = 3;
+}
+
+static void set_lookup(struct frame *frame)
+{
+    assert(frame != NULL);
+    frame->thread->dyn.lookup = frame_stack_popr(frame);
+    int i = 3;
+}
+
+static void set_call_set0(struct frame *frame)
+{
+    assert(frame != NULL);
+    frame->thread->dyn.call_set = frame_stack_popr(frame);
+    int i = 3;
+}
+
+static void set_exact_method_handle(struct frame *frame)
+{
+    assert(frame != NULL);
+    frame->thread->dyn.exact_method_handle = frame_stack_popr(frame);
+    int i = 3;
+}
+
+static void parse_bootstrap_method_type(
+        struct class *curr_class, struct thread *curr_thread, struct invoke_dynamic_ref *ref)
+{
+// todo 注意有一个这个方法： MethodType.fromMethodDescriptorString 更方便
+    struct object *parameter_types = method_descriptor_to_parameter_types(curr_class->loader, ref->nt->descriptor);
+    struct object *return_type = method_descriptor_to_return_type(curr_class->loader, ref->nt->descriptor);
+    struct class *c = classloader_load_class(g_bootstrap_loader, "java/lang/invoke/MethodType");
+
+    // public static MethodType methodType(Class<?> rtype, Class<?>[] ptypes)
+    if (arrobj_len(parameter_types) > 0) {
+        struct method *get_method_type = class_lookup_static_method(
+                c, "methodType", "(Ljava/lang/Class;[Ljava/lang/Class;)Ljava/lang/invoke/MethodType;");
+
+        struct slot args[] = { rslot(return_type), rslot(parameter_types) };
+        thread_invoke_method_with_shim(curr_thread, get_method_type, args, set_bootstrap_method_type);
+    } else {
+        struct method *get_method_type = class_lookup_static_method(
+                c, "methodType", "(Ljava/lang/Class;)Ljava/lang/invoke/MethodType;");
+        struct slot args[] = { rslot(return_type) };
+        thread_invoke_method_with_shim(curr_thread, get_method_type, args, set_bootstrap_method_type);
+    }
+
+    if (!c->inited) { // 后压栈，先执行
+        class_clinit(c, curr_thread);
+    }
+}
+
+static void get_lookup(struct thread *curr_thread)
+{
+    struct class *c = classloader_load_class(g_bootstrap_loader, "java/lang/invoke/MethodHandles");
+    struct method *m = class_lookup_static_method(c, "lookup", "()Ljava/lang/invoke/MethodHandles$Lookup;");
+    thread_invoke_method_with_shim(curr_thread, m, NULL, set_lookup);
+
+    if (!c->inited) { // 后压栈，先执行
+        class_clinit(c, curr_thread);
+    }
+}
+
+//static struct slot rtc_to_slot(struct classloader *loader, const struct rtcp *rtcp, int index)
+//{
+//    assert(rtcp != NULL);
+//
+//    switch (rtcp->pool[index].t) {
+//        case STRING_CONSTANT:
+//            return rslot(strobj_create(rtcp_get_str(rtcp, index)));
+//        case CLASS_CONSTANT:
+//            return rslot(clsobj_create(classloader_load_class(loader, rtcp_get_class_name(rtcp, index))));
+//        case INTEGER_CONSTANT:
+//            return islot(rtcp_get_int(rtcp, index));
+//        case LONG_CONSTANT:
+//            return lslot(rtcp_get_long(rtcp, index));
+//        case FLOAT_CONSTANT:
+//            return fslot(rtcp_get_float(rtcp, index));
+//        case DOUBLE_CONSTANT:
+//            return dslot(rtcp_get_double(rtcp, index));
+//        case METHOD_HANDLE_CONSTANT: {
+//            struct method_handle *mh = rtcp_get_method_handle(rtcp, index);
+//            // todo
+//            jvm_abort("");
+//            break;
+//        }
+//        case METHOD_TYPE_CONSTANT: {
+//            const char *descriptor = rtcp_get_method_type(rtcp, index);
+//            // todo
+//            jvm_abort("");
+//            break;
+//        }
+//        default:
+//            VM_UNKNOWN_ERROR("unknown type. t = %d, index = %d\n", rtcp->pool[index].t, index);
+//            break;
+//    }
+//}
+
+static void set_call_set(struct class *curr_class, struct thread *curr_thread,
+                        struct classloader *loader, struct invoke_dynamic_ref *ref)
+{
+
+    struct method_ref *mr = ref->handle->ref.mr;
+
+    struct class *bootstrap_class = classloader_load_class(loader, mr->class_name);
+    struct method *bootstrap_method = class_lookup_static_method(bootstrap_class, mr->name, mr->descriptor);
+    // todo 说明 bootstrap_method 的格式
+    // bootstrap_method is static,  todo 对不对
+    // 前三个参数固定为 MethodHandles.Lookup caller, String invokedName, MethodType invokedType todo 对不对
+    // 后续的参数由 ref->argc and ref->args 决定
+    assert(ref->argc + 3 == bootstrap_method->arg_slot_count);
+    struct slot args[bootstrap_method->arg_slot_count];
+    args[0] = rslot(curr_thread->dyn.lookup);
+    args[1] = rslot(strobj_create(mr->name));
+    args[2] = rslot(curr_thread->dyn.bootstrap_method_type);
+    // parse remaining args
+    for (int i = 0, j = 3; i < ref->argc; i++, j++) {
+        args[j] = rtc_to_slot(curr_class->loader, curr_class->rtcp, ref->args[i]); // todo 用哪个类的 rtcp
+    }
+
+    thread_invoke_method_with_shim(curr_thread, bootstrap_method, args, set_call_set0);
+}
+#endif
+
+// 每一个 invokedynamic 指令都称为 Dynamic Call Site(动态调用点)
+void invokedynamic(struct frame *frame)
+{
+    jvm_abort("invokedynamic not implement\n");  // todo
+
+#if 0
+    size_t saved_pc = frame->reader.pc - 1;
+
+    struct class *curr_class = frame->m.method->clazz;
+    struct thread *curr_thread = frame->thread;
+
+    // The run-time constant pool item at that index must be a symbolic reference to a call site specifier.
+    int index = bcr_readu2(&frame->reader); // CONSTANT_InvokeDynamic_info
+
+    bcr_readu1(&frame->reader); // this byte must always be zero.
+    bcr_readu1(&frame->reader); // this byte must always be zero.
+
+    struct invoke_dynamic_ref *ref = rtcp_get_invoke_dynamic(curr_class->rtcp, index);
+
+    struct object *bootstrap_method_type = curr_thread->dyn.bootstrap_method_type;
+    if (bootstrap_method_type == NULL) {
+        parse_bootstrap_method_type(curr_class, curr_thread, ref);
+        frame->reader.pc = saved_pc; // recover pc
+        return;
+    }
+
+    struct object *lookup = curr_thread->dyn.lookup;
+    if (lookup == NULL) {
+        get_lookup(curr_thread);
+        frame->reader.pc = saved_pc; // recover pc
+        return;
+    }
+
+    struct object *call_set = curr_thread->dyn.call_set;
+    struct object *exact_method_handle = curr_thread->dyn.exact_method_handle;
+
+    // todo
+    switch (ref->handle->kind) {
+        case REF_KIND_GET_FIELD:
+            break;
+        case REF_KIND_GET_STATIC:
+            break;
+        case REF_KIND_PUT_FIELD:
+            break;
+        case REF_KIND_PUT_STATIC:
+            break;
+        case REF_KIND_INVOKE_VIRTUAL:
+            break;
+        case REF_KIND_INVOKE_STATIC: {
+            if (call_set == NULL) {
+                set_call_set(curr_class, curr_thread, frame->m.method->clazz->loader, ref);
+                frame->reader.pc = saved_pc; // recover pc
+                return;
+            }
+
+            if (exact_method_handle != NULL) {
+                // public final Object invokeExact(Object... args) throws Throwable
+                struct method *exact_method = class_lookup_instance_method(
+                        exact_method_handle->clazz, "invokeExact", "[Ljava/lang/Object;");
+                // todo args
+                jvm_abort(""); ////////////////////////////////////////////////////
+                // invoke exact method, invokedynamic completely execute over.
+                thread_invoke_method(curr_thread, exact_method, NULL);
+                return;
+            } else {
+                // public abstract MethodHandle dynamicInvoker()
+                struct method *dynamic_invoker = class_lookup_instance_method(
+                        call_set->clazz, "dynamicInvoker", "()Ljava/lang/invoke/MethodHandle;");
+                struct slot arg = rslot(call_set);
+                thread_invoke_method_with_shim(curr_thread, dynamic_invoker, &arg, set_exact_method_handle);
+                frame->reader.pc = saved_pc; // recover pc
+                return;
+            }
+        }
+        case REF_KIND_INVOKE_SPECIAL:
+            break;
+        case REF_KIND_NEW_INVOKE_SPECIAL:
+            break;
+        case REF_KIND_INVOKE_INTERFACE:
+            break;
+        default:
+            VM_UNKNOWN_ERROR("unknown kind. %d", ref->handle->kind);
+            break;
+    }
+
+    // todo rest thread.dyn 的值，下次调用时这个值要从新解析。
+#endif
+}
+
 
 
 #define CASE(x, body) case x: { body; break; }
@@ -532,20 +841,60 @@ static slot_t * exec()
 
             CASE(OPC_IREM, BINARY_OP(jint, %))
             CASE(OPC_LREM, BINARY_OP(jlong, %))
-            CASE(OPC_FREM, __frem(frame))
-            CASE(OPC_DREM, __drem(frame))
+
+            CASE(OPC_FREM, {
+                jfloat v2 = frame_stack_popf(frame);
+                jfloat v1 = frame_stack_popf(frame);
+                jvm_abort("not implement\n");
+                //    os_pushf(frame->operand_stack, dremf(v1, v2)); /* todo 相加溢出的问题 */
+            })
+
+            CASE(OPC_DREM, {
+                jdouble v2 = frame_stack_popd(frame);
+                jdouble v1 = frame_stack_popd(frame);
+                jvm_abort("未实现\n");
+                //    os_pushd(frame->operand_stack, drem(v1, v2)); /* todo 相加溢出的问题 */
+            })
 
             CASE(OPC_INEG, frame_stack_pushi(frame, -frame_stack_popi(frame)))
             CASE(OPC_LNEG, frame_stack_pushl(frame, -frame_stack_popl(frame)))
             CASE(OPC_FNEG, frame_stack_pushf(frame, -frame_stack_popf(frame)))
             CASE(OPC_DNEG, frame_stack_pushd(frame, -frame_stack_popd(frame)))
 
-            CASE(OPC_ISHL, ishl(frame))
-            CASE(OPC_LSHL, lshl(frame))
-            CASE(OPC_ISHR, ishr(frame))
-            CASE(OPC_LSHR, lshr(frame))
-            CASE(OPC_IUSHR, iushr(frame))
-            CASE(OPC_LUSHR, lushr(frame))
+            CASE(OPC_ISHL, {
+                // 与0x1f是因为低5位表示位移距离，位移距离实际上被限制在0到31之间。
+                jint shift = frame_stack_popi(frame) & 0x1f;
+                jint value = frame_stack_popi(frame);
+                frame_stack_pushi(frame, value << shift);
+            })
+            CASE(OPC_LSHL, {
+                // 与0x3f是因为低6位表示位移距离，位移距离实际上被限制在0到63之间。
+                jint shift = frame_stack_popi(frame) & 0x3f;
+                jlong value = frame_stack_popl(frame);
+                frame_stack_pushl(frame, value << shift);
+            })
+            CASE(OPC_ISHR, {
+                // 逻辑右移 shift logical right
+                jint shift = frame_stack_popi(frame) & 0x1f;
+                jint value = frame_stack_popi(frame);
+                frame_stack_pushi(frame, (~(((jint)1) >> shift)) & (value >> shift));
+            })
+            CASE(OPC_LSHR, {
+                jint shift = frame_stack_popi(frame) & 0x3f;
+                jlong value = frame_stack_popl(frame);
+                frame_stack_pushl(frame, (~(((jlong)1) >> shift)) & (value >> shift));
+            })
+            CASE(OPC_IUSHR, {
+                // 算术右移 shift arithmetic right
+                jint shift = frame_stack_popi(frame) & 0x1f;
+                jint value = frame_stack_popi(frame);
+                frame_stack_pushi(frame, value >> shift);
+            })
+            CASE(OPC_LUSHR, {
+                jint shift = frame_stack_popi(frame) & 0x3f;
+                jlong value = frame_stack_popl(frame);
+                frame_stack_pushl(frame, value >> shift);
+            })
 
             CASE(OPC_IAND, BINARY_OP(jint, &))
             CASE(OPC_LAND, BINARY_OP(jlong, &))
@@ -905,7 +1254,7 @@ static slot_t * exec()
                 resolved_method = method;
                 goto invoke_method;
             }
-            case 0xba: // invokedynamic
+            case OPC_INVOKEDYNAMIC:
                 invokedynamic(frame);
                 break;
 invoke_method:

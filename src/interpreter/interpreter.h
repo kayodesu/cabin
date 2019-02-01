@@ -199,6 +199,7 @@ slot_t *exec_java_func(struct method *m, const slot_t *args);
 #define OPC_INVOKESPECIAL      183
 #define OPC_INVOKESTATIC       184
 #define OPC_INVOKEINTERFACE    185
+#define OPC_INVOKEDYNAMIC      186
 #define OPC_NEW                187
 #define OPC_NEWARRAY           188
 #define OPC_ANEWARRAY          189
