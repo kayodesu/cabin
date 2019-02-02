@@ -315,12 +315,10 @@ static void anewarray(struct frame *frame)
         u2 bootstrap_method_attr_index;
         u2 name_and_type_index;
     } invoke_dynamic_constant;
-
     struct {
         u2 num;
         struct bootstrap_method *methods;
     } bootstrap_methods;
-
     struct bootstrap_method {
         /*
         * bootstrap_method_ref 项的值必须是一个对常量池的有效索引。
@@ -338,12 +336,10 @@ static void anewarray(struct frame *frame)
         *
         u2 *bootstrap_arguments;
     };
-
     struct {
         // reference_kind项的值必须在1至9之间（包括1和9），它决定了方法句柄的类型。
         // 方法句柄类型的值表示方法句柄的字节码行为。
         u1 reference_kind;
-
         * 2. If the value of the reference_kind item is 5 (REF_invokeVirtual) or 8
         *    (REF_newInvokeSpecial), then the constant_pool entry at that index must
         *    be a CONSTANT_Methodref_info structure representing a class's
@@ -359,7 +355,6 @@ static void anewarray(struct frame *frame)
         *    class's or interface's method for which a method handle is to be created.
         u2 reference_index;
     } method_handle_constant;
-
     struct {
         u2 class_index;
         u2 name_and_type_index;
@@ -617,7 +612,7 @@ static slot_t * exec()
     struct frame *frame = thread->top_frame;
     print2("executing frame(%p): %s, pc = %lu\n", frame, frame_to_string(frame), frame->reader.pc);
 
-    while (frame_has_more(frame)) {
+    while (true) {
         u1 opcode = frame_readu1(frame);
         print3("%d(0x%x), %s, pc = %lu\n", opcode, opcode, instruction_names[opcode], frame->reader.pc);
 
@@ -759,7 +754,7 @@ static slot_t * exec()
                 frame->stack -= 2;
                 slot_t *value = frame->stack;
                 GET_AND_CHECK_ARRAY
-                memcpy(arrobj_index(arr, index), value, sizeof(slot_t) * 2);
+                        memcpy(arrobj_index(arr, index), value, sizeof(slot_t) * 2);
             })
 
             CASE(OPC_POP, frame->stack--)
@@ -1004,8 +999,8 @@ static slot_t * exec()
                 bcr_skip(&frame->reader, offset - 3);  // minus instruction length
             })
 
-            // 在Java 6之前，Oracle的Java编译器使用 jsr, jsr_w 和 ret 指令来实现 finally 子句。
-            // 从Java 6开始，已经不再使用这些指令
+                // 在Java 6之前，Oracle的Java编译器使用 jsr, jsr_w 和 ret 指令来实现 finally 子句。
+                // 从Java 6开始，已经不再使用这些指令
             case OPC_JSR:
                 vm_internal_error("jsr doesn't support after jdk 6.");
                 break;
@@ -1130,8 +1125,8 @@ static slot_t * exec()
 
                 // 下面这样写对不对 todo
 //                if (obj->clazz != frame->method->clazz) {
-                    // 从对象的类中查找真正要调用的方法
-                    m = class_lookup_method(obj->clazz, m->name, m->descriptor);
+                // 从对象的类中查找真正要调用的方法
+                m = class_lookup_method(obj->clazz, m->name, m->descriptor);
 //                }
 
                 resolved_method = m;
@@ -1257,23 +1252,23 @@ static slot_t * exec()
             case OPC_INVOKEDYNAMIC:
                 invokedynamic(frame);
                 break;
-invoke_method:
-{
-    struct frame *new_frame = alloc_frame(resolved_method, false);
-    if (resolved_method->arg_slot_count > 0 && args == NULL) {
-        jvm_abort("do not find args, %d\n", resolved_method->arg_slot_count); // todo
-    }
+            invoke_method:
+            {
+                struct frame *new_frame = alloc_frame(resolved_method, false);
+                if (resolved_method->arg_slot_count > 0 && args == NULL) {
+                    jvm_abort("do not find args, %d\n", resolved_method->arg_slot_count); // todo
+                }
 
-    // 准备参数
-    for (int i = 0; i < resolved_method->arg_slot_count; i++) {
-        // 传递参数到被调用的函数。
-    //        frame_locals_set(frame, i, args + i);
-        new_frame->locals[i] = args[i];
-    }
+                // 准备参数
+                for (int i = 0; i < resolved_method->arg_slot_count; i++) {
+                    // 传递参数到被调用的函数。
+                    //        frame_locals_set(frame, i, args + i);
+                    new_frame->locals[i] = args[i];
+                }
 
-    frame = new_frame;
-    break;
-}
+                frame = new_frame;
+                break;
+            }
 
             CASE(OPC_NEW, {
                 // new指令专门用来创建类实例。数组由专门的指令创建
