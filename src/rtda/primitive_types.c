@@ -29,7 +29,7 @@ static const struct {
 
 #define PRIMITIVE_TYPE_COUNT (sizeof(primitive_types) / sizeof(*primitive_types))
 
-void pt_load_primitive_types()
+void load_primitive_types()
 {
     // 加载基本类型（int, float, etc.）的 class
     for (int i = 0; i < PRIMITIVE_TYPE_COUNT; i++) {

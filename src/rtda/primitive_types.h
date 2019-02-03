@@ -7,7 +7,7 @@
 
 #include <stdbool.h>
 
-void pt_load_primitive_types();
+void load_primitive_types();
 
 bool pt_is_primitive_class_name(const char *class_name);
 bool pt_is_primitive_descriptor(char descriptor);

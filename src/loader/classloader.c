@@ -225,7 +225,7 @@ struct classloader* classloader_create(bool is_bootstrap_loader)
     loader->jlclass = load_sys_class("java/lang/Class");
 
     // 加载基本类型（int, float, etc.）的 class
-    pt_load_primitive_types();
+    load_primitive_types();
 //    for (int i = 0; i < PRIMITIVE_TYPE_COUNT; i++) {
 //        struct class *c = jclass_create_primitive_class(loader, primitive_types[i].class_name);
 //        hashmap_put(loader->loaded_class_pool, primitive_types[i].class_name, c);
