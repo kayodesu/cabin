@@ -9,6 +9,7 @@
 #include "descriptor.h"
 #include "../../symbol.h"
 #include "resolve.h"
+#include "../../utf8.h"
 
 
 void field_init(struct field *field, struct class *c, struct bytecode_reader *reader)
@@ -93,11 +94,11 @@ bool field_is_accessible_to(const struct field *field, const struct class *visit
 
     // 字段是protected，则只有 子类 和 同一个包下的类 可以访问
     if (IS_PROTECTED(field->access_flags)) {
-        return class_is_subclass_of(visitor, field->clazz) || strcmp(field->clazz->pkg_name, visitor->pkg_name) == 0;
+        return class_is_subclass_of(visitor, field->clazz) || utf8_equals(field->clazz->pkg_name, visitor->pkg_name);
     }
 
     // 字段有默认访问权限（非public，非protected，也非private），则只有同一个包下的类可以访问
-    return strcmp(field->clazz->pkg_name, visitor->pkg_name) == 0;
+    return utf8_equals(field->clazz->pkg_name, visitor->pkg_name);
 }
 
 struct object* field_get_type(struct field *field)

@@ -105,11 +105,11 @@ static void parse_attribute(struct class *c, struct bytecode_reader *reader)
     struct constant_pool *cp = &c->constant_pool;
 
     for (int i = 0; i < attr_count; i++) {
-        const char *attr_name = CP_UTF8(cp, bcr_readu2(reader));//rtcp_get_str(c->rtcp, bcr_readu2(reader));
+        const char *attr_name = CP_UTF8(cp, bcr_readu2(reader));
         u4 attr_len = bcr_readu4(reader);
 
         if (SYMBOL(Signature) == attr_name) {
-            c->signature = CP_UTF8(cp, bcr_readu2(reader));//rtcp_get_str(c->rtcp, bcr_readu2(reader));
+            c->signature = CP_UTF8(cp, bcr_readu2(reader));
         } else if (SYMBOL(Synthetic) == attr_name) {
             set_synthetic(&c->access_flags);
         } else if (SYMBOL(Deprecated) == attr_name) {
@@ -117,7 +117,7 @@ static void parse_attribute(struct class *c, struct bytecode_reader *reader)
         } else if (SYMBOL(SourceFile) == attr_name) {
             u2 source_file_index = bcr_readu2(reader);
             if (source_file_index >= 0) {
-                c->source_file_name = CP_UTF8(cp, source_file_index);//rtcp_get_str(c->rtcp, source_file_index);
+                c->source_file_name = CP_UTF8(cp, source_file_index);
             } else {
                 /*
                  * 并不是每个class文件中都有源文件信息，这个因编译时的编译器选项而异。
@@ -203,7 +203,7 @@ static void create_vtable(struct class *c)
                 || IS_STATIC(m->access_flags)
                 || IS_FINAL(m->access_flags)
                 || IS_ABSTRACT(m->access_flags)
-                || strcmp(m->name, "<clinit>") == 0) {  //  todo strcmp(m->name, "<init>") == 0
+                || utf8_equals(m->name, SYMBOL(class_init))) {  //  todo strcmp(m->name, "<init>") == 0
                 continue;
             }
 
@@ -229,14 +229,14 @@ static void create_vtable(struct class *c)
             || IS_STATIC(m->access_flags)
             || IS_FINAL(m->access_flags)
             || IS_ABSTRACT(m->access_flags)
-            || strcmp(m->name, "<clinit>") == 0) {  //  todo strcmp(m->name, "<init>") == 0
+            || utf8_equals(m->name, SYMBOL(class_init))) {  //  todo strcmp(m->name, "<init>") == 0
 //            printf("1111111     %s~%s~%s\n", m->clazz->class_name, m->name, m->descriptor);//////////////////////////
             continue;
         }
 
         int j = 0;
         for (j = 0; j < c->super_class->vtable_len; j++) {
-            if (strcmp(m->name, c->vtable[j].name) == 0 && strcmp(m->descriptor, c->vtable[j].descriptor) == 0) {
+            if (utf8_equals(m->name, c->vtable[j].name) && utf8_equals(m->descriptor, c->vtable[j].descriptor)) {
                 // 重写了父类的方法，更新
                 c->vtable[j].method = m;
                 m->vtable_index = j;
@@ -318,14 +318,12 @@ struct class *class_create(struct classloader *loader, u1 *bytecode, size_t len)
             case CONSTANT_Float: {
                 u1 bytes[4];
                 bcr_read_bytes(&reader, bytes, 4);
-//                *(jfloat *)&((cp)->info[i]) = bytes_to_float(bytes);
                 CP_FLOAT(cp, i) = bytes_to_float(bytes);
                 break;
             }
             case CONSTANT_Long: {
                 u1 bytes[8];
                 bcr_read_bytes(&reader, bytes, 8);
-//                *(jlong *) &(CP_INFO(cp, i)) = bytes_to_int64(bytes);
                 CP_LONG(cp, i) = bytes_to_int64(bytes);
 
                 i++;
@@ -335,7 +333,6 @@ struct class *class_create(struct classloader *loader, u1 *bytecode, size_t len)
             case CONSTANT_Double: {
                 u1 bytes[8];
                 bcr_read_bytes(&reader, bytes, 8);
-//                *(jdouble *) &(CP_INFO(cp, i)) = bytes_to_double(bytes);
                 CP_DOUBLE(cp, i) = bytes_to_double(bytes);
 
                 i++;
@@ -377,14 +374,17 @@ struct class *class_create(struct classloader *loader, u1 *bytecode, size_t len)
 
     c->access_flags = bcr_readu2(&reader);
 
-    c->class_name = CP_CLASS_NAME(cp, bcr_readu2(&reader));//rtcp_get_class_name(c->rtcp, bcr_readu2(&reader));
-    c->pkg_name = vm_strdup(c->class_name);
+    c->class_name = CP_CLASS_NAME(cp, bcr_readu2(&reader));
+    char *pkg_name = vm_strdup(c->class_name);
 
-    char *p = strrchr(c->pkg_name, '/');
+    char *p = strrchr(pkg_name, '/');
     if (p == NULL) {
-        c->pkg_name[0] = 0; // 包名可以为空
+        c->pkg_name = ""; // 包名可以为空
     } else {
         *p = 0; // 得到包名
+        c->pkg_name = new_utf8(pkg_name);
+        if (c->pkg_name != pkg_name) // use hashed utf8
+            free(pkg_name);
     }
 
     u2 super_class = bcr_readu2(&reader);
@@ -502,7 +502,7 @@ struct class* class_create_primitive_class(struct classloader *loader, const cha
 
     c->access_flags = ACC_PUBLIC;
     c->pkg_name = ""; // todo 包名
-    c->class_name = vm_strdup(class_name);
+    c->class_name = class_name;
     c->loader = loader;
     c->inited = true;
 
@@ -525,12 +525,12 @@ struct class* class_create_arr_class(struct classloader *loader, const char *cla
     c->class_name = vm_strdup(class_name);
     c->loader = loader;
     c->inited = true; // 数组类不需要初始化
-    c->super_class = load_sys_class("java/lang/Object");
+    c->super_class = load_sys_class(SYMBOL(java_lang_Object));
 
     c->interfaces_count = 2;
     c->interfaces = malloc(sizeof(struct class *) * 2);
-    c->interfaces[0] = load_sys_class("java/lang/Cloneable");
-    c->interfaces[1] = load_sys_class("java/io/Serializable");
+    c->interfaces[0] = load_sys_class(SYMBOL(java_lang_Cloneable));
+    c->interfaces[1] = load_sys_class(SYMBOL(java_io_Serializable));
 
     c->vtable_len = 0;
     c->vtable = NULL;
@@ -574,7 +574,7 @@ void class_clinit(struct class *c)
     // 可能调用putstatic等函数也会触发<clinit>的调用造成死循环。
     c->inited = true;
 
-    struct method *method = class_get_declared_method(c, "<clinit>", "()V");
+    struct method *method = class_get_declared_method(c, SYMBOL(class_init), SYMBOL(___V));
     if (method != NULL) { // 有的类没有<clinit>方法
         if (!IS_STATIC(method->access_flags)) {
             // todo error
@@ -589,7 +589,7 @@ void class_clinit(struct class *c)
 struct field* jclass_lookup_field0(struct class *c, const char *name, const char *descriptor)
 {
     for (int i = 0; i < c->fields_count; i++) {
-        if (strcmp(c->fields[i].name, name) == 0 && strcmp(c->fields[i].descriptor, descriptor) == 0) {
+        if (utf8_equals(c->fields[i].name, name) && utf8_equals(c->fields[i].descriptor, descriptor)) {
             return c->fields + i;
         }
     }
@@ -645,7 +645,7 @@ struct field* class_lookup_instance_field(struct class *c, const char *name, con
 struct method* class_get_declared_method(struct class *c, const char *name, const char *descriptor)
 {
     for (int i = 0; i < c->methods_count; i++) {
-        if (strcmp(c->methods[i].name, name) == 0 && strcmp(c->methods[i].descriptor, descriptor) == 0) {
+        if (utf8_equals(c->methods[i].name, name) && utf8_equals(c->methods[i].descriptor, descriptor)) {
             return c->methods + i;
         }
     }
@@ -687,7 +687,7 @@ struct method** class_get_declared_methods(struct class *c, const char *name, bo
     *count = 0;
 
     for (int i = 0; i < c->methods_count; i++) {
-        if ((!public_only || IS_PUBLIC(c->methods[i].access_flags)) && (strcmp(c->methods[i].name, name) == 0)) {
+        if ((!public_only || IS_PUBLIC(c->methods[i].access_flags)) && (utf8_equals(c->methods[i].name, name))) {
             methods[*count] = c->methods + i;
             (*count)++;
         }
@@ -698,12 +698,12 @@ struct method** class_get_declared_methods(struct class *c, const char *name, bo
 
 struct method* class_get_constructor(struct class *c, const char *descriptor)
 {
-    return class_get_declared_method(c, "<init>", descriptor);
+    return class_get_declared_method(c, SYMBOL(object_init), descriptor);
 }
 
 struct method** class_get_constructors(struct class *c, bool public_only, int *count)
 {
-    struct method **constructors = class_get_declared_methods(c, "<init>", public_only, count);
+    struct method **constructors = class_get_declared_methods(c, SYMBOL(object_init), public_only, count);
     if (*count < 1) {
         jvm_abort("至少有一个constructor\n");
     }
@@ -893,11 +893,11 @@ bool class_is_accessible_to(const struct class *c, const struct class *visitor)
 
     // 字段是 protected，则只有 子类 和 同一个包下的类 可以访问
     if (IS_PROTECTED(c->access_flags)) {
-        return class_is_subclass_of(visitor, c) || strcmp(c->pkg_name, visitor->pkg_name) == 0;
+        return class_is_subclass_of(visitor, c) || utf8_equals(c->pkg_name, visitor->pkg_name);
     }
 
     // 字段有默认访问权限（非public，非protected，也非private），则只有同一个包下的类可以访问
-    return strcmp(c->pkg_name, visitor->pkg_name) == 0;
+    return utf8_equals(c->pkg_name, visitor->pkg_name);
 }
 
 char *class_to_string(const struct class *c)

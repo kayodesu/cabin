@@ -229,6 +229,7 @@ extern char* symbol_values[];
     action(_java_lang_Thread__V, "(Ljava/lang/Thread;)V"), \
     action(_java_lang_Throwable__V, "(Ljava/lang/Throwable;)V"), \
     action(_array_java_lang_String__V, "([Ljava/lang/String;)V"), \
+    action(___java_lang_Object, "()Ljava/lang/Object;"), \
     action(___java_lang_ClassLoader, "()Ljava/lang/ClassLoader;"), \
     action(_java_lang_Object_java_lang_Object__java_lang_Object, \
            "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"), \

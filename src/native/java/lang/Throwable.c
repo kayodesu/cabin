@@ -7,6 +7,8 @@
 #include "../../../rtda/heap/object.h"
 #include "../../../rtda/heap/strobj.h"
 #include "../../../rtda/thread/thread.h"
+#include "../../../utf8.h"
+#include "../../../symbol.h"
 
 
 struct stack_trace {
@@ -45,7 +47,7 @@ static void fillInStackTrace(struct frame *frame)
 
     for (struct class *c = this->clazz; c != NULL; c = c->super_class) {
         f = f->prev; // jump 执行异常类的构造函数的frame
-        if (strcmp(c->class_name, "java/lang/Throwable") == 0) {
+        if (utf8_equals(c->class_name, SYMBOL(java_lang_Throwable))) {
             break; // 可以了，遍历到 Throwable 就行了，因为现在在执行 Throwable 的 fillInStackTrace 方法。
         }
     }

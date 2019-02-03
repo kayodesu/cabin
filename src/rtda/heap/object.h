@@ -46,7 +46,6 @@ static inline bool object_is_array(const struct object *o)
     return class_is_array(o->clazz);
 }
 
-bool object_is_primitive(const struct object *o);
 bool object_is_jlstring(const struct object *o);
 bool object_is_jlclass(const struct object *o);
 

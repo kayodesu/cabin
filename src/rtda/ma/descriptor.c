@@ -60,9 +60,6 @@ const char* types_to_descriptor(const struct object *types)
     char *descriptor = vm_malloc(sizeof(char)*(DESCRIPTOR_MAX_LEN + 1));
 
     if (object_is_array(types)) {
-        // must be array object of java/lang/Class
-        assert(strcmp(types->clazz->class_name, "[Ljava/lang/Class;") == 0);
-
         int i = 0;
         int arr_len = arrobj_len(types);
         for (int t = 0; t < arr_len; t++) {

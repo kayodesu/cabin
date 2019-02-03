@@ -16,7 +16,6 @@ static slot_t* convert_args(jref this_obj, struct method *m, jref args)
     assert(types_len == arrobj_len(args));
 
     // 因为有 category two 的存在，result 的长度最大为 types_len * 2 + this_obj
-//    VM_MALLOCS(struct slot, types_len * 2 + this_obj != NULL ? 1 : 0, result);
     slot_t *result = vm_malloc(sizeof(slot_t) * 2 * types_len + 1);
     int k = 0;
     if (this_obj != NULL) {
@@ -28,7 +27,7 @@ static slot_t* convert_args(jref this_obj, struct method *m, jref args)
         assert(clsobj != NULL);
         jref o = arrobj_get(jref, args, i);
 
-        if (class_is_primitive(clsobj->u.entity_class)) {
+        if (is_primitive(clsobj->u.entity_class)) {
             const slot_t *unbox = priobj_unbox(o);
             result[k++] = *unbox;
             if (o->u.a.ele_size > 4) // category_two

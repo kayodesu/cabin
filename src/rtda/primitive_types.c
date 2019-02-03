@@ -5,6 +5,7 @@
 #include <string.h>
 #include "primitive_types.h"
 #include "ma/class.h"
+#include "../symbol.h"
 
 /*
  * 基本类型的名称，描述符，等等

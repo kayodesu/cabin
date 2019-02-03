@@ -307,7 +307,7 @@ static void isArray(struct frame *frame)
 static void isPrimitive(struct frame *frame)
 {
     struct object *this = frame_locals_getr(frame, 0);
-    bool b = class_is_primitive(this->u.entity_class);
+    bool b = is_primitive(this->u.entity_class);
     frame_stack_pushi(frame, b ? 1 : 0);
 }
 

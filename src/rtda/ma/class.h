@@ -258,7 +258,7 @@ static inline bool class_is_array(const struct class *c)
 //    return c != NULL && strcmp(c->class_name, "java/lang/Class") == 0;  // todo 对不对
 //}
 
-static inline bool class_is_primitive(const struct class *c)
+static inline bool is_primitive(const struct class *c)
 {
     assert(c != NULL);
     return pt_is_primitive_class_name(c->class_name);
@@ -279,6 +279,7 @@ static inline bool is_primitive_array(const struct class *c)
     return strchr("ZBCSIFJD", c->class_name[1]) != NULL;
 }
 
+#if 0
 // 是否是一维数组
 static inline bool is_one_dimension_array(const struct class *c)
 {
@@ -317,5 +318,6 @@ static inline bool is_float_array(const struct class *c) { return strcmp(c->clas
 static inline bool is_long_array(const struct class *c) { return strcmp(c->class_name, "[J") == 0; }
 
 static inline bool is_double_array(const struct class *c) { return strcmp(c->class_name, "[D") == 0; }
+#endif
 
 #endif //JVM_JCLASS_H

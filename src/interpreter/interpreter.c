@@ -11,6 +11,8 @@
 #include "../rtda/ma/field.h"
 #include "../rtda/ma/resolve.h"
 #include "interpreter.h"
+#include "../utf8.h"
+#include "../symbol.h"
 
 #if (PRINT_LEVEL >= 3)
 // the mapping of instructions's code and name
@@ -244,27 +246,17 @@ static void newarray(struct frame *frame)
 
     // todo arrLen == 0 的情况
 
-    /*
-     * AT_BOOLEAN = 4
-     * AT_CHAR    = 5
-     * AT_FLOAT   = 6
-     * AT_DOUBLE  = 7
-     * AT_BYTE    = 8
-     * AT_SHORT   = 9
-     * AT_INT     = 10
-     * AT_LONG    = 11
-     */
     int arr_type = bcr_readu1(&frame->reader);
     char *arr_name;
     switch (arr_type) {
-        case 4: arr_name = "[Z"; break;
-        case 5: arr_name = "[C"; break;
-        case 6: arr_name = "[F"; break;
-        case 7: arr_name = "[D"; break;
-        case 8: arr_name = "[B"; break;
-        case 9: arr_name = "[S"; break;
-        case 10: arr_name = "[I"; break;
-        case 11: arr_name = "[J"; break;
+        case 4: arr_name = "[Z"; break;  // AT_BOOLEAN
+        case 5: arr_name = "[C"; break;  // AT_CHAR
+        case 6: arr_name = "[F"; break;  // AT_FLOAT
+        case 7: arr_name = "[D"; break;  // AT_DOUBLE
+        case 8: arr_name = "[B"; break;  // AT_BYTE
+        case 9: arr_name = "[S"; break;  // AT_SHORT
+        case 10: arr_name = "[I"; break; // AT_INT
+        case 11: arr_name = "[J"; break; // AT_LONG
         default:
             VM_UNKNOWN_ERROR("error. Invalid array type: %d", arr_type);
             return;
@@ -1091,7 +1083,7 @@ static slot_t * exec()
                 // 如果是final字段，则只能在构造函数中初始化，否则抛出java.lang.IllegalAccessError。
                 if (IS_FINAL(f->access_flags)) {
                     // todo
-                    if (frame->method->clazz != f->clazz || strcmp(frame->method->name, "<init>") != 0) {
+                    if (frame->method->clazz != f->clazz || !utf8_equals(frame->method->name, SYMBOL(object_init))) {
                         jvm_abort("java.lang.IllegalAccessError\n"); // todo
                     }
                 }
@@ -1154,7 +1146,7 @@ static slot_t * exec()
                 if (IS_SUPER(m->clazz->access_flags)
                     && !IS_PRIVATE(m->access_flags)
                     && class_is_subclass_of(curr_class, m->clazz) // todo
-                    && strcmp(m->name, "<init>") != 0) {
+                    && !utf8_equals(m->name, SYMBOL(object_init))) {
                     m = class_lookup_method(curr_class->super_class, m->name, m->descriptor);
                 }
 

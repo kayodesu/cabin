@@ -10,6 +10,7 @@
 #include "../../symbol.h"
 #include "../../classfile/constant.h"
 #include "../../interpreter/interpreter.h"
+#include "../../utf8.h"
 
 struct object* method_get_parameter_types(struct method *method)
 {
@@ -193,8 +194,8 @@ void method_init(struct method *method, struct class *c, struct bytecode_reader 
     struct constant_pool *cp = &c->constant_pool;
 
     method->access_flags = bcr_readu2(reader);
-    method->name = CP_UTF8(cp, bcr_readu2(reader));//rtcp_get_str(c->rtcp, bcr_readu2(reader));
-    method->descriptor = CP_UTF8(cp, bcr_readu2(reader));//rtcp_get_str(c->rtcp, bcr_readu2(reader));
+    method->name = CP_UTF8(cp, bcr_readu2(reader));
+    method->descriptor = CP_UTF8(cp, bcr_readu2(reader));
     u2 attr_count = bcr_readu2(reader);
 
     method->max_stack = method->max_locals = method->exception_tables_count = 0;
@@ -357,11 +358,11 @@ bool method_is_accessible_to(const struct method *method, const struct class *vi
     // 字段是protected，则只有 子类 和 同一个包下的类 可以访问
     if (IS_PROTECTED(method->access_flags)) {
         return class_is_subclass_of(visitor, method->clazz)
-               || strcmp(method->clazz->pkg_name, visitor->pkg_name) == 0;
+               || utf8_equals(method->clazz->pkg_name, visitor->pkg_name);
     }
 
     // 字段有默认访问权限（非public，非protected，也非private），则只有同一个包下的类可以访问
-    return strcmp(method->clazz->pkg_name, visitor->pkg_name) == 0;
+    return utf8_equals(method->clazz->pkg_name, visitor->pkg_name);
 }
 
 int method_get_line_number(const struct method *method, int pc)

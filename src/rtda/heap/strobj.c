@@ -9,6 +9,7 @@
 #include "../ma/field.h"
 #include "arrobj.h"
 #include "object.h"
+#include "../../symbol.h"
 
 /*
  * jdk8下的一些测试：
@@ -63,7 +64,7 @@ struct object* strobj_create(const char *str)
 // todo 要不要调用 <clinit>, <init>方法。
 
     // 给 java/lang/String 类的 value 变量赋值  todo
-    struct field *field = class_lookup_instance_field(o->clazz, "value", "[C");
+    struct field *field = class_lookup_instance_field(o->clazz, SYMBOL(value), SYMBOL(array_C));
     set_instance_field_value(o, field, (const slot_t *) &jchars);
 //    for (int i = 0; i < o->clazz->fields_count; i++) {
 //        struct field *field = o->clazz->fields + i;

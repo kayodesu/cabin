@@ -7,6 +7,7 @@
 #include "../../../slot.h"
 #include "../../../rtda/heap/object.h"
 #include "../../../interpreter/interpreter.h"
+#include "../../../symbol.h"
 
 // @CallerSensitive
 // public static native <T> T doPrivileged(PrivilegedAction<T> action);
@@ -22,7 +23,7 @@ static void doPrivileged(struct frame *frame)
      *     T run();
      * }
      */
-    struct method *m = class_get_declared_nonstatic_method(this->clazz, "run", "()Ljava/lang/Object;");
+    struct method *m = class_get_declared_method(this->clazz, SYMBOL(run), SYMBOL(___java_lang_Object));
 //    struct slot args[] = { rslot(this) };
 //    thread_invoke_method(frame->thread, m, args);
 //    slot_t args[] = { this };

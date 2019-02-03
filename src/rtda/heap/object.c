@@ -47,17 +47,6 @@ struct object* object_clone(const struct object *src)
 //    return o;
 }
 
-bool object_is_primitive(const struct object *o)
-{
-    assert(o != NULL);
-    if (!class_is_primitive(o->clazz)) {
-        return false;
-    }
-
-    assert(strcmp(o->clazz->class_name, "void") != 0); // 没有 void object
-    return true;
-}
-
 bool object_is_jlstring(const struct object *o)
 {
     assert(o != NULL);
@@ -133,7 +122,7 @@ bool object_is_instance_of(const struct object *o, const struct class *c)
 const slot_t* priobj_unbox(const struct object *po)
 {
     assert(po != NULL);
-    assert(object_is_primitive(po));
+    assert(is_primitive(po->clazz));
 
     // value 的描述符就是基本类型的类名。比如，private final boolean value;
     return get_instance_field_value_by_nt(po, "value", po->clazz->class_name);
