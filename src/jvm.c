@@ -132,17 +132,14 @@ static void start_jvm(const char *main_class_name)
         }
     }
 
-    slot_t args[] = { 0, NULL }; // todo
-//    thread_invoke_method(main_thread, main_method, args);
-    exec_java_func(main_method, args);
-
     // 开始在主线程中执行 main 方法
-//    interpret(main_thread);
+    exec_java_func(main_method, (slot_t []) { 0, NULL }); //  todo
+
 
     // todo 如果有其他的非后台线程在执行，则main线程需要在此wait
 
-    // main_thread 退出，做一些清理工作。
-    classloader_destroy(loader);
+    // main_thread 退出，做一些清理工作。 todo
+//    classloader_destroy(loader);
 }
 
 static void find_jars(const char *path, char jars[][PATH_MAX], int *jars_count)

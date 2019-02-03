@@ -109,13 +109,11 @@ static void initProperties(struct frame *frame)
             props->clazz, "setProperty", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;");
 
     for (int i = 0; i < sizeof(sys_props) / sizeof(*sys_props); i++) {
-        slot_t args[] = {
-                props,
-                strobj_create(sys_props[i][0]),
-                strobj_create(sys_props[i][1])
-        };
-
-        exec_java_func(set_property, args);
+        exec_java_func(set_property, (slot_t []) {
+                (slot_t) props,
+                (slot_t) strobj_create(sys_props[i][0]),
+                (slot_t) strobj_create(sys_props[i][1])
+        });
     }
 
     // 返回参数

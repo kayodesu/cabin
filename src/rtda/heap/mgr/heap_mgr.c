@@ -19,23 +19,6 @@ void hm_init(struct heap_mgr *hm)
     hm->free_list.next = NULL;
 }
 
-void* hm_get0(struct heap_mgr *hm, size_t len)
-{
-    for (struct free_list_node *node = &(hm->free_list); node != NULL && node->len < len; node = node->next);
-
-    if (hm->free_list.len >= len) {
-        void *p = (void *) hm->free_list.head;
-        size_t redundance = hm->free_list.len - len;
-        if (redundance == 0) {
-            hm->free_list.head = hm->free_list.next;
-        } else {
-            hm->free_list.head += len;
-            hm->free_list.len -= len;
-        }
-        return p;
-    }
-}
-
 void* hm_get(struct heap_mgr *hm, size_t len)
 {
     assert(hm != NULL);

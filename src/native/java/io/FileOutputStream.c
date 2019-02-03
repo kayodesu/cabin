@@ -5,7 +5,6 @@
 #include "../../registry.h"
 #include "../../../jvm.h"
 #include "../../../rtda/thread/frame.h"
-#include "../../../slot.h"
 #include "../../../rtda/heap/object.h"
 #include "../../../output.h"
 #include "../../../rtda/heap/arrobj.h"

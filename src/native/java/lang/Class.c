@@ -8,7 +8,6 @@
 #include "../../../rtda/ma/field.h"
 #include "../../../rtda/heap/strpool.h"
 #include "../../../util/util.h"
-#include "../../../rtda/primitive_types.h"
 #include "../../../rtda/heap/arrobj.h"
 #include "../../../rtda/heap/clsobj.h"
 #include "../../../rtda/heap/strobj.h"
@@ -554,19 +553,16 @@ static void getDeclaredFields0(struct frame *frame)
 //        *(struct object **)jobject_index(jlrf_arr, i) = jlrf_obj;
         arrobj_set(struct object *, jlrf_arr, i, jlrf_obj);
 
-        slot_t args[] = {
-                jlrf_obj, // this
-                this, // declaring class
-                get_str_from_pool(frame->method->clazz->loader, fields[i].name), // name
-                field_get_type(fields + i), // type
+        exec_java_func(field_constructor, (slot_t []) {
+                (slot_t) jlrf_obj, // this
+                (slot_t) this, // declaring class
+                (slot_t) get_str_from_pool(frame->method->clazz->loader, fields[i].name), // name
+                (slot_t) field_get_type(fields + i), // type
                 fields[i].access_flags, // modifiers
-                fields[i].id, // slot   todo
-                NULL, // signature  todo
-                NULL, // annotations  todo
-        };
-//        thread_invoke_method(frame->thread, field_constructor, );
-
-        exec_java_func(field_constructor, args);
+                (slot_t) fields[i].id, // slot   todo
+                (slot_t) NULL, // signature  todo
+                (slot_t) NULL, // annotations  todo
+        });
     }
 }
 
@@ -611,23 +607,20 @@ static void getDeclaredMethods0(struct frame *frame)
         struct object *jlrf_obj = object_create(jlrm_cls);
         arrobj_set(struct object *, jlrm_arr, i, jlrf_obj);
 
-        slot_t args[] = {
-                jlrf_obj,        // this
-                this, // declaring class
-                get_str_from_pool(frame->method->clazz->loader, methods[i].name), // name
-                method_get_parameter_types(methods + i), // parameter types
-                method_get_return_type(methods + i),     // return type
-                method_get_exception_types(methods + i), // checked exceptions
+        exec_java_func(method_constructor, (slot_t []) {
+                (slot_t) jlrf_obj,        // this
+                (slot_t) this, // declaring class
+                (slot_t) get_str_from_pool(frame->method->clazz->loader, methods[i].name), // name
+                (slot_t) method_get_parameter_types(methods + i), // parameter types
+                (slot_t) method_get_return_type(methods + i),     // return type
+                (slot_t) method_get_exception_types(methods + i), // checked exceptions
                 methods[i].access_flags, // modifiers
                 0, // slot   todo
-                NULL, // signature  todo
-                NULL, // annotations  todo
-                NULL, // parameter annotations  todo
-                NULL, // annotation default  todo
-        };
-//        thread_invoke_method(frame->thread, method_constructor, );
-
-        exec_java_func(method_constructor, args);
+                (slot_t) NULL, // signature  todo
+                (slot_t) NULL, // annotations  todo
+                (slot_t) NULL, // parameter annotations  todo
+                (slot_t) NULL, // annotation default  todo
+        });
     }
 }
 
@@ -663,20 +656,17 @@ static void getDeclaredConstructors0(struct frame *frame)
         struct object *jlrf_obj = object_create(jlrc_cls);
         arrobj_set(struct object *, jlrc_arr, i, jlrf_obj);
 
-        slot_t args[] = {
-                jlrf_obj, // this
-                this, // declaring class
-                method_get_parameter_types(constructors[i]),  // parameter types
-                method_get_exception_types(constructors[i]),  // checked exceptions
+        exec_java_func(constructor_constructor, (slot_t []) {
+                (slot_t) jlrf_obj, // this
+                (slot_t) this, // declaring class
+                (slot_t) method_get_parameter_types(constructors[i]),  // parameter types
+                (slot_t) method_get_exception_types(constructors[i]),  // checked exceptions
                 constructors[i]->access_flags, // modifiers
                 0, // slot   todo
-                NULL, // signature  todo
-                NULL, // annotations  todo
-                NULL, // parameter annotations  todo
-        };
-//        thread_invoke_method(frame->thread, constructor_constructor, );
-
-        exec_java_func(constructor_constructor, args);
+                (slot_t) NULL, // signature  todo
+                (slot_t) NULL, // annotations  todo
+                (slot_t) NULL, // parameter annotations  todo
+        });
     }
 }
 

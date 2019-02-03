@@ -24,7 +24,7 @@ static inline jint arrobj_len(const struct object *o)
     return o->u.a.len;
 }
 
-static inline void* arrobj_data(const struct object *o)
+static inline void* arrobj_data(struct object *o)
 {
     assert(o != NULL);
     assert(object_is_array(o));

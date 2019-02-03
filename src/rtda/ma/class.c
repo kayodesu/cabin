@@ -345,7 +345,7 @@ struct class *class_create(struct classloader *loader, u1 *bytecode, size_t len)
                 bcr_read_bytes(&reader, (u1 *) buf, utf8_len);
                 buf[utf8_len] = 0;
 
-                char *utf8;
+                const char *utf8;
                 CP_INFO(cp,i) = (uintptr_t) (utf8 = new_utf8(buf));
                 if (utf8 != buf) // use hashed utf8
                     free(buf);

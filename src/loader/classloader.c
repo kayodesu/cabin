@@ -11,8 +11,6 @@
 #include "../rtda/ma/field.h"
 #include "../util/hashmap.h"
 #include "../rtda/heap/object.h"
-#include "../jtypes.h"
-#include "../rtda/primitive_types.h"
 #include "../rtda/heap/clsobj.h"
 
 struct classloader {
@@ -39,7 +37,7 @@ struct class* classloader_get_jlstring(struct classloader *loader)
 }
 
 struct bytecode_content {
-    s1 *bytecode;
+    u1 *bytecode;
     size_t len;
 };
 
@@ -93,8 +91,8 @@ static struct bytecode_content read_class_from_jar(const char *jar_path, const c
                     return invalid_bytecode_content;
                 }
 
-                size_t uncompressed_size = file_info.uncompressed_size;
-                s1 *bytecode = vm_malloc(sizeof(s1) * uncompressed_size);
+                size_t uncompressed_size = (size_t) file_info.uncompressed_size;
+                u1 *bytecode = vm_malloc(sizeof(u1) * uncompressed_size);
                 if (unzReadCurrentFile(jar_file, bytecode, (unsigned int) uncompressed_size) != uncompressed_size) {
                     // todo error
                     unzCloseCurrentFile(jar_file);  // todo 干嘛的
@@ -137,7 +135,7 @@ static struct bytecode_content read_class_from_dir(const char *dir_path, const c
         fseek(f, 0, SEEK_END); //定位到文件末
         size_t file_len = (size_t) ftell(f); //文件长度
 
-        s1 *bytecode = vm_malloc(sizeof(s1) * file_len);
+        u1 *bytecode = vm_malloc(sizeof(u1) * file_len);
         fseek(f, 0, SEEK_SET);
         fread(bytecode, 1, file_len, f);
         fclose(f);

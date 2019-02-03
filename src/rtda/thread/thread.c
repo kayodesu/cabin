@@ -65,14 +65,13 @@ void create_main_thread(struct classloader *loader)
     // 调用 java/lang/Thread 的构造函数
     struct method *constructor
             = class_get_constructor(jlt_obj->clazz, "(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");
-    slot_t args[] = {
-            jlt_obj,
-            system_thread_group,
-            strobj_create(MAIN_THREAD_NAME) // thread name
-    };
-//    thread_invoke_method(main_thread, constructor, args);
+
     class_clinit(jlt_class);
-    exec_java_func(constructor, args);
+    exec_java_func(constructor, (slot_t []) {
+            (slot_t) jlt_obj,
+            (slot_t) system_thread_group,
+            (slot_t) strobj_create(MAIN_THREAD_NAME) // thread name
+    });
 }
 
 struct thread *thread_create(struct classloader *loader, struct object *jltobj)

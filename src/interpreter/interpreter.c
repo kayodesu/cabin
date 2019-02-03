@@ -312,20 +312,17 @@ static void anewarray(struct frame *frame)
         struct bootstrap_method *methods;
     } bootstrap_methods;
     struct bootstrap_method {
-        /*
-        * bootstrap_method_ref 项的值必须是一个对常量池的有效索引。
-        * 常量池在该索引处的值必须是一个CONSTANT_MethodHandle_info结构。
-        * 注意：此CONSTANT_MethodHandle_info结构的reference_kind项应为值6（REF_invokeStatic）或8（REF_newInvokeSpecial），
-        * 否则在invokedynamic指令解析调用点限定符时，引导方法会执行失败。
-        *
+        // bootstrap_method_ref 项的值必须是一个对常量池的有效索引。
+        // 常量池在该索引处的值必须是一个CONSTANT_MethodHandle_info结构。
+        // 注意：此CONSTANT_MethodHandle_info结构的reference_kind项应为值6（REF_invokeStatic）或8（REF_newInvokeSpecial），
+        // 否则在invokedynamic指令解析调用点限定符时，引导方法会执行失败。
         u2 bootstrap_method_ref;
         u2 num_bootstrap_arguments;
-        /*
-        * bootstrap_arguments 数组的每个成员必须是一个对常量池的有效索引。
-        * 常量池在该索引出必须是下列结构之一：
-        * CONSTANT_String_info, CONSTANT_Class_info, CONSTANT_Integer_info, CONSTANT_Long_info,
-        * CONSTANT_Float_info, CONSTANT_Double_info, CONSTANT_MethodHandle_info, CONSTANT_MethodType_info。
-        *
+
+        // bootstrap_arguments 数组的每个成员必须是一个对常量池的有效索引。
+        // 常量池在该索引出必须是下列结构之一：
+        // CONSTANT_String_info, CONSTANT_Class_info, CONSTANT_Integer_info, CONSTANT_Long_info,
+        // CONSTANT_Float_info, CONSTANT_Double_info, CONSTANT_MethodHandle_info, CONSTANT_MethodType_info。
         u2 *bootstrap_arguments;
     };
     struct {
@@ -1205,7 +1202,7 @@ static slot_t * exec()
                  * 其含义和给method结构体定义的arg_slot_count字段相同。
                  * 这个数是可以根据方法描述符计算出来的，它的存在仅仅是因为历史原因。
                  */
-                u1 arg_slot_count = frame_readu1(frame);
+                frame_readu1(frame);
                 /*
                  * 此字节是留给Oracle的某些Java虚拟机实现用的，它的值必须是0。
                  * 该字节的存在是为了保证Java虚拟机可以向后兼容。

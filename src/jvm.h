@@ -58,22 +58,6 @@ extern struct classloader *g_bootstrap_loader;
 #define LSTR "Ljava/lang/String;"
 #define LCLD "Ljava/lang/ClassLoader;"
 
-static inline void* vm_malloc(size_t size)
-{
-    void *p = malloc(size);
-    if (p == NULL)
-        vm_out_of_memory_error("malloc failed");
-    return p;
-}
-
-static inline void* vm_calloc(size_t n, size_t size)
-{
-    void *p = calloc(n, size);
-    if (p == NULL)
-        vm_out_of_memory_error("malloc failed");
-    return p;
-}
-
 /*
  * jvms规定函数最多有255个参数，this也算，long和double占两个长度
  */
@@ -185,5 +169,21 @@ _Noreturn void vm_unknown_error(const char *msg);
             vm_unknown_error(msg); \
         } while (false)
 
+
+static inline void* vm_malloc(size_t size)
+{
+    void *p = malloc(size);
+    if (p == NULL)
+        vm_out_of_memory_error("malloc failed");
+    return p;
+}
+
+static inline void* vm_calloc(size_t n, size_t size)
+{
+    void *p = calloc(n, size);
+    if (p == NULL)
+        vm_out_of_memory_error("malloc failed");
+    return p;
+}
 
 #endif //JVM_JVM_H

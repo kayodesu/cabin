@@ -30,7 +30,7 @@ struct constant_pool {
 //#define CP_METHOD_NAME_TYPE(cp, i)       (u2)((cp)->info[i]>>16)
 #define CP_INTERFACE_CLASS(cp, i)        (u2)(cp)->info[i]
 #define CP_INTERFACE_NAME_TYPE(cp, i)    (u2)((cp)->info[i]>>16)
-
+#undef CP_UTF8
 #define CP_UTF8(cp, i)                   (char *)((cp)->info[i])
 #define CP_STRING(cp, i)                 CP_UTF8(cp, (u2)(cp)->info[i])
 #define CP_CLASS_NAME(cp, i)             CP_UTF8(cp, (u2)(cp)->info[i])
@@ -64,7 +64,7 @@ struct class {
     // 通过此字段，每个Class结构体实例都与一个类对象关联。
     struct object *clsobj;
 
-    char *pkg_name;
+    const char *pkg_name;
 
     // 必须是全限定类名，用作 hash 表中的 key
     const char *class_name;

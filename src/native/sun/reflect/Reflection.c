@@ -22,8 +22,7 @@ static void getCallerClass(struct frame *frame)
 //    struct frame *top0 = NULL;
     struct frame *top1 = frame->prev;
     if (top1 == NULL) {
-        VM_UNKNOWN_ERROR(""); // todo
-        return;
+        vm_unknown_error(""); // todo
     }
     struct frame *top2 = top1->prev;
 
@@ -43,8 +42,7 @@ static void getCallerClass(struct frame *frame)
 ////        }
 //    }
     if (top2 == NULL) {
-        VM_UNKNOWN_ERROR(""); // todo
-        return;
+        vm_unknown_error(""); // todo
     }
 
     jref o = top2->method->clazz->clsobj;

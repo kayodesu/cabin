@@ -10,10 +10,10 @@ static struct hashset set;
 
 void utf8_init()
 {
-    hashset_init(&set, utf8_hash, strcmp);
+    hashset_init(&set, (int (*)(const void *)) utf8_hash, (int (*)(const void *, const void *)) strcmp);
 }
 
-char* find_hashed_utf8(const char *utf8, bool add_if_absent)
+const char* find_hashed_utf8(const char *utf8, bool add_if_absent)
 {
     const void *data = hashset_find(&set, utf8);
     if (data == NULL && add_if_absent) {

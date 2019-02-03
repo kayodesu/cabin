@@ -12,10 +12,10 @@
 // jlong, jdouble 称为类型二，占两个slot
 typedef uintptr_t slot_t;
 
-#define ISLOT(__slot) (* (jint *) (__slot))
-#define FSLOT(__slot) (* (jfloat *) (__slot))
-#define LSLOT(__slot) (* (jlong *) (__slot))
-#define DSLOT(__slot) (* (jdouble *) (__slot))
-#define RSLOT(__slot) (* (jref *) (__slot))
+#define ISLOT(slot_point) (* (jint *) (slot_point))
+#define FSLOT(slot_point) (* (jfloat *) (slot_point))
+#define LSLOT(slot_point) (* (jlong *) (slot_point))
+#define DSLOT(slot_point) (* (jdouble *) (slot_point))
+#define RSLOT(slot_point) (* (jref *) (slot_point))
 
 #endif //JVM_SLOT_H
