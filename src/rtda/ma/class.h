@@ -167,20 +167,10 @@ void class_destroy(struct class *c);
  */
 void class_clinit(struct class *c);
 
-//struct slot* copy_inited_instance_fields_values(const Class *c);
-
 void set_static_field_value(struct class *c, struct field *f, slot_t *value);
 
-//void set_static_field_value_by_id(Class *c, int id, const struct slot *value);
-//void set_static_field_value_by_nt(Class *c,
-//                                  const char *name, const char *descriptor, const struct slot *value);
-
 const slot_t* get_static_field_value(const struct class *c, const struct field *f);
-//const struct slot* get_static_field_value_by_nt(const Class *c, const char *name, const char *descriptor);
 
-
-//struct field* jclass_get_field(Class *c, const char *name, const char *descriptor);
-//struct field** jclass_get_fields(Class *c, bool public_only);
 struct field* class_lookup_field(struct class *c, const char *name, const char *descriptor);
 struct field* class_lookup_static_field(struct class *c, const char *name, const char *descriptor);
 struct field* class_lookup_instance_field(struct class *c, const char *name, const char *descriptor);
@@ -234,8 +224,6 @@ char *class_to_string(const struct class *c);
  * 需要调用者释放返回值(free())
  */
 char* get_arr_class_name(const char *class_name);
-
-//Class* jclass_array_class(Class *c);
 
 /*
  * Returns the representing the component class of an array class.

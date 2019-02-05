@@ -58,4 +58,3 @@ struct object* clsobj_create(struct class *entity_class)
 
     return o;
 }
-

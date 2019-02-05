@@ -7,6 +7,7 @@
 #include "object.h"
 #include "../ma/field.h"
 #include "mgr/heap_mgr.h"
+#include "../../symbol.h"
 
 struct object* object_create(struct class *c)
 {
@@ -17,11 +18,8 @@ struct object* object_create(struct class *c)
     struct object *o = hm_get(&g_heap_mgr, size);
     o->clazz = c;
     o->size = size;
-//    memcpy(o->data, c->inited_instance_fields_values, c->instance_fields_count * sizeof(struct slot));
     return o;
 }
-
-//void* jarrobj_copy_data(const struct object *o);
 
 struct object* object_clone(const struct object *src)
 {
@@ -29,31 +27,10 @@ struct object* object_clone(const struct object *src)
     struct object *o = hm_get(&g_heap_mgr, src->size);
     memcpy(o, src, src->size);
     return o;
-
-//    o->clazz = src->clazz;
-//    o->instance_fields_count = src->instance_fields_count;
-//
-//    if (jobject_is_array(src)) {
-//        o->instance_fields_values = NULL;
-//        o->extra = jarrobj_copy_data(src);
-//    } else { // todo 其他情况，异常对象的情况
-//        size_t len = sizeof(struct slot) * o->instance_fields_count;
-//        o->instance_fields_values = malloc(len);
-//        CHECK_MALLOC_RESULT(o->instance_fields_values);
-//        memcpy(o->instance_fields_values, src->instance_fields_values, len);
-//        o->extra = src->extra;
-//    }
-//    printvm("create object: %s\n", jobject_to_string(o));
-//    return o;
 }
 
 void set_instance_field_value(struct object *o, struct field *f, const slot_t *value)
 {
-//    o->data[id] = *value;
-//    if (slot_is_category_two(value)) {
-//        assert(id + 1 < o->clazz->instance_fields_count);
-//        o->data[id + 1] = phslot;
-//    }
     assert(o != NULL && f != NULL && value != NULL);
 
     o->data[f->id] =  value[0];
@@ -61,18 +38,6 @@ void set_instance_field_value(struct object *o, struct field *f, const slot_t *v
         o->data[f->id + 1] = value[1];
     }
 }
-
-//void set_instance_field_value_by_nt(struct object *o, const char *name, const char *descriptor, const slot_t *value)
-//{
-//    assert(o != NULL && name != NULL && descriptor != NULL && value != NULL);
-//
-//    struct field *f = class_lookup_field(o->clazz, name, descriptor);
-//    if (f == NULL) {
-//        jvm_abort("error\n"); // todo
-//    }
-//
-//    set_instance_field_value_by_id(o, f->id, value);
-//}
 
 const slot_t* get_instance_field_value_by_id(const struct object *o, int id)
 {
@@ -113,7 +78,7 @@ const slot_t* priobj_unbox(const struct object *po)
     assert(is_primitive(po->clazz));
 
     // value 的描述符就是基本类型的类名。比如，private final boolean value;
-    return get_instance_field_value_by_nt(po, "value", po->clazz->class_name);
+    return get_instance_field_value_by_nt(po, SYMBOL(value), po->clazz->class_name);
 }
 
 void object_destroy(struct object *o)
@@ -139,6 +104,4 @@ const char* object_to_string(const struct object *o)
     assert(0 <= n && n <= MAX_LEN);
     result[n] = 0;
     return result;
-
-#undef MAX_LEN
 }

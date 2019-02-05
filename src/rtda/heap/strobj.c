@@ -66,17 +66,6 @@ struct object* strobj_create(const char *str)
     // 给 java/lang/String 类的 value 变量赋值  todo
     struct field *field = class_lookup_instance_field(o->clazz, SYMBOL(value), SYMBOL(array_C));
     set_instance_field_value(o, field, (const slot_t *) &jchars);
-//    for (int i = 0; i < o->clazz->fields_count; i++) {
-//        struct field *field = o->clazz->fields + i;
-//        if (!IS_STATIC(field->access_flags)
-//            && strcmp(field->descriptor, "[C") == 0
-//            && strcmp(field->name, "value") == 0) {
-//            struct slot s = rslot(jchars);
-//            set_instance_field_value_by_id(o, field->id, &s);
-//            break;
-//        }
-//    }
-
     return o;
 }
 
@@ -84,7 +73,7 @@ const char* strobj_value(struct object *o)
 {
     assert(o != NULL);
     if (o->u.str == NULL) {
-        struct object *char_arr = RSLOT(get_instance_field_value_by_nt(o, "value", "[C"));
+        struct object *char_arr = RSLOT(get_instance_field_value_by_nt(o, SYMBOL(value), SYMBOL(array_C)));
         o->u.str = unicode_to_utf8(arrobj_data(char_arr), arrobj_len(char_arr));
     }
     return o->u.str;
