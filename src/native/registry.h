@@ -7,6 +7,10 @@
 
 struct frame;
 
+#define LOBJ "Ljava/lang/Object;"
+#define LCLS "Ljava/lang/Class;"
+#define LSTR "Ljava/lang/String;"
+
 // 注册所有的本地方法
 void register_all_native_methods();
 

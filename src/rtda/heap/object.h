@@ -24,7 +24,7 @@ struct object {
         // effective only if object of array
         struct {
             size_t ele_size; // 表示数组每个元素的大小
-            size_t len; // 数组的长度
+            jint len; // 数组的长度
         } a;
 
         // effective only if object of java/lang/Throwable
@@ -45,9 +45,6 @@ static inline bool object_is_array(const struct object *o)
     assert(o != NULL);
     return class_is_array(o->clazz);
 }
-
-bool object_is_jlstring(const struct object *o);
-bool object_is_jlclass(const struct object *o);
 
 struct object* object_clone(const struct object *src);
 

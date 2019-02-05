@@ -49,15 +49,6 @@ extern struct heap_mgr g_heap_mgr;
 // todo 说明
 extern struct classloader *g_bootstrap_loader;
 
-#define OBJ "java/lang/Object"
-#define CLS "java/lang/Class"
-#define STR "java/lang/String"
-
-#define LOBJ "Ljava/lang/Object;"
-#define LCLS "Ljava/lang/Class;"
-#define LSTR "Ljava/lang/String;"
-#define LCLD "Ljava/lang/ClassLoader;"
-
 /*
  * jvms规定函数最多有255个参数，this也算，long和double占两个长度
  */

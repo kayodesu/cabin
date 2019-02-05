@@ -743,8 +743,8 @@ static void fullFence(struct frame *frame)
 
 void sun_misc_Unsafe_registerNatives()
 {
-#undef C
 #define C "sun/misc/Unsafe~"
+#define LCLD "Ljava/lang/ClassLoader;"
     register_native_method(C"registerNatives~()V", registerNatives);
 
     register_native_method(C"park~(ZJ)V", park);

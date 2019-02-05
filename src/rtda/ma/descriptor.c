@@ -12,7 +12,6 @@ char* type_to_descriptor(const struct object *type, char *descriptor, int *len)
     assert(type != NULL);
     assert(descriptor != NULL);
     assert(len != NULL);
-    assert(object_is_jlclass(type)); // must be object of java/lang/Class
 
     struct class *c = type->u.entity_class;
     char d = pt_get_descriptor_by_class_name(c->class_name);

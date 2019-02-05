@@ -47,18 +47,6 @@ struct object* object_clone(const struct object *src)
 //    return o;
 }
 
-bool object_is_jlstring(const struct object *o)
-{
-    assert(o != NULL);
-    return strcmp(o->clazz->class_name, STR) == 0;
-}
-
-bool object_is_jlclass(const struct object *o)
-{
-    assert(o != NULL);
-    return strcmp(o->clazz->class_name, CLS) == 0;
-}
-
 void set_instance_field_value(struct object *o, struct field *f, const slot_t *value)
 {
 //    o->data[id] = *value;
