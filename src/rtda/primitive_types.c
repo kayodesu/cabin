@@ -38,7 +38,7 @@ void load_primitive_types()
     }
 }
 
-bool pt_is_primitive_class_name(const char *class_name)
+bool is_primitive_class_name(const char *class_name)
 {
     assert(class_name != NULL);
     for (int i = 0; i < PRIMITIVE_TYPE_COUNT; i++) {
@@ -49,20 +49,10 @@ bool pt_is_primitive_class_name(const char *class_name)
     return false;
 }
 
-bool pt_is_primitive_descriptor(char descriptor)
+bool is_primitive_descriptor(char descriptor)
 {
     for (int i = 0; i < PRIMITIVE_TYPE_COUNT; i++) {
         if (primitive_types[i].descriptor == descriptor) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool pt_is_primitive_wrapper_class_name(const char *wrapper_class_name)
-{
-    for (int i = 0; i < PRIMITIVE_TYPE_COUNT; i++) {
-        if (strcmp(primitive_types[i].wrapper_class_name, wrapper_class_name) == 0) {
             return true;
         }
     }

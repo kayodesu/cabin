@@ -125,7 +125,7 @@ struct object* method_descriptor_to_parameter_types(struct classloader *loader, 
         } else if (*b == '[') { // array reference, 描述符形如 [B 或 [[Ljava/lang/String; 的形式
             char *t = b;
             while (*(++t) == '[');
-            if (!pt_is_primitive_descriptor(*t)) {
+            if (!is_primitive_descriptor(*t)) {
                 t = strchr(t, ';');
                 if (t == NULL) {
                     VM_UNKNOWN_ERROR("descriptor error. %s", descriptor);
@@ -138,7 +138,7 @@ struct object* method_descriptor_to_parameter_types(struct classloader *loader, 
             buf[parameter_types_count++] = load_class(loader, b)->clsobj;
             *t = k; // recover
             b = t;
-        } else if (pt_is_primitive_descriptor(*b)) {
+        } else if (is_primitive_descriptor(*b)) {
             const char *class_name = pt_get_class_name_by_descriptor(*b);
             buf[parameter_types_count++] = load_class(loader, class_name)->clsobj;
         } else {

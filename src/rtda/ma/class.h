@@ -249,7 +249,7 @@ static inline bool class_is_array(const struct class *c)
 static inline bool is_primitive(const struct class *c)
 {
     assert(c != NULL);
-    return pt_is_primitive_class_name(c->class_name);
+    return is_primitive_class_name(c->class_name);
 }
 
 /*
