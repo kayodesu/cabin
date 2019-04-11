@@ -18,18 +18,18 @@ struct classloader {
 //    struct hashmap *classobj_pool; // java.lang.Class 类的对象池，保存 object *
 
     // 缓存一下常见类
-    struct class *jlclass; // java.lang.Class 的类
-    struct class *jlstring; // java.lang.String 的类
+    Class *jlclass; // java.lang.Class 的类
+    Class *jlstring; // java.lang.String 的类
 };
 
-struct class* classloader_get_jlclass(struct classloader *loader)
+Class* classloader_get_jlclass(ClassLoader *loader)
 {
     assert(loader != NULL);
     assert(loader->jlclass != NULL);
     return loader->jlclass;
 }
 
-struct class* classloader_get_jlstring(struct classloader *loader)
+Class* classloader_get_jlstring(ClassLoader *loader)
 {
     assert(loader != NULL);
     assert(loader->jlstring != NULL);
@@ -184,7 +184,7 @@ static struct bytecode_content read_class(const char *class_name)
     return invalid_bytecode_content; // not find
 }
 
-//static struct object* get_jclass_obj_from_pool(struct classloader *loader, const char *class_name)
+//static struct object* get_jclass_obj_from_pool(ClassLoader *loader, const char *class_name)
 //{
 //    struct object *clsobj = hashmap_find(loader->classobj_pool, class_name);
 ////    HASH_FIND_STR(loader->classobj_pool, class_name, clsobj);
@@ -199,15 +199,15 @@ static struct bytecode_content read_class(const char *class_name)
 //    return clsobj;
 //}
 
-//static void set_clsobj(struct classloader *loader, struct class *c)
+//static void set_clsobj(ClassLoader *loader, Class *c)
 //{
 ////    struct jclass *c = c0;
 //    c->clsobj = get_jclass_obj_from_pool(loader, c->class_name);
 //}
 
-struct classloader* classloader_create(bool is_bootstrap_loader)
+ClassLoader* classloader_create(bool is_bootstrap_loader)
 {
-    struct classloader *loader = vm_malloc(sizeof(struct classloader));
+    ClassLoader *loader = vm_malloc(sizeof(ClassLoader));
     if (is_bootstrap_loader) {
         g_bootstrap_loader = loader;
     }
@@ -225,7 +225,7 @@ struct classloader* classloader_create(bool is_bootstrap_loader)
     // 加载基本类型（int, float, etc.）的 class
     load_primitive_types();
 //    for (int i = 0; i < PRIMITIVE_TYPE_COUNT; i++) {
-//        struct class *c = jclass_create_primitive_class(loader, primitive_types[i].class_name);
+//        Class *c = jclass_create_primitive_class(loader, primitive_types[i].class_name);
 //        hashmap_put(loader->loaded_class_pool, primitive_types[i].class_name, c);
 //    }
 
@@ -241,7 +241,7 @@ struct classloader* classloader_create(bool is_bootstrap_loader)
     void *values[size];
     hashmap_values(loader->loaded_class_pool, values);
     for (int i = 0; i < size; i++) {
-        struct class *c = values[i];
+        Class *c = values[i];
         c->clsobj = clsobj_create(c);
     }
 
@@ -250,7 +250,7 @@ struct classloader* classloader_create(bool is_bootstrap_loader)
     return loader;
 }
 
-void classloader_put_to_pool(struct classloader *loader, const char *class_name, struct class *c)
+void classloader_put_to_pool(ClassLoader *loader, const char *class_name, Class *c)
 {
     assert(loader != NULL);
     assert(class_name != NULL);
@@ -259,7 +259,7 @@ void classloader_put_to_pool(struct classloader *loader, const char *class_name,
     hashmap_put(loader->loaded_class_pool, class_name, c);
 }
 
-static struct class* loading(struct classloader *loader, const char *class_name)
+static Class* loading(ClassLoader *loader, const char *class_name)
 {
     struct bytecode_content content = read_class(class_name);
     if (IS_INVALID(content)) {
@@ -270,7 +270,7 @@ static struct class* loading(struct classloader *loader, const char *class_name)
     return class_create(loader, content.bytecode, content.len);
 }
 
-static struct class* verification(struct class *c)
+static Class* verification(Class *c)
 {
     if (c->magic != 0xcafebabe) {
         jvm_abort("error. magic = %u(0x%x)", c->magic, c->magic);
@@ -295,7 +295,7 @@ static struct class* verification(struct class *c)
     return c;
 }
 
-static struct class* preparation(struct class *c)
+static Class* preparation(Class *c)
 {
 //    const struct rtcp* const rtcp = c->rtcp;
 
@@ -332,31 +332,31 @@ static struct class* preparation(struct class *c)
 /*
  * 解析（Resolution）是根据运行时常量池的符号引用来动态决定具体的值的过程。
  */
-static struct class* resolution(struct class *c)
+static Class* resolution(Class *c)
 {
     // todo
     return c;
 }
 
-static struct class* initialization(struct class *c)
+static Class* initialization(Class *c)
 {
     // todo
     return c;
 }
 
-static struct class* load_non_arr_class(struct classloader *loader, const char *class_name)
+static Class* load_non_arr_class(ClassLoader *loader, const char *class_name)
 {
 // todo 解析，初始化是在这里进行，还是待使用的时候再进行
-    struct class *c = loading(loader, class_name);
+    Class *c = loading(loader, class_name);
     return initialization(resolution(preparation(verification(c))));
 }
 
-struct class* load_class(struct classloader *loader, const char *class_name)
+Class* load_class(ClassLoader *loader, const char *class_name)
 {
     assert(loader != NULL);
     assert(class_name != NULL);
 
-    struct class *c = hashmap_find(loader->loaded_class_pool, class_name);
+    Class *c = hashmap_find(loader->loaded_class_pool, class_name);
     if (c != NULL) {
         assert(strcmp(c->class_name, class_name) == 0);
         return c;
@@ -383,7 +383,7 @@ struct class* load_class(struct classloader *loader, const char *class_name)
     return c;
 }
 
-void classloader_destroy(struct classloader *loader)
+void classloader_destroy(ClassLoader *loader)
 {
     assert(loader != NULL);
 

@@ -19,7 +19,7 @@
 
 
 // 计算实例字段的个数，同时给它们编号
-static void calc_instance_field_id(struct class *c)
+static void calc_instance_field_id(Class *c)
 {
     assert(c != NULL);
 
@@ -51,7 +51,7 @@ static void calc_instance_field_id(struct class *c)
 //    }
 //    // 初始化本类中的实例变量
 //    for (int i = 0; i < c->fields_count; i++) {
-//        struct field *field = c->fields + i;
+//        Field *field = c->fields + i;
 //        if (!IS_STATIC(field->access_flags)) {
 //            assert(field->id < c->instance_fields_count);
 //            switch (field->descriptor[0]) {
@@ -82,7 +82,7 @@ static void calc_instance_field_id(struct class *c)
 }
 
 // 计算静态字段的个数，同时给它们编号
-static void calc_static_field_id(struct class *c)
+static void calc_static_field_id(Class *c)
 {
     assert(c != NULL);
 
@@ -99,7 +99,7 @@ static void calc_static_field_id(struct class *c)
     c->static_fields_values = vm_calloc(c->static_fields_count, sizeof(slot_t));
 }
 
-static void parse_attribute(struct class *c, struct bytecode_reader *reader)
+static void parse_attribute(Class *c, struct bytecode_reader *reader)
 {
     u2 attr_count = bcr_readu2(reader);
     struct constant_pool *cp = &c->constant_pool;
@@ -130,7 +130,7 @@ static void parse_attribute(struct class *c, struct bytecode_reader *reader)
             u2 enclosing_method_index = bcr_readu2(reader);
 
             if (enclosing_class_index > 0) {
-                struct class *enclosing_class = load_class(c->loader, CP_CLASS_NAME(cp, enclosing_class_index));
+                Class *enclosing_class = load_class(c->loader, CP_CLASS_NAME(cp, enclosing_class_index));
                 c->enclosing_info[0] = clsobj_create(enclosing_class);
 
                 if (enclosing_method_index > 0) {
@@ -189,7 +189,7 @@ static void parse_attribute(struct class *c, struct bytecode_reader *reader)
     }
 }
 
-static void create_vtable(struct class *c)
+static void create_vtable(Class *c)
 {
     assert(c != NULL);
     if (c->super_class == NULL) {
@@ -198,7 +198,7 @@ static void create_vtable(struct class *c)
         c->vtable_len = 0;
 
         for (int i = 0; i < c->methods_count; i++) {
-            struct method *m = c->methods + i;
+            Method *m = c->methods + i;
             if (IS_PRIVATE(m->access_flags)
                 || IS_STATIC(m->access_flags)
                 || IS_FINAL(m->access_flags)
@@ -224,7 +224,7 @@ static void create_vtable(struct class *c)
     c->vtable_len = c->super_class->vtable_len;
 
     for (int i = 0; i < c->methods_count; i++) {
-        struct method *m = c->methods + i;
+        Method *m = c->methods + i;
         if (IS_PRIVATE(m->access_flags)
             || IS_STATIC(m->access_flags)
             || IS_FINAL(m->access_flags)
@@ -256,7 +256,7 @@ static void create_vtable(struct class *c)
     }
 }
 
-static void print_vtable(const struct class *c)
+static void print_vtable(const Class *c)
 {
     assert(c != NULL);
     for (int i = 0; i < c->vtable_len; i++) {
@@ -264,7 +264,7 @@ static void print_vtable(const struct class *c)
     }
 }
 
-struct class *class_create(struct classloader *loader, u1 *bytecode, size_t len)
+Class *class_create(ClassLoader *loader, u1 *bytecode, size_t len)
 {
     assert(loader != NULL);
     assert(bytecode != NULL);
@@ -272,7 +272,7 @@ struct class *class_create(struct classloader *loader, u1 *bytecode, size_t len)
     struct bytecode_reader reader;
     bcr_init(&reader, bytecode, len);
 
-    struct class *c = vm_malloc(sizeof(struct class));
+    Class *c = vm_malloc(sizeof(Class));
     c->loader = loader;
     c->inited = false;
     c->deprecated = false;
@@ -406,7 +406,7 @@ struct class *class_create(struct classloader *loader, u1 *bytecode, size_t len)
     if (c->interfaces_count == 0) {
         c->interfaces = NULL;
     } else {
-        c->interfaces = vm_malloc(sizeof(struct class *) * c->interfaces_count);
+        c->interfaces = vm_malloc(sizeof(Class *) * c->interfaces_count);
 
         for (int i = 0; i < c->interfaces_count; i++) {
 //            const char *interface_name = CP_CLASS_NAME(cp, bcr_readu2(&reader));//rtcp_get_class_name(c->rtcp, bcr_readu2(&reader));
@@ -425,7 +425,7 @@ struct class *class_create(struct classloader *loader, u1 *bytecode, size_t len)
     if (c->fields_count == 0) {
         c->fields = NULL;
     } else {
-        c->fields = vm_malloc(sizeof(struct field) * c->fields_count);
+        c->fields = vm_malloc(sizeof(Field) * c->fields_count);
         for (int i = 0, back = c->fields_count - 1; i < c->fields_count; i++) {
             u2 access_flags = bcr_peeku2(&reader);
             // 保证所有的 public fields 放在前面
@@ -446,7 +446,7 @@ struct class *class_create(struct classloader *loader, u1 *bytecode, size_t len)
     if (c->methods_count == 0) {
         c->methods = NULL;
     } else {
-        c->methods = vm_malloc(sizeof(struct method) * c->methods_count);
+        c->methods = vm_malloc(sizeof(Method) * c->methods_count);
         for (int i = 0, back = c->methods_count - 1; i < c->methods_count; i++) {
             u2 access_flags = bcr_peeku2(&reader);
             // 保证所有的 public methods 放在前面
@@ -465,7 +465,7 @@ struct class *class_create(struct classloader *loader, u1 *bytecode, size_t len)
     return c;
 }
 
-static void jclass_clear(struct class *c)
+static void jclass_clear(Class *c)
 {
     assert(c != NULL);
 
@@ -490,14 +490,14 @@ static void jclass_clear(struct class *c)
     c->enclosing_info[0] = c->enclosing_info[1] = c->enclosing_info[2] = NULL;
 }
 
-struct class* class_create_primitive_class(struct classloader *loader, const char *class_name)
+Class* class_create_primitive_class(ClassLoader *loader, const char *class_name)
 {
     assert(loader != NULL);
     assert(class_name != NULL);
 
     // todo class_name 是不是基本类型
 
-    struct class *c = vm_malloc(sizeof(struct class));
+    Class *c = vm_malloc(sizeof(Class));
     jclass_clear(c);
 
     c->access_flags = ACC_PUBLIC;
@@ -511,13 +511,13 @@ struct class* class_create_primitive_class(struct classloader *loader, const cha
     return c;
 }
 
-struct class* class_create_arr_class(struct classloader *loader, const char *class_name)
+Class* class_create_arr_class(ClassLoader *loader, const char *class_name)
 {
     assert(loader != NULL);
     assert(class_name != NULL);
 
     // todo class_name 是不是 array
-    struct class *c = vm_malloc(sizeof(struct class));
+    Class *c = vm_malloc(sizeof(Class));
     jclass_clear(c);
 
     c->access_flags = ACC_PUBLIC;
@@ -528,7 +528,7 @@ struct class* class_create_arr_class(struct classloader *loader, const char *cla
     c->super_class = load_sys_class(SYMBOL(java_lang_Object));
 
     c->interfaces_count = 2;
-    c->interfaces = malloc(sizeof(struct class *) * 2);
+    c->interfaces = malloc(sizeof(Class *) * 2);
     c->interfaces[0] = load_sys_class(SYMBOL(java_lang_Cloneable));
     c->interfaces[1] = load_sys_class(SYMBOL(java_io_Serializable));
 
@@ -538,7 +538,7 @@ struct class* class_create_arr_class(struct classloader *loader, const char *cla
     return c;
 }
 
-void class_destroy(struct class *c)
+void class_destroy(Class *c)
 {
     if (c == NULL) {
         // todo
@@ -560,7 +560,7 @@ void class_destroy(struct class *c)
     free(c);
 }
 
-void class_clinit(struct class *c)
+void class_clinit(Class *c)
 {
     if (c->inited) {
         return;
@@ -574,7 +574,7 @@ void class_clinit(struct class *c)
     // 可能调用putstatic等函数也会触发<clinit>的调用造成死循环。
     c->inited = true;
 
-    struct method *method = class_get_declared_method(c, SYMBOL(class_init), SYMBOL(___V));
+    Method *method = class_get_declared_method(c, SYMBOL(class_init), SYMBOL(___V));
     if (method != NULL) { // 有的类没有<clinit>方法
         if (!IS_STATIC(method->access_flags)) {
             // todo error
@@ -586,7 +586,7 @@ void class_clinit(struct class *c)
     }
 }
 
-struct field* jclass_lookup_field0(struct class *c, const char *name, const char *descriptor)
+Field* jclass_lookup_field0(Class *c, const char *name, const char *descriptor)
 {
     for (int i = 0; i < c->fields_count; i++) {
         if (utf8_equals(c->fields[i].name, name) && utf8_equals(c->fields[i].descriptor, descriptor)) {
@@ -595,7 +595,7 @@ struct field* jclass_lookup_field0(struct class *c, const char *name, const char
     }
 
     // todo 在父类中查找
-    struct field *field;
+    Field *field;
     if (c->super_class != NULL) {
         if ((field = jclass_lookup_field0(c->super_class, name, descriptor)) != NULL)
             return field;
@@ -610,9 +610,9 @@ struct field* jclass_lookup_field0(struct class *c, const char *name, const char
     return NULL;
 }
 
-struct field* class_lookup_field(struct class *c, const char *name, const char *descriptor)
+Field* class_lookup_field(Class *c, const char *name, const char *descriptor)
 {
-    struct field *f = jclass_lookup_field0(c, name, descriptor);
+    Field *f = jclass_lookup_field0(c, name, descriptor);
     if (f == NULL) {
         // java.lang.NoSuchFieldError  todo
         jvm_abort("java.lang.NoSuchFieldError. %s, %s, %s\n", c->class_name, name, descriptor); // tood
@@ -620,9 +620,9 @@ struct field* class_lookup_field(struct class *c, const char *name, const char *
     return f;
 }
 
-struct field* class_lookup_static_field(struct class *c, const char *name, const char *descriptor)
+Field* class_lookup_static_field(Class *c, const char *name, const char *descriptor)
 {
-    struct field *field = class_lookup_field(c, name, descriptor);
+    Field *field = class_lookup_field(c, name, descriptor);
     // todo field == nullptr
     if (!IS_STATIC(field->access_flags)) {
         // todo java.lang.IncompatibleClassChangeError
@@ -631,9 +631,9 @@ struct field* class_lookup_static_field(struct class *c, const char *name, const
     return field;
 }
 
-struct field* class_lookup_instance_field(struct class *c, const char *name, const char *descriptor)
+Field* class_lookup_instance_field(Class *c, const char *name, const char *descriptor)
 {
-    struct field* field = class_lookup_field(c, name, descriptor);
+    Field* field = class_lookup_field(c, name, descriptor);
     // todo field == nullptr
     if (IS_STATIC(field->access_flags)) {
         // todo java.lang.IncompatibleClassChangeError
@@ -642,7 +642,7 @@ struct field* class_lookup_instance_field(struct class *c, const char *name, con
     return field;
 }
 
-struct method* class_get_declared_method(struct class *c, const char *name, const char *descriptor)
+Method* class_get_declared_method(Class *c, const char *name, const char *descriptor)
 {
     for (int i = 0; i < c->methods_count; i++) {
         if (utf8_equals(c->methods[i].name, name) && utf8_equals(c->methods[i].descriptor, descriptor)) {
@@ -653,10 +653,10 @@ struct method* class_get_declared_method(struct class *c, const char *name, cons
     return NULL;
 }
 
-struct method* class_get_declared_static_method(struct class *c, const char *name, const char *descriptor)
+Method* class_get_declared_static_method(Class *c, const char *name, const char *descriptor)
 {
     for (int i = 0; i < c->methods_count; i++) {
-        struct method *m = c->methods + i;
+        Method *m = c->methods + i;
         if (IS_STATIC(m->access_flags) && strcmp(m->name, name) == 0 && strcmp(m->descriptor, descriptor) == 0) {
             return m;
         }
@@ -665,10 +665,10 @@ struct method* class_get_declared_static_method(struct class *c, const char *nam
     return NULL;
 }
 
-struct method* class_get_declared_nonstatic_method(struct class *c, const char *name, const char *descriptor)
+Method* class_get_declared_nonstatic_method(Class *c, const char *name, const char *descriptor)
 {
     for (int i = 0; i < c->methods_count; i++) {
-        struct method *m = c->methods + i;
+        Method *m = c->methods + i;
         if (!IS_STATIC(m->access_flags) && strcmp(m->name, name) == 0 && strcmp(m->descriptor, descriptor) == 0) {
             return m;
         }
@@ -677,13 +677,13 @@ struct method* class_get_declared_nonstatic_method(struct class *c, const char *
     return NULL;
 }
 
-struct method** class_get_declared_methods(struct class *c, const char *name, bool public_only, int *count)
+Method** class_get_declared_methods(Class *c, const char *name, bool public_only, int *count)
 {
     assert(c != NULL);
     assert(name != NULL);
     assert(count != NULL);
 
-    struct method **methods = vm_malloc(sizeof(struct method *) * c->methods_count);
+    Method **methods = vm_malloc(sizeof(Method *) * c->methods_count);
     *count = 0;
 
     for (int i = 0; i < c->methods_count; i++) {
@@ -696,23 +696,23 @@ struct method** class_get_declared_methods(struct class *c, const char *name, bo
     return methods;
 }
 
-struct method* class_get_constructor(struct class *c, const char *descriptor)
+Method* class_get_constructor(Class *c, const char *descriptor)
 {
     return class_get_declared_method(c, SYMBOL(object_init), descriptor);
 }
 
-struct method** class_get_constructors(struct class *c, bool public_only, int *count)
+Method** class_get_constructors(Class *c, bool public_only, int *count)
 {
-    struct method **constructors = class_get_declared_methods(c, SYMBOL(object_init), public_only, count);
+    Method **constructors = class_get_declared_methods(c, SYMBOL(object_init), public_only, count);
     if (*count < 1) {
         jvm_abort("至少有一个constructor\n");
     }
     return constructors;
 }
 
-static struct method* class_lookup_method0(struct class *c, const char *name, const char *descriptor)
+static Method* class_lookup_method0(Class *c, const char *name, const char *descriptor)
 {
-    struct method *method = class_get_declared_method(c, name, descriptor);
+    Method *method = class_get_declared_method(c, name, descriptor);
     if (method != NULL) {
         return method;
     }
@@ -732,9 +732,9 @@ static struct method* class_lookup_method0(struct class *c, const char *name, co
     return NULL;
 }
 
-struct method* class_lookup_method(struct class *c, const char *name, const char *descriptor)
+Method* class_lookup_method(Class *c, const char *name, const char *descriptor)
 {
-    struct method *m = class_lookup_method0(c, name, descriptor);
+    Method *m = class_lookup_method0(c, name, descriptor);
     if (m == NULL) {
         // todo java.lang.NoSuchMethodError
         VM_UNKNOWN_ERROR("can not find method. %s~%s~%s", c->class_name, name, descriptor);
@@ -742,9 +742,9 @@ struct method* class_lookup_method(struct class *c, const char *name, const char
     return m;
 }
 
-struct method* class_lookup_static_method(struct class *c, const char *name, const char *descriptor)
+Method* class_lookup_static_method(Class *c, const char *name, const char *descriptor)
 {
-    struct method *m = class_lookup_method(c, name, descriptor);
+    Method *m = class_lookup_method(c, name, descriptor);
     if (!IS_STATIC(m->access_flags)) {
         // todo java.lang.IncompatibleClassChangeError
         jvm_abort("java.lang.IncompatibleClassChangeError");
@@ -752,9 +752,9 @@ struct method* class_lookup_static_method(struct class *c, const char *name, con
     return m;
 }
 
-struct method* class_lookup_instance_method(struct class *c, const char *name, const char *descriptor)
+Method* class_lookup_instance_method(Class *c, const char *name, const char *descriptor)
 {
-    struct method *m = class_lookup_method(c, name, descriptor);
+    Method *m = class_lookup_method(c, name, descriptor);
     // todo m == nullptr
     if (IS_STATIC(m->access_flags)) {
         // todo java.lang.IncompatibleClassChangeError
@@ -763,7 +763,7 @@ struct method* class_lookup_instance_method(struct class *c, const char *name, c
     return m;
 }
 
-bool class_is_subclass_of(const struct class *c, const struct class *father)
+bool class_is_subclass_of(const Class *c, const Class *father)
 {
     if (c == father)
         return true;
@@ -779,7 +779,7 @@ bool class_is_subclass_of(const struct class *c, const struct class *father)
     return false;
 }
 
-int class_inherited_depth(const struct class *c)
+int class_inherited_depth(const Class *c)
 {
     assert(c != NULL);
 
@@ -790,7 +790,7 @@ int class_inherited_depth(const struct class *c)
     return depth;
 }
 
-void set_static_field_value(struct class *c, struct field *f, slot_t *value)
+void set_static_field_value(Class *c, Field *f, slot_t *value)
 {
     assert(c != NULL && f != NULL && value != NULL);
 
@@ -800,7 +800,7 @@ void set_static_field_value(struct class *c, struct field *f, slot_t *value)
     }
 }
 
-const slot_t* get_static_field_value(const struct class *c, const struct field *f)
+const slot_t* get_static_field_value(const Class *c, const Field *f)
 {
     return c->static_fields_values + f->id;
 }
@@ -828,7 +828,7 @@ char* get_arr_class_name(const char *class_name)
     return array_class_name;
 }
 
-//struct class* jclass_array_class(struct class *c)
+//Class* jclass_array_class(Class *c)
 //{
 //    assert(c != NULL);
 //
@@ -851,7 +851,7 @@ char* get_arr_class_name(const char *class_name)
 //    return classloader_load_class(c->loader, array_class_name);
 //}
 
-struct class* class_component_class(const struct class *arr_cls)
+Class* class_component_class(const Class *arr_cls)
 {
     assert(arr_cls != NULL);
     if (!class_is_array(arr_cls)) {
@@ -879,7 +879,7 @@ struct class* class_component_class(const struct class *arr_cls)
     }
 }
 
-bool class_is_accessible_to(const struct class *c, const struct class *visitor)
+bool class_is_accessible_to(const Class *c, const Class *visitor)
 {
     // todo 实现对不对
     assert(c != NULL && visitor != NULL); // todo
@@ -900,7 +900,7 @@ bool class_is_accessible_to(const struct class *c, const struct class *visitor)
     return utf8_equals(c->pkg_name, visitor->pkg_name);
 }
 
-char *class_to_string(const struct class *c)
+char *class_to_string(const Class *c)
 {
     char *result = vm_malloc(sizeof(char) * PATH_MAX);
     strcpy(result, "class: ");

@@ -93,7 +93,7 @@ static char* instruction_names[] = {
 #endif
 
 // constant instructions -----------------------------------------------------------------------------------------------
-static void __ldc(struct frame *frame, int index)
+static void __ldc(Frame *frame, int index)
 {
     struct constant_pool *cp = &frame->method->clazz->constant_pool;
     u1 type = CP_TYPE(cp, index);
@@ -109,14 +109,14 @@ static void __ldc(struct frame *frame, int index)
     } else if (type == CONSTANT_Class) {
         frame_stack_pushr(frame, resolve_class(frame->method->clazz, index)->clsobj);
     } else if (type == CONSTANT_ResolvedClass) {
-        struct class *c = (struct class *) CP_INFO(cp, index);
+        Class *c = (Class *) CP_INFO(cp, index);
         frame_stack_pushr(frame, c->clsobj);
     } else {
         VM_UNKNOWN_ERROR("unknown type: %d", type);
     }
 }
 
-void ldc2_w(struct frame *frame)
+void ldc2_w(Frame *frame)
 {
     int index = bcr_readu2(&frame->reader);
     struct constant_pool *cp = &frame->method->clazz->constant_pool;
@@ -134,7 +134,7 @@ void ldc2_w(struct frame *frame)
 /*
  * todo 指令说明  好像是实现 switch 语句
  */
-static void tableswitch(struct frame *frame)
+static void tableswitch(Frame *frame)
 {
     struct bytecode_reader *reader = &frame->reader;
     size_t saved_pc = reader->pc - 1; // save the pc before 'tableswitch' instruction
@@ -172,7 +172,7 @@ static void tableswitch(struct frame *frame)
 /*
  * todo 指令说明  好像是实现 switch 语句
  */
-static void lookupswitch(struct frame *frame)
+static void lookupswitch(Frame *frame)
 {
     struct bytecode_reader *reader = &frame->reader;
     size_t saved_pc = reader->pc - 1; // save the pc before 'lookupswitch' instruction
@@ -211,9 +211,9 @@ static void lookupswitch(struct frame *frame)
  * 创建多维数组
  * todo 注意这种情况，基本类型的多维数组 int[][][]
  */
-static void multianewarray(struct frame *frame)
+static void multianewarray(Frame *frame)
 {
-    struct class *curr_class = frame->method->clazz;
+    Class *curr_class = frame->method->clazz;
     int index = bcr_readu2(&frame->reader);
     const char *class_name = CP_UTF8(&curr_class->constant_pool, index); // 这里解析出来的直接就是数组类。
 
@@ -227,7 +227,7 @@ static void multianewarray(struct frame *frame)
         arr_lens[i] = (size_t) len;
     }
 
-    struct class *arr_class = load_class(curr_class->loader, class_name);
+    Class *arr_class = load_class(curr_class->loader, class_name);
     jref arr = arrobj_create_multi(arr_class, arr_dim, arr_lens);
     frame_stack_pushr(frame, arr);
 }
@@ -237,7 +237,7 @@ static void multianewarray(struct frame *frame)
  * 显然基本类型数组肯定都是一维数组，
  * 如果引用类型数组的元素也是数组，那么它就是多维数组。
  */
-static void newarray(struct frame *frame)
+static void newarray(Frame *frame)
 {
     jint arr_len = frame_stack_popi(frame);
     if (arr_len < 0) {
@@ -262,7 +262,7 @@ static void newarray(struct frame *frame)
             return;
     }
 
-    struct class *c = load_class(frame->method->clazz->loader, arr_name);
+    Class *c = load_class(frame->method->clazz->loader, arr_name);
     frame_stack_pushr(frame, arrobj_create(c, (size_t) arr_len));
 }
 
@@ -272,7 +272,7 @@ static void newarray(struct frame *frame)
  * 实现完全错误
  * 创建一维引用类型数组
  */
-static void anewarray(struct frame *frame)
+static void anewarray(Frame *frame)
 {
     jint arr_len = frame_stack_popi(frame);
     if (arr_len < 0) {
@@ -287,14 +287,14 @@ static void anewarray(struct frame *frame)
     const char *class_name;
     u1 type = CP_TYPE(cp, index);
     if (type == CONSTANT_ResolvedClass) {
-        struct class *c = (struct class *) CP_INFO(cp, index);
+        Class *c = (Class *) CP_INFO(cp, index);
         class_name = c->class_name;
     } else {
         class_name = CP_CLASS_NAME(cp, index);
     }
 
     char *arr_class_name = get_arr_class_name(class_name);
-    struct class *arr_class = load_class(frame->method->clazz->loader, arr_class_name);
+    Class *arr_class = load_class(frame->method->clazz->loader, arr_class_name);
     free(arr_class_name);
     frame_stack_pushr(frame, arrobj_create(arr_class, (size_t) arr_len));
 }
@@ -351,28 +351,28 @@ static void anewarray(struct frame *frame)
  */
 
 #if 0
-static void set_bootstrap_method_type(struct frame *frame)
+static void set_bootstrap_method_type(Frame *frame)
 {
     assert(frame != NULL);
     frame->thread->dyn.bootstrap_method_type = frame_stack_popr(frame);
     int i = 3;
 }
 
-static void set_lookup(struct frame *frame)
+static void set_lookup(Frame *frame)
 {
     assert(frame != NULL);
     frame->thread->dyn.lookup = frame_stack_popr(frame);
     int i = 3;
 }
 
-static void set_call_set0(struct frame *frame)
+static void set_call_set0(Frame *frame)
 {
     assert(frame != NULL);
     frame->thread->dyn.call_set = frame_stack_popr(frame);
     int i = 3;
 }
 
-static void set_exact_method_handle(struct frame *frame)
+static void set_exact_method_handle(Frame *frame)
 {
     assert(frame != NULL);
     frame->thread->dyn.exact_method_handle = frame_stack_popr(frame);
@@ -380,12 +380,12 @@ static void set_exact_method_handle(struct frame *frame)
 }
 
 static void parse_bootstrap_method_type(
-        struct class *curr_class, struct thread *curr_thread, struct invoke_dynamic_ref *ref)
+        Class *curr_class, struct thread *curr_thread, struct invoke_dynamic_ref *ref)
 {
 // todo 注意有一个这个方法： MethodType.fromMethodDescriptorString 更方便
-    struct object *parameter_types = method_descriptor_to_parameter_types(curr_class->loader, ref->nt->descriptor);
-    struct object *return_type = method_descriptor_to_return_type(curr_class->loader, ref->nt->descriptor);
-    struct class *c = load_class(g_bootstrap_loader, "java/lang/invoke/MethodType");
+    Object *parameter_types = method_descriptor_to_parameter_types(curr_class->loader, ref->nt->descriptor);
+    Object *return_type = method_descriptor_to_return_type(curr_class->loader, ref->nt->descriptor);
+    Class *c = load_class(g_bootstrap_loader, "java/lang/invoke/MethodType");
 
     // public static MethodType methodType(Class<?> rtype, Class<?>[] ptypes)
     if (arrobj_len(parameter_types) > 0) {
@@ -408,7 +408,7 @@ static void parse_bootstrap_method_type(
 
 static void get_lookup(struct thread *curr_thread)
 {
-    struct class *c = load_class(g_bootstrap_loader, "java/lang/invoke/MethodHandles");
+    Class *c = load_class(g_bootstrap_loader, "java/lang/invoke/MethodHandles");
     struct method *m = class_lookup_static_method(c, "lookup", "()Ljava/lang/invoke/MethodHandles$Lookup;");
     thread_invoke_method_with_shim(curr_thread, m, NULL, set_lookup);
 
@@ -452,13 +452,13 @@ static void get_lookup(struct thread *curr_thread)
 //    }
 //}
 
-static void set_call_set(struct class *curr_class, struct thread *curr_thread,
+static void set_call_set(Class *curr_class, struct thread *curr_thread,
                         struct classloader *loader, struct invoke_dynamic_ref *ref)
 {
 
     struct method_ref *mr = ref->handle->ref.mr;
 
-    struct class *bootstrap_class = load_class(loader, mr->class_name);
+    Class *bootstrap_class = load_class(loader, mr->class_name);
     struct method *bootstrap_method = class_lookup_static_method(bootstrap_class, mr->name, mr->descriptor);
     // todo 说明 bootstrap_method 的格式
     // bootstrap_method is static,  todo 对不对
@@ -479,14 +479,14 @@ static void set_call_set(struct class *curr_class, struct thread *curr_thread,
 #endif
 
 // 每一个 invokedynamic 指令都称为 Dynamic Call Site(动态调用点)
-void invokedynamic(struct frame *frame)
+void invokedynamic(Frame *frame)
 {
     jvm_abort("invokedynamic not implement\n");  // todo
 
 #if 0
     size_t saved_pc = frame->reader.pc - 1;
 
-    struct class *curr_class = frame->m.method->clazz;
+    Class *curr_class = frame->m.method->clazz;
     struct thread *curr_thread = frame->thread;
 
     // The run-time constant pool item at that index must be a symbolic reference to a call site specifier.
@@ -497,22 +497,22 @@ void invokedynamic(struct frame *frame)
 
     struct invoke_dynamic_ref *ref = rtcp_get_invoke_dynamic(curr_class->rtcp, index);
 
-    struct object *bootstrap_method_type = curr_thread->dyn.bootstrap_method_type;
+    Object *bootstrap_method_type = curr_thread->dyn.bootstrap_method_type;
     if (bootstrap_method_type == NULL) {
         parse_bootstrap_method_type(curr_class, curr_thread, ref);
         frame->reader.pc = saved_pc; // recover pc
         return;
     }
 
-    struct object *lookup = curr_thread->dyn.lookup;
+    Object *lookup = curr_thread->dyn.lookup;
     if (lookup == NULL) {
         get_lookup(curr_thread);
         frame->reader.pc = saved_pc; // recover pc
         return;
     }
 
-    struct object *call_set = curr_thread->dyn.call_set;
-    struct object *exact_method_handle = curr_thread->dyn.exact_method_handle;
+    Object *call_set = curr_thread->dyn.call_set;
+    Object *exact_method_handle = curr_thread->dyn.exact_method_handle;
 
     // todo
     switch (ref->handle->kind) {
@@ -593,12 +593,12 @@ static slot_t * exec()
         index = bcr_readu1(&frame->reader); \
     }
 
-    struct thread *thread = thread_self();
+    Thread *thread = thread_self();
 
-    struct method *resolved_method;
+    Method *resolved_method;
     slot_t *args;
 
-    struct frame *frame = thread->top_frame;
+    Frame *frame = thread->top_frame;
     print2("executing frame(%p): %s, pc = %lu\n", frame, frame_to_string(frame), frame->reader.pc);
 
     while (true) {
@@ -1006,7 +1006,7 @@ static slot_t * exec()
 
 #define METHOD_RETURN(ret_value_slot_count) \
 { \
-    struct frame *invoke_frame = thread->top_frame = frame->prev; \
+    Frame *invoke_frame = thread->top_frame = frame->prev; \
     frame->stack -= (ret_value_slot_count); \
      \
     if (frame->vm_invoke || invoke_frame == NULL) { \
@@ -1026,7 +1026,7 @@ static slot_t * exec()
             CASE(OPC_GETSTATIC, {
                 struct bytecode_reader *reader = &frame->reader;
                 int index = bcr_readu2(reader);
-                struct field *f = resolve_field(frame->method->clazz, index);
+                Field *f = resolve_field(frame->method->clazz, index);
 
                 if (!f->clazz->inited) {
                     class_clinit(f->clazz);
@@ -1042,7 +1042,7 @@ static slot_t * exec()
             CASE(OPC_PUTSTATIC, {
                 struct bytecode_reader *reader = &frame->reader;
                 int index = bcr_readu2(reader);
-                struct field *f = resolve_field(frame->method->clazz, index);
+                Field *f = resolve_field(frame->method->clazz, index);
 
                 if (!f->clazz->inited) {
                     class_clinit(f->clazz);
@@ -1059,7 +1059,7 @@ static slot_t * exec()
 
             CASE(OPC_GETFIELD, {
                 int index = bcr_readu2(&frame->reader);
-                struct field *f = resolve_field(frame->method->clazz, index);
+                Field *f = resolve_field(frame->method->clazz, index);
 
                 jref obj = frame_stack_popr(frame);
                 if (obj == NULL) {
@@ -1075,7 +1075,7 @@ static slot_t * exec()
 
             CASE(OPC_PUTFIELD, {
                 int index = bcr_readu2(&frame->reader);
-                struct field *f = resolve_field(frame->method->clazz, index);
+                Field *f = resolve_field(frame->method->clazz, index);
 
                 // 如果是final字段，则只能在构造函数中初始化，否则抛出java.lang.IllegalAccessError。
                 if (IS_FINAL(f->access_flags)) {
@@ -1103,11 +1103,11 @@ static slot_t * exec()
             case OPC_INVOKEVIRTUAL: {
                 // invokevirtual指令用于调用对象的实例方法，根据对象的实际类型进行分派（虚方法分派）。
                 int index = bcr_readu2(&frame->reader);
-                struct method *m = resolve_method(frame->method->clazz, index);
+                Method *m = resolve_method(frame->method->clazz, index);
 
                 frame->stack -= m->arg_slot_count;
                 args = frame->stack;
-                struct object *obj = (struct object *) args[0];
+                Object *obj = (Object *) args[0];
                 if (obj == NULL) {
                     thread_throw_null_pointer_exception();
                 }
@@ -1125,7 +1125,7 @@ static slot_t * exec()
             case OPC_INVOKESPECIAL: {
                 // invokespecial指令用于调用一些需要特殊处理的实例方法，
                 // 包括构造函数、私有方法和通过super关键字调用的超类方法。
-                struct class *curr_class = frame->method->clazz;
+                Class *curr_class = frame->method->clazz;
                 int index = bcr_readu2(&frame->reader);
 //
 //    // 假定从方法符号引用中解析出来的类是C，方法是M。如果M是构造函数，则声明M的类必须是C，
@@ -1134,7 +1134,7 @@ static slot_t * exec()
 ////        jvm_abort("java.lang.NoSuchMethodError\n");
 ////    }
 
-                struct method *m = resolve_method(curr_class, index);
+                Method *m = resolve_method(curr_class, index);
                 /*
                  * 如果调用的中超类中的函数，但不是构造函数，不是private 函数，且当前类的ACC_SUPER标志被设置，
                  * 需要一个额外的过程查找最终要调用的方法；否则前面从方法符号引用中解析出来的方法就是要调用的方法。
@@ -1169,11 +1169,11 @@ static slot_t * exec()
             case OPC_INVOKESTATIC: {
                 // invokestatic指令用来调用静态方法。
                 // 如果类还没有被初始化，会触发类的初始化。
-                struct class *curr_class = frame->method->clazz;
+                Class *curr_class = frame->method->clazz;
 
                 int index = bcr_readu2(&frame->reader);
 
-                struct method *m = resolve_method(curr_class, index);
+                Method *m = resolve_method(curr_class, index);
 
                 if (IS_ABSTRACT(m->access_flags)) {
                     // todo java.lang.AbstractMethodError
@@ -1194,7 +1194,7 @@ static slot_t * exec()
                 goto invoke_method;
             }
             case OPC_INVOKEINTERFACE: {
-                struct class *curr_class = frame->method->clazz;
+                Class *curr_class = frame->method->clazz;
                 int index = frame_readu2(frame); //bcr_readu2(&frame->reader);
 
                 /*
@@ -1209,7 +1209,7 @@ static slot_t * exec()
                  */
                 frame_readu1(frame);
 
-                struct method *m = resolve_method(curr_class, index);
+                Method *m = resolve_method(curr_class, index);
 
                 /* todo 本地方法 */
 
@@ -1221,7 +1221,7 @@ static slot_t * exec()
                     thread_throw_null_pointer_exception();
                 }
 
-                struct method *method = class_lookup_method(obj->clazz, m->name, m->descriptor);
+                Method *method = class_lookup_method(obj->clazz, m->name, m->descriptor);
                 if (method == NULL) {
                     jvm_abort("error\n"); // todo
                 }
@@ -1243,7 +1243,7 @@ static slot_t * exec()
                 break;
             invoke_method:
             {
-                struct frame *new_frame = alloc_frame(resolved_method, false);
+                Frame *new_frame = alloc_frame(resolved_method, false);
                 if (resolved_method->arg_slot_count > 0 && args == NULL) {
                     jvm_abort("do not find args, %d\n", resolved_method->arg_slot_count); // todo
                 }
@@ -1263,7 +1263,7 @@ static slot_t * exec()
                 // new指令专门用来创建类实例。数组由专门的指令创建
                 // 如果类还没有被初始化，会触发类的初始化。
                 struct bytecode_reader *reader = &frame->reader;
-                struct class *c = resolve_class(frame->method->clazz, bcr_readu2(reader));  // todo
+                Class *c = resolve_class(frame->method->clazz, bcr_readu2(reader));  // todo
                 if (!c->inited)
                     class_clinit(c);
 
@@ -1281,7 +1281,7 @@ static slot_t * exec()
             CASE(OPC_ANEWARRAY, anewarray(frame))
 
             CASE(OPC_ARRAYLENGTH, {
-                struct object *o = frame_stack_popr(frame);
+                Object *o = frame_stack_popr(frame);
                 if (o == NULL) {
                     thread_throw_null_pointer_exception();
                 }
@@ -1329,7 +1329,7 @@ static slot_t * exec()
 
                 // 如果引用是null，则指令执行结束。也就是说，null 引用可以转换成任何类型
                 if (obj != NULL) {
-                    struct class *c = resolve_class(frame->method->clazz, index);
+                    Class *c = resolve_class(frame->method->clazz, index);
                     if (!object_is_instance_of(obj, c)) {
                         thread_throw_class_cast_exception(obj->clazz->class_name, c->class_name);
                     }
@@ -1338,7 +1338,7 @@ static slot_t * exec()
 
             CASE(OPC_INSTANCEOF, {
                 int index = bcr_readu2(&frame->reader);
-                struct class *c = resolve_class(frame->method->clazz, index);
+                Class *c = resolve_class(frame->method->clazz, index);
 
                 jref obj = frame_stack_popr(frame);
                 if (obj == NULL)
@@ -1388,9 +1388,9 @@ static slot_t * exec()
     jvm_abort("Never goes here!");
 }
 
-slot_t *exec_java_func(struct method *method, const slot_t *args)
+slot_t *exec_java_func(Method *method, const slot_t *args)
 {
-    struct frame *frame = alloc_frame(method, true);
+    Frame *frame = alloc_frame(method, true);
     if (method->arg_slot_count > 0 && args == NULL) {
         jvm_abort("do not find args, %d\n", method->arg_slot_count); // todo
     }

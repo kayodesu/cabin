@@ -1,12 +1,13 @@
 #include "../../../registry.h"
 #include "../../../../jvm.h"
+#include "../../../../jvmdef.h"
 
 /*
  * Author: Jia Yang
  */
 
 // private native byte[] getTypeAnnotationBytes0();
-static void getTypeAnnotationBytes0(struct frame *frame)
+static void getTypeAnnotationBytes0(Frame *frame)
 {
     jvm_abort(""); // todo
 }

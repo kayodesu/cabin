@@ -6,7 +6,7 @@
 #include "arrobj.h"
 #include "mgr/heap_mgr.h"
 
-struct object *arrobj_create(struct class *arr_class, jint arr_len)
+Object *arrobj_create(Class *arr_class, jint arr_len)
 {
     assert(arr_class != NULL);
     assert(class_is_array(arr_class));
@@ -27,8 +27,8 @@ struct object *arrobj_create(struct class *arr_class, jint arr_len)
     else if (t == 'D') { ele_size = sizeof(jdouble); }
 
     size_t mem_len = ele_size * arr_len;
-    size_t size = sizeof(struct object) + mem_len;
-    struct object *o = hm_get(&g_heap_mgr, size);
+    size_t size = sizeof(Object) + mem_len;
+    Object *o = hm_get(&g_heap_mgr, size);
     o->clazz = arr_class;
     o->size = size;
     o->u.a.ele_size = ele_size;
@@ -38,7 +38,7 @@ struct object *arrobj_create(struct class *arr_class, jint arr_len)
     return o;
 }
 
-struct object *arrobj_create_multi(struct class *arr_class, size_t arr_dim, const size_t *arr_lens)
+Object *arrobj_create_multi(Class *arr_class, size_t arr_dim, const size_t *arr_lens)
 {
     assert(arr_class != NULL);
     assert(arr_lens != NULL);
@@ -49,13 +49,13 @@ struct object *arrobj_create_multi(struct class *arr_class, size_t arr_dim, cons
      * 先创建其第一维，第一维的每个元素也是一数组
      */
     size_t len = arr_lens[0];
-    struct object *o = arrobj_create(arr_class, len);
+    Object *o = arrobj_create(arr_class, len);
     if (arr_dim == 1) {
         return o;
     }
 
     // todo
-    struct class *ele_class = load_class(arr_class->loader, arr_class->class_name + 1); // jump '['
+    Class *ele_class = load_class(arr_class->loader, arr_class->class_name + 1); // jump '['
     for (size_t i = 0; i < len; i++) {
         arrobj_set(jref, o, i, arrobj_create_multi(ele_class, arr_dim - 1, arr_lens + 1));
     }
@@ -63,7 +63,7 @@ struct object *arrobj_create_multi(struct class *arr_class, size_t arr_dim, cons
     return o;
 }
 
-void arrobj_copy(struct object *dst, jint dst_pos, const struct object *src, jint src_pos, jint len)
+void arrobj_copy(Object *dst, jint dst_pos, const Object *src, jint src_pos, jint len)
 {
     assert(src != NULL);
     assert(object_is_array(src));

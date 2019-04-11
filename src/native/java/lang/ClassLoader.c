@@ -9,49 +9,49 @@
 #include "../../../rtda/heap/strobj.h"
 
 // private native Class<?> defineClass0(String name, byte[] b, int off, int len, ProtectionDomain pd);
-static void defineClass0(struct frame *frame)
+static void defineClass0(Frame *frame)
 {
     // todo
     jvm_abort("");
 }
 
 // private native Class<?> defineClass1(String name, byte[] b, int off, int len, ProtectionDomain pd, String source);
-static void defineClass1(struct frame *frame)
+static void defineClass1(Frame *frame)
 {
     // todo
     jvm_abort("");
 }
 
 // private native Class<?> defineClass2(String name, java.nio.ByteBuffer b, int off, int len, ProtectionDomain pd, String source);
-static void defineClass2(struct frame *frame)
+static void defineClass2(Frame *frame)
 {
     // todo
     jvm_abort("");
 }
 
 // private native void resolveClass0(Class<?> c);
-static void resolveClass0(struct frame *frame)
+static void resolveClass0(Frame *frame)
 {
     // todo
     jvm_abort("");
 }
 
 // private native Class<?> findBootstrapClass(String name);
-static void findBootstrapClass(struct frame *frame)
+static void findBootstrapClass(Frame *frame)
 {
     // todo
     jvm_abort("");
 }
 
 // private native final Class<?> findLoadedClass0(String name);
-static void findLoadedClass0(struct frame *frame)
+static void findLoadedClass0(Frame *frame)
 {
     // todo
     jvm_abort("");
 }
 
 // private static native String findBuiltinLib(String name);
-static void findBuiltinLib(struct frame *frame)
+static void findBuiltinLib(Frame *frame)
 {
 //    jvm_abort("findBuiltinLib");
 
@@ -71,7 +71,7 @@ static void findBuiltinLib(struct frame *frame)
 }
 // Retrieves the assertion directives from the VM.
 // private static native AssertionStatusDirectives retrieveDirectives();
-static void retrieveDirectives(struct frame *frame)
+static void retrieveDirectives(Frame *frame)
 {
     // todo
     jvm_abort("");

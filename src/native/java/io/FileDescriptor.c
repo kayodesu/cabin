@@ -10,7 +10,7 @@
  *
  * private native void initIDs();
  */
-static void initIDs(struct frame *frame)
+static void initIDs(Frame *frame)
 {
     // todo
 //    jvm_abort("error\n");
@@ -19,7 +19,7 @@ static void initIDs(struct frame *frame)
 /*
  * private static native long set(int d);
  */
-static void set(struct frame *frame)
+static void set(Frame *frame)
 {
 //    jvm_abort("error\n");
     // todo
@@ -56,7 +56,7 @@ static void set(struct frame *frame)
  *
  * public native void sync() throws SyncFailedException;
  */
-static void sync(struct frame *frame)
+static void sync(Frame *frame)
 {
     jvm_abort("error\n"); // todo
 }

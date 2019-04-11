@@ -16,20 +16,20 @@
  *
  * public static native Thread currentThread();
  */
-static void currentThread(struct frame *frame)
+static void currentThread(Frame *frame)
 {
     // push a object of java/lang/Thread of current thread
     frame_stack_pushr(frame, thread_self()->jltobj);
 }
 
 // public static native void yield();
-static void yield(struct frame *frame)
+static void yield(Frame *frame)
 {
     jvm_abort(""); // todo
 }
 
 // public static native void sleep(long millis) throws InterruptedException;
-static void sleep(struct frame *frame)
+static void sleep(Frame *frame)
 {
     jvm_abort("error\n");
     // todo
@@ -52,13 +52,13 @@ static void sleep(struct frame *frame)
 }
 
 // private native void interrupt0();
-static void interrupt0(struct frame *frame)
+static void interrupt0(Frame *frame)
 {
     jvm_abort("error\n");
 }
 
 // private native boolean isInterrupted(boolean ClearInterrupted);
-static void isInterrupted(struct frame *frame)
+static void isInterrupted(Frame *frame)
 {
     jvm_abort("error\n");
 //    frame->operandStack.push(0);
@@ -72,7 +72,7 @@ static void isInterrupted(struct frame *frame)
  *          <code>false</code> otherwise.
  */
 // public final native boolean isAlive();
-static void isAlive(struct frame *frame)
+static void isAlive(Frame *frame)
 {
     // todo
 //    JObject *thisObj = frame->getLocalVar(0).getRef();
@@ -106,7 +106,7 @@ static void isAlive(struct frame *frame)
  * @see        ThreadGroup#getMaxPriority()
  */
 // private native void setPriority0(int newPriority);
-static void setPriority0(struct frame *frame)
+static void setPriority0(Frame *frame)
 {
     // todo
 //    jref this = slot_getr(frame->local_vars);
@@ -129,7 +129,7 @@ void *exec_new_thread_run(void *arg)
 }
 
 // private native void start0();
-static void start0(struct frame *frame)
+static void start0(Frame *frame)
 {
     // todo
     jref this = frame_locals_getr(frame, 0);
@@ -165,49 +165,49 @@ static void start0(struct frame *frame)
 
 // @Deprecated
 // public native int countStackFrames();
-static void countStackFrames(struct frame *frame)
+static void countStackFrames(Frame *frame)
 {
     jvm_abort(""); // todo
 }
 
 // public static native boolean holdsLock(Object obj);
-static void holdsLock(struct frame *frame)
+static void holdsLock(Frame *frame)
 {
     jvm_abort(""); // todo
 }
 
 // private native static StackTraceElement[][] dumpThreads(Thread[] threads);
-static void dumpThreads(struct frame *frame)
+static void dumpThreads(Frame *frame)
 {
     jvm_abort(""); // todo
 }
 
 // private native static Thread[] getThreads();
-static void getThreads(struct frame *frame)
+static void getThreads(Frame *frame)
 {
     jvm_abort(""); // todo
 }
 
 // private native void stop0(Object o);
-static void stop0(struct frame *frame)
+static void stop0(Frame *frame)
 {
     jvm_abort(""); // todo
 }
 
 // private native void suspend0();
-static void suspend0(struct frame *frame)
+static void suspend0(Frame *frame)
 {
     jvm_abort(""); // todo
 }
 
 // private native void resume0();
-static void resume0(struct frame *frame)
+static void resume0(Frame *frame)
 {
     jvm_abort(""); // todo
 }
 
 // private native void setNativeName(String name);
-static void setNativeName(struct frame *frame)
+static void setNativeName(Frame *frame)
 {
     jvm_abort(""); // todo
 }

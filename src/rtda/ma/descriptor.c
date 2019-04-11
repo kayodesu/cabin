@@ -7,13 +7,13 @@
 #include "../heap/arrobj.h"
 #include "../heap/clsobj.h"
 
-char* type_to_descriptor(const struct object *type, char *descriptor, int *len)
+char* type_to_descriptor(const Object *type, char *descriptor, int *len)
 {
     assert(type != NULL);
     assert(descriptor != NULL);
     assert(len != NULL);
 
-    struct class *c = type->u.entity_class;
+    Class *c = type->u.entity_class;
     char d = pt_get_descriptor_by_class_name(c->class_name);
     if (d != 0) { // primitive type
         descriptor[0] = d;
@@ -44,7 +44,7 @@ char* type_to_descriptor(const struct object *type, char *descriptor, int *len)
     return descriptor;
 }
 
-struct object *descriptor_to_type(struct classloader *loader, const char *descriptor)
+Object *descriptor_to_type(ClassLoader *loader, const char *descriptor)
 {
     assert(loader != NULL);
     assert(descriptor != NULL);
@@ -53,7 +53,7 @@ struct object *descriptor_to_type(struct classloader *loader, const char *descri
     return load_class(loader, descriptor_to_class_name(descriptor, buf))->clsobj;
 }
 
-const char* types_to_descriptor(const struct object *types)
+const char* types_to_descriptor(const Object *types)
 {
     assert(types != NULL);
     char *descriptor = vm_malloc(sizeof(char)*(DESCRIPTOR_MAX_LEN + 1));
@@ -62,7 +62,7 @@ const char* types_to_descriptor(const struct object *types)
         int i = 0;
         int arr_len = arrobj_len(types);
         for (int t = 0; t < arr_len; t++) {
-            struct object *type = arrobj_get(struct object *, types, t);
+            Object *type = arrobj_get(Object *, types, t);
             int len = DESCRIPTOR_MAX_LEN - i;
             type_to_descriptor(type, descriptor + i, &len);
             i += len;
@@ -89,7 +89,7 @@ const char* descriptor_to_class_name(const char *descriptor, char *buf)
     }
 }
 
-struct object* method_descriptor_to_parameter_types(struct classloader *loader, const char *method_descriptor)
+Object* method_descriptor_to_parameter_types(ClassLoader *loader, const char *method_descriptor)
 {
     assert(loader != NULL);
     assert(method_descriptor != NULL);
@@ -98,7 +98,7 @@ struct object* method_descriptor_to_parameter_types(struct classloader *loader, 
     char descriptor[dlen + 1];
     strcpy(descriptor, method_descriptor);
 
-    struct object* buf[METHOD_PARAMETERS_MAX_COUNT];
+    Object* buf[METHOD_PARAMETERS_MAX_COUNT];
 
     int parameter_types_count = 0;
 
@@ -149,15 +149,15 @@ struct object* method_descriptor_to_parameter_types(struct classloader *loader, 
 
     // todo parameter_types_count == 0 是不是要填一个 void.class
 
-    struct object *parameter_types
+    Object *parameter_types
             = arrobj_create(load_class(loader, "[Ljava/lang/Class;"), parameter_types_count);
     for (int i = 0; i < parameter_types_count; i++) {
-        arrobj_set(struct object *, parameter_types, i, buf[i]);
+        arrobj_set(Object *, parameter_types, i, buf[i]);
     }
     return parameter_types;
 }
 
-struct object* method_descriptor_to_return_type(struct classloader *loader, const char *method_descriptor)
+Object* method_descriptor_to_return_type(ClassLoader *loader, const char *method_descriptor)
 {
     assert(loader != NULL);
     assert(method_descriptor != NULL);

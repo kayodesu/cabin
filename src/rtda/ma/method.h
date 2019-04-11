@@ -18,7 +18,7 @@ struct exception_table {
     u2 start_pc;
     u2 end_pc;
     u2 handler_pc;
-    struct class *catch_type;
+    Class *catch_type;
 };
 
 struct method {
@@ -27,14 +27,14 @@ struct method {
      * 对于一个子类，如果有一个方法是从父类中继承而来的，
      * 那么此方法的 class 依然指向父类，即真正定义此方法的类。
      */
-    struct class *clazz;
+    Class *clazz;
     const char *name;
     const char *descriptor;
     int vtable_index;
 
-    NO_ACCESS struct object *parameter_types; // "[Ljava/lang/Class;"
-    NO_ACCESS struct object *return_type;     // java/lang/Class
-    NO_ACCESS struct object *exception_types; // "[Ljava/lang/Class;"
+    NO_ACCESS Object *parameter_types; // "[Ljava/lang/Class;"
+    NO_ACCESS Object *return_type;     // java/lang/Class
+    NO_ACCESS Object *exception_types; // "[Ljava/lang/Class;"
 
     u2 access_flags;
     u2 max_stack;
@@ -79,24 +79,24 @@ struct method {
 
 struct bytecode_reader;
 
-void method_init(struct method *method, struct class *c, struct bytecode_reader *reader);
+void method_init(Method *method, Class *c, struct bytecode_reader *reader);
 
-bool method_is_accessible_to(const struct method *method, const struct class *visitor);
+bool method_is_accessible_to(const Method *method, const Class *visitor);
 
 // 查找 pc 所对应的行号
-int method_get_line_number(const struct method *method, int pc);
+int method_get_line_number(const Method *method, int pc);
 
-struct object* method_get_parameter_types(struct method *method);
-struct object* method_get_return_type(struct method *method);
-struct object* method_get_exception_types(struct method *method);
+Object* method_get_parameter_types(Method *method);
+Object* method_get_return_type(Method *method);
+Object* method_get_exception_types(Method *method);
 
 /*
  * @pc, 发生异常的位置
  */
-int method_find_exception_handler(struct method *method, struct class *exception_type, size_t pc);
+int method_find_exception_handler(Method *method, Class *exception_type, size_t pc);
 
-char *method_to_string(const struct method *method);
+char *method_to_string(const Method *method);
 
-void method_release(struct method *m);
+void method_release(Method *m);
 
 #endif //JVM_JMETHOD_H

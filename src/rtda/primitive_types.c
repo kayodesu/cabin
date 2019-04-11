@@ -33,7 +33,7 @@ void load_primitive_types()
 {
     // 加载基本类型（int, float, etc.）的 class
     for (int i = 0; i < PRIMITIVE_TYPE_COUNT; i++) {
-        struct class *c = class_create_primitive_class(g_bootstrap_loader, primitive_types[i].class_name);
+        Class *c = class_create_primitive_class(g_bootstrap_loader, primitive_types[i].class_name);
         classloader_put_to_pool(g_bootstrap_loader, primitive_types[i].class_name, c);
     }
 }

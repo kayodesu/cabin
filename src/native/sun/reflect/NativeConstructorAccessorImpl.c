@@ -9,7 +9,7 @@
 #include "../../../rtda/heap/arrobj.h"
 #include "../../../interpreter/interpreter.h"
 
-static slot_t* convert_args(jref this_obj, struct method *m, jref args)
+static slot_t* convert_args(jref this_obj, Method *m, jref args)
 {
     jref types = method_get_parameter_types(m);
     int types_len = arrobj_len(types);
@@ -45,7 +45,7 @@ static slot_t* convert_args(jref this_obj, struct method *m, jref args)
  * private static native Object newInstance0(Constructor<?> c, Object[] os)
  * throws InstantiationException, IllegalArgumentException, InvocationTargetException;
  */
-static void newInstance0(struct frame *frame)
+static void newInstance0(Frame *frame)
 {
     jref constructor_obj = frame_locals_getr(frame, 0);
     /*
@@ -56,12 +56,12 @@ static void newInstance0(struct frame *frame)
     jref init_args = frame_locals_getr(frame, 1); // may be NULL
 
     // which class this constructor belongs to.
-    struct class *clazz
+    Class *clazz
             = RSLOT(get_instance_field_value_by_nt(constructor_obj, "clazz", "Ljava/lang/Class;"))->u.entity_class;
-    struct object *this_obj = object_create(clazz);
+    Object *this_obj = object_create(clazz);
     frame_stack_pushr(frame, this_obj); // return value
 
-    struct method *constructor = NULL;
+    Method *constructor = NULL;
     if (init_args == NULL) { // 构造函数没有参数
         constructor = class_get_constructor(clazz, "()V");
         assert(constructor != NULL);

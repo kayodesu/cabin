@@ -12,7 +12,7 @@
 #include "../../interpreter/interpreter.h"
 #include "../../utf8.h"
 
-struct object* method_get_parameter_types(struct method *method)
+Object* method_get_parameter_types(Method *method)
 {
     assert(method != NULL);
     if (method->parameter_types == NULL) {
@@ -21,7 +21,7 @@ struct object* method_get_parameter_types(struct method *method)
     return method->parameter_types;
 }
 
-struct object* method_get_return_type(struct method *method)
+Object* method_get_return_type(Method *method)
 {
     assert(method != NULL);
     if (method->return_type == NULL) {
@@ -30,15 +30,15 @@ struct object* method_get_return_type(struct method *method)
     return method->return_type;
 }
 
-struct object* method_get_exception_types(struct method *method)
+Object* method_get_exception_types(Method *method)
 {
     assert(method != NULL);
 
     if (method->exception_types == NULL) {
         int count = 0;
-        struct object **exception_types = vm_malloc(sizeof(struct object **) * method->exception_tables_count);
+        Object **exception_types = vm_malloc(sizeof(Object **) * method->exception_tables_count);
         for (int i = 0; i < method->exception_tables_count; i++) {
-            struct class *c = method->exception_tables[i].catch_type;
+            Class *c = method->exception_tables[i].catch_type;
             if (c != NULL) {
                 exception_types[count++] = c->clsobj;
             }
@@ -47,7 +47,7 @@ struct object* method_get_exception_types(struct method *method)
         method->exception_types
                 = arrobj_create(load_class(method->clazz->loader, "[Ljava/lang/Class;"), count);
         for (int i = 0; i < count; i++) {
-            arrobj_set(struct object *, method->exception_types, i, exception_types[i]);
+            arrobj_set(Object *, method->exception_types, i, exception_types[i]);
         }
     }
 
@@ -55,7 +55,7 @@ struct object* method_get_exception_types(struct method *method)
     return method->exception_types;
 }
 
-static void cal_arg_slot_count(struct method *method)
+static void cal_arg_slot_count(Method *method)
 {
     method->arg_slot_count = 0;
 
@@ -97,7 +97,7 @@ static void cal_arg_slot_count(struct method *method)
 /*
  * 解析方法的 code 属性
  */
-static void parse_code_attr(struct method *method, struct bytecode_reader *reader)
+static void parse_code_attr(Method *method, struct bytecode_reader *reader)
 {
     assert(method != NULL);
     assert(reader != NULL);
@@ -135,7 +135,7 @@ static void parse_code_attr(struct method *method, struct bytecode_reader *reade
                 t->catch_type = NULL;
             } else {
                 if (CP_TYPE(&method->clazz->constant_pool, catch_type) == CONSTANT_ResolvedClass)
-                    t->catch_type = (struct class *) CP_INFO(&method->clazz->constant_pool, catch_type);
+                    t->catch_type = (Class *) CP_INFO(&method->clazz->constant_pool, catch_type);
                 else {
                     const char *class_name = CP_CLASS_NAME(&method->clazz->constant_pool, catch_type);
                     t->catch_type = load_class(method->clazz->loader, class_name);
@@ -188,7 +188,7 @@ static void parse_code_attr(struct method *method, struct bytecode_reader *reade
     }
 }
 
-void method_init(struct method *method, struct class *c, struct bytecode_reader *reader)
+void method_init(Method *method, Class *c, struct bytecode_reader *reader)
 {
     method->clazz = c;
     struct constant_pool *cp = &c->constant_pool;
@@ -330,7 +330,7 @@ void method_init(struct method *method, struct class *c, struct bytecode_reader 
     }
 }
 
-void method_release(struct method *m)
+void method_release(Method *m)
 {
     if (m == NULL) {
         // todo
@@ -340,7 +340,7 @@ void method_release(struct method *m)
     // todo
 }
 
-bool method_is_accessible_to(const struct method *method, const struct class *visitor)
+bool method_is_accessible_to(const Method *method, const Class *visitor)
 {
     // todo  实现对不对
 
@@ -365,7 +365,7 @@ bool method_is_accessible_to(const struct method *method, const struct class *vi
     return utf8_equals(method->clazz->pkg_name, visitor->pkg_name);
 }
 
-int method_get_line_number(const struct method *method, int pc)
+int method_get_line_number(const Method *method, int pc)
 {
     assert(method != NULL);
 
@@ -391,7 +391,7 @@ int method_get_line_number(const struct method *method, int pc)
     return -1;
 }
 
-int method_find_exception_handler(struct method *method, struct class *exception_type, size_t pc)
+int method_find_exception_handler(Method *method, Class *exception_type, size_t pc)
 {
     for (int i = 0; i < method->exception_tables_count; i++) {
         const struct exception_table *t = method->exception_tables + i;
@@ -408,7 +408,7 @@ int method_find_exception_handler(struct method *method, struct class *exception
     return -1;
 }
 
-char *method_to_string(const struct method *method)
+char *method_to_string(const Method *method)
 {
 #define MAX_LEN 1023 // big enough
     char *result = vm_malloc(sizeof(char)*(MAX_LEN + 1));

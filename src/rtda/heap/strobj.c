@@ -34,14 +34,14 @@
         return
  */
 
-struct object* strobj_create(const char *str)
+Object* strobj_create(const char *str)
 {
     assert(str != NULL);
-    struct object *o = object_create(classloader_get_jlstring(g_bootstrap_loader));
+    Object *o = object_create(classloader_get_jlstring(g_bootstrap_loader));
 
     jchar *wstr = utf8_to_unicode(str);
     jint len = wcslen(wstr);
-    struct object *jchars = arrobj_create(load_sys_class("[C"), len);
+    Object *jchars = arrobj_create(load_sys_class("[C"), len);
     // 不要使用 wcscpy 直接字符串拷贝，
     // 因为 wcscpy 函数会自动添加字符串结尾 L'\0'，
     // 但 jchars 没有空间容纳字符串结尾符，因为 jchar 是字符数组，不是字符串
@@ -51,16 +51,16 @@ struct object* strobj_create(const char *str)
 
     // todo 要不要调用<init>方法。
     // 给 java/lang/String 类的 value 变量赋值
-    struct field *field = class_lookup_instance_field(o->clazz, SYMBOL(value), SYMBOL(array_C));
+    Field *field = class_lookup_instance_field(o->clazz, SYMBOL(value), SYMBOL(array_C));
     set_instance_field_value(o, field, (const slot_t *) &jchars);
     return o;
 }
 
-const char* strobj_value(struct object *o)
+const char* strobj_value(Object *o)
 {
     assert(o != NULL);
     if (o->u.str == NULL) {
-        struct object *char_arr = RSLOT(get_instance_field_value_by_nt(o, SYMBOL(value), SYMBOL(array_C)));
+        Object *char_arr = RSLOT(get_instance_field_value_by_nt(o, SYMBOL(value), SYMBOL(array_C)));
         o->u.str = unicode_to_utf8(arrobj_data(char_arr), arrobj_len(char_arr));
     }
     return o->u.str;

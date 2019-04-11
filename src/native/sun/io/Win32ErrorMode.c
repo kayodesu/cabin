@@ -5,7 +5,7 @@
  * Author: Jia Yang
  */
 
-static void setErrorMode(struct frame *frame)
+static void setErrorMode(Frame *frame)
 {
     frame_stack_pushl(frame, 0); // todo
 }

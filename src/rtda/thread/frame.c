@@ -8,7 +8,7 @@
 #include "../ma/access.h"
 #include "thread.h"
 
-char* frame_to_string(const struct frame *f)
+char* frame_to_string(const Frame *f)
 {
     assert(f != NULL);
     int len = strlen(f->method->clazz->class_name) + strlen(f->method->name) + strlen(f->method->descriptor) + 16;

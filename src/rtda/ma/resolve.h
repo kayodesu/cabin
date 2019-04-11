@@ -6,19 +6,16 @@
 #define JVM_RESOLVE_H
 
 #include <stdint.h>
+#include "../../jvmdef.h"
 
-struct class;
-struct method;
-struct field;
+Class* resolve_class(Class *visitor, int cp_index);
 
-struct class* resolve_class(struct class *visitor, int cp_index);
+Method* resolve_method(Class *visitor, int cp_index);
 
-struct method* resolve_method(struct class *visitor, int cp_index);
+Field* resolve_field(Class *visitor, int cp_index);
 
-struct field* resolve_field(struct class *visitor, int cp_index);
+Object* resolve_string(Class *c, int cp_index);
 
-struct object* resolve_string(struct class *c, int cp_index);
-
-uintptr_t resolve_single_constant(struct class *c, int cp_index);
+uintptr_t resolve_single_constant(Class *c, int cp_index);
 
 #endif //JVM_RESOLVE_H

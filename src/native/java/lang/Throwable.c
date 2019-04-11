@@ -17,7 +17,7 @@ struct stack_trace {
 };
 
 // private native Throwable fillInStackTrace(int dummy);
-static void fillInStackTrace(struct frame *frame)
+static void fillInStackTrace(Frame *frame)
 {
     jref this = frame_locals_getr(frame, 0);
     frame_stack_pushr(frame, this);
@@ -42,10 +42,10 @@ static void fillInStackTrace(struct frame *frame)
      * at java/lang/Throwable.fillInStackTrace(Throwable.java:783)
      * at java/lang/Throwable.fillInStackTrace(Native Method)
      */
-    struct frame *f = frame->prev->prev;
+    Frame *f = frame->prev->prev;
 //    num -= 2; // 减去执行fillInStackTrace(int) 和 fillInStackTrace() 方法的frame
 
-    for (struct class *c = this->clazz; c != NULL; c = c->super_class) {
+    for (Class *c = this->clazz; c != NULL; c = c->super_class) {
         f = f->prev; // jump 执行异常类的构造函数的frame
         if (utf8_equals(c->class_name, SYMBOL(java_lang_Throwable))) {
             break; // 可以了，遍历到 Throwable 就行了，因为现在在执行 Throwable 的 fillInStackTrace 方法。
@@ -55,9 +55,9 @@ static void fillInStackTrace(struct frame *frame)
     struct stack_trace *trace = vm_malloc(sizeof(struct stack_trace) + sizeof(jref) * num);
     trace->count = 0;
 
-    struct class *c = load_sys_class("java/lang/StackTraceElement");
+    Class *c = load_sys_class("java/lang/StackTraceElement");
     for (; f != NULL; f = f->prev) {
-        struct object *o = object_create(c);
+        Object *o = object_create(c);
         trace->eles[trace->count++] = o;
 
         // public StackTraceElement(String declaringClass, String methodName, String fileName, int lineNumber)
@@ -77,7 +77,7 @@ static void fillInStackTrace(struct frame *frame)
 }
 
 // native StackTraceElement getStackTraceElement(int index);
-static void getStackTraceElement(struct frame *frame)
+static void getStackTraceElement(Frame *frame)
 {
     jref throwable = frame_locals_getr(frame, 0);
     jint index = frame_locals_geti(frame, 1);
@@ -88,7 +88,7 @@ static void getStackTraceElement(struct frame *frame)
 }
 
 // native int getStackTraceDepth();
-static void getStackTraceDepth(struct frame *frame)
+static void getStackTraceDepth(Frame *frame)
 {
     jref this = frame_locals_getr(frame, 0);
     struct stack_trace *trace = this->u.stack_trace;

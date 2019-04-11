@@ -9,27 +9,27 @@
 #include "mgr/heap_mgr.h"
 #include "../../symbol.h"
 
-struct object* object_create(struct class *c)
+Object* object_create(Class *c)
 {
     assert(c != NULL);
     assert(!class_is_array(c));
 
-    size_t size = sizeof(struct object) + c->instance_fields_count * sizeof(slot_t);
-    struct object *o = hm_get(&g_heap_mgr, size);
+    size_t size = sizeof(Object) + c->instance_fields_count * sizeof(slot_t);
+    Object *o = hm_get(&g_heap_mgr, size);
     o->clazz = c;
     o->size = size;
     return o;
 }
 
-struct object* object_clone(const struct object *src)
+Object* object_clone(const Object *src)
 {
     assert(src != NULL);
-    struct object *o = hm_get(&g_heap_mgr, src->size);
+    Object *o = hm_get(&g_heap_mgr, src->size);
     memcpy(o, src, src->size);
     return o;
 }
 
-void set_instance_field_value(struct object *o, struct field *f, const slot_t *value)
+void set_instance_field_value(Object *o, Field *f, const slot_t *value)
 {
     assert(o != NULL && f != NULL && value != NULL);
 
@@ -39,25 +39,25 @@ void set_instance_field_value(struct object *o, struct field *f, const slot_t *v
     }
 }
 
-const slot_t* get_instance_field_value_by_id(const struct object *o, int id)
+const slot_t* get_instance_field_value_by_id(const Object *o, int id)
 {
     assert(o != NULL);
     assert(0 <= id && id < o->clazz->instance_fields_count);
     return o->data + id;
 }
 
-const slot_t* get_instance_field_value(const struct object *o, struct field *f)
+const slot_t* get_instance_field_value(const Object *o, Field *f)
 {
     assert(o != NULL);
     assert(f != NULL);
     return o->data + f->id;
 }
 
-const slot_t* get_instance_field_value_by_nt(const struct object *o, const char *name, const char *descriptor)
+const slot_t* get_instance_field_value_by_nt(const Object *o, const char *name, const char *descriptor)
 {
     assert(o != NULL && name != NULL && descriptor != NULL);
 
-    struct field *f = class_lookup_field(o->clazz, name, descriptor);
+    Field *f = class_lookup_field(o->clazz, name, descriptor);
     if (f == NULL) {
         jvm_abort("error, %s, %s\n", name, descriptor); // todo
     }
@@ -65,14 +65,14 @@ const slot_t* get_instance_field_value_by_nt(const struct object *o, const char 
     return get_instance_field_value(o, f);
 }
 
-bool object_is_instance_of(const struct object *o, const struct class *c)
+bool object_is_instance_of(const Object *o, const Class *c)
 {
     if (o == NULL || c == NULL)  // todo
         return false;
     return class_is_subclass_of(o->clazz, c);
 }
 
-const slot_t* priobj_unbox(const struct object *po)
+const slot_t* priobj_unbox(const Object *po)
 {
     assert(po != NULL);
     assert(is_primitive(po->clazz));
@@ -81,7 +81,7 @@ const slot_t* priobj_unbox(const struct object *po)
     return get_instance_field_value_by_nt(po, SYMBOL(value), po->clazz->class_name);
 }
 
-void object_destroy(struct object *o)
+void object_destroy(Object *o)
 {
     if (o == NULL) {
         // todo
@@ -90,7 +90,7 @@ void object_destroy(struct object *o)
     // todo
 }
 
-const char* object_to_string(const struct object *o)
+const char* object_to_string(const Object *o)
 {
 #define MAX_LEN 1023 // big enough? todo
     char *result = vm_malloc(sizeof(char)*(MAX_LEN + 1));

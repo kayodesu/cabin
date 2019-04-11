@@ -8,28 +8,28 @@
 
 
 // public static native Class<?> getCallerClass(int level)
-static void getCallerClass0(struct frame *frame)
+static void getCallerClass0(Frame *frame)
 {
     jvm_abort("");
 }
 
 // public static native Class<?> getCallerClass()
-static void getCallerClass(struct frame *frame)
+static void getCallerClass(Frame *frame)
 {
     // top0, current frame is executing getCallerClass()
     // top1, who called getCallerClass, the one who wants to know his caller.
     // top2, the caller of top1, the result.
-//    struct frame *top0 = NULL;
-    struct frame *top1 = frame->prev;
+//    Frame *top0 = NULL;
+    Frame *top1 = frame->prev;
     if (top1 == NULL) {
         vm_unknown_error(""); // todo
     }
-    struct frame *top2 = top1->prev;
+    Frame *top2 = top1->prev;
 
 //    int depth = thread_stack_depth(frame->thread);
 //    for (int i = 0; i < depth; i++) {
 //        // 过滤掉 shim frame
-//        struct frame *sf = thread_stack_frame_from_top(frame->thread, i);
+//        Frame *sf = thread_stack_frame_from_top(frame->thread, i);
 ////        if (sf->type == SF_TYPE_NORMAL) {
 //            if (top0 == NULL) {
 //                top0 = sf;
@@ -50,9 +50,9 @@ static void getCallerClass(struct frame *frame)
 }
 
 // public static native int getClassAccessFlags(Class<?> type)
-static void getClassAccessFlags(struct frame *frame)
+static void getClassAccessFlags(Frame *frame)
 {
-    struct object *type = frame_locals_getr(frame, 0);
+    Object *type = frame_locals_getr(frame, 0);
     frame_stack_pushi(frame, type->clazz->access_flags);
 }
 

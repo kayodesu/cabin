@@ -8,6 +8,7 @@
 #include "registry.h"
 #include "../jvm.h"
 #include "../util/hashmap.h"
+#include "../jvmdef.h"
 
 // key 的组成为 "class_name~method_name~method_descriptor" 的形式，
 // key 的长度要足够存储上述格式的字符和外加字符串结尾的'\0'
@@ -16,7 +17,7 @@
 
 static struct hashmap *native_methods;
 
-void registerNatives(struct frame *frame) { /* do nothing */ }
+void registerNatives(Frame *frame) { /* do nothing */ }
 
 void register_native_method(const char *key, native_method_t method)
 {

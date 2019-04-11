@@ -9,7 +9,7 @@
 #include "../../../rtda/heap/object.h"
 
 // native long find(String name);
-static void find(struct frame *frame)
+static void find(Frame *frame)
 {
     // todo
 //    jref name = slot_getr(frame->local_vars + 1);
@@ -18,7 +18,7 @@ static void find(struct frame *frame)
 }
 
 // native void load(String name, boolean isBuiltin);
-static void load(struct frame *frame)
+static void load(Frame *frame)
 {
     // todo
     jref this = frame_locals_getr(frame, 0);
@@ -35,7 +35,7 @@ static void load(struct frame *frame)
 }
 
 // native void unload(String name, boolean isBuiltin);
-static void unload(struct frame *frame)
+static void unload(Frame *frame)
 {
 
 }

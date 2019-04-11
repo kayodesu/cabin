@@ -48,12 +48,12 @@
         true
  */
 
-struct object* clsobj_create(struct class *entity_class)
+Object* clsobj_create(Class *entity_class)
 {
     assert(entity_class != NULL);
 
-    struct class *c = classloader_get_jlclass(g_bootstrap_loader);
-    struct object *o = object_create(c);
+    Class *c = classloader_get_jlclass(g_bootstrap_loader);
+    Object *o = object_create(c);
     o->u.entity_class = entity_class;
 
     return o;

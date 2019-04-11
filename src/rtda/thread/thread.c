@@ -12,15 +12,15 @@
 // Thread specific key holding a thread
 static pthread_key_t thread_key;
 
-struct thread *main_thread = NULL;
-struct object *system_thread_group = NULL;
+Thread *main_thread = NULL;
+Object *system_thread_group = NULL;
 
-struct thread* thread_self()
+Thread* thread_self()
 {
-    return (struct thread *) pthread_getspecific(thread_key);
+    return (Thread *) pthread_getspecific(thread_key);
 }
 
-static inline void set_thread_self(struct thread *thread)
+static inline void set_thread_self(Thread *thread)
 {
     pthread_setspecific(thread_key, thread);
 }
@@ -28,16 +28,16 @@ static inline void set_thread_self(struct thread *thread)
 /*
  * main thread 由虚拟机启动。
  */
-void create_main_thread(struct classloader *loader)
+void create_main_thread(ClassLoader *loader)
 {
     pthread_key_create(&thread_key, NULL);
     main_thread = thread_create(loader, NULL);
 
-    struct class *jltg_class = load_sys_class("java/lang/ThreadGroup");
+    Class *jltg_class = load_sys_class("java/lang/ThreadGroup");
     system_thread_group = object_create(jltg_class);
 
-    struct class *jlt_class = load_sys_class("java/lang/Thread");
-    struct object *jlt_obj = object_create(jlt_class);
+    Class *jlt_class = load_sys_class("java/lang/Thread");
+    Object *jlt_obj = object_create(jlt_class);
 
     main_thread->jltobj = jlt_obj;
 
@@ -63,7 +63,7 @@ void create_main_thread(struct classloader *loader)
 //    set_thread_self(main_thread);
 
     // 调用 java/lang/Thread 的构造函数
-    struct method *constructor
+    Method *constructor
             = class_get_constructor(jlt_obj->clazz, "(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");
 
     class_clinit(jlt_class);
@@ -74,15 +74,15 @@ void create_main_thread(struct classloader *loader)
     });
 }
 
-struct thread *thread_create(struct classloader *loader, struct object *jltobj)
+Thread *thread_create(ClassLoader *loader, Object *jltobj)
 {
     assert(loader != NULL);
 
-    struct thread *thread = vm_malloc(sizeof( struct thread));
+    Thread *thread = vm_malloc(sizeof( Thread));
     thread->jltobj = jltobj;
     thread->top_frame = NULL;
 
-//    struct class *jlt_class = classloader_load_class(loader, "java/lang/Thread");
+//    Class *jlt_class = classloader_load_class(loader, "java/lang/Thread");
 //    thread->this_obj = object_create(jlt_class);
 //
 //    slot_t s = 1;;  // todo. why 1? I do not know. 参见 jvmgo/instructions/reserved/bootstrap.go
@@ -119,15 +119,15 @@ struct thread *thread_create(struct classloader *loader, struct object *jltobj)
     return thread;
 }
 
-struct frame *alloc_frame(struct method *m, bool vm_invoke)
+Frame *alloc_frame(Method *m, bool vm_invoke)
 {
-    struct thread *thread = thread_self();
+    Thread *thread = thread_self();
 
-    struct frame *old_top = thread->top_frame;
+    Frame *old_top = thread->top_frame;
     if (old_top == NULL) {
-        thread->top_frame = (struct frame *) thread->vm_stack;
+        thread->top_frame = (Frame *) thread->vm_stack;
     } else {
-        thread->top_frame = (struct frame *) ((intptr_t) thread->top_frame + FRAME_SIZE(old_top->method));
+        thread->top_frame = (Frame *) ((intptr_t) thread->top_frame + FRAME_SIZE(old_top->method));
     }
 
     if ((intptr_t) thread->top_frame + FRAME_SIZE(m) - (intptr_t) thread->vm_stack > VM_STACK_SIZE) {
@@ -135,7 +135,7 @@ struct frame *alloc_frame(struct method *m, bool vm_invoke)
         jvm_abort("stack_over_flo");
     }
 
-    struct frame *new_frame = thread->top_frame;
+    Frame *new_frame = thread->top_frame;
     new_frame->vm_invoke = vm_invoke;
     new_frame->prev = old_top;
     new_frame->stack = new_frame->locals + m->max_locals;
@@ -146,16 +146,16 @@ struct frame *alloc_frame(struct method *m, bool vm_invoke)
 
 void pop_frame()
 {
-    struct thread *thread = thread_self();
+    Thread *thread = thread_self();
     assert(thread->top_frame != NULL);
     thread->top_frame = thread->top_frame->prev;
 }
 
 int vm_stack_depth()
 {
-    struct thread *thread = thread_self();
+    Thread *thread = thread_self();
     int depth = 0;
-    struct frame *f = thread->top_frame;
+    Frame *f = thread->top_frame;
     while (f != NULL) {
         depth++;
         f = f->prev;
@@ -193,14 +193,14 @@ static void JThread::joinToMainThreadGroup() {
 
 #endif
 
-void thread_handle_uncaught_exception(struct object *exception)
+void thread_handle_uncaught_exception(Object *exception)
 {
     assert(exception != NULL);
 
-    struct thread *thread = thread_self();
+    Thread *thread = thread_self();
 //    vector_clear(&thread->vm_stack);
     thread->top_frame = NULL; // clear vm_stack
-    struct method *pst = class_lookup_instance_method(exception->clazz, "printStackTrace", "()V");
+    Method *pst = class_lookup_instance_method(exception->clazz, "printStackTrace", "()V");
     exec_java_func(pst, (slot_t *) &exception);
 }
 
@@ -230,7 +230,7 @@ _Noreturn void thread_throw_class_cast_exception(const char *from_class_name, co
     jvm_abort("");
 }
 
-void thread_destroy(struct thread *thread)
+void thread_destroy(Thread *thread)
 {
     // todo
     assert(thread != NULL);

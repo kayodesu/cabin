@@ -6,7 +6,7 @@
 #include "../../../rtda/thread/frame.h"
 
 // private native void initIDs();
-static void initIDs(struct frame *frame)
+static void initIDs(Frame *frame)
 {
 //    jvm_abort("error\n");
     // todo
@@ -18,7 +18,7 @@ static void initIDs(struct frame *frame)
  *
  * private native void open0(String name) throws FileNotFoundException;
  */
-static void open0(struct frame *frame)
+static void open0(Frame *frame)
 {
     jvm_abort("\n"); // todo
 }
@@ -33,7 +33,7 @@ static void open0(struct frame *frame)
  *
  * private native int read0() throws IOException;
  */
-static void read0(struct frame *frame)
+static void read0(Frame *frame)
 {
     jvm_abort("\n"); // todo
 }
@@ -48,7 +48,7 @@ static void read0(struct frame *frame)
  *
  * private native int readBytes(byte b[], int off, int len) throws IOException;
  */
-static void readBytes(struct frame *frame)
+static void readBytes(Frame *frame)
 {
     jvm_abort("\n"); // todo
 }
@@ -80,7 +80,7 @@ static void readBytes(struct frame *frame)
  *
  * private native long skip0(long n) throws IOException;
  */
-static void skip0(struct frame *frame)
+static void skip0(Frame *frame)
 {
     jvm_abort("\n"); // todo
 }
@@ -104,7 +104,7 @@ static void skip0(struct frame *frame)
  *
 private native int available0() throws IOException;
  */
-static void available0(struct frame *frame)
+static void available0(Frame *frame)
 {
     jvm_abort("\n"); // todo
 }
@@ -112,7 +112,7 @@ static void available0(struct frame *frame)
 /*
  * private native void close0() throws IOException;
  */
-static void close0(struct frame *frame)
+static void close0(Frame *frame)
 {
     jvm_abort("\n"); // todo
 }

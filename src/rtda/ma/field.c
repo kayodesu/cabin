@@ -12,7 +12,7 @@
 #include "../../utf8.h"
 
 
-void field_init(struct field *field, struct class *c, struct bytecode_reader *reader)
+void field_init(Field *field, Class *c, struct bytecode_reader *reader)
 {
     field->constant_value_index = INVALID_CONSTANT_VALUE_INDEX;
     field->clazz = c;
@@ -77,7 +77,7 @@ void field_init(struct field *field, struct class *c, struct bytecode_reader *re
     }
 }
 
-bool field_is_accessible_to(const struct field *field, const struct class *visitor)
+bool field_is_accessible_to(const Field *field, const Class *visitor)
 {
     // todo  实现对不对
 
@@ -101,7 +101,7 @@ bool field_is_accessible_to(const struct field *field, const struct class *visit
     return utf8_equals(field->clazz->pkg_name, visitor->pkg_name);
 }
 
-struct object* field_get_type(struct field *field)
+Object* field_get_type(Field *field)
 {
     assert(field != NULL);
 
@@ -112,12 +112,12 @@ struct object* field_get_type(struct field *field)
     return field->type;
 }
 
-void field_release(struct field *field)
+void field_release(Field *field)
 {
     // todo
 }
 
-char* field_to_string(const struct field *field)
+char* field_to_string(const Field *field)
 {
 #define MAX_LEN 1023 // big enough
     char *result = vm_malloc(sizeof(char)*(MAX_LEN + 1));

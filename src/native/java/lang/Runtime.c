@@ -8,7 +8,7 @@
 #include "../../../rtda/thread/frame.h"
 
 // public native int availableProcessors();
-static void availableProcessors(struct frame *frame)
+static void availableProcessors(Frame *frame)
 {
     // todo 这是windows 方式，不利于平台移植
     SYSTEM_INFO sysInfo;
@@ -17,44 +17,44 @@ static void availableProcessors(struct frame *frame)
 }
 
 // public native long freeMemory();
-static void freeMemory(struct frame *frame)
+static void freeMemory(Frame *frame)
 {
     jvm_abort("");
 }
 
 // public native long totalMemory();
-static void totalMemory(struct frame *frame)
+static void totalMemory(Frame *frame)
 {
     jvm_abort("");
 }
 
 // public native long maxMemory();
-static void maxMemory(struct frame *frame)
+static void maxMemory(Frame *frame)
 {
     jvm_abort("");
 }
 
 // public native void gc();
-static void gc(struct frame *frame)
+static void gc(Frame *frame)
 {
     jvm_abort("");
 }
 
 /* Wormhole for calling java.lang.ref.Finalizer.runFinalization */
 // private static native void runFinalization0();
-static void runFinalization0(struct frame *frame)
+static void runFinalization0(Frame *frame)
 {
     jvm_abort("");
 }
 
 // public native void traceInstructions(boolean on)
-static void traceInstructions(struct frame *frame)
+static void traceInstructions(Frame *frame)
 {
     jvm_abort("");
 }
 
 // public native void traceMethodCalls(boolean on);
-static void traceMethodCalls(struct frame *frame)
+static void traceMethodCalls(Frame *frame)
 {
     jvm_abort("");
 }

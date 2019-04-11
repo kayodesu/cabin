@@ -10,7 +10,7 @@
  */
 
 // private native long getLongAt0(Object o, int i);
-static void getLongAt0(struct frame *frame)
+static void getLongAt0(Frame *frame)
 {
     // todo 对不对
     jref o = frame_locals_getr(frame, 1);
@@ -20,7 +20,7 @@ static void getLongAt0(struct frame *frame)
 }
 
 // private native String getUTF8At0(Object o, int i);
-static void getUTF8At0(struct frame *frame)
+static void getUTF8At0(Frame *frame)
 {
     // todo 对不对
     jref o = frame_locals_getr(frame, 1);

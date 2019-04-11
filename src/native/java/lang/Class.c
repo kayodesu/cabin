@@ -21,9 +21,9 @@
  * private static native Class<?> forName0
  *  (String name, boolean initialize, ClassLoader loader, Class<?> caller) throws ClassNotFoundException;
  */
-static void forName0(struct frame *frame)
+static void forName0(Frame *frame)
 {
-    struct object *so = frame_locals_getr(frame, 0);
+    Object *so = frame_locals_getr(frame, 0);
 
     const char *class_name0 = strobj_value(so);
     char class_name[strlen(class_name0) + 1];
@@ -31,7 +31,7 @@ static void forName0(struct frame *frame)
     // 这里class name 是形如 xxx.xx.xx的形式，将其替换为 xxx/xx/xx的形式
     vm_strrpl(class_name, '.', '/');
 
-    struct class *c = load_class(frame->method->clazz->loader, class_name);
+    Class *c = load_class(frame->method->clazz->loader, class_name);
 
     int initialize = frame_locals_geti(frame, 1);
     if (initialize && !c->inited) {
@@ -47,12 +47,12 @@ static void forName0(struct frame *frame)
  * Return the Virtual Machine's Class object for the named primitive type.
  */
 // static native Class<?> getPrimitiveClass(String name);
-static void getPrimitiveClass(struct frame *frame)
+static void getPrimitiveClass(Frame *frame)
 {
-    struct object *so = frame_locals_getr(frame, 0);
+    Object *so = frame_locals_getr(frame, 0);
 
     const char *class_name = strobj_value(so); // 这里得到的 class_name 是诸如 "int~float" 之类的 primitive type
-    struct class *c = load_class(g_bootstrap_loader, class_name);
+    Class *c = load_class(g_bootstrap_loader, class_name);
     frame_stack_pushr(frame, c->clsobj);
 }
 
@@ -108,11 +108,11 @@ static void getPrimitiveClass(struct frame *frame)
  *          represented by this object.
  */
 // private native String getName0();
-static void getName0(struct frame *frame)
+static void getName0(Frame *frame)
 {
-    struct object *this = frame_locals_getr(frame, 0);
+    Object *this = frame_locals_getr(frame, 0);
 
-    struct class *c = this->u.entity_class;//clsobj_entity_class(this);
+    Class *c = this->u.entity_class;//clsobj_entity_class(this);
     char class_name[strlen(c->class_name) + 1];
     strcpy(class_name, c->class_name);
     // 这里需要的是 java.lang.Object 这样的类名，而非 java/lang/Object
@@ -167,7 +167,7 @@ static void getName0(struct frame *frame)
  *
  * private static native boolean desiredAssertionStatus0(Class<?> clazz);
  */
-static void desiredAssertionStatus0(struct frame *frame)
+static void desiredAssertionStatus0(Frame *frame)
 {
     // todo 本vm不讨论断言。desiredAssertionStatus0（）方法把false推入操作数栈顶
     frame_stack_pushi(frame, 0);
@@ -205,9 +205,9 @@ static void desiredAssertionStatus0(struct frame *frame)
  *
  * public native boolean isInstance(Object obj);
  */
-static void isInstance(struct frame *frame)
+static void isInstance(Frame *frame)
 {
-    struct object *this = frame_locals_getr(frame, 0);
+    Object *this = frame_locals_getr(frame, 0);
 
     jref obj = frame_locals_getr(frame, 1);
     frame_stack_pushi(frame, (obj != NULL && object_is_instance_of(obj, this->u.entity_class)) ? 1 : 0);
@@ -238,10 +238,10 @@ static void isInstance(struct frame *frame)
  *
  * public native boolean isAssignableFrom(Class<?> cls);
  */
-static void isAssignableFrom(struct frame *frame)
+static void isAssignableFrom(Frame *frame)
 {
-    struct object *this = frame_locals_getr(frame, 0);
-    struct object *cls = (struct object *) frame_locals_getr(frame, 1);
+    Object *this = frame_locals_getr(frame, 0);
+    Object *cls = (Object *) frame_locals_getr(frame, 1);
     if (cls == NULL) {
         thread_throw_null_pointer_exception();
     }
@@ -256,9 +256,9 @@ static void isAssignableFrom(struct frame *frame)
  *
  * public native boolean isInterface();
  */
-static void isInterface(struct frame *frame)
+static void isInterface(Frame *frame)
 {
-    struct object *this = frame_locals_getr(frame, 0);
+    Object *this = frame_locals_getr(frame, 0);
     frame_stack_pushi(frame, IS_INTERFACE(this->u.entity_class->access_flags) ? 1 : 0);
 }
 
@@ -267,9 +267,9 @@ static void isInterface(struct frame *frame)
  *
  * public native boolean isArray();
  */
-static void isArray(struct frame *frame)
+static void isArray(Frame *frame)
 {
-    struct object *this = frame_locals_getr(frame, 0);
+    Object *this = frame_locals_getr(frame, 0);
     frame_stack_pushi(frame, class_is_array(this->u.entity_class) ? 1 : 0);  // todo
 }
 
@@ -303,9 +303,9 @@ static void isArray(struct frame *frame)
  *
  * public native boolean isPrimitive();
  */
-static void isPrimitive(struct frame *frame)
+static void isPrimitive(Frame *frame)
 {
-    struct object *this = frame_locals_getr(frame, 0);
+    Object *this = frame_locals_getr(frame, 0);
     bool b = is_primitive(this->u.entity_class);
     frame_stack_pushi(frame, b ? 1 : 0);
 }
@@ -323,11 +323,11 @@ static void isPrimitive(struct frame *frame)
  *
  * public native Class<? super T> getSuperclass();
  */
-static void getSuperclass(struct frame *frame)
+static void getSuperclass(Frame *frame)
 {
-    struct object *this = frame_locals_getr(frame, 0);
+    Object *this = frame_locals_getr(frame, 0);
 
-    struct class *c = load_class(frame->method->clazz->loader, this->u.entity_class->class_name);
+    Class *c = load_class(frame->method->clazz->loader, this->u.entity_class->class_name);
     frame_stack_pushr(frame, c->super_class != NULL ? c->super_class->clsobj : NULL);
 }
 
@@ -376,16 +376,16 @@ static void getSuperclass(struct frame *frame)
  * @return an array of interfaces implemented by this class.
  */
 //private native Class<?>[] getInterfaces0();
-static void getInterfaces0(struct frame *frame)
+static void getInterfaces0(Frame *frame)
 {
-    struct object *this = frame_locals_getr(frame, 0);
+    Object *this = frame_locals_getr(frame, 0);
 
-    struct class *entity_class = this->u.entity_class;
-    struct class *arr_cls = load_class(frame->method->clazz->loader, "[java/lang/Class;");
-    struct object *interfaces = arrobj_create(arr_cls, entity_class->interfaces_count);
+    Class *entity_class = this->u.entity_class;
+    Class *arr_cls = load_class(frame->method->clazz->loader, "[java/lang/Class;");
+    Object *interfaces = arrobj_create(arr_cls, entity_class->interfaces_count);
     for (int i = 0; i < entity_class->interfaces_count; i++) {
         assert(entity_class->interfaces[i] != NULL);
-        arrobj_set(struct object *, interfaces, i, entity_class->interfaces[i]->clsobj);
+        arrobj_set(Object *, interfaces, i, entity_class->interfaces[i]->clsobj);
     }
 
     frame_stack_pushr(frame, interfaces);
@@ -397,11 +397,11 @@ static void getInterfaces0(struct frame *frame)
  *
  * public native Class<?> getComponentType();
  */
-static void getComponentType(struct frame *frame)
+static void getComponentType(Frame *frame)
 {
-    struct object *this = frame_locals_getr(frame, 0);
+    Object *this = frame_locals_getr(frame, 0);
 
-    struct class *component_cls = class_component_class(this->u.entity_class);
+    Class *component_cls = class_component_class(this->u.entity_class);
     if (component_cls != NULL) {
         frame_stack_pushr(frame, component_cls->clsobj);
     } else {
@@ -437,9 +437,9 @@ static void getComponentType(struct frame *frame)
  * @since JDK1.1
  */
 //public native int getModifiers();
-static void getModifiers(struct frame *frame)
+static void getModifiers(Frame *frame)
 {
-    struct object *this = frame_locals_getr(frame, 0);
+    Object *this = frame_locals_getr(frame, 0);
     frame_stack_pushi(frame, this->u.entity_class->access_flags);
 }
 
@@ -452,7 +452,7 @@ static void getModifiers(struct frame *frame)
  * @since   JDK1.1
  */
 // public native Object[] getSigners();
-static void getSigners(struct frame *frame)
+static void getSigners(Frame *frame)
 {
     jvm_abort("");
 }
@@ -462,17 +462,17 @@ static void getSigners(struct frame *frame)
  * Set the signers of this class.
  */
 // native void setSigners(Object[] signers);
-static void setSigners(struct frame *frame)
+static void setSigners(Frame *frame)
 {
     jvm_abort("");
 }
 
 // private native Object[] getEnclosingMethod0();
-static void getEnclosingMethod0(struct frame *frame)
+static void getEnclosingMethod0(Frame *frame)
 {
     jref this = frame_locals_getr(frame, 0);
 
-    struct class *c = this->u.entity_class;
+    Class *c = this->u.entity_class;
     if (c->enclosing_info[0] == NULL) {
         frame_stack_pushr(frame, NULL);
         return;
@@ -490,52 +490,52 @@ static void getEnclosingMethod0(struct frame *frame)
  * Returns the ProtectionDomain of this class.
  */
 //private native java.security.ProtectionDomain getProtectionDomain0();
-static void getProtectionDomain0(struct frame *frame)
+static void getProtectionDomain0(Frame *frame)
 {
     jvm_abort("");
 }
 
 // Generic signature handling
 //private native String getGenericSignature0();
-static void getGenericSignature0(struct frame *frame)
+static void getGenericSignature0(Frame *frame)
 {
     jvm_abort("");
 }
 
 // Annotations handling
 //native byte[] getRawAnnotations();
-static void getRawAnnotations(struct frame *frame)
+static void getRawAnnotations(Frame *frame)
 {
     jvm_abort("");
 }
 
 // native byte[] getRawTypeAnnotations();
-static void getRawTypeAnnotations(struct frame *frame)
+static void getRawTypeAnnotations(Frame *frame)
 {
     jvm_abort("");
 }
 
 // native ConstantPool getConstantPool();
-static void getConstantPool(struct frame *frame)
+static void getConstantPool(Frame *frame)
 {
     jvm_abort("");
 }
 
 // private native Field[] getDeclaredFields0(boolean publicOnly);
-static void getDeclaredFields0(struct frame *frame)
+static void getDeclaredFields0(Frame *frame)
 {
     jref this = frame_locals_getr(frame, 0);
     bool public_only = frame_locals_getz(frame, 1);
 
-    struct classloader *loader = frame->method->clazz->loader;
-    struct class *cls = load_class(loader, this->u.entity_class->class_name);
+    ClassLoader *loader = frame->method->clazz->loader;
+    Class *cls = load_class(loader, this->u.entity_class->class_name);
 
-    struct field *fields = cls->fields;
+    Field *fields = cls->fields;
     jint fields_count = public_only ? cls->public_fields_count : cls->fields_count;
 
-    struct class *jlrf_cls = load_sys_class("java/lang/reflect/Field");
+    Class *jlrf_cls = load_sys_class("java/lang/reflect/Field");
     char *arr_cls_name = get_arr_class_name(jlrf_cls->class_name);
-    struct object *jlrf_arr = arrobj_create(load_class(loader, arr_cls_name), fields_count);
+    Object *jlrf_arr = arrobj_create(load_class(loader, arr_cls_name), fields_count);
     frame_stack_pushr(frame, jlrf_arr);
     free(arr_cls_name);
 
@@ -543,15 +543,15 @@ static void getDeclaredFields0(struct frame *frame)
      * Field(Class<?> declaringClass, String name, Class<?> type,
      *      int modifiers, int slot, String signature, byte[] annotations)
      */
-    struct method *field_constructor = class_get_constructor(jlrf_cls,
+    Method *field_constructor = class_get_constructor(jlrf_cls,
             "(Ljava/lang/Class;" "Ljava/lang/String;" "Ljava/lang/Class;" "II" "Ljava/lang/String;" "[B)V");
     assert(field_constructor != NULL);
 
     // invoke constructor of class java/lang/reflect/Field
     for (int i = 0; i < fields_count; i++) {
-        struct object *jlrf_obj = object_create(jlrf_cls);
-//        *(struct object **)jobject_index(jlrf_arr, i) = jlrf_obj;
-        arrobj_set(struct object *, jlrf_arr, i, jlrf_obj);
+        Object *jlrf_obj = object_create(jlrf_cls);
+//        *(Object **)jobject_index(jlrf_arr, i) = jlrf_obj;
+        arrobj_set(Object *, jlrf_arr, i, jlrf_obj);
 
         exec_java_func(field_constructor, (slot_t []) {
                 (slot_t) jlrf_obj, // this
@@ -575,20 +575,20 @@ static void getDeclaredFields0(struct frame *frame)
  *
  * private native Method[] getDeclaredMethods0(boolean publicOnly);
  */
-static void getDeclaredMethods0(struct frame *frame)
+static void getDeclaredMethods0(Frame *frame)
 {
     jref this = frame_locals_getr(frame, 0);
     bool public_only = frame_locals_getz(frame, 1);
 
-    struct classloader *loader = frame->method->clazz->loader;
-    struct class *cls = load_class(loader, this->u.entity_class->class_name);
+    ClassLoader *loader = frame->method->clazz->loader;
+    Class *cls = load_class(loader, this->u.entity_class->class_name);
 
-    struct method *methods = cls->methods;
+    Method *methods = cls->methods;
     jint methods_count = public_only ? cls->public_methods_count : cls->methods_count;
 
-    struct class *jlrm_cls = load_sys_class("java/lang/reflect/Method");
+    Class *jlrm_cls = load_sys_class("java/lang/reflect/Method");
     char *arr_cls_name = get_arr_class_name(jlrm_cls->class_name);
-    struct object *jlrm_arr = arrobj_create(load_class(loader, arr_cls_name), methods_count);
+    Object *jlrm_arr = arrobj_create(load_class(loader, arr_cls_name), methods_count);
     frame_stack_pushr(frame, jlrm_arr);
     free(arr_cls_name);
 
@@ -597,15 +597,15 @@ static void getDeclaredMethods0(struct frame *frame)
      *      Class<?>[] checkedExceptions, int modifiers, int slot, String signature,
      *      byte[] annotations, byte[] parameterAnnotations, byte[] annotationDefault)
      */
-    struct method *method_constructor = class_get_constructor(jlrm_cls,
+    Method *method_constructor = class_get_constructor(jlrm_cls,
                 "(Ljava/lang/Class;" "Ljava/lang/String;" "[Ljava/lang/Class;" "Ljava/lang/Class;"
                 "[Ljava/lang/Class;" "II" "Ljava/lang/String;" "[B[B[B)V");
     assert(method_constructor != NULL);
 
     // invoke constructor of class java/lang/reflect/Method
     for (int i = 0; i < methods_count; i++) {
-        struct object *jlrf_obj = object_create(jlrm_cls);
-        arrobj_set(struct object *, jlrm_arr, i, jlrf_obj);
+        Object *jlrf_obj = object_create(jlrm_cls);
+        arrobj_set(Object *, jlrm_arr, i, jlrf_obj);
 
         exec_java_func(method_constructor, (slot_t []) {
                 (slot_t) jlrf_obj,        // this
@@ -625,20 +625,20 @@ static void getDeclaredMethods0(struct frame *frame)
 }
 
 // private native Constructor<T>[] getDeclaredConstructors0(boolean publicOnly);
-static void getDeclaredConstructors0(struct frame *frame)
+static void getDeclaredConstructors0(Frame *frame)
 {
     jref this = frame_locals_getr(frame, 0);
     bool public_only = frame_locals_getz(frame, 1);
 
-    struct classloader *loader = frame->method->clazz->loader;
-    struct class *cls = load_class(loader, this->u.entity_class->class_name);
+    ClassLoader *loader = frame->method->clazz->loader;
+    Class *cls = load_class(loader, this->u.entity_class->class_name);
 
     int constructors_count;
-    struct method **constructors = class_get_constructors(cls, public_only, &constructors_count);
+    Method **constructors = class_get_constructors(cls, public_only, &constructors_count);
 
-    struct class *jlrc_cls = load_sys_class("java/lang/reflect/Constructor");
+    Class *jlrc_cls = load_sys_class("java/lang/reflect/Constructor");
     char *arr_cls_name = get_arr_class_name(jlrc_cls->class_name);
-    struct object *jlrc_arr = arrobj_create(load_class(loader, arr_cls_name), constructors_count);
+    Object *jlrc_arr = arrobj_create(load_class(loader, arr_cls_name), constructors_count);
     frame_stack_pushr(frame, jlrc_arr);
     free(arr_cls_name);
 
@@ -647,14 +647,14 @@ static void getDeclaredConstructors0(struct frame *frame)
      *      Class<?>[] checkedExceptions, int modifiers, int slot,
      *      String signature, byte[] annotations, byte[] parameterAnnotations)
      */
-    struct method *constructor_constructor = class_get_constructor(jlrc_cls,
+    Method *constructor_constructor = class_get_constructor(jlrc_cls,
                 "(Ljava/lang/Class;" "[Ljava/lang/Class;" "[Ljava/lang/Class;" "II" "Ljava/lang/String;" "[B[B)V");
     assert(constructor_constructor != NULL);
 
     // invoke constructor of class java/lang/reflect/Constructor
     for (int i = 0; i < constructors_count; i++) {
-        struct object *jlrf_obj = object_create(jlrc_cls);
-        arrobj_set(struct object *, jlrc_arr, i, jlrf_obj);
+        Object *jlrf_obj = object_create(jlrc_cls);
+        arrobj_set(Object *, jlrc_arr, i, jlrf_obj);
 
         exec_java_func(constructor_constructor, (slot_t []) {
                 (slot_t) jlrf_obj, // this
@@ -677,7 +677,7 @@ static void getDeclaredConstructors0(struct frame *frame)
  *
  * private native Class<?>[] getDeclaredClasses0();
  */
-static void getDeclaredClasses0(struct frame *frame)
+static void getDeclaredClasses0(Frame *frame)
 {
     jvm_abort("");
 }
@@ -703,10 +703,10 @@ static void getDeclaredClasses0(struct frame *frame)
  *
  * private native Class<?> getDeclaringClass0();
  */
-static void getDeclaringClass0(struct frame *frame)
+static void getDeclaringClass0(Frame *frame)
 {
     jref this = frame_locals_getr(frame, 0);
-    struct class *entity_class = this->u.entity_class;
+    Class *entity_class = this->u.entity_class;
 
     if (class_is_array(entity_class) || is_primitive_array(entity_class)) {
         frame_stack_pushr(frame, NULL);

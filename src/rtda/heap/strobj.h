@@ -7,7 +7,7 @@
 
 #include "object.h"
 
-struct object* strobj_create(const char *str);
-const char* strobj_value(struct object *so);
+Object* strobj_create(const char *str);
+const char* strobj_value(Object *so);
 
 #endif //JVM_STROBJ_H

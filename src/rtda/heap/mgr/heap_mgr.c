@@ -7,7 +7,7 @@
 #include "../../../jvm.h"
 #include "../../../config.h"
 
-void hm_init(struct heap_mgr *hm)
+void hm_init(HeapMgr *hm)
 {
     assert(hm != NULL);
 
@@ -19,7 +19,7 @@ void hm_init(struct heap_mgr *hm)
     hm->free_list.next = NULL;
 }
 
-void* hm_get(struct heap_mgr *hm, size_t len)
+void* hm_get(HeapMgr *hm, size_t len)
 {
     assert(hm != NULL);
 

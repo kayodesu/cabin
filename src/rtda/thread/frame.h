@@ -12,9 +12,9 @@
 #include "../../util/bytecode_reader.h"
 
 struct frame {
-    struct method *method;
+    Method *method;
     struct bytecode_reader reader;
-    struct frame *prev;
+    Frame *prev;
 
     /*
      * this frame 执行的函数是否由虚拟机调用
@@ -47,18 +47,18 @@ struct frame {
 #define frame_locals_getd(f, index) DSLOT((f)->locals + (index))
 #define frame_locals_getr(f, index) RSLOT((f)->locals + (index))
 
-static inline void frame_stack_pushi(struct frame *f, jint value)    { *(jint *) f->stack = value; f->stack++; }
-static inline void frame_stack_pushf(struct frame *f, jfloat value)  { *(jfloat *) f->stack = value; f->stack++; }
-static inline void frame_stack_pushl(struct frame *f, jlong value)   { *(jlong *) f->stack = value; f->stack += 2; }
-static inline void frame_stack_pushd(struct frame *f, jdouble value) { *(jdouble *) f->stack = value; f->stack += 2; }
-static inline void frame_stack_pushr(struct frame *f, jref value)    { *(jref *) f->stack = value; f->stack++; }
+static inline void frame_stack_pushi(Frame *f, jint value)    { *(jint *) f->stack = value; f->stack++; }
+static inline void frame_stack_pushf(Frame *f, jfloat value)  { *(jfloat *) f->stack = value; f->stack++; }
+static inline void frame_stack_pushl(Frame *f, jlong value)   { *(jlong *) f->stack = value; f->stack += 2; }
+static inline void frame_stack_pushd(Frame *f, jdouble value) { *(jdouble *) f->stack = value; f->stack += 2; }
+static inline void frame_stack_pushr(Frame *f, jref value)    { *(jref *) f->stack = value; f->stack++; }
 
-static inline jint    frame_stack_popi(struct frame *f) { f->stack--; return *(jint *)f->stack; }
-static inline jfloat  frame_stack_popf(struct frame *f) { f->stack--; return *(jfloat *)f->stack; }
-static inline jlong   frame_stack_popl(struct frame *f) { f->stack -= 2; return *(jlong *)f->stack; }
-static inline jdouble frame_stack_popd(struct frame *f) { f->stack -= 2; return *(jdouble *)f->stack; }
-static inline jref    frame_stack_popr(struct frame *f) { f->stack--; return *(jref *)f->stack; }
+static inline jint    frame_stack_popi(Frame *f) { f->stack--; return *(jint *)f->stack; }
+static inline jfloat  frame_stack_popf(Frame *f) { f->stack--; return *(jfloat *)f->stack; }
+static inline jlong   frame_stack_popl(Frame *f) { f->stack -= 2; return *(jlong *)f->stack; }
+static inline jdouble frame_stack_popd(Frame *f) { f->stack -= 2; return *(jdouble *)f->stack; }
+static inline jref    frame_stack_popr(Frame *f) { f->stack--; return *(jref *)f->stack; }
 
-char* frame_to_string(const struct frame *f);
+char* frame_to_string(const Frame *f);
 
 #endif //JVM_STACK_FRAME_H

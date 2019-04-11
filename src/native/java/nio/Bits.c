@@ -4,40 +4,41 @@
 
 #include "../../../jvm.h"
 #include "../../registry.h"
+#include "../../../jvmdef.h"
 
 // static native void copyFromShortArray(Object src, long srcPos, long dstAddr, long length);
-static void copyFromShortArray(struct frame *frame)
+static void copyFromShortArray(Frame *frame)
 {
     jvm_abort(""); // todo
 }
 
 // static native void copyToShortArray(long srcAddr, Object dst, long dstPos, long length);
-static void copyToShortArray(struct frame *frame)
+static void copyToShortArray(Frame *frame)
 {
     jvm_abort(""); // todo
 }
 
 // static native void copyFromIntArray(Object src, long srcPos, long dstAddr, long length);
-static void copyFromIntArray(struct frame *frame)
+static void copyFromIntArray(Frame *frame)
 {
     jvm_abort(""); // todo
 }
 
 
 // static native void copyToIntArray(long srcAddr, Object dst, long dstPos, long length);
-static void copyToIntArray(struct frame *frame)
+static void copyToIntArray(Frame *frame)
 {
     jvm_abort(""); // todo
 }
 
 // static native void copyFromLongArray(Object src, long srcPos, long dstAddr, long length);
-static void copyFromLongArray(struct frame *frame)
+static void copyFromLongArray(Frame *frame)
 {
     jvm_abort(""); // todo
 }
 
 // static native void copyToLongArray(long srcAddr, Object dst, long dstPos, long length);
-static void copyToLongArray(struct frame *frame)
+static void copyToLongArray(Frame *frame)
 {
     jvm_abort(""); // todo
 }

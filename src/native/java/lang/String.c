@@ -9,7 +9,7 @@
 
 // todo 这函数是干嘛的
 // public native String intern();
-static void intern(struct frame *frame)
+static void intern(Frame *frame)
 {
     // todo
     jref this = frame_locals_getr(frame, 0);

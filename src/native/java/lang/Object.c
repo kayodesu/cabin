@@ -7,17 +7,17 @@
 #include "../../../rtda/heap/object.h"
 
 // public native int hashCode();
-static void hashCode(struct frame *frame)
+static void hashCode(Frame *frame)
 {
     jref this = frame_locals_getr(frame, 0);
     frame_stack_pushi(frame, (jint) (intptr_t) this);
 }
 
 // protected native Object clone() throws CloneNotSupportedException;
-static void clone(struct frame *frame)
+static void clone(Frame *frame)
 {
     jref this = frame_locals_getr(frame, 0);
-    struct class *cloneable = load_sys_class("java/lang/Cloneable");
+    Class *cloneable = load_sys_class("java/lang/Cloneable");
     if (!class_is_subclass_of(this->clazz, cloneable)) {
         jvm_abort("java.lang.CloneNotSupportedException"); // todo
     }
@@ -25,28 +25,28 @@ static void clone(struct frame *frame)
 }
 
 // public final native Class<?> getClass();
-static void getClass(struct frame *frame)
+static void getClass(Frame *frame)
 {
     jref this = frame_locals_getr(frame, 0);
     frame_stack_pushr(frame, this->clazz->clsobj); // todo 对不对
 }
 
 // public final native void notifyAll();
-static void notifyAll(struct frame *frame)
+static void notifyAll(Frame *frame)
 {
 //    jref this = frame_locals_getr(frame, 0);
     // todo
 }
 
 // public final native void notify();
-static void notify(struct frame *frame)
+static void notify(Frame *frame)
 {
 //    jref this = frame_locals_getr(frame, 0);
     // todo
 }
 
 // public final native void wait(long timeout) throws InterruptedException;
-static void wait(struct frame *frame)
+static void wait(Frame *frame)
 {
 //    jref this = frame_locals_getr(frame, 0);
 //    jlong timeout = slot_getl(frame->local_vars + 1);

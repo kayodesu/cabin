@@ -11,7 +11,7 @@
 
 
 // private static native void initIDs();
-static void initIDs(struct frame *frame)
+static void initIDs(Frame *frame)
 {
 //    jvm_abort("error\n");
     // todo
@@ -24,7 +24,7 @@ static void initIDs(struct frame *frame)
  *
  * private native void open0(String name, boolean append) throws FileNotFoundException;
  */
-static void open0(struct frame *frame)
+static void open0(Frame *frame)
 {
     jvm_abort("error\n"); // todo
 }
@@ -39,7 +39,7 @@ static void open0(struct frame *frame)
  *
  * private native void write(int b, boolean append) throws IOException;
  */
-static void write(struct frame *frame)
+static void write(Frame *frame)
 {
     jvm_abort("error\n"); // todo
 }
@@ -54,7 +54,7 @@ static void write(struct frame *frame)
  * @exception IOException If an I/O error has occurred.
  */
 // private native void writeBytes(byte b[], int off, int len, boolean append) throws IOException;
-static void writeBytes(struct frame *frame)
+static void writeBytes(Frame *frame)
 {
     jref this = frame_locals_getr(frame, 0);
     jref b = frame_locals_getr(frame, 1);
@@ -87,7 +87,7 @@ static void writeBytes(struct frame *frame)
 }
 
 // private native void close0() throws IOException;
-static void close0(struct frame *frame)
+static void close0(Frame *frame)
 {
     jvm_abort("error\n"); // todo
 }

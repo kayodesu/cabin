@@ -5,7 +5,7 @@
 #ifndef JVM_REGISTRY_H
 #define JVM_REGISTRY_H
 
-struct frame;
+#include "../jvmdef.h"
 
 #define LOBJ "Ljava/lang/Object;"
 #define LCLS "Ljava/lang/Class;"
@@ -14,9 +14,9 @@ struct frame;
 // 注册所有的本地方法
 void register_all_native_methods();
 
-extern void registerNatives(struct frame *);
+extern void registerNatives(Frame *);
 
-typedef void (* native_method_t)(struct frame *);
+typedef void (* native_method_t)(Frame *);
 
 /*
  * 注册本地方法

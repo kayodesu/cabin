@@ -35,9 +35,9 @@ char user_dirs[USER_DIRS_MAX_COUNT][PATH_MAX];
 char user_jars[USER_JARS_MAX_COUNT][PATH_MAX];
 
 //size_t g_initial_heap_size = 67108864; // 64Mb  64 * 1024 * 1024
-struct heap_mgr g_heap_mgr;
+HeapMgr g_heap_mgr;
 
-struct classloader *g_bootstrap_loader = NULL;
+ClassLoader *g_bootstrap_loader = NULL;
 
 //struct object *system_thread_group = NULL;
 //struct thread *main_thread = NULL;
@@ -56,15 +56,15 @@ static void init_jvm()
 ///*
 // * main thread 由虚拟机启动。
 // */
-//static void create_main_thread(struct classloader *loader)
+//static void create_main_thread(ClassLoader *loader)
 //{
 //
 //    main_thread = thread_create(loader, NULL);
 //
-//    struct class *jltg_class = load_sys_class("java/lang/ThreadGroup");
+//    Class *jltg_class = load_sys_class("java/lang/ThreadGroup");
 //    system_thread_group = object_create(jltg_class);
 //
-//    struct class *jlt_class = load_sys_class("java/lang/Thread");
+//    Class *jlt_class = load_sys_class("java/lang/Thread");
 //    struct object *jlt_obj = object_create(jlt_class);
 //
 //    main_thread->jltobj = jlt_obj;
@@ -105,11 +105,11 @@ static void start_jvm(const char *main_class_name)
 {
     init_jvm();
 
-    struct classloader *loader = classloader_create(true);
+    ClassLoader *loader = classloader_create(true);
     create_main_thread(loader);
 
     // 先加载 sun.mis.VM 类，然后执行其类初始化方法
-    struct class *vm_class = load_sys_class("sun/misc/VM");
+    Class *vm_class = load_sys_class("sun/misc/VM");
     if (vm_class == NULL) {
         jvm_abort("vm_class is null\n");  // todo throw exception
         return;
@@ -119,8 +119,8 @@ static void start_jvm(const char *main_class_name)
     // 在VM类的类初始化方法中调用了 "initialize" 方法。
     class_clinit(vm_class);
 
-    struct class *main_class = load_class(loader, main_class_name);
-    struct method *main_method = class_lookup_static_method(main_class, "main", "([Ljava/lang/String;)V");
+    Class *main_class = load_class(loader, main_class_name);
+    Method *main_method = class_lookup_static_method(main_class, "main", "([Ljava/lang/String;)V");
     if (main_method == NULL) {
         jvm_abort("can't find method main."); // todo
     } else {

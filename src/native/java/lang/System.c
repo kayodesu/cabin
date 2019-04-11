@@ -23,7 +23,7 @@
  * @since      1.2
  */
 // public static native String mapLibraryName(String libname);
-static void mapLibraryName(struct frame *frame)
+static void mapLibraryName(Frame *frame)
 {
     jref libname = frame_locals_getr(frame, 0);
     if (libname == NULL) {
@@ -40,7 +40,7 @@ static void mapLibraryName(struct frame *frame)
 }
 
 // public static native void arraycopy(Object src, int srcPos, Object dest, int destPos, int length)
-static void arraycopy(struct frame *frame)
+static void arraycopy(Frame *frame)
 {
     jref src = frame_locals_getr(frame, 0);
     jint src_pos = frame_locals_geti(frame, 1);
@@ -52,7 +52,7 @@ static void arraycopy(struct frame *frame)
 }
 
 // public static native int identityHashCode(Object x);
-static void identityHashCode(struct frame *frame)
+static void identityHashCode(Frame *frame)
 {
     jref x = frame_locals_getr(frame, 0);
     frame_stack_pushi(frame, (jint) (intptr_t) x);
@@ -77,7 +77,7 @@ static void identityHashCode(struct frame *frame)
  * user.dir             User's current working directory
  */
 // private static native Properties initProperties(Properties props);
-static void initProperties(struct frame *frame)
+static void initProperties(Frame *frame)
 {
     char *sys_props[][2] = {  // todo
             { "java.version",         "1.8.0" },  // todo
@@ -102,10 +102,10 @@ static void initProperties(struct frame *frame)
             { "sun.stderr.encoding",  "UTF-8" },
     };
 
-    struct object *props = frame_locals_getr(frame, 0);
+    Object *props = frame_locals_getr(frame, 0);
 
     // todo init
-    struct method *set_property = class_lookup_instance_method(
+    Method *set_property = class_lookup_instance_method(
             props->clazz, "setProperty", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;");
 
     for (int i = 0; i < sizeof(sys_props) / sizeof(*sys_props); i++) {
@@ -121,26 +121,26 @@ static void initProperties(struct frame *frame)
 }
 
 // private static native void setIn0(InputStream in);
-static void setIn0(struct frame *frame)
+static void setIn0(Frame *frame)
 {
     jref in = frame_locals_getr(frame, 0);
-    struct class *c = frame->method->clazz;
+    Class *c = frame->method->clazz;
     set_static_field_value(c, class_lookup_field(c, "in", "Ljava/io/InputStream;"), (slot_t *) &in);
 }
 
 // private static native void setOut0(PrintStream out);
-static void setOut0(struct frame *frame)
+static void setOut0(Frame *frame)
 {
     jref out = frame_locals_getr(frame, 0);
-    struct class *c = frame->method->clazz;
+    Class *c = frame->method->clazz;
     set_static_field_value(c, class_lookup_field(c, "out", "Ljava/io/PrintStream;"), (slot_t *) &out);
 }
 
 // private static native void setErr0(PrintStream err);
-static void setErr0(struct frame *frame)
+static void setErr0(Frame *frame)
 {
     jref err = frame_locals_getr(frame, 0);
-    struct class *c = frame->method->clazz;
+    Class *c = frame->method->clazz;
     set_static_field_value(c, class_lookup_field(c, "err", "Ljava/io/PrintStream;"), (slot_t *) &err);
 }
 
@@ -154,7 +154,7 @@ todo
  *
  * public static native long nanoTime();
  */
-static void nanoTime(struct frame *frame)
+static void nanoTime(Frame *frame)
 {
     jvm_abort("error\n");
     // todo
@@ -167,7 +167,7 @@ static void nanoTime(struct frame *frame)
 }
 
 // public static native long currentTimeMillis();
-static void currentTimeMillis(struct frame *frame)
+static void currentTimeMillis(Frame *frame)
 {
     jvm_abort("error\n"); // todo
 }

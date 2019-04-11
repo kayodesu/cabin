@@ -9,7 +9,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <limits.h>
+#include "jvmdef.h"
 #include "jtypes.h"
+#include "rtda/heap/mgr/heap_mgr.h"
 
 #ifndef PATH_MAX
 #define PATH_MAX 260 // todo
@@ -44,10 +46,10 @@ extern char user_jars[][PATH_MAX];
 // 初始堆大小
 //extern size_t g_initial_heap_size;
 
-extern struct heap_mgr g_heap_mgr;
+extern HeapMgr g_heap_mgr;
 
 // todo 说明
-extern struct classloader *g_bootstrap_loader;
+extern ClassLoader *g_bootstrap_loader;
 
 /*
  * jvms规定函数最多有255个参数，this也算，long和double占两个长度
@@ -61,7 +63,7 @@ extern struct classloader *g_bootstrap_loader;
 #define NO_ACCESS
 
 // The system Thread group.
-extern struct object *system_thread_group;
+extern Object *system_thread_group;
 
 // name of main thread
 #define MAIN_THREAD_NAME "main"

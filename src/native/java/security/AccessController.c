@@ -11,7 +11,7 @@
 
 // @CallerSensitive
 // public static native <T> T doPrivileged(PrivilegedAction<T> action);
-static void doPrivileged(struct frame *frame)
+static void doPrivileged(Frame *frame)
 {
     // todo 这个函数干什么用的。。。。
     jref this = frame_locals_getr(frame, 0);
@@ -23,7 +23,7 @@ static void doPrivileged(struct frame *frame)
      *     T run();
      * }
      */
-    struct method *m = class_get_declared_method(this->clazz, SYMBOL(run), SYMBOL(___java_lang_Object));
+    Method *m = class_get_declared_method(this->clazz, SYMBOL(run), SYMBOL(___java_lang_Object));
 //    struct slot args[] = { rslot(this) };
 //    thread_invoke_method(frame->thread, m, args);
 //    slot_t args[] = { this };
@@ -33,7 +33,7 @@ static void doPrivileged(struct frame *frame)
 
 // @CallerSensitive
 // public static native <T> T doPrivileged(PrivilegedAction<T> action, AccessControlContext context);
-static void doPrivileged1(struct frame *frame)
+static void doPrivileged1(Frame *frame)
 {
     // todo
     doPrivileged(frame);
@@ -41,7 +41,7 @@ static void doPrivileged1(struct frame *frame)
 
 // @CallerSensitive
 // public static native <T> T doPrivileged(PrivilegedExceptionAction<T> action) throws PrivilegedActionException;
-static void doPrivileged2(struct frame *frame)
+static void doPrivileged2(Frame *frame)
 {
     // todo
     doPrivileged(frame);
@@ -50,21 +50,21 @@ static void doPrivileged2(struct frame *frame)
 // @CallerSensitive
 // public static native <T> T doPrivileged(PrivilegedExceptionAction<T> action, AccessControlContext context)
 //      throws PrivilegedActionException;
-static void doPrivileged3(struct frame *frame)
+static void doPrivileged3(Frame *frame)
 {
     // todo
     doPrivileged(frame);
 }
 
 // private static native AccessControlContext getStackAccessControlContext();
-static void getStackAccessControlContext(struct frame *frame)
+static void getStackAccessControlContext(Frame *frame)
 {
     // todo
     frame_stack_pushr(frame, NULL);
 }
 
 // static native AccessControlContext getInheritedAccessControlContext();
-static void getInheritedAccessControlContext(struct frame *frame)
+static void getInheritedAccessControlContext(Frame *frame)
 {
     // todo
     jvm_abort("");

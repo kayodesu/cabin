@@ -6,13 +6,13 @@
  */
 
 // private native Parameter[] getParameters0();
-static void getParameters0(struct frame *frame)
+static void getParameters0(Frame *frame)
 {
     jvm_abort(""); // todo
 }
 
 // native byte[] getTypeAnnotationBytes0();
-static void getTypeAnnotationBytes0(struct frame *frame)
+static void getTypeAnnotationBytes0(Frame *frame)
 {
     jvm_abort(""); // todo
 }

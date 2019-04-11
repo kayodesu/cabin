@@ -7,7 +7,7 @@
 #include "../../../interpreter/interpreter.h"
 
 // private static native void initialize();
-static void initialize(struct frame *frame)
+static void initialize(Frame *frame)
 {
 //    static bool flag = false;
 //    if (flag) {
@@ -15,9 +15,9 @@ static void initialize(struct frame *frame)
 //    }
 
     // todo
-    struct class *sys_class = load_sys_class("java/lang/System");
+    Class *sys_class = load_sys_class("java/lang/System");
 //    sysClass->clinit(frame);  // todo
-    struct method *m = class_lookup_static_method(sys_class, "initializeSystemClass", "()V");
+    Method *m = class_lookup_static_method(sys_class, "initializeSystemClass", "()V");
     if (m == NULL) {
         jvm_abort("not find initializeSystemClass\n");  // todo m == nullptr
     }
@@ -31,7 +31,7 @@ static void initialize(struct frame *frame)
  *
  * public static native ClassLoader latestUserDefinedLoader();
  */
-static void latestUserDefinedLoader(struct frame *frame)
+static void latestUserDefinedLoader(Frame *frame)
 {
     jvm_abort(""); // todo
 }

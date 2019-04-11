@@ -7,14 +7,14 @@
  */
 
 // private static native int findSignal(String string);
-static void findSignal(struct frame *frame)
+static void findSignal(Frame *frame)
 {
     jref name = frame_locals_getr(frame, 0);
     frame_stack_pushi(frame, 0); // todo
 }
 
 // private static native long handle0(int i, long l);
-static void handle0(struct frame *frame)
+static void handle0(Frame *frame)
 {
 //    jint i = slot_geti(frame->local_vars);
 //    jlong l = slot_getl(frame->local_vars + 1);
@@ -23,7 +23,7 @@ static void handle0(struct frame *frame)
 }
 
 // private static native void raise0(int i);
-static void raise0(struct frame *frame)
+static void raise0(Frame *frame)
 {
 //    jint i = slot_geti(frame->local_vars);
     // todo

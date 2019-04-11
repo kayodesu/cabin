@@ -6,7 +6,7 @@
  */
 
 // private static native boolean VMSupportsCS8();
-static void VMSupportsCS8(struct frame *frame)
+static void VMSupportsCS8(Frame *frame)
 {
 /*
  * 	stack := frame.OperandStack()

@@ -9,18 +9,18 @@
 #include "access.h"
 #include "../../slot.h"
 #include "../../jvm.h"
+#include "../../jvmdef.h"
 
-struct class;
 struct bytecode_reader;
 
 struct field {
-    struct class *clazz; // which class this field belongs to
+    Class *clazz; // which class this field belongs to
     const char *name;
     const char *descriptor;
 
     // the declared type(class object) of this field
     // like, int k; the type of k is int.class
-    NO_ACCESS struct object *type;
+    NO_ACCESS Object *type;
 
     u2 access_flags;
     bool category_two;
@@ -44,14 +44,14 @@ struct field {
 
 #define INVALID_CONSTANT_VALUE_INDEX (-1)
 
-void field_init(struct field *field, struct class *c, struct bytecode_reader *reader);
+void field_init(Field *field, Class *c, struct bytecode_reader *reader);
 
-bool field_is_accessible_to(const struct field *field, const struct class *visitor);
+bool field_is_accessible_to(const Field *field, const Class *visitor);
 
-struct object* field_get_type(struct field *field);
+Object* field_get_type(Field *field);
 
-void field_release(struct field *field);
+void field_release(Field *field);
 
-char* field_to_string(const struct field *field);
+char* field_to_string(const Field *field);
 
 #endif //JVM_JFIELD_H

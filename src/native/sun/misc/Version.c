@@ -6,23 +6,23 @@
  */
 
 // public static native String getJdkSpecialVersion()
-static void getJdkSpecialVersion(struct frame *frame)
+static void getJdkSpecialVersion(Frame *frame)
 {
     jvm_abort(""); // todo
 }
 
 // public static native String getJvmSpecialVersion()
-static void getJvmSpecialVersion(struct frame *frame)
+static void getJvmSpecialVersion(Frame *frame)
 {
     jvm_abort(""); // todo
 }
 
-static void getJdkVersionInfo(struct frame *frame)
+static void getJdkVersionInfo(Frame *frame)
 {
     jvm_abort(""); // todo
 }
 
-static void getJvmVersionInfo(struct frame *frame)
+static void getJvmVersionInfo(Frame *frame)
 {
     jvm_abort(""); // todo
 }
