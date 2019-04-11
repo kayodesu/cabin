@@ -149,8 +149,7 @@ Object* method_descriptor_to_parameter_types(ClassLoader *loader, const char *me
 
     // todo parameter_types_count == 0 是不是要填一个 void.class
 
-    Object *parameter_types
-            = arrobj_create(load_class(loader, "[Ljava/lang/Class;"), parameter_types_count);
+    Object *parameter_types = arrobj_create(load_class(loader, "[Ljava/lang/Class;"), parameter_types_count);
     for (int i = 0; i < parameter_types_count; i++) {
         arrobj_set(Object *, parameter_types, i, buf[i]);
     }

@@ -10,8 +10,7 @@
 #include "../../slot.h"
 #include "../../jvm.h"
 #include "../../jvmdef.h"
-
-struct bytecode_reader;
+#include "../../util/bytecode_reader.h"
 
 struct field {
     Class *clazz; // which class this field belongs to
@@ -44,7 +43,7 @@ struct field {
 
 #define INVALID_CONSTANT_VALUE_INDEX (-1)
 
-void field_init(Field *field, Class *c, struct bytecode_reader *reader);
+void field_init(Field *field, Class *c, BytecodeReader *reader);
 
 bool field_is_accessible_to(const Field *field, const Class *visitor);
 

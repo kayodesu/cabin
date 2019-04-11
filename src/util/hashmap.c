@@ -5,17 +5,18 @@
 #include <assert.h>
 #include <string.h>
 #include "../jvm.h"
+#include "hashmap.h"
 
-struct item {
+typedef struct item {
     int hash; // hash value of key
     const void *key;
     void *value;
     struct item *next;
-};
+} Item;
 
-static inline struct item* item_create(int hash, const void *key, void *value, struct item *next)
+static inline Item* item_create(int hash, const void *key, void *value, Item *next)
 {
-    struct item *item = vm_malloc(sizeof(struct item));
+    Item *item = vm_malloc(sizeof(Item));
     item->hash = hash;
     item->key = key;
     item->value = value;
@@ -24,7 +25,7 @@ static inline struct item* item_create(int hash, const void *key, void *value, s
 }
 
 struct hashmap {
-    struct item **table;
+    Item **table;
 
     // length of the table
     size_t length;
@@ -50,12 +51,12 @@ struct hashmap {
 
 static int hash_string(const char *str);
 
-struct hashmap* hashmap_create(int (*hash)(const void *), int (* cmp)(const void *, const void *), bool add_existing)
+HashMap* hashmap_create(int (*hash)(const void *), int (* cmp)(const void *, const void *), bool add_existing)
 {
     assert(hash != NULL);
     assert(cmp != NULL);
 
-    struct hashmap *map = vm_malloc(sizeof(struct hashmap));
+    HashMap *map = vm_malloc(sizeof(HashMap));
     map->length = DEFAULT_INITIAL_CAPACITY;
     map->table = vm_calloc(sizeof(*(map->table)), map->length);
     map->size = 0;
@@ -72,7 +73,7 @@ struct hashmap* hashmap_create_str_key(bool add_existing)
                           add_existing);
 }
 
-static const struct item* get_item(const struct hashmap *map, const void *key)
+static const Item* get_item(const HashMap*map, const void *key)
 {
     assert(map != NULL);
 
@@ -84,7 +85,7 @@ static const struct item* get_item(const struct hashmap *map, const void *key)
         return NULL;
     }
 
-    for (struct item *curr = map->table[index]; curr != NULL; curr = curr->next) {
+    for (Item *curr = map->table[index]; curr != NULL; curr = curr->next) {
         // 先判断 hash 提速，如 key's hash 不等，则 key 肯定不相等
         if (curr->hash == hash && map->cmp(curr->key, key) == 0) { // existing
             return curr;
@@ -94,19 +95,19 @@ static const struct item* get_item(const struct hashmap *map, const void *key)
     return NULL;
 }
 
-int hashmap_size(const struct hashmap *map)
+int hashmap_size(const HashMap *map)
 {
     assert(map != NULL);
     return map->size;
 }
 
-bool hashmap_contains_key(const struct hashmap *map, const void *key)
+bool hashmap_contains_key(const HashMap *map, const void *key)
 {
     assert(map != NULL);
     return get_item(map, key) != NULL;
 }
 
-void hashmap_put(struct hashmap *map, const void *key, void *value)
+void hashmap_put(HashMap *map, const void *key, void *value)
 {
     assert(map != NULL);
 
@@ -120,7 +121,7 @@ void hashmap_put(struct hashmap *map, const void *key, void *value)
         return;
     }
 
-    for (struct item *curr = map->table[index]; curr != NULL; curr = curr->next) {
+    for (Item *curr = map->table[index]; curr != NULL; curr = curr->next) {
         // 先判断 hash 提速，如 key's hash 不等，则 key 肯定不相等
         if (curr->hash == hash && map->cmp(curr->key, key) == 0) { // existing
             if (!map->add_existing) { // 不允许 add existing key
@@ -134,19 +135,19 @@ void hashmap_put(struct hashmap *map, const void *key, void *value)
     map->size++;
 }
 
-void* hashmap_find(const struct hashmap *map, const void *key)
+void* hashmap_find(const HashMap *map, const void *key)
 {
     assert(map != NULL);
-    const struct item *item = get_item(map, key);
+    const Item *item = get_item(map, key);
     return item != NULL ? item->value : NULL;
 }
 
-int hashmap_values(struct hashmap *map, void *values[])
+int hashmap_values(HashMap *map, void *values[])
 {
     assert(map != NULL);
 
     for (int i = 0, k = 0; i < map->length; i++) {
-        for (struct item *item = map->table[i]; item != NULL; item = item->next) {
+        for (Item *item = map->table[i]; item != NULL; item = item->next) {
             values[k++] = item->value;
         }
     }
@@ -154,19 +155,19 @@ int hashmap_values(struct hashmap *map, void *values[])
 }
 
 #if (JVM_DEBUG)
-void hashmap_print(const struct hashmap *map)
+void hashmap_print(const HashMap*map)
 {
     assert(map != NULL);
     for (int i = 0; i < map->length; i++) {
         printf("\nindex = %d --------------------------- \n", i);
-        for (struct item *item = map->table[i]; item != NULL; item = item->next) {
+        for (Item *item = map->table[i]; item != NULL; item = item->next) {
             printf("%s\n", (char *) item->key);
         }
     }
 }
 #endif
 
-void hashmap_destroy(struct hashmap *map)
+void hashmap_destroy(HashMap *map)
 {
     assert(map != NULL);
     free(map->table);

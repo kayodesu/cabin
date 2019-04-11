@@ -97,7 +97,7 @@ static void cal_arg_slot_count(Method *method)
 /*
  * 解析方法的 code 属性
  */
-static void parse_code_attr(Method *method, struct bytecode_reader *reader)
+static void parse_code_attr(Method *method, BytecodeReader *reader)
 {
     assert(method != NULL);
     assert(reader != NULL);
@@ -122,9 +122,9 @@ static void parse_code_attr(Method *method, struct bytecode_reader *reader)
     if (method->exception_tables_count == 0) {
         method->exception_tables = NULL;
     } else {
-        method->exception_tables = vm_malloc(sizeof(struct exception_table) * method->exception_tables_count);
+        method->exception_tables = vm_malloc(sizeof(ExceptionTable) * method->exception_tables_count);
         for (int i = 0; i < method->exception_tables_count; i++) {
-            struct exception_table *t = method->exception_tables + i;
+            ExceptionTable *t = method->exception_tables + i;
             t->start_pc = bcr_readu2(reader);
             t->end_pc = bcr_readu2(reader);
             t->handler_pc = bcr_readu2(reader);
@@ -188,7 +188,7 @@ static void parse_code_attr(Method *method, struct bytecode_reader *reader)
     }
 }
 
-void method_init(Method *method, Class *c, struct bytecode_reader *reader)
+void method_init(Method *method, Class *c, BytecodeReader *reader)
 {
     method->clazz = c;
     struct constant_pool *cp = &c->constant_pool;
@@ -394,7 +394,7 @@ int method_get_line_number(const Method *method, int pc)
 int method_find_exception_handler(Method *method, Class *exception_type, size_t pc)
 {
     for (int i = 0; i < method->exception_tables_count; i++) {
-        const struct exception_table *t = method->exception_tables + i;
+        const ExceptionTable *t = method->exception_tables + i;
         if (t->start_pc <= pc && pc < t->end_pc) {
             if (t->catch_type == NULL) {
                 return t->handler_pc;  // catch all

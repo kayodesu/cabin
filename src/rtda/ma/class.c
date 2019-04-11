@@ -99,7 +99,7 @@ static void calc_static_field_id(Class *c)
     c->static_fields_values = vm_calloc(c->static_fields_count, sizeof(slot_t));
 }
 
-static void parse_attribute(Class *c, struct bytecode_reader *reader)
+static void parse_attribute(Class *c, BytecodeReader *reader)
 {
     u2 attr_count = bcr_readu2(reader);
     struct constant_pool *cp = &c->constant_pool;
@@ -269,7 +269,7 @@ Class *class_create(ClassLoader *loader, u1 *bytecode, size_t len)
     assert(loader != NULL);
     assert(bytecode != NULL);
 
-    struct bytecode_reader reader;
+    BytecodeReader reader;
     bcr_init(&reader, bytecode, len);
 
     Class *c = vm_malloc(sizeof(Class));

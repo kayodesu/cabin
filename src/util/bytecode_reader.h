@@ -13,13 +13,13 @@
 #include "../jvm.h"
 #include "convert.h"
 
-struct bytecode_reader {
+typedef struct bytecode_reader {
     const u1 *bytecode;
     size_t len;  // bytecode len
     size_t pc;   // program count
-};
+} BytecodeReader;
 
-static inline void bcr_init(struct bytecode_reader *reader, const u1 *bytecode, size_t len)
+static inline void bcr_init(BytecodeReader *reader, const u1 *bytecode, size_t len)
 {
     assert(reader != NULL);
     assert(bytecode != NULL);
@@ -29,19 +29,19 @@ static inline void bcr_init(struct bytecode_reader *reader, const u1 *bytecode, 
     reader->pc = 0;
 }
 
-static inline const u1* bcr_curr_pos(struct bytecode_reader *reader)
+static inline const u1* bcr_curr_pos(BytecodeReader *reader)
 {
     assert(reader != NULL);
     return  reader->bytecode + reader->pc;
 }
 
-static inline bool bcr_has_more(const struct bytecode_reader *reader)
+static inline bool bcr_has_more(const BytecodeReader *reader)
 {
     assert(reader != NULL);
     return reader->pc < reader->len;
 }
 
-static inline void bcr_skip(struct bytecode_reader *reader, int offset)
+static inline void bcr_skip(BytecodeReader *reader, int offset)
 {
     assert(reader != NULL);
     reader->pc += offset;
@@ -50,7 +50,7 @@ static inline void bcr_skip(struct bytecode_reader *reader, int offset)
 /*
  * todo 函数干什么用的
  */
-static inline void bcr_align4(struct bytecode_reader *reader)
+static inline void bcr_align4(BytecodeReader *reader)
 {
     assert(reader != NULL);
     while (reader->pc % 4 != 0) {
@@ -58,7 +58,7 @@ static inline void bcr_align4(struct bytecode_reader *reader)
     }
 }
 
-static inline void bcr_read_bytes(struct bytecode_reader *reader, u1 *buf, size_t len)
+static inline void bcr_read_bytes(BytecodeReader *reader, u1 *buf, size_t len)
 {
     assert(reader != NULL);
     assert(buf != NULL);
@@ -67,19 +67,19 @@ static inline void bcr_read_bytes(struct bytecode_reader *reader, u1 *buf, size_
     reader->pc += len;
 }
 
-static inline s1 bcr_reads1(struct bytecode_reader *reader)
+static inline s1 bcr_reads1(BytecodeReader *reader)
 {
     assert(reader != NULL);
     return reader->bytecode[reader->pc++];
 }
 
-static inline u1 bcr_readu1(struct bytecode_reader *reader)
+static inline u1 bcr_readu1(BytecodeReader *reader)
 {
     assert(reader != NULL);
     return (u1) reader->bytecode[reader->pc++];
 }
 
-static inline u2 bcr_readu2(struct bytecode_reader *reader)
+static inline u2 bcr_readu2(BytecodeReader *reader)
 {
     assert(reader != NULL);
     u2 x = bcr_readu1(reader);
@@ -88,20 +88,20 @@ static inline u2 bcr_readu2(struct bytecode_reader *reader)
     return x << 8 | y;
 }
 
-static inline u2 bcr_peeku2(struct bytecode_reader *reader)
+static inline u2 bcr_peeku2(BytecodeReader *reader)
 {
     u2 data = bcr_readu2(reader);
     reader->pc -= 2;
     return data;
 }
 
-static inline s2 bcr_reads2(struct bytecode_reader *reader)
+static inline s2 bcr_reads2(BytecodeReader *reader)
 {
     assert(reader != NULL);
     return bcr_readu2(reader);
 }
 
-static inline u4 bcr_readu4(struct bytecode_reader *reader)
+static inline u4 bcr_readu4(BytecodeReader *reader)
 {
     assert(reader != NULL);
     u1 buf[4];
@@ -110,7 +110,7 @@ static inline u4 bcr_readu4(struct bytecode_reader *reader)
     return (u4) bytes_to_int32(buf);  // should be bytesToUint32  todo
 }
 
-static inline u8 bcr_readu8(struct bytecode_reader *reader)
+static inline u8 bcr_readu8(BytecodeReader *reader)
 {
     assert(reader != NULL);
     const u1 *p = reader->bytecode;
@@ -126,7 +126,7 @@ static inline u8 bcr_readu8(struct bytecode_reader *reader)
     return v;
 }
 
-static inline s4 bcr_reads4(struct bytecode_reader *reader)
+static inline s4 bcr_reads4(BytecodeReader *reader)
 {
     assert(reader != NULL);
     u1 buf[4];
@@ -138,7 +138,7 @@ static inline s4 bcr_reads4(struct bytecode_reader *reader)
 /*
  * 读 @n 个s4数据到 @s4s 数组中
  */
-static inline void bcr_reads4s(struct bytecode_reader *reader, int n, s4 *s4s)
+static inline void bcr_reads4s(BytecodeReader *reader, int n, s4 *s4s)
 {
     assert(reader != NULL);
     for (int i = 0; i < n; i++) {
@@ -149,7 +149,7 @@ static inline void bcr_reads4s(struct bytecode_reader *reader, int n, s4 *s4s)
     }
 }
 
-static inline void bcr_destroy(struct bytecode_reader *reader)
+static inline void bcr_destroy(BytecodeReader *reader)
 {
     free(reader);
 }

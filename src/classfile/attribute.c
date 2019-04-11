@@ -9,7 +9,7 @@
 #include "../util/encoding.h"
 #include "attribute.h"
 
-void read_annotation(struct bytecode_reader *reader, struct annotation *a)
+void read_annotation(BytecodeReader *reader, struct annotation *a)
 {
     assert(reader != NULL);
     assert(a != NULL);
@@ -24,7 +24,7 @@ void read_annotation(struct bytecode_reader *reader, struct annotation *a)
     }
 }
 
-void read_element_value(struct bytecode_reader *reader, struct element_value *ev)
+void read_element_value(BytecodeReader *reader, struct element_value *ev)
 {
     assert(reader != NULL);
     assert(ev != NULL);

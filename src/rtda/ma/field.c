@@ -12,7 +12,7 @@
 #include "../../utf8.h"
 
 
-void field_init(Field *field, Class *c, struct bytecode_reader *reader)
+void field_init(Field *field, Class *c, BytecodeReader *reader)
 {
     field->constant_value_index = INVALID_CONSTANT_VALUE_INDEX;
     field->clazz = c;

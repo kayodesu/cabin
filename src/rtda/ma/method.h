@@ -14,12 +14,12 @@
  * start_pc 给出的是try{}语句块的第一条指令，end_pc 给出的则是try{}语句块的下一条指令。
  * 如果 catch_type 是 NULL（在class文件中是0），表示可以处理所有异常，这是用来实现finally子句的。
  */
-struct exception_table {
+typedef struct {
     u2 start_pc;
     u2 end_pc;
     u2 handler_pc;
     Class *catch_type;
-};
+} ExceptionTable;
 
 struct method {
     /*
@@ -46,7 +46,7 @@ struct method {
      * start_pc 给出的是try{ }语句块的第一条指令，end_pc 给出的则是try{}语句块的下一条指令。
      * 如果 catch_type 是 NULL（在class文件中是0），表示可以处理所有异常，这是用来实现finally子句的。
      */
-    struct exception_table *exception_tables;
+    ExceptionTable *exception_tables;
 
     u4 line_number_table_count;
     struct line_number_table *line_number_tables;
@@ -77,9 +77,7 @@ struct method {
 #endif
 };
 
-struct bytecode_reader;
-
-void method_init(Method *method, Class *c, struct bytecode_reader *reader);
+void method_init(Method *method, Class *c, BytecodeReader *reader);
 
 bool method_is_accessible_to(const Method *method, const Class *visitor);
 

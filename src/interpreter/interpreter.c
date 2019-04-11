@@ -136,7 +136,7 @@ void ldc2_w(Frame *frame)
  */
 static void tableswitch(Frame *frame)
 {
-    struct bytecode_reader *reader = &frame->reader;
+    BytecodeReader *reader = &frame->reader;
     size_t saved_pc = reader->pc - 1; // save the pc before 'tableswitch' instruction
     bcr_align4(reader);
 
@@ -174,7 +174,7 @@ static void tableswitch(Frame *frame)
  */
 static void lookupswitch(Frame *frame)
 {
-    struct bytecode_reader *reader = &frame->reader;
+    BytecodeReader *reader = &frame->reader;
     size_t saved_pc = reader->pc - 1; // save the pc before 'lookupswitch' instruction
     bcr_align4(reader);
 
@@ -1024,7 +1024,7 @@ static slot_t * exec()
             CASE(OPC_RETURN, METHOD_RETURN(0))
 
             CASE(OPC_GETSTATIC, {
-                struct bytecode_reader *reader = &frame->reader;
+                BytecodeReader *reader = &frame->reader;
                 int index = bcr_readu2(reader);
                 Field *f = resolve_field(frame->method->clazz, index);
 
@@ -1040,7 +1040,7 @@ static slot_t * exec()
             })
 
             CASE(OPC_PUTSTATIC, {
-                struct bytecode_reader *reader = &frame->reader;
+                BytecodeReader *reader = &frame->reader;
                 int index = bcr_readu2(reader);
                 Field *f = resolve_field(frame->method->clazz, index);
 
@@ -1262,7 +1262,7 @@ static slot_t * exec()
             CASE(OPC_NEW, {
                 // new指令专门用来创建类实例。数组由专门的指令创建
                 // 如果类还没有被初始化，会触发类的初始化。
-                struct bytecode_reader *reader = &frame->reader;
+                BytecodeReader *reader = &frame->reader;
                 Class *c = resolve_class(frame->method->clazz, bcr_readu2(reader));  // todo
                 if (!c->inited)
                     class_clinit(c);

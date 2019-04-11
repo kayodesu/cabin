@@ -5,14 +5,9 @@
 #ifndef JVM_HASHSET_H
 #define JVM_HASHSET_H
 
+struct hashset_entry;
 
-struct hashset_entry {
-    int hash;
-    const void *data;
-    struct hashset_entry *next;
-};
-
-struct hashset {
+typedef struct {
     struct hashset_entry *set;
     size_t len;
     size_t count;
@@ -22,15 +17,15 @@ struct hashset {
 
     // cmp data.
     int (* cmp)(const void *, const void *);
-};
+} HashSet;
 
-void hashset_init(struct hashset *set, int (* hash)(const void *), int (* cmp)(const void *, const void *));
+void hashset_init(HashSet *set, int (* hash)(const void *), int (* cmp)(const void *, const void *));
 
-void hashset_put(struct hashset *set, const void *data);
+void hashset_put(HashSet *set, const void *data);
 
 /*
  * return hashed data if present, otherwise return NULL
  */
-const void* hashset_find(struct hashset *set, const void *data);
+const void* hashset_find(HashSet *set, const void *data);
 
 #endif //JVM_HASHSET_H

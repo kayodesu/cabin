@@ -13,7 +13,7 @@
 
 struct frame {
     Method *method;
-    struct bytecode_reader reader;
+    BytecodeReader reader;
     Frame *prev;
 
     /*

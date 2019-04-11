@@ -6,7 +6,7 @@
 #include "utf8.h"
 #include "util/hashset.h"
 
-static struct hashset set;
+static HashSet set;
 
 void utf8_init()
 {
