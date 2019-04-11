@@ -6,7 +6,7 @@
 #define JVM_SYMBOL_H
 
 
-extern char* symbol_values[];
+extern const char *symbol_values[];
 #define SYMBOL_NAME_ENUM(name) symbol_##name
 #define SYMBOL(name) symbol_values[SYMBOL_NAME_ENUM(name)]
 

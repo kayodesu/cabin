@@ -8,7 +8,7 @@
 #include "jvm.h"
 
 #define SYMBOL_VALUE(name, value) value
-char* symbol_values[] = {
+const char *symbol_values[] = {
     SYMBOL_PAIRS(SYMBOL_VALUE)
 };
 
