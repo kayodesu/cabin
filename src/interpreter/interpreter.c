@@ -118,7 +118,7 @@ static void __ldc(Frame *frame, int index)
 
 void ldc2_w(Frame *frame)
 {
-    int index = bcr_readu2(&frame->reader);
+    int index = readu2(&frame->reader);
     struct constant_pool *cp = &frame->method->clazz->constant_pool;
     u1 type = CP_TYPE(cp, index);
 
@@ -214,7 +214,7 @@ static void lookupswitch(Frame *frame)
 static void multianewarray(Frame *frame)
 {
     Class *curr_class = frame->method->clazz;
-    int index = bcr_readu2(&frame->reader);
+    int index = readu2(&frame->reader);
     const char *class_name = CP_UTF8(&curr_class->constant_pool, index); // 这里解析出来的直接就是数组类。
 
     int arr_dim = bcr_readu1(&frame->reader); // 多维数组的维度
@@ -281,7 +281,7 @@ static void anewarray(Frame *frame)
 
     // todo arrLen == 0 的情况
 
-    int index = bcr_readu2(&frame->reader);
+    int index = readu2(&frame->reader);
     struct constant_pool *cp = &frame->method->clazz->constant_pool;
 
     const char *class_name;
@@ -490,7 +490,7 @@ void invokedynamic(Frame *frame)
     struct thread *curr_thread = frame->thread;
 
     // The run-time constant pool item at that index must be a symbolic reference to a call site specifier.
-    int index = bcr_readu2(&frame->reader); // CONSTANT_InvokeDynamic_info
+    int index = readu2(&frame->reader); // CONSTANT_InvokeDynamic_info
 
     bcr_readu1(&frame->reader); // this byte must always be zero.
     bcr_readu1(&frame->reader); // this byte must always be zero.
@@ -588,7 +588,7 @@ static slot_t * exec()
     int index; \
     if (wide_extending) { \
         wide_extending = false; /* recover */  \
-        index = bcr_readu2(&frame->reader); \
+        index = readu2(&frame->reader); \
     } else { \
         index = bcr_readu1(&frame->reader); \
     }
@@ -891,7 +891,7 @@ static slot_t * exec()
                 jint index, value;
 
                 if (wide_extending) {
-                    index = bcr_readu2(&frame->reader);
+                    index = readu2(&frame->reader);
                     value = bcr_reads2(&frame->reader);
                     wide_extending = false;
                 } else {
@@ -1025,7 +1025,7 @@ static slot_t * exec()
 
             CASE(OPC_GETSTATIC, {
                 BytecodeReader *reader = &frame->reader;
-                int index = bcr_readu2(reader);
+                int index = readu2(reader);
                 Field *f = resolve_field(frame->method->clazz, index);
 
                 if (!f->clazz->inited) {
@@ -1041,7 +1041,7 @@ static slot_t * exec()
 
             CASE(OPC_PUTSTATIC, {
                 BytecodeReader *reader = &frame->reader;
-                int index = bcr_readu2(reader);
+                int index = readu2(reader);
                 Field *f = resolve_field(frame->method->clazz, index);
 
                 if (!f->clazz->inited) {
@@ -1058,7 +1058,7 @@ static slot_t * exec()
             })
 
             CASE(OPC_GETFIELD, {
-                int index = bcr_readu2(&frame->reader);
+                int index = readu2(&frame->reader);
                 Field *f = resolve_field(frame->method->clazz, index);
 
                 jref obj = frame_stack_popr(frame);
@@ -1074,7 +1074,7 @@ static slot_t * exec()
             })
 
             CASE(OPC_PUTFIELD, {
-                int index = bcr_readu2(&frame->reader);
+                int index = readu2(&frame->reader);
                 Field *f = resolve_field(frame->method->clazz, index);
 
                 // 如果是final字段，则只能在构造函数中初始化，否则抛出java.lang.IllegalAccessError。
@@ -1102,7 +1102,7 @@ static slot_t * exec()
 
             case OPC_INVOKEVIRTUAL: {
                 // invokevirtual指令用于调用对象的实例方法，根据对象的实际类型进行分派（虚方法分派）。
-                int index = bcr_readu2(&frame->reader);
+                int index = readu2(&frame->reader);
                 Method *m = resolve_method(frame->method->clazz, index);
 
                 frame->stack -= m->arg_slot_count;
@@ -1126,7 +1126,7 @@ static slot_t * exec()
                 // invokespecial指令用于调用一些需要特殊处理的实例方法，
                 // 包括构造函数、私有方法和通过super关键字调用的超类方法。
                 Class *curr_class = frame->method->clazz;
-                int index = bcr_readu2(&frame->reader);
+                int index = readu2(&frame->reader);
 //
 //    // 假定从方法符号引用中解析出来的类是C，方法是M。如果M是构造函数，则声明M的类必须是C，
 ////    if (method->name == "<init>" && method->class != c) {
@@ -1171,7 +1171,7 @@ static slot_t * exec()
                 // 如果类还没有被初始化，会触发类的初始化。
                 Class *curr_class = frame->method->clazz;
 
-                int index = bcr_readu2(&frame->reader);
+                int index = readu2(&frame->reader);
 
                 Method *m = resolve_method(curr_class, index);
 
@@ -1195,7 +1195,7 @@ static slot_t * exec()
             }
             case OPC_INVOKEINTERFACE: {
                 Class *curr_class = frame->method->clazz;
-                int index = frame_readu2(frame); //bcr_readu2(&frame->reader);
+                int index = frame_readu2(frame); //readu2(&frame->reader);
 
                 /*
                  * 此字节的值是给方法传递参数需要的slot数，
@@ -1263,7 +1263,7 @@ static slot_t * exec()
                 // new指令专门用来创建类实例。数组由专门的指令创建
                 // 如果类还没有被初始化，会触发类的初始化。
                 BytecodeReader *reader = &frame->reader;
-                Class *c = resolve_class(frame->method->clazz, bcr_readu2(reader));  // todo
+                Class *c = resolve_class(frame->method->clazz, readu2(reader));  // todo
                 if (!c->inited)
                     class_clinit(c);
 
@@ -1325,7 +1325,7 @@ static slot_t * exec()
 
             CASE(OPC_CHECKCAST, {
                 jref obj = RSLOT(frame->stack - 1); // 不改变操作数栈
-                int index = bcr_readu2(&frame->reader);
+                int index = readu2(&frame->reader);
 
                 // 如果引用是null，则指令执行结束。也就是说，null 引用可以转换成任何类型
                 if (obj != NULL) {
@@ -1337,7 +1337,7 @@ static slot_t * exec()
             })
 
             CASE(OPC_INSTANCEOF, {
-                int index = bcr_readu2(&frame->reader);
+                int index = readu2(&frame->reader);
                 Class *c = resolve_class(frame->method->clazz, index);
 
                 jref obj = frame_stack_popr(frame);

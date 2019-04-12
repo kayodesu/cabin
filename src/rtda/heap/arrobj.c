@@ -4,7 +4,6 @@
 
 #include "object.h"
 #include "arrobj.h"
-#include "mgr/heap_mgr.h"
 
 Object *arrobj_create(Class *arr_class, jint arr_len)
 {

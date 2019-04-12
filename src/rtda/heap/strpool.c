@@ -7,7 +7,7 @@
 #include "object.h"
 #include "strobj.h"
 
-static struct hashmap *pool; // string pool
+static HashMap *pool; // string pool
 
 void build_str_pool()
 {

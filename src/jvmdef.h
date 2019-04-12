@@ -10,7 +10,7 @@
  */
 
 typedef struct classloader ClassLoader;
-typedef struct class Class;
+typedef struct _class Class;
 typedef struct field Field;
 typedef struct method Method;
 typedef struct object Object;

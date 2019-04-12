@@ -155,7 +155,7 @@ int hashmap_values(HashMap *map, void *values[])
 }
 
 #if (JVM_DEBUG)
-void hashmap_print(const HashMap*map)
+void hashmap_print(const HashMap *map)
 {
     assert(map != NULL);
     for (int i = 0; i < map->length; i++) {

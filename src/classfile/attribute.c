@@ -14,11 +14,11 @@ void read_annotation(BytecodeReader *reader, struct annotation *a)
     assert(reader != NULL);
     assert(a != NULL);
 
-    a->type_index = bcr_readu2(reader);
-    a->num_element_value_pairs = bcr_readu2(reader);
+    a->type_index = readu2(reader);
+    a->num_element_value_pairs = readu2(reader);
     a->element_value_pairs = vm_malloc(sizeof(struct element_value_pair) * a->num_element_value_pairs);
     for (int i = 0; i < a->num_element_value_pairs; i++) {
-        a->element_value_pairs[i].element_name_index = bcr_readu2(reader);
+        a->element_value_pairs[i].element_name_index = readu2(reader);
         a->element_value_pairs[i].value = vm_malloc(sizeof(struct element_value));
         read_element_value(reader, a->element_value_pairs[i].value);
     }
@@ -39,20 +39,20 @@ void read_element_value(BytecodeReader *reader, struct element_value *ev)
         case 'S':
         case 'Z':
         case 's':
-            ev->value.const_value_index = bcr_readu2(reader);
+            ev->value.const_value_index = readu2(reader);
             break;
         case 'c':
-            ev->value.class_info_index = bcr_readu2(reader);
+            ev->value.class_info_index = readu2(reader);
             break;
         case 'e':
-            ev->value.enum_const_value.type_name_index = bcr_readu2(reader);
-            ev->value.enum_const_value.const_name_index = bcr_readu2(reader);
+            ev->value.enum_const_value.type_name_index = readu2(reader);
+            ev->value.enum_const_value.const_name_index = readu2(reader);
             break;
         case '@':
             read_annotation(reader, &(ev->value.annotation_value));
             break;
         case '[':
-            ev->value.array_value.num_values = bcr_readu2(reader);
+            ev->value.array_value.num_values = readu2(reader);
             ev->value.array_value.values = vm_malloc(sizeof(struct element_value) * ev->value.array_value.num_values);
             for (int i = 0; i < ev->value.array_value.num_values; i++) {
                 read_element_value(reader, ev->value.array_value.values + i);

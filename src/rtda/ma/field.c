@@ -17,9 +17,9 @@ void field_init(Field *field, Class *c, BytecodeReader *reader)
     field->constant_value_index = INVALID_CONSTANT_VALUE_INDEX;
     field->clazz = c;
     field->deprecated = false;
-    field->access_flags = bcr_readu2(reader);
-    field->name = CP_UTF8(&(c->constant_pool), bcr_readu2(reader));
-    field->descriptor = CP_UTF8(&(c->constant_pool), bcr_readu2(reader));
+    field->access_flags = readu2(reader);
+    field->name = CP_UTF8(&(c->constant_pool), readu2(reader));
+    field->descriptor = CP_UTF8(&(c->constant_pool), readu2(reader));
 
     char d = field->descriptor[0];
     if (d == 'J' || d == 'D') {
@@ -31,9 +31,9 @@ void field_init(Field *field, Class *c, BytecodeReader *reader)
     field->type = NULL;
 
     // parse field's attributes
-    u2 attr_count = bcr_readu2(reader);
+    u2 attr_count = readu2(reader);
     for (int i = 0; i < attr_count; i++) {
-        const char *attr_name = CP_UTF8(&(c->constant_pool), bcr_readu2(reader));//rtcp_get_str(c->rtcp, bcr_readu2(reader));
+        const char *attr_name = CP_UTF8(&(c->constant_pool), readu2(reader));//rtcp_get_str(c->rtcp, readu2(reader));
         u4 attr_len = bcr_readu4(reader);
 
         if (SYMBOL(Deprecated) == attr_name) {
@@ -45,7 +45,7 @@ void field_init(Field *field, Class *c, BytecodeReader *reader)
              *
              * 非静态字段包含了ConstantValue属性，那么这个属性必须被虚拟机所忽略。
              */
-            u2 index = bcr_readu2(reader);
+            u2 index = readu2(reader);
             if (IS_STATIC(field->access_flags)) {  // todo
                 field->constant_value_index = index;
 //                field->v.static_value.u = resolve_single_constant(c, index);  // todo
@@ -53,9 +53,9 @@ void field_init(Field *field, Class *c, BytecodeReader *reader)
         } else if (SYMBOL(Synthetic) == attr_name) {
             set_synthetic(&field->access_flags);
         } else if (SYMBOL(Signature) == attr_name) {
-            c->signature = CP_UTF8(&(c->constant_pool), bcr_readu2(reader));//rtcp_get_str(c->rtcp, bcr_readu2(reader));
+            c->signature = CP_UTF8(&(c->constant_pool), readu2(reader));//rtcp_get_str(c->rtcp, readu2(reader));
         } else if (SYMBOL(RuntimeVisibleAnnotations) == attr_name) { // ignore
-//            u2 num = field->runtime_visible_annotations_num = bcr_readu2(reader);
+//            u2 num = field->runtime_visible_annotations_num = readu2(reader);
 //            field->runtime_visible_annotations = malloc(sizeof(struct annotation) * num);
 //            CHECK_MALLOC_RESULT(field->runtime_visible_annotations);
 //            for (u2 k = 0; k < num; k++) {
@@ -63,7 +63,7 @@ void field_init(Field *field, Class *c, BytecodeReader *reader)
 //            }
             bcr_skip(reader, attr_len);
         } else if (SYMBOL(RuntimeInvisibleAnnotations) == attr_name) { // ignore
-//            u2 num = field->runtime_invisible_annotations_num = bcr_readu2(reader);
+//            u2 num = field->runtime_invisible_annotations_num = readu2(reader);
 //            field->runtime_invisible_annotations = malloc(sizeof(struct annotation) * num);
 //            CHECK_MALLOC_RESULT(field->runtime_invisible_annotations);
 //            for (u2 k = 0; k < num; k++) {

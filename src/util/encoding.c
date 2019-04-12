@@ -7,7 +7,7 @@
 #include "encoding.h"
 #include "../jvm.h"
 
-jchar* utf8_to_unicode(const const char *str)
+jchar *utf8_to_unicode(const const char *str)
 {
     size_t len = strlen(str);
     jchar *wstr = vm_malloc(sizeof(jchar)*(len + 1));
@@ -16,7 +16,7 @@ jchar* utf8_to_unicode(const const char *str)
     return wstr;
 }
 
-char* unicode_to_utf8(const const jchar arr[], size_t len)
+char *unicode_to_utf8(const const jchar arr[], size_t len)
 {
     char *str = vm_malloc(sizeof(char)*(len + 1));
     wcstombs(str, arr, len);

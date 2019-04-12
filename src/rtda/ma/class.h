@@ -50,7 +50,7 @@ struct constant_pool {
 #define CP_LONG(cp, i)                   LSLOT((cp)->info + (i))
 #define CP_DOUBLE(cp, i)                 DSLOT((cp)->info + (i))
 
-struct class {
+struct _class {
     u2 access_flags;
     u4 magic;
     u2 minor_version;

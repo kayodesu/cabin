@@ -87,6 +87,7 @@ static inline u2 bcr_readu2(BytecodeReader *reader)
 
     return x << 8 | y;
 }
+#define readu2 bcr_readu2
 
 static inline u2 bcr_peeku2(BytecodeReader *reader)
 {

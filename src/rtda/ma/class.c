@@ -101,21 +101,21 @@ static void calc_static_field_id(Class *c)
 
 static void parse_attribute(Class *c, BytecodeReader *reader)
 {
-    u2 attr_count = bcr_readu2(reader);
+    u2 attr_count = readu2(reader);
     struct constant_pool *cp = &c->constant_pool;
 
     for (int i = 0; i < attr_count; i++) {
-        const char *attr_name = CP_UTF8(cp, bcr_readu2(reader));
+        const char *attr_name = CP_UTF8(cp, readu2(reader));
         u4 attr_len = bcr_readu4(reader);
 
         if (SYMBOL(Signature) == attr_name) {
-            c->signature = CP_UTF8(cp, bcr_readu2(reader));
+            c->signature = CP_UTF8(cp, readu2(reader));
         } else if (SYMBOL(Synthetic) == attr_name) {
             set_synthetic(&c->access_flags);
         } else if (SYMBOL(Deprecated) == attr_name) {
             c->deprecated = true;
         } else if (SYMBOL(SourceFile) == attr_name) {
-            u2 source_file_index = bcr_readu2(reader);
+            u2 source_file_index = readu2(reader);
             if (source_file_index >= 0) {
                 c->source_file_name = CP_UTF8(cp, source_file_index);
             } else {
@@ -126,8 +126,8 @@ static void parse_attribute(Class *c, BytecodeReader *reader)
                 c->source_file_name = "Unknown source file";
             }
         } else if (SYMBOL(EnclosingMethod) == attr_name) {
-            u2 enclosing_class_index = bcr_readu2(reader);
-            u2 enclosing_method_index = bcr_readu2(reader);
+            u2 enclosing_class_index = readu2(reader);
+            u2 enclosing_method_index = readu2(reader);
 
             if (enclosing_class_index > 0) {
                 Class *enclosing_class = load_class(c->loader, CP_CLASS_NAME(cp, enclosing_class_index));
@@ -140,27 +140,27 @@ static void parse_attribute(Class *c, BytecodeReader *reader)
                 }
             }
         } else if (SYMBOL(BootstrapMethods) == attr_name) {
-            u2 num = bcr_readu2(reader);
+            u2 num = readu2(reader);
             struct bootstrap_method methods[num];
 
             for (u2 k = 0; k < num; k++) {
-                methods[k].bootstrap_method_ref = bcr_readu2(reader);
-                methods[k].num_bootstrap_arguments = bcr_readu2(reader);
+                methods[k].bootstrap_method_ref = readu2(reader);
+                methods[k].num_bootstrap_arguments = readu2(reader);
                 methods[k].bootstrap_arguments = vm_malloc(sizeof(u2) * methods[k].num_bootstrap_arguments); // todo 没有 free
                 for (int j = 0; j < methods[k].num_bootstrap_arguments; j++) {
-                    methods[k].bootstrap_arguments[j] = bcr_readu2(reader);
+                    methods[k].bootstrap_arguments[j] = readu2(reader);
                 }
             }
 
 //            rtcp_build_invoke_dynamic_constant(c->rtcp, methods);  todo
         } else if (SYMBOL(InnerClasses) == attr_name) { // ignore
-//            u2 num = bcr_readu2(reader);
+//            u2 num = readu2(reader);
 //            struct inner_class classes[num];
 //            for (u2 k = 0; k < num; k++) {
-//                classes[k].inner_class_info_index = bcr_readu2(reader);
-//                classes[k].outer_class_info_index = bcr_readu2(reader);
-//                classes[k].inner_name_index = bcr_readu2(reader);
-//                classes[k].inner_class_access_flags = bcr_readu2(reader);
+//                classes[k].inner_class_info_index = readu2(reader);
+//                classes[k].outer_class_info_index = readu2(reader);
+//                classes[k].inner_name_index = readu2(reader);
+//                classes[k].inner_class_access_flags = readu2(reader);
 //            }
             bcr_skip(reader, attr_len);
         } else if (SYMBOL(SourceDebugExtension) == attr_name) { // ignore
@@ -168,14 +168,14 @@ static void parse_attribute(Class *c, BytecodeReader *reader)
 //            bcr_read_bytes(reader, source_debug_extension, attr_len);
             bcr_skip(reader, attr_len);
         } else if (SYMBOL(RuntimeVisibleAnnotations) == attr_name) { // ignore
-//            u2 runtime_annotations_num = bcr_readu2(reader);
+//            u2 runtime_annotations_num = readu2(reader);
 //            struct annotation annotations[runtime_annotations_num];
 //            for (u2 k = 0; k < runtime_annotations_num; k++) {
 //                read_annotation(reader, annotations + i);
 //            }
             bcr_skip(reader, attr_len);
         } else if (SYMBOL(RuntimeInvisibleAnnotations) == attr_name) { // ignore
-//            u2 runtime_annotations_num = bcr_readu2(reader);
+//            u2 runtime_annotations_num = readu2(reader);
 //            struct annotation annotations[runtime_annotations_num];
 //            for (u2 k = 0; k < runtime_annotations_num; k++) {
 //                read_annotation(reader, annotations + i);
@@ -279,10 +279,10 @@ Class *class_create(ClassLoader *loader, u1 *bytecode, size_t len)
     c->enclosing_info[0] = c->enclosing_info[1] = c->enclosing_info[2] = NULL;
 
     c->magic = bcr_readu4(&reader);
-    c->minor_version = bcr_readu2(&reader);
-    c->major_version = bcr_readu2(&reader);
+    c->minor_version = readu2(&reader);
+    c->major_version = readu2(&reader);
 
-    u2 cp_count = bcr_readu2(&reader);
+    u2 cp_count = readu2(&reader);
 
     c->constant_pool.type = vm_malloc(cp_count * sizeof(u1));
     c->constant_pool.info = vm_malloc(cp_count * sizeof(slot_t));
@@ -296,7 +296,7 @@ Class *class_create(ClassLoader *loader, u1 *bytecode, size_t len)
             case CONSTANT_Class:
             case CONSTANT_String:
             case CONSTANT_MethodType:
-                CP_INFO(cp, i) = bcr_readu2(&reader);
+                CP_INFO(cp, i) = readu2(&reader);
                 break;
             case CONSTANT_NameAndType:
             case CONSTANT_Fieldref:
@@ -304,8 +304,8 @@ Class *class_create(ClassLoader *loader, u1 *bytecode, size_t len)
             case CONSTANT_InterfaceMethodref:
             case CONSTANT_Dynamic:
             case CONSTANT_InvokeDynamic: {
-                u2 index1 = bcr_readu2(&reader); // class_index
-                u2 index2 = bcr_readu2(&reader); // name_and_type_index
+                u2 index1 = readu2(&reader); // class_index
+                u2 index2 = readu2(&reader); // name_and_type_index
                 CP_INFO(cp, i) = (index2 << 16) + index1;
                 break;
             }
@@ -340,7 +340,7 @@ Class *class_create(ClassLoader *loader, u1 *bytecode, size_t len)
                 break;
             }
             case CONSTANT_Utf8: {
-                u2 utf8_len = bcr_readu2(&reader);
+                u2 utf8_len = readu2(&reader);
                 char *buf = vm_malloc(utf8_len + 1);
                 bcr_read_bytes(&reader, (u1 *) buf, utf8_len);
                 buf[utf8_len] = 0;
@@ -354,17 +354,17 @@ Class *class_create(ClassLoader *loader, u1 *bytecode, size_t len)
             }
             case CONSTANT_MethodHandle: {
                 u2 index1 = bcr_readu1(&reader); // 这里确实是 bcr_readu1  reference_kind
-                u2 index2 = bcr_readu2(&reader); // reference_index
+                u2 index2 = readu2(&reader); // reference_index
                 CP_INFO(cp, i) = (index2 << 16) + index1;
                 break;
             }
 //            case CONSTANT_MethodType:
-//                c->u.method_descriptor_index = bcr_readu2(reader);
+//                c->u.method_descriptor_index = readu2(reader);
 //                break;
 //            case CONSTANT_Dynamic:
 //            case CONSTANT_InvokeDynamic:
-//                c->u.invoke_dynamic_constant.bootstrap_method_attr_index = bcr_readu2(reader);
-//                c->u.invoke_dynamic_constant.name_and_type_index = bcr_readu2(reader);
+//                c->u.invoke_dynamic_constant.bootstrap_method_attr_index = readu2(reader);
+//                c->u.invoke_dynamic_constant.name_and_type_index = readu2(reader);
 //                break;
             default:
                 // java_lang_ClassFormatError todo
@@ -372,9 +372,9 @@ Class *class_create(ClassLoader *loader, u1 *bytecode, size_t len)
         }
     }
 
-    c->access_flags = bcr_readu2(&reader);
+    c->access_flags = readu2(&reader);
 
-    c->class_name = CP_CLASS_NAME(cp, bcr_readu2(&reader));
+    c->class_name = CP_CLASS_NAME(cp, readu2(&reader));
     char *pkg_name = vm_strdup(c->class_name);
 
     char *p = strrchr(pkg_name, '/');
@@ -387,7 +387,7 @@ Class *class_create(ClassLoader *loader, u1 *bytecode, size_t len)
             free(pkg_name);
     }
 
-    u2 super_class = bcr_readu2(&reader);
+    u2 super_class = readu2(&reader);
     if (super_class == 0) { // why 0
         c->super_class = NULL; // 可以没有父类
     } else {
@@ -402,25 +402,25 @@ Class *class_create(ClassLoader *loader, u1 *bytecode, size_t len)
     }
 
     // parse interfaces
-    c->interfaces_count = bcr_readu2(&reader);
+    c->interfaces_count = readu2(&reader);
     if (c->interfaces_count == 0) {
         c->interfaces = NULL;
     } else {
         c->interfaces = vm_malloc(sizeof(Class *) * c->interfaces_count);
 
         for (int i = 0; i < c->interfaces_count; i++) {
-//            const char *interface_name = CP_CLASS_NAME(cp, bcr_readu2(&reader));//rtcp_get_class_name(c->rtcp, bcr_readu2(&reader));
+//            const char *interface_name = CP_CLASS_NAME(cp, readu2(&reader));//rtcp_get_class_name(c->rtcp, readu2(&reader));
 //            if (interface_name[0] == 0) { // empty
 //                printvm("error\n"); // todo
 //            } else {
 //                c->interfaces[i] = classloader_load_class(loader, interface_name);
 //            }
-            c->interfaces[i] = resolve_class(c, bcr_readu2(&reader));
+            c->interfaces[i] = resolve_class(c, readu2(&reader));
         }
     }
 
     // parse fields
-    c->fields_count = bcr_readu2(&reader);
+    c->fields_count = readu2(&reader);
     c->public_fields_count = 0;
     if (c->fields_count == 0) {
         c->fields = NULL;
@@ -441,7 +441,7 @@ Class *class_create(ClassLoader *loader, u1 *bytecode, size_t len)
     calc_instance_field_id(c);
 
     // parse methods
-    c->methods_count = bcr_readu2(&reader);
+    c->methods_count = readu2(&reader);
     c->public_methods_count = 0;
     if (c->methods_count == 0) {
         c->methods = NULL;
