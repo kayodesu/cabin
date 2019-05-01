@@ -14,7 +14,7 @@
 #include "../rtda/heap/clsobj.h"
 
 struct classloader {
-    struct hashmap *loaded_class_pool; // 保存 class *
+    HashMap loaded_class_pool; // 保存 class *
 //    struct hashmap *classobj_pool; // java.lang.Class 类的对象池，保存 object *
 
     // 缓存一下常见类
@@ -212,7 +212,8 @@ ClassLoader* classloader_create(bool is_bootstrap_loader)
         g_bootstrap_loader = loader;
     }
 
-    loader->loaded_class_pool = hashmap_create_str_key(false);
+    hashmap_init_str_key(&loader->loaded_class_pool);
+//    loader->loaded_class_pool = hashmap_create_str_key();
 //    loader->classobj_pool = hashmap_create_str_key();
 
     /*
@@ -237,9 +238,9 @@ ClassLoader* classloader_create(bool is_bootstrap_loader)
 //    }
 
     // 给已经加载的每一个类关联类对象。
-    int size = hashmap_size(loader->loaded_class_pool);
+    int size = hashmap_size(&loader->loaded_class_pool);
     void *values[size];
-    hashmap_values(loader->loaded_class_pool, values);
+    hashmap_values(&loader->loaded_class_pool, values);
     for (int i = 0; i < size; i++) {
         Class *c = values[i];
         c->clsobj = clsobj_create(c);
@@ -256,7 +257,7 @@ void classloader_put_to_pool(ClassLoader *loader, const char *class_name, Class 
     assert(class_name != NULL);
     assert(strlen(class_name) > 0);
     assert(c != NULL);
-    hashmap_put(loader->loaded_class_pool, class_name, c);
+    hashmap_put(&loader->loaded_class_pool, class_name, c);
 }
 
 static Class* loading(ClassLoader *loader, const char *class_name)
@@ -356,7 +357,7 @@ Class* load_class(ClassLoader *loader, const char *class_name)
     assert(loader != NULL);
     assert(class_name != NULL);
 
-    Class *c = hashmap_find(loader->loaded_class_pool, class_name);
+    Class *c = hashmap_find(&loader->loaded_class_pool, class_name);
     if (c != NULL) {
         assert(strcmp(c->class_name, class_name) == 0);
         return c;
@@ -379,7 +380,7 @@ Class* load_class(ClassLoader *loader, const char *class_name)
         c->clsobj = clsobj_create(c);
     }
 
-    hashmap_put(loader->loaded_class_pool, c->class_name, c);
+    hashmap_put(&loader->loaded_class_pool, c->class_name, c);
     return c;
 }
 
@@ -387,9 +388,9 @@ void classloader_destroy(ClassLoader *loader)
 {
     assert(loader != NULL);
 
-    if (loader->loaded_class_pool != NULL) {
-        hashmap_destroy(loader->loaded_class_pool);
-    }
+//    if (loader->loaded_class_pool != NULL) {
+//        hashmap_destroy(loader->loaded_class_pool);
+//    }
 //    if (loader->classobj_pool != NULL) {
 //        hashmap_destroy(loader->classobj_pool);
 //    }

@@ -51,7 +51,7 @@ Object* strobj_create(const char *str)
 
     // todo 要不要调用<init>方法。
     // 给 java/lang/String 类的 value 变量赋值
-    Field *field = class_lookup_instance_field(o->clazz, SYMBOL(value), SYMBOL(array_C));
+    Field *field = class_lookup_instance_field(o->clazz, S(value), S(array_C));
     set_instance_field_value(o, field, (const slot_t *) &jchars);
     return o;
 }
@@ -60,7 +60,7 @@ const char* strobj_value(Object *o)
 {
     assert(o != NULL);
     if (o->u.str == NULL) {
-        Object *char_arr = RSLOT(get_instance_field_value_by_nt(o, SYMBOL(value), SYMBOL(array_C)));
+        Object *char_arr = RSLOT(get_instance_field_value_by_nt(o, S(value), S(array_C)));
         o->u.str = unicode_to_utf8(arrobj_data(char_arr), arrobj_len(char_arr));
     }
     return o->u.str;

@@ -48,8 +48,8 @@ struct method {
      */
     ExceptionTable *exception_tables;
 
-    u4 line_number_table_count;
-    struct line_number_table *line_number_tables;
+    u2 line_number_tables_count;
+    LineNumberTable *line_number_tables;
 
     const u1 *code;
     size_t code_length;

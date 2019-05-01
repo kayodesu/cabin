@@ -39,7 +39,7 @@ struct object {
     slot_t data[];
 };
 
-Object* object_create(Class *c);
+Object *object_create(Class *c);
 
 static inline bool object_is_array(const Object *o)
 {
@@ -47,24 +47,24 @@ static inline bool object_is_array(const Object *o)
     return class_is_array(o->clazz);
 }
 
-Object* object_clone(const Object *src);
+Object *object_clone(const Object *src);
 
 void set_instance_field_value(Object *o, Field *f, const slot_t *value);
 
-const slot_t* get_instance_field_value(const Object *o, Field *f);
+const slot_t *get_instance_field_value(const Object *o, Field *f);
 
-const slot_t* get_instance_field_value_by_id(const Object *o, int id);
-const slot_t* get_instance_field_value_by_nt(const Object *o, const char *name, const char *descriptor);
+const slot_t *get_instance_field_value_by_id(const Object *o, int id);
+const slot_t *get_instance_field_value_by_nt(const Object *o, const char *name, const char *descriptor);
 
 /*
  * todo 说明
  */
-const slot_t* priobj_unbox(const Object *po);
+const slot_t *priobj_unbox(const Object *po);
 
 void object_destroy(Object *o);
 
 bool object_is_instance_of(const Object *o, const Class *c);
 
-const char* object_to_string(const Object *o);
+const char *object_to_string(const Object *o);
 
 #endif //JVM_JOBJECT_H

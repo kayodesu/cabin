@@ -1080,7 +1080,7 @@ static slot_t * exec()
                 // 如果是final字段，则只能在构造函数中初始化，否则抛出java.lang.IllegalAccessError。
                 if (IS_FINAL(f->access_flags)) {
                     // todo
-                    if (frame->method->clazz != f->clazz || !utf8_equals(frame->method->name, SYMBOL(object_init))) {
+                    if (frame->method->clazz != f->clazz || !utf8_equals(frame->method->name, S(object_init))) {
                         jvm_abort("java.lang.IllegalAccessError\n"); // todo
                     }
                 }
@@ -1143,7 +1143,7 @@ static slot_t * exec()
                 if (IS_SUPER(m->clazz->access_flags)
                     && !IS_PRIVATE(m->access_flags)
                     && class_is_subclass_of(curr_class, m->clazz) // todo
-                    && !utf8_equals(m->name, SYMBOL(object_init))) {
+                    && !utf8_equals(m->name, S(object_init))) {
                     m = class_lookup_method(curr_class->super_class, m->name, m->descriptor);
                 }
 

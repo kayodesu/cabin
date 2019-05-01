@@ -11,6 +11,6 @@
 /*
  * @entity_class: todo 说明
  */
-Object* clsobj_create(Class *entity_class);
+Object *clsobj_create(Class *entity_class);
 
 #endif //JVM_CLSOBJ_H

@@ -47,10 +47,10 @@ void field_init(Field *field, Class *c, BytecodeReader *reader);
 
 bool field_is_accessible_to(const Field *field, const Class *visitor);
 
-Object* field_get_type(Field *field);
+Object *field_get_type(Field *field);
 
 void field_release(Field *field);
 
-char* field_to_string(const Field *field);
+char *field_to_string(const Field *field);
 
 #endif //JVM_JFIELD_H

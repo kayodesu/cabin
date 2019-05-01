@@ -163,7 +163,7 @@ _Noreturn void vm_unknown_error(const char *msg);
         } while (false)
 
 
-static inline void* vm_malloc(size_t size)
+static inline void *vm_malloc(size_t size)
 {
     void *p = malloc(size);
     if (p == NULL)
@@ -171,7 +171,7 @@ static inline void* vm_malloc(size_t size)
     return p;
 }
 
-static inline void* vm_calloc(size_t n, size_t size)
+static inline void *vm_calloc(size_t n, size_t size)
 {
     void *p = calloc(n, size);
     if (p == NULL)

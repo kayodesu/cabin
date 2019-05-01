@@ -7,14 +7,14 @@
 #include "../heap/arrobj.h"
 #include "../heap/clsobj.h"
 
-char* type_to_descriptor(const Object *type, char *descriptor, int *len)
+char *type_to_descriptor(const Object *type, char *descriptor, int *len)
 {
     assert(type != NULL);
     assert(descriptor != NULL);
     assert(len != NULL);
 
     Class *c = type->u.entity_class;
-    char d = pt_get_descriptor_by_class_name(c->class_name);
+    char d = get_primitive_descriptor_by_class_name(c->class_name);
     if (d != 0) { // primitive type
         descriptor[0] = d;
         *len = 1;
@@ -53,7 +53,7 @@ Object *descriptor_to_type(ClassLoader *loader, const char *descriptor)
     return load_class(loader, descriptor_to_class_name(descriptor, buf))->clsobj;
 }
 
-const char* types_to_descriptor(const Object *types)
+const char *types_to_descriptor(const Object *types)
 {
     assert(types != NULL);
     char *descriptor = vm_malloc(sizeof(char)*(DESCRIPTOR_MAX_LEN + 1));
@@ -75,7 +75,7 @@ const char* types_to_descriptor(const Object *types)
     }
 }
 
-const char* descriptor_to_class_name(const char *descriptor, char *buf)
+const char *descriptor_to_class_name(const char *descriptor, char *buf)
 {
     assert(descriptor != NULL);
     if (*descriptor == '[') { // array
@@ -85,11 +85,11 @@ const char* descriptor_to_class_name(const char *descriptor, char *buf)
         buf[strlen(buf) - 1] = 0; // set last ';' is 0 to end string
         return buf;
     } else { // primitive
-        return pt_get_class_name_by_descriptor(*descriptor);
+        return get_primitive_class_name_by_descriptor(*descriptor);
     }
 }
 
-Object* method_descriptor_to_parameter_types(ClassLoader *loader, const char *method_descriptor)
+Object *method_descriptor_to_parameter_types(ClassLoader *loader, const char *method_descriptor)
 {
     assert(loader != NULL);
     assert(method_descriptor != NULL);
@@ -139,7 +139,7 @@ Object* method_descriptor_to_parameter_types(ClassLoader *loader, const char *me
             *t = k; // recover
             b = t;
         } else if (is_primitive_descriptor(*b)) {
-            const char *class_name = pt_get_class_name_by_descriptor(*b);
+            const char *class_name = get_primitive_class_name_by_descriptor(*b);
             buf[parameter_types_count++] = load_class(loader, class_name)->clsobj;
         } else {
             VM_UNKNOWN_ERROR("descriptor error %s", descriptor);
@@ -156,7 +156,7 @@ Object* method_descriptor_to_parameter_types(ClassLoader *loader, const char *me
     return parameter_types;
 }
 
-Object* method_descriptor_to_return_type(ClassLoader *loader, const char *method_descriptor)
+Object *method_descriptor_to_return_type(ClassLoader *loader, const char *method_descriptor)
 {
     assert(loader != NULL);
     assert(method_descriptor != NULL);

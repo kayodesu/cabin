@@ -47,7 +47,7 @@ static void fillInStackTrace(Frame *frame)
 
     for (Class *c = this->clazz; c != NULL; c = c->super_class) {
         f = f->prev; // jump 执行异常类的构造函数的frame
-        if (utf8_equals(c->class_name, SYMBOL(java_lang_Throwable))) {
+        if (utf8_equals(c->class_name, S(java_lang_Throwable))) {
             break; // 可以了，遍历到 Throwable 就行了，因为现在在执行 Throwable 的 fillInStackTrace 方法。
         }
     }

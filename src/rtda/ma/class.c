@@ -108,13 +108,13 @@ static void parse_attribute(Class *c, BytecodeReader *reader)
         const char *attr_name = CP_UTF8(cp, readu2(reader));
         u4 attr_len = bcr_readu4(reader);
 
-        if (SYMBOL(Signature) == attr_name) {
+        if (S(Signature) == attr_name) {
             c->signature = CP_UTF8(cp, readu2(reader));
-        } else if (SYMBOL(Synthetic) == attr_name) {
+        } else if (S(Synthetic) == attr_name) {
             set_synthetic(&c->access_flags);
-        } else if (SYMBOL(Deprecated) == attr_name) {
+        } else if (S(Deprecated) == attr_name) {
             c->deprecated = true;
-        } else if (SYMBOL(SourceFile) == attr_name) {
+        } else if (S(SourceFile) == attr_name) {
             u2 source_file_index = readu2(reader);
             if (source_file_index >= 0) {
                 c->source_file_name = CP_UTF8(cp, source_file_index);
@@ -125,7 +125,7 @@ static void parse_attribute(Class *c, BytecodeReader *reader)
                  */
                 c->source_file_name = "Unknown source file";
             }
-        } else if (SYMBOL(EnclosingMethod) == attr_name) {
+        } else if (S(EnclosingMethod) == attr_name) {
             u2 enclosing_class_index = readu2(reader);
             u2 enclosing_method_index = readu2(reader);
 
@@ -139,7 +139,7 @@ static void parse_attribute(Class *c, BytecodeReader *reader)
                     c->enclosing_info[2] = strobj_create(CP_NAME_TYPE_TYPE(cp, enclosing_method_index));//(nt->descriptor);
                 }
             }
-        } else if (SYMBOL(BootstrapMethods) == attr_name) {
+        } else if (S(BootstrapMethods) == attr_name) {
             u2 num = readu2(reader);
             struct bootstrap_method methods[num];
 
@@ -153,7 +153,7 @@ static void parse_attribute(Class *c, BytecodeReader *reader)
             }
 
 //            rtcp_build_invoke_dynamic_constant(c->rtcp, methods);  todo
-        } else if (SYMBOL(InnerClasses) == attr_name) { // ignore
+        } else if (S(InnerClasses) == attr_name) { // ignore
 //            u2 num = readu2(reader);
 //            struct inner_class classes[num];
 //            for (u2 k = 0; k < num; k++) {
@@ -163,18 +163,18 @@ static void parse_attribute(Class *c, BytecodeReader *reader)
 //                classes[k].inner_class_access_flags = readu2(reader);
 //            }
             bcr_skip(reader, attr_len);
-        } else if (SYMBOL(SourceDebugExtension) == attr_name) { // ignore
+        } else if (S(SourceDebugExtension) == attr_name) { // ignore
 //            u1 source_debug_extension[attr_len];
 //            bcr_read_bytes(reader, source_debug_extension, attr_len);
             bcr_skip(reader, attr_len);
-        } else if (SYMBOL(RuntimeVisibleAnnotations) == attr_name) { // ignore
+        } else if (S(RuntimeVisibleAnnotations) == attr_name) { // ignore
 //            u2 runtime_annotations_num = readu2(reader);
 //            struct annotation annotations[runtime_annotations_num];
 //            for (u2 k = 0; k < runtime_annotations_num; k++) {
 //                read_annotation(reader, annotations + i);
 //            }
             bcr_skip(reader, attr_len);
-        } else if (SYMBOL(RuntimeInvisibleAnnotations) == attr_name) { // ignore
+        } else if (S(RuntimeInvisibleAnnotations) == attr_name) { // ignore
 //            u2 runtime_annotations_num = readu2(reader);
 //            struct annotation annotations[runtime_annotations_num];
 //            for (u2 k = 0; k < runtime_annotations_num; k++) {
@@ -203,7 +203,7 @@ static void create_vtable(Class *c)
                 || IS_STATIC(m->access_flags)
                 || IS_FINAL(m->access_flags)
                 || IS_ABSTRACT(m->access_flags)
-                || utf8_equals(m->name, SYMBOL(class_init))) {  //  todo strcmp(m->name, "<init>") == 0
+                || utf8_equals(m->name, S(class_init))) {  //  todo strcmp(m->name, "<init>") == 0
                 continue;
             }
 
@@ -229,7 +229,7 @@ static void create_vtable(Class *c)
             || IS_STATIC(m->access_flags)
             || IS_FINAL(m->access_flags)
             || IS_ABSTRACT(m->access_flags)
-            || utf8_equals(m->name, SYMBOL(class_init))) {  //  todo strcmp(m->name, "<init>") == 0
+            || utf8_equals(m->name, S(class_init))) {  //  todo strcmp(m->name, "<init>") == 0
 //            printf("1111111     %s~%s~%s\n", m->clazz->class_name, m->name, m->descriptor);//////////////////////////
             continue;
         }
@@ -465,7 +465,7 @@ Class *class_create(ClassLoader *loader, u1 *bytecode, size_t len)
     return c;
 }
 
-static void jclass_clear(Class *c)
+static void class_clear(Class *c)
 {
     assert(c != NULL);
 
@@ -490,7 +490,7 @@ static void jclass_clear(Class *c)
     c->enclosing_info[0] = c->enclosing_info[1] = c->enclosing_info[2] = NULL;
 }
 
-Class* class_create_primitive_class(ClassLoader *loader, const char *class_name)
+Class *class_create_primitive_class(ClassLoader *loader, const char *class_name)
 {
     assert(loader != NULL);
     assert(class_name != NULL);
@@ -498,7 +498,7 @@ Class* class_create_primitive_class(ClassLoader *loader, const char *class_name)
     // todo class_name 是不是基本类型
 
     Class *c = vm_malloc(sizeof(Class));
-    jclass_clear(c);
+    class_clear(c);
 
     c->access_flags = ACC_PUBLIC;
     c->pkg_name = ""; // todo 包名
@@ -511,26 +511,26 @@ Class* class_create_primitive_class(ClassLoader *loader, const char *class_name)
     return c;
 }
 
-Class* class_create_arr_class(ClassLoader *loader, const char *class_name)
+Class *class_create_arr_class(ClassLoader *loader, const char *class_name)
 {
     assert(loader != NULL);
     assert(class_name != NULL);
 
     // todo class_name 是不是 array
     Class *c = vm_malloc(sizeof(Class));
-    jclass_clear(c);
+    class_clear(c);
 
     c->access_flags = ACC_PUBLIC;
     c->pkg_name = ""; // todo 包名
     c->class_name = vm_strdup(class_name);
     c->loader = loader;
     c->inited = true; // 数组类不需要初始化
-    c->super_class = load_sys_class(SYMBOL(java_lang_Object));
+    c->super_class = load_sys_class(S(java_lang_Object));
 
     c->interfaces_count = 2;
     c->interfaces = malloc(sizeof(Class *) * 2);
-    c->interfaces[0] = load_sys_class(SYMBOL(java_lang_Cloneable));
-    c->interfaces[1] = load_sys_class(SYMBOL(java_io_Serializable));
+    c->interfaces[0] = load_sys_class(S(java_lang_Cloneable));
+    c->interfaces[1] = load_sys_class(S(java_io_Serializable));
 
     c->vtable_len = 0;
     c->vtable = NULL;
@@ -574,7 +574,7 @@ void class_clinit(Class *c)
     // 可能调用putstatic等函数也会触发<clinit>的调用造成死循环。
     c->inited = true;
 
-    Method *method = class_get_declared_method(c, SYMBOL(class_init), SYMBOL(___V));
+    Method *method = class_get_declared_method(c, S(class_init), S(___V));
     if (method != NULL) { // 有的类没有<clinit>方法
         if (!IS_STATIC(method->access_flags)) {
             // todo error
@@ -698,12 +698,12 @@ Method** class_get_declared_methods(Class *c, const char *name, bool public_only
 
 Method* class_get_constructor(Class *c, const char *descriptor)
 {
-    return class_get_declared_method(c, SYMBOL(object_init), descriptor);
+    return class_get_declared_method(c, S(object_init), descriptor);
 }
 
 Method** class_get_constructors(Class *c, bool public_only, int *count)
 {
-    Method **constructors = class_get_declared_methods(c, SYMBOL(object_init), public_only, count);
+    Method **constructors = class_get_declared_methods(c, S(object_init), public_only, count);
     if (*count < 1) {
         jvm_abort("至少有一个constructor\n");
     }
@@ -817,7 +817,7 @@ char* get_arr_class_name(const char *class_name)
     }
 
     // 基本类型
-    const char *arr_cls_name = pt_get_array_class_name_by_class_name(class_name);
+    const char *arr_cls_name = get_primitive_array_class_name_by_class_name(class_name);
     if (arr_cls_name != NULL) {
         strcpy(array_class_name, arr_cls_name);
         return array_class_name;

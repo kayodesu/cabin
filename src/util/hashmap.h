@@ -5,25 +5,49 @@
 #ifndef JVM_HASHMAP_H
 #define JVM_HASHMAP_H
 
+#include <stdio.h>
 #include <stdbool.h>
 
 /*
  * hash map.
- * 可以存储 NULL
+ * key 不可以为 NULL，value可以为NULL
  */
+typedef struct hashmap {
+    struct hashmap_item **table;
 
-typedef struct hashmap HashMap;
+    // length of the table
+    size_t length;
+
+    // compute hash of key
+    int (* hash)(const void *);
+
+    // cmp key.
+    int (* cmp)(const void *, const void *);
+
+    // The number of key-value mappings contained in this hashtable
+    size_t size;
+
+    // 是否允许 add existing key
+    bool add_existing;
+} HashMap;
+
+void hashmap_init(HashMap *map, int (*hash)(const void *), int (* cmp)(const void *, const void *));
+
+/*
+ * 初始化以key为字符串（char*） 的hashmap
+ */
+void hashmap_init_str_key(HashMap *map);
 
 /*
  * @hash hash function, 不能为 NULL
  * @cmp value cmp function. 不能为 NULL
  */
-HashMap* hashmap_create(int (*hash)(const void *), int (* cmp)(const void *, const void *), bool add_existing);
-
-/*
- * 创建key为字符串（char*） 的hashmap
- */
-HashMap* hashmap_create_str_key(bool add_existing);
+//HashMap* hashmap_create(int (* hash)(const void *), int (* cmp)(const void *, const void *));
+//
+///*
+// * 创建key为字符串（char*） 的hashmap
+// */
+//HashMap* hashmap_create_str_key();
 
 /*
  * add a mapping to hashtable
@@ -31,7 +55,7 @@ HashMap* hashmap_create_str_key(bool add_existing);
  */
 void hashmap_put(HashMap *map, const void *key, void *value);
 
-bool hashmap_contains_key(const HashMap *map, const void *key);
+const void *hashmap_contains_key(const HashMap *map, const void *key);
 
 /*
  * 返回key所对应的value。
@@ -40,7 +64,7 @@ bool hashmap_contains_key(const HashMap *map, const void *key);
  * 2. value的值就是NULL。
  * 可以使用 hashmap_contains_key 函数区分则两种情况
  */
-void* hashmap_find(const HashMap *map, const void *key);
+void *hashmap_find(const HashMap *map, const void *key);
 
 int hashmap_size(const HashMap *map);
 

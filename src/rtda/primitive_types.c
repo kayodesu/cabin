@@ -59,7 +59,7 @@ bool is_primitive_descriptor(char descriptor)
     return false;
 }
 
-const char* pt_get_array_class_name_by_class_name(const char *class_name)
+const char *get_primitive_array_class_name_by_class_name(const char *class_name)
 {
     assert(class_name != NULL);
 
@@ -71,7 +71,7 @@ const char* pt_get_array_class_name_by_class_name(const char *class_name)
     return NULL;
 }
 
-const char* pt_get_class_name_by_descriptor(char descriptor)
+const char *get_primitive_class_name_by_descriptor(char descriptor)
 {
     for (int i = 0; i < PRIMITIVE_TYPE_COUNT; i++) {
         if (primitive_types[i].descriptor == descriptor) {
@@ -81,7 +81,7 @@ const char* pt_get_class_name_by_descriptor(char descriptor)
     return NULL;
 }
 
-char pt_get_descriptor_by_class_name(const char *class_name)
+char get_primitive_descriptor_by_class_name(const char *class_name)
 {
     assert(class_name != NULL);
 

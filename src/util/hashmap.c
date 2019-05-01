@@ -7,11 +7,11 @@
 #include "../jvm.h"
 #include "hashmap.h"
 
-typedef struct item {
+typedef struct hashmap_item {
     int hash; // hash value of key
     const void *key;
     void *value;
-    struct item *next;
+    struct hashmap_item *next;
 } Item;
 
 static inline Item* item_create(int hash, const void *key, void *value, Item *next)
@@ -24,56 +24,53 @@ static inline Item* item_create(int hash, const void *key, void *value, Item *ne
     return item;
 }
 
-struct hashmap {
-    Item **table;
-
-    // length of the table
-    size_t length;
-
-    // compute hash of key
-    int (*hash)(const void *);
-
-    // cmp key.
-    int (* cmp)(const void *, const void *);
-
-    // The number of key-value mappings contained in this hashtable
-    size_t size;
-
-    // 是否允许 add existing key
-    bool add_existing;
-};
-
 // The default initial capacity - MUST be a power of two.
-#define DEFAULT_INITIAL_CAPACITY (1 << 4) // aka 16
+#define DEFAULT_INITIAL_CAPACITY (1 << 6) // aka 64
 
 // The load factor used when none specified in constructor.
 //#define DEFAULT_LOAD_FACTOR 0.75f
 
 static int hash_string(const char *str);
 
-HashMap* hashmap_create(int (*hash)(const void *), int (* cmp)(const void *, const void *), bool add_existing)
+void hashmap_init(HashMap *map, int (* hash)(const void *), int (* cmp)(const void *, const void *))
 {
-    assert(hash != NULL);
-    assert(cmp != NULL);
-
-    HashMap *map = vm_malloc(sizeof(HashMap));
+    assert(map != NULL);
     map->length = DEFAULT_INITIAL_CAPACITY;
     map->table = vm_calloc(sizeof(*(map->table)), map->length);
     map->size = 0;
     map->hash = hash;
     map->cmp = cmp;
-    map->add_existing = add_existing;
-    return map;
 }
 
-struct hashmap* hashmap_create_str_key(bool add_existing)
+void hashmap_init_str_key(HashMap *map)
 {
-    return hashmap_create((int (*)(const void *)) hash_string,
-                          (int (*)(const void *, const void *)) strcmp,
-                          add_existing);
+    assert(map != NULL);
+    hashmap_init(map, (int (*)(const void *)) hash_string, (int (*)(const void *, const void *)) strcmp);
 }
 
-static const Item* get_item(const HashMap*map, const void *key)
+//HashMap* hashmap_create(int (*hash)(const void *), int (* cmp)(const void *, const void *))
+//{
+//    assert(hash != NULL);
+//    assert(cmp != NULL);
+//
+//    HashMap *map = vm_malloc(sizeof(HashMap));
+////    map->length = DEFAULT_INITIAL_CAPACITY;
+////    map->table = vm_calloc(sizeof(*(map->table)), map->length);
+////    map->size = 0;
+////    map->hash = hash;
+////    map->cmp = cmp;
+////    map->add_existing = add_existing;
+//    hashmap_init(map, hash, cmp);
+//    return map;
+//}
+//
+//struct hashmap* hashmap_create_str_key()
+//{
+//    return hashmap_create((int (*)(const void *)) hash_string,
+//                          (int (*)(const void *, const void *)) strcmp);
+//}
+
+static const Item *get_item(const HashMap*map, const void *key)
 {
     assert(map != NULL);
 
@@ -101,10 +98,14 @@ int hashmap_size(const HashMap *map)
     return map->size;
 }
 
-bool hashmap_contains_key(const HashMap *map, const void *key)
+const void *hashmap_contains_key(const HashMap *map, const void *key)
 {
     assert(map != NULL);
-    return get_item(map, key) != NULL;
+    const Item *item = get_item(map, key);
+    if (item != NULL)
+        return item->key;
+    return NULL;
+//    return get_item(map, key) != NULL;
 }
 
 void hashmap_put(HashMap *map, const void *key, void *value)

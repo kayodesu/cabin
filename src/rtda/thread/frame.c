@@ -8,11 +8,11 @@
 #include "../ma/access.h"
 #include "thread.h"
 
-char* frame_to_string(const Frame *f)
+char *frame_to_string(const Frame *f)
 {
     assert(f != NULL);
     int len = strlen(f->method->clazz->class_name) + strlen(f->method->name) + strlen(f->method->descriptor) + 16;
-    char *buf = malloc(sizeof(char) * len);
+    char *buf = vm_malloc(sizeof(char) * len);
     strcpy(buf, IS_NATIVE(f->method->access_flags) ? "(native)" : "");
     strcat(buf, f->method->clazz->class_name);
     strcat(buf, "~");

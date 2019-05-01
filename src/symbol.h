@@ -10,6 +10,8 @@ extern const char *symbol_values[];
 #define SYMBOL_NAME_ENUM(name) symbol_##name
 #define SYMBOL(name) symbol_values[SYMBOL_NAME_ENUM(name)]
 
+#define S SYMBOL
+
 #define SYMBOL_PAIRS(action) \
     /* Method and field names, etc. */\
     action(f, "f"), \

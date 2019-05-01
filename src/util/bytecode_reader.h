@@ -13,7 +13,7 @@
 #include "../jvm.h"
 #include "convert.h"
 
-typedef struct bytecode_reader {
+typedef struct {
     const u1 *bytecode;
     size_t len;  // bytecode len
     size_t pc;   // program count

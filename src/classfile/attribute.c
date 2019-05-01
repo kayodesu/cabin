@@ -8,6 +8,7 @@
 #include "constant.h"
 #include "../util/encoding.h"
 #include "attribute.h"
+#include "../rtda/ma/class.h"
 
 void read_annotation(BytecodeReader *reader, struct annotation *a)
 {
@@ -61,4 +62,49 @@ void read_element_value(BytecodeReader *reader, struct element_value *ev)
         default:
             VM_UNKNOWN_ERROR("unknown tag: %d", ev->tag);
     }
+}
+
+//struct code_attribute_exception_table *newExceptionTables(BytecodeReader *reader, Method *method)
+//{
+//    assert(reader != NULL);
+//    assert(method != NULL);
+//
+//    method->exception_tables_count = readu2(reader);
+//    if (method->exception_tables_count == 0)
+//        return NULL;
+//
+//    method->exception_tables = vm_malloc(sizeof(struct code_attribute_exception_table) * method->exception_tables_count);
+//    for (int i = 0; i < method->exception_tables_count; i++) {
+//        struct code_attribute_exception_table *t = method->exception_tables + i;
+//        t->start_pc = readu2(reader);
+//        t->end_pc = readu2(reader);
+//        t->handler_pc = readu2(reader);
+//        u2 catch_type = readu2(reader);
+//        if (catch_type == 0) {
+//            // 异常处理项的 catch_type 有可能是 0。
+//            // 0 是无效的常量池索引，但是在这里 0 并非表示 catch-none，而是表示 catch-all。
+//            t->catch_type = NULL;
+//        } else {
+//            if (CP_TYPE(&method->clazz->constant_pool, catch_type) == CONSTANT_ResolvedClass)
+//                t->catch_type = (Class *) CP_INFO(&method->clazz->constant_pool, catch_type);
+//            else {
+//                const char *class_name = CP_CLASS_NAME(&method->clazz->constant_pool, catch_type);
+//                t->catch_type = load_class(method->clazz->loader, class_name);
+//            }
+//        }
+//    }
+//}
+
+LineNumberTable *newLineNumberTables(BytecodeReader *reader, u2 *line_number_tables_count)
+{
+    assert(reader != NULL);
+    assert(line_number_tables_count != NULL);
+
+    *line_number_tables_count = readu2(reader);
+    LineNumberTable *line_number_tables = vm_malloc(sizeof(LineNumberTable) * *line_number_tables_count);
+    for (u2 i = 0; i < *line_number_tables_count; i++) {
+        line_number_tables[i].start_pc = readu2(reader);
+        line_number_tables[i].line_number = readu2(reader);
+    }
+    return line_number_tables;
 }

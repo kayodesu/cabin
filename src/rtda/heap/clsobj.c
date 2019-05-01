@@ -48,7 +48,7 @@
         true
  */
 
-Object* clsobj_create(Class *entity_class)
+Object *clsobj_create(Class *entity_class)
 {
     assert(entity_class != NULL);
 

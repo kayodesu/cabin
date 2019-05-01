@@ -19,7 +19,7 @@ void hm_init(HeapMgr *hm)
     hm->free_list.next = NULL;
 }
 
-void* hm_get(HeapMgr *hm, size_t len)
+void *hm_get(HeapMgr *hm, size_t len)
 {
     assert(hm != NULL);
 

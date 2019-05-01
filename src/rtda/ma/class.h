@@ -144,9 +144,9 @@ Class *class_create(ClassLoader *loader, u1 *bytecode, size_t len);
 /*
  * 创建基本类型（int, float etc.）的 class.
  */
-Class* class_create_primitive_class(ClassLoader *loader, const char *class_name);
+Class *class_create_primitive_class(ClassLoader *loader, const char *class_name);
 
-Class* class_create_arr_class(ClassLoader *loader, const char *class_name);
+Class *class_create_arr_class(ClassLoader *loader, const char *class_name);
 
 void classloader_put_to_pool(ClassLoader *loader, const char *class_name, Class *c);
 

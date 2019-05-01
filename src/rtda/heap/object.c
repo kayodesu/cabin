@@ -9,7 +9,7 @@
 #include "mgr/heap_mgr.h"
 #include "../../symbol.h"
 
-Object* object_create(Class *c)
+Object *object_create(Class *c)
 {
     assert(c != NULL);
     assert(!class_is_array(c));
@@ -21,7 +21,7 @@ Object* object_create(Class *c)
     return o;
 }
 
-Object* object_clone(const Object *src)
+Object *object_clone(const Object *src)
 {
     assert(src != NULL);
     Object *o = hm_get(&g_heap_mgr, src->size);
@@ -39,21 +39,21 @@ void set_instance_field_value(Object *o, Field *f, const slot_t *value)
     }
 }
 
-const slot_t* get_instance_field_value_by_id(const Object *o, int id)
+const slot_t *get_instance_field_value_by_id(const Object *o, int id)
 {
     assert(o != NULL);
     assert(0 <= id && id < o->clazz->instance_fields_count);
     return o->data + id;
 }
 
-const slot_t* get_instance_field_value(const Object *o, Field *f)
+const slot_t *get_instance_field_value(const Object *o, Field *f)
 {
     assert(o != NULL);
     assert(f != NULL);
     return o->data + f->id;
 }
 
-const slot_t* get_instance_field_value_by_nt(const Object *o, const char *name, const char *descriptor)
+const slot_t *get_instance_field_value_by_nt(const Object *o, const char *name, const char *descriptor)
 {
     assert(o != NULL && name != NULL && descriptor != NULL);
 
@@ -72,13 +72,13 @@ bool object_is_instance_of(const Object *o, const Class *c)
     return class_is_subclass_of(o->clazz, c);
 }
 
-const slot_t* priobj_unbox(const Object *po)
+const slot_t *priobj_unbox(const Object *po)
 {
     assert(po != NULL);
     assert(is_primitive(po->clazz));
 
     // value 的描述符就是基本类型的类名。比如，private final boolean value;
-    return get_instance_field_value_by_nt(po, SYMBOL(value), po->clazz->class_name);
+    return get_instance_field_value_by_nt(po, S(value), po->clazz->class_name);
 }
 
 void object_destroy(Object *o)
@@ -90,7 +90,7 @@ void object_destroy(Object *o)
     // todo
 }
 
-const char* object_to_string(const Object *o)
+const char *object_to_string(const Object *o)
 {
 #define MAX_LEN 1023 // big enough? todo
     char *result = vm_malloc(sizeof(char)*(MAX_LEN + 1));

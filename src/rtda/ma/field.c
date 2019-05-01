@@ -36,9 +36,9 @@ void field_init(Field *field, Class *c, BytecodeReader *reader)
         const char *attr_name = CP_UTF8(&(c->constant_pool), readu2(reader));//rtcp_get_str(c->rtcp, readu2(reader));
         u4 attr_len = bcr_readu4(reader);
 
-        if (SYMBOL(Deprecated) == attr_name) {
+        if (S(Deprecated) == attr_name) {
             field->deprecated = true;
-        } else if (SYMBOL(ConstantValue) == attr_name) {
+        } else if (S(ConstantValue) == attr_name) {
             /*
              * ConstantValue属性表示一个常量字段的值。
              * 在一个field_info结构的属性表中最多只能有一个ConstantValue属性。
@@ -50,11 +50,11 @@ void field_init(Field *field, Class *c, BytecodeReader *reader)
                 field->constant_value_index = index;
 //                field->v.static_value.u = resolve_single_constant(c, index);  // todo
             }
-        } else if (SYMBOL(Synthetic) == attr_name) {
+        } else if (S(Synthetic) == attr_name) {
             set_synthetic(&field->access_flags);
-        } else if (SYMBOL(Signature) == attr_name) {
+        } else if (S(Signature) == attr_name) {
             c->signature = CP_UTF8(&(c->constant_pool), readu2(reader));//rtcp_get_str(c->rtcp, readu2(reader));
-        } else if (SYMBOL(RuntimeVisibleAnnotations) == attr_name) { // ignore
+        } else if (S(RuntimeVisibleAnnotations) == attr_name) { // ignore
 //            u2 num = field->runtime_visible_annotations_num = readu2(reader);
 //            field->runtime_visible_annotations = malloc(sizeof(struct annotation) * num);
 //            CHECK_MALLOC_RESULT(field->runtime_visible_annotations);
@@ -62,7 +62,7 @@ void field_init(Field *field, Class *c, BytecodeReader *reader)
 //                read_annotation(reader, field->runtime_visible_annotations + i);
 //            }
             bcr_skip(reader, attr_len);
-        } else if (SYMBOL(RuntimeInvisibleAnnotations) == attr_name) { // ignore
+        } else if (S(RuntimeInvisibleAnnotations) == attr_name) { // ignore
 //            u2 num = field->runtime_invisible_annotations_num = readu2(reader);
 //            field->runtime_invisible_annotations = malloc(sizeof(struct annotation) * num);
 //            CHECK_MALLOC_RESULT(field->runtime_invisible_annotations);
@@ -101,7 +101,7 @@ bool field_is_accessible_to(const Field *field, const Class *visitor)
     return utf8_equals(field->clazz->pkg_name, visitor->pkg_name);
 }
 
-Object* field_get_type(Field *field)
+Object *field_get_type(Field *field)
 {
     assert(field != NULL);
 
@@ -117,7 +117,7 @@ void field_release(Field *field)
     // todo
 }
 
-char* field_to_string(const Field *field)
+char *field_to_string(const Field *field)
 {
 #define MAX_LEN 1023 // big enough
     char *result = vm_malloc(sizeof(char)*(MAX_LEN + 1));

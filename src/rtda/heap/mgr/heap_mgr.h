@@ -24,6 +24,6 @@ typedef struct heap_mgr {
 
 void hm_init(HeapMgr *hm);
 
-void* hm_get(HeapMgr *hm, size_t len);
+void *hm_get(HeapMgr *hm, size_t len);
 
 #endif //JVM_HEAP_MANAGER_H

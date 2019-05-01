@@ -59,6 +59,6 @@ static inline jlong   frame_stack_popl(Frame *f) { f->stack -= 2; return *(jlong
 static inline jdouble frame_stack_popd(Frame *f) { f->stack -= 2; return *(jdouble *)f->stack; }
 static inline jref    frame_stack_popr(Frame *f) { f->stack--; return *(jref *)f->stack; }
 
-char* frame_to_string(const Frame *f);
+char *frame_to_string(const Frame *f);
 
 #endif //JVM_STACK_FRAME_H

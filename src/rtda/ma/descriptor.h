@@ -58,21 +58,21 @@ VoidDescriptor:
  * todo 说明
  * @len，即是输入参数又是输出参数。
  */
-char* type_to_descriptor(const Object *type, char *descriptor, int *len);
+char *type_to_descriptor(const Object *type, char *descriptor, int *len);
 Object *descriptor_to_type(ClassLoader *loader, const char *descriptor);
 
 /*
  * @types is a array object of java/lang/Class
  * todo 说明
  */
-const char* types_to_descriptor(const Object *types);
+const char *types_to_descriptor(const Object *types);
 
 // [xxx -> [xxx
 // Lx/y/z; -> x/y/z
 // I -> int, ...
-const char* descriptor_to_class_name(const char *descriptor, char *buf);
+const char *descriptor_to_class_name(const char *descriptor, char *buf);
 
-Object* method_descriptor_to_parameter_types(ClassLoader *loader, const char *method_descriptor);
-Object* method_descriptor_to_return_type(ClassLoader *loader, const char *method_descriptor);
+Object *method_descriptor_to_parameter_types(ClassLoader *loader, const char *method_descriptor);
+Object *method_descriptor_to_return_type(ClassLoader *loader, const char *method_descriptor);
 
 #endif //JVM_DESCRIPTOR_H

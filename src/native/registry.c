@@ -15,13 +15,13 @@
 #define KEY_LEN(class_name, method_name, method_descriptor) \
                  (strlen(class_name) + strlen(method_name) + strlen(method_descriptor) + 3 + 1)
 
-static struct hashmap *native_methods;
+static HashMap native_methods;
 
 void registerNatives(Frame *frame) { /* do nothing */ }
 
 void register_native_method(const char *key, native_method_t method)
 {
-    hashmap_put(native_methods, key, method);
+    hashmap_put(&native_methods, key, method);
 }
 
 native_method_t find_native_method(const char *class_name, const char *method_name, const char *method_descriptor)
@@ -35,7 +35,7 @@ native_method_t find_native_method(const char *class_name, const char *method_na
     snprintf(key, key_len - 1, "%s~%s~%s", class_name, method_name, method_descriptor);
     key[key_len - 1] = 0;
 
-    native_method_t method = hashmap_find(native_methods, key);
+    native_method_t method = hashmap_find(&native_methods, key);
     if (method != NULL) {
         return method;
     }
@@ -49,7 +49,7 @@ native_method_t find_native_method(const char *class_name, const char *method_na
 
 void register_all_native_methods()
 {
-    native_methods = hashmap_create_str_key(false);
+    hashmap_init_str_key(&native_methods);
 
     DECLARE_AND_INVOKE(java_lang_Class_registerNatives);
     DECLARE_AND_INVOKE(java_lang_Float_registerNatives);

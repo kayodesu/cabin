@@ -114,7 +114,7 @@ static void parse_code_attr(Method *method, BytecodeReader *reader)
     method->code = bcr_curr_pos(reader);
     bcr_skip(reader, method->code_length);
 
-    method->line_number_table_count = 0;
+    method->line_number_tables_count = 0;
     method->line_number_tables = NULL;
 
     // parse exception tables
@@ -150,16 +150,11 @@ static void parse_code_attr(Method *method, BytecodeReader *reader)
         const char *attr_name = CP_UTF8(&method->clazz->constant_pool, readu2(reader));//rtcp_get_str(method->clazz->rtcp, readu2(reader));
         u4 attr_len = bcr_readu4(reader);
 
-        if (SYMBOL(LineNumberTable) == attr_name) {
-            method->line_number_table_count = readu2(reader);
-            method->line_number_tables = vm_malloc(sizeof(struct line_number_table) * method->line_number_table_count);
-            for (int i = 0; i < method->line_number_table_count; i++) {
-                method->line_number_tables[i].start_pc = readu2(reader);
-                method->line_number_tables[i].line_number = readu2(reader);
-            }
-        } else if (SYMBOL(StackMapTable) == attr_name) { // ignore
+        if (S(LineNumberTable) == attr_name) {
+            method->line_number_tables = newLineNumberTables(reader, &method->line_number_tables_count);
+        } else if (S(StackMapTable) == attr_name) { // ignore
             bcr_skip(reader, attr_len);
-        } else if (SYMBOL(LocalVariableTable) == attr_name) { // ignore
+        } else if (S(LocalVariableTable) == attr_name) { // ignore
 //            u2 num = readu2(reader);
 //            struct local_variable_table tables[num];
 //            for (int i = 0; i < num; i++) {
@@ -170,7 +165,7 @@ static void parse_code_attr(Method *method, BytecodeReader *reader)
 //                tables[i].index = readu2(reader);
 //            }
             bcr_skip(reader, attr_len);
-        } else if (SYMBOL(LocalVariableTypeTable) == attr_name) { // ignore
+        } else if (S(LocalVariableTypeTable) == attr_name) { // ignore
 //            u2 num = readu2(reader);
 //            struct local_variable_type_table tables[num];
 //            for (int i = 0; i < num; i++) {
@@ -199,7 +194,7 @@ void method_init(Method *method, Class *c, BytecodeReader *reader)
     u2 attr_count = readu2(reader);
 
     method->max_stack = method->max_locals = method->exception_tables_count = 0;
-    method->line_number_table_count = method->code_length = 0;
+    method->line_number_tables_count = method->code_length = 0;
     method->exception_tables = NULL;
     method->line_number_tables = NULL;
     method->code = NULL;
@@ -217,15 +212,15 @@ void method_init(Method *method, Class *c, BytecodeReader *reader)
         const char *attr_name = CP_UTF8(cp, readu2(reader));//rtcp_get_str(c->rtcp, readu2(reader));
         u4 attr_len = bcr_readu4(reader);
 
-        if (SYMBOL(Code) == attr_name) {
+        if (S(Code) == attr_name) {
             parse_code_attr(method, reader);
-        } else if (SYMBOL(Deprecated) == attr_name) {
+        } else if (S(Deprecated) == attr_name) {
             method->deprecated = true;
-        } else if (SYMBOL(Synthetic) == attr_name) {
+        } else if (S(Synthetic) == attr_name) {
             set_synthetic(&method->access_flags);
-        } else if (SYMBOL(Signature) == attr_name) {
+        } else if (S(Signature) == attr_name) {
             c->signature = CP_UTF8(cp, readu2(reader));//rtcp_get_str(c->rtcp, readu2(reader));
-        } else if (SYMBOL(MethodParameters) == attr_name) { // ignore
+        } else if (S(MethodParameters) == attr_name) { // ignore
 //            u1 num = bcr_readu1(reader); // 这里就是 u1，不是u2
 //            struct parameter parameters[num];
 //            for (u2 k = 0; k < num; k++) {
@@ -233,14 +228,14 @@ void method_init(Method *method, Class *c, BytecodeReader *reader)
 //                parameters[k].access_flags = readu2(reader);
 //            }
             bcr_skip(reader, attr_len);
-        } else if (SYMBOL(Exceptions) == attr_name) { // ignore
+        } else if (S(Exceptions) == attr_name) { // ignore
 //            method->exception_tables_count = readu2(reader);
 //            u2 exception_index_table[num];
 //            for (u2 k = 0; k < num; k++) {
 //                exception_index_table[i] = readu2(reader);
 //            }
             bcr_skip(reader, attr_len);
-        } else if (SYMBOL(RuntimeVisibleParameterAnnotations) == attr_name) { // ignore
+        } else if (S(RuntimeVisibleParameterAnnotations) == attr_name) { // ignore
 //            u2 num = method->runtime_visible_parameter_annotations_num = readu2(reader);
 //            struct parameter_annotation *as
 //                    = method->runtime_visible_parameter_annotations = malloc(sizeof(struct parameter_annotation) * num);
@@ -254,7 +249,7 @@ void method_init(Method *method, Class *c, BytecodeReader *reader)
 //                }
 //            }
             bcr_skip(reader, attr_len);
-        } else if (SYMBOL(RuntimeInvisibleParameterAnnotations) == attr_name) { // ignore
+        } else if (S(RuntimeInvisibleParameterAnnotations) == attr_name) { // ignore
 //            u2 num = method->runtime_invisible_parameter_annotations_num = readu2(reader);
 //            struct parameter_annotation *as
 //                    = method->runtime_invisible_parameter_annotations = malloc(sizeof(struct parameter_annotation) * num);
@@ -268,7 +263,7 @@ void method_init(Method *method, Class *c, BytecodeReader *reader)
 //                }
 //            }
             bcr_skip(reader, attr_len);
-        } else if (SYMBOL(RuntimeVisibleAnnotations) == attr_name) { // ignore
+        } else if (S(RuntimeVisibleAnnotations) == attr_name) { // ignore
 //            u2 num = method->runtime_visible_annotations_num = readu2(reader);
 //            method->runtime_visible_annotations = malloc(sizeof(struct annotation) * num);
 //            CHECK_MALLOC_RESULT(method->runtime_visible_annotations);
@@ -276,7 +271,7 @@ void method_init(Method *method, Class *c, BytecodeReader *reader)
 //                read_annotation(reader, method->runtime_visible_annotations + i);
 //            }
             bcr_skip(reader, attr_len);
-        } else if (SYMBOL(RuntimeInvisibleAnnotations) == attr_name) { // ignore
+        } else if (S(RuntimeInvisibleAnnotations) == attr_name) { // ignore
 //            u2 num = method->runtime_invisible_annotations_num = readu2(reader);
 //            method->runtime_invisible_annotations = malloc(sizeof(struct annotation) * num);
 //            CHECK_MALLOC_RESULT(method->runtime_invisible_annotations);
@@ -284,7 +279,7 @@ void method_init(Method *method, Class *c, BytecodeReader *reader)
 //                read_annotation(reader, method->runtime_invisible_annotations + i);
 //            }
             bcr_skip(reader, attr_len);
-        } else if (SYMBOL(AnnotationDefault) == attr_name) { // ignore
+        } else if (S(AnnotationDefault) == attr_name) { // ignore
 //            struct element_value ev;
 //            read_element_value(reader, &ev);
             bcr_skip(reader, attr_len);
@@ -384,7 +379,7 @@ int method_get_line_number(const Method *method, int pc)
         return -1;
     }
 
-    for (int i = method->line_number_table_count - 1; i >= 0; i--) {
+    for (int i = method->line_number_tables_count - 1; i >= 0; i--) {
         if (pc >= method->line_number_tables[i].start_pc)
             return method->line_number_tables[i].line_number;
     }

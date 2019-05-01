@@ -35,7 +35,7 @@ typedef int32_t         jint;
 typedef int64_t         jlong;
 typedef float          jfloat;
 typedef double         jdouble;
-typedef struct object* jref; // JVM中的引用类型，只能指向一个jobject对象。
+typedef struct object* jref; // JVM中的引用类型，只能指向一个object对象。
 
 #define SLOTS(type) ((sizeof(type) + 3)/4) //_Generic((type), jlong: 2, jdouble: 2, default: 1)
 

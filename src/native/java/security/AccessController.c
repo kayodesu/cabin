@@ -23,7 +23,7 @@ static void doPrivileged(Frame *frame)
      *     T run();
      * }
      */
-    Method *m = class_get_declared_method(this->clazz, SYMBOL(run), SYMBOL(___java_lang_Object));
+    Method *m = class_get_declared_method(this->clazz, S(run), S(___java_lang_Object));
 //    struct slot args[] = { rslot(this) };
 //    thread_invoke_method(frame->thread, m, args);
 //    slot_t args[] = { this };
