@@ -31,9 +31,9 @@ ComponentType:
     FieldType
 --------------------
 Method Descriptors:
-A method descriptor contains zero or more parameter descriptors, representing the
-types of parameters that the method takes, and a return descriptor, representing the
-type of the value (if any) that the method returns.
+A Method descriptor contains zero or more parameter descriptors, representing the
+types of parameters that the Method takes, and a return descriptor, representing the
+type of the value (if any) that the Method returns.
 
 MethodDescriptor:
     (ParameterDescriptor, ...) ReturnDescriptor
@@ -49,30 +49,26 @@ VoidDescriptor:
     V
  */
 
-#include "../../jvmdef.h"
+class Object;
+class ArrayObject;
+class ClassObject;
+class ClassLoader;
 
-#define DESCRIPTOR_MAX_LEN 1023 // todo
-
-/*
- * 解析单个 type to descriptor。
- * todo 说明
- * @len，即是输入参数又是输出参数。
- */
-char *type_to_descriptor(const Object *type, char *descriptor, int *len);
-Object *descriptor_to_type(ClassLoader *loader, const char *descriptor);
 
 /*
- * @types is a array object of java/lang/Class
+ * @types is a array Object of java/lang/Class or just Object of java/lang/Class
  * todo 说明
  */
-const char *types_to_descriptor(const Object *types);
+std::string typesToDescriptor(const Object *types);
 
+
+ClassObject *descriptorToType(ClassLoader *loader, const char *descriptor);
 // [xxx -> [xxx
 // Lx/y/z; -> x/y/z
 // I -> int, ...
-const char *descriptor_to_class_name(const char *descriptor, char *buf);
+const char *descriptorToClassName(const char *descriptor, char *buf);
 
-Object *method_descriptor_to_parameter_types(ClassLoader *loader, const char *method_descriptor);
-Object *method_descriptor_to_return_type(ClassLoader *loader, const char *method_descriptor);
+ArrayObject *methodDescriptorToParameterTypes(ClassLoader *loader, const char *method_descriptor);
+ClassObject *methodDescriptorToTeturnType(ClassLoader *loader, const char *method_descriptor);
 
 #endif //JVM_DESCRIPTOR_H

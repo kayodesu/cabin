@@ -5,21 +5,33 @@
 #ifndef JVM_UTF8_H
 #define JVM_UTF8_H
 
-#include <stdbool.h>
+#include <cstring>
 
-void utf8_init();
-//int utf8_hash(const char *utf8);
+struct Utf8Hash {
+    /*
+     * 计算字符串的hash值
+     * todo 函数是啥意思
+     */
+    size_t operator()(const char *str) const
+    {
+        if (str == nullptr)
+            return 0; // nullptr 的 hashcode 为0
+
+        size_t h = 0;
+        for (; *str != 0; str++) {
+            h = 31 * h + (*str & 0xff);
+        }
+        return h;
+    }
+};
 
 /*
- * if @utf8 is present, return hashed utf8.
- *
- * if @utf8 is absent and @add_if_absent is false return NULL,
- * otherwise put @utf8 to hashset and return @utf8.
+ * save a utf8 string.
+ * @utf8 必须是可持久存在的，不能是临时变量等等。
  */
-const char *find_hashed_utf8(const char *utf8, bool add_if_absent);
+const char *save_utf8(const char *utf8);
+const char *find_saved_utf8(const char *utf8);
 
-#define new_utf8(s) find_hashed_utf8(s, true)
-#define find_utf8(s) find_hashed_utf8(s, false)
 #define utf8_equals(s, t) (((s) == (t)) || (strcmp(s, t) == 0))
 
 #endif //JVM_UTF8_H

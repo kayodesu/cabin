@@ -1,5 +1,5 @@
 # JVM
-A JVM written in C.
+A JVM written in C++.
 
 ## Development environment
 * Win10 x64
@@ -107,5 +107,5 @@ C:\>
 ```
 ## Reference
 * jvms8.pdf
-* 自己动手写Java虚拟机，张秀宏。
-* 深入理解Java虚拟机——JVM高级特性与最佳实践(第2版)，周志明。
+* 张秀宏，自己动手写Java虚拟机。
+* 周志明，深入理解Java虚拟机——JVM高级特性与最佳实践(第2版)。

@@ -5,8 +5,7 @@
 #ifndef JVM_JTYPES_H
 #define JVM_JTYPES_H
 
-#include <stdint.h>
-#include <stdbool.h>
+#include <cstdint>
 
 typedef int8_t  s1;  // s: signed
 typedef int16_t s2;
@@ -17,7 +16,7 @@ typedef uint16_t u2;
 typedef uint32_t u4;
 typedef uint64_t u8;
 
-struct object;
+class Object;
 
 /*
  * Java虚拟机中的整型类型的取值范围如下：
@@ -35,7 +34,7 @@ typedef int32_t         jint;
 typedef int64_t         jlong;
 typedef float          jfloat;
 typedef double         jdouble;
-typedef struct object* jref; // JVM中的引用类型，只能指向一个object对象。
+typedef Object *        jref; // JVM中的引用类型，只能指向一个object对象。
 
 #define SLOTS(type) ((sizeof(type) + 3)/4) //_Generic((type), jlong: 2, jdouble: 2, default: 1)
 

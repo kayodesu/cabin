@@ -7,6 +7,8 @@
 
 #include "../slot.h"
 
+class Method;
+
 /*
  * 此方法用于虚拟机主动调用函数，
  * 函数调用指令（invokestatic, invokespecial, ...）中不能使用

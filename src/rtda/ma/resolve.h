@@ -5,8 +5,12 @@
 #ifndef JVM_RESOLVE_H
 #define JVM_RESOLVE_H
 
-#include <stdint.h>
-#include "../../jvmdef.h"
+#include <cstdint>
+
+class Class;
+class Method;
+class Field;
+class Object;
 
 Class* resolve_class(Class *visitor, int cp_index);
 

@@ -5,22 +5,14 @@
 #ifndef JVM_JVM_H
 #define JVM_JVM_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <limits.h>
-#include "jvmdef.h"
+#include <cstdio>
+#include <cstdlib>
 #include "jtypes.h"
-#include "rtda/heap/mgr/heap_mgr.h"
+#include "rtda/heap/mgr/HeapMgr.h"
 
 #ifndef PATH_MAX
 #define PATH_MAX 260 // todo
 #endif
-
-// todo
-//#define JVM_STRING_LEN_MAX (0xFFFF - 1)
-//#define JVM_PKT_NAME_LEN_MAX JVM_STRING_LEN_MAX
-//#define JVM_CLASS_NAME_LEN_MAX JVM_STRING_LEN_MAX
 
 // 启动类路径（bootstrap classpath）默认对应 jre/lib 目录，Java标准库（大部分在rt.jar里）位于该路径
 extern int jre_lib_jars_count;
@@ -43,24 +35,19 @@ extern int user_jars_count;
 extern char user_dirs[][PATH_MAX];
 extern char user_jars[][PATH_MAX];
 
-// 初始堆大小
-//extern size_t g_initial_heap_size;
-
 extern HeapMgr g_heap_mgr;
+
+class ClassLoader;
+class StrPool;
 
 // todo 说明
 extern ClassLoader *g_bootstrap_loader;
+extern StrPool g_str_pool;
 
 /*
  * jvms规定函数最多有255个参数，this也算，long和double占两个长度
  */
 #define METHOD_PARAMETERS_MAX_COUNT 255
-
-/*
- * struct 中标记为 NO_ACCESS 的成员拒绝直接访问，
- * 应通过对应的 get function 获取（比如此成员可能因为效率原因采用了延迟加载）。
- */
-#define NO_ACCESS
 
 // The system Thread group.
 extern Object *system_thread_group;
@@ -70,47 +57,12 @@ extern Object *system_thread_group;
 
 #define printvm(...) do { printf("%s: %d: ", __FILE__, __LINE__); printf(__VA_ARGS__); } while(false)
 
-/*
- * 是否开启调试模式(true or false)
- */
-#define JVM_DEBUG 0
-
-/*
- * print level.
- * 0: only print errors.
- * 1: print warnings.
- * 2: print 函数调用
- * 3: print every instructions
- */
-#define PRINT_LEVEL 0
-
-#define print0(...) do { printvm("fatal error. "); printf(__VA_ARGS__); } while(false)
-
-#if (PRINT_LEVEL >= 1)
-#define print1 printvm
-#else
-#define print1(...)
-#endif
-
-#if (PRINT_LEVEL >= 2)
-#define print2 printvm
-#else
-#define print2(...)
-#endif
-
-#if (PRINT_LEVEL >= 3)
-#define print3 printvm
-#else
-#define print3(...)
-#endif
-
-
 // 出现异常，退出jvm
-#define jvm_abort(...) do { print0(__VA_ARGS__); exit(-1); } while(false)
+#define jvm_abort(...) do { printvm("fatal error. "); printf(__VA_ARGS__); exit(-1); } while(false)
 
 /*
  * Virtual Machine Errors
- * A Java Virtual Machine implementation throws an object that is an instance of
+ * A Java Virtual Machine implementation throws an Object that is an instance of
  * a subclass of the class VirtualMachineError when an internal error or resource
  * limitation prevents it from implementing the semantics described in this chapter.
  * This specification cannot predict where internal errors or resource limitations may
@@ -128,24 +80,24 @@ extern Object *system_thread_group;
  * a fault in the underlying host system software, or a fault in the hardware.
  * This error is delivered asynchronously when it is detected and may occur at any point in a program.
  */
-_Noreturn void vm_internal_error(const char *msg);
+void vm_internal_error(const char *msg);
 
 /*
  * java.lang.OutOfMemoryError
  *
  * The Java Virtual Machine implementation has run out of either virtual or physical memory,
- * and the automatic storage mgr was unable to reclaim enough memory to satisfy an object creation request.
+ * and the automatic storage mgr was unable to reclaim enough memory to satisfy an Object creation request.
  */
-_Noreturn void vm_out_of_memory_error(const char *msg);
+void vm_out_of_memory_error(const char *msg);
 
 /*
  * java.lang.StackOverflowError
  *
- * The Java Virtual Machine implementation has run out of stack space for a thread,
- * typically because the thread is doing an unbounded number of recursive invocations
+ * The Java Virtual Machine implementation has run out of stack space for a Thread,
+ * typically because the Thread is doing an unbounded number of recursive invocations
  * as a result of a fault in the executing program.
  */
-_Noreturn void vm_stack_overflow_error();
+void vm_stack_overflow_error();
 
 /*
  * java.lang.UnknownError
@@ -153,7 +105,7 @@ _Noreturn void vm_stack_overflow_error();
  * An exception or error has occurred, but the Java Virtual Machine
  * implementation is unable to report the actual exception or error.
  */
-_Noreturn void vm_unknown_error(const char *msg);
+void vm_unknown_error(const char *msg);
 
 #define VM_UNKNOWN_ERROR(...) \
         do { \

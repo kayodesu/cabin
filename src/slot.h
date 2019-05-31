@@ -5,7 +5,7 @@
 #ifndef JVM_SLOT_H
 #define JVM_SLOT_H
 
-#include <stdint.h>
+#include <cstdint>
 #include "jtypes.h"
 
 // 一个slot_t类型必须可以容纳jbool, jbyte, jchar, jshort，jint，jfloat, jref称为类型一

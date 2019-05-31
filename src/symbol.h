@@ -68,6 +68,7 @@ extern const char *symbol_values[];
     action(newLibraryUnloader, "newLibraryUnloader"), \
     action(contextClassLoader, "contextClassLoader"), \
     action(getSystemClassLoader, "getSystemClassLoader"), \
+    action(registerNatives, "registerNatives"), \
     \
     /* Constant pool attribute names */\
     action(Code, "Code"), \
@@ -120,6 +121,7 @@ extern const char *symbol_values[];
     action(java_lang_Object, "java/lang/Object"), \
     action(java_lang_String, "java/lang/String"), \
     action(java_lang_Thread, "java/lang/Thread"), \
+    action(java_lang_Runtime, "java/lang/Runtime"), \
     action(java_lang_System, "java/lang/System"), \
     action(java_lang_Boolean, "java/lang/Boolean"), \
     action(java_lang_Integer, "java/lang/Integer"), \
@@ -134,6 +136,7 @@ extern const char *symbol_values[];
     action(java_lang_ThreadGroup, "java/lang/ThreadGroup"), \
     action(java_lang_ClassLoader, "java/lang/ClassLoader"), \
     action(java_lang_reflect_Field, "java/lang/reflect/Field"), \
+    action(java_lang_reflect_Executable, "java/lang/reflect/Executable"), \
     action(java_lang_reflect_VMField, "java/lang/reflect/VMField"), \
     action(gnu_classpath_Pointer32, "gnu/classpath/Pointer32"), \
     action(gnu_classpath_Pointer64, "gnu/classpath/Pointer64"), \
@@ -149,8 +152,8 @@ extern const char *symbol_values[];
     action(java_lang_reflect_Constructor, "java/lang/reflect/Constructor"), \
     action(java_lang_reflect_VMConstructor, "java/lang/reflect/VMConstructor"), \
     action(java_lang_ref_PhantomReference, "java/lang/ref/PhantomReference"), \
-    action(jamvm_java_lang_VMClassLoaderData, "jamvm/java/lang/VMClassLoaderData"), \
     action(java_nio_DirectByteBufferImpl_ReadWrite, "java/nio/DirectByteBufferImpl$ReadWrite"), \
+    action(java_lang_ClassLoader_NativeLibrary, "java/lang/ClassLoader$NativeLibrary"), \
     \
     /* Exception class names */\
     action(java_lang_Error, "java/lang/Error"), \
@@ -186,6 +189,7 @@ extern const char *symbol_values[];
     /* Array class names */\
     action(array_C, "[C"), \
     action(array_java_lang_Class, "[Ljava/lang/Class;"), \
+    action(array_java_lang_Object, "[Ljava/lang/Object;"), \
     action(array_java_lang_String, "[Ljava/lang/String;"), \
     action(array_java_lang_Package, "[Ljava/lang/Package;"), \
     action(array_java_lang_reflect_Field, "[Ljava/lang/reflect/Field;"), \
