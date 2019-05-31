@@ -1,5 +1,5 @@
 # JVM
-A JVM written in C++.
+A JVM is written in C++.
 
 ## Development environment
 * Win10 x64
