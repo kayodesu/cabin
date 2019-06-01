@@ -17,12 +17,12 @@ class ArrayObject;
 class ClassObject;
 
 class Method: public Member {
-    ArrayObject *parameterTypes = nullptr; // "[Ljava/lang/Class;"
+    ArrayObject *parameterTypes = nullptr; // [Ljava/lang/Class;
     ClassObject *returnType = nullptr;     // java/lang/Class
-    ArrayObject *exceptionTypes = nullptr; // "[Ljava/lang/Class;"
+    ArrayObject *exceptionTypes = nullptr; // [Ljava/lang/Class;
 
 public:
-    int vtable_index;
+    int vtableIndex;
 
     u2 maxStack = 0;
     u2 maxLocals = 0;
