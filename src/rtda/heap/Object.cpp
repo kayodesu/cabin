@@ -86,9 +86,9 @@ const slot_t *Object::unbox() const
 {
     if (clazz->isPrimitive()) {
         // value 的描述符就是基本类型的类名。比如，private final boolean value;
-        Field *f = clazz->lookupField(S(value), clazz->class_name);
+        Field *f = clazz->lookupField(S(value), clazz->className);
         if (f == nullptr) {
-            jvm_abort("error, %s, %s\n", S(value), clazz->class_name); // todo
+            jvm_abort("error, %s, %s\n", S(value), clazz->className); // todo
         }
         return data + f->id;
 //        return getInstFieldValue(S(value), clazz->class_name);
@@ -110,6 +110,6 @@ bool Object::isArray() const
 string Object::toString() const
 {
     ostringstream os;
-    os << "Object(" << this << "), " << clazz->class_name;
+    os << "Object(" << this << "), " << clazz->className;
     return os.str();
 }

@@ -350,7 +350,7 @@ Class *ClassLoader::loadClass(const char *class_name)
     }
 
 //    std::cout << "insert: " << c->class_name << std::endl;
-    auto p = loadedClasses.insert(make_pair(c->class_name, c));
+    auto p = loadedClasses.insert(make_pair(c->className, c));
 //    std::cout << p.second << " | " << loadedClassPool.size() <<std::endl;
 //    hashmap_put(loader->loaded_class_pool, c->class_name, c);
     return c;

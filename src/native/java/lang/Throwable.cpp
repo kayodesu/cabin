@@ -40,9 +40,9 @@ static void fillInStackTrace(Frame *frame)
     Frame *f = frame->prev->prev;
 //    num -= 2; // 减去执行fillInStackTrace(int) 和 fillInStackTrace() 方法的frame
 
-    for (Class *c = thisObj->clazz; c != nullptr; c = c->super_class) {
+    for (Class *c = thisObj->clazz; c != nullptr; c = c->superClass) {
         f = f->prev; // jump 执行异常类的构造函数的frame
-        if (utf8_equals(c->class_name, S(java_lang_Throwable))) {
+        if (utf8_equals(c->className, S(java_lang_Throwable))) {
             break; // 可以了，遍历到 Throwable 就行了，因为现在在执行 Throwable 的 fillInStackTrace 方法。
         }
     }
@@ -58,7 +58,7 @@ static void fillInStackTrace(Frame *frame)
         // may be should call <init>, but 直接赋值 is also ok. todo
 
         auto fileName = StringObject::newInst(f->method->clazz->sourceFileName);
-        auto className = StringObject::newInst(f->method->clazz->class_name);
+        auto className = StringObject::newInst(f->method->clazz->className);
         auto methodName = StringObject::newInst(f->method->name);
         int lineNumber = f->method->getLineNumber(f->reader.pc - 1); // todo why 减1？ 减去opcode的长度
 

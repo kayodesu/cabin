@@ -68,17 +68,17 @@ struct Class: public Access {
     // 通过此字段，每个Class结构体实例都与一个类对象关联。
     ClassObject *clsobj;
 
-    const char *pkg_name;
+    const char *pkgName;
 
-    // 必须是全限定类名，用作 hash 表中的 key
-    const char *class_name;
+    // 必须是全限定类名
+    const char *className;
 
     // 如果类没有<clinit>方法，是不是inited直接职位true  todo
     bool inited = false; // 此类是否被初始化过了（是否调用了<clinit>方法）。
 
     ClassLoader *loader; // todo
 
-    Class *super_class;
+    Class *superClass;
 
     std::vector<Class *> interfaces;
 
@@ -106,13 +106,9 @@ struct Class: public Access {
     std::vector<Field *> fields;
     u2 publicFieldsCount = 0;
 
-
     // instance_field_count 有可能大于 fields_count，因为 instance_field_count 包含了继承过来的 field.
     // 类型二统计为两个数量
     int instFieldsCount;
-
-    // 已经按变量类型初始化好的变量值，供创建此类的对象时使用。
-//    struct slot *inited_instance_fields_values;
 
     /*
      * 类型二统计为两个数量
@@ -148,11 +144,13 @@ private:
     void parseAttribute(BytecodeReader &r);
     void create_vtable();
     void print_vtable();
+
+    // 根据类名生成包名
     const void genPkgName();
 
 protected:
     Class(ClassLoader *loader, const char *className)
-            : class_name(className), loader(loader) { }
+            : className(className), loader(loader) { }
 
 public:
     Class(ClassLoader *loader, const u1 *bytecode, size_t len);
@@ -201,7 +199,7 @@ public:
     bool isArray() const;
     bool isPrimitive() const
     {
-        return isPrimitiveClassName(class_name);
+        return isPrimitiveClassName(className);
     }
 
     /*
@@ -223,7 +221,7 @@ public:
     {
         assert(className != nullptr);
         access_flags = ACC_PUBLIC;
-        pkg_name = "";
+        pkgName = "";
         inited = true;
         // todo super_class ???? java.lang.Object ??????
     }
@@ -235,7 +233,7 @@ public:
 class ArrayClass: public Class {
     size_t eleSize = 0;
 public:
-    ArrayClass(const char *className);
+    explicit ArrayClass(const char *className);
 
     // 判断数组单个元素的大小
     // 除了基本类型的数组外，其他都是引用类型的数组
@@ -257,10 +255,10 @@ public:
       */
     bool isPrimitiveArray() const
     {
-        if (strlen(class_name) != 2 || class_name[0] != '[')
+        if (strlen(className) != 2 || className[0] != '[')
             return false;
 
-        return strchr("ZBCSIFJD", class_name[1]) != nullptr;
+        return strchr("ZBCSIFJD", className[1]) != nullptr;
     }
 };
 

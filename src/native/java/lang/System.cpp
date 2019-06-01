@@ -26,15 +26,13 @@ static void mapLibraryName(Frame *frame)
 {
     auto libname = dynamic_cast<StringObject *>(frame_locals_getr(frame, 0));
     if (libname == nullptr) {
-        thread_throw_null_pointer_exception();
+        thread_throw_null_pointer_exception(); // todo
     }
 
-//    jvm_abort("%s\n", jstrobj_value(libname));
     const char *name = libname->getUtf8Value();
     char mapping_name[strlen(name) + 5];;
     strcpy(mapping_name, name);
     strcat(mapping_name, ".dll"); // todo ...........................
-//    printvm("mapLibraryName, %s\n", mapping_name);
     frame_stack_pushr(frame, StringObject::newInst(mapping_name));  // todo
 }
 
@@ -47,7 +45,6 @@ static void arraycopy(Frame *frame)
     jint dest_pos = frame_locals_geti(frame, 3);
     jint length = frame_locals_geti(frame, 4);
 
-//    arrobj_copy(dest, dest_pos, src, src_pos, length);
     assert(dest->isArray());
     assert(src->isArray());
     ArrayObject::copy((ArrayObject *) dest, dest_pos, (ArrayObject *) src, src_pos, length);
@@ -129,7 +126,6 @@ static void setIn0(Frame *frame)
     jref in = frame_locals_getr(frame, 0);
     Class *c = frame->method->clazz;
     c->setStaticFieldValue(c->lookupField("in", "Ljava/io/InputStream;"), (slot_t *) &in);
-//    set_static_field_value(c, class_lookup_field(c, "in", "Ljava/io/InputStream;"), (slot_t *) &in);
 }
 
 // private static native void setOut0(PrintStream out);
@@ -138,7 +134,6 @@ static void setOut0(Frame *frame)
     jref out = frame_locals_getr(frame, 0);
     Class *c = frame->method->clazz;
     c->setStaticFieldValue(c->lookupField("out", "Ljava/io/PrintStream;"), (slot_t *) &out);
-//    set_static_field_value(c, class_lookup_field(c, "out", "Ljava/io/PrintStream;"), (slot_t *) &out);
 }
 
 // private static native void setErr0(PrintStream err);
@@ -147,7 +142,6 @@ static void setErr0(Frame *frame)
     jref err = frame_locals_getr(frame, 0);
     Class *c = frame->method->clazz;
     c->setStaticFieldValue(c->lookupField("err", "Ljava/io/PrintStream;"), (slot_t *) &err);
-//    set_static_field_value(c, class_lookup_field(c, "err", "Ljava/io/PrintStream;"), (slot_t *) &err);
 }
 
 /*

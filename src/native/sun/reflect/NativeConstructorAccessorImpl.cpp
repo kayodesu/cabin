@@ -33,7 +33,7 @@ static slot_t* convert_args(jref this_obj, Method *m, ArrayObject *args)
         if (clsobj->entityClass->isPrimitive()) {
             const slot_t *unbox = o->unbox();
             result[k++] = *unbox;
-            if (strcmp(o->clazz->class_name, "long") == 0 || strcmp(o->clazz->class_name, "double") == 0) // category_two
+            if (strcmp(o->clazz->className, "long") == 0 || strcmp(o->clazz->className, "double") == 0) // category_two
                 result[k++] = *++unbox;
         } else {
             RSLOT(result + k) = o;

@@ -53,13 +53,10 @@ static void findLoadedClass0(Frame *frame)
 // private static native String findBuiltinLib(String name);
 static void findBuiltinLib(Frame *frame)
 {
-//    jvm_abort("findBuiltinLib");
-
     // todo
     auto name0 = (StringObject *) frame_locals_getr(frame, 0);
 
-    const char *name = name0->getUtf8Value();//strobj_value(name0);
-//    printvm("findBuiltinLib, %s\n", name);
+    const char *name = name0->getUtf8Value();
     if (strcmp(name, "zip.dll") == 0) {
         // C:\Program Files\Java\jre1.8.0_162\bin
         char buf[1024] = R"(C:\Program Files\Java\jre1.8.0_162\bin\zip.dll)";  // todo

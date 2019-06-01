@@ -295,7 +295,7 @@ static void anewarray(Frame *frame)
     u1 type = CP_TYPE(cp, index);
     if (type == CONSTANT_ResolvedClass) {
         auto c = (Class *) CP_INFO(cp, index);
-        class_name = c->class_name;
+        class_name = c->className;
     } else {
         class_name = CP_CLASS_NAME(cp, index);
     }
@@ -1168,7 +1168,7 @@ static slot_t *exec()
                     && !m->isPrivate()
                     && curr_class->isSubclassOf(m->clazz) // todo
                     && !utf8_equals(m->name, S(object_init))) {
-                    m = curr_class->super_class->lookupMethod(m->name, m->descriptor);
+                    m = curr_class->superClass->lookupMethod(m->name, m->descriptor);
                 }
 
                 if (m->isAbstract()) {
@@ -1364,7 +1364,7 @@ invoke_method:
                 if (obj != nullptr) {
                     Class *c = resolve_class(frame->method->clazz, index);
                     if (!obj->isInstanceOf(c)) {
-                        thread_throw_class_cast_exception(obj->clazz->class_name, c->class_name);
+                        thread_throw_class_cast_exception(obj->clazz->className, c->className);
                     }
                 }
             })

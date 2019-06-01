@@ -121,16 +121,16 @@ static void getName0(Frame *frame)
     auto thisObj = (ClassObject *) frame_locals_getr(frame, 0);
 
     Class *c = thisObj->entityClass;//clsobj_entity_class(this);
-    char class_name[strlen(c->class_name) + 1];
-    strcpy(class_name, c->class_name);
+    char className[strlen(c->className) + 1];
+    strcpy(className, c->className);
     // 这里需要的是 java.lang.Object 这样的类名，而非 java/lang/Object
     // 所以需要进行一下替换
-//    vm_strrpl(class_name, '/', '.');
-    for (char *p = class_name; *p != 0; p++) {
+//    vm_strrpl(className, '/', '.');
+    for (char *p = className; *p != 0; p++) {
         if (*p == '/')
             *p = '.';
     }
-    frame_stack_pushr(frame, StringObject::newInst(class_name));
+    frame_stack_pushr(frame, StringObject::newInst(className));
 }
 
 /**
@@ -339,8 +339,8 @@ static void getSuperclass(Frame *frame)
 {
     auto thisObj = (ClassObject *) frame_locals_getr(frame, 0);
 
-    Class *c = frame->method->clazz->loader->loadClass(thisObj->entityClass->class_name);
-    frame_stack_pushr(frame, c->super_class != nullptr ? c->super_class->clsobj : nullptr);
+    Class *c = frame->method->clazz->loader->loadClass(thisObj->entityClass->className);
+    frame_stack_pushr(frame, c->superClass != nullptr ? c->superClass->clsobj : nullptr);
 }
 
 /**
@@ -548,7 +548,7 @@ static void getDeclaredFields0(Frame *frame)
     bool public_only = frame_locals_getz(frame, 1);
 
     ClassLoader *loader = frame->method->clazz->loader;
-    Class *cls = loader->loadClass(thisObj->entityClass->class_name);
+    Class *cls = loader->loadClass(thisObj->entityClass->className);
 
 //    Field *fields = cls->fields;
     jint fields_count = public_only ? cls->publicFieldsCount : cls->fields.size();
@@ -558,7 +558,7 @@ static void getDeclaredFields0(Frame *frame)
     auto jlrf_arr = ArrayObject::newInst(jlrf_cls->arrayClass(), fields_count);
     frame_stack_pushr(frame, jlrf_arr);
 
-//    char *arr_cls_name = get_arr_class_name(jlrf_cls->class_name);
+//    char *arr_cls_name = get_arr_class_name(jlrf_cls->className);
 //    Object *jlrf_arr = arrobj_create(load_class(loader, arr_cls_name), fields_count);
 //    frame_stack_pushr(frame, jlrf_arr);
 //    free(arr_cls_name);
@@ -607,13 +607,13 @@ static void getDeclaredMethods0(Frame *frame)
     bool public_only = frame_locals_getz(frame, 1);
 
     ClassLoader *loader = frame->method->clazz->loader;
-    Class *cls = loader->loadClass(thisObj->entityClass->class_name);
+    Class *cls = loader->loadClass(thisObj->entityClass->className);
 
 //    struct method *methods = cls->methods;
     jint methods_count = public_only ? cls->publicMethodsCount : cls->methods.size();
 
     Class *jlrm_cls = loadSysClass("java/lang/reflect/Method");
-//    char *arr_cls_name = get_arr_class_name(jlrm_cls->class_name);
+//    char *arr_cls_name = get_arr_class_name(jlrm_cls->className);
     auto jlrm_arr = ArrayObject::newInst(jlrm_cls->arrayClass(), methods_count);
     frame_stack_pushr(frame, jlrm_arr);
 //    free(arr_cls_name);
@@ -659,13 +659,13 @@ static void getDeclaredConstructors0(Frame *frame)
     bool public_only = frame_locals_getz(frame, 1);
 
     ClassLoader *loader = frame->method->clazz->loader;
-    Class *cls = loader->loadClass(thisObj->entityClass->class_name);
+    Class *cls = loader->loadClass(thisObj->entityClass->className);
 
     std::vector<Method *> constructors = cls->getConstructors(public_only);
     int constructors_count = constructors.size();
 
     Class *jlrc_cls = loadSysClass("java/lang/reflect/Constructor");
-//    char *arr_cls_name = get_arr_class_name(jlrc_cls->class_name);
+//    char *arr_cls_name = get_arr_class_name(jlrc_cls->className);
     auto jlrc_arr = ArrayObject::newInst(jlrc_cls->arrayClass(), constructors_count);
     frame_stack_pushr(frame, jlrc_arr);
 //    free(arr_cls_name);
@@ -742,8 +742,8 @@ static void getDeclaringClass0(Frame *frame)
         return;
     }
 
-    char buf[strlen(entityClass->class_name) + 1];
-    strcpy(buf, entityClass->class_name);
+    char buf[strlen(entityClass->className) + 1];
+    strcpy(buf, entityClass->className);
     char *last_dollar = strrchr(buf, '$'); // 内部类标识：out_class_name$inner_class_name
     if (last_dollar == nullptr) {
         frame_stack_pushr(frame, nullptr);

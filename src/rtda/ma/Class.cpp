@@ -20,8 +20,8 @@ void Class::calcFieldsId()
     int insId = 0;
     int staticId = 0;
 
-    if (super_class != nullptr) {
-        insId = super_class->instFieldsCount; // todo 父类的私有变量是不是也算在了里面，不过问题不大，浪费点空间吧了
+    if (superClass != nullptr) {
+        insId = superClass->instFieldsCount; // todo 父类的私有变量是不是也算在了里面，不过问题不大，浪费点空间吧了
     }
 
     for(auto f : fields) {
@@ -246,26 +246,26 @@ void Class::create_vtable()
 void Class::print_vtable()
 {
     for (int i = 0; i < vtable_len; i++) {
-        printvm("%s~%s~%s\n", class_name, vtable[i].name, vtable[i].descriptor);
+        printvm("%s~%s~%s\n", className, vtable[i].name, vtable[i].descriptor);
     }
 }
 
 const void Class::genPkgName()
 {
-    char *tmp = strdup(class_name);
+    char *tmp = strdup(className);
     char *p = strrchr(tmp, '/');
     if (p == nullptr) {
         free(tmp);
-        pkg_name = ""; // 包名可以为空
+        pkgName = ""; // 包名可以为空
     } else {
         *p = 0; // 得到包名
         auto hashed = find_saved_utf8(tmp);
         if (hashed != nullptr) {
             free(tmp);
-            pkg_name = hashed;
+            pkgName = hashed;
         } else {
-            pkg_name = tmp;
-            save_utf8(pkg_name);
+            pkgName = tmp;
+            save_utf8(pkgName);
         }
     }
 }
@@ -377,14 +377,14 @@ Class::Class(ClassLoader *loader, const u1 *bytecode, size_t len)
 
     access_flags = r.readu2();
 
-    class_name = CP_CLASS_NAME(cp, r.readu2());
+    className = CP_CLASS_NAME(cp, r.readu2());
     genPkgName();
 
     u2 super_class = r.readu2();
     if (super_class == 0) { // why 0
-        this->super_class = NULL; // 可以没有父类
+        this->superClass = nullptr; // 可以没有父类
     } else {
-        this->super_class = resolve_class(this, super_class);
+        this->superClass = resolve_class(this, super_class);
 //        super_class = classloader_load_class(loader, CP_CLASS_NAME(cp, super_class));//rtcp_get_class_name(rtcp, super_class));
         // 从父类中拷贝继承来的field   todo 要不要从新new个field不然delete要有问题，继承过来的field的类名问题
 //        for_each(superClass->instanceFields.begin(), superClass->instanceFields.end(), [](JField *f) {
@@ -431,7 +431,7 @@ Class::Class(ClassLoader *loader, const u1 *bytecode, size_t len)
 
     parseAttribute(r); // parse class attributes
 //    create_vtable(c);
-//    if (strcmp(class_name, "sun/util/PreHashedMap") == 0)
+//    if (strcmp(className, "sun/util/PreHashedMap") == 0)
 //        print_vtable(c);
 }
 
@@ -448,8 +448,8 @@ void Class::clinit()
         return;
     }
 
-    if (super_class != nullptr && !super_class->inited) {
-        super_class->clinit();
+    if (superClass != nullptr && !superClass->inited) {
+        superClass->clinit();
     }
 
     // 在这里先行 set inited true, 如不这样，后面执行<clinit>时，
@@ -477,8 +477,8 @@ Field *Class::lookupField(const char *name, const char *descriptor)
 
     // todo 在父类中查找
     struct Field *field;
-    if (super_class != nullptr) {
-        if ((field = super_class->lookupField(name, descriptor)) != nullptr)
+    if (superClass != nullptr) {
+        if ((field = superClass->lookupField(name, descriptor)) != nullptr)
             return field;
     }
 
@@ -489,7 +489,7 @@ Field *Class::lookupField(const char *name, const char *descriptor)
     }
 
     // java.lang.NoSuchFieldError  todo
-    jvm_abort("java.lang.NoSuchFieldError. %s, %s, %s\n", class_name, name, descriptor);
+    jvm_abort("java.lang.NoSuchFieldError. %s, %s, %s\n", className, name, descriptor);
     return nullptr;
 }
 
@@ -577,8 +577,8 @@ Method *Class::lookupMethod(const char *name, const char *descriptor)
     }
 
     // todo 在父类中查找
-    if (super_class != nullptr) {
-        if ((method = super_class->lookupMethod(name, descriptor)) != nullptr)
+    if (superClass != nullptr) {
+        if ((method = superClass->lookupMethod(name, descriptor)) != nullptr)
             return method;
     }
 
@@ -589,7 +589,7 @@ Method *Class::lookupMethod(const char *name, const char *descriptor)
     }
 
     // todo java.lang.NoSuchMethodError
-    VM_UNKNOWN_ERROR("can not find method. %s~%s~%s", class_name, name, descriptor);
+    VM_UNKNOWN_ERROR("can not find method. %s~%s~%s", className, name, descriptor);
     return nullptr;
 }
 
@@ -619,7 +619,7 @@ bool Class::isSubclassOf(const Class *father) const
     if (this == father)
         return true;
 
-    if (super_class != nullptr && super_class->isSubclassOf(father))
+    if (superClass != nullptr && superClass->isSubclassOf(father))
         return true;
 
     for (auto c : interfaces) {
@@ -632,9 +632,9 @@ bool Class::isSubclassOf(const Class *father) const
 
 int Class::inheritedDepth() const
 {
-    int depth;
-    const Class *c = this->super_class;
-    for (depth = 0; c != nullptr; c = super_class) {
+    int depth = 0;
+    const Class *c = this->superClass;
+    for (; c != nullptr; c = c->superClass) {
         depth++;
     }
     return depth;
@@ -657,25 +657,25 @@ const slot_t* Class::getStaticFieldValue(const Field *f)
 
 bool Class::isArray() const
 {
-    return class_name[0] == '[';
+    return className[0] == '[';
 }
 
 ArrayClass *Class::arrayClass() const
 {
-    char arrayClassName[strlen(class_name) + 8]; // big enough
+    char arrayClassName[strlen(className) + 8]; // big enough
 
     // 数组
-    if (class_name[0] == '[') {
-        sprintf(arrayClassName, "[%s\0", class_name);
+    if (className[0] == '[') {
+        sprintf(arrayClassName, "[%s\0", className);
         return loadArrayClass(arrayClassName); // todo
     }
 
     // 基本类型
-    const char *tmp = primitiveClassName2arrayClassName(class_name);
+    const char *tmp = primitiveClassName2arrayClassName(className);
     if (tmp != nullptr)
         return loadArrayClass(tmp); // todo
     // 类引用
-    sprintf(arrayClassName, "[L%s;\0", class_name);
+    sprintf(arrayClassName, "[L%s;\0", className);
     return loadArrayClass(arrayClassName); // todo
 }
 
@@ -692,18 +692,18 @@ bool Class::isAccessibleTo(const Class *visitor) const
 
     // 字段是 protected，则只有 子类 和 同一个包下的类 可以访问
     if (isProtected()) {
-        return visitor->isSubclassOf(this) || utf8_equals(pkg_name, visitor->pkg_name);
-//        return class_is_subclass_of(visitor, c) || utf8_equals(pkg_name, visitor->pkg_name);
+        return visitor->isSubclassOf(this) || utf8_equals(pkgName, visitor->pkgName);
+//        return class_is_subclass_of(visitor, c) || utf8_equals(pkgName, visitor->pkgName);
     }
 
     // 字段有默认访问权限（非public，非protected，也非private），则只有同一个包下的类可以访问
-    return utf8_equals(pkg_name, visitor->pkg_name);
+    return utf8_equals(pkgName, visitor->pkgName);
 }
 
 string Class::toString() const
 {
     string s = "class: ";
-    s += class_name;
+    s += className;
     return s;
 }
 
@@ -711,11 +711,11 @@ string Class::toString() const
 ArrayClass::ArrayClass(const char *className): Class(g_bootstrap_loader, strdup(className))
 {
     assert(className != nullptr);
-    // todo class_name 是不是 array
+    // todo className 是不是 array
     access_flags = ACC_PUBLIC;
     inited = true; // 数组类不需要初始化
-    pkg_name = "";
-    super_class = loadSysClass(S(java_lang_Object));
+    pkgName = "";
+    superClass = loadSysClass(S(java_lang_Object));
     interfaces.push_back(loadSysClass(S(java_lang_Cloneable)));
     interfaces.push_back(loadSysClass(S(java_io_Serializable)));
 
@@ -730,7 +730,7 @@ size_t ArrayClass::getEleSize()
         // 除了基本类型的数组外，其他都是引用类型的数组
         // 多维数组是数组的数组，也是引用类型的数组
         eleSize = sizeof(jref);
-        char t = class_name[1]; // jump '['
+        char t = className[1]; // jump '['
         if (t == 'Z') { eleSize = sizeof(jbool); }
         else if (t == 'B') { eleSize = sizeof(jbyte); }
         else if (t == 'C') { eleSize = sizeof(jchar); }
@@ -745,7 +745,7 @@ size_t ArrayClass::getEleSize()
 
 Class *ArrayClass::componentClass()
 {
-    const char *component_name = class_name;
+    const char *component_name = className;
     for (; *component_name == '['; component_name++);
 
     if (*component_name != 'L') {
@@ -756,7 +756,7 @@ Class *ArrayClass::componentClass()
     int last = strlen(component_name) - 1;
     assert(last > 0);
     if (component_name[last] != ';') {
-        VM_UNKNOWN_ERROR("%s", class_name); // todo
+        VM_UNKNOWN_ERROR("%s", className); // todo
         return nullptr;
     } else {
         char buf[last + 1];

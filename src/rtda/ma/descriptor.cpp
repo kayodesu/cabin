@@ -17,13 +17,13 @@ static void type_to_descriptor(const ClassObject *type, ostringstream &os)
     assert(type != nullptr);
 
     Class *c = type->entityClass;
-    char d = primitiveClassName2descriptor(c->class_name);
+    char d = primitiveClassName2descriptor(c->className);
     if (d != 0) { // primitive type
         os << d;
     } else if (c->isArray()) { // 数组
-        os << c->class_name;
+        os << c->className;
     } else { // 普通类
-        os << 'L' << c->class_name << ';';
+        os << 'L' << c->className << ';';
     }
 }
 

@@ -78,6 +78,6 @@ ClassObject *Field::getType()
 string Field::toString() const
 {
     ostringstream oss;
-    oss << clazz->class_name << "~" << name << "~" << descriptor;
+    oss << clazz->className << "~" << name << "~" << descriptor;
     return oss.str();
 }

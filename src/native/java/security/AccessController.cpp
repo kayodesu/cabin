@@ -22,9 +22,6 @@ static void doPrivileged(Frame *frame)
      * }
      */
     Method *m = thisObj->clazz->getDeclaredMethod(S(run), S(___java_lang_Object));
-//    struct slot args[] = { rslot(this) };
-//    thread_invoke_method(frame->thread, m, args);
-//    slot_t args[] = { this };
     slot_t *s = exec_java_func(m, (slot_t *) &thisObj);
     frame_stack_pushr(frame, RSLOT(s));
 }

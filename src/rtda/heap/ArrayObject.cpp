@@ -66,7 +66,7 @@ ArrayObject::ArrayObject(ArrayClass *arrClass, size_t arr_dim, const size_t *arr
     }
 
     // todo
-    auto eleClass = (ArrayClass *)(arrClass->loader->loadClass(arrClass->class_name + 1)); // jump '['
+    auto eleClass = (ArrayClass *)(arrClass->loader->loadClass(arrClass->className + 1)); // jump '['
     for (size_t i = 0; i < len; i++) {
         set(i, new ArrayObject(eleClass, arr_dim - 1, arr_lens + 1));
 //        arrobj_set(jref, o, i, newMultiArrObj(eleClass, arr_dim - 1, arr_lens + 1));

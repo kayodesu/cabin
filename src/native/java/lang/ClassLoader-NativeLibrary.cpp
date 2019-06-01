@@ -30,9 +30,6 @@ static void load(Frame *frame)
     // set boolean loaded is true
     slot_t s = 1;
     thisObj->setInstFieldValue("loaded", "Z", &s);
-//    set_instance_field_value(thisObj, class_lookup_field(thisObj->clazz, "loaded", "Z"), &s);
-
-//    printvm("-------- %s, %d\n", jstrobj_value(name), is_builtin);
 }
 
 // native void unload(String name, boolean isBuiltin);

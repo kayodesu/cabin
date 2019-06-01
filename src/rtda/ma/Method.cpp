@@ -293,7 +293,7 @@ Method::Method(Class *c, BytecodeReader &r): Member(c)
         }
 
         this->code = code;
-        nativeMethod = findNativeMethod(clazz->class_name, name, descriptor);
+        nativeMethod = findNativeMethod(clazz->className, name, descriptor);
     }
 }
 
@@ -336,6 +336,6 @@ string Method::toString() const
     ostringstream oss;
     oss << "method";
     oss << isNative() ? "(native)" : "";
-    oss << ": "  << clazz->class_name << "~" << name << "~" << descriptor;
+    oss << ": "  << clazz->className << "~" << name << "~" << descriptor;
     return oss.str();
 }

@@ -21,9 +21,9 @@ bool Member::isAccessibleTo(const Class *visitor) const
 
     // 字段是protected，则只有 子类 和 同一个包下的类 可以访问
     if (isProtected()) {
-        return visitor->isSubclassOf(clazz) || utf8_equals(clazz->pkg_name, visitor->pkg_name);
+        return visitor->isSubclassOf(clazz) || utf8_equals(clazz->pkgName, visitor->pkgName);
     }
 
     // 字段有默认访问权限（非public，非protected，也非private），则只有同一个包下的类可以访问
-    return utf8_equals(clazz->pkg_name, visitor->pkg_name);
+    return utf8_equals(clazz->pkgName, visitor->pkgName);
 }

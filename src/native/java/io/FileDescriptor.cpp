@@ -21,7 +21,6 @@ static void initIDs(Frame *frame)
  */
 static void set(Frame *frame)
 {
-//    jvm_abort("error\n");
     // todo
     frame_stack_pushl(frame, 123);
 }
