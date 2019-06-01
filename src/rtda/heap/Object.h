@@ -7,7 +7,7 @@
 
 #include "../../slot.h"
 #include "../ma/Class.h"
-
+#include "../ma/Field.h"
 
 class Object {
 protected:
@@ -37,9 +37,35 @@ public:
     void setInstFieldValue(Field *f, const slot_t *value);
     void setInstFieldValue(const char *name, const char *descriptor, const slot_t *value);
 
-    const slot_t *getInstFieldValue(int id) const;
-    const slot_t *getInstFieldValue(Field *f) const;
-    const slot_t *getInstFieldValue(const char *name, const char *descriptor) const;
+    // @id: id of the field
+    template <typename T>
+    T getInstFieldValue(int id) const
+    {
+        assert(0 <= id && id < clazz->instFieldsCount);
+        return * (T *) (data + id);
+    }
+
+    template <typename T>
+    T getInstFieldValue(Field *f) const
+    {
+        assert(f != nullptr);
+        return getInstFieldValue<T>(f->id);
+    }
+
+    template <typename T>
+    T getInstFieldValue(const char *name, const char *descriptor) const
+    {
+        assert(name != nullptr && descriptor != nullptr);
+
+        Field *f = clazz->lookupField(name, descriptor);
+        if (f == nullptr) {
+            jvm_abort("error, %s, %s\n", name, descriptor); // todo
+        }
+
+        return getInstFieldValue<T>(f->id);
+    }
+
+    void storeInstFieldValue(Field *f, slot_t *&value) const;
 
     bool isInstanceOf(const Class *c) const;
 

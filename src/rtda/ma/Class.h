@@ -204,7 +204,6 @@ public:
         return isPrimitiveClassName(class_name);
     }
 
-
     /*
      * 计算一个类的继承深度。
      * 如：java.lang.Object的继承的深度为0

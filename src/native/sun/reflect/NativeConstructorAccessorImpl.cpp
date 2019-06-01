@@ -59,7 +59,7 @@ static void newInstance0(Frame *frame)
     ArrayObject *init_args = (ArrayObject *) frame_locals_getr(frame, 1); // may be NULL
 
     // which class this constructor belongs to.
-    auto ac = (ClassObject *) RSLOT(constructor_obj->getInstFieldValue(S(clazz), S(sig_java_lang_Class)));
+    auto ac = constructor_obj->getInstFieldValue<ClassObject *>(S(clazz), S(sig_java_lang_Class));
     Class *clazz = ac->entityClass;
     Object *this_obj = Object::newInst(clazz);
     frame_stack_pushr(frame, this_obj); // return value
@@ -79,7 +79,7 @@ static void newInstance0(Frame *frame)
     } else {
         // parameter types of this constructor
         auto parameter_types
-                = (ArrayObject *) RSLOT(constructor_obj->getInstFieldValue(S(parameterTypes), S(array_java_lang_Class)));
+                =  constructor_obj->getInstFieldValue<ArrayObject *>(S(parameterTypes), S(array_java_lang_Class));
         constructor = clazz->getConstructor(typesToDescriptor(parameter_types).c_str());
         assert(constructor != nullptr);
 

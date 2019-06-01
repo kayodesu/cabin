@@ -6,6 +6,7 @@
 #include "../../../rtda/heap/Object.h"
 #include "../../../util/endianness.h"
 #include "../../../rtda/heap/ArrayObject.h"
+#include "../../../symbol.h"
 
 /* todo
 http://www.docjar.com/docs/api/sun/misc/Unsafe.html#park%28boolean,%20long%29
@@ -36,7 +37,7 @@ static void unpark(Frame *frame)
 
 /*
  * 第一个参数为需要改变的对象，
- * 第二个为偏移量(参加函数 objectFieldOffset)，
+ * 第二个为偏移量(参见函数 objectFieldOffset)，
  * 第三个参数为期待的值，
  * 第四个为更新后的值。
  *
@@ -56,7 +57,7 @@ static void compareAndSwapInt(Frame *frame)
     if (o->isArray()) {
         old = ((ArrayObject *) o)->get<jint>(offset);//arrobj_get(jint, o, offset);
     } else {
-        old = ISLOT(o->getInstFieldValue(offset));//ISLOT(get_instance_field_value_by_id(o, offset));
+        old = o->getInstFieldValue<jint>(offset);//ISLOT(o->getInstFieldValue(offset));
     }
 
     bool b = __sync_bool_compare_and_swap(&old, expected, x);
@@ -78,7 +79,7 @@ static void compareAndSwapLong(Frame *frame)
         old = ao->get<jlong>(offset);//arrobj_get(jint, o, offset);
     } else {
 //        old = LSLOT(get_instance_field_value_by_id(o, offset));
-        old = LSLOT(o->getInstFieldValue(offset));
+        old = o->getInstFieldValue<jlong>(offset);
     }
 
     bool b = __sync_bool_compare_and_swap(&old, expected, x);
@@ -99,7 +100,7 @@ static void compareAndSwapObject(Frame *frame)
         old = ao->get<jref>(offset);
 //        old = arrobj_get(jref, o, offset);
     } else {
-        old = RSLOT(o->getInstFieldValue(offset));
+        old = o->getInstFieldValue<jref>(offset);
     }
 
     bool b = __sync_bool_compare_and_swap(&old, expected, x);
@@ -170,7 +171,7 @@ static void objectFieldOffset(Frame *frame)
 //    frame->operandStack.push((jlong)offset);
 
     jref field_obj = frame_locals_getr(frame, 1);
-    jint offset = ISLOT(field_obj->getInstFieldValue("slot", "I")); // todo "slot", "I" 什么东西
+    jint offset = field_obj->getInstFieldValue<jint>(S(slot), S(I)); // todo "slot", "I" 什么东西
 //    printvm("-------   %s, %d\n", jobject_to_string(field_obj), offset);
     frame_stack_pushl(frame, offset);
 }
@@ -320,7 +321,7 @@ static void getIntVolatile(Frame *frame)
         value = ao->get<jint>(offset);
 //        value = arrobj_get(jint, o, offset);  // todo
     } else {
-        value = ISLOT(o->getInstFieldValue(offset));  // todo
+        value = o->getInstFieldValue<jint>(offset);  // todo
     }
     frame_stack_pushi(frame, value);
 }
@@ -402,9 +403,8 @@ static void getObjectVolatile(Frame *frame)
     if (o->isArray()) {
         ArrayObject *ao = dynamic_cast<ArrayObject *>(o);  // todo
         value = ao->get<jref>(offset);
-//        value = arrobj_get(jref, o, offset);  // todo
     } else {
-        value = RSLOT(o->getInstFieldValue(offset));  // todo
+        value = o->getInstFieldValue<jref>(offset);  // todo
     }
     frame_stack_pushr(frame, value);
 }

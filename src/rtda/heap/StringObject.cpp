@@ -74,7 +74,7 @@ StringObject::StringObject(const char *str): Object(g_bootstrap_loader->jlString
 const char *StringObject::getUtf8Value()
 {
     if (utf8Value == nullptr) {
-        ArrayObject *char_arr =(ArrayObject *) RSLOT(getInstFieldValue(S(value), S(array_C)));
+        ArrayObject *char_arr = getInstFieldValue<ArrayObject *>(S(value), S(array_C));
         utf8Value = unicode_to_utf8(reinterpret_cast<const jchar *>(char_arr->data), char_arr->len);
     }
     return utf8Value;

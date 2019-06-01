@@ -47,28 +47,32 @@ void Object::setInstFieldValue(const char *name, const char *descriptor, const s
     setInstFieldValue(clazz->lookupInstField(name, descriptor), value);
 }
 
-const slot_t *Object::getInstFieldValue(int id) const
-{
-    assert(0 <= id && id < clazz->instFieldsCount);
-    return data + id;
-}
+//const slot_t *Object::getInstFieldValue(Field *f) const
+//{
+//    assert(f != nullptr);
+//    return data + f->id;
+//}
 
-const slot_t *Object::getInstFieldValue(Field *f) const
-{
-    assert(f != nullptr);
-    return data + f->id;
-}
+//const slot_t *Object::getInstFieldValue(const char *name, const char *descriptor) const
+//{
+//    assert(name != nullptr && descriptor != nullptr);
+//
+//    Field *f = clazz->lookupField(name, descriptor);
+//    if (f == nullptr) {
+//        jvm_abort("error, %s, %s\n", name, descriptor); // todo
+//    }
+//
+//    return getInstFieldValue(f);
+//}
 
-const slot_t *Object::getInstFieldValue(const char *name, const char *descriptor) const
+void Object::storeInstFieldValue(Field *f, slot_t *&value) const
 {
-    assert(name != nullptr && descriptor != nullptr);
-
-    Field *f = clazz->lookupField(name, descriptor);
-    if (f == nullptr) {
-        jvm_abort("error, %s, %s\n", name, descriptor); // todo
+    assert(f != nullptr && value != nullptr);
+    auto p =  data + f->id;
+    *value++ = p[0];
+    if (f->categoryTwo) {
+        *value++ = p[1];
     }
-
-    return getInstFieldValue(f);
 }
 
 bool Object::isInstanceOf(const Class *c) const
@@ -82,7 +86,12 @@ const slot_t *Object::unbox() const
 {
     if (clazz->isPrimitive()) {
         // value 的描述符就是基本类型的类名。比如，private final boolean value;
-        return getInstFieldValue(S(value), clazz->class_name);
+        Field *f = clazz->lookupField(S(value), clazz->class_name);
+        if (f == nullptr) {
+            jvm_abort("error, %s, %s\n", S(value), clazz->class_name); // todo
+        }
+        return data + f->id;
+//        return getInstFieldValue(S(value), clazz->class_name);
     }
     // todo error!!!!!!!!
     jvm_abort("error");

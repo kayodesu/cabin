@@ -1086,11 +1086,12 @@ static slot_t *exec()
                     thread_throw_null_pointer_exception();
                 }
 
-                const slot_t *value = obj->getInstFieldValue(f);
-                *frame->stack++ = value[0];
-                if (f->categoryTwo) {
-                    *frame->stack++ = value[1];
-                }
+//                const slot_t *value = obj->getInstFieldValue(f);
+//                *frame->stack++ = value[0];
+//                if (f->categoryTwo) {
+//                    *frame->stack++ = value[1];
+//                }
+                obj->storeInstFieldValue(f, frame->stack);
                 break;
             }
 
