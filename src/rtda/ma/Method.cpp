@@ -335,7 +335,8 @@ string Method::toString() const
 {
     ostringstream oss;
     oss << "method";
-    oss << isNative() ? "(native)" : "";
+    if (isNative())
+        oss << "(native)";
     oss << ": "  << clazz->className << "~" << name << "~" << descriptor;
     return oss.str();
 }
