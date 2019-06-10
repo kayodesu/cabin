@@ -395,7 +395,7 @@ static void getInterfaces0(Frame *frame)
     Class *entity_class = thisObj->entityClass;
     auto arr_cls = loadArrayClass(S(array_java_lang_Class));
     auto interfaces = ArrayObject::newInst(arr_cls, entity_class->interfaces.size());
-    for (int i = 0; i < entity_class->interfaces.size(); i++) {
+    for (size_t i = 0; i < entity_class->interfaces.size(); i++) {
         assert(entity_class->interfaces[i] != nullptr);
         interfaces->set(i, entity_class->interfaces[i]->clsobj);
 //        arrobj_set(Object *, interfaces, i, entity_class->interfaces[i]->clsobj);
@@ -473,7 +473,7 @@ static void getModifiers(Frame *frame)
 // public native Object[] getSigners();
 static void getSigners(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("getSigners");
 }
 
 
@@ -483,7 +483,7 @@ static void getSigners(Frame *frame)
 // native void setSigners(Object[] signers);
 static void setSigners(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("setSigners");
 }
 
 // private native Object[] getEnclosingMethod0();
@@ -512,33 +512,33 @@ static void getEnclosingMethod0(Frame *frame)
 //private native java.security.ProtectionDomain getProtectionDomain0();
 static void getProtectionDomain0(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("getProtectionDomain0");
 }
 
 // Generic signature handling
 //private native String getGenericSignature0();
 static void getGenericSignature0(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("getGenericSignature0");
 }
 
 // Annotations handling
 //native byte[] getRawAnnotations();
 static void getRawAnnotations(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("getRawAnnotations");
 }
 
 // native byte[] getRawTypeAnnotations();
 static void getRawTypeAnnotations(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("getRawTypeAnnotations");
 }
 
 // native ConstantPool getConstantPool();
 static void getConstantPool(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("getConstantPool");
 }
 
 // private native Field[] getDeclaredFields0(boolean publicOnly);
@@ -710,7 +710,7 @@ static void getDeclaredConstructors0(Frame *frame)
  */
 static void getDeclaredClasses0(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("getDeclaredClasses0");
 }
 
 /**
@@ -770,13 +770,13 @@ void java_lang_Class_registerNatives()
     register_native_method(C"isArray", "()Z", isArray);
     register_native_method(C"isPrimitive", "()Z", isPrimitive);
 
-    register_native_method(C"getSuperclass", "()"LCLS, getSuperclass);
+    register_native_method(C"getSuperclass", "()" LCLS, getSuperclass);
     register_native_method(C"getInterfaces0", "()[Ljava/lang/Class;", getInterfaces0);
     register_native_method(C"getComponentType", "()Ljava/lang/Class;", getComponentType);
     register_native_method(C"getModifiers", "()I", getModifiers);
     register_native_method(C"getEnclosingMethod0", "()[Ljava/lang/Object;", getEnclosingMethod0);
-    register_native_method(C"getDeclaringClass0", "()"LCLS, getDeclaringClass0);
-    register_native_method(C"getGenericSignature0", "()"LSTR, getGenericSignature0);
+    register_native_method(C"getDeclaringClass0", "()" LCLS, getDeclaringClass0);
+    register_native_method(C"getGenericSignature0", "()" LSTR, getGenericSignature0);
     register_native_method(C"getProtectionDomain0", "()Ljava/security/ProtectionDomain;", getProtectionDomain0);
     register_native_method(C"getConstantPool", "()Lsun/reflect/ConstantPool;", getConstantPool);
 

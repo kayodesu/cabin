@@ -46,7 +46,7 @@ static struct bytecode_content read_class_from_jar(const char *jar_path, const c
         return invalid_bytecode_content;
     }
 
-    for (int i = 0; i < global_info.number_entry; i++) {
+    for (unsigned long long int i = 0; i < global_info.number_entry; i++) {
         char file_name[PATH_MAX];
         if (unzGetCurrentFileInfo64(jar_file, &file_info, file_name, sizeof(file_name), NULL, 0, NULL, 0) != UNZ_OK) {
             unzClose(jar_file);
@@ -100,11 +100,11 @@ static struct bytecode_content read_class_from_jar(const char *jar_path, const c
 
 static struct bytecode_content read_class_from_dir(const char *dir_path, const char *class_name)
 {
-    assert(dir_path != NULL);
-    assert(class_name != NULL);
+    assert(dir_path != nullptr);
+    assert(class_name != nullptr);
 
     char file_path[PATH_MAX];
-    sprintf(file_path, "%s/%s.class\0", dir_path, class_name);
+    sprintf(file_path, "%s/%s.class", dir_path, class_name);
 
     FILE *f = fopen(file_path, "rb");
     if (f != NULL) { // find out
@@ -160,34 +160,11 @@ static struct bytecode_content read_class(const char *class_name)
     return invalid_bytecode_content; // not find
 }
 
-//static struct Object* get_jclass_obj_from_pool(ClassLoader *loader, const char *class_name)
-//{
-//    struct Object *clsobj = hashmap_find(loader->classobj_pool, class_name);
-////    HASH_FIND_STR(loader->classobj_pool, class_name, clsobj);
-//    if (clsobj != NULL) {
-//        printvm("find out class obj: %s\n", class_name);  /////////////////////////////////////
-//        return clsobj;
-//    }
-//
-//    clsobj = jclsobj_create(loader->jlclass, class_name);
-//    hashmap_put(loader->classobj_pool, clsobj->c.class_name, clsobj);
-////    HASH_ADD_KEYPTR(hh, loader->classobj_pool, class_name, strlen(class_name), clsobj);
-//    return clsobj;
-//}
-
-//static void set_clsobj(ClassLoader *loader, Class *c)
-//{
-////    struct jclass *c = c0;
-//    c->clsobj = get_jclass_obj_from_pool(loader, c->class_name);
-//}
-
 ClassLoader::ClassLoader(bool is_bootstrap_loader)
 {
     if (is_bootstrap_loader) {
         g_bootstrap_loader = this;
     }
-
-//    loader->classobj_pool = hashmap_create_str_key();
 
     /*
      * 先加载java.lang.Class类，
@@ -266,7 +243,7 @@ static Class* preparation(Class *c)
 
     // 如果静态变量属于基本类型或String类型，有final修饰符，
     // 且它的值在编译期已知，则该值存储在class文件常量池中。
-    for (int i = 0; i < c->fields.size(); i++) {
+    for (size_t i = 0; i < c->fields.size(); i++) {
         if (!c->fields[i]->isStatic()) {
             continue;
         }
@@ -320,18 +297,10 @@ Class *ClassLoader::loadClass(const char *class_name)
 {
     assert(class_name != nullptr);
 
-//    std::cout << "--------- find 1---------------" << std::endl;
     auto iter = loadedClasses.find(class_name);
-//    std::cout << "--------- find 2---------------" << std::endl;
     if (iter != loadedClasses.end()) {
         return iter->second;
     }
-
-//    Class *c = hashmap_find(loader->loaded_class_pool, class_name);
-//    if (c != NULL) {
-//        assert(strcmp(c->class_name, class_name) == 0);
-//        return c;
-//    }
 
     Class *c = nullptr;
     if (class_name[0] == '[') {
@@ -349,10 +318,7 @@ Class *ClassLoader::loadClass(const char *class_name)
         c->clsobj = ClassObject::newInst(c);//clsobj_create(c);
     }
 
-//    std::cout << "insert: " << c->class_name << std::endl;
-    auto p = loadedClasses.insert(make_pair(c->className, c));
-//    std::cout << p.second << " | " << loadedClassPool.size() <<std::endl;
-//    hashmap_put(loader->loaded_class_pool, c->class_name, c);
+    loadedClasses.insert(make_pair(c->className, c));
     return c;
 }
 

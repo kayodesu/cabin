@@ -240,7 +240,7 @@ void vm_out_of_memory_error(const char *msg)
 void vm_stack_overflow_error()
 {
     // todo
-    jvm_abort("");
+    jvm_abort("vm_stack_overflow_error");
 }
 
 void vm_unknown_error(const char *msg)

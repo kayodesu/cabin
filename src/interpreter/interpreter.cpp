@@ -1135,12 +1135,15 @@ static slot_t *exec()
                     thread_throw_null_pointer_exception();
                 }
 
+                assert(m->vtableIndex >= 0);
+                assert(m->vtableIndex < obj->clazz->vtable.size());
+                resolved_method = obj->clazz->vtable[m->vtableIndex];  // todo
+
                 // 下面这样写对不对 todo
-//                if (obj->clazz != frame->method->clazz) {
-                // 从对象的类中查找真正要调用的方法
-//                m = class_lookup_method(obj->clazz, m->name, m->descriptor);
-                m = obj->clazz->lookupMethod(m->name, m->descriptor);
-//                }
+               // if (obj->clazz != frame->method->clazz) {
+          //          // 从对象的类中查找真正要调用的方法
+                    m = obj->clazz->lookupMethod(m->name, m->descriptor);
+            //    }
 
                 resolved_method = m;
                 goto invoke_method;

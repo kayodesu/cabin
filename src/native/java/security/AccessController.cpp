@@ -62,7 +62,7 @@ static void getStackAccessControlContext(Frame *frame)
 static void getInheritedAccessControlContext(Frame *frame)
 {
     // todo
-    jvm_abort("");
+    jvm_abort("getInheritedAccessControlContext");
 }
 
 void java_security_AccessController_registerNatives()
@@ -75,16 +75,16 @@ void java_security_AccessController_registerNatives()
     register_native_method(C"getInheritedAccessControlContext", "()Ljava/security/AccessControlContext;",
                            getInheritedAccessControlContext);
 
-    register_native_method(C"doPrivileged", "(Ljava/security/PrivilegedAction;)"LOBJ, doPrivileged);
+    register_native_method(C"doPrivileged", "(Ljava/security/PrivilegedAction;)" LOBJ, doPrivileged);
 
     register_native_method(C"doPrivileged",
-             "(Ljava/security/PrivilegedAction;Ljava/security/AccessControlContext;)"LOBJ,
+             "(Ljava/security/PrivilegedAction;Ljava/security/AccessControlContext;)" LOBJ,
                          doPrivileged1);
 
-    register_native_method(C"doPrivileged", "(Ljava/security/PrivilegedExceptionAction;)"LOBJ,
+    register_native_method(C"doPrivileged", "(Ljava/security/PrivilegedExceptionAction;)" LOBJ,
                          doPrivileged2);
 
     register_native_method(C"doPrivileged",
-             "(Ljava/security/PrivilegedExceptionAction;Ljava/security/AccessControlContext;)"LOBJ,
+             "(Ljava/security/PrivilegedExceptionAction;Ljava/security/AccessControlContext;)" LOBJ,
                            doPrivileged3);
 }

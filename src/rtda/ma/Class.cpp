@@ -175,8 +175,65 @@ void Class::parseAttribute(BytecodeReader &r)
     }
 }
 
-void Class::create_vtable()
+void Class::createVtable()
 {
+    assert(vtable.empty());
+
+    if (superClass == nullptr) {
+        assert(strcmp(className, "java/lang/Object") == 0);
+        int i = 0;
+        for (auto &m : methods) {
+            if (m->isVirtual()) {
+                vtable.push_back(m);
+                m->vtableIndex = i++;
+            }
+        }
+        return;
+    }
+
+    // 将父类的vtable复制过来
+//    vector<Method *> &superVtable = superClass->vtable;
+    vtable.insert(vtable.end(), superClass->vtable.begin(), superClass->vtable.end());
+
+    int jj = superClass->vtable.size();
+    int eee = vtable.size();
+    assert(jj == eee);
+
+
+//    auto inheritedEnd = vtable.end();
+    int i = 0;
+    for (auto &m : methods) {
+        if (m->isVirtual()) {
+//            if (strcmp(className, "java/util/Vector") == 0) {
+//                int j = 0;
+//                printvm("********    %s\n", m->toString().c_str());
+//            }
+            for (auto iter = vtable.begin(); iter != vtable.end(); iter++) {
+                assert((*iter)->vtableIndex != Method::INVALID_VTABLE_INDEX);
+                if (utf8_equals(m->name, (*iter)->name) && utf8_equals(m->descriptor, (*iter)->descriptor)) {
+                    // 重写了父类的方法，更新
+                    m->vtableIndex = (*iter)->vtableIndex;
+                    *iter = m;
+                    goto NEXT_LOOP;
+                }
+            }
+
+            // 子类定义了要给新方法，加到 vtable 后面
+            vtable.push_back(m);
+            m->vtableIndex = i++;
+        }
+NEXT_LOOP:;
+    }
+
+
+//    if (strcmp(className, "java/util/Vector") == 0) {
+//        printvm("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+//        for (auto m : vtable) {
+//            printvm("%s\n", m->toString().c_str());
+//        }
+//        printvm("----------------------------------------------------------\n");
+//    }
+
 #if 0
     if (super_class == nullptr) {
         int vtable_len = methods_count;
@@ -241,13 +298,6 @@ void Class::create_vtable()
         }
     }
 #endif
-}
-
-void Class::print_vtable()
-{
-    for (int i = 0; i < vtable_len; i++) {
-        printvm("%s~%s~%s\n", className, vtable[i].name, vtable[i].descriptor);
-    }
 }
 
 const void Class::genPkgName()
@@ -430,7 +480,7 @@ Class::Class(ClassLoader *loader, const u1 *bytecode, size_t len)
     }
 
     parseAttribute(r); // parse class attributes
-//    create_vtable(c);
+    createVtable();
 //    if (strcmp(className, "sun/util/PreHashedMap") == 0)
 //        print_vtable(c);
 }
@@ -666,7 +716,7 @@ ArrayClass *Class::arrayClass() const
 
     // 数组
     if (className[0] == '[') {
-        sprintf(arrayClassName, "[%s\0", className);
+        sprintf(arrayClassName, "[%s", className);
         return loadArrayClass(arrayClassName); // todo
     }
 
@@ -675,7 +725,7 @@ ArrayClass *Class::arrayClass() const
     if (tmp != nullptr)
         return loadArrayClass(tmp); // todo
     // 类引用
-    sprintf(arrayClassName, "[L%s;\0", className);
+    sprintf(arrayClassName, "[L%s;", className);
     return loadArrayClass(arrayClassName); // todo
 }
 
@@ -719,8 +769,7 @@ ArrayClass::ArrayClass(const char *className): Class(g_bootstrap_loader, strdup(
     interfaces.push_back(loadSysClass(S(java_lang_Cloneable)));
     interfaces.push_back(loadSysClass(S(java_io_Serializable)));
 
-//    c->vtable_len = 0;
-//    c->vtable = NULL;
+    createVtable();
 }
 
 size_t ArrayClass::getEleSize()

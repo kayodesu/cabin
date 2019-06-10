@@ -12,42 +12,42 @@
 static void defineClass0(Frame *frame)
 {
     // todo
-    jvm_abort("");
+    jvm_abort("defineClass0");
 }
 
 // private native Class<?> defineClass1(String name, byte[] b, int off, int len, ProtectionDomain pd, String source);
 static void defineClass1(Frame *frame)
 {
     // todo
-    jvm_abort("");
+    jvm_abort("defineClass1");
 }
 
 // private native Class<?> defineClass2(String name, java.nio.ByteBuffer b, int off, int len, ProtectionDomain pd, String source);
 static void defineClass2(Frame *frame)
 {
     // todo
-    jvm_abort("");
+    jvm_abort("defineClass2");
 }
 
 // private native void resolveClass0(Class<?> c);
 static void resolveClass0(Frame *frame)
 {
     // todo
-    jvm_abort("");
+    jvm_abort("resolveClass0");
 }
 
 // private native Class<?> findBootstrapClass(String name);
 static void findBootstrapClass(Frame *frame)
 {
     // todo
-    jvm_abort("");
+    jvm_abort("findBootstrapClass");
 }
 
 // private native final Class<?> findLoadedClass0(String name);
 static void findLoadedClass0(Frame *frame)
 {
     // todo
-    jvm_abort("");
+    jvm_abort("findLoadedClass0");
 }
 
 // private static native String findBuiltinLib(String name);
@@ -71,7 +71,7 @@ static void findBuiltinLib(Frame *frame)
 static void retrieveDirectives(Frame *frame)
 {
     // todo
-    jvm_abort("");
+    jvm_abort("retrieveDirectives");
 }
 
 void java_lang_ClassLoader_registerNatives()

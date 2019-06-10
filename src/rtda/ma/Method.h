@@ -11,6 +11,8 @@
 #include "Member.h"
 #include "../../classfile/Attribute.h"
 #include "../../native/registry.h"
+#include "../../utf8.h"
+#include "../../symbol.h"
 
 
 class ArrayObject;
@@ -22,7 +24,8 @@ class Method: public Member {
     ArrayObject *exceptionTypes = nullptr; // [Ljava/lang/Class;
 
 public:
-    int vtableIndex;
+    static const int INVALID_VTABLE_INDEX = -1;
+    int vtableIndex = INVALID_VTABLE_INDEX;
 
     u2 maxStack = 0;
     u2 maxLocals = 0;
@@ -58,6 +61,19 @@ private:
 
 public:
     Method(Class *c, BytecodeReader &r);
+
+    /*
+     * 判断此方法是否由 invokevirtual 指令调用，
+     * final方法虽然非虚，但也由 invokevirtual 调用。
+     * todo
+     * 一个 final non-private 方法则可以覆写基类的虚方法，并且可以被基类引用通过invokevirtual调用到。
+     * 参考 https://www.zhihu.com/question/45131640
+     */
+    bool isVirtual() const
+    {
+//        printf("[%d], %s\n", !isPrivate() && !isStatic() && !utf8_equals(name, SYMBOL(object_init)), toString().c_str());
+        return !isPrivate() && !isStatic() && !utf8_equals(name, SYMBOL(object_init));
+    }
 
     ArrayObject *getParameterTypes();
     ClassObject *getReturnType();

@@ -10,7 +10,7 @@
 // public static native Class<?> getCallerClass(int level)
 static void getCallerClass0(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("getCallerClass0");
 }
 
 // public static native Class<?> getCallerClass()

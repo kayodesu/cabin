@@ -8,13 +8,13 @@
 // private native Parameter[] getParameters0();
 static void getParameters0(Frame *frame)
 {
-    jvm_abort(""); // todo
+    jvm_abort("getParameters0"); // todo
 }
 
 // native byte[] getTypeAnnotationBytes0();
 static void getTypeAnnotationBytes0(Frame *frame)
 {
-    jvm_abort(""); // todo
+    jvm_abort("getTypeAnnotationBytes0"); // todo
 }
 
 void java_lang_reflect_Executable_registerNatives()

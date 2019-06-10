@@ -19,44 +19,44 @@ static void availableProcessors(Frame *frame)
 // public native long freeMemory();
 static void freeMemory(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("freeMemory");
 }
 
 // public native long totalMemory();
 static void totalMemory(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("totalMemory");
 }
 
 // public native long maxMemory();
 static void maxMemory(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("maxMemory");
 }
 
 // public native void gc();
 static void gc(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("gc");
 }
 
 /* Wormhole for calling java.lang.ref.Finalizer.runFinalization */
 // private static native void runFinalization0();
 static void runFinalization0(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("runFinalization0");
 }
 
 // public native void traceInstructions(boolean on)
 static void traceInstructions(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("traceInstructions");
 }
 
 // public native void traceMethodCalls(boolean on);
 static void traceMethodCalls(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("traceMethodCalls");
 }
 
 void java_lang_Runtime_registerNatives()

@@ -21,7 +21,7 @@ static void currentThread(Frame *frame)
 // public static native void yield();
 static void yield(Frame *frame)
 {
-    jvm_abort(""); // todo
+    jvm_abort("yield"); // todo
 }
 
 // public static native void sleep(long millis) throws InterruptedException;
@@ -121,7 +121,7 @@ void *exec_new_thread_run(void *arg)
 //    jref this = arg;
 //    struct method *run = class_lookup_instance_method(this->clazz, "run", "()V");
 //    exec_java_func(run, (slot_t *) &this, true);
-    return NULL;
+    return nullptr;
 }
 
 // private native void start0();
@@ -157,49 +157,49 @@ static void start0(Frame *frame)
 // public native int countStackFrames();
 static void countStackFrames(Frame *frame)
 {
-    jvm_abort(""); // todo
+    jvm_abort("countStackFrames"); // todo
 }
 
 // public static native boolean holdsLock(Object obj);
 static void holdsLock(Frame *frame)
 {
-    jvm_abort(""); // todo
+    jvm_abort("holdsLock"); // todo
 }
 
 // private native static StackTraceElement[][] dumpThreads(Thread[] threads);
 static void dumpThreads(Frame *frame)
 {
-    jvm_abort(""); // todo
+    jvm_abort("dumpThreads"); // todo
 }
 
 // private native static Thread[] getThreads();
 static void getThreads(Frame *frame)
 {
-    jvm_abort(""); // todo
+    jvm_abort("getThreads"); // todo
 }
 
 // private native void stop0(Object o);
 static void stop0(Frame *frame)
 {
-    jvm_abort(""); // todo
+    jvm_abort("stop0"); // todo
 }
 
 // private native void suspend0();
 static void suspend0(Frame *frame)
 {
-    jvm_abort(""); // todo
+    jvm_abort("suspend0"); // todo
 }
 
 // private native void resume0();
 static void resume0(Frame *frame)
 {
-    jvm_abort(""); // todo
+    jvm_abort("resume0"); // todo
 }
 
 // private native void setNativeName(String name);
 static void setNativeName(Frame *frame)
 {
-    jvm_abort(""); // todo
+    jvm_abort("setNativeName"); // todo
 }
 
 void java_lang_Thread_registerNatives()

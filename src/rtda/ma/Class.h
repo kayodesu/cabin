@@ -78,7 +78,7 @@ struct Class: public Access {
 
     ClassLoader *loader; // todo
 
-    Class *superClass;
+    Class *superClass = nullptr;
 
     std::vector<Class *> interfaces;
 
@@ -118,12 +118,13 @@ struct Class: public Access {
 
     // vtable 只保存虚方法。
     // 该类所有函数自有函数（除了private, static, final, abstract）和 父类的函数虚拟表。
-    struct {
-        const char *name; // method name
-        const char *descriptor; // method descriptor
-        Method *method;
-    } *vtable; // todo
-    int vtable_len;
+//    struct {
+//        const char *name; // method name
+//        const char *descriptor; // method descriptor
+//        Method *method;
+//    } *vtable; // todo
+//    int vtable_len;
+    std::vector<Method *> vtable;
 
     void *itable; // todo
 
@@ -142,8 +143,6 @@ private:
     // 计算字段的个数，同时给它们编号
     void calcFieldsId();
     void parseAttribute(BytecodeReader &r);
-    void create_vtable();
-    void print_vtable();
 
     // 根据类名生成包名
     const void genPkgName();
@@ -151,6 +150,8 @@ private:
 protected:
     Class(ClassLoader *loader, const char *className)
             : className(className), loader(loader) { }
+
+    void createVtable();
 
 public:
     Class(ClassLoader *loader, const u1 *bytecode, size_t len);
@@ -224,6 +225,9 @@ public:
         pkgName = "";
         inited = true;
         // todo super_class ???? java.lang.Object ??????
+        superClass = loadSysClass(S(java_lang_Object));
+
+        createVtable();
     }
 };
 

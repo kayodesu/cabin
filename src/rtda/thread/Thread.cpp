@@ -208,5 +208,5 @@ void thread_throw_class_cast_exception(const char *from_class_name, const char *
     assert(from_class_name != nullptr);
     assert(to_class_name != nullptr);
     // todo
-    jvm_abort("");
+    jvm_abort("thread_throw_class_cast_exception");
 }

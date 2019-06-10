@@ -176,7 +176,7 @@ void java_lang_System_registerNatives()
 {
 #undef C
 #define C "java/lang/System",
-    register_native_method(C"mapLibraryName", "(Ljava/lang/String;)"LSTR, mapLibraryName);
+    register_native_method(C"mapLibraryName", "(Ljava/lang/String;)" LSTR, mapLibraryName);
     register_native_method(C"arraycopy", "(Ljava/lang/Object;ILjava/lang/Object;II)V", arraycopy);
     register_native_method(C"identityHashCode", "(Ljava/lang/Object;)I", identityHashCode);
     register_native_method(C"initProperties", "(Ljava/util/Properties;)Ljava/util/Properties;", initProperties);

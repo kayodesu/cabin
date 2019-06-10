@@ -84,6 +84,7 @@
       <w>rload</w>
       <w>rslot</w>
       <w>slen</w>
+      <w>sprintf</w>
       <w>statbuf</w>
       <w>strcat</w>
       <w>strdup</w>

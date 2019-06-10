@@ -34,7 +34,7 @@ static void initialize(Frame *frame)
  */
 static void latestUserDefinedLoader(Frame *frame)
 {
-    jvm_abort(""); // todo
+    jvm_abort("latestUserDefinedLoader"); // todo
 }
 
 void sun_misc_VM_registerNatives()

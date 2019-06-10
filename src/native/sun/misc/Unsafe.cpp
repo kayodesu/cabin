@@ -24,13 +24,13 @@ elsewhere.
 // public native void park(boolean isAbsolute, long time);
 static void park(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("park");
 }
 
 //  public native void unpark(Object thread);
 static void unpark(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("unpark");
 }
 
 /*************************************    compare and swap    ************************************/
@@ -112,32 +112,32 @@ static void compareAndSwapObject(Frame *frame)
 // public native Object allocateInstance(Class<?> type) throws InstantiationException;
 static void allocateInstance(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("allocateInstance");
 }
 
 // public native Class defineClass(String name, byte[] b, int off, int len,
 //                                  ClassLoader loader, ProtectionDomain protectionDomain)
 static void defineClass(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("defineClass");
 }
 
 // public native void ensureClassInitialized(Class<?> c);
 static void ensureClassInitialized(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("ensureClassInitialized");
 }
 
 // public native Object staticFieldBase(Field f);
 // public native long staticFieldOffset(Field f);
 static void staticFieldOffset(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("staticFieldOffset");
 }
 
 static void staticFieldBase(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("staticFieldBase");
 }
 /*************************************    object    ************************************/
 
@@ -179,133 +179,133 @@ static void objectFieldOffset(Frame *frame)
 // public native boolean getBoolean(Object o, long offset);
 static void getBoolean(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("getBoolean");
 }
 
 // public native void putBoolean(Object o, long offset, boolean x);
 static void putBoolean(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("putBoolean");
 }
 
 // public native byte getByte(Object o, long offset);
 static void obj_getByte(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("obj_getByte");
 }
 
 // public native void putByte(Object o, long offset, byte x);
 static void obj_putByte(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("obj_putByte");
 }
 
 // public native char getChar(Object o, long offset);
 static void obj_getChar(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("obj_getChar");
 }
 
 // public native void putChar(Object o, long offset, char x);
 static void obj_putChar(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("obj_putChar");
 }
 
 // public native short getShort(Object o, long offset);
 static void obj_getShort(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("obj_getShort");
 }
 
 // public native void putShort(Object o, long offset, short x);
 static void obj_putShort(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("obj_putShort");
 }
 
 // public native int getInt(Object o, long offset);
 static void obj_getInt(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("obj_getInt");
 }
 
 // public native void putInt(Object o, long offset, int x);
 static void obj_putInt(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("obj_putInt");
 }
 
 // public native long getLong(Object o, long offset);
 static void obj_getLong(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("obj_getLong");
 }
 
 // public native void putLong(Object o, long offset, long x);
 static void obj_putLong(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("obj_putLong");
 }
 
 // public native float getFloat(Object o, long offset);
 static void obj_getFloat(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("obj_getFloat");
 }
 
 // public native void putFloat(Object o, long offset, float x);
 static void obj_putFloat(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("obj_putFloat");
 }
 
 // public native double getDouble(Object o, long offset);
 static void obj_getDouble(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("obj_getDouble");
 }
 
 // public native void putDouble(Object o, long offset, double x);
 static void obj_putDouble(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("obj_putDouble");
 }
 
 // public native Object getObject(Object o, long offset);
 static void getObject(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("getObject");
 }
 
 // public native void putObject(Object o, long offset, Object x);
 static void putObject(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("putObject");
 }
 
 // public native boolean getBooleanVolatile(Object o, long offset);
 static void getBooleanVolatile(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("getBooleanVolatile");
 }
 
 // public native byte getByteVolatile(Object o, long offset);
 static void getByteVolatile(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("getByteVolatile");
 }
 
 // public native char getCharVolatile(Object o, long offset);
 static void getCharVolatile(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("getCharVolatile");
 }
 
 // public native short getShortVolatile(Object o, long offset);
 static void getShortVolatile(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("getShortVolatile");
 }
 
 // public native int getIntVolatile(Object o, long offset);
@@ -329,67 +329,67 @@ static void getIntVolatile(Frame *frame)
 // public native long getLongVolatile(Object o, long offset);
 static void getLongVolatile(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("getLongVolatile");
 }
 
 // public native float getFloatVolatile(Object o, long offset);
 static void getFloatVolatile(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("getFloatVolatile");
 }
 
 // public native double getDoubleVolatile(Object o, long offset);
 static void getDoubleVolatile(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("getDoubleVolatile");
 }
 
 // public native void putIntVolatile(Object o, long offset, int x);
 static void putIntVolatile(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("putIntVolatile");
 }
 
 // public native void putBooleanVolatile(Object o, long offset, boolean x);
 static void putBooleanVolatile(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("putBooleanVolatile");
 }
 
 // public native void putByteVolatile(Object o, long offset, byte x);
 static void putByteVolatile(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("putByteVolatile");
 }
 
 // public native void putShortVolatile(Object o, long offset, short x);
 static void putShortVolatile(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("putShortVolatile");
 }
 
 // public native void putCharVolatile(Object o, long offset, char x);
 static void putCharVolatile(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("putCharVolatile");
 }
 
 // public native void putLongVolatile(Object o, long offset, long x);
 static void putLongVolatile(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("putLongVolatile");
 }
 
 // public native void putFloatVolatile(Object o, long offset, float x);
 static void putFloatVolatile(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("putFloatVolatile");
 }
 
 // public native void putDoubleVolatile(Object o, long offset, double x);
 static void putDoubleVolatile(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("putDoubleVolatile");
 }
 // -------------------------
 // public native Object getObjectVolatile(Object o, long offset);
@@ -412,33 +412,33 @@ static void getObjectVolatile(Frame *frame)
 // public native void putObjectVolatile(Object o, long offset, Object x);
 static void putObjectVolatile(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("putObjectVolatile");
 }
 
 // public native Object getOrderedObject(Object o, long offset);
 static void getOrderedObject(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("getOrderedObject");
 }
 
 // public native void putOrderedObject(Object o, long offset, Object x);
 static void putOrderedObject(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("putOrderedObject");
 }
 
 /** Ordered/Lazy version of {@link #putIntVolatile(Object, long, int)}  */
 // public native void putOrderedInt(Object o, long offset, int x);
 static void putOrderedInt(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("putOrderedInt");
 }
 
 /** Ordered/Lazy version of {@link #putLongVolatile(Object, long, long)} */
 // public native void putOrderedLong(Object o, long offset, long x);
 static void putOrderedLong(Frame *frame)
 {
-    jvm_abort("");
+    jvm_abort("putOrderedLong");
 }
 
 /*************************************    unsafe memory    ************************************/
@@ -615,7 +615,7 @@ static void getAddress(Frame *frame)
 // public native void setMemory(Object o, long offset, long bytes, byte value);
 static void setMemory(Frame *frame)
 {
-    jvm_abort(""); // todo
+    jvm_abort("setMemory"); // todo
 }
 
 /**
@@ -638,7 +638,7 @@ static void setMemory(Frame *frame)
 // public native void copyMemory(Object srcBase, long srcOffset, Object destBase, long destOffset, long bytes);
 static void copyMemory(Frame *frame)
 {
-    jvm_abort(""); // todo
+    jvm_abort("copyMemory"); // todo
 }
 
 /**
@@ -659,12 +659,12 @@ static void copyMemory(Frame *frame)
 // public native int getLoadAverage(double[] loadavg, int nelems);
 static void getLoadAverage(Frame *frame)
 {
-    jvm_abort(""); // todo
+    jvm_abort("getLoadAverage"); // todo
 }
 
 static void shouldBeInitialized(Frame *frame)
 {
-    jvm_abort(""); // todo
+    jvm_abort("shouldBeInitialized"); // todo
 }
 
 /**
@@ -674,7 +674,7 @@ static void shouldBeInitialized(Frame *frame)
 // public native int pageSize();
 static void pageSize(Frame *frame)
 {
-    jvm_abort(""); // todo
+    jvm_abort("pageSize"); // todo
 }
 
 /**
@@ -696,14 +696,14 @@ static void pageSize(Frame *frame)
 // public native Class defineAnonymousClass(Class hostClass, byte[] data, Object[] cpPatches);
 static void defineAnonymousClass(Frame *frame)
 {
-    jvm_abort(""); // todo
+    jvm_abort("defineAnonymousClass"); // todo
 }
 
 /** Lock the object.  It must get unlocked via {@link #monitorExit}. */
 //  public native void monitorEnter(Object o);
 static void monitorEnter(Frame *frame)
 {
-    jvm_abort(""); // todo
+    jvm_abort("monitorEnter"); // todo
 }
 
 /**
@@ -713,7 +713,7 @@ static void monitorEnter(Frame *frame)
 // public native void monitorExit(Object o);
 static void monitorExit(Frame *frame)
 {
-    jvm_abort(""); // todo
+    jvm_abort("monitorExit"); // todo
 }
 
 /**
@@ -724,29 +724,29 @@ static void monitorExit(Frame *frame)
 // public native boolean tryMonitorEnter(Object o);
 static void tryMonitorEnter(Frame *frame)
 {
-    jvm_abort(""); // todo
+    jvm_abort("tryMonitorEnter"); // todo
 }
 
 /** Throw the exception without telling the verifier. */
 // public native void throwException(Throwable ee);
 static void throwException(Frame *frame)
 {
-    jvm_abort(""); // todo
+    jvm_abort("throwException"); // todo
 }
 
 static void loadFence(Frame *frame)
 {
-    jvm_abort(""); // todo
+    jvm_abort("loadFence"); // todo
 }
 
 static void storeFence(Frame *frame)
 {
-    jvm_abort(""); // todo
+    jvm_abort("storeFence"); // todo
 }
 
 static void fullFence(Frame *frame)
 {
-    jvm_abort(""); // todo
+    jvm_abort("fullFence"); // todo
 }
 
 void sun_misc_Unsafe_registerNatives()
@@ -759,14 +759,14 @@ void sun_misc_Unsafe_registerNatives()
     // compare and swap
     register_native_method(C"compareAndSwapInt", "(Ljava/lang/Object;JII)Z", compareAndSwapInt);
     register_native_method(C"compareAndSwapLong", "(Ljava/lang/Object;JJJ)Z", compareAndSwapLong);
-    register_native_method(C"compareAndSwapObject", "("LOBJ"J"LOBJ LOBJ")Z", compareAndSwapObject);
+    register_native_method(C"compareAndSwapObject", "(" LOBJ "J" LOBJ LOBJ")Z", compareAndSwapObject);
 
     // class
     register_native_method(C"allocateInstance", "(Ljava/lang/Class;)Ljava/lang/Object;", allocateInstance);
-    register_native_method(C"defineClass", "("LSTR"[BII"LCLD"Ljava/security/ProtectionDomain;)"LCLS,defineClass);
+    register_native_method(C"defineClass", "(" LSTR "[BII" LCLD "Ljava/security/ProtectionDomain;)" LCLS,defineClass);
     register_native_method(C"ensureClassInitialized", "(Ljava/lang/Class;)V", ensureClassInitialized);
     register_native_method(C"staticFieldOffset", "(Ljava/lang/reflect/Field;)J", staticFieldOffset);
-    register_native_method(C"staticFieldBase", "(Ljava/lang/reflect/Field;)"LOBJ, staticFieldBase);
+    register_native_method(C"staticFieldBase", "(Ljava/lang/reflect/Field;)" LOBJ, staticFieldBase);
 
     // Object
     register_native_method(C"arrayBaseOffset", "(Ljava/lang/Class;)I", arrayBaseOffset);
@@ -843,7 +843,7 @@ void sun_misc_Unsafe_registerNatives()
     register_native_method(C"shouldBeInitialized", "(Ljava/lang/Class;)Z", shouldBeInitialized);
     register_native_method(C"getLoadAverage", "([DI)I", getLoadAverage);
     register_native_method(C"pageSize", "()I", pageSize);
-    register_native_method(C"defineAnonymousClass", "(Ljava/lang/Class;[B[Ljava/lang/Object;)"LCLS, defineAnonymousClass);
+    register_native_method(C"defineAnonymousClass", "(Ljava/lang/Class;[B[Ljava/lang/Object;)" LCLS, defineAnonymousClass);
     register_native_method(C"monitorEnter", "(Ljava/lang/Object;)V", monitorEnter);
     register_native_method(C"monitorExit", "(Ljava/lang/Object;)V", monitorExit);
     register_native_method(C"tryMonitorEnter", "(Ljava/lang/Object;)Z", tryMonitorEnter);
