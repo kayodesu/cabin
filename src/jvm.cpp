@@ -95,7 +95,8 @@ static void find_jars(const char *path, char jars[][PATH_MAX], int *jars_count)
         }
 
         char abspath[PATH_MAX];
-        sprintf(abspath, "%s/%s\0", path, entry->d_name); // 绝对路径
+        // sprintf 和 snprintf 会自动在加上字符串结束符'\0'
+        sprintf(abspath, "%s/%s", path, entry->d_name); // 绝对路径
 
         stat(abspath, &statbuf);
         if (S_ISREG(statbuf.st_mode)) { // 常规文件
