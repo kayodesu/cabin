@@ -9,7 +9,7 @@
 using namespace std;
 
 Frame::Frame(Method *m, bool vm_invoke, Frame *prev)
-        : method(m), vm_invoke(vm_invoke), prev(prev), reader(m->code, m->codeLen)
+        : method(m), reader(m->code, m->codeLen), vm_invoke(vm_invoke), prev(prev)
 {
     locals = reinterpret_cast<slot_t *>(this + 1);
     stack = locals + m->maxLocals;

@@ -12,7 +12,6 @@
 struct Frame {
     Method *method;
     BytecodeReader reader;
-    Frame *prev;
 
     /*
      * this frame 执行的函数是否由虚拟机调用
@@ -20,6 +19,8 @@ struct Frame {
      * 也不会后续执行其下层frame，而是直接返回。
      */
     bool vm_invoke;
+
+    Frame *prev;
 
     slot_t *stack;   // operand stack
     slot_t *locals; // local variables
