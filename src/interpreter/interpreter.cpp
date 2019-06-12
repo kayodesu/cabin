@@ -1137,7 +1137,7 @@ static slot_t *exec()
 
                 assert(m->vtableIndex >= 0);
                 assert(m->vtableIndex < obj->clazz->vtable.size());
-                resolved_method = obj->clazz->vtable[m->vtableIndex];  // todo
+//                resolved_method = obj->clazz->vtable[m->vtableIndex];  // todo
 
                 // 下面这样写对不对 todo
                // if (obj->clazz != frame->method->clazz) {
@@ -1245,7 +1245,6 @@ static slot_t *exec()
                     thread_throw_null_pointer_exception();
                 }
 
-//              Method *method = class_lookup_method(obj->clazz, m->name, m->descriptor);
                 Method *method = obj->clazz->lookupMethod(m->name, m->descriptor);
                 if (method == nullptr) {
                     jvm_abort("error\n"); // todo
@@ -1277,7 +1276,6 @@ invoke_method:
     // 准备参数
     for (int i = 0; i < resolved_method->arg_slot_count; i++) {
         // 传递参数到被调用的函数。
-        //        frame_locals_set(frame, i, args + i);
         new_frame->locals[i] = args[i];
     }
 
@@ -1289,9 +1287,7 @@ invoke_method:
             case OPC_NEW: {
                 // new指令专门用来创建类实例。数组由专门的指令创建
                 // 如果类还没有被初始化，会触发类的初始化。
-         //       printvm("vvvvvvvvvvvvvvvvvvvvvvvvvvvvv   %s\n", frame->toString().c_str());  /////////////////////////
                 Class *c = resolve_class(frame->method->clazz, reader->readu2());  // todo
-         //       printvm("zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz         %s\n", c->toString().c_str());  /////////////////////////
                 if (!c->inited) {
                     c->clinit();
                 }
