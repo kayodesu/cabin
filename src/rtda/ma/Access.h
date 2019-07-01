@@ -33,31 +33,6 @@
 #define ACC_ANNOTATION   0x2000 // class
 #define ACC_ENUM         0x4000 // class field        表示字段为枚举类型
 
-//#define IS_PUBLIC(access_flags)       (((access_flags) & ACC_PUBLIC)       != 0)
-//#define IS_PRIVATE(access_flags)      (((access_flags) & ACC_PRIVATE)      != 0)
-//#define IS_PROTECTED(access_flags)    (((access_flags) & ACC_PROTECTED)    != 0)
-//#define IS_STATIC(access_flags)       (((access_flags) & ACC_STATIC)       != 0)
-//#define IS_FINAL(access_flags)        (((access_flags) & ACC_FINAL)        != 0)
-//#define IS_SUPER(access_flags)        (((access_flags) & ACC_SUPER)        != 0)
-//#define IS_SYNCHRONIZED(access_flags) (((access_flags) & ACC_SYNCHRONIZED) != 0)
-//#define IS_VOLATILE(access_flags)     (((access_flags) & ACC_VOLATILE)     != 0)
-//#define IS_BRIDGE(access_flags)       (((access_flags) & ACC_BRIDGE)       != 0)
-//#define IS_TRANSIENT(access_flags)    (((access_flags) & ACC_TRANSIENT)    != 0)
-//#define IS_VARARGS(access_flags)      (((access_flags) & ACC_VARARGS)      != 0)
-//#define IS_NATIVE(access_flags)       (((access_flags) & ACC_NATIVE)       != 0)
-//#define IS_INTERFACE(access_flags)    (((access_flags) & ACC_INTERFACE)    != 0)
-//#define IS_ABSTRACT(access_flags)     (((access_flags) & ACC_ABSTRACT)     != 0)
-//#define IS_STRICT(access_flags)       (((access_flags) & ACC_STRICT)       != 0)
-//#define IS_SYNTHETIC(access_flags)    (((access_flags) & ACC_SYNTHETIC)    != 0)
-//#define IS_ANNOTATION(access_flags)   (((access_flags) & ACC_ANNOTATION)   != 0)
-//#define IS_ENUM(access_flags)         (((access_flags) & ACC_ENUM)         != 0)
-
-
-//static inline void set_synthetic(u2 *access_flags)
-//{
-//    (*access_flags) |= ACC_SYNTHETIC;  // todo
-//}
-
 
 struct Access {
     u2 access_flags = 0;
@@ -66,15 +41,24 @@ struct Access {
 
     explicit Access(u2 access_flags): access_flags(access_flags) { }
 
-    bool isPublic() const    { return (access_flags & ACC_PUBLIC)    != 0; }
-    bool isPrivate() const   { return (access_flags & ACC_PRIVATE)   != 0; }
-    bool isProtected() const { return (access_flags & ACC_PROTECTED) != 0; }
-    bool isStatic() const    { return (access_flags & ACC_STATIC)    != 0; }
-    bool isFinal() const     { return (access_flags & ACC_FINAL)     != 0; }
-    bool isSuper() const     { return (access_flags & ACC_SUPER)     != 0; }
-    bool isNative() const    { return (access_flags & ACC_NATIVE)    != 0; }
-    bool isInterface() const { return (access_flags & ACC_INTERFACE) != 0; }
-    bool isAbstract() const  { return (access_flags & ACC_ABSTRACT)  != 0; }
+    bool isPublic() const       { return (access_flags & ACC_PUBLIC)       != 0; }
+    bool isPrivate() const      { return (access_flags & ACC_PRIVATE)      != 0; }
+    bool isProtected() const    { return (access_flags & ACC_PROTECTED)    != 0; }
+    bool isStatic() const       { return (access_flags & ACC_STATIC)       != 0; }
+    bool isFinal() const        { return (access_flags & ACC_FINAL)        != 0; }
+    bool isSuper() const        { return (access_flags & ACC_SUPER)        != 0; }
+    bool isSynchronized() const { return (access_flags & ACC_SYNCHRONIZED) != 0; }
+    bool isVolatile() const     { return (access_flags & ACC_VOLATILE)     != 0; }
+    bool isBridge() const       { return (access_flags & ACC_BRIDGE)       != 0; }
+    bool isTransient() const    { return (access_flags & ACC_TRANSIENT)    != 0; }
+    bool isVarargs() const      { return (access_flags & ACC_VARARGS)      != 0; }
+    bool isNative() const       { return (access_flags & ACC_NATIVE)       != 0; }
+    bool isInterface() const    { return (access_flags & ACC_INTERFACE)    != 0; }
+    bool isAbstract() const     { return (access_flags & ACC_ABSTRACT)     != 0; }
+    bool isStrict() const       { return (access_flags & ACC_STRICT)       != 0; }
+    bool isSynthetic() const    { return (access_flags & ACC_SYNTHETIC)    != 0; }
+    bool isAnnotation() const   { return (access_flags & ACC_ANNOTATION)   != 0; }
+    bool isEnum() const         { return (access_flags & ACC_ENUM)         != 0; }
 
     void setSynthetic() { access_flags |= ACC_SYNTHETIC; }  // todo
 };
