@@ -108,18 +108,18 @@ static void __ldc(Frame *frame, int index)
     u1 type = CP_TYPE(cp, index);
 
     if (type == CONSTANT_Integer) {
-        frame_stack_pushi(frame, CP_INT(cp, index));
+        frame->pushi(CP_INT(cp, index));
     } else if (type == CONSTANT_Float) {
-        frame_stack_pushf(frame, CP_FLOAT(cp, index));
+        frame->pushf(CP_FLOAT(cp, index));
     } else if (type == CONSTANT_String) {
-        frame_stack_pushr(frame, resolve_string(frame->method->clazz, index));
+        frame->pushr(resolve_string(frame->method->clazz, index));
     } else if (type == CONSTANT_ResolvedString) {
-        frame_stack_pushr(frame, (jref) CP_INFO(cp, index));
+        frame->pushr((jref) CP_INFO(cp, index));
     } else if (type == CONSTANT_Class) {
-        frame_stack_pushr(frame, resolve_class(frame->method->clazz, index)->clsobj);
+        frame->pushr(resolve_class(frame->method->clazz, index)->clsobj);
     } else if (type == CONSTANT_ResolvedClass) {
         auto c = (Class *) CP_INFO(cp, index);
-        frame_stack_pushr(frame, c->clsobj);
+        frame->pushr(c->clsobj);
     } else {
         VM_UNKNOWN_ERROR("unknown type: %d", type);
     }
@@ -132,9 +132,9 @@ void ldc2_w(Frame *frame)
     u1 type = CP_TYPE(cp, index);
 
     if (type == CONSTANT_Long) {
-        frame_stack_pushl(frame, CP_LONG(cp, index));
+        frame->pushl(CP_LONG(cp, index));
     } else if (type == CONSTANT_Double) {
-        frame_stack_pushd(frame, CP_DOUBLE(cp, index));
+        frame->pushd(CP_DOUBLE(cp, index));
     } else {
         VM_UNKNOWN_ERROR("unknown type: %d", type);
     }
@@ -163,7 +163,7 @@ static void tableswitch(Frame *frame)
     reader.reads4s(jump_offset_count, jump_offsets);
 
     // 弹出要判断的值
-    jint index = frame_stack_popi(frame);
+    jint index = frame->popi();
     s4 offset;
     if (index < low || index > height) {
         offset = default_offset; // 没在 case 标识的范围内，跳转到 default 分支。
@@ -200,7 +200,7 @@ static void lookupswitch(Frame *frame)
     reader.reads4s(npairs * 2, match_offsets);
 
     // 弹出要判断的值
-    jint key = frame_stack_popi(frame);
+    jint key = frame->popi();
     s4 offset = default_offset;
     for (int i = 0; i < npairs * 2; i += 2) {
         if (match_offsets[i] == key) { // 找到 case
@@ -228,7 +228,7 @@ static void multianewarray(Frame *frame)
     int arr_dim = frame->reader.readu1(); // 多维数组的维度
     size_t arr_lens[arr_dim]; // 每一维数组的长度
     for (int i = arr_dim - 1; i >= 0; i--) {
-        int len = frame_stack_popi(frame);
+        int len = frame->popi();
         if (len < 0) {  // todo 等于0的情况
             thread_throw_negative_array_size_exception(len);
         }
@@ -236,7 +236,7 @@ static void multianewarray(Frame *frame)
     }
 
     jref arr = ArrayObject::newInst(loadArrayClass(class_name), arr_dim, arr_lens);
-    frame_stack_pushr(frame, arr);
+    frame->pushr(arr);
 }
 
 /*
@@ -246,7 +246,7 @@ static void multianewarray(Frame *frame)
  */
 static void newarray(Frame *frame)
 {
-    jint arr_len = frame_stack_popi(frame);
+    jint arr_len = frame->popi();
     if (arr_len < 0) {
         thread_throw_negative_array_size_exception(arr_len);
     }
@@ -270,7 +270,7 @@ static void newarray(Frame *frame)
     }
 
     auto c = loadArrayClass(arr_name);
-    frame_stack_pushr(frame, ArrayObject::newInst(c, (size_t) arr_len));
+    frame->pushr(ArrayObject::newInst(c, (size_t) arr_len));
 }
 
 /*
@@ -281,7 +281,7 @@ static void newarray(Frame *frame)
  */
 static void anewarray(Frame *frame)
 {
-    jint arr_len = frame_stack_popi(frame);
+    jint arr_len = frame->popi();
     if (arr_len < 0) {
         thread_throw_array_index_out_of_bounds_exception(arr_len);
     }
@@ -301,7 +301,7 @@ static void anewarray(Frame *frame)
     }
 
     auto ac = frame->method->clazz->loader->loadClass(class_name)->arrayClass();
-    frame_stack_pushr(frame, ArrayObject::newInst(ac, (size_t) arr_len));
+    frame->pushr(ArrayObject::newInst(ac, (size_t) arr_len));
 }
 
 
@@ -631,27 +631,27 @@ static slot_t *exec()
 
         switch (opcode) {
             CASE(OPC_NOP, { })
-            CASE(OPC_ACONST_NULL, frame_stack_pushr(frame, nullptr))
-            CASE(OPC_ICONST_M1, frame_stack_pushi(frame, -1))
-            CASE(OPC_ICONST_0, frame_stack_pushi(frame, 0))
-            CASE(OPC_ICONST_1, frame_stack_pushi(frame, 1))
-            CASE(OPC_ICONST_2, frame_stack_pushi(frame, 2))
-            CASE(OPC_ICONST_3, frame_stack_pushi(frame, 3))
-            CASE(OPC_ICONST_4, frame_stack_pushi(frame, 4))
-            CASE(OPC_ICONST_5, frame_stack_pushi(frame, 5))
+            CASE(OPC_ACONST_NULL, frame->pushr(nullptr))
+            CASE(OPC_ICONST_M1, frame->pushi(-1))
+            CASE(OPC_ICONST_0, frame->pushi(0))
+            CASE(OPC_ICONST_1, frame->pushi(1))
+            CASE(OPC_ICONST_2, frame->pushi(2))
+            CASE(OPC_ICONST_3, frame->pushi(3))
+            CASE(OPC_ICONST_4, frame->pushi(4))
+            CASE(OPC_ICONST_5, frame->pushi(5))
 
-            CASE(OPC_LCONST_0, frame_stack_pushl(frame, 0))
-            CASE(OPC_LCONST_1, frame_stack_pushl(frame, 1))
+            CASE(OPC_LCONST_0, frame->pushl(0))
+            CASE(OPC_LCONST_1, frame->pushl(1))
 
-            CASE(OPC_FCONST_0, frame_stack_pushf(frame, 0))
-            CASE(OPC_FCONST_1, frame_stack_pushf(frame, 1))
-            CASE(OPC_FCONST_2, frame_stack_pushf(frame, 2))
+            CASE(OPC_FCONST_0, frame->pushf(0))
+            CASE(OPC_FCONST_1, frame->pushf(1))
+            CASE(OPC_FCONST_2, frame->pushf(2))
 
-            CASE(OPC_DCONST_0, frame_stack_pushd(frame, 0))
-            CASE(OPC_DCONST_1, frame_stack_pushd(frame, 1))
+            CASE(OPC_DCONST_0, frame->pushd(0))
+            CASE(OPC_DCONST_1, frame->pushd(1))
 
-            CASE(OPC_BIPUSH, frame_stack_pushi(frame, reader->readu1())) // Byte Integer push
-            CASE(OPC_SIPUSH, frame_stack_pushi(frame, reader->readu2())) // Short Integer push
+            CASE(OPC_BIPUSH, frame->pushi(reader->readu1())) // Byte Integer push
+            CASE(OPC_SIPUSH, frame->pushi(reader->readu2())) // Short Integer push
 
             CASE(OPC_LDC, __ldc(frame, reader->readu1()))
             CASE(OPC_LDC_W, __ldc(frame, reader->readu2()))
@@ -691,8 +691,8 @@ static slot_t *exec()
             })
 
 #define GET_AND_CHECK_ARRAY \
-    jint index = frame_stack_popi(frame); \
-    auto arr = (ArrayObject *) frame_stack_popr(frame); \
+    jint index = frame->popi(); \
+    auto arr = (ArrayObject *) frame->popr(); \
     if ((arr) == nullptr) \
         thread_throw_null_pointer_exception(); \
     if (!arr->checkBounds(index)) \
@@ -846,58 +846,58 @@ static slot_t *exec()
             CASE(OPC_LREM, BINARY_OP(jlong, %))
 
             case OPC_FREM: {
-                jfloat v2 = frame_stack_popf(frame);
-                jfloat v1 = frame_stack_popf(frame);
+                jfloat v2 = frame->popf();
+                jfloat v1 = frame->popf();
                 jvm_abort("not implement\n");
                 //    os_pushf(frame->operand_stack, dremf(v1, v2)); /* todo 相加溢出的问题 */
                 break;
             }
 
             CASE(OPC_DREM, {
-                jdouble v2 = frame_stack_popd(frame);
-                jdouble v1 = frame_stack_popd(frame);
+                jdouble v2 = frame->popd();
+                jdouble v1 = frame->popd();
                 jvm_abort("未实现\n");
                 //    os_pushd(frame->operand_stack, drem(v1, v2)); /* todo 相加溢出的问题 */
             })
 
-            CASE(OPC_INEG, frame_stack_pushi(frame, -frame_stack_popi(frame)))
-            CASE(OPC_LNEG, frame_stack_pushl(frame, -frame_stack_popl(frame)))
-            CASE(OPC_FNEG, frame_stack_pushf(frame, -frame_stack_popf(frame)))
-            CASE(OPC_DNEG, frame_stack_pushd(frame, -frame_stack_popd(frame)))
+            CASE(OPC_INEG, frame->pushi(-frame->popi()))
+            CASE(OPC_LNEG, frame->pushl(-frame->popl()))
+            CASE(OPC_FNEG, frame->pushf(-frame->popf()))
+            CASE(OPC_DNEG, frame->pushd(-frame->popd()))
 
             CASE(OPC_ISHL, {
                 // 与0x1f是因为低5位表示位移距离，位移距离实际上被限制在0到31之间。
-                jint shift = frame_stack_popi(frame) & 0x1f;
-                jint value = frame_stack_popi(frame);
-                frame_stack_pushi(frame, value << shift);
+                jint shift = frame->popi() & 0x1f;
+                jint value = frame->popi();
+                frame->pushi(value << shift);
             })
             CASE(OPC_LSHL, {
                 // 与0x3f是因为低6位表示位移距离，位移距离实际上被限制在0到63之间。
-                jint shift = frame_stack_popi(frame) & 0x3f;
-                jlong value = frame_stack_popl(frame);
-                frame_stack_pushl(frame, value << shift);
+                jint shift = frame->popi() & 0x3f;
+                jlong value = frame->popl();
+                frame->pushl(value << shift);
             })
             CASE(OPC_ISHR, {
                 // 逻辑右移 shift logical right
-                jint shift = frame_stack_popi(frame) & 0x1f;
-                jint value = frame_stack_popi(frame);
-                frame_stack_pushi(frame, (~(((jint)1) >> shift)) & (value >> shift));
+                jint shift = frame->popi() & 0x1f;
+                jint value = frame->popi();
+                frame->pushi((~(((jint)1) >> shift)) & (value >> shift));
             })
             CASE(OPC_LSHR, {
-                jint shift = frame_stack_popi(frame) & 0x3f;
-                jlong value = frame_stack_popl(frame);
-                frame_stack_pushl(frame, (~(((jlong)1) >> shift)) & (value >> shift));
+                jint shift = frame->popi() & 0x3f;
+                jlong value = frame->popl();
+                frame->pushl((~(((jlong)1) >> shift)) & (value >> shift));
             })
             CASE(OPC_IUSHR, {
                 // 算术右移 shift arithmetic right
-                jint shift = frame_stack_popi(frame) & 0x1f;
-                jint value = frame_stack_popi(frame);
-                frame_stack_pushi(frame, value >> shift);
+                jint shift = frame->popi() & 0x1f;
+                jint value = frame->popi();
+                frame->pushi(value >> shift);
             })
             CASE(OPC_LUSHR, {
-                jint shift = frame_stack_popi(frame) & 0x3f;
-                jlong value = frame_stack_popl(frame);
-                frame_stack_pushl(frame, value >> shift);
+                jint shift = frame->popi() & 0x3f;
+                jlong value = frame->popl();
+                frame->pushl(value >> shift);
             })
 
             CASE(OPC_IAND, BINARY_OP(jint, &))
@@ -923,7 +923,7 @@ static slot_t *exec()
                 break;
             }
 
-#define x2y(x, y) frame_stack_push##y(frame, x##2##y(frame_stack_pop##x(frame)))
+#define x2y(x, y) frame->push##y(x##2##y(frame->pop##x()))
             CASE(OPC_I2L, x2y(i, l))
             CASE(OPC_I2F, x2y(i, f))
             CASE(OPC_I2D, x2y(i, d))
@@ -940,9 +940,9 @@ static slot_t *exec()
             CASE(OPC_D2L, x2y(d, l))
             CASE(OPC_D2F, x2y(d, f))
 
-            CASE(OPC_I2B, frame_stack_pushi(frame, i2b(frame_stack_popi(frame))))
-            CASE(OPC_I2C, frame_stack_pushi(frame, i2c(frame_stack_popi(frame))))
-            CASE(OPC_I2S, frame_stack_pushi(frame, i2s(frame_stack_popi(frame))))
+            CASE(OPC_I2B, frame->pushi(i2b(frame->popi())))
+            CASE(OPC_I2C, frame->pushi(i2c(frame->popi())))
+            CASE(OPC_I2S, frame->pushi(i2s(frame->popi())))
 
 /*
  * NAN 与正常的的浮点数无法比较，即 即不大于 也不小于 也不等于。
@@ -953,9 +953,9 @@ static slot_t *exec()
 
 #define CMP(type, t, cmp_result) \
 { \
-    type v2 = frame_stack_pop##t(frame); \
-    type v1 = frame_stack_pop##t(frame); \
-    frame_stack_pushi(frame, cmp_result); \
+    type v2 = frame->pop##t(); \
+    type v1 = frame->pop##t(); \
+    frame->pushi(cmp_result); \
 }
 
             CASE(OPC_LCMP, CMP(jlong, l, DO_CMP(v1, v2, -1)))
@@ -966,7 +966,7 @@ static slot_t *exec()
 
 #define IF_COND(cond) \
 { \
-    jint v = frame_stack_popi(frame); \
+    jint v = frame->popi(); \
     jint offset = reader->reads2(); \
     if (v cond 0) \
         reader->skip(offset - 3);  /* minus instruction length */ \
@@ -1081,7 +1081,7 @@ static slot_t *exec()
             case OPC_GETFIELD: {
                 int index = reader->readu2();
                 Field *f = resolve_field(frame->method->clazz, index);
-                jref obj = frame_stack_popr(frame);
+                jref obj = frame->popr();
                 if (obj == nullptr) {
                     thread_throw_null_pointer_exception();
                 }
@@ -1114,7 +1114,7 @@ static slot_t *exec()
                 }
                 slot_t *value = frame->stack;
 
-                jref obj = frame_stack_popr(frame);
+                jref obj = frame->popr();
                 if (obj == nullptr) {
                     thread_throw_null_pointer_exception();
                 }
@@ -1299,7 +1299,7 @@ invoke_method:
                 // todo java/lang/Class 会在这里创建，为什么会这样，怎么处理
                 //    assert(strcmp(c->class_name, "java/lang/Class") == 0);
 
-                frame_stack_pushr(frame, Object::newInst(c));
+                frame->pushr(Object::newInst(c));
 				break;
             }
 
@@ -1307,19 +1307,19 @@ invoke_method:
             CASE(OPC_ANEWARRAY, anewarray(frame))
 
             case OPC_ARRAYLENGTH: {
-                Object *o = frame_stack_popr(frame);
+                Object *o = frame->popr();
                 if (o == nullptr) {
                     thread_throw_null_pointer_exception();
                 }
                 if (!o->isArray()) {
                     vm_unknown_error("not a array");
                 }
-                frame_stack_pushi(frame, ((ArrayObject *) o)->len);
+                frame->pushi(((ArrayObject *) o)->len);
 				break;
             }
 
             case OPC_ATHROW: {
-                jref exception = frame_stack_popr(frame);
+                jref exception = frame->popr();
                 if (exception == nullptr) {
                     thread_throw_null_pointer_exception();
                 }
@@ -1336,7 +1336,7 @@ invoke_method:
                          */
 //                frame_stack_clear(top);  // todo
 //                frame_stack_pushr(top, exception);
-                        frame_stack_pushr(frame, exception);
+                        frame->pushr(exception);
                         reader->pc = (size_t) handler_pc;
                         break;  // todo
                     }
@@ -1372,20 +1372,20 @@ invoke_method:
                 int index = reader->readu2();
                 Class *c = resolve_class(frame->method->clazz, index);
 
-                jref obj = frame_stack_popr(frame);
+                jref obj = frame->popr();
                 if (obj == nullptr)
-                    frame_stack_pushi(frame, 0);
+                    frame->pushi(0);
                 else
-                    frame_stack_pushi(frame, obj->isInstanceOf(c) ? 1 : 0);
+                    frame->pushi(obj->isInstanceOf(c) ? 1 : 0);
             })
 
             CASE(OPC_MONITORENTER, {
-                jref o = frame_stack_popr(frame);
+                jref o = frame->popr();
                 // todo
             })
 
             CASE(OPC_MONITOREXIT, {
-                jref o = frame_stack_popr(frame);
+                jref o = frame->popr();
                 // todo
             })
 
@@ -1394,14 +1394,14 @@ invoke_method:
 
             CASE(OPC_IFNULL, {
                 int offset = reader->reads2();
-                if (frame_stack_popr(frame) == nullptr) {
+                if (frame->popr() == nullptr) {
                     reader->skip(offset - 3); // minus instruction length
                 }
             })
 
             CASE(OPC_IFNONNULL, {
                 int offset = reader->reads2();
-                if (frame_stack_popr(frame) != nullptr) {
+                if (frame->popr() != nullptr) {
                     reader->skip(offset - 3); // minus instruction length
                 }
             })

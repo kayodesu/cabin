@@ -48,7 +48,7 @@ static void forName0(Frame *frame)
 //        bcr_set_pc(Frame->reader, jthread_get_pc(Frame->thread));
     }
 
-    frame_stack_pushr(frame, (jref) c->clsobj);
+    frame->pushr((jref) c->clsobj);
 }
 
 /*
@@ -61,7 +61,7 @@ static void getPrimitiveClass(Frame *frame)
 
     const char *class_name = so->getUtf8Value(); // 这里得到的 class_name 是诸如 "int, float" 之类的 primitive type
     Class *c = g_bootstrap_loader->loadClass(class_name);
-    frame_stack_pushr(frame, c->clsobj);
+    frame->pushr(c->clsobj);
 }
 
 /**
@@ -130,7 +130,7 @@ static void getName0(Frame *frame)
         if (*p == '/')
             *p = '.';
     }
-    frame_stack_pushr(frame, StringObject::newInst(className));
+    frame->pushr(StringObject::newInst(className));
 }
 
 /**
@@ -182,7 +182,7 @@ static void getName0(Frame *frame)
 static void desiredAssertionStatus0(Frame *frame)
 {
     // todo 本vm不讨论断言。desiredAssertionStatus0（）方法把false推入操作数栈顶
-    frame_stack_pushi(frame, 0);
+    frame->pushi(0);
 }
 
 /**
@@ -222,7 +222,7 @@ static void isInstance(Frame *frame)
     auto thisObj = frame->getLocalAsRef<ClassObject>(0);
 
     jref obj = frame->getLocalAsRef(1);
-    frame_stack_pushi(frame, (obj != nullptr && obj->isInstanceOf(thisObj->entityClass)) ? 1 : 0);
+    frame->pushi((obj != nullptr && obj->isInstanceOf(thisObj->entityClass)) ? 1 : 0);
 }
 
 /**
@@ -260,7 +260,7 @@ static void isAssignableFrom(Frame *frame)
 
 //    bool b = class_is_subclass_of(clsobj_entity_class(cls), clsobj_entity_class(this));
     bool b = cls->entityClass->isSubclassOf(thisObj->entityClass);
-    frame_stack_pushi(frame, b ? 1 : 0);
+    frame->pushi(b ? 1 : 0);
 }
 
 /*
@@ -271,7 +271,7 @@ static void isAssignableFrom(Frame *frame)
 static void isInterface(Frame *frame)
 {
     auto thisObj = frame->getLocalAsRef<ClassObject>(0);
-    frame_stack_pushi(frame, thisObj->entityClass->isInterface() ? 1 : 0);
+    frame->pushi(thisObj->entityClass->isInterface() ? 1 : 0);
 }
 
 /*
@@ -282,7 +282,7 @@ static void isInterface(Frame *frame)
 static void isArray(Frame *frame)
 {
     auto thisObj = frame->getLocalAsRef<ClassObject>(0);
-    frame_stack_pushi(frame, thisObj->entityClass->isArray() ? 1 : 0);  // todo
+    frame->pushi(thisObj->entityClass->isArray() ? 1 : 0);  // todo
 }
 
 /**
@@ -319,7 +319,7 @@ static void isPrimitive(Frame *frame)
 {
     auto thisObj = frame->getLocalAsRef<ClassObject>(0);
     bool b = thisObj->entityClass->isPrimitive();
-    frame_stack_pushi(frame, b ? 1 : 0);
+    frame->pushi(b ? 1 : 0);
 }
 
 /**
@@ -340,7 +340,7 @@ static void getSuperclass(Frame *frame)
     auto thisObj = frame->getLocalAsRef<ClassObject>(0);
 
     Class *c = frame->method->clazz->loader->loadClass(thisObj->entityClass->className);
-    frame_stack_pushr(frame, c->superClass != nullptr ? c->superClass->clsobj : nullptr);
+    frame->pushr(c->superClass != nullptr ? c->superClass->clsobj : nullptr);
 }
 
 /**
@@ -401,7 +401,7 @@ static void getInterfaces0(Frame *frame)
 //        arrobj_set(Object *, interfaces, i, entity_class->interfaces[i]->clsobj);
     }
 
-    frame_stack_pushr(frame, interfaces);
+    frame->pushr(interfaces);
 }
 
 /*
@@ -415,9 +415,9 @@ static void getComponentType(Frame *frame)
     auto thisObj = frame->getLocalAsRef<ClassObject>(0);
 
     if (thisObj->entityClass->isArray()) {
-        frame_stack_pushr(frame, ((ArrayClass *) thisObj->entityClass)->componentClass()->clsobj);
+        frame->pushr(((ArrayClass *) thisObj->entityClass)->componentClass()->clsobj);
     } else {
-        frame_stack_pushr(frame, nullptr);
+        frame->pushr(nullptr);
     }
 
 //    Class *component_cls = class_component_class(thisObj->entityClass);
@@ -459,7 +459,7 @@ static void getComponentType(Frame *frame)
 static void getModifiers(Frame *frame)
 {
     auto thisObj = frame->getLocalAsRef<ClassObject>(0);
-    frame_stack_pushi(frame, thisObj->entityClass->access_flags);
+    frame->pushi(thisObj->entityClass->access_flags);
 }
 
 /**
@@ -493,7 +493,7 @@ static void getEnclosingMethod0(Frame *frame)
 
     Class *c = thisObj->entityClass;
     if (c->enclosing_info[0] == nullptr) {
-        frame_stack_pushr(frame, nullptr);
+        frame->pushr(nullptr);
         return;
     }
 
@@ -503,7 +503,7 @@ static void getEnclosingMethod0(Frame *frame)
 //        arrobj_set(jref, result, i, c->enclosing_info[i]);
     }
 
-    frame_stack_pushr(frame, result);
+    frame->pushr(result);
 }
 
 /*
@@ -556,7 +556,7 @@ static void getDeclaredFields0(Frame *frame)
     Class *jlrf_cls = loadSysClass(S(java_lang_reflect_Field));
 
     auto jlrf_arr = ArrayObject::newInst(jlrf_cls->arrayClass(), fields_count);
-    frame_stack_pushr(frame, jlrf_arr);
+    frame->pushr(jlrf_arr);
 
 //    char *arr_cls_name = get_arr_class_name(jlrf_cls->className);
 //    Object *jlrf_arr = arrobj_create(load_class(loader, arr_cls_name), fields_count);
@@ -615,7 +615,7 @@ static void getDeclaredMethods0(Frame *frame)
     Class *jlrm_cls = loadSysClass("java/lang/reflect/Method");
 //    char *arr_cls_name = get_arr_class_name(jlrm_cls->className);
     auto jlrm_arr = ArrayObject::newInst(jlrm_cls->arrayClass(), methods_count);
-    frame_stack_pushr(frame, jlrm_arr);
+    frame->pushr(jlrm_arr);
 //    free(arr_cls_name);
 
     /*
@@ -667,7 +667,7 @@ static void getDeclaredConstructors0(Frame *frame)
     Class *jlrc_cls = loadSysClass("java/lang/reflect/Constructor");
 //    char *arr_cls_name = get_arr_class_name(jlrc_cls->className);
     auto jlrc_arr = ArrayObject::newInst(jlrc_cls->arrayClass(), constructors_count);
-    frame_stack_pushr(frame, jlrc_arr);
+    frame->pushr(jlrc_arr);
 //    free(arr_cls_name);
 
     /*
@@ -738,7 +738,7 @@ static void getDeclaringClass0(Frame *frame)
 {
     Class *entityClass = (frame->getLocalAsRef<ClassObject>(0))->entityClass;
     if (entityClass->isArray()) {
-        frame_stack_pushr(frame, nullptr);
+        frame->pushr(nullptr);
         return;
     }
 
@@ -746,10 +746,10 @@ static void getDeclaringClass0(Frame *frame)
     strcpy(buf, entityClass->className);
     char *last_dollar = strrchr(buf, '$'); // 内部类标识：out_class_name$inner_class_name
     if (last_dollar == nullptr) {
-        frame_stack_pushr(frame, nullptr);
+        frame->pushr(nullptr);
     } else {
         *last_dollar = 0;
-        frame_stack_pushr(frame, frame->method->clazz->loader->loadClass(buf)->clsobj);
+        frame->pushr(frame->method->clazz->loader->loadClass(buf)->clsobj);
     }
 }
 

@@ -33,7 +33,7 @@ static void mapLibraryName(Frame *frame)
     char mapping_name[strlen(name) + 5];;
     strcpy(mapping_name, name);
     strcat(mapping_name, ".dll"); // todo ...........................
-    frame_stack_pushr(frame, StringObject::newInst(mapping_name));  // todo
+    frame->pushr(StringObject::newInst(mapping_name));  // todo
 }
 
 // public static native void arraycopy(Object src, int srcPos, Object dest, int destPos, int length)
@@ -54,7 +54,7 @@ static void arraycopy(Frame *frame)
 static void identityHashCode(Frame *frame)
 {
     jref x = frame->getLocalAsRef(0);
-    frame_stack_pushi(frame, (jint) (intptr_t) x);
+    frame->pushi((jint) (intptr_t) x);
 }
 
 /*
@@ -117,7 +117,7 @@ static void initProperties(Frame *frame)
     }
 
     // 返回参数
-    frame_stack_pushr(frame, props);
+    frame->pushr(props);
 }
 
 // private static native void setIn0(InputStream in);
@@ -163,7 +163,7 @@ static void nanoTime(Frame *frame)
 	stack := frame.OperandStack()
 	stack.PushLong(nanoTime)
      */
-    frame_stack_pushl(frame, (jlong)1);
+    frame->pushl((jlong)1);
 }
 
 // public static native long currentTimeMillis();

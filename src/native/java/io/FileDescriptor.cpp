@@ -22,7 +22,7 @@ static void initIDs(Frame *frame)
 static void set(Frame *frame)
 {
     // todo
-    frame_stack_pushl(frame, 123);
+    frame->pushl(123);
 }
 
 /**

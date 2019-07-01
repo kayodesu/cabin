@@ -23,7 +23,7 @@ static void doPrivileged(Frame *frame)
      */
     Method *m = thisObj->clazz->getDeclaredMethod(S(run), S(___java_lang_Object));
     slot_t *s = exec_java_func(m, (slot_t *) &thisObj);
-    frame_stack_pushr(frame, RSLOT(s));
+    frame->pushr(RSLOT(s));
 }
 
 // @CallerSensitive
@@ -55,7 +55,7 @@ static void doPrivileged3(Frame *frame)
 static void getStackAccessControlContext(Frame *frame)
 {
     // todo
-    frame_stack_pushr(frame, nullptr);
+    frame->pushr(nullptr);
 }
 
 // static native AccessControlContext getInheritedAccessControlContext();

@@ -15,7 +15,7 @@ using namespace std;
 static void fillInStackTrace(Frame *frame)
 {
     jref thisObj = frame->getLocalAsRef(0);
-    frame_stack_pushr(frame, thisObj);
+    frame->pushr(thisObj);
 
     int num = vm_stack_depth();
     /*
@@ -79,7 +79,7 @@ static void getStackTraceElement(Frame *frame)
 
     auto trace = (vector<Object *> *) thisObj->extra;
     assert(trace != nullptr);
-    frame_stack_pushr(frame, trace->at(index));
+    frame->pushr(trace->at(index));
 }
 
 // native int getStackTraceDepth();
@@ -88,7 +88,7 @@ static void getStackTraceDepth(Frame *frame)
     jref thisObj = frame->getLocalAsRef(0);
     auto trace = (vector<Object *> *) thisObj->extra;
     assert(trace != nullptr);
-    frame_stack_pushi(frame, trace->size());
+    frame->pushi(trace->size());
 }
 
 void java_lang_Throwable_registerNatives()

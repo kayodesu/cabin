@@ -14,7 +14,7 @@ static void find(Frame *frame)
     // todo
 //    jref name = slot_getr(frame->local_vars + 1);
 //    printvm("-------- %s\n", jstrobj_value(name));
-    frame_stack_pushl(frame, 1); // todo
+    frame->pushl(1); // todo
 }
 
 // native void load(String name, boolean isBuiltin);

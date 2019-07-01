@@ -15,7 +15,7 @@
 static void currentThread(Frame *frame)
 {
     // push a Object of java/lang/Thread of current thread
-    frame_stack_pushr(frame, thread_self()->jltobj);
+    frame->pushr(thread_self()->jltobj);
 }
 
 // public static native void yield();
@@ -74,7 +74,7 @@ static void isAlive(Frame *frame)
 //    JObject *thisObj = frame->getLocalVar(0).getRef();
 //    frame->operandStack.push(0);  // todo wtf?
 //    struct Object *this_obj = slot_getr(frame->local_vars);
-    frame_stack_pushi(frame, 0); // todo 为什么要设置成0，设置成1就状态错误
+    frame->pushi(0); // todo 为什么要设置成0，设置成1就状态错误
 }
 
 /**

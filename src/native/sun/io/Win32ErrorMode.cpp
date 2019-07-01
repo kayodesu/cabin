@@ -7,7 +7,7 @@
 
 static void setErrorMode(Frame *frame)
 {
-    frame_stack_pushl(frame, 0); // todo
+    frame->pushl(0); // todo
 }
 
 void sun_io_Win32ErrorMode_registerNatives()

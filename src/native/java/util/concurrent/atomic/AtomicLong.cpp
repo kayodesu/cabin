@@ -12,7 +12,7 @@ static void VMSupportsCS8(Frame *frame)
  * 	stack := frame.OperandStack()
 	stack.PushBoolean(false) // todo sync/atomic
  */
-    frame_stack_pushi(frame, 0); // todo
+    frame->pushi(0); // todo
 }
 
 void java_util_concurrent_atomic_AtomicLong_registerNatives()

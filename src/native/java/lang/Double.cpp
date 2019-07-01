@@ -10,14 +10,14 @@
 static void doubleToRawLongBits(Frame *frame)
 {
     jdouble d = frame->getLocalAsDouble(0);
-    frame_stack_pushl(frame, double_to_raw_long_bits(d));
+    frame->pushl(double_to_raw_long_bits(d));
 }
 
 // public static native double longBitsToDouble(long value);
 static void longBitsToDouble(Frame *frame)
 {
     jlong l = frame->getLocalAsLong(0);
-    frame_stack_pushd(frame, long_bits_to_double(l));
+    frame->pushd(long_bits_to_double(l));
 }
 
 void java_lang_Double_registerNatives()

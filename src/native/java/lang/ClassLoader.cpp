@@ -60,7 +60,7 @@ static void findBuiltinLib(Frame *frame)
     if (strcmp(name, "zip.dll") == 0) {
         // C:\Program Files\Java\jre1.8.0_162\bin
         char buf[1024] = R"(C:\Program Files\Java\jre1.8.0_162\bin\zip.dll)";  // todo
-        frame_stack_pushr(frame, StringObject::newInst(buf));    // todo
+        frame->pushr(StringObject::newInst(buf));    // todo
     } else {
         jvm_abort(name);
     }

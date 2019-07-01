@@ -13,7 +13,7 @@ static void availableProcessors(Frame *frame)
     // todo 这是windows 方式，不利于平台移植
     SYSTEM_INFO sysInfo;
     GetSystemInfo(&sysInfo);
-    frame_stack_pushi(frame, (jint) sysInfo.dwNumberOfProcessors);
+    frame->pushi((jint) sysInfo.dwNumberOfProcessors);
 }
 
 // public native long freeMemory();

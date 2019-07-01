@@ -61,7 +61,7 @@ static void compareAndSwapInt(Frame *frame)
     }
 
     bool b = __sync_bool_compare_and_swap(&old, expected, x);
-    frame_stack_pushi(frame, b ? 1 : 0);
+    frame->pushi(b ? 1 : 0);
 }
 
 // public final native boolean compareAndSwapLong(Object o, long offset, long expected, long x);
@@ -83,7 +83,7 @@ static void compareAndSwapLong(Frame *frame)
     }
 
     bool b = __sync_bool_compare_and_swap(&old, expected, x);
-    frame_stack_pushi(frame, b ? 1 : 0);
+    frame->pushi(b ? 1 : 0);
 }
 
 // public final native boolean compareAndSwapObject(Object o, long offset, Object expected, Object x)
@@ -104,7 +104,7 @@ static void compareAndSwapObject(Frame *frame)
     }
 
     bool b = __sync_bool_compare_and_swap(&old, expected, x);
-    frame_stack_pushi(frame, b ? 1 : 0);
+    frame->pushi(b ? 1 : 0);
 }
 
 /*************************************    class    ************************************/
@@ -144,13 +144,13 @@ static void staticFieldBase(Frame *frame)
 // public native int arrayBaseOffset(Class<?> type)
 static void arrayBaseOffset(Frame *frame)
 {
-    frame_stack_pushi(frame, 0);//frame->operandStack.push((jint)0);  // todo
+    frame->pushi(0);//frame->operandStack.push((jint)0);  // todo
 }
 
 // public native int arrayIndexScale(Class<?> type)
 static void arrayIndexScale(Frame *frame)
 {
-    frame_stack_pushi(frame, 1);//frame->operandStack.push((jint)1);  // todo
+    frame->pushi(1);//frame->operandStack.push((jint)1);  // todo
 }
 
 // public native long objectFieldOffset(Field field)
@@ -173,7 +173,7 @@ static void objectFieldOffset(Frame *frame)
     jref field_obj = frame->getLocalAsRef(1);
     jint offset = field_obj->getInstFieldValue<jint>(S(slot), S(I)); // todo "slot", "I" 什么东西
 //    printvm("-------   %s, %d\n", jobject_to_string(field_obj), offset);
-    frame_stack_pushl(frame, offset);
+    frame->pushl(offset);
 }
 
 // public native boolean getBoolean(Object o, long offset);
@@ -323,7 +323,7 @@ static void getIntVolatile(Frame *frame)
     } else {
         value = o->getInstFieldValue<jint>(offset);  // todo
     }
-    frame_stack_pushi(frame, value);
+    frame->pushi(value);
 }
 
 // public native long getLongVolatile(Object o, long offset);
@@ -406,7 +406,7 @@ static void getObjectVolatile(Frame *frame)
     } else {
         value = o->getInstFieldValue<jref>(offset);  // todo
     }
-    frame_stack_pushr(frame, value);
+    frame->pushr(value);
 }
 
 // public native void putObjectVolatile(Object o, long offset, Object x);
@@ -454,7 +454,7 @@ static void allocateMemory(Frame *frame)
 {
     jlong bytes = frame->getLocalAsLong(1);
     u1 *p = (u1 *) vm_malloc(sizeof(char)*bytes); // todo
-    frame_stack_pushl(frame, (jlong) (intptr_t) p);
+    frame->pushl((jlong) (intptr_t) p);
 }
 
 // public native long reallocateMemory(long address, long bytes);
@@ -462,7 +462,7 @@ static void reallocateMemory(Frame *frame)
 {
     jlong address = frame->getLocalAsLong(1);
     jlong bytes = frame->getLocalAsLong(3);
-    frame_stack_pushl(frame, (jlong) (intptr_t) realloc((void *) (intptr_t) address, (size_t) bytes)); // 有内存泄漏
+    frame->pushl((jlong) (intptr_t) realloc((void *) (intptr_t) address, (size_t) bytes)); // 有内存泄漏
 }
 
 // public native void freeMemory(long address);
@@ -475,7 +475,7 @@ static void freeMemory(Frame *frame)
 // public native int addressSize();
 static void addressSize(Frame *frame)
 {
-    frame_stack_pushi(frame, sizeof(jlong)); // todo
+    frame->pushi(sizeof(jlong)); // todo
 }
 
 // public native void putByte(long address, byte x);
@@ -490,7 +490,7 @@ static void putByte(Frame *frame)
 static void getByte(Frame *frame)
 {
     jlong address = frame->getLocalAsLong(1);
-    frame_stack_pushi(frame, *(jbyte *) (intptr_t) address);
+    frame->pushi(*(jbyte *) (intptr_t) address);
 }
 
 // public native void putChar(long address, char x);
@@ -505,7 +505,7 @@ static void putChar(Frame *frame)
 static void getChar(Frame *frame)
 {
     jlong address = frame->getLocalAsLong(1);
-    frame_stack_pushi(frame, *(jchar *) (intptr_t) address);
+    frame->pushi(*(jchar *) (intptr_t) address);
 }
 
 // public native void putShort(long address, short x);
@@ -520,7 +520,7 @@ static void putShort(Frame *frame)
 static void getShort(Frame *frame)
 {
     jlong address = frame->getLocalAsLong(1);
-    frame_stack_pushi(frame, *(jshort *) (intptr_t) address);
+    frame->pushi(*(jshort *) (intptr_t) address);
 }
 
 // public native void putInt(long address, int x);
@@ -535,7 +535,7 @@ static void putInt(Frame *frame)
 static void getInt(Frame *frame)
 {
     jlong address = frame->getLocalAsLong(1);
-    frame_stack_pushi(frame, *(jint *) (intptr_t) address);
+    frame->pushi(*(jint *) (intptr_t) address);
 }
 
 // public native void putLong(long address, long x);
@@ -550,7 +550,7 @@ static void putLong(Frame *frame)
 static void getLong(Frame *frame)
 {
     jlong address = frame->getLocalAsLong(1);
-    frame_stack_pushl(frame, *(jlong *) (intptr_t) address);
+    frame->pushl(*(jlong *) (intptr_t) address);
 }
 
 // public native void putFloat(long address, float x);
@@ -565,7 +565,7 @@ static void putFloat(Frame *frame)
 static void getFloat(Frame *frame)
 {
     jlong address = frame->getLocalAsLong(1);
-    frame_stack_pushf(frame, *(jfloat *) (intptr_t) address);
+    frame->pushf(*(jfloat *) (intptr_t) address);
 }
 
 // public native void putDouble(long address, double x);
@@ -580,7 +580,7 @@ static void putDouble(Frame *frame)
 static void getDouble(Frame *frame)
 {
     jlong address = frame->getLocalAsLong(1);
-    frame_stack_pushd(frame, *(jdouble *) (intptr_t) address);
+    frame->pushd(*(jdouble *) (intptr_t) address);
 }
 
 // public native void putAddress(long address, long x);

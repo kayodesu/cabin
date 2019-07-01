@@ -62,7 +62,7 @@ static void newInstance0(Frame *frame)
     auto ac = constructor_obj->getInstFieldValue<ClassObject *>(S(clazz), S(sig_java_lang_Class));
     Class *clazz = ac->entityClass;
     Object *this_obj = Object::newInst(clazz);
-    frame_stack_pushr(frame, this_obj); // return value
+    frame->pushr(this_obj); // return value
 
     Method *constructor = nullptr;
     if (init_args == nullptr) { // 构造函数没有参数

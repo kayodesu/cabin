@@ -63,20 +63,22 @@ struct Frame {
         return (* (T **) (locals + index));
     }
 
+    // push to stack.
+    void pushi(jint v)    { *(jint *) stack = v; stack++; }
+    void pushf(jfloat v)  { *(jfloat *) stack = v; stack++; }
+    void pushl(jlong v)   { *(jlong *) stack = v; stack += 2; }
+    void pushd(jdouble v) { *(jdouble *) stack = v; stack += 2; }
+    void pushr(jref v)    { *(jref *) stack = v; stack++; }
+
+    // pop from stack.
+    jint    popi() { stack--;    return * (jint *) stack; }
+    jfloat  popf() { stack--;    return * (jfloat *) stack; }
+    jlong   popl() { stack -= 2; return * (jlong *) stack; }
+    jdouble popd() { stack -= 2; return * (jdouble *) stack; }
+    jref    popr() { stack--;    return * (jref *) stack; }
+
     static size_t size(const Method *m);
     std::string toString();
 };
-
-static inline void frame_stack_pushi(Frame *f, jint value)    { *(jint *) f->stack = value; f->stack++; }
-static inline void frame_stack_pushf(Frame *f, jfloat value)  { *(jfloat *) f->stack = value; f->stack++; }
-static inline void frame_stack_pushl(Frame *f, jlong value)   { *(jlong *) f->stack = value; f->stack += 2; }
-static inline void frame_stack_pushd(Frame *f, jdouble value) { *(jdouble *) f->stack = value; f->stack += 2; }
-static inline void frame_stack_pushr(Frame *f, jref value)    { *(jref *) f->stack = value; f->stack++; }
-
-static inline jint    frame_stack_popi(Frame *f) { f->stack--; return *(jint *)f->stack; }
-static inline jfloat  frame_stack_popf(Frame *f) { f->stack--; return *(jfloat *)f->stack; }
-static inline jlong   frame_stack_popl(Frame *f) { f->stack -= 2; return *(jlong *)f->stack; }
-static inline jdouble frame_stack_popd(Frame *f) { f->stack -= 2; return *(jdouble *)f->stack; }
-static inline jref    frame_stack_popr(Frame *f) { f->stack--; return *(jref *)f->stack; }
 
 #endif //JVM_STACK_FRAME_H

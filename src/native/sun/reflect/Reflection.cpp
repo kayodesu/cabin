@@ -46,14 +46,14 @@ static void getCallerClass(Frame *frame)
     }
 
     jref o = top2->method->clazz->clsobj;
-    frame_stack_pushr(frame, o);
+    frame->pushr(o);
 }
 
 // public static native int getClassAccessFlags(Class<?> type)
 static void getClassAccessFlags(Frame *frame)
 {
     Object *type = frame->getLocalAsRef(0);
-    frame_stack_pushi(frame, type->clazz->access_flags);
+    frame->pushi(type->clazz->access_flags);
 }
 
 void sun_reflect_Reflection_registerNatives()

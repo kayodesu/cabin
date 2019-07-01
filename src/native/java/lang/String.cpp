@@ -14,7 +14,7 @@ static void intern(Frame *frame)
 
 //    put_so_to_pool(this);
     auto soInPool = g_str_pool.put(thisObj);
-    frame_stack_pushr(frame, soInPool);
+    frame->pushr(soInPool);
 }
 
 void java_lang_String_registerNatives()

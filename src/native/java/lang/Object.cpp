@@ -12,7 +12,7 @@
 static void hashCode(Frame *frame)
 {
     jref thisObj = frame->getLocalAsRef(0);
-    frame_stack_pushi(frame, (jint) (intptr_t) thisObj);
+    frame->pushi((jint) (intptr_t) thisObj);
 }
 
 // protected native Object clone() throws CloneNotSupportedException;
@@ -23,14 +23,14 @@ static void clone(Frame *frame)
     if (!thisObj->clazz->isSubclassOf(cloneable)) {
         jvm_abort("java.lang.CloneNotSupportedException"); // todo
     }
-    frame_stack_pushr(frame, thisObj->clone());
+    frame->pushr(thisObj->clone());
 }
 
 // public final native Class<?> getClass();
 static void getClass(Frame *frame)
 {
     jref thisObj = frame->getLocalAsRef(0);
-    frame_stack_pushr(frame, thisObj->clazz->clsobj); // todo 对不对
+    frame->pushr(thisObj->clazz->clsobj); // todo 对不对
 }
 
 // public final native void notifyAll();
