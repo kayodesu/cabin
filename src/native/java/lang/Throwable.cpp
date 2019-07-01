@@ -14,7 +14,7 @@ using namespace std;
 // private native Throwable fillInStackTrace(int dummy);
 static void fillInStackTrace(Frame *frame)
 {
-    jref thisObj = frame_locals_getr(frame, 0);
+    jref thisObj = frame->getLocalAsRef(0);
     frame_stack_pushr(frame, thisObj);
 
     int num = vm_stack_depth();
@@ -74,8 +74,8 @@ static void fillInStackTrace(Frame *frame)
 // native StackTraceElement getStackTraceElement(int index);
 static void getStackTraceElement(Frame *frame)
 {
-    jref thisObj = frame_locals_getr(frame, 0);
-    jint index = frame_locals_geti(frame, 1);
+    jref thisObj = frame->getLocalAsRef(0);
+    jint index = frame->getLocalAsInt(1);
 
     auto trace = (vector<Object *> *) thisObj->extra;
     assert(trace != nullptr);
@@ -85,7 +85,7 @@ static void getStackTraceElement(Frame *frame)
 // native int getStackTraceDepth();
 static void getStackTraceDepth(Frame *frame)
 {
-    jref thisObj = frame_locals_getr(frame, 0);
+    jref thisObj = frame->getLocalAsRef(0);
     auto trace = (vector<Object *> *) thisObj->extra;
     assert(trace != nullptr);
     frame_stack_pushi(frame, trace->size());

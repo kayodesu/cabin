@@ -10,7 +10,7 @@
 static void intern(Frame *frame)
 {
     // todo
-    auto thisObj = (StringObject *) frame_locals_getr(frame, 0);
+    auto thisObj = frame->getLocalAsRef<StringObject>(0);
 
 //    put_so_to_pool(this);
     auto soInPool = g_str_pool.put(thisObj);

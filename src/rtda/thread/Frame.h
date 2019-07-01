@@ -23,20 +23,49 @@ struct Frame {
     Frame *prev;
 
     slot_t *stack;   // operand stack
-    slot_t *locals; // local variables
+    slot_t *locals;  // local variables
 
     Frame(Method *m, bool vm_invoke, Frame *prev);
+
+    jint getLocalAsInt(int index)
+    {
+        return * (jint *) (locals + index);
+    }
+
+    jshort getLocalAsShort(int index)
+    {
+        return (jshort) getLocalAsInt(index);
+    }
+
+    jbool getLocalAsBool(int index)
+    {
+        return getLocalAsInt(index) != 0;
+    }
+
+    jfloat getLocalAsFloat(int index)
+    {
+        return * (jfloat *) (locals + index);
+    }
+
+    jlong getLocalAsLong(int index)
+    {
+        return * (jlong *) (locals + index);
+    }
+
+    jdouble getLocalAsDouble(int index)
+    {
+        return * (jdouble *) (locals + index);
+    }
+
+    template <typename T = Object>
+    T *getLocalAsRef(int index)
+    {
+        return (* (T **) (locals + index));
+    }
 
     static size_t size(const Method *m);
     std::string toString();
 };
-
-#define frame_locals_geti(f, index) ISLOT((f)->locals + (index))
-#define frame_locals_getz(f, index) (ISLOT((f)->locals + (index)) != 0)
-#define frame_locals_getf(f, index) FSLOT((f)->locals + (index))
-#define frame_locals_getl(f, index) LSLOT((f)->locals + (index))
-#define frame_locals_getd(f, index) DSLOT((f)->locals + (index))
-#define frame_locals_getr(f, index) RSLOT((f)->locals + (index))
 
 static inline void frame_stack_pushi(Frame *f, jint value)    { *(jint *) f->stack = value; f->stack++; }
 static inline void frame_stack_pushf(Frame *f, jfloat value)  { *(jfloat *) f->stack = value; f->stack++; }

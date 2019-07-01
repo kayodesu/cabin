@@ -9,14 +9,14 @@
 // public static native int floatToRawIntBits(float value);
 static void floatToRawIntBits(Frame *frame)
 {
-    jfloat f = frame_locals_getf(frame, 0);
+    jfloat f = frame->getLocalAsFloat(0);
     frame_stack_pushi(frame, float_to_raw_int_bits(f));
 }
 
 // public static native float intBitsToFloat(int value);
 static void intBitsToFloat(Frame *frame)
 {
-    jint i = frame_locals_geti(frame, 0);
+    jint i = frame->getLocalAsInt(0);
     frame_stack_pushf(frame, int_bits_to_float(i));
 }
 

@@ -48,10 +48,10 @@ static void unpark(Frame *frame)
  */
 static void compareAndSwapInt(Frame *frame)
 {
-    jref o = frame_locals_getr(frame, 1); // first argument
-    jlong offset = frame_locals_getl(frame, 2); // long 占两个Slot
-    jint expected = frame_locals_geti(frame, 4);
-    jint x = frame_locals_geti(frame, 5);
+    jref o = frame->getLocalAsRef(1); // first argument
+    jlong offset = frame->getLocalAsLong(2); // long 占两个Slot
+    jint expected = frame->getLocalAsInt(4);
+    jint x = frame->getLocalAsInt(5);
 
     jint old;
     if (o->isArray()) {
@@ -67,10 +67,10 @@ static void compareAndSwapInt(Frame *frame)
 // public final native boolean compareAndSwapLong(Object o, long offset, long expected, long x);
 static void compareAndSwapLong(Frame *frame)
 {
-    jref o = frame_locals_getr(frame, 1); // first argument
-    jlong offset = frame_locals_getl(frame, 2); // long 占两个Slot
-    jlong expected = frame_locals_getl(frame, 4);
-    jlong x = frame_locals_getl(frame, 6);
+    jref o = frame->getLocalAsRef(1); // first argument
+    jlong offset = frame->getLocalAsLong(2); // long 占两个Slot
+    jlong expected = frame->getLocalAsLong(4);
+    jlong x = frame->getLocalAsLong(6);
 
     jlong old;
     if (o->isArray()) {
@@ -89,10 +89,10 @@ static void compareAndSwapLong(Frame *frame)
 // public final native boolean compareAndSwapObject(Object o, long offset, Object expected, Object x)
 static void compareAndSwapObject(Frame *frame)
 {
-    jref o = frame_locals_getr(frame, 1); // first argument
-    jlong offset = frame_locals_getl(frame, 2); // long 占两个Slot
-    jref expected = frame_locals_getr(frame, 4);
-    jref x = frame_locals_getr(frame, 5);
+    jref o = frame->getLocalAsRef(1); // first argument
+    jlong offset = frame->getLocalAsLong(2); // long 占两个Slot
+    jref expected = frame->getLocalAsRef(4);
+    jref x = frame->getLocalAsRef(5);
 
     jref old;
     if (o->isArray()) {
@@ -170,7 +170,7 @@ static void objectFieldOffset(Frame *frame)
 //    jint offset = jlrFieldObj->getFieldValue("slot", "I").getInt();
 //    frame->operandStack.push((jlong)offset);
 
-    jref field_obj = frame_locals_getr(frame, 1);
+    jref field_obj = frame->getLocalAsRef(1);
     jint offset = field_obj->getInstFieldValue<jint>(S(slot), S(I)); // todo "slot", "I" 什么东西
 //    printvm("-------   %s, %d\n", jobject_to_string(field_obj), offset);
     frame_stack_pushl(frame, offset);
@@ -312,8 +312,8 @@ static void getShortVolatile(Frame *frame)
 static void getIntVolatile(Frame *frame)
 {
     // todo Volatile
-    jref o = frame_locals_getr(frame, 1); // first argument
-    jlong offset = frame_locals_getl(frame, 2);
+    jref o = frame->getLocalAsRef(1); // first argument
+    jlong offset = frame->getLocalAsLong(2);
 
     jint value;
     if (o->isArray()) {
@@ -396,8 +396,8 @@ static void putDoubleVolatile(Frame *frame)
 static void getObjectVolatile(Frame *frame)
 {
     // todo Volatile
-    jref o = frame_locals_getr(frame, 1); // first argument
-    jlong offset = frame_locals_getl(frame, 2);
+    jref o = frame->getLocalAsRef(1); // first argument
+    jlong offset = frame->getLocalAsLong(2);
 
     jref value;
     if (o->isArray()) {
@@ -452,7 +452,7 @@ static void putOrderedLong(Frame *frame)
 // public native long allocateMemory(long bytes);
 static void allocateMemory(Frame *frame)
 {
-    jlong bytes = frame_locals_getl(frame, 1);
+    jlong bytes = frame->getLocalAsLong(1);
     u1 *p = (u1 *) vm_malloc(sizeof(char)*bytes); // todo
     frame_stack_pushl(frame, (jlong) (intptr_t) p);
 }
@@ -460,15 +460,15 @@ static void allocateMemory(Frame *frame)
 // public native long reallocateMemory(long address, long bytes);
 static void reallocateMemory(Frame *frame)
 {
-    jlong address = frame_locals_getl(frame, 1);
-    jlong bytes = (jbyte) frame_locals_getl(frame, 3);
+    jlong address = frame->getLocalAsLong(1);
+    jlong bytes = frame->getLocalAsLong(3);
     frame_stack_pushl(frame, (jlong) (intptr_t) realloc((void *) (intptr_t) address, (size_t) bytes)); // 有内存泄漏
 }
 
 // public native void freeMemory(long address);
 static void freeMemory(Frame *frame)
 {
-    jlong address = frame_locals_getl(frame, 1);
+    jlong address = frame->getLocalAsLong(1);
     free((void *) (intptr_t) address);
 }
 
@@ -481,105 +481,105 @@ static void addressSize(Frame *frame)
 // public native void putByte(long address, byte x);
 static void putByte(Frame *frame)
 {
-    jlong address = frame_locals_getl(frame, 1);
-    jbyte x = (jbyte) frame_locals_geti(frame, 3);
+    jlong address = frame->getLocalAsLong(1);
+    jbyte x = (jbyte) frame->getLocalAsInt(3);
     *(jbyte *) (intptr_t) address = changeToBigEndian(x); // todo java按大端存储？？？？？？？
 }
 
 // public native byte getByte(long address);
 static void getByte(Frame *frame)
 {
-    jlong address = frame_locals_getl(frame, 1);
+    jlong address = frame->getLocalAsLong(1);
     frame_stack_pushi(frame, *(jbyte *) (intptr_t) address);
 }
 
 // public native void putChar(long address, char x);
 static void putChar(Frame *frame)
 {
-    jlong address = frame_locals_getl(frame, 1);
-    jchar x = (jchar) frame_locals_geti(frame, 3);
+    jlong address = frame->getLocalAsLong(1);
+    jchar x = (jchar) frame->getLocalAsInt(3);
     *(jchar *) (intptr_t) address = changeToBigEndian(x);
 }
 
 // public native char getChar(long address);
 static void getChar(Frame *frame)
 {
-    jlong address = frame_locals_getl(frame, 1);
+    jlong address = frame->getLocalAsLong(1);
     frame_stack_pushi(frame, *(jchar *) (intptr_t) address);
 }
 
 // public native void putShort(long address, short x);
 static void putShort(Frame *frame)
 {
-    jlong address = frame_locals_getl(frame, 1);
-    jshort x = (jshort) frame_locals_geti(frame, 3);
+    jlong address = frame->getLocalAsLong(1);
+    jshort x = frame->getLocalAsShort(3);
     *(jshort *) (intptr_t) address = changeToBigEndian(x);
 }
 
 // public native short getShort(long address);
 static void getShort(Frame *frame)
 {
-    jlong address = frame_locals_getl(frame, 1);
+    jlong address = frame->getLocalAsLong(1);
     frame_stack_pushi(frame, *(jshort *) (intptr_t) address);
 }
 
 // public native void putInt(long address, int x);
 static void putInt(Frame *frame)
 {
-    jlong address = frame_locals_getl(frame, 1);
-    jint x = frame_locals_geti(frame, 3);
+    jlong address = frame->getLocalAsLong(1);
+    jint x = frame->getLocalAsInt(3);
     *(jint *) (intptr_t) address = changeToBigEndian(x);
 }
 
 // public native int getInt(long address);
 static void getInt(Frame *frame)
 {
-    jlong address = frame_locals_getl(frame, 1);
+    jlong address = frame->getLocalAsLong(1);
     frame_stack_pushi(frame, *(jint *) (intptr_t) address);
 }
 
 // public native void putLong(long address, long x);
 static void putLong(Frame *frame)
 {
-    jlong address = frame_locals_getl(frame, 1);
-    jlong x = frame_locals_getl(frame, 3);
+    jlong address = frame->getLocalAsLong(1);
+    jlong x = frame->getLocalAsLong(3);
     *(jlong *) (intptr_t) address = changeToBigEndian(x);
 }
 
 // public native long getLong(long address);
 static void getLong(Frame *frame)
 {
-    jlong address = frame_locals_getl(frame, 1);
+    jlong address = frame->getLocalAsLong(1);
     frame_stack_pushl(frame, *(jlong *) (intptr_t) address);
 }
 
 // public native void putFloat(long address, float x);
 static void putFloat(Frame *frame)
 {
-    jlong address = frame_locals_getl(frame,+ 1);
-    jfloat x = frame_locals_getf(frame, 3);
+    jlong address = frame->getLocalAsLong(1);
+    jfloat x = frame->getLocalAsFloat(3);
     *(jfloat *) (intptr_t) address = changeToBigEndian(x);
 }
 
 // public native float getFloat(long address);
 static void getFloat(Frame *frame)
 {
-    jlong address = frame_locals_getl(frame, 1);
+    jlong address = frame->getLocalAsLong(1);
     frame_stack_pushf(frame, *(jfloat *) (intptr_t) address);
 }
 
 // public native void putDouble(long address, double x);
 static void putDouble(Frame *frame)
 {
-    jlong address = frame_locals_getl(frame, 1);
-    jdouble x = frame_locals_getd(frame, 3);
+    jlong address = frame->getLocalAsLong(1);
+    jdouble x = frame->getLocalAsDouble(3);
     *(jdouble *) (intptr_t) address = changeToBigEndian(x);
 }
 
 // public native double getDouble(long address);
 static void getDouble(Frame *frame)
 {
-    jlong address = frame_locals_getl(frame, 1);
+    jlong address = frame->getLocalAsLong(1);
     frame_stack_pushd(frame, *(jdouble *) (intptr_t) address);
 }
 

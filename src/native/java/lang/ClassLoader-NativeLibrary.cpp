@@ -21,8 +21,8 @@ static void find(Frame *frame)
 static void load(Frame *frame)
 {
     // todo
-    jref thisObj = frame_locals_getr(frame, 0);
-    jref name = frame_locals_getr(frame, 1);
+    jref thisObj = frame->getLocalAsRef(0);
+    jref name = frame->getLocalAsRef(1);
 //    bool is_builtin = slot_geti(frame->local_vars + 2) == 0 ? false : true;
 
     // todo load

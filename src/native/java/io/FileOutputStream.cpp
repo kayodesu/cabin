@@ -56,11 +56,11 @@ static void write(Frame *frame)
 // private native void writeBytes(byte b[], int off, int len, boolean append) throws IOException;
 static void writeBytes(Frame *frame)
 {
-    jref thisObj = frame_locals_getr(frame, 0);
-    auto b = (ArrayObject *) frame_locals_getr(frame, 1);
-    jint off = frame_locals_geti(frame, 2);
-    jint len = frame_locals_geti(frame, 3);
-    bool append = frame_locals_getz(frame, 4);
+    jref thisObj = frame->getLocalAsRef(0);
+    auto b = frame->getLocalAsRef<ArrayObject>(1);
+    jint off = frame->getLocalAsInt(2);
+    jint len = frame->getLocalAsInt(3);
+    bool append = frame->getLocalAsBool(4);
 
     // todo
     auto data = (jbyte *) b->data;

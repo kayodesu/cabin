@@ -24,7 +24,7 @@
 // public static native String mapLibraryName(String libname);
 static void mapLibraryName(Frame *frame)
 {
-    auto libname = dynamic_cast<StringObject *>(frame_locals_getr(frame, 0));
+    auto libname = frame->getLocalAsRef<StringObject>(0);
     if (libname == nullptr) {
         thread_throw_null_pointer_exception(); // todo
     }
@@ -39,11 +39,11 @@ static void mapLibraryName(Frame *frame)
 // public static native void arraycopy(Object src, int srcPos, Object dest, int destPos, int length)
 static void arraycopy(Frame *frame)
 {
-    jref src = frame_locals_getr(frame, 0);
-    jint src_pos = frame_locals_geti(frame, 1);
-    jref dest = frame_locals_getr(frame, 2);
-    jint dest_pos = frame_locals_geti(frame, 3);
-    jint length = frame_locals_geti(frame, 4);
+    jref src = frame->getLocalAsRef(0);
+    jint src_pos = frame->getLocalAsInt(1);
+    jref dest = frame->getLocalAsRef(2);
+    jint dest_pos = frame->getLocalAsInt(3);
+    jint length = frame->getLocalAsInt(4);
 
     assert(dest->isArray());
     assert(src->isArray());
@@ -53,7 +53,7 @@ static void arraycopy(Frame *frame)
 // public static native int identityHashCode(Object x);
 static void identityHashCode(Frame *frame)
 {
-    jref x = frame_locals_getr(frame, 0);
+    jref x = frame->getLocalAsRef(0);
     frame_stack_pushi(frame, (jint) (intptr_t) x);
 }
 
@@ -101,7 +101,7 @@ static void initProperties(Frame *frame)
             { "sun.stderr.encoding",  "UTF-8" },
     };
 
-    Object *props = frame_locals_getr(frame, 0);
+    Object *props = frame->getLocalAsRef(0);
 
     // todo init
     Method *set_property = props->clazz->lookupInstMethod(
@@ -123,7 +123,7 @@ static void initProperties(Frame *frame)
 // private static native void setIn0(InputStream in);
 static void setIn0(Frame *frame)
 {
-    jref in = frame_locals_getr(frame, 0);
+    jref in = frame->getLocalAsRef(0);
     Class *c = frame->method->clazz;
     c->setStaticFieldValue(c->lookupField("in", "Ljava/io/InputStream;"), (slot_t *) &in);
 }
@@ -131,7 +131,7 @@ static void setIn0(Frame *frame)
 // private static native void setOut0(PrintStream out);
 static void setOut0(Frame *frame)
 {
-    jref out = frame_locals_getr(frame, 0);
+    jref out = frame->getLocalAsRef(0);
     Class *c = frame->method->clazz;
     c->setStaticFieldValue(c->lookupField("out", "Ljava/io/PrintStream;"), (slot_t *) &out);
 }
@@ -139,7 +139,7 @@ static void setOut0(Frame *frame)
 // private static native void setErr0(PrintStream err);
 static void setErr0(Frame *frame)
 {
-    jref err = frame_locals_getr(frame, 0);
+    jref err = frame->getLocalAsRef(0);
     Class *c = frame->method->clazz;
     c->setStaticFieldValue(c->lookupField("err", "Ljava/io/PrintStream;"), (slot_t *) &err);
 }

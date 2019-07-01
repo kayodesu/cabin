@@ -128,7 +128,7 @@ void *exec_new_thread_run(void *arg)
 static void start0(Frame *frame)
 {
     // todo
-    jref thisObj = frame_locals_getr(frame, 0);
+    jref thisObj = frame->getLocalAsRef(0);
     pthread_t pid;
     int ret = pthread_create(&pid, NULL, exec_new_thread_run, thisObj);
     if (ret != 0) {

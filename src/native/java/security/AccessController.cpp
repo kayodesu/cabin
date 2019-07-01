@@ -12,7 +12,7 @@
 static void doPrivileged(Frame *frame)
 {
     // todo 这个函数干什么用的。。。。
-    jref thisObj = frame_locals_getr(frame, 0);
+    jref thisObj = frame->getLocalAsRef(0);
 
     /*
      * run 函数返回 T类型 的对象

@@ -9,7 +9,7 @@
 // private static native int findSignal(String string);
 static void findSignal(Frame *frame)
 {
-    jref name = frame_locals_getr(frame, 0);
+    jref name = frame->getLocalAsRef(0);
     frame_stack_pushi(frame, 0); // todo
 }
 

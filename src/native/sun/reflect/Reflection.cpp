@@ -52,7 +52,7 @@ static void getCallerClass(Frame *frame)
 // public static native int getClassAccessFlags(Class<?> type)
 static void getClassAccessFlags(Frame *frame)
 {
-    Object *type = frame_locals_getr(frame, 0);
+    Object *type = frame->getLocalAsRef(0);
     frame_stack_pushi(frame, type->clazz->access_flags);
 }
 

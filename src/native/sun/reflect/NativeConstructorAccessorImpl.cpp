@@ -50,13 +50,13 @@ static slot_t* convert_args(jref this_obj, Method *m, ArrayObject *args)
  */
 static void newInstance0(Frame *frame)
 {
-    jref constructor_obj = frame_locals_getr(frame, 0);
+    jref constructor_obj = frame->getLocalAsRef(0);
     /*
      * init_args array of objects to be passed as arguments to
      * the constructor call; values of primitive types are wrapped in
      * a wrapper Object of the appropriate type
      */
-    ArrayObject *init_args = (ArrayObject *) frame_locals_getr(frame, 1); // may be NULL
+    ArrayObject *init_args = frame->getLocalAsRef<ArrayObject>(1); // may be NULL
 
     // which class this constructor belongs to.
     auto ac = constructor_obj->getInstFieldValue<ClassObject *>(S(clazz), S(sig_java_lang_Class));

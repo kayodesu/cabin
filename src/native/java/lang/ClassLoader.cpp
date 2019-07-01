@@ -54,7 +54,7 @@ static void findLoadedClass0(Frame *frame)
 static void findBuiltinLib(Frame *frame)
 {
     // todo
-    auto name0 = (StringObject *) frame_locals_getr(frame, 0);
+    auto name0 = frame->getLocalAsRef<StringObject>(0);
 
     const char *name = name0->getUtf8Value();
     if (strcmp(name, "zip.dll") == 0) {
