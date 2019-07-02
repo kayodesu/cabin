@@ -226,7 +226,4 @@ struct LineNumberTable {
 //    struct annotation *annotations;
 //};
 
-//void read_annotation(struct bytecode_reader *reader, struct annotation *a);
-//void read_element_value(struct bytecode_reader *reader, struct element_value *ev);
-
 #endif //JVM_ATTRIBUTE_H
