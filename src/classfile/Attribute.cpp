@@ -8,8 +8,8 @@
 
 void Annotation::read(BytecodeReader &r)
 {
-    type_index = r.readu2(); //bcr_readu2(reader);
-    u2 num = r.readu2();// bcr_readu2(reader);
+    type_index = r.readu2();
+    u2 num = r.readu2();
     for (u2 i = 0; i < num; i++) {
         elementValuePairs.emplace_back(ElementValuePair(r));
     }
@@ -39,17 +39,12 @@ ElementValue::ElementValue(BytecodeReader &r)
             break;
         case '@':
             annotation_value.read(r);
-//            read_annotation(reader, &(ev->value.annotation_value));
             break;
         case '[':
             num = r.readu2();
             for (u2 i = 0; i < num; i++) {
                 arrayValue.emplace_back(ElementValue(r));
             }
-//            value.array_value.values = vm_malloc(sizeof(struct element_value) * value.array_value.num_values);
-//            for (int i = 0; i < value.array_value.num_values; i++) {
-//                read_element_value(reader, value.array_value.values + i);
-//            }
             break;
         default:
             VM_UNKNOWN_ERROR("unknown tag: %d", tag);
