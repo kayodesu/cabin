@@ -225,7 +225,7 @@ static void multianewarray(Frame *frame)
     int index = frame->reader.readu2();
     const char *class_name = CP_UTF8(&curr_class->constant_pool, index); // 这里解析出来的直接就是数组类。
 
-    int arr_dim = frame->reader.readu1(); // 多维数组的维度
+    auto arr_dim = frame->reader.readu1(); // 多维数组的维度
     size_t arr_lens[arr_dim]; // 每一维数组的长度
     for (int i = arr_dim - 1; i >= 0; i--) {
         int len = frame->popi();
@@ -712,7 +712,7 @@ static slot_t *exec()
 
             CASE2(OPC_LALOAD, OPC_DALOAD, {
                 GET_AND_CHECK_ARRAY
-                auto value = (slot_t *) arr->index(index);//(slot_t *) arrobj_index(arr, index);
+                auto value = (slot_t *) arr->index(index);
                 *frame->stack++ = value[0];
                 *frame->stack++ = value[1];
             })
@@ -1312,7 +1312,7 @@ invoke_method:
                     thread_throw_null_pointer_exception();
                 }
                 if (!o->isArray()) {
-                    vm_unknown_error("not a array");
+                    vm_unknown_error("not a array"); // todo
                 }
                 frame->pushi(((ArrayObject *) o)->len);
 				break;
