@@ -7,6 +7,7 @@
 
 #include <map>
 #include <cstring>
+#include <cassert>
 #include "../jvm.h"
 #include "../utf8.h"
 
@@ -58,12 +59,14 @@ public:
 
 static inline Class *loadSysClass(const char *className)
 {
+    assert(className != nullptr);
     return g_bootstrap_loader->loadClass(className);
 };
 
 static inline ArrayClass *loadArrayClass(const char *arrClassName)
 {
-    // todo 判断是不是array class名
+    assert(arrClassName != nullptr);
+    assert(arrClassName[0] == '['); // must be array class name
     return (ArrayClass *) g_bootstrap_loader->loadClass(arrClassName);
 };
 
