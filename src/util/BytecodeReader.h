@@ -12,7 +12,7 @@
 #include "convert.h"
 
 class BytecodeReader {
-    const u1 *bytecode;
+    const u1 *bytecode = nullptr;
     size_t len;  // bytecode len
 
 public:
