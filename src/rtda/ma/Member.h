@@ -21,11 +21,11 @@ struct Member: public Access {
      * 那么此方法的 class 依然指向父类，即真正定义此方法的类。
      */
     Class *clazz;
-    const char *name;
-    const char *descriptor;
+    const char *name = nullptr;
+    const char *descriptor = nullptr;
 
     bool deprecated = false;
-    const char *signature;
+    const char *signature = nullptr;
 
     bool isAccessibleTo(const Class *visitor) const;
 
