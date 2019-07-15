@@ -12,12 +12,13 @@ A JVM is written in C++.
 * jre8 lib
 
 ## Features Support
-✔ Java arithmetic, flow control, object-oriented programming(virtual method, inherit, etc.)
-✔ String
-✔ Array
-✔ Exception
-✘ Multi-thread
-✘ Garbage collection
+* Java arithmetic, flow control, object-oriented programming(virtual method, inherit, etc.)
+* String
+* Array
+* Exception
+<!--
+* Multi-thread
+* Garbage collection -->
 ## Run
 Ensure your Java version is Java8.
 
