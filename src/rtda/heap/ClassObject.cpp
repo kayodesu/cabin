@@ -51,7 +51,7 @@ using namespace std;
 
 ClassObject *ClassObject::newInst(Class *entityClass)
 {
-    auto classClass = g_bootstrap_loader->jlClass;
+    auto classClass = vmEnv.bootLoader->jlClass;
     size_t size = sizeof(ClassObject) + classClass->instFieldsCount * sizeof(slot_t);
     return new(g_heap_mgr.get(size)) ClassObject(classClass, entityClass);
 }

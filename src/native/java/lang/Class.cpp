@@ -60,7 +60,7 @@ static void getPrimitiveClass(Frame *frame)
     auto so = frame->getLocalAsRef<StringObject>(0);
 
     const char *class_name = so->getUtf8Value(); // 这里得到的 class_name 是诸如 "int, float" 之类的 primitive type
-    Class *c = g_bootstrap_loader->loadClass(class_name);
+    Class *c = vmEnv.bootLoader->loadClass(class_name);
     frame->pushr(c->clsobj);
 }
 
@@ -581,7 +581,7 @@ static void getDeclaredFields0(Frame *frame)
         slot_t args[] = {
                 (slot_t) jlrf_obj, // this
                 (slot_t) thisObj, // declaring class
-                (slot_t) g_str_pool.get(cls->fields[i]->name), // name
+                (slot_t) vmEnv.strPool->get(cls->fields[i]->name), // name
                 (slot_t) cls->fields[i]->getType(), // type
                 cls->fields[i]->access_flags, // modifiers
                 (slot_t) cls->fields[i]->id, // slot   todo
@@ -637,7 +637,7 @@ static void getDeclaredMethods0(Frame *frame)
         slot_t args[] = {
                 (slot_t) jlrf_obj,        // this
                 (slot_t) thisObj, // declaring class
-                (slot_t) g_str_pool.get(method->name), // name
+                (slot_t) vmEnv.strPool->get(method->name), // name
                 (slot_t) method->getParameterTypes(), // parameter types
                 (slot_t) method->getReturnType(),     // return type
                 (slot_t) method->getExceptionTypes(), // checked exceptions

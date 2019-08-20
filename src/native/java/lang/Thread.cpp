@@ -6,6 +6,7 @@
 #include "../../registry.h"
 #include "../../../rtda/heap/Object.h"
 #include "../../../rtda/thread/Thread.h"
+#include "../../../interpreter/interpreter.h"
 
 /*
  * Returns a reference to the currently executing thread Object.
@@ -113,24 +114,23 @@ static void setPriority0(Frame *frame)
 }
 
 /* execute new thread's run function */
-void *exec_new_thread_run(void *arg)
+static void *exec_new_thread_run(void *arg)
 {
-//    struct thread *new_thread = thread_create(frame->method->clazz->loader, this);
+    // 已经在新线程里面了！
+    assert(arg != nullptr);
 
-    // todo
-//    jref this = arg;
-//    struct method *run = class_lookup_instance_method(this->clazz, "run", "()V");
-//    exec_java_func(run, (slot_t *) &this, true);
-    return nullptr;
+    auto thread = new Thread((jref) arg);
+    Method *run = thread->jltobj->clazz->lookupInstMethod("run", "()V");
+    return execJavaFunc(run, (slot_t *) &(thread->jltobj));
 }
 
 // private native void start0();
 static void start0(Frame *frame)
 {
     // todo
-    jref thisObj = frame->getLocalAsRef(0);
+    jref jltobj = frame->getLocalAsRef(0); // object of java.lang.Thread
     pthread_t pid;
-    int ret = pthread_create(&pid, NULL, exec_new_thread_run, thisObj);
+    int ret = pthread_create(&pid, NULL, exec_new_thread_run, jltobj);
     if (ret != 0) {
         vm_internal_error("create Thread failed");
     }

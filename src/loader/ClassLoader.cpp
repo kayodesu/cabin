@@ -163,7 +163,7 @@ static struct bytecode_content read_class(const char *class_name)
 ClassLoader::ClassLoader(bool is_bootstrap_loader)
 {
     if (is_bootstrap_loader) {
-        g_bootstrap_loader = this;
+        vmEnv.bootLoader = this;
     }
 
     /*

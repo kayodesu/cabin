@@ -13,7 +13,7 @@ using namespace std;
 
 Object *Object::newInst(Class *c)
 {
-    if (c == g_bootstrap_loader->jlString) {
+    if (c == vmEnv.bootLoader->jlString) {
         return StringObject::newInst(""); // todo
     }
     size_t size = sizeof(Object) + c->instFieldsCount * sizeof(slot_t);

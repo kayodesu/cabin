@@ -33,19 +33,61 @@ char user_jars[USER_JARS_MAX_COUNT][PATH_MAX];
 //size_t g_initial_heap_size = 67108864; // 64Mb  64 * 1024 * 1024
 HeapMgr g_heap_mgr;
 
-ClassLoader *g_bootstrap_loader = nullptr;
-StrPool g_str_pool;
 
 VMEnv vmEnv;
 
+VMEnv::VMEnv()
+{
+    strPool = new StrPool;
+}
+
 void init_symbol();
+
+// main thread is current thread
+static void initMainThread()
+{
+    auto mainThread = new Thread(nullptr);
+
+    Class *jltg_class = loadSysClass(S(java_lang_ThreadGroup));
+    vmEnv.sysThreadGroup = Object::newInst(jltg_class);
+
+    // 初始化 system_thread_group
+    // java/lang/ThreadGroup 的无参数构造函数主要用来：
+    // Creates an empty Thread group that is not in any Thread group.
+    // This method is used to create the system Thread group.
+    jltg_class->clinit();
+    execJavaFunc(jltg_class->getConstructor(S(___V)), (slot_t *) &(vmEnv.sysThreadGroup));
+
+    mainThread->setThreadGroupAndName(vmEnv.sysThreadGroup, MAIN_THREAD_NAME);
+}
+
+static void *execGCThread(void *arg)
+{
+    // todo
+    return nullptr;
+}
+
+// create gc thread
+static void createGCThread()
+{
+    // todo
+    pthread_t pid;
+    int ret = pthread_create(&pid, NULL, execGCThread, nullptr);
+    if (ret != 0) {
+        vm_internal_error("create Thread failed");
+    }
+}
 
 static void start_jvm(const char *main_class_name)
 {
     init_symbol();
+    init_thread_module();
 
+    // create system class loader
     auto loader = new ClassLoader(true);
-    createMainThread(loader);
+
+    initMainThread();
+    createGCThread();
 
     // 先加载 sun.mis.VM 类，然后执行其类初始化方法
     Class *vm_class = loadSysClass("sun/misc/VM");
@@ -251,3 +293,4 @@ void vm_unknown_error(const char *msg)
     // todo
     jvm_abort(msg);
 }
+

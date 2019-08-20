@@ -60,14 +60,14 @@ public:
 static inline Class *loadSysClass(const char *className)
 {
     assert(className != nullptr);
-    return g_bootstrap_loader->loadClass(className);
+    return vmEnv.bootLoader->loadClass(className);
 };
 
 static inline ArrayClass *loadArrayClass(const char *arrClassName)
 {
     assert(arrClassName != nullptr);
     assert(arrClassName[0] == '['); // must be array class name
-    return (ArrayClass *) g_bootstrap_loader->loadClass(arrClassName);
+    return (ArrayClass *) vmEnv.bootLoader->loadClass(arrClassName);
 };
 
 #endif //JVM_CLASS_LOADER_H

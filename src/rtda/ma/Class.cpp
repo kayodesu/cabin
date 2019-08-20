@@ -754,7 +754,7 @@ string Class::toString() const
 }
 
 /* ----------------------------------------------------- */
-ArrayClass::ArrayClass(const char *className): Class(g_bootstrap_loader, strdup(className))
+ArrayClass::ArrayClass(const char *className): Class(vmEnv.bootLoader, strdup(className))
 {
     assert(className != nullptr);
     // todo className 是不是 array

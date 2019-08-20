@@ -75,7 +75,7 @@ Object* resolve_string(Class *c, int cp_index)
     }
 
     const char *str = CP_STRING(cp, cp_index);
-    Object *so = g_str_pool.get(str);
+    Object *so = vmEnv.strPool->get(str);
     CP_INFO(cp, cp_index) = (uintptr_t) so;
     CP_TYPE(cp, cp_index) = CONSTANT_ResolvedString;
 

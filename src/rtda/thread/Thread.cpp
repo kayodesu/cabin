@@ -12,9 +12,6 @@
 // Thread specific key holding a Thread
 static pthread_key_t thread_key;
 
-Thread *main_thread = nullptr;
-Object *system_thread_group = nullptr;
-
 Thread *thread_self()
 {
     return (Thread *) pthread_getspecific(thread_key);
@@ -25,88 +22,48 @@ static inline void set_thread_self(Thread *thread)
     pthread_setspecific(thread_key, thread);
 }
 
-/*
- * main thread 由虚拟机启动。
- */
-void createMainThread(ClassLoader *loader)
+void init_thread_module()
 {
     pthread_key_create(&thread_key, nullptr);
-    main_thread = new Thread(loader, nullptr);
-
-    Class *jltg_class = loadSysClass(S(java_lang_ThreadGroup));
-    system_thread_group = Object::newInst(jltg_class);
-
-    Class *jlt_class = loadSysClass(S(java_lang_Thread));
-    Object *jlt_obj = Object::newInst(jlt_class);
-
-    main_thread->jltobj = jlt_obj;
-
-    // 初始化 system_thread_group
-    // java/lang/ThreadGroup 的无参数构造函数主要用来：
-    // Creates an empty Thread group that is not in any Thread group.
-    // This method is used to create the system Thread group.
-    jltg_class->clinit();
-
-    execJavaFunc(jltg_class->getConstructor(S(___V)), (slot_t *) &system_thread_group);
-
-    // from java/lang/Thread.java
-    // public final static int MIN_PRIORITY = 1;
-    // public final static int NORM_PRIORITY = 5;
-    // public final static int MAX_PRIORITY = 10;
-    slot_t value = 5;  // main thread 必须有初始的 priority
-    jlt_obj->setInstFieldValue(S(priority), S(I), &value);
-
-    // 调用 java/lang/Thread 的构造函数
-    Method *constructor = jlt_obj->clazz->getConstructor("(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");
-
-    jlt_class->clinit();
-
-    slot_t args[] = {
-            (slot_t) jlt_obj,
-            (slot_t) system_thread_group,
-            (slot_t) StringObject::newInst(MAIN_THREAD_NAME) // thread name
-    };
-    execJavaFunc(constructor, args);
 }
 
-Thread::Thread(ClassLoader *loader, Object *jltobj): jltobj(jltobj)
+Thread::Thread(Object *jltobj, Object *threadGroup, const char *threadName, int priority)
 {
-    assert(loader != nullptr);
-
-//    Class *jlt_class = classloader_load_class(loader, "java/lang/Thread");
-//    thread->this_obj = object_create(jlt_class);
-//
-//    slot_t s = 1;;  // todo. why 1? I do not know. 参见 jvmgo/instructions/reserved/bootstrap.go
-//    set_instance_field_value(thread->this_obj, class_lookup_field(jlt_class, "priority", "I"), &s);
-
-//    Thread->dyn.bootstrap_method_type = Thread->dyn.lookup = Thread->dyn.call_set = Thread->dyn.exact_method_handle = NULL;
-
-    /*
-    auto jlThreadClass = classLoader->loadClass("java/lang/Thread");
-    jlThreadObj = new Jobject(jlThreadClass);
-    Jvalue v;
-    v.i = 1;  // todo. why 1? I do not know. 参见 jvmgo/instructions/reserved/bootstrap.go
-    jlThreadObj->setInstanceFieldValue("priority", "I", v);
-
-    // 置此线程的 ThreadGroup
-    if (mainThreadGroup != nullptr) {  // todo
-//        auto constructor = jlThreadClass->getConstructor("(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");
-//        auto Frame = new StackFrame(this, constructor);
-//        Frame->operandStack.push(jlThreadObj);
-//        assert(mainThreadGroup != nullptr);
-//        Frame->operandStack.push(mainThreadGroup);
-//        JstringObj *o = new JstringObj(classLoader, strToJstr("main"));
-//        Frame->operandStack.push(o);
-//
-//        pushFrame(Frame);
-//        interpret(this);
-//
-//        delete o;
-        joinToMainThreadGroup();
-    }
-     */
+    assert(MIN_PRIORITY <= priority && priority <= MAX_PRIORITY);
 
     set_thread_self(this);
+    vmEnv.threads.push_back(this);
+
+    Class *jlt_class = loadSysClass(S(java_lang_Thread));
+    jlt_class->clinit();
+
+    if (jltobj != nullptr)
+        this->jltobj = jltobj;
+    else
+        this->jltobj = Object::newInst(jlt_class);
+    this->jltobj->setInstFieldValue(S(priority), S(I), (slot_t *) &priority);
+
+    if (threadGroup != nullptr)
+        setThreadGroupAndName(threadGroup, threadName);
+}
+
+void Thread::setThreadGroupAndName(Object *threadGroup, const char *threadName)
+{
+    assert(threadGroup != nullptr);
+
+    if (threadName == nullptr) {
+        // todo
+        threadName = "unknown";
+    }
+
+    // 调用 java/lang/Thread 的构造函数
+    Method *constructor = jltobj->clazz->getConstructor("(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");
+    slot_t args[] = {
+            (slot_t) jltobj,
+            (slot_t) threadGroup,
+            (slot_t) StringObject::newInst(threadName) // thread name
+    };
+    execJavaFunc(constructor, args);
 }
 
 Frame *allocFrame(Method *m, bool vm_invoke)

@@ -5,6 +5,7 @@
 #ifndef JVM_JTHREAD_H
 #define JVM_JTHREAD_H
 
+#include <pthread.h>
 #include "../../config.h"
 #include "../../jtypes.h"
 
@@ -21,16 +22,24 @@ class Method;
  * 但是内存已经耗尽，会导致OutOfMemoryError异常抛出。
  */
 
+#define MIN_PRIORITY 1
+#define NORM_PRIORITY 5
+#define MAX_PRIORITY 10
+
 struct Thread {
-    Object *jltobj; // Object of java.lang.Thread
+    Object *jltobj; // 所关联的 Object of java.lang.Thread
+    pthread_t pid;  // 所关联的 POSIX 线程对应的id
 
     u1 vm_stack[VM_STACK_SIZE]; // 虚拟机栈，一个线程只有一个虚拟机栈
     Frame *top_frame = nullptr;
 
-    Thread(ClassLoader *loader, Object *jl_thread_obj);
+    Thread(Object *jltobj, Object *threadGroup = nullptr,
+           const char *threadName = nullptr, int priority = NORM_PRIORITY);
+
+    void setThreadGroupAndName(Object *threadGroup, const char *threadName);
 };
 
-void createMainThread(ClassLoader *loader);
+void init_thread_module();
 
 Thread *thread_self();
 

@@ -42,10 +42,6 @@ class ClassLoader;
 class StrPool;
 struct Thread;
 
-// todo 说明
-extern ClassLoader *g_bootstrap_loader;
-extern StrPool g_str_pool;
-
 
 // 一个 VM 只有一个 VMEnv 对象
 class VMEnv {
@@ -54,7 +50,12 @@ private:
 public:
     // todo 说明
     ClassLoader *bootLoader = nullptr; // bootstrap loader
-    StrPool *strPool = nullptr;
+    StrPool *strPool;
+
+    // The system Thread group.
+    Object *sysThreadGroup;
+
+    VMEnv();
 
     // todo 所有线程
     std::vector<Thread *> threads;
@@ -67,8 +68,8 @@ extern VMEnv vmEnv;
  */
 #define METHOD_PARAMETERS_MAX_COUNT 255
 
-// The system Thread group.
-extern Object *system_thread_group;
+//// The system Thread group.
+//extern Object *system_thread_group;
 
 // name of main thread
 #define MAIN_THREAD_NAME "main"

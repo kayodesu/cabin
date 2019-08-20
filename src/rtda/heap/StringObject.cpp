@@ -38,7 +38,7 @@ using namespace std;
 
 StringObject *StringObject::newInst(const char *str)
 {
-    Class *c = g_bootstrap_loader->jlString;
+    Class *c = vmEnv.bootLoader->jlString;
     size_t size = sizeof(StringObject) + c->instFieldsCount*sizeof(slot_t);
     return new(g_heap_mgr.get(size)) StringObject(str);
 }
@@ -48,7 +48,7 @@ void StringObject::operator delete(void *rawMemory,std::size_t size) throw()
     Object::operator delete(rawMemory, size);
 }
 
-StringObject::StringObject(const char *str): Object(g_bootstrap_loader->jlString)
+StringObject::StringObject(const char *str): Object(vmEnv.bootLoader->jlString)
 {
     assert(str != nullptr);
 
@@ -56,7 +56,7 @@ StringObject::StringObject(const char *str): Object(g_bootstrap_loader->jlString
 
     jchar *wstr = utf8_to_unicode(str);
     len = wcslen(reinterpret_cast<const wchar_t *>(wstr)); // todo
-    ArrayObject *jchars = ArrayObject::newInst(g_bootstrap_loader->charArr, len);
+    ArrayObject *jchars = ArrayObject::newInst(vmEnv.bootLoader->charArr, len);
     // 不要使用 wcscpy 直接字符串拷贝，
     // 因为 wcscpy 函数会自动添加字符串结尾 L'\0'，
     // 但 jchars 没有空间容纳字符串结尾符，因为 jchar 是字符数组，不是字符串

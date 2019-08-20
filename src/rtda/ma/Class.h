@@ -218,7 +218,7 @@ public:
 // 基本类型（int, float etc.）的 class.
 class PrimitiveClass: public Class {
 public:
-    explicit PrimitiveClass(const char *className): Class(g_bootstrap_loader, className)
+    explicit PrimitiveClass(const char *className): Class(vmEnv.bootLoader, className)
     {
         assert(className != nullptr);
         access_flags = ACC_PUBLIC;
