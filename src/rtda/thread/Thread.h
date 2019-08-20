@@ -1,5 +1,5 @@
 /*
- * Author: Jia Yang
+ * Author: kayo
  */
 
 #ifndef JVM_JTHREAD_H
@@ -22,9 +22,7 @@ class Method;
  */
 
 struct Thread {
-    Object *this_obj; // Object of java.lang.Thread   todo 干嘛用的
-
-    Object *jltobj; // Object of java/lang/Thread
+    Object *jltobj; // Object of java.lang.Thread
 
     u1 vm_stack[VM_STACK_SIZE]; // 虚拟机栈，一个线程只有一个虚拟机栈
     Frame *top_frame = nullptr;
@@ -32,7 +30,7 @@ struct Thread {
     Thread(ClassLoader *loader, Object *jl_thread_obj);
 };
 
-void create_main_thread(ClassLoader *loader);
+void createMainThread(ClassLoader *loader);
 
 Thread *thread_self();
 

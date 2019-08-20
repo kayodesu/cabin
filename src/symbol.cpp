@@ -1,5 +1,5 @@
 /*
- * Author: Jia Yang
+ * Author: kayo
  */
 
 #include "symbol.h"

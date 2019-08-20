@@ -1,5 +1,5 @@
 /*
- * Author: Jia Yang
+ * Author: kayo
  */
 
 #include "../../registry.h"
@@ -22,7 +22,7 @@ static void doPrivileged(Frame *frame)
      * }
      */
     Method *m = thisObj->clazz->getDeclaredMethod(S(run), S(___java_lang_Object));
-    slot_t *s = exec_java_func(m, (slot_t *) &thisObj);
+    slot_t *s = execJavaFunc(m, (slot_t *) &thisObj);
     frame->pushr(RSLOT(s));
 }
 

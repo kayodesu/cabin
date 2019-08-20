@@ -1,5 +1,5 @@
 /*
- * Author: Jia Yang
+ * Author: kayo
  */
 
 #ifndef JVM_ENDIANNESS_H

@@ -75,7 +75,7 @@ static void newInstance0(Frame *frame)
             constructor_obj->clazz->clinit();
         }
 
-        exec_java_func(constructor, (slot_t *) &this_obj);
+        execJavaFunc(constructor, (slot_t *) &this_obj);
     } else {
         // parameter types of this constructor
         auto parameter_types
@@ -90,7 +90,7 @@ static void newInstance0(Frame *frame)
 
         // todo 可否直接传递 init_args 数组的 data域？？？？？？？？？？？？
         slot_t *args = convert_args(this_obj, constructor, init_args);
-        exec_java_func(constructor, args);
+        execJavaFunc(constructor, args);
         free(args);
     }
 }

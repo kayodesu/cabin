@@ -1,5 +1,5 @@
 /*
- * Author: Jia Yang
+ * Author: kayo
  */
 
 #include "../../registry.h"
@@ -588,7 +588,7 @@ static void getDeclaredFields0(Frame *frame)
                 (slot_t) nullptr, // signature  todo
                 (slot_t) nullptr, // annotations  todo
         };
-        exec_java_func(field_constructor, args);
+        execJavaFunc(field_constructor, args);
     }
 }
 
@@ -648,7 +648,7 @@ static void getDeclaredMethods0(Frame *frame)
                 (slot_t) nullptr, // parameter annotations  todo
                 (slot_t) nullptr, // annotation default  todo
         };
-        exec_java_func(method_constructor, args);
+        execJavaFunc(method_constructor, args);
     }
 }
 
@@ -697,7 +697,7 @@ static void getDeclaredConstructors0(Frame *frame)
                 (slot_t) nullptr, // annotations  todo
                 (slot_t) nullptr, // parameter annotations  todo
         };
-        exec_java_func(constructor_constructor, args);
+        execJavaFunc(constructor_constructor, args);
     }
 }
 

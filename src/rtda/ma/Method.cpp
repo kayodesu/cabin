@@ -1,5 +1,5 @@
 /*
- * Author: Jia Yang
+ * Author: kayo
  */
 
 #include <sstream>
@@ -54,7 +54,7 @@ ArrayObject *Method::getExceptionTypes()
 {
     if (exceptionTypes == nullptr) {
         int count = 0;
-        Object *types[exceptionTables.size()];//vm_malloc(sizeof(Object **) * exception_tables_count);
+        Object *types[exceptionTables.size()];
         for (auto t : exceptionTables) {
             if (t.catchType != nullptr)
                 types[count++] = t.catchType->clsobj;
@@ -129,16 +129,13 @@ void Method::parseCodeAttr(BytecodeReader &r)
     // parse attributes of code's attribute
     u2 attr_count = r.readu2();
     for (int k = 0; k < attr_count; k++) {
-        const char *attr_name = CP_UTF8(&clazz->constant_pool, r.readu2());//rtcp_get_str(method->clazz->rtcp, readu2(reader));
+        const char *attr_name = CP_UTF8(&clazz->constant_pool, r.readu2());
         u4 attr_len = r.readu4();
 
         if (S(LineNumberTable) == attr_name) {
             int count = r.readu2();
-//            line_number_tables = vm_malloc(sizeof(struct line_number_table) * line_number_table_count);
             for (int i = 0; i < count; i++) {
                 lineNumberTables.emplace_back(LineNumberTable(r));
-//                line_number_tables[i].start_pc = r.readu2();
-//                line_number_tables[i].line_number = r.readu2();
             }
         } else if (S(StackMapTable) == attr_name) { // ignore
             r.skip(attr_len);
@@ -184,7 +181,7 @@ Method::Method(Class *c, BytecodeReader &r): Member(c)
 
     // parse method's attributes
     for (int i = 0; i < attr_count; i++) {
-        const char *attr_name = CP_UTF8(cp, r.readu2());//rtcp_get_str(c->rtcp, readu2(reader));
+        const char *attr_name = CP_UTF8(cp, r.readu2());
         u4 attr_len = r.readu4();
 
         if (S(Code) == attr_name) {
@@ -194,7 +191,7 @@ Method::Method(Class *c, BytecodeReader &r): Member(c)
         } else if (S(Synthetic) == attr_name) {
             setSynthetic();
         } else if (S(Signature) == attr_name) {
-            signature = CP_UTF8(cp, r.readu2());//rtcp_get_str(c->rtcp, readu2(reader));
+            signature = CP_UTF8(cp, r.readu2());
         } else if (S(MethodParameters) == attr_name) { // ignore
 //            u1 num = bcr_readu1(reader); // 这里就是 u1，不是u2
 //            struct parameter parameters[num];
@@ -305,8 +302,8 @@ int Method::getLineNumber(int pc) const
     }
 
     /*
-     * 和源文件名一样，并不是每个方法都有行号表。如果方法没有
-行号表，自然也就查不到pc对应的行号，这种情况下返回–1
+     * 和源文件名一样，并不是每个方法都有行号表。
+     * 如果方法没有行号表，自然也就查不到pc对应的行号，这种情况下返回–1
      todo
      */
     // 从后往前查

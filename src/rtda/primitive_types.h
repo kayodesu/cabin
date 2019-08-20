@@ -1,5 +1,5 @@
 /*
- * Author: Jia Yang
+ * Author: kayo
  */
 
 #ifndef JVM_PRIMITIVE_TYPES_H

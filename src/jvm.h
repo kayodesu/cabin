@@ -1,5 +1,5 @@
 /*
- * Author: Jia Yang
+ * Author: kayo
  */
 
 #ifndef JVM_JVM_H
@@ -7,6 +7,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <vector>
 #include "jtypes.h"
 #include "rtda/heap/mgr/HeapMgr.h"
 
@@ -39,10 +40,27 @@ extern HeapMgr g_heap_mgr;
 
 class ClassLoader;
 class StrPool;
+struct Thread;
 
 // todo 说明
 extern ClassLoader *g_bootstrap_loader;
 extern StrPool g_str_pool;
+
+
+// 一个 VM 只有一个 VMEnv 对象
+class VMEnv {
+private:
+
+public:
+    // todo 说明
+    ClassLoader *bootLoader = nullptr; // bootstrap loader
+    StrPool *strPool = nullptr;
+
+    // todo 所有线程
+    std::vector<Thread *> threads;
+};
+
+extern VMEnv vmEnv;
 
 /*
  * jvms规定函数最多有255个参数，this也算，long和double占两个长度

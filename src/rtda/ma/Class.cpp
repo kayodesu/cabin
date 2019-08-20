@@ -1,5 +1,5 @@
 /*
- * Author: Jia Yang
+ * Author: kayo
  */
 
 #include <vector>
@@ -328,7 +328,7 @@ Class::Class(ClassLoader *loader, const u1 *bytecode, size_t len)
     BytecodeReader r(bytecode, len);
 
     this->loader = loader;
-    enclosing_info[0] = enclosing_info[1] = enclosing_info[2] = NULL;
+    enclosing_info[0] = enclosing_info[1] = enclosing_info[2] = nullptr;
 
     magic = r.readu4();
     minor_version = r.readu2();
@@ -336,8 +336,8 @@ Class::Class(ClassLoader *loader, const u1 *bytecode, size_t len)
 
     u2 cp_count = r.readu2();
 
-    constant_pool.type = new u1[cp_count];//vm_malloc(cp_count * sizeof(u1));
-    constant_pool.info = new slot_t[cp_count];//vm_malloc(cp_count * sizeof(slot_t));
+    constant_pool.type = new u1[cp_count];
+    constant_pool.info = new slot_t[cp_count];
     struct constant_pool *cp = &constant_pool;
 
     // constant pool 从 1 开始计数，第0位无效
@@ -462,8 +462,6 @@ Class::Class(ClassLoader *loader, const u1 *bytecode, size_t len)
             fields[lastField--] = f;
     }
 
-//    calc_static_field_id();
-//    calc_instance_field_id();
     calcFieldsId();
 
     // parse methods
@@ -513,8 +511,7 @@ void Class::clinit()
             printvm("error\n");
         }
 
-//        thread_invoke_method(Thread, method, NULL);
-        exec_java_func(method, nullptr);
+        execJavaFunc(method, nullptr);
     }
 }
 
@@ -743,7 +740,6 @@ bool Class::isAccessibleTo(const Class *visitor) const
     // 字段是 protected，则只有 子类 和 同一个包下的类 可以访问
     if (isProtected()) {
         return visitor->isSubclassOf(this) || utf8_equals(pkgName, visitor->pkgName);
-//        return class_is_subclass_of(visitor, c) || utf8_equals(pkgName, visitor->pkgName);
     }
 
     // 字段有默认访问权限（非public，非protected，也非private），则只有同一个包下的类可以访问

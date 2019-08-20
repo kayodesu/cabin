@@ -1,5 +1,5 @@
 /*
- * Author: Jia Yang
+ * Author: kayo
  */
 
 #ifndef JVM_INTERPRETER_H
@@ -13,7 +13,7 @@ class Method;
  * 此方法用于虚拟机主动调用函数，
  * 函数调用指令（invokestatic, invokespecial, ...）中不能使用
  */
-slot_t *exec_java_func(Method *m, const slot_t *args);
+slot_t *execJavaFunc(Method *m, const slot_t *args);
 
 #define OPC_NOP                  0
 #define OPC_ACONST_NULL          1

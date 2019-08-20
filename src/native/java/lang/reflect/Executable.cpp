@@ -2,7 +2,7 @@
 #include "../../../../jvm.h"
 
 /*
- * Author: Jia Yang
+ * Author: kayo
  */
 
 // private native Parameter[] getParameters0();

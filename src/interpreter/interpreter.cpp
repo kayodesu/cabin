@@ -1,5 +1,5 @@
 /*
- * Author: Jia Yang
+ * Author: kayo
  */
 
 #include <iostream>
@@ -1421,7 +1421,7 @@ invoke_method:
     jvm_abort("Never goes here!");
 }
 
-slot_t *exec_java_func(Method *method, const slot_t *args)
+slot_t *execJavaFunc(Method *method, const slot_t *args)
 {
     assert(method != nullptr);
     Frame *frame = allocFrame(method, true);

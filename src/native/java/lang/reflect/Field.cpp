@@ -2,7 +2,7 @@
 #include "../../../../jvm.h"
 
 /*
- * Author: Jia Yang
+ * Author: kayo
  */
 
 // private native byte[] getTypeAnnotationBytes0();

@@ -2,7 +2,7 @@
 #include "../../../../../rtda/thread/Frame.h"
 
 /*
- * Author: Jia Yang
+ * Author: kayo
  */
 
 // private static native boolean VMSupportsCS8();

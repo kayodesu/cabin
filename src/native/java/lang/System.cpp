@@ -1,5 +1,5 @@
 /*
- * Author: Jia Yang
+ * Author: kayo
  */
 
 #include <ctime>
@@ -113,7 +113,7 @@ static void initProperties(Frame *frame)
                 (slot_t) StringObject::newInst(sys_prop[0]),
                 (slot_t) StringObject::newInst(sys_prop[1])
         };
-        exec_java_func(set_property, args);
+        execJavaFunc(set_property, args);
     }
 
     // 返回参数

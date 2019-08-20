@@ -1,5 +1,5 @@
 /*
- * Author: Jia Yang
+ * Author: kayo
  */
 
 #include <pthread.h>
@@ -28,7 +28,7 @@ static inline void set_thread_self(Thread *thread)
 /*
  * main thread 由虚拟机启动。
  */
-void create_main_thread(ClassLoader *loader)
+void createMainThread(ClassLoader *loader)
 {
     pthread_key_create(&thread_key, nullptr);
     main_thread = new Thread(loader, nullptr);
@@ -47,7 +47,7 @@ void create_main_thread(ClassLoader *loader)
     // This method is used to create the system Thread group.
     jltg_class->clinit();
 
-    exec_java_func(jltg_class->getConstructor(S(___V)), (slot_t *) &system_thread_group);
+    execJavaFunc(jltg_class->getConstructor(S(___V)), (slot_t *) &system_thread_group);
 
     // from java/lang/Thread.java
     // public final static int MIN_PRIORITY = 1;
@@ -66,7 +66,7 @@ void create_main_thread(ClassLoader *loader)
             (slot_t) system_thread_group,
             (slot_t) StringObject::newInst(MAIN_THREAD_NAME) // thread name
     };
-    exec_java_func(constructor, args);
+    execJavaFunc(constructor, args);
 }
 
 Thread::Thread(ClassLoader *loader, Object *jltobj): jltobj(jltobj)
@@ -182,7 +182,7 @@ void thread_handle_uncaught_exception(Object *exception)
     Thread *thread = thread_self();
     thread->top_frame = nullptr; // clear vm_stack
     Method *pst = exception->clazz->lookupInstMethod(S(printStackTrace), S(___V));
-    exec_java_func(pst, (slot_t *) &exception);
+    execJavaFunc(pst, (slot_t *) &exception);
 }
 
 void thread_throw_null_pointer_exception()

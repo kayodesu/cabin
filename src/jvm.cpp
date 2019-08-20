@@ -1,5 +1,5 @@
 /*
- * Author: Jia Yang
+ * Author: kayo
  */
 
 #include <dirent.h>
@@ -36,6 +36,8 @@ HeapMgr g_heap_mgr;
 ClassLoader *g_bootstrap_loader = nullptr;
 StrPool g_str_pool;
 
+VMEnv vmEnv;
+
 void init_symbol();
 
 static void start_jvm(const char *main_class_name)
@@ -43,7 +45,7 @@ static void start_jvm(const char *main_class_name)
     init_symbol();
 
     auto loader = new ClassLoader(true);
-    create_main_thread(loader);
+    createMainThread(loader);
 
     // 先加载 sun.mis.VM 类，然后执行其类初始化方法
     Class *vm_class = loadSysClass("sun/misc/VM");
@@ -71,7 +73,7 @@ static void start_jvm(const char *main_class_name)
 
     // 开始在主线程中执行 main 方法
     slot_t args[] = { 0, (uintptr_t) NULL };
-    exec_java_func(main_method, args); //  todo
+    execJavaFunc(main_method, args); //  todo
 
 
     // todo 如果有其他的非后台线程在执行，则main线程需要在此wait

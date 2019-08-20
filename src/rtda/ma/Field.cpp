@@ -1,5 +1,5 @@
 /*
- * Author: Jia Yang
+ * Author: kayo
  */
 
 #include <sstream>
@@ -42,7 +42,7 @@ Field::Field(Class *c, BytecodeReader &r): Member(c)
         } else if (S(Synthetic) == attr_name) {
             setSynthetic();
         } else if (S(Signature) == attr_name) {
-            c->signature = CP_UTF8(&(c->constant_pool), r.readu2());//rtcp_get_str(c->rtcp, readu2(reader));
+            c->signature = CP_UTF8(&(c->constant_pool), r.readu2());
         } else if (S(RuntimeVisibleAnnotations) == attr_name) { // ignore
 //            u2 num = field->runtime_visible_annotations_num = readu2(reader);
 //            field->runtime_visible_annotations = malloc(sizeof(struct annotation) * num);
