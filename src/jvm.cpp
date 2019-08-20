@@ -219,7 +219,7 @@ int main(int argc, char* argv[])
 
     time_t time3;
     time(&time3);
-    printf("run jvm: %lds\n", ((long)(time3)) - ((long)(time2)));
+    printf("run KayoVM: %lds\n", ((long)(time3)) - ((long)(time2)));
     return 0;
 }
 

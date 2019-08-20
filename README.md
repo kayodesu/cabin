@@ -26,7 +26,7 @@ Two command-line options:
 * -bcp path: set jre lib path.
 * -cp path: set class path.
 ```
-C:\>jvm HelloWorld -bcp "C:\Program Files\Java\jre1.8.0_162\lib" -cp D:\code\jvm\testclasses
+C:\>jvm HelloWorld -bcp "C:\Program Files\Java\jre1.8.0_162\lib" -cp D:\code\KayoVM\testclasses
 ```
 or, using JAVA_HOME and CLASS_PATH environment variables.
 ```
@@ -44,7 +44,7 @@ public class HelloWorld {
 ```
 
 ```
-C:\>jvm HelloWorld -bcp "C:\Program Files\Java\jre1.8.0_162\lib" -cp D:\code\jvm\testclasses
+C:\>jvm HelloWorld -bcp "C:\Program Files\Java\jre1.8.0_162\lib" -cp D:\code\KayoVM\testclasses
 Hello, world!
 
 C:\>
