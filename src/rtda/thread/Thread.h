@@ -33,7 +33,7 @@ struct Thread {
     u1 vm_stack[VM_STACK_SIZE]; // 虚拟机栈，一个线程只有一个虚拟机栈
     Frame *top_frame = nullptr;
 
-    Thread(Object *jltobj, Object *threadGroup = nullptr,
+    explicit Thread(Object *jltobj, Object *threadGroup = nullptr,
            const char *threadName = nullptr, int priority = NORM_PRIORITY);
 
     void setThreadGroupAndName(Object *threadGroup, const char *threadName);

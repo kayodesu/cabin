@@ -50,15 +50,15 @@ private:
 public:
     // todo 说明
     ClassLoader *bootLoader = nullptr; // bootstrap loader
-    StrPool *strPool;
+    StrPool *strPool; // string pool
 
     // The system Thread group.
     Object *sysThreadGroup;
 
-    VMEnv();
-
     // todo 所有线程
     std::vector<Thread *> threads;
+
+    VMEnv();
 };
 
 extern VMEnv vmEnv;

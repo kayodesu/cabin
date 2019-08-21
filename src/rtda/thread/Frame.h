@@ -77,6 +77,8 @@ struct Frame {
     jdouble popd() { stack -= 2; return * (jdouble *) stack; }
     jref    popr() { stack--;    return * (jref *) stack; }
 
+    bool objectAccessible(jref obj);
+
     static size_t size(const Method *m);
     std::string toString();
 };
