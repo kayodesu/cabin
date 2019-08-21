@@ -8,33 +8,13 @@
 #include <cstdio>
 #include <cstdlib>
 #include <vector>
+#include <string>
 #include "jtypes.h"
 #include "rtda/heap/mgr/HeapMgr.h"
 
 #ifndef PATH_MAX
 #define PATH_MAX 260 // todo
 #endif
-
-// 启动类路径（bootstrap classpath）默认对应 jre/lib 目录，Java标准库（大部分在rt.jar里）位于该路径
-extern int jre_lib_jars_count;
-extern char jre_lib_jars[][PATH_MAX];
-
-// 扩展类路径（extension classpath）默认对应 jre/lib/ext 目录，使用Java扩展机制的类位于这个路径。
-extern int jre_ext_jars_count;
-extern char jre_ext_jars[][PATH_MAX];
-
-/*
- * 用户类路径（user classpath）我们自己实现的类，以及第三方类库位于用户类路径
- *
- * 用户类路径的默认值是当前目录。可以设置CLASSPATH环境变量来修改用户类路径。
- * 可以通过 -cp 选项修改，
- * -cp 选项的优先级更高，可以覆盖CLASSPATH环境变量设置。
- * -cp 选项既可以指定目录，也可以指定JAR文件。
- */
-extern int user_dirs_count;
-extern int user_jars_count;
-extern char user_dirs[][PATH_MAX];
-extern char user_jars[][PATH_MAX];
 
 extern HeapMgr g_heap_mgr;
 
@@ -48,6 +28,23 @@ class VMEnv {
 private:
 
 public:
+    // 启动类路径（bootstrap classpath）默认对应 jre/lib 目录，Java标准库（大部分在rt.jar里）位于该路径
+    std::vector<std::string> jreLibJars;
+
+    // 扩展类路径（extension classpath）默认对应 jre/lib/ext 目录，使用Java扩展机制的类位于这个路径。
+    std::vector<std::string> jreExtJars;
+
+    /*
+     * 用户类路径（user classpath）我们自己实现的类，以及第三方类库位于用户类路径
+     *
+     * 用户类路径的默认值是当前目录。可以设置CLASSPATH环境变量来修改用户类路径。
+     * 可以通过 -cp 选项修改，
+     * -cp 选项的优先级更高，可以覆盖CLASSPATH环境变量设置。
+     * -cp 选项既可以指定目录，也可以指定JAR文件。
+     */
+    std::vector<std::string> userDirs;
+    std::vector<std::string> userJars;
+
     // todo 说明
     ClassLoader *bootLoader = nullptr; // bootstrap loader
     StrPool *strPool; // string pool
@@ -67,9 +64,6 @@ extern VMEnv vmEnv;
  * jvms规定函数最多有255个参数，this也算，long和double占两个长度
  */
 #define METHOD_PARAMETERS_MAX_COUNT 255
-
-//// The system Thread group.
-//extern Object *system_thread_group;
 
 // name of main thread
 #define MAIN_THREAD_NAME "main"

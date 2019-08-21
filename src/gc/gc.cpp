@@ -11,7 +11,7 @@ bool objectAccessible(jref obj)
 {
     // 虚拟机栈(栈桢中的本地变量表)中的引用的对象
     for (Thread *thread : vmEnv.threads) {
-        for (Frame *frame = thread->top_frame; frame != nullptr; frame = frame->prev) {
+        for (Frame *frame = thread->topFrame; frame != nullptr; frame = frame->prev) {
             if (frame->objectAccessible(obj))
                 return true;
         }

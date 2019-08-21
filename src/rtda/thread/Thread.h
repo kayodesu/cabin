@@ -30,8 +30,8 @@ struct Thread {
     Object *jltobj; // 所关联的 Object of java.lang.Thread
     pthread_t pid;  // 所关联的 POSIX 线程对应的id
 
-    u1 vm_stack[VM_STACK_SIZE]; // 虚拟机栈，一个线程只有一个虚拟机栈
-    Frame *top_frame = nullptr;
+    u1 vmStack[VM_STACK_SIZE]; // 虚拟机栈，一个线程只有一个虚拟机栈
+    Frame *topFrame = nullptr;
 
     explicit Thread(Object *jltobj, Object *threadGroup = nullptr,
            const char *threadName = nullptr, int priority = NORM_PRIORITY);

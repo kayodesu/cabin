@@ -199,7 +199,6 @@ void Class::createVtable()
     int eee = vtable.size();
     assert(jj == eee);
 
-
 //    auto inheritedEnd = vtable.end();
     int i = 0;
     for (auto &m : methods) {

@@ -13,26 +13,9 @@
 #include "rtda/heap/StrPool.h"
 #include "symbol.h"
 
+using namespace std;
 
-#define JRE_LIB_JARS_MAX_COUNT 64 // big enough
-#define JRE_EXT_JARS_MAX_COUNT 64 // big enough
-#define USER_DIRS_MAX_COUNT 64 // big enough? // todo
-#define USER_JARS_MAX_COUNT 64 // big enough? // todo
-
-int jre_lib_jars_count = 0;
-char jre_lib_jars[JRE_LIB_JARS_MAX_COUNT][PATH_MAX];
-
-int jre_ext_jars_count = 0;
-char jre_ext_jars[JRE_EXT_JARS_MAX_COUNT][PATH_MAX];
-
-int user_dirs_count = 0;
-int user_jars_count = 0;
-char user_dirs[USER_DIRS_MAX_COUNT][PATH_MAX];
-char user_jars[USER_JARS_MAX_COUNT][PATH_MAX];
-
-//size_t g_initial_heap_size = 67108864; // 64Mb  64 * 1024 * 1024
 HeapMgr g_heap_mgr;
-
 
 VMEnv vmEnv;
 
@@ -48,15 +31,15 @@ static void initMainThread()
 {
     auto mainThread = new Thread(nullptr);
 
-    Class *jltg_class = loadSysClass(S(java_lang_ThreadGroup));
-    vmEnv.sysThreadGroup = Object::newInst(jltg_class);
+    Class *jltgClass = loadSysClass(S(java_lang_ThreadGroup));
+    vmEnv.sysThreadGroup = Object::newInst(jltgClass);
 
     // 初始化 system_thread_group
     // java/lang/ThreadGroup 的无参数构造函数主要用来：
     // Creates an empty Thread group that is not in any Thread group.
     // This method is used to create the system Thread group.
-    jltg_class->clinit();
-    execJavaFunc(jltg_class->getConstructor(S(___V)), (slot_t *) &(vmEnv.sysThreadGroup));
+    jltgClass->clinit();
+    execJavaFunc(jltgClass->getConstructor(S(___V)), (slot_t *) &(vmEnv.sysThreadGroup));
 
     mainThread->setThreadGroupAndName(vmEnv.sysThreadGroup, MAIN_THREAD_NAME);
 }
@@ -78,7 +61,7 @@ static void createGCThread()
     }
 }
 
-static void start_jvm(const char *main_class_name)
+static void startJvm(const char *main_class_name)
 {
     init_symbol();
     init_thread_module();
@@ -123,14 +106,13 @@ static void start_jvm(const char *main_class_name)
     // todo main_thread 退出，做一些清理工作。
 }
 
-static void find_jars(const char *path, char jars[][PATH_MAX], int *jars_count)
+static void findJars(const char *path, vector<std::string> &result)
 {
     DIR *dir = opendir(path);
     if (dir == nullptr) {
         printvm("open dir failed. %s\n", path);
     }
 
-    int count = 0;
     struct dirent *entry;
     struct stat statbuf;
     while ((entry = readdir(dir)) != nullptr) {
@@ -145,13 +127,11 @@ static void find_jars(const char *path, char jars[][PATH_MAX], int *jars_count)
         stat(abspath, &statbuf);
         if (S_ISREG(statbuf.st_mode)) { // 常规文件
             char *suffix = strrchr(abspath, '.');
-            if (suffix != nullptr && strcmp(suffix, ".jar") == 0) {
-                strcpy(jars[count++], abspath);
-            }
+            if (suffix != nullptr && strcmp(suffix, ".jar") == 0)
+                result.emplace_back(abspath);
         }
     }
 
-    *jars_count = count;
     closedir(dir);
 }
 
@@ -202,25 +182,23 @@ int main(int argc, char* argv[])
     // parse bootstrap classpath
     if (bootstrap_classpath[0] == 0) { // empty
         // 命令行参数没有设置 bootstrap_classpath 的值，那么使用 JAVA_HOME 环境变量
-        char *java_home = getenv("JAVA_HOME"); // JAVA_HOME 是 JDK 的目录
-        if (java_home == nullptr) {
+        char *javaHome = getenv("JAVA_HOME"); // JAVA_HOME 是 JDK 的目录
+        if (javaHome == nullptr) {
             vm_internal_error("no java lib"); // todo
         }
-        strcpy(bootstrap_classpath, java_home);
+        strcpy(bootstrap_classpath, javaHome);
         strcat(bootstrap_classpath, "/jre/lib");
     }
 
-    find_jars(bootstrap_classpath, jre_lib_jars, &jre_lib_jars_count);
+    findJars(bootstrap_classpath, vmEnv.jreLibJars);
 
     // 第0个位置放rt.jar，因为rt.jar常用，所以放第0个位置首先搜索。
-    for (int i = 0; i < jre_lib_jars_count; i++) {
-        char *s = strrchr(jre_lib_jars[i], '\\');
-        char *t = strrchr(jre_lib_jars[i], '/');
-        if ((s != nullptr && strcmp(s + 1, "rt.jar") == 0) || (t != nullptr && strcmp(t + 1, "rt.jar") == 0)) { // find
-            char tmp[PATH_MAX];
-            strcpy(tmp, jre_lib_jars[0]);
-            strcpy(jre_lib_jars[0], jre_lib_jars[i]);
-            strcpy(jre_lib_jars[i], tmp);
+    for (auto iter = vmEnv.jreLibJars.begin(); iter != vmEnv.jreLibJars.end(); iter++) {
+        auto i = iter->rfind('\\');
+        auto j = iter->rfind('/');
+        if ((i != iter->npos && iter->compare(i + 1, 6, "rt.jar") == 0)
+                || (j != iter->npos && iter->compare(j + 1, 6, "rt.jar") == 0)) {
+            std::swap(*(vmEnv.jreLibJars.begin()), *iter);
             break;
         }
     }
@@ -231,15 +209,17 @@ int main(int argc, char* argv[])
         strcat(extension_classpath, "/ext");  // todo JDK9+ 的目录结构有变动！！！！！！！
     }
 
-    find_jars(extension_classpath, jre_ext_jars, &jre_ext_jars_count);
+    findJars(extension_classpath, vmEnv.jreExtJars);
 
     // parse user classpath
     if (user_classpath[0] == 0) {  // empty
         char *classpath = getenv("CLASSPATH");
         if (classpath == nullptr) {
-            getcwd(user_dirs[user_dirs_count++], PATH_MAX); // current working path
+            char buf[PATH_MAX + 1];
+            getcwd(buf, PATH_MAX); // current working path
+            vmEnv.userDirs.emplace_back(buf);
         } else {
-            strcpy(user_dirs[user_dirs_count++], classpath);
+            vmEnv.userDirs.emplace_back(classpath);
         }
     } else {
         const char *delim = ";"; // 各个path以分号分隔
@@ -247,9 +227,9 @@ int main(int argc, char* argv[])
         while (path != nullptr) {
             const char *suffix = strrchr(path, '.');
             if (suffix != nullptr && strcmp(suffix, ".jar") == 0) { // jar file
-                strcpy(user_jars[user_jars_count++], path);
+                vmEnv.userJars.emplace_back(path);
             } else { // directory
-                strcpy(user_dirs[user_dirs_count++], path);
+                vmEnv.userDirs.emplace_back(path);
             }
             path = strtok(nullptr, delim);
         }
@@ -258,8 +238,9 @@ int main(int argc, char* argv[])
     register_all_native_methods(); // todo 不要一次全注册，需要时再注册
 
     time_t time2;
-    time(&time2);    
-    start_jvm(main_class_name);
+    time(&time2);
+    
+    startJvm(main_class_name);
 
     time_t time3;
     time(&time3);

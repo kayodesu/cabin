@@ -2,26 +2,17 @@
  * Author: kayo
  */
 
+#include <memory>
+#include "../symbol.h"
 #include "ClassLoader.h"
 #include "minizip/unzip.h"
 #include "../rtda/ma/Class.h"
 #include "../rtda/ma/Field.h"
 #include "../rtda/heap/ClassObject.h"
-#include "../symbol.h"
-
 
 using namespace std;
 
-struct bytecode_content {
-    u1 *bytecode;
-    size_t len;
-};
-
-static struct bytecode_content invalid_bytecode_content = { NULL, 0 };
-
-#define IS_INVALID(bytecode_content) ((bytecode_content).bytecode == NULL || (bytecode_content).len == 0)
-
-static struct bytecode_content read_class_from_jar(const char *jar_path, const char *class_name)
+static unique_ptr<pair<u1 *, size_t>> read_class_from_jar(const char *jar_path, const char *class_name)
 {
     unz_global_info64 global_info;
     unz_file_info64 file_info;
@@ -30,20 +21,20 @@ static struct bytecode_content read_class_from_jar(const char *jar_path, const c
     if (jar_file == NULL) {
         // todo error
         printvm("unzOpen64 failed: %s\n", jar_path);
-        return invalid_bytecode_content;
+        return nullptr;
     }
     if (unzGetGlobalInfo64(jar_file, &global_info) != UNZ_OK) {
         // todo throw “文件错误”;
         unzClose(jar_file);
         printvm("unzGetGlobalInfo64 failed: %s\n", jar_path);
-        return invalid_bytecode_content;
+        return nullptr;
     }
 
     if (unzGoToFirstFile(jar_file) != UNZ_OK) {
         // todo throw “文件错误”;
         unzClose(jar_file);
         printvm("unzGoToFirstFile failed: %s\n", jar_path);
-        return invalid_bytecode_content;
+        return nullptr;
     }
 
     for (unsigned long long int i = 0; i < global_info.number_entry; i++) {
@@ -51,7 +42,7 @@ static struct bytecode_content read_class_from_jar(const char *jar_path, const c
         if (unzGetCurrentFileInfo64(jar_file, &file_info, file_name, sizeof(file_name), NULL, 0, NULL, 0) != UNZ_OK) {
             unzClose(jar_file);
             printvm("unzGetCurrentFileInfo64 failed: %s\n", jar_path);
-            return invalid_bytecode_content;
+            return nullptr;
         }
 
         char *p = strrchr(file_name, '.');
@@ -64,21 +55,21 @@ static struct bytecode_content read_class_from_jar(const char *jar_path, const c
                     // todo error
                     unzClose(jar_file);
                     printvm("unzOpenCurrentFile failed: %s\n", jar_path);
-                    return invalid_bytecode_content;
+                    return nullptr;
                 }
 
-                size_t uncompressed_size = (size_t) file_info.uncompressed_size;
-                u1 *bytecode = (u1 *) vm_malloc(sizeof(u1) * uncompressed_size);
+                auto uncompressed_size = (size_t) file_info.uncompressed_size;
+                auto bytecode = (u1 *) vm_malloc(sizeof(u1) * uncompressed_size);
                 if (unzReadCurrentFile(jar_file, bytecode, (unsigned int) uncompressed_size) != uncompressed_size) {
                     // todo error
                     unzCloseCurrentFile(jar_file);  // todo 干嘛的
                     unzClose(jar_file);
                     printvm("unzReadCurrentFile failed: %s\n", jar_path);
-                    return invalid_bytecode_content;
+                    return nullptr;
                 }
                 unzCloseCurrentFile(jar_file); // todo 干嘛的
                 unzClose(jar_file);
-                return (struct bytecode_content) { bytecode, uncompressed_size };
+                return make_unique<pair<u1 *, size_t>>(bytecode, uncompressed_size);
             }
         }
 
@@ -90,15 +81,15 @@ static struct bytecode_content read_class_from_jar(const char *jar_path, const c
             // todo error
             unzClose(jar_file);
             printvm("unzGoToNextFile failed: %s\n", jar_path);
-            return invalid_bytecode_content;
+            return nullptr;
         }
     }
 
     unzClose(jar_file);
-    return invalid_bytecode_content;
+    return nullptr;
 }
 
-static struct bytecode_content read_class_from_dir(const char *dir_path, const char *class_name)
+static unique_ptr<pair<u1 *, size_t>> read_class_from_dir(const char *dir_path, const char *class_name)
 {
     assert(dir_path != nullptr);
     assert(class_name != nullptr);
@@ -115,7 +106,7 @@ static struct bytecode_content read_class_from_dir(const char *dir_path, const c
         fseek(f, 0, SEEK_SET);
         fread(bytecode, 1, file_len, f);
         fclose(f);
-        return (struct bytecode_content) { bytecode, file_len };
+        return make_unique<pair<u1 *, size_t>>(bytecode, file_len);
     }
 
     if (errno != ENOFILE) {
@@ -124,40 +115,40 @@ static struct bytecode_content read_class_from_dir(const char *dir_path, const c
     }
 
     // not find
-    return invalid_bytecode_content;
+    return nullptr;
 }
 
-static struct bytecode_content read_class(const char *class_name)
+static unique_ptr<pair<u1 *, size_t>> read_class(const char *class_name)
 {
     // search jre/lib
-    for (int i = 0; i < jre_lib_jars_count; i++) {
-        struct bytecode_content content = read_class_from_jar(jre_lib_jars[i], class_name);
-        if (!IS_INVALID(content)) // find out
+    for (auto &jar : vmEnv.jreLibJars) {
+        auto content = read_class_from_jar(jar.c_str(), class_name);
+        if (content) // find out
             return content;
     }
 
     // search jre/lib/ext
-    for (int i = 0; i < jre_ext_jars_count; i++) {
-        struct bytecode_content content = read_class_from_jar(jre_ext_jars[i], class_name);
-        if (!IS_INVALID(content)) // find out
+    for (auto &jar : vmEnv.jreExtJars) {
+        auto content = read_class_from_jar(jar.c_str(), class_name);
+        if (content) // find out
             return content;
     }
 
     // search user paths
-    for (int i = 0; i < user_dirs_count; i++) {
-        struct bytecode_content content = read_class_from_dir(user_dirs[i], class_name);
-        if (!IS_INVALID(content)) // find out
+    for (auto &dir : vmEnv.userDirs) {
+        auto content = read_class_from_dir(dir.c_str(), class_name);
+        if (content) // find out
             return content;
     }
 
     // search user jars
-    for (int i = 0; i < user_jars_count; i++) {
-        struct bytecode_content content = read_class_from_jar(user_jars[i], class_name);
-        if (!IS_INVALID(content)) // find out
+    for (auto &jar : vmEnv.userJars) {
+        auto content = read_class_from_jar(jar.c_str(), class_name);
+        if (content) // find out
             return content;
     }
 
-    return invalid_bytecode_content; // not find
+    return nullptr; // not find
 }
 
 ClassLoader::ClassLoader(bool is_bootstrap_loader)
@@ -204,12 +195,12 @@ void ClassLoader::putToPool(const char *className, Class *c)
 
 Class *ClassLoader::loading(const char *className)
 {
-    struct bytecode_content content = read_class(className);
-    if (IS_INVALID(content)) {
+    auto content = read_class(className);
+    if (!content) {
         jvm_abort("class not find: %s", className);
     }
 
-    return new Class(this, content.bytecode, content.len);
+    return new Class(this, content->first, content->second);
 }
 
 static Class* verification(Class *c)
@@ -315,7 +306,7 @@ Class *ClassLoader::loadClass(const char *class_name)
     }
 
     if (jlClass != nullptr) {
-        c->clsobj = ClassObject::newInst(c);//clsobj_create(c);
+        c->clsobj = ClassObject::newInst(c);
     }
 
     loadedClasses.insert(make_pair(c->className, c));

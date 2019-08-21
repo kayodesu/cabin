@@ -71,7 +71,6 @@ public:
      */
     bool isVirtual() const
     {
-//        printf("[%d], %s\n", !isPrivate() && !isStatic() && !utf8_equals(name, SYMBOL(object_init)), toString().c_str());
         return !isPrivate() && !isStatic() && !utf8_equals(name, SYMBOL(object_init));
     }
 

@@ -606,7 +606,7 @@ static slot_t *exec()
     Method *resolved_method;
     slot_t *args;
 
-    Frame *frame = thread->top_frame;
+    Frame *frame = thread->topFrame;
 #if (PRINT_EXECUTING_FRAME)
     printvm("executing frame: %s\n", frame->toString().c_str());
 #endif
@@ -1026,7 +1026,7 @@ static slot_t *exec()
 
 #define METHOD_RETURN(ret_value_slot_count) \
 { \
-    Frame *invoke_frame = thread->top_frame = frame->prev; \
+    Frame *invoke_frame = thread->topFrame = frame->prev; \
     frame->stack -= (ret_value_slot_count); \
      \
     if (frame->vm_invoke || invoke_frame == nullptr) { \

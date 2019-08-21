@@ -70,33 +70,33 @@ Frame *allocFrame(Method *m, bool vm_invoke)
 {
     Thread *thread = thread_self();
 
-    Frame *old_top = thread->top_frame;
+    Frame *old_top = thread->topFrame;
     if (old_top == nullptr) {
-        thread->top_frame = (Frame *) thread->vm_stack;
+        thread->topFrame = (Frame *) thread->vmStack;
     } else {
-        thread->top_frame = (Frame *) ((intptr_t) thread->top_frame + Frame::size(old_top->method));
+        thread->topFrame = (Frame *) ((intptr_t) thread->topFrame + Frame::size(old_top->method));
     }
 
-    if ((intptr_t) thread->top_frame + Frame::size(m) - (intptr_t) thread->vm_stack > VM_STACK_SIZE) {
+    if ((intptr_t) thread->topFrame + Frame::size(m) - (intptr_t) thread->vmStack > VM_STACK_SIZE) {
         // todo 栈溢出
         jvm_abort("stack_over_flo");
     }
 
-    return new(thread->top_frame) Frame(m, vm_invoke, old_top);
+    return new(thread->topFrame) Frame(m, vm_invoke, old_top);
 }
 
 void popFrame()
 {
     Thread *thread = thread_self();
-    assert(thread->top_frame != nullptr);
-    thread->top_frame = thread->top_frame->prev;
+    assert(thread->topFrame != nullptr);
+    thread->topFrame = thread->topFrame->prev;
 }
 
 int vm_stack_depth()
 {
     Thread *thread = thread_self();
     int depth = 0;
-    Frame *f = thread->top_frame;
+    Frame *f = thread->topFrame;
     while (f != nullptr) {
         depth++;
         f = f->prev;
@@ -137,7 +137,7 @@ void thread_handle_uncaught_exception(Object *exception)
     assert(exception != nullptr);
 
     Thread *thread = thread_self();
-    thread->top_frame = nullptr; // clear vm_stack
+    thread->topFrame = nullptr; // clear vm_stack
     Method *pst = exception->clazz->lookupInstMethod(S(printStackTrace), S(___V));
     execJavaFunc(pst, (slot_t *) &exception);
 }
