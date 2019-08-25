@@ -39,7 +39,7 @@ static void initMainThread()
     // Creates an empty Thread group that is not in any Thread group.
     // This method is used to create the system Thread group.
     jltgClass->clinit();
-    execJavaFunc(jltgClass->getConstructor(S(___V)), (slot_t *) &(vmEnv.sysThreadGroup));
+    execJavaFunc(jltgClass->getConstructor(S(___V)), vmEnv.sysThreadGroup);
 
     mainThread->setThreadGroupAndName(vmEnv.sysThreadGroup, MAIN_THREAD_NAME);
 }
@@ -97,8 +97,7 @@ static void startJvm(const char *main_class_name)
     }
 
     // 开始在主线程中执行 main 方法
-    slot_t args[] = { 0, (uintptr_t) NULL };
-    execJavaFunc(main_method, args); //  todo
+    execJavaFunc(main_method, (Object *) nullptr); //  todo
 
 
     // todo 如果有其他的非后台线程在执行，则main线程需要在此wait

@@ -3,11 +3,17 @@
  */
 
 #include <pthread.h>
+#include "../../debug.h"
 #include "Thread.h"
 #include "../heap/Object.h"
 #include "../../interpreter/interpreter.h"
-#include "../../symbol.h"
 #include "../heap/StringObject.h"
+
+#if TRACE_THREAD
+#define TRACE PRINT_TRACE
+#else
+#define TRACE(x)
+#endif
 
 // Thread specific key holding a Thread
 static pthread_key_t thread_key;
@@ -58,12 +64,21 @@ void Thread::setThreadGroupAndName(Object *threadGroup, const char *threadName)
 
     // 调用 java/lang/Thread 的构造函数
     Method *constructor = jltobj->clazz->getConstructor("(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");
-    slot_t args[] = {
-            (slot_t) jltobj,
-            (slot_t) threadGroup,
-            (slot_t) StringObject::newInst(threadName) // thread name
-    };
-    execJavaFunc(constructor, args);
+//    slot_t args[] = {
+//            (slot_t) jltobj,
+//            (slot_t) threadGroup,
+//            (slot_t) StringObject::newInst(threadName) // thread name
+//    };
+    execJavaFunc(constructor, { (slot_t) jltobj,
+                                (slot_t) threadGroup,
+                                (slot_t) StringObject::newInst(threadName) });
+}
+
+bool Thread::isAlive() {
+    assert(jltobj != nullptr);
+    auto status = jltobj->getInstFieldValue<jint>("threadStatus", "I");
+    // todo
+    return false;
 }
 
 Frame *allocFrame(Method *m, bool vm_invoke)
@@ -139,7 +154,7 @@ void thread_handle_uncaught_exception(Object *exception)
     Thread *thread = thread_self();
     thread->topFrame = nullptr; // clear vm_stack
     Method *pst = exception->clazz->lookupInstMethod(S(printStackTrace), S(___V));
-    execJavaFunc(pst, (slot_t *) &exception);
+    execJavaFunc(pst, exception);
 }
 
 void thread_throw_null_pointer_exception()

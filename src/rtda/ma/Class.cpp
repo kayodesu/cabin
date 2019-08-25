@@ -510,7 +510,7 @@ void Class::clinit()
             printvm("error\n");
         }
 
-        execJavaFunc(method, nullptr);
+        execJavaFunc(method);
     }
 }
 

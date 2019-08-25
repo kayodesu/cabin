@@ -3,12 +3,19 @@
  */
 
 #include <memory>
+#include "../debug.h"
 #include "../symbol.h"
 #include "ClassLoader.h"
 #include "minizip/unzip.h"
 #include "../rtda/ma/Class.h"
 #include "../rtda/ma/Field.h"
 #include "../rtda/heap/ClassObject.h"
+
+#if TRACE_LOAD_CLASS
+#define TRACE PRINT_TRACE
+#else
+#define TRACE(...)
+#endif
 
 using namespace std;
 
@@ -284,24 +291,25 @@ Class *ClassLoader::loadNonArrClass(const char *class_name)
     return initialization(resolution(preparation(verification(c))));
 }
 
-Class *ClassLoader::loadClass(const char *class_name)
+Class *ClassLoader::loadClass(const char *className)
 {
-    assert(class_name != nullptr);
+    assert(className != nullptr);
 
-    auto iter = loadedClasses.find(class_name);
+    auto iter = loadedClasses.find(className);
     if (iter != loadedClasses.end()) {
+        TRACE("find loaded class (%s) from pool.", className);
         return iter->second;
     }
 
     Class *c = nullptr;
-    if (class_name[0] == '[') {
-        c = new ArrayClass(class_name);
+    if (className[0] == '[') {
+        c = new ArrayClass(className);
     } else {
-        c = loadNonArrClass(class_name);
+        c = loadNonArrClass(className);
     }
 
     if (c == nullptr) {
-        VM_UNKNOWN_ERROR("loader class failed. %s", class_name);
+        VM_UNKNOWN_ERROR("loader class failed. %s", className);
         return nullptr;
     }
 
@@ -310,6 +318,7 @@ Class *ClassLoader::loadClass(const char *class_name)
     }
 
     loadedClasses.insert(make_pair(c->className, c));
+    TRACE("load class (%s).", className);
     return c;
 }
 

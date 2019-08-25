@@ -10,7 +10,4 @@
 // every thread has a vm stack
 #define VM_STACK_SIZE (64*1024)      // 64Kb
 
-#define PRINT_EXECUTING_FRAME false
-#define PRINT_EXECUTING_INSTRUCTION false
-
 #endif //JVM_CONFIG_H

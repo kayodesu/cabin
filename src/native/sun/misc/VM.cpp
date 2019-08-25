@@ -23,7 +23,7 @@ static void initialize(Frame *frame)
         jvm_abort("not find initializeSystemClass\n");  // todo m == nullptr
     }
 
-    execJavaFunc(m, nullptr);
+    execJavaFunc(m);
 }
 
 /*

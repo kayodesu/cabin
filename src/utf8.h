@@ -34,4 +34,8 @@ const char *find_saved_utf8(const char *utf8);
 
 #define utf8_equals(s, t) (((s) == (t)) || (strcmp(s, t) == 0))
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+int utf8Len(const unsigned char *utf8);
+
 #endif //JVM_UTF8_H

@@ -22,12 +22,73 @@ class Method;
  * 但是内存已经耗尽，会导致OutOfMemoryError异常抛出。
  */
 
-#define MIN_PRIORITY 1
-#define NORM_PRIORITY 5
-#define MAX_PRIORITY 10
+
+///* Thread states */
+//
+//#define JVMTI_THREAD_STATE_ALIVE                    0x001
+//#define JVMTI_THREAD_STATE_TERMINATED               0x002
+//#define JVMTI_THREAD_STATE_RUNNABLE                 0x004
+//#define JVMTI_THREAD_STATE_WAITING_INDEFINITELY     0x010
+//#define JVMTI_THREAD_STATE_WAITING_WITH_TIMEOUT     0x020
+//#define JVMTI_THREAD_STATE_SLEEPING                 0x040
+//#define JVMTI_THREAD_STATE_WAITING                  0x080
+//#define JVMTI_THREAD_STATE_IN_OBJECT_WAIT           0x100
+//#define JVMTI_THREAD_STATE_PARKED                   0x200
+//#define JVMTI_THREAD_STATE_BLOCKED_ON_MONITOR_ENTER 0x400
+//
+//#define CREATING          0x0
+//#define RUNNING           (JVMTI_THREAD_STATE_ALIVE \
+//                          |JVMTI_THREAD_STATE_RUNNABLE)
+//#define WAITING           (JVMTI_THREAD_STATE_ALIVE \
+//                          |JVMTI_THREAD_STATE_WAITING \
+//                          |JVMTI_THREAD_STATE_WAITING_INDEFINITELY)
+//#define TIMED_WAITING     (JVMTI_THREAD_STATE_ALIVE \
+//                          |JVMTI_THREAD_STATE_WAITING \
+//                          |JVMTI_THREAD_STATE_WAITING_WITH_TIMEOUT)
+//#define OBJECT_WAIT       (JVMTI_THREAD_STATE_IN_OBJECT_WAIT|WAITING)
+//#define OBJECT_TIMED_WAIT (JVMTI_THREAD_STATE_IN_OBJECT_WAIT|TIMED_WAITING)
+//#define SLEEPING          (JVMTI_THREAD_STATE_SLEEPING|TIMED_WAITING)
+//#define PARKED            (JVMTI_THREAD_STATE_PARKED|WAITING)
+//#define TIMED_PARKED      (JVMTI_THREAD_STATE_PARKED|TIMED_WAITING)
+//#define BLOCKED           JVMTI_THREAD_STATE_BLOCKED_ON_MONITOR_ENTER
+//#define TERMINATED        JVMTI_THREAD_STATE_TERMINATED
+
+/* thread priorities */
+
+#define MIN_PRIORITY   1
+#define NORM_PRIORITY  5
+#define MAX_PRIORITY   10
+
+///* Suspend states */
+//
+//#define SUSP_NONE      0
+//#define SUSP_BLOCKING  1
+//#define SUSP_CRITICAL  2
+//#define SUSP_SUSPENDED 3
+//
+///* Park states */
+//
+//#define PARK_BLOCKED   0
+//#define PARK_RUNNING   1
+//#define PARK_PERMIT    2
+
+class Monitor {
+    /*
+    pthread_mutex_t lock;
+    pthread_cond_t cv;
+    Thread *owner;
+    int count;
+    int waiting;
+    int notifying;
+    int interrupting;
+    int entering;
+    struct monitor *next;
+    char in_use;
+     */
+};
 
 struct Thread {
-    Object *jltobj; // 所关联的 Object of java.lang.Thread
+    Object *jltobj = nullptr; // 所关联的 Object of java.lang.Thread
     pthread_t pid;  // 所关联的 POSIX 线程对应的id
 
     u1 vmStack[VM_STACK_SIZE]; // 虚拟机栈，一个线程只有一个虚拟机栈
@@ -37,6 +98,8 @@ struct Thread {
            const char *threadName = nullptr, int priority = NORM_PRIORITY);
 
     void setThreadGroupAndName(Object *threadGroup, const char *threadName);
+
+    bool isAlive();
 };
 
 void init_thread_module();

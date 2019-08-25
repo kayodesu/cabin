@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include "../jvm.h"
+#include "../debug.h"
 #include "../rtda/thread/Thread.h"
 #include "../rtda/thread/Frame.h"
 #include "../rtda/heap/StrPool.h"
@@ -17,7 +18,13 @@
 
 using namespace std;
 
-#if (PRINT_EXECUTING_INSTRUCTION)
+#if TRACE_INTERPRETER
+#define TRACE PRINT_TRACE
+#else
+#define TRACE(...)
+#endif
+
+#if TRACE_INTERPRETER
 // the mapping of instructions's code and name
 static const char *instruction_names[] = {
         "nop",
@@ -607,9 +614,7 @@ static slot_t *exec()
     slot_t *args;
 
     Frame *frame = thread->topFrame;
-#if (PRINT_EXECUTING_FRAME)
-    printvm("executing frame: %s\n", frame->toString().c_str());
-#endif
+    TRACE("executing frame: %s\n", frame->toString().c_str());
     BytecodeReader *reader = &frame->reader;
     slot_t *stack = frame->stack;
     slot_t *locals = frame->locals;
@@ -625,9 +630,7 @@ static slot_t *exec()
 
     while (true) {
         u1 opcode = reader->readu1();
-#if (PRINT_EXECUTING_INSTRUCTION)
-        printvm("%d(0x%x), %s, pc = %lu\n", opcode, opcode, instruction_names[opcode], frame->reader.pc);
-#endif
+        TRACE("%d(0x%x), %s, pc = %lu\n", opcode, opcode, instruction_names[opcode], frame->reader.pc);
 
         switch (opcode) {
             CASE(OPC_NOP, { })
@@ -853,52 +856,59 @@ static slot_t *exec()
                 break;
             }
 
-            CASE(OPC_DREM, {
+            case OPC_DREM: {
                 jdouble v2 = frame->popd();
                 jdouble v1 = frame->popd();
-                jvm_abort("未实现\n");
+                jvm_abort("not implement\n");
                 //    os_pushd(frame->operand_stack, drem(v1, v2)); /* todo 相加溢出的问题 */
-            })
+                break;
+            }
 
             CASE(OPC_INEG, frame->pushi(-frame->popi()))
             CASE(OPC_LNEG, frame->pushl(-frame->popl()))
             CASE(OPC_FNEG, frame->pushf(-frame->popf()))
             CASE(OPC_DNEG, frame->pushd(-frame->popd()))
 
-            CASE(OPC_ISHL, {
+            case OPC_ISHL: {
                 // 与0x1f是因为低5位表示位移距离，位移距离实际上被限制在0到31之间。
                 jint shift = frame->popi() & 0x1f;
                 jint value = frame->popi();
                 frame->pushi(value << shift);
-            })
-            CASE(OPC_LSHL, {
+                break;
+            }
+            case OPC_LSHL: {
                 // 与0x3f是因为低6位表示位移距离，位移距离实际上被限制在0到63之间。
                 jint shift = frame->popi() & 0x3f;
                 jlong value = frame->popl();
                 frame->pushl(value << shift);
-            })
-            CASE(OPC_ISHR, {
+                break;
+            }
+            case OPC_ISHR: {
                 // 逻辑右移 shift logical right
                 jint shift = frame->popi() & 0x1f;
                 jint value = frame->popi();
                 frame->pushi((~(((jint)1) >> shift)) & (value >> shift));
-            })
-            CASE(OPC_LSHR, {
+                break;
+            }
+            case OPC_LSHR: {
                 jint shift = frame->popi() & 0x3f;
                 jlong value = frame->popl();
                 frame->pushl((~(((jlong)1) >> shift)) & (value >> shift));
-            })
-            CASE(OPC_IUSHR, {
+                break;
+            }
+            case OPC_IUSHR: {
                 // 算术右移 shift arithmetic right
                 jint shift = frame->popi() & 0x1f;
                 jint value = frame->popi();
                 frame->pushi(value >> shift);
-            })
-            CASE(OPC_LUSHR, {
+                break;
+            }
+            case OPC_LUSHR: {
                 jint shift = frame->popi() & 0x3f;
                 jlong value = frame->popl();
                 frame->pushl(value >> shift);
-            })
+                break;
+            }
 
             CASE(OPC_IAND, BINARY_OP(jint, &))
             CASE(OPC_LAND, BINARY_OP(jlong, &))
@@ -1003,10 +1013,11 @@ static slot_t *exec()
             CASE(OPC_IF_ACMPEQ, IF_ACMP_COND(==))
             CASE(OPC_IF_ACMPNE, IF_ACMP_COND(!=))
 
-            CASE(OPC_GOTO, {
+            case OPC_GOTO: {
                 int offset = reader->reads2();
                 reader->skip(offset - 3);  // minus instruction length
-            })
+                break;
+            }
 
             // 在Java 6之前，Oracle的Java编译器使用 jsr, jsr_w 和 ret 指令来实现 finally 子句。
             // 从Java 6开始，已经不再使用这些指令
@@ -1317,7 +1328,6 @@ invoke_method:
                 frame->pushi(((ArrayObject *) o)->len);
 				break;
             }
-
             case OPC_ATHROW: {
                 jref exception = frame->popr();
                 if (exception == nullptr) {
@@ -1354,8 +1364,7 @@ invoke_method:
                 thread_handle_uncaught_exception(exception);
                 return nullptr; // todo
             }
-
-            CASE(OPC_CHECKCAST, {
+            case OPC_CHECKCAST: {
                 jref obj = RSLOT(frame->stack - 1); // 不改变操作数栈
                 int index = reader->readu2();
 
@@ -1366,9 +1375,9 @@ invoke_method:
                         thread_throw_class_cast_exception(obj->clazz->className, c->className);
                     }
                 }
-            })
-
-            CASE(OPC_INSTANCEOF, {
+                break;
+            }
+            case OPC_INSTANCEOF: {
                 int index = reader->readu2();
                 Class *c = resolve_class(frame->method->clazz, index);
 
@@ -1377,34 +1386,36 @@ invoke_method:
                     frame->pushi(0);
                 else
                     frame->pushi(obj->isInstanceOf(c) ? 1 : 0);
-            })
-
-            CASE(OPC_MONITORENTER, {
+                break;
+            }
+            case OPC_MONITORENTER: {
                 jref o = frame->popr();
                 // todo
-            })
-
-            CASE(OPC_MONITOREXIT, {
+                break;
+            }
+            case OPC_MONITOREXIT: {
                 jref o = frame->popr();
                 // todo
-            })
+                break;
+            }
 
             CASE(OPC_WIDE, wide_extending = true)
             CASE(OPC_MULTIANEWARRAY, multianewarray(frame))
 
-            CASE(OPC_IFNULL, {
+            case OPC_IFNULL: {
                 int offset = reader->reads2();
                 if (frame->popr() == nullptr) {
                     reader->skip(offset - 3); // minus instruction length
                 }
-            })
-
-            CASE(OPC_IFNONNULL, {
+                break;
+            }
+            case OPC_IFNONNULL: {
                 int offset = reader->reads2();
                 if (frame->popr() != nullptr) {
                     reader->skip(offset - 3); // minus instruction length
                 }
-            })
+                break;
+            }
 
             case OPC_GOTO_W: // todo
                 vm_internal_error("goto_w doesn't support");
@@ -1412,7 +1423,9 @@ invoke_method:
             case OPC_JSR_W: // todo
                 vm_internal_error("jsr_w doesn't support after jdk 6.");
                 break;
-            CASE(OPC_INVOKENATIVE, frame->method->nativeMethod(frame))
+            case OPC_INVOKENATIVE:
+                frame->method->nativeMethod(frame);
+                break;
             default:
                 jvm_abort("This instruction isn't used. %d(0x%x)\n", opcode, opcode); // todo
         }
@@ -1433,6 +1446,23 @@ slot_t *execJavaFunc(Method *method, const slot_t *args)
     for (int i = 0; i < method->arg_slot_count; i++) {
         // 传递参数到被调用的函数。
         frame->locals[i] = args[i];
+    }
+
+    return exec();
+}
+
+slot_t *execJavaFunc(Method *method, initializer_list<slot_t> args)
+{
+    assert(method != nullptr);
+    assert(method->arg_slot_count == args.size());
+
+    Frame *frame = allocFrame(method, true);
+
+    // 准备参数
+    int i = 0;
+    for (auto iter = args.begin(); i < method->arg_slot_count && iter != args.end(); i++, iter++) {
+        // 传递参数到被调用的函数。
+        frame->locals[i] = *iter;
     }
 
     return exec();

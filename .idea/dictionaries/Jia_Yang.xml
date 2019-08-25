@@ -36,6 +36,7 @@
       <w>invokenative</w>
       <w>islot</w>
       <w>jarrobj</w>
+      <w>jboolean</w>
       <w>jchars</w>
       <w>jclsobj</w>
       <w>jlclass</w>
@@ -46,6 +47,7 @@
       <w>jltg</w>
       <w>jltobj</w>
       <w>jpriobj</w>
+      <w>jsize</w>
       <w>jstrobj</w>
       <w>jvms</w>
       <w>klass</w>
@@ -60,6 +62,7 @@
       <w>mallocs</w>
       <w>memcpy</w>
       <w>methodref</w>
+      <w>nonvirtual</w>
       <w>nullslot</w>
       <w>oper</w>
       <w>peeku</w>
@@ -95,6 +98,7 @@
       <w>treturn</w>
       <w>unbox</w>
       <w>unpark</w>
+      <w>unregister</w>
       <w>valist</w>
       <w>vtable</w>
       <w>wcscpy</w>

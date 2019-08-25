@@ -108,12 +108,9 @@ static void initProperties(Frame *frame)
             "setProperty", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;");
 
     for (auto &sys_prop : sys_props) {
-        slot_t args[] = {
-                (slot_t) props,
-                (slot_t) StringObject::newInst(sys_prop[0]),
-                (slot_t) StringObject::newInst(sys_prop[1])
-        };
-        execJavaFunc(set_property, args);
+        execJavaFunc(set_property,  { (slot_t) props,
+                                      (slot_t) StringObject::newInst(sys_prop[0]),
+                                      (slot_t) StringObject::newInst(sys_prop[1]) });
     }
 
     // 返回参数

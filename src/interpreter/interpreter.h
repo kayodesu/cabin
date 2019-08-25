@@ -5,6 +5,7 @@
 #ifndef JVM_INTERPRETER_H
 #define JVM_INTERPRETER_H
 
+#include <initializer_list>
 #include "../slot.h"
 
 class Method;
@@ -14,6 +15,19 @@ class Method;
  * 函数调用指令（invokestatic, invokespecial, ...）中不能使用
  */
 slot_t *execJavaFunc(Method *m, const slot_t *args);
+
+slot_t *execJavaFunc(Method *m, std::initializer_list<slot_t> args);
+
+static inline slot_t *execJavaFunc(Method *m)
+{
+    return execJavaFunc(m, { });
+}
+
+static inline slot_t *execJavaFunc(Method *m, Object *o)
+{
+    return execJavaFunc(m, { (slot_t) o });
+}
+
 
 #define OPC_NOP                  0
 #define OPC_ACONST_NULL          1

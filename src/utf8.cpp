@@ -33,3 +33,18 @@ const char *find_saved_utf8(const char *utf8)
         return nullptr;
     return *iter;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+int utf8Len(const unsigned char *utf8)
+{
+    int count;
+
+    for(count = 0; *utf8; count++) {
+        int x = *utf8;
+        utf8 += (x & 0x80) ? ((x & 0x20) ?  3 : 2) : 1;
+    }
+
+    return count;
+}
+

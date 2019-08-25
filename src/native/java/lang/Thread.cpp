@@ -121,7 +121,7 @@ static void *exec_new_thread_run(void *arg)
 
     auto thread = new Thread((jref) arg);
     Method *run = thread->jltobj->clazz->lookupInstMethod("run", "()V");
-    return execJavaFunc(run, (slot_t *) &(thread->jltobj));
+    return execJavaFunc(run, thread->jltobj);
 }
 
 // private native void start0();

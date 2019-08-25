@@ -578,17 +578,16 @@ static void getDeclaredFields0(Frame *frame)
 //        arrobj_set(Object *, jlrf_arr, i, jlrf_obj);
         jlrf_arr->set(i, jlrf_obj);
 
-        slot_t args[] = {
+        execJavaFunc(field_constructor, {
                 (slot_t) jlrf_obj, // this
                 (slot_t) thisObj, // declaring class
                 (slot_t) vmEnv.strPool->get(cls->fields[i]->name), // name
                 (slot_t) cls->fields[i]->getType(), // type
-                cls->fields[i]->access_flags, // modifiers
-                (slot_t) cls->fields[i]->id, // slot   todo
-                (slot_t) nullptr, // signature  todo
-                (slot_t) nullptr, // annotations  todo
-        };
-        execJavaFunc(field_constructor, args);
+                cls->fields[i]->access_flags, /* modifiers */
+                (slot_t) cls->fields[i]->id, /* slot   todo */
+                (slot_t) nullptr, /* signature  todo */
+                (slot_t) nullptr, /* annotations  todo */
+        });
     }
 }
 
@@ -634,21 +633,20 @@ static void getDeclaredMethods0(Frame *frame)
         Object *jlrf_obj = Object::newInst(jlrm_cls);
         jlrm_arr->set(i, jlrf_obj);
 
-        slot_t args[] = {
-                (slot_t) jlrf_obj,        // this
-                (slot_t) thisObj, // declaring class
-                (slot_t) vmEnv.strPool->get(method->name), // name
-                (slot_t) method->getParameterTypes(), // parameter types
-                (slot_t) method->getReturnType(),     // return type
-                (slot_t) method->getExceptionTypes(), // checked exceptions
-                method->access_flags, // modifiers
-                0, // slot   todo
-                (slot_t) nullptr, // signature  todo
-                (slot_t) nullptr, // annotations  todo
-                (slot_t) nullptr, // parameter annotations  todo
-                (slot_t) nullptr, // annotation default  todo
-        };
-        execJavaFunc(method_constructor, args);
+        execJavaFunc(method_constructor, {
+                (slot_t) jlrf_obj,        /* this  */
+                (slot_t) thisObj, /* declaring class */
+                (slot_t) vmEnv.strPool->get(method->name), /* name */
+                (slot_t) method->getParameterTypes(), /* parameter types */
+                (slot_t) method->getReturnType(),     /* return type */
+                (slot_t) method->getExceptionTypes(), /* checked exceptions */
+                method->access_flags, /* modifiers*/
+                0, /* slot   todo */
+                (slot_t) nullptr, /* signature  todo */
+                (slot_t) nullptr, /* annotations  todo */
+                (slot_t) nullptr, /* parameter annotations  todo */
+                (slot_t) nullptr, /* annotation default  todo */
+        });
     }
 }
 
@@ -686,7 +684,7 @@ static void getDeclaredConstructors0(Frame *frame)
 //        arrobj_set(struct Object *, jlrc_arr, i, jlrf_obj);
         jlrc_arr->set(i, jlrf_obj);
 
-        slot_t args[] = {
+        execJavaFunc(constructor_constructor, {
                 (slot_t) jlrf_obj, // this
                 (slot_t) thisObj, // declaring class
                 (slot_t) constructor->getParameterTypes(),  // parameter types
@@ -696,8 +694,7 @@ static void getDeclaredConstructors0(Frame *frame)
                 (slot_t) nullptr, // signature  todo
                 (slot_t) nullptr, // annotations  todo
                 (slot_t) nullptr, // parameter annotations  todo
-        };
-        execJavaFunc(constructor_constructor, args);
+        });
     }
 }
 

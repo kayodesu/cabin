@@ -19,16 +19,16 @@ static slot_t* convert_args(jref this_obj, Method *m, ArrayObject *args)
     assert(types_len == args->len);
 
     // 因为有 category two 的存在，result 的长度最大为 types_len * 2 + this_obj
-    auto result = new slot_t[2 * types_len + 1];//vm_malloc(sizeof(slot_t) * 2 * types_len + 1);
+    auto result = new slot_t[2 * types_len + 1];
     int k = 0;
     if (this_obj != nullptr) {
         result[k++] = (slot_t) &this_obj;
     }
 
     for (int i = 0; i < types_len; i++) {
-        auto clsobj = types->get<ClassObject *>(i);//arrobj_get(jref, types, i);
+        auto clsobj = types->get<ClassObject *>(i);
         assert(clsobj != nullptr);
-        auto o = args->get<jref>(i);//arrobj_get(jref, args, i);
+        auto o = args->get<jref>(i);
 
         if (clsobj->entityClass->isPrimitive()) {
             const slot_t *unbox = o->unbox();
@@ -56,7 +56,7 @@ static void newInstance0(Frame *frame)
      * the constructor call; values of primitive types are wrapped in
      * a wrapper Object of the appropriate type
      */
-    ArrayObject *init_args = frame->getLocalAsRef<ArrayObject>(1); // may be NULL
+    auto init_args = frame->getLocalAsRef<ArrayObject>(1); // may be NULL
 
     // which class this constructor belongs to.
     auto ac = constructor_obj->getInstFieldValue<ClassObject *>(S(clazz), S(sig_java_lang_Class));
@@ -75,7 +75,7 @@ static void newInstance0(Frame *frame)
             constructor_obj->clazz->clinit();
         }
 
-        execJavaFunc(constructor, (slot_t *) &this_obj);
+        execJavaFunc(constructor, this_obj);
     } else {
         // parameter types of this constructor
         auto parameter_types
@@ -91,7 +91,7 @@ static void newInstance0(Frame *frame)
         // todo 可否直接传递 init_args 数组的 data域？？？？？？？？？？？？
         slot_t *args = convert_args(this_obj, constructor, init_args);
         execJavaFunc(constructor, args);
-        free(args);
+        delete args;
     }
 }
 
