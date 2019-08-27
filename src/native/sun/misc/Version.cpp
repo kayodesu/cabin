@@ -1,5 +1,5 @@
 #include "../../registry.h"
-#include "../../../jvm.h"
+#include "../../../kayo.h"
 
 /*
  * Author: Jia Yang

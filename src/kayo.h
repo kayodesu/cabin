@@ -45,8 +45,6 @@ public:
     std::vector<std::string> userDirs;
     std::vector<std::string> userJars;
 
-    // todo 说明
-    ClassLoader *bootLoader = nullptr; // bootstrap loader
     StrPool *strPool; // string pool
 
     // The system Thread group.

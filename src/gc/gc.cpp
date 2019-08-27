@@ -3,7 +3,7 @@
  */
 
 #include "gc.h"
-#include "../jvm.h"
+#include "../kayo.h"
 #include "../rtda/thread/Thread.h"
 #include "../rtda/thread/Frame.h"
 

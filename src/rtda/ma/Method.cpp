@@ -25,11 +25,16 @@ Method::ExceptionTable::ExceptionTable(Class *clazz, BytecodeReader &r)
         // 0 是无效的常量池索引，但是在这里 0 并非表示 catch-none，而是表示 catch-all。
         catchType = nullptr;
     } else {
-        if (CP_TYPE(&clazz->constant_pool, type) == CONSTANT_ResolvedClass)
-            catchType = (Class *) CP_INFO(&clazz->constant_pool, type);
-        else {
-            const char *class_name = CP_CLASS_NAME(&clazz->constant_pool, type);
-            catchType = clazz->loader->loadClass(class_name);
+        catchType = new CatchType;
+        if (CP_TYPE(&clazz->constant_pool, type) == CONSTANT_ResolvedClass) {
+            catchType->resolved = true;
+            catchType->u.clazz = (Class *) CP_INFO(&clazz->constant_pool, type);
+        } else {
+            // 不能在这里load class，有形成死循环的可能。
+            // 比如当前方法是 Throwable 中的方法，而此方法又抛出了 Throwable 子类的Exception（记为A），
+            // 而此时 Throwable 还没有构造完成，所以无法构造其子类 A。
+            catchType->resolved = false;
+            catchType->u.className = CP_CLASS_NAME(&clazz->constant_pool, type);
         }
     }
 }
@@ -56,11 +61,17 @@ ArrayObject *Method::getExceptionTypes()
         int count = 0;
         Object *types[exceptionTables.size()];
         for (auto t : exceptionTables) {
-            if (t.catchType != nullptr)
-                types[count++] = t.catchType->clsobj;
+            if (t.catchType == nullptr)
+                continue;
+
+            if (!t.catchType->resolved) {
+                t.catchType->u.clazz = clazz->loader->loadClass((t.catchType->u.className));
+                t.catchType->resolved = true;
+            }
+            types[count++] = t.catchType->u.clazz->clsobj;
         }
 
-        ArrayClass *ac = reinterpret_cast<ArrayClass *>(clazz->loader->loadClass(S(array_java_lang_Class)));
+        auto ac = (ArrayClass *)(clazz->loader->loadClass(S(array_java_lang_Class)));
         exceptionTypes = ArrayObject::newInst(ac, count);
         for (int i = 0; i < count; i++)
             exceptionTypes->set(i, types[i]);
@@ -318,10 +329,14 @@ int Method::findExceptionHandler(Class *exceptionType, size_t pc)
 {
     for (auto t : exceptionTables) {
         if (t.startPc <= pc && pc < t.endPc) {
-            if (t.catchType == nullptr // catch all
-                || exceptionType->isSubclassOf(t.catchType)) {
+            if (t.catchType == nullptr)  // catch all
                 return t.handlerPc;
+            if (!t.catchType->resolved) {
+                t.catchType->u.clazz = clazz->loader->loadClass(t.catchType->u.className);
+                t.catchType->resolved = true;
             }
+            if (exceptionType->isSubclassOf(t.catchType->u.clazz))
+                return t.handlerPc;
         }
     }
 

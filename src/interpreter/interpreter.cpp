@@ -3,7 +3,7 @@
  */
 
 #include <iostream>
-#include "../jvm.h"
+#include "../kayo.h"
 #include "../debug.h"
 #include "../rtda/thread/Thread.h"
 #include "../rtda/thread/Frame.h"
@@ -820,33 +820,33 @@ static slot_t *exec()
                 break;
             CASE(OPC_SWAP, swap(frame->stack[-1], frame->stack[-2]));
 
-#define BINARY_OP(type, oper) \
+#define BINARY_OP(type, n, oper) \
 { \
-    frame->stack -= SLOTS(type);\
+    frame->stack -= (n);\
     ((type *) frame->stack)[-1] = ((type *) frame->stack)[-1] oper ((type *) frame->stack)[0]; \
 }
-            CASE(OPC_IADD, BINARY_OP(jint, +))
-            CASE(OPC_LADD, BINARY_OP(jlong, +))
-            CASE(OPC_FADD, BINARY_OP(jfloat, +))
-            CASE(OPC_DADD, BINARY_OP(jdouble, +))
+            CASE(OPC_IADD, BINARY_OP(jint, 1, +))
+            CASE(OPC_LADD, BINARY_OP(jlong, 2, +))
+            CASE(OPC_FADD, BINARY_OP(jfloat, 1, +))
+            CASE(OPC_DADD, BINARY_OP(jdouble, 2, +))
 
-            CASE(OPC_ISUB, BINARY_OP(jint, -))
-            CASE(OPC_LSUB, BINARY_OP(jlong, -))
-            CASE(OPC_FSUB, BINARY_OP(jfloat, -))
-            CASE(OPC_DSUB, BINARY_OP(jdouble, -))
+            CASE(OPC_ISUB, BINARY_OP(jint, 1, -))
+            CASE(OPC_LSUB, BINARY_OP(jlong, 2, -))
+            CASE(OPC_FSUB, BINARY_OP(jfloat, 1, -))
+            CASE(OPC_DSUB, BINARY_OP(jdouble, 2, -))
 
-            CASE(OPC_IMUL, BINARY_OP(jint, *))
-            CASE(OPC_LMUL, BINARY_OP(jlong, *))
-            CASE(OPC_FMUL, BINARY_OP(jfloat, *))
-            CASE(OPC_DMUL, BINARY_OP(jdouble, *))
+            CASE(OPC_IMUL, BINARY_OP(jint, 1, *))
+            CASE(OPC_LMUL, BINARY_OP(jlong, 2, *))
+            CASE(OPC_FMUL, BINARY_OP(jfloat, 1, *))
+            CASE(OPC_DMUL, BINARY_OP(jdouble, 2, *))
 
-            CASE(OPC_IDIV, BINARY_OP(jint, /))
-            CASE(OPC_LDIV, BINARY_OP(jlong, /))
-            CASE(OPC_FDIV, BINARY_OP(jfloat, /))
-            CASE(OPC_DDIV, BINARY_OP(jdouble, /))
+            CASE(OPC_IDIV, BINARY_OP(jint, 1, /))
+            CASE(OPC_LDIV, BINARY_OP(jlong, 2, /))
+            CASE(OPC_FDIV, BINARY_OP(jfloat, 1, /))
+            CASE(OPC_DDIV, BINARY_OP(jdouble, 2, /))
 
-            CASE(OPC_IREM, BINARY_OP(jint, %))
-            CASE(OPC_LREM, BINARY_OP(jlong, %))
+            CASE(OPC_IREM, BINARY_OP(jint, 1, %))
+            CASE(OPC_LREM, BINARY_OP(jlong, 2, %))
 
             case OPC_FREM: {
                 jfloat v2 = frame->popf();
@@ -910,12 +910,12 @@ static slot_t *exec()
                 break;
             }
 
-            CASE(OPC_IAND, BINARY_OP(jint, &))
-            CASE(OPC_LAND, BINARY_OP(jlong, &))
-            CASE(OPC_IOR, BINARY_OP(jint, |))
-            CASE(OPC_LOR, BINARY_OP(jlong, |))
-            CASE(OPC_IXOR, BINARY_OP(jint, ^))
-            CASE(OPC_LXOR, BINARY_OP(jlong, ^))
+            CASE(OPC_IAND, BINARY_OP(jint, 1, &))
+            CASE(OPC_LAND, BINARY_OP(jlong, 2, &))
+            CASE(OPC_IOR, BINARY_OP(jint, 1, |))
+            CASE(OPC_LOR, BINARY_OP(jlong, 2, |))
+            CASE(OPC_IXOR, BINARY_OP(jint, 1, ^))
+            CASE(OPC_LXOR, BINARY_OP(jlong, 2, ^))
 
             case OPC_IINC: {
                 jint index, value;
@@ -1048,7 +1048,7 @@ static slot_t *exec()
             *invoke_frame->stack++ = *ret_value++; \
         } \
         CHANGE_FRAME(invoke_frame); \
-/*printvm("executing frame: %s\n", frame->toString().c_str());*/ \
+        TRACE("executing frame: %s\n", frame->toString().c_str()); \
     } \
 }
             CASE3(OPC_IRETURN, OPC_FRETURN, OPC_ARETURN, METHOD_RETURN(1))
@@ -1146,8 +1146,8 @@ static slot_t *exec()
                     thread_throw_null_pointer_exception();
                 }
 
-                assert(m->vtableIndex >= 0);
-                assert(m->vtableIndex < obj->clazz->vtable.size());
+          //      assert(m->vtableIndex >= 0);
+        //        assert(m->vtableIndex < obj->clazz->vtable.size());
 //                resolved_method = obj->clazz->vtable[m->vtableIndex];  // todo
 
                 // 下面这样写对不对 todo

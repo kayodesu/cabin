@@ -13,7 +13,7 @@ using namespace std;
 
 Object *Object::newInst(Class *c)
 {
-    if (c == vmEnv.bootLoader->jlString) {
+    if (c == java_lang_String_class) {
         return StringObject::newInst(""); // todo
     }
     size_t size = sizeof(Object) + c->instFieldsCount * sizeof(slot_t);

@@ -14,6 +14,7 @@
 #include "../thread/Frame.h"
 #include "../primitive_types.h"
 #include "Access.h"
+#include "../../loader/bootstrap_class_loader.h"
 
 
 class Field;
@@ -218,14 +219,14 @@ public:
 // 基本类型（int, float etc.）的 class.
 class PrimitiveClass: public Class {
 public:
-    explicit PrimitiveClass(const char *className): Class(vmEnv.bootLoader, className)
+    explicit PrimitiveClass(const char *className): Class(bootClassLoader, className)
     {
         assert(className != nullptr);
         access_flags = ACC_PUBLIC;
         pkgName = "";
         inited = true;
         // todo super_class ???? java.lang.Object ??????
-        superClass = loadSysClass(S(java_lang_Object));
+        superClass = java_lang_Object_class;
 
         createVtable();
     }

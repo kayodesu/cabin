@@ -3,7 +3,7 @@
  */
 
 #include "../../registry.h"
-#include "../../../jvm.h"
+#include "../../../kayo.h"
 #include "../../../rtda/thread/Frame.h"
 #include "../../../rtda/heap/Object.h"
 #include "../../../output.h"

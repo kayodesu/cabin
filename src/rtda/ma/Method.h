@@ -97,12 +97,26 @@ private:
         u2 startPc;
         u2 endPc;
         u2 handlerPc;
-        Class *catchType;
+
+        struct CatchType {
+            bool resolved;
+            union {
+                Class *clazz; // if resolved
+                const char *className; // if not resolved
+            } u;
+        } *catchType = nullptr;
 
         ExceptionTable(Class *clazz, BytecodeReader &r);
     };
 
     std::vector<ExceptionTable> exceptionTables;
+
+public:
+    ~Method()
+    {
+        for (auto &t : exceptionTables)
+            delete t.catchType;
+    }
 };
 
 #endif //JVM_JMETHOD_H

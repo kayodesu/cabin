@@ -2,7 +2,7 @@
  * Author: kayo
  */
 
-#include "../../../jvm.h"
+#include "../../../kayo.h"
 #include "../../registry.h"
 
 // static native void copyFromShortArray(Object src, long srcPos, long dstAddr, long length);

@@ -12,6 +12,7 @@
 #include "../../../symbol.h"
 #include "../../../rtda/heap/ArrayObject.h"
 #include "../../../util/encoding.h"
+#include "../../../loader/bootstrap_class_loader.h"
 
 
 /*
@@ -60,7 +61,7 @@ static void getPrimitiveClass(Frame *frame)
     auto so = frame->getLocalAsRef<StringObject>(0);
 
     const char *class_name = so->getUtf8Value(); // 这里得到的 class_name 是诸如 "int, float" 之类的 primitive type
-    Class *c = vmEnv.bootLoader->loadClass(class_name);
+    Class *c = bootClassLoader->loadClass(class_name);
     frame->pushr(c->clsobj);
 }
 
@@ -393,12 +394,10 @@ static void getInterfaces0(Frame *frame)
     auto thisObj = frame->getLocalAsRef<ClassObject>(0);
 
     Class *entity_class = thisObj->entityClass;
-    auto arr_cls = loadArrayClass(S(array_java_lang_Class));
-    auto interfaces = ArrayObject::newInst(arr_cls, entity_class->interfaces.size());
+    auto interfaces = ArrayObject::newInst(java_lang_Class_array_class, entity_class->interfaces.size());
     for (size_t i = 0; i < entity_class->interfaces.size(); i++) {
         assert(entity_class->interfaces[i] != nullptr);
         interfaces->set(i, entity_class->interfaces[i]->clsobj);
-//        arrobj_set(Object *, interfaces, i, entity_class->interfaces[i]->clsobj);
     }
 
     frame->pushr(interfaces);
@@ -497,7 +496,7 @@ static void getEnclosingMethod0(Frame *frame)
         return;
     }
 
-    auto result = ArrayObject::newInst(loadArrayClass(S(array_java_lang_Object)), 3);
+    auto result = ArrayObject::newInst(java_lang_Object_array_class, 3);
     for (int i = 0; i < 3; i++) {
         result->set(i, c->enclosing_info[i]);
 //        arrobj_set(jref, result, i, c->enclosing_info[i]);

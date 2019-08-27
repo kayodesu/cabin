@@ -8,11 +8,13 @@
 #include <map>
 #include <cstring>
 #include <cassert>
-#include "../jvm.h"
+#include "../kayo.h"
 #include "../utf8.h"
+#include "bootstrap_class_loader.h"
 
 class Class;
 class ArrayClass;
+
 
 class ClassLoader {
 //    HashMap loaded_class_pool; // 保存 class *
@@ -33,14 +35,8 @@ class ClassLoader {
     Class *loadNonArrClass(const char *class_name);
 
 public:
-    // 缓存一下常见类
-    Class *jlClass = nullptr; // java.lang.Class 的类, 不要胡乱删除置空。因为load_class中要判断loader->jclass_class是否为NULL。
-    Class *jlString; // java.lang.String 的类
-    ArrayClass *jlClassArr; // [Ljava/lang/Class;
-    ArrayClass *jlObjectArr; // [Ljava/lang/Object;
-    ArrayClass *charArr; // [C
 
-    explicit ClassLoader(bool is_bootstrap_loader);
+    ClassLoader();
     ~ClassLoader();
 
     /*
@@ -60,14 +56,14 @@ public:
 static inline Class *loadSysClass(const char *className)
 {
     assert(className != nullptr);
-    return vmEnv.bootLoader->loadClass(className);
+    return bootClassLoader->loadClass(className);
 };
 
 static inline ArrayClass *loadArrayClass(const char *arrClassName)
 {
     assert(arrClassName != nullptr);
     assert(arrClassName[0] == '['); // must be array class name
-    return (ArrayClass *) vmEnv.bootLoader->loadClass(arrClassName);
+    return (ArrayClass *) bootClassLoader->loadClass(arrClassName);
 };
 
 #endif //JVM_CLASS_LOADER_H

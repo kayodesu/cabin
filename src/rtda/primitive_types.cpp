@@ -31,7 +31,7 @@ void loadPrimitiveTypes()
     // 加载基本类型（int, float, etc.）的 class
     for (auto t : primitiveTypes) {
         Class *c = new PrimitiveClass(t.class_name);
-        vmEnv.bootLoader->putToPool(t.class_name, c);
+        bootClassLoader->putToPool(t.class_name, c);
     }
 }
 

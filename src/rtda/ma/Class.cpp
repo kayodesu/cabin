@@ -12,6 +12,7 @@
 #include "../../classfile/constant.h"
 #include "../heap/ClassObject.h"
 #include "../heap/StringObject.h"
+#include "../../loader/bootstrap_class_loader.h"
 
 using namespace std;
 
@@ -753,16 +754,16 @@ string Class::toString() const
 }
 
 /* ----------------------------------------------------- */
-ArrayClass::ArrayClass(const char *className): Class(vmEnv.bootLoader, strdup(className))
+ArrayClass::ArrayClass(const char *className): Class(bootClassLoader, strdup(className))
 {
     assert(className != nullptr);
     // todo className 是不是 array
     access_flags = ACC_PUBLIC;
     inited = true; // 数组类不需要初始化
     pkgName = "";
-    superClass = loadSysClass(S(java_lang_Object));
-    interfaces.push_back(loadSysClass(S(java_lang_Cloneable)));
-    interfaces.push_back(loadSysClass(S(java_io_Serializable)));
+    superClass = java_lang_Object_class;
+    interfaces.push_back(java_lang_Cloneable_class);
+    interfaces.push_back(java_io_Serializable_class);
 
     createVtable();
 }

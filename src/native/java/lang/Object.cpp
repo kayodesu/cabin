@@ -19,7 +19,7 @@ static void hashCode(Frame *frame)
 static void clone(Frame *frame)
 {
     jref thisObj = frame->getLocalAsRef(0);
-    Class *cloneable = loadSysClass(S(java_lang_Cloneable));
+    Class *cloneable = java_lang_Cloneable_class;
     if (!thisObj->clazz->isSubclassOf(cloneable)) {
         jvm_abort("java.lang.CloneNotSupportedException"); // todo
     }

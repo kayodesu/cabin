@@ -40,13 +40,12 @@ Thread::Thread(Object *jltobj, Object *threadGroup, const char *threadName, int 
     set_thread_self(this);
     vmEnv.threads.push_back(this);
 
-    Class *jlt_class = loadSysClass(S(java_lang_Thread));
-    jlt_class->clinit();
+    java_lang_Thread_class->clinit();
 
     if (jltobj != nullptr)
         this->jltobj = jltobj;
     else
-        this->jltobj = Object::newInst(jlt_class);
+        this->jltobj = Object::newInst(java_lang_Thread_class);
     this->jltobj->setInstFieldValue(S(priority), S(I), (slot_t *) &priority);
 
     if (threadGroup != nullptr)

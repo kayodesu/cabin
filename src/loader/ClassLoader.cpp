@@ -6,7 +6,7 @@
 #include "../debug.h"
 #include "../symbol.h"
 #include "ClassLoader.h"
-#include "minizip/unzip.h"
+#include "../../zlib/minizip/unzip.h"
 #include "../rtda/ma/Class.h"
 #include "../rtda/ma/Field.h"
 #include "../rtda/heap/ClassObject.h"
@@ -18,6 +18,7 @@
 #endif
 
 using namespace std;
+
 
 static unique_ptr<pair<u1 *, size_t>> read_class_from_jar(const char *jar_path, const char *class_name)
 {
@@ -158,20 +159,16 @@ static unique_ptr<pair<u1 *, size_t>> read_class(const char *class_name)
     return nullptr; // not find
 }
 
-ClassLoader::ClassLoader(bool is_bootstrap_loader)
+ClassLoader::ClassLoader()
 {
-    if (is_bootstrap_loader) {
-        vmEnv.bootLoader = this;
-    }
-
     /*
      * 先加载java.lang.Class类，
      * 这又会触发java.lang.Object等类和接口的加载。
      */
-    jlClass = loadSysClass(S(java_lang_Class));
+//    jlClass = loadSysClass(S(java_lang_Class));
 
     // 加载基本类型（int, float, etc.）的 class
-    loadPrimitiveTypes();
+//    loadPrimitiveTypes();
 
     // todo
     //    for (auto &primitiveType : primitiveTypes) {
@@ -181,15 +178,15 @@ ClassLoader::ClassLoader(bool is_bootstrap_loader)
 //    }
 
     // 给已经加载的每一个类关联类对象。
-    for (auto iter : loadedClasses) {
-        iter.second->clsobj = ClassObject::newInst(iter.second); // todo ClassObject可不可以重用，每次都要new吗？？
-    }
+//    for (auto iter : loadedClasses) {
+//        iter.second->clsobj = ClassObject::newInst(iter.second); // todo ClassObject可不可以重用，每次都要new吗？？
+//    }
 
     // 缓存一下常见类
-    jlString = loadSysClass(S(java_lang_String));
-    jlClassArr = loadArrayClass(S(array_java_lang_Class));
-    jlObjectArr = loadArrayClass(S(array_java_lang_Object));
-    charArr = loadArrayClass(S(array_C));
+//    jlString = loadSysClass(S(java_lang_String));
+//    jlClassArr = loadArrayClass(S(array_java_lang_Class));
+//    jlObjectArr = loadArrayClass(S(array_java_lang_Object));
+//    charArr = loadArrayClass(S(array_C));
 }
 
 void ClassLoader::putToPool(const char *className, Class *c)
@@ -294,7 +291,6 @@ Class *ClassLoader::loadNonArrClass(const char *class_name)
 Class *ClassLoader::loadClass(const char *className)
 {
     assert(className != nullptr);
-
     auto iter = loadedClasses.find(className);
     if (iter != loadedClasses.end()) {
         TRACE("find loaded class (%s) from pool.", className);
@@ -313,11 +309,12 @@ Class *ClassLoader::loadClass(const char *className)
         return nullptr;
     }
 
-    if (jlClass != nullptr) {
+    if (java_lang_Class_class != nullptr) {
         c->clsobj = ClassObject::newInst(c);
     }
 
-    loadedClasses.insert(make_pair(c->className, c));
+    assert(strcmp(className, c->className) == 0);
+    auto res = loadedClasses.insert(make_pair(c->className, c));
     TRACE("load class (%s).", className);
     return c;
 }

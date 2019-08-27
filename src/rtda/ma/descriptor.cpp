@@ -129,7 +129,7 @@ ArrayObject *methodDescriptorToParameterTypes(ClassLoader *loader, const char *m
 
     // todo parameter_types_count == 0 是不是要填一个 void.class
 
-    auto parameter_types = ArrayObject::newInst(loadArrayClass(S(array_java_lang_Class)), parameter_types_count);
+    auto parameter_types = ArrayObject::newInst(java_lang_Class_array_class, parameter_types_count);
     for (int i = 0; i < parameter_types_count; i++) {
 //        arrobj_set(Object *, parameter_types, i, buf[i]);
         parameter_types->set(i, buf[i]);

@@ -1,13 +1,12 @@
-# JVM
+# KayoVM
 A JVM is written in C++.
 
 ## Development environment
-* Win10 x64
+* Win10
 * CLion
-* MinGW
+* MinGW32
 
 ## Dependence
-* zlib, minizib
 * pthread lib
 * jre8 lib
 
@@ -26,11 +25,11 @@ Two command-line options:
 * -bcp path: set jre lib path.
 * -cp path: set class path.
 ```
-C:\>jvm HelloWorld -bcp "C:\Program Files\Java\jre1.8.0_162\lib" -cp D:\code\KayoVM\testclasses
+C:\>kayovm HelloWorld -bcp "C:\Program Files\Java\jre1.8.0_162\lib" -cp D:\code\KayoVM\testclasses
 ```
 or, using JAVA_HOME and CLASS_PATH environment variables.
 ```
-C:\>jvm HelloWorld
+C:\>kayovm HelloWorld
 ```
 
 ## Quiz
@@ -44,7 +43,7 @@ public class HelloWorld {
 ```
 
 ```
-C:\>jvm HelloWorld -bcp "C:\Program Files\Java\jre1.8.0_162\lib" -cp D:\code\KayoVM\testclasses
+C:\>kayovm HelloWorld -bcp "C:\Program Files\Java\jre1.8.0_162\lib" -cp D:\code\KayoVM\testclasses
 Hello, world!
 
 C:\>
@@ -77,7 +76,7 @@ public class BubbleSort {
 ```
 
 ```
-C:\>jvm array/BubbleSort
+C:\>kayovm array/BubbleSort
 [9, 10, 11, 22, 24, 36, 36, 56, 65, 77, 78, 84, 92, 95, 97]
 
 C:\>
@@ -102,7 +101,7 @@ public class StackTraceTest {
 }
 ```
 ```
-C:\>jvm exception/StackTraceTest
+C:\>kayovm exception/StackTraceTest
 java.lang.RuntimeException: BAD!
         at exception/StackTraceTest.bad(StackTraceTest.java:15)
         at exception/StackTraceTest.bar(StackTraceTest.java:14)

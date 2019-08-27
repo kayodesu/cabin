@@ -4,7 +4,7 @@
 
 #include <cstring>
 #include "HeapMgr.h"
-#include "../../../jvm.h"
+#include "../../../kayo.h"
 #include "../../../config.h"
 
 HeapMgr::HeapMgr()

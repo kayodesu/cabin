@@ -46,10 +46,13 @@
       <w>jlstring</w>
       <w>jltg</w>
       <w>jltobj</w>
+      <w>jnicall</w>
+      <w>jniexport</w>
       <w>jpriobj</w>
       <w>jsize</w>
       <w>jstrobj</w>
       <w>jvms</w>
+      <w>kayovm</w>
       <w>klass</w>
       <w>lcld</w>
       <w>lcls</w>

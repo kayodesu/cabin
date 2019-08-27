@@ -4,7 +4,7 @@
 
 #include <cstring>
 #include "encoding.h"
-#include "../jvm.h"
+#include "../kayo.h"
 
 jchar *utf8_to_unicode(const char *str)
 {

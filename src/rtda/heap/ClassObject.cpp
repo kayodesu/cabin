@@ -51,9 +51,10 @@ using namespace std;
 
 ClassObject *ClassObject::newInst(Class *entityClass)
 {
-    auto classClass = vmEnv.bootLoader->jlClass;
-    size_t size = sizeof(ClassObject) + classClass->instFieldsCount * sizeof(slot_t);
-    return new(g_heap_mgr.get(size)) ClassObject(classClass, entityClass);
+    assert(entityClass != nullptr);
+    assert(java_lang_Class_class != nullptr);
+    size_t size = sizeof(ClassObject) + java_lang_Class_class->instFieldsCount * sizeof(slot_t);
+    return new(g_heap_mgr.get(size)) ClassObject(java_lang_Class_class, entityClass);
 }
 
 void ClassObject::operator delete(void *rawMemory,std::size_t size) throw()

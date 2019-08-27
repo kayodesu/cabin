@@ -39,8 +39,6 @@ typedef Object *        jref; // JVM中的引用类型，只能指向一个objec
 typedef jbool jboolean;
 typedef jint jsize;
 
-#define SLOTS(type) ((sizeof(type) + 3)/4) //_Generic((type), jlong: 2, jdouble: 2, default: 1) // todo 64位指针错误
-
 static inline jlong i2l(jint i)
 {  // todo
     return (jlong) i;

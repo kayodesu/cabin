@@ -1,276 +1,1664 @@
 /*
+ * This file contains additional functions exported from the VM.
+ * These functions are complementary to the standard JNI support.
+ * There are three parts to this file:
+ *
+ * First, this file contains the VM-related functions needed by native
+ * libraries in the standard Java API. For example, the java.lang.Object
+ * class needs VM-level functions that wait for and notify monitors.
+ *
+ * Second, this file contains the functions and constant definitions
+ * needed by the byte code verifier and class file format checker.
+ * These functions allow the verifier and format checker to be written
+ * in a VM-independent way.
+ *
+ * Third, this file contains various I/O and network operations needed
+ * by the standard Java I/O and network APIs.
+ *
  * Author: kayo
  */
 
-#include <dirent.h>
 #include <sys/stat.h>
-#include <ctime>
-#include "jvm.h"
-#include "loader/ClassLoader.h"
-#include "rtda/thread/Thread.h"
-#include "rtda/ma/Access.h"
-#include "interpreter/interpreter.h"
-#include "rtda/heap/StrPool.h"
-#include "symbol.h"
+#include "native/jni.h"
 
-using namespace std;
-
-HeapMgr g_heap_mgr;
-
-VMEnv vmEnv;
-
-VMEnv::VMEnv()
-{
-    strPool = new StrPool;
-}
-
-void init_symbol();
-
-// main thread is current thread
-static void initMainThread()
-{
-    auto mainThread = new Thread(nullptr);
-
-    Class *jltgClass = loadSysClass(S(java_lang_ThreadGroup));
-    vmEnv.sysThreadGroup = Object::newInst(jltgClass);
-
-    // 初始化 system_thread_group
-    // java/lang/ThreadGroup 的无参数构造函数主要用来：
-    // Creates an empty Thread group that is not in any Thread group.
-    // This method is used to create the system Thread group.
-    jltgClass->clinit();
-    execJavaFunc(jltgClass->getConstructor(S(___V)), vmEnv.sysThreadGroup);
-
-    mainThread->setThreadGroupAndName(vmEnv.sysThreadGroup, MAIN_THREAD_NAME);
-}
-
-static void *execGCThread(void *arg)
-{
-    // todo
-    return nullptr;
-}
-
-// create gc thread
-static void createGCThread()
-{
-    // todo
-    pthread_t pid;
-    int ret = pthread_create(&pid, NULL, execGCThread, nullptr);
-    if (ret != 0) {
-        vm_internal_error("create Thread failed");
-    }
-}
-
-static void startJvm(const char *main_class_name)
-{
-    init_symbol();
-    init_thread_module();
-
-    // create system class loader
-    auto loader = new ClassLoader(true);
-
-    initMainThread();
-    createGCThread();
-
-    // 先加载 sun.mis.VM 类，然后执行其类初始化方法
-    Class *vm_class = loadSysClass("sun/misc/VM");
-    if (vm_class == nullptr) {
-        jvm_abort("vm_class is null\n");  // todo throw exception
-        return;
-    }
-
-    // VM类的 "initialize~()V" 方法需调用执行
-    // 在VM类的类初始化方法中调用了 "initialize" 方法。
-    vm_class->clinit();
-
-    Class *main_class = loader->loadClass(main_class_name);
-    Method *main_method = main_class->lookupStaticMethod(S(main), S(_array_java_lang_String__V));
-    if (main_method == nullptr) {
-        jvm_abort("can't find method main."); // todo
-    } else {
-        if (!main_method->isPublic()) {
-            jvm_abort("method main must be public."); // todo
-        }
-        if (!main_method->isStatic()) {
-            jvm_abort("method main must be static."); // todo
-        }
-    }
-
-    // 开始在主线程中执行 main 方法
-    execJavaFunc(main_method, (Object *) nullptr); //  todo
-
-
-    // todo 如果有其他的非后台线程在执行，则main线程需要在此wait
-
-    // todo main_thread 退出，做一些清理工作。
-}
-
-static void findJars(const char *path, vector<std::string> &result)
-{
-    DIR *dir = opendir(path);
-    if (dir == nullptr) {
-        printvm("open dir failed. %s\n", path);
-    }
-
-    struct dirent *entry;
-    struct stat statbuf;
-    while ((entry = readdir(dir)) != nullptr) {
-        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
-            continue;
-        }
-
-        char abspath[PATH_MAX];
-        // sprintf 和 snprintf 会自动在加上字符串结束符'\0'
-        sprintf(abspath, "%s/%s", path, entry->d_name); // 绝对路径
-
-        stat(abspath, &statbuf);
-        if (S_ISREG(statbuf.st_mode)) { // 常规文件
-            char *suffix = strrchr(abspath, '.');
-            if (suffix != nullptr && strcmp(suffix, ".jar") == 0)
-                result.emplace_back(abspath);
-        }
-    }
-
-    closedir(dir);
-}
-
-int main(int argc, char* argv[])
-{
-    time_t time0;
-    time(&time0);
-
-    char bootstrap_classpath[PATH_MAX] = { 0 };
-    char extension_classpath[PATH_MAX] = { 0 };
-    char user_classpath[PATH_MAX] = { 0 };
-
-    char main_class_name[FILENAME_MAX] = { 0 };
-
-    // parse cmd arguments
-    // 可执行程序的名字为 argv[0]，跳过。
-    for (int i = 1; i < argc; i++) {
-        if (argv[i][0] == '-') {
-            const char *name = argv[i];
-            if (strcmp(name, "-bcp") == 0) { // parse Bootstrap Class Path
-                if (++i >= argc) {
-                    jvm_abort("缺少参数：%s\n", name);
-                }
-                strcpy(bootstrap_classpath, argv[i]);
-            } else if (strcmp(name, "-cp") == 0) { // parse Class Path
-                if (++i >= argc) {
-                    jvm_abort("缺少参数：%s\n", name);
-                }
-                strcpy(user_classpath, argv[i]);
-            } else {
-                jvm_abort("unknown 参数: %s\n", name);
-            }
-        } else {
-            strcpy(main_class_name, argv[i]);
-        }
-    }
-
-    if (main_class_name[0] == 0) {  // empty
-        jvm_abort("no input file\n");
-    }
-
-    // 如果 main_class_name 有 .class 后缀，去掉后缀。
-    char *p = strrchr(main_class_name, '.');
-    if (p != nullptr && strcmp(p, ".class") == 0) {
-        *p = 0;
-    }
-
-    // parse bootstrap classpath
-    if (bootstrap_classpath[0] == 0) { // empty
-        // 命令行参数没有设置 bootstrap_classpath 的值，那么使用 JAVA_HOME 环境变量
-        char *javaHome = getenv("JAVA_HOME"); // JAVA_HOME 是 JDK 的目录
-        if (javaHome == nullptr) {
-            vm_internal_error("no java lib"); // todo
-        }
-        strcpy(bootstrap_classpath, javaHome);
-        strcat(bootstrap_classpath, "/jre/lib");
-    }
-
-    findJars(bootstrap_classpath, vmEnv.jreLibJars);
-
-    // 第0个位置放rt.jar，因为rt.jar常用，所以放第0个位置首先搜索。
-    for (auto iter = vmEnv.jreLibJars.begin(); iter != vmEnv.jreLibJars.end(); iter++) {
-        auto i = iter->rfind('\\');
-        auto j = iter->rfind('/');
-        if ((i != iter->npos && iter->compare(i + 1, 6, "rt.jar") == 0)
-                || (j != iter->npos && iter->compare(j + 1, 6, "rt.jar") == 0)) {
-            std::swap(*(vmEnv.jreLibJars.begin()), *iter);
-            break;
-        }
-    }
-
-    // parse extension classpath
-    if (extension_classpath[0] == 0) {  // empty
-        strcpy(extension_classpath, bootstrap_classpath);
-        strcat(extension_classpath, "/ext");  // todo JDK9+ 的目录结构有变动！！！！！！！
-    }
-
-    findJars(extension_classpath, vmEnv.jreExtJars);
-
-    // parse user classpath
-    if (user_classpath[0] == 0) {  // empty
-        char *classpath = getenv("CLASSPATH");
-        if (classpath == nullptr) {
-            char buf[PATH_MAX + 1];
-            getcwd(buf, PATH_MAX); // current working path
-            vmEnv.userDirs.emplace_back(buf);
-        } else {
-            vmEnv.userDirs.emplace_back(classpath);
-        }
-    } else {
-        const char *delim = ";"; // 各个path以分号分隔
-        char *path = strtok(user_classpath, delim);
-        while (path != nullptr) {
-            const char *suffix = strrchr(path, '.');
-            if (suffix != nullptr && strcmp(suffix, ".jar") == 0) { // jar file
-                vmEnv.userJars.emplace_back(path);
-            } else { // directory
-                vmEnv.userDirs.emplace_back(path);
-            }
-            path = strtok(nullptr, delim);
-        }
-    }
-
-    register_all_native_methods(); // todo 不要一次全注册，需要时再注册
-
-    time_t time2;
-    time(&time2);
+extern "C" {
     
-    startJvm(main_class_name);
+#define JNIEXPORT __declspec(dllexport)
+#define JNICALL __attribute__((__stdcall__))
+    
+/*
+ * Bump the version number when either of the following happens:
+ *
+ * 1. There is a change in JVM_* functions.
+ *
+ * 2. There is a change in the contract between VM and Java classes.
+ *    For example, if the VM relies on a new private field in Thread
+ *    class.
+ */
 
-    time_t time3;
-    time(&time3);
-    printf("run KayoVM: %lds\n", ((long)(time3)) - ((long)(time2)));
-    return 0;
-}
+#define JVM_INTERFACE_VERSION 6
 
-void vm_internal_error(const char *msg)
+JNIEXPORT jint JNICALL
+_JVM_GetInterfaceVersion(void)
 {
-    assert(msg != nullptr);
-    // todo
-    jvm_abort(msg);
+    
 }
 
-void vm_out_of_memory_error(const char *msg)
-{
-    assert(msg != nullptr);
-    // todo
-    jvm_abort(msg);
+/*************************************************************************
+ PART 1: Functions for Native Libraries
+ ************************************************************************/
+/*
+ * java.lang.Object
+ */
+JNIEXPORT jint JNICALL
+_JVM_IHashCode(JNIEnv *env, jobject obj){
+
 }
 
-void vm_stack_overflow_error()
-{
-    // todo
-    jvm_abort("vm_stack_overflow_error");
+JNIEXPORT void JNICALL
+_JVM_MonitorWait(JNIEnv *env, jobject obj, jlong ms){
+
 }
 
-void vm_unknown_error(const char *msg)
-{
-    assert(msg != nullptr);
-    // todo
-    jvm_abort(msg);
+JNIEXPORT void JNICALL
+_JVM_MonitorNotify(JNIEnv *env, jobject obj){
+
 }
 
+JNIEXPORT void JNICALL
+_JVM_MonitorNotifyAll(JNIEnv *env, jobject obj){
+
+}
+
+JNIEXPORT jobject JNICALL
+_JVM_Clone(JNIEnv *env, jobject obj){
+
+}
+
+/*
+ * java.lang.String
+ */
+JNIEXPORT jstring JNICALL
+_JVM_InternString(JNIEnv *env, jstring str){
+
+}
+
+/*
+ * java.lang.System
+ */
+JNIEXPORT jlong JNICALL
+_JVM_CurrentTimeMillis(JNIEnv *env, jclass ignored){
+
+}
+
+JNIEXPORT jlong JNICALL
+_JVM_NanoTime(JNIEnv *env, jclass ignored){
+
+}
+
+JNIEXPORT jlong JNICALL
+_JVM_GetNanoTimeAdjustment(JNIEnv *env, jclass ignored, jlong offset_secs){
+
+}
+
+JNIEXPORT void JNICALL
+_JVM_ArrayCopy(JNIEnv *env, jclass ignored, jobject src, jint src_pos,
+              jobject dst, jint dst_pos, jint length){
+
+}
+
+/*
+ * Return an array of all properties as alternating name and value pairs.
+ */
+JNIEXPORT jobjectArray JNICALL
+_JVM_GetProperties(JNIEnv *env){
+
+}
+
+/*
+ * java.lang.Runtime
+ */
+JNIEXPORT void JNICALL
+_JVM_BeforeHalt(){
+
+}
+
+JNIEXPORT void JNICALL
+_JVM_Halt(jint code){
+
+}
+
+JNIEXPORT void JNICALL
+_JVM_GC(void){
+
+}
+
+/* Returns the number of real-time milliseconds that have elapsed since the
+ * least-recently-inspected heap object was last inspected by the garbage
+ * collector.
+ *
+ * For simple stop-the-world collectors this value is just the time
+ * since the most recent collection.  For generational collectors it is the
+ * time since the oldest generation was most recently collected.  Other
+ * collectors are free to return a pessimistic estimate of the elapsed time, or
+ * simply the time since the last full collection was performed.
+ *
+ * Note that in the presence of reference objects, a given object that is no
+ * longer strongly reachable may have to be inspected multiple times before it
+ * can be reclaimed.
+ */
+JNIEXPORT jlong JNICALL
+_JVM_MaxObjectInspectionAge(void){
+
+}
+
+JNIEXPORT jlong JNICALL
+_JVM_TotalMemory(void){
+
+}
+
+JNIEXPORT jlong JNICALL
+_JVM_FreeMemory(void){
+
+}
+
+JNIEXPORT jlong JNICALL
+_JVM_MaxMemory(void){
+
+}
+
+JNIEXPORT jint JNICALL
+_JVM_ActiveProcessorCount(void){
+
+}
+
+JNIEXPORT void * JNICALL
+_JVM_LoadLibrary(const char *name){
+
+}
+
+JNIEXPORT void JNICALL
+_JVM_UnloadLibrary(void * handle){
+
+}
+
+JNIEXPORT void * JNICALL
+_JVM_FindLibraryEntry(void *handle, const char *name){
+
+}
+
+JNIEXPORT jboolean JNICALL
+_JVM_IsSupportedJNIVersion(jint version){
+
+}
+
+JNIEXPORT jobjectArray JNICALL
+_JVM_GetVmArguments(JNIEnv *env){
+
+}
+
+JNIEXPORT void JNICALL
+_JVM_InitializeFromArchive(JNIEnv* env, jclass cls){
+
+}
+
+/*
+ * java.lang.Throwable
+ */
+JNIEXPORT void JNICALL
+_JVM_FillInStackTrace(JNIEnv *env, jobject throwable){
+
+}
+
+/*
+ * java.lang.StackTraceElement
+ */
+JNIEXPORT void JNICALL
+_JVM_InitStackTraceElementArray(JNIEnv *env, jobjectArray elements, jobject throwable){
+
+}
+
+JNIEXPORT void JNICALL
+_JVM_InitStackTraceElement(JNIEnv* env, jobject element, jobject stackFrameInfo){
+
+}
+
+/*
+ * java.lang.StackWalker
+ */
+enum {
+  JVM_STACKWALK_FILL_CLASS_REFS_ONLY       = 0x2,
+  JVM_STACKWALK_GET_CALLER_CLASS           = 0x04,
+  JVM_STACKWALK_SHOW_HIDDEN_FRAMES         = 0x20,
+  JVM_STACKWALK_FILL_LIVE_STACK_FRAMES     = 0x100
+};
+
+JNIEXPORT jobject JNICALL
+_JVM_CallStackWalk(JNIEnv *env, jobject stackStream, jlong mode,
+                  jint skip_frames, jint frame_count, jint start_index,
+                  jobjectArray frames){
+
+}
+
+JNIEXPORT jint JNICALL
+_JVM_MoreStackWalk(JNIEnv *env, jobject stackStream, jlong mode, jlong anchor,
+                  jint frame_count, jint start_index,
+                  jobjectArray frames){
+
+}
+
+/*
+ * java.lang.Thread
+ */
+JNIEXPORT void JNICALL
+_JVM_StartThread(JNIEnv *env, jobject thread){
+
+}
+
+JNIEXPORT void JNICALL
+_JVM_StopThread(JNIEnv *env, jobject thread, jobject exception){
+
+}
+
+JNIEXPORT jboolean JNICALL
+_JVM_IsThreadAlive(JNIEnv *env, jobject thread){
+
+}
+
+JNIEXPORT void JNICALL
+_JVM_SuspendThread(JNIEnv *env, jobject thread){
+
+}
+
+JNIEXPORT void JNICALL
+_JVM_ResumeThread(JNIEnv *env, jobject thread){
+
+}
+
+JNIEXPORT void JNICALL
+_JVM_SetThreadPriority(JNIEnv *env, jobject thread, jint prio){
+
+}
+
+JNIEXPORT void JNICALL
+_JVM_Yield(JNIEnv *env, jclass threadClass){
+
+}
+
+JNIEXPORT void JNICALL
+_JVM_Sleep(JNIEnv *env, jclass threadClass, jlong millis){
+
+}
+
+JNIEXPORT jobject JNICALL
+_JVM_CurrentThread(JNIEnv *env, jclass threadClass){
+
+}
+
+JNIEXPORT jint JNICALL
+_JVM_CountStackFrames(JNIEnv *env, jobject thread){
+
+}
+
+JNIEXPORT void JNICALL
+_JVM_Interrupt(JNIEnv *env, jobject thread){
+
+}
+
+JNIEXPORT jboolean JNICALL
+_JVM_IsInterrupted(JNIEnv *env, jobject thread, jboolean clearInterrupted){
+
+}
+
+JNIEXPORT jboolean JNICALL
+_JVM_HoldsLock(JNIEnv *env, jclass threadClass, jobject obj){
+
+}
+
+JNIEXPORT void JNICALL
+_JVM_DumpAllStacks(JNIEnv *env, jclass unused){
+
+}
+
+JNIEXPORT jobjectArray JNICALL
+_JVM_GetAllThreads(JNIEnv *env, jclass dummy){
+
+}
+
+JNIEXPORT void JNICALL
+_JVM_SetNativeThreadName(JNIEnv *env, jobject jthread, jstring name){
+
+}
+
+/* getStackTrace() and getAllStackTraces() method */
+JNIEXPORT jobjectArray JNICALL
+_JVM_DumpThreads(JNIEnv *env, jclass threadClass, jobjectArray threads){
+
+}
+
+/*
+ * java.lang.SecurityManager
+ */
+JNIEXPORT jobjectArray JNICALL
+_JVM_GetClassContext(JNIEnv *env){
+
+}
+
+/*
+ * java.lang.Package
+ */
+JNIEXPORT jstring JNICALL
+_JVM_GetSystemPackage(JNIEnv *env, jstring name){
+
+}
+
+JNIEXPORT jobjectArray JNICALL
+_JVM_GetSystemPackages(JNIEnv *env){
+
+}
+
+/*
+ * java.lang.ref.Reference
+ */
+JNIEXPORT jobject JNICALL
+_JVM_GetAndClearReferencePendingList(JNIEnv *env){
+
+}
+
+JNIEXPORT jboolean JNICALL
+_JVM_HasReferencePendingList(JNIEnv *env){
+
+}
+
+JNIEXPORT void JNICALL
+_JVM_WaitForReferencePendingList(JNIEnv *env){
+
+}
+
+/*
+ * java.io.ObjectInputStream
+ */
+JNIEXPORT jobject JNICALL
+_JVM_LatestUserDefinedLoader(JNIEnv *env){
+
+}
+
+/*
+ * java.lang.reflect.Array
+ */
+JNIEXPORT jint JNICALL
+_JVM_GetArrayLength(JNIEnv *env, jobject arr){
+
+}
+
+JNIEXPORT jobject JNICALL
+_JVM_GetArrayElement(JNIEnv *env, jobject arr, jint index){
+
+}
+
+JNIEXPORT jvalue JNICALL
+_JVM_GetPrimitiveArrayElement(JNIEnv *env, jobject arr, jint index, jint wCode){
+
+}
+
+JNIEXPORT void JNICALL
+_JVM_SetArrayElement(JNIEnv *env, jobject arr, jint index, jobject val){
+
+}
+
+JNIEXPORT void JNICALL
+_JVM_SetPrimitiveArrayElement(JNIEnv *env, jobject arr, jint index, jvalue v,
+                             unsigned char vCode){
+
+}
+
+JNIEXPORT jobject JNICALL
+_JVM_NewArray(JNIEnv *env, jclass eltClass, jint length){
+
+}
+
+JNIEXPORT jobject JNICALL
+_JVM_NewMultiArray(JNIEnv *env, jclass eltClass, jintArray dim){
+
+}
+
+
+/*
+ * Returns the immediate caller class of the native method invoking
+ * JVM_GetCallerClass.  The Method.invoke and other frames due to
+ * reflection machinery are skipped.
+ *
+ * The caller is expected to be marked with
+ * jdk.internal.reflect.CallerSensitive. The JVM will throw an
+ * error if it is not marked properly.
+ */
+JNIEXPORT jclass JNICALL
+_JVM_GetCallerClass(JNIEnv *env){
+
+}
+
+
+/*
+ * Find primitive classes
+ * utf: class name
+ */
+JNIEXPORT jclass JNICALL
+_JVM_FindPrimitiveClass(JNIEnv *env, const char *utf){
+
+}
+
+
+/*
+ * Find a class from a boot class loader. Returns NULL if class not found.
+ */
+JNIEXPORT jclass JNICALL
+_JVM_FindClassFromBootLoader(JNIEnv *env, const char *name){
+
+}
+
+/*
+ * Find a class from a given class loader.  Throws ClassNotFoundException.
+ *  name:   name of class
+ *  init:   whether initialization is done
+ *  loader: class loader to look up the class. This may not be the same as the caller's
+ *          class loader.
+ *  caller: initiating class. The initiating class may be null when a security
+ *          manager is not installed.
+ */
+JNIEXPORT jclass JNICALL
+_JVM_FindClassFromCaller(JNIEnv *env, const char *name, jboolean init,
+                        jobject loader, jclass caller){
+
+}
+
+/*
+ * Find a class from a given class.
+ */
+JNIEXPORT jclass JNICALL
+_JVM_FindClassFromClass(JNIEnv *env, const char *name, jboolean init,
+                             jclass from){
+
+}
+
+/* Find a loaded class cached by the VM */
+JNIEXPORT jclass JNICALL
+_JVM_FindLoadedClass(JNIEnv *env, jobject loader, jstring name){
+
+}
+
+/* Define a class */
+JNIEXPORT jclass JNICALL
+_JVM_DefineClass(JNIEnv *env, const char *name, jobject loader, const jbyte *buf,
+                jsize len, jobject pd){
+
+}
+
+/* Define a class with a source (added in JDK1.5) */
+JNIEXPORT jclass JNICALL
+_JVM_DefineClassWithSource(JNIEnv *env, const char *name, jobject loader,
+                          const jbyte *buf, jsize len, jobject pd,
+                          const char *source){
+
+}
+
+/*
+ * Module support funcions
+ */
+
+/*
+ * Define a module with the specified packages and bind the module to the
+ * given class loader.
+ *  module:       module to define
+ *  is_open:      specifies if module is open (currently ignored)
+ *  version:      the module version
+ *  location:     the module location
+ *  packages:     list of packages in the module
+ *  num_packages: number of packages in the module
+ */
+JNIEXPORT void JNICALL
+_JVM_DefineModule(JNIEnv *env, jobject module, jboolean is_open, jstring version,
+                 jstring location, const char* const* packages, jsize num_packages){
+
+}
+
+/*
+ * Set the boot loader's unnamed module.
+ *  module: boot loader's unnamed module
+ */
+JNIEXPORT void JNICALL
+_JVM_SetBootLoaderUnnamedModule(JNIEnv *env, jobject module){
+
+}
+
+/*
+ * Do a qualified export of a package.
+ *  from_module: module containing the package to export
+ *  package:     name of the package to export
+ *  to_module:   module to export the package to
+ */
+JNIEXPORT void JNICALL
+_JVM_AddModuleExports(JNIEnv *env, jobject from_module, const char* package, jobject to_module){
+
+}
+
+/*
+ * Do an export of a package to all unnamed modules.
+ *  from_module: module containing the package to export
+ *  package:     name of the package to export to all unnamed modules
+ */
+JNIEXPORT void JNICALL
+_JVM_AddModuleExportsToAllUnnamed(JNIEnv *env, jobject from_module, const char* package){
+
+}
+
+/*
+ * Do an unqualified export of a package.
+ *  from_module: module containing the package to export
+ *  package:     name of the package to export
+ */
+JNIEXPORT void JNICALL
+_JVM_AddModuleExportsToAll(JNIEnv *env, jobject from_module, const char* package){
+
+}
+
+/*
+ * Add a module to the list of modules that a given module can read.
+ *  from_module:   module requesting read access
+ *  source_module: module that from_module wants to read
+ */
+JNIEXPORT void JNICALL
+_JVM_AddReadsModule(JNIEnv *env, jobject from_module, jobject source_module){
+
+}
+
+/*
+ * Reflection support functions
+ */
+
+JNIEXPORT jstring JNICALL
+_JVM_InitClassName(JNIEnv *env, jclass cls){
+
+}
+
+JNIEXPORT jobjectArray JNICALL
+_JVM_GetClassInterfaces(JNIEnv *env, jclass cls){
+
+}
+
+JNIEXPORT jboolean JNICALL
+_JVM_IsInterface(JNIEnv *env, jclass cls){
+
+}
+
+JNIEXPORT jobjectArray JNICALL
+_JVM_GetClassSigners(JNIEnv *env, jclass cls){
+
+}
+
+JNIEXPORT void JNICALL
+_JVM_SetClassSigners(JNIEnv *env, jclass cls, jobjectArray signers){
+
+}
+
+JNIEXPORT jobject JNICALL
+_JVM_GetProtectionDomain(JNIEnv *env, jclass cls){
+
+}
+
+JNIEXPORT jboolean JNICALL
+_JVM_IsArrayClass(JNIEnv *env, jclass cls){
+
+}
+
+JNIEXPORT jboolean JNICALL
+_JVM_IsPrimitiveClass(JNIEnv *env, jclass cls){
+
+}
+
+JNIEXPORT jint JNICALL
+_JVM_GetClassModifiers(JNIEnv *env, jclass cls){
+
+}
+
+JNIEXPORT jobjectArray JNICALL
+_JVM_GetDeclaredClasses(JNIEnv *env, jclass ofClass){
+
+}
+
+JNIEXPORT jclass JNICALL
+_JVM_GetDeclaringClass(JNIEnv *env, jclass ofClass){
+
+}
+
+JNIEXPORT jstring JNICALL
+_JVM_GetSimpleBinaryName(JNIEnv *env, jclass ofClass){
+
+}
+
+/* Generics support (JDK 1.5) */
+JNIEXPORT jstring JNICALL
+_JVM_GetClassSignature(JNIEnv *env, jclass cls){
+
+}
+
+/* Annotations support (JDK 1.5) */
+JNIEXPORT jbyteArray JNICALL
+_JVM_GetClassAnnotations(JNIEnv *env, jclass cls){
+
+}
+
+/* Type use annotations support (JDK 1.8) */
+
+JNIEXPORT jbyteArray JNICALL
+_JVM_GetClassTypeAnnotations(JNIEnv *env, jclass cls){
+
+}
+
+JNIEXPORT jbyteArray JNICALL
+_JVM_GetFieldTypeAnnotations(JNIEnv *env, jobject field){
+
+}
+
+JNIEXPORT jbyteArray JNICALL
+_JVM_GetMethodTypeAnnotations(JNIEnv *env, jobject method){
+
+}
+
+/*
+ * New (JDK 1.4) reflection implementation
+ */
+
+JNIEXPORT jobjectArray JNICALL
+_JVM_GetClassDeclaredMethods(JNIEnv *env, jclass ofClass, jboolean publicOnly){
+
+}
+
+JNIEXPORT jobjectArray JNICALL
+_JVM_GetClassDeclaredFields(JNIEnv *env, jclass ofClass, jboolean publicOnly){
+
+}
+
+JNIEXPORT jobjectArray JNICALL
+_JVM_GetClassDeclaredConstructors(JNIEnv *env, jclass ofClass, jboolean publicOnly){
+
+}
+
+/* Differs from JVM_GetClassModifiers in treatment of inner classes.
+   This returns the access flags for the class as specified in the
+   class file rather than searching the InnerClasses attribute (if
+   present) to find the source-level access flags. Only the values of
+   the low 13 bits (i.e., a mask of 0x1FFF) are guaranteed to be
+   valid. */
+JNIEXPORT jint JNICALL
+_JVM_GetClassAccessFlags(JNIEnv *env, jclass cls){
+
+}
+
+/* Nestmates - since JDK 11 */
+
+JNIEXPORT jboolean JNICALL
+_JVM_AreNestMates(JNIEnv *env, jclass current, jclass member){
+
+}
+
+JNIEXPORT jclass JNICALL
+_JVM_GetNestHost(JNIEnv *env, jclass current){
+
+}
+
+JNIEXPORT jobjectArray JNICALL
+_JVM_GetNestMembers(JNIEnv *env, jclass current){
+
+}
+
+/* The following two reflection routines are still needed due to startup time issues */
+/*
+ * java.lang.reflect.Method
+ */
+JNIEXPORT jobject JNICALL
+_JVM_InvokeMethod(JNIEnv *env, jobject method, jobject obj, jobjectArray args0){
+
+}
+
+/*
+ * java.lang.reflect.Constructor
+ */
+JNIEXPORT jobject JNICALL
+_JVM_NewInstanceFromConstructor(JNIEnv *env, jobject c, jobjectArray args0){
+
+}
+
+/*
+ * Constant pool access; currently used to implement reflective access to annotations (JDK 1.5)
+ */
+
+JNIEXPORT jobject JNICALL
+_JVM_GetClassConstantPool(JNIEnv *env, jclass cls){
+
+}
+
+JNIEXPORT jint JNICALL _JVM_ConstantPoolGetSize
+(JNIEnv *env, jobject unused, jobject jcpool){
+
+}
+
+JNIEXPORT jclass JNICALL _JVM_ConstantPoolGetClassAt
+(JNIEnv *env, jobject unused, jobject jcpool, jint index){
+
+}
+
+JNIEXPORT jclass JNICALL _JVM_ConstantPoolGetClassAtIfLoaded
+(JNIEnv *env, jobject unused, jobject jcpool, jint index){
+
+}
+
+JNIEXPORT jint JNICALL _JVM_ConstantPoolGetClassRefIndexAt
+(JNIEnv *env, jobject obj, jobject unused, jint index){
+
+}
+
+JNIEXPORT jobject JNICALL _JVM_ConstantPoolGetMethodAt
+(JNIEnv *env, jobject unused, jobject jcpool, jint index){
+
+}
+
+JNIEXPORT jobject JNICALL _JVM_ConstantPoolGetMethodAtIfLoaded
+(JNIEnv *env, jobject unused, jobject jcpool, jint index){
+
+}
+
+JNIEXPORT jobject JNICALL _JVM_ConstantPoolGetFieldAt
+(JNIEnv *env, jobject unused, jobject jcpool, jint index){
+
+}
+
+JNIEXPORT jobject JNICALL _JVM_ConstantPoolGetFieldAtIfLoaded
+(JNIEnv *env, jobject unused, jobject jcpool, jint index){
+
+}
+
+JNIEXPORT jobjectArray JNICALL _JVM_ConstantPoolGetMemberRefInfoAt
+(JNIEnv *env, jobject unused, jobject jcpool, jint index){
+
+}
+
+JNIEXPORT jint JNICALL _JVM_ConstantPoolGetNameAndTypeRefIndexAt
+(JNIEnv *env, jobject obj, jobject unused, jint index){
+
+}
+
+JNIEXPORT jobjectArray JNICALL _JVM_ConstantPoolGetNameAndTypeRefInfoAt
+(JNIEnv *env, jobject obj, jobject unused, jint index){
+
+}
+
+JNIEXPORT jint JNICALL _JVM_ConstantPoolGetIntAt
+(JNIEnv *env, jobject unused, jobject jcpool, jint index){
+
+}
+
+JNIEXPORT jlong JNICALL _JVM_ConstantPoolGetLongAt
+(JNIEnv *env, jobject unused, jobject jcpool, jint index){
+
+}
+
+JNIEXPORT jfloat JNICALL _JVM_ConstantPoolGetFloatAt
+(JNIEnv *env, jobject unused, jobject jcpool, jint index){
+
+}
+
+JNIEXPORT jdouble JNICALL _JVM_ConstantPoolGetDoubleAt
+(JNIEnv *env, jobject unused, jobject jcpool, jint index){
+
+}
+
+JNIEXPORT jstring JNICALL _JVM_ConstantPoolGetStringAt
+(JNIEnv *env, jobject unused, jobject jcpool, jint index){
+
+}
+
+JNIEXPORT jstring JNICALL _JVM_ConstantPoolGetUTF8At
+(JNIEnv *env, jobject unused, jobject jcpool, jint index){
+
+}
+
+JNIEXPORT jbyte JNICALL _JVM_ConstantPoolGetTagAt
+(JNIEnv *env, jobject unused, jobject jcpool, jint index){
+
+}
+
+/*
+ * Parameter reflection
+ */
+
+JNIEXPORT jobjectArray JNICALL
+_JVM_GetMethodParameters(JNIEnv *env, jobject method){
+
+}
+
+/*
+ * java.security.*
+ */
+
+JNIEXPORT jobject JNICALL
+_JVM_GetInheritedAccessControlContext(JNIEnv *env, jclass cls){
+
+}
+
+/*
+ * Ensure that code doing a stackwalk and using javaVFrame::locals() to
+ * get the value will see a materialized value and not a scalar-replaced
+ * null value.
+ */
+#define JVM_EnsureMaterializedForStackWalk(env, value) \
+    do {} while(0) // Nothing to do.  The fact that the value escaped
+                   // through a native method is enough.
+
+JNIEXPORT jobject JNICALL
+_JVM_GetStackAccessControlContext(JNIEnv *env, jclass cls){
+
+}
+
+/*
+ * Signal support, used to implement the shutdown sequence.  Every VM must
+ * support JVM_SIGINT and JVM_SIGTERM, raising the former for user interrupts
+ * (^C) and the latter for external termination (kill, system shutdown, etc.).
+ * Other platform-dependent signal values may also be supported.
+ */
+
+JNIEXPORT void * JNICALL
+_JVM_RegisterSignal(jint sig, void *handler){
+
+}
+
+JNIEXPORT jboolean JNICALL
+_JVM_RaiseSignal(jint sig){
+
+}
+
+JNIEXPORT jint JNICALL
+_JVM_FindSignal(const char *name){
+
+}
+
+/*
+ * Retrieve the assertion directives for the specified class.
+ */
+JNIEXPORT jboolean JNICALL
+_JVM_DesiredAssertionStatus(JNIEnv *env, jclass unused, jclass cls){
+
+}
+
+/*
+ * Retrieve the assertion directives from the VM.
+ */
+JNIEXPORT jobject JNICALL
+_JVM_AssertionStatusDirectives(JNIEnv *env, jclass unused){
+
+}
+
+/*
+ * java.util.concurrent.atomic.AtomicLong
+ */
+JNIEXPORT jboolean JNICALL
+_JVM_SupportsCX8(void){
+
+}
+
+/*
+ * com.sun.dtrace.jsdt support
+ */
+
+#define JVM_TRACING_DTRACE_VERSION 1
+
+/*
+ * Structure to pass one probe description to JVM
+ */
+typedef struct {
+    jmethodID method;
+    jstring   function;
+    jstring   name;
+    void*            reserved[4];     // for future use
+} JVM_DTraceProbe;
+
+/**
+ * Encapsulates the stability ratings for a DTrace provider field
+ */
+typedef struct {
+    jint nameStability;
+    jint dataStability;
+    jint dependencyClass;
+} JVM_DTraceInterfaceAttributes;
+
+/*
+ * Structure to pass one provider description to JVM
+ */
+typedef struct {
+    jstring                       name;
+    JVM_DTraceProbe*              probes;
+    jint                          probe_count;
+    JVM_DTraceInterfaceAttributes providerAttributes;
+    JVM_DTraceInterfaceAttributes moduleAttributes;
+    JVM_DTraceInterfaceAttributes functionAttributes;
+    JVM_DTraceInterfaceAttributes nameAttributes;
+    JVM_DTraceInterfaceAttributes argsAttributes;
+    void*                         reserved[4]; // for future use
+} JVM_DTraceProvider;
+
+/*
+ * Get the version number the JVM was built with
+ */
+JNIEXPORT jint JNICALL
+_JVM_DTraceGetVersion(JNIEnv* env){
+
+}
+
+/*
+ * Register new probe with given signature, return global handle
+ *
+ * The version passed in is the version that the library code was
+ * built with.
+ */
+JNIEXPORT jlong JNICALL
+_JVM_DTraceActivate(JNIEnv* env, jint version, jstring module_name,
+  jint providers_count, JVM_DTraceProvider* providers){
+
+}
+
+/*
+ * Check JSDT probe
+ */
+JNIEXPORT jboolean JNICALL
+_JVM_DTraceIsProbeEnabled(JNIEnv* env, jmethodID method){
+
+}
+
+/*
+ * Destroy custom DOF
+ */
+JNIEXPORT void JNICALL
+_JVM_DTraceDispose(JNIEnv* env, jlong activation_handle){
+
+}
+
+/*
+ * Check to see if DTrace is supported by OS
+ */
+JNIEXPORT jboolean JNICALL
+_JVM_DTraceIsSupported(JNIEnv* env){
+
+}
+
+/*************************************************************************
+ PART 2: Support for the Verifier and Class File Format Checker
+ ************************************************************************/
+/*
+ * Return the class name in UTF format. The result is valid
+ * until JVM_ReleaseUTf is called.
+ *
+ * The caller must treat the string as a constant and not modify it
+ * in any way.
+ */
+JNIEXPORT const char * JNICALL
+_JVM_GetClassNameUTF(JNIEnv *env, jclass cb){
+
+}
+
+/*
+ * Returns the constant pool types in the buffer provided by "types."
+ */
+JNIEXPORT void JNICALL
+_JVM_GetClassCPTypes(JNIEnv *env, jclass cb, unsigned char *types){
+
+}
+
+/*
+ * Returns the number of Constant Pool entries.
+ */
+JNIEXPORT jint JNICALL
+_JVM_GetClassCPEntriesCount(JNIEnv *env, jclass cb){
+
+}
+
+/*
+ * Returns the number of *declared* fields or methods.
+ */
+JNIEXPORT jint JNICALL
+_JVM_GetClassFieldsCount(JNIEnv *env, jclass cb){
+
+}
+
+JNIEXPORT jint JNICALL
+_JVM_GetClassMethodsCount(JNIEnv *env, jclass cb){
+
+}
+
+/*
+ * Returns the CP indexes of exceptions raised by a given method.
+ * Places the result in the given buffer.
+ *
+ * The method is identified by method_index.
+ */
+JNIEXPORT void JNICALL
+_JVM_GetMethodIxExceptionIndexes(JNIEnv *env, jclass cb, jint method_index,
+                                unsigned short *exceptions){
+
+}
+/*
+ * Returns the number of exceptions raised by a given method.
+ * The method is identified by method_index.
+ */
+JNIEXPORT jint JNICALL
+_JVM_GetMethodIxExceptionsCount(JNIEnv *env, jclass cb, jint method_index){
+
+}
+
+/*
+ * Returns the byte code sequence of a given method.
+ * Places the result in the given buffer.
+ *
+ * The method is identified by method_index.
+ */
+JNIEXPORT void JNICALL
+_JVM_GetMethodIxByteCode(JNIEnv *env, jclass cb, jint method_index,
+                        unsigned char *code){
+
+}
+
+/*
+ * Returns the length of the byte code sequence of a given method.
+ * The method is identified by method_index.
+ */
+JNIEXPORT jint JNICALL
+_JVM_GetMethodIxByteCodeLength(JNIEnv *env, jclass cb, jint method_index){
+
+}
+
+/*
+ * A structure used to a capture exception table entry in a Java method.
+ */
+typedef struct {
+    jint start_pc;
+    jint end_pc;
+    jint handler_pc;
+    jint catchType;
+} JVM_ExceptionTableEntryType;
+
+/*
+ * Returns the exception table entry at entry_index of a given method.
+ * Places the result in the given buffer.
+ *
+ * The method is identified by method_index.
+ */
+JNIEXPORT void JNICALL
+_JVM_GetMethodIxExceptionTableEntry(JNIEnv *env, jclass cb, jint method_index,
+                                   jint entry_index,
+                                   JVM_ExceptionTableEntryType *entry){
+
+}
+
+/*
+ * Returns the length of the exception table of a given method.
+ * The method is identified by method_index.
+ */
+JNIEXPORT jint JNICALL
+_JVM_GetMethodIxExceptionTableLength(JNIEnv *env, jclass cb, int index){
+
+}
+
+/*
+ * Returns the modifiers of a given field.
+ * The field is identified by field_index.
+ */
+JNIEXPORT jint JNICALL
+_JVM_GetFieldIxModifiers(JNIEnv *env, jclass cb, int index){
+
+}
+
+/*
+ * Returns the modifiers of a given method.
+ * The method is identified by method_index.
+ */
+JNIEXPORT jint JNICALL
+_JVM_GetMethodIxModifiers(JNIEnv *env, jclass cb, int index){
+
+}
+
+/*
+ * Returns the number of local variables of a given method.
+ * The method is identified by method_index.
+ */
+JNIEXPORT jint JNICALL
+_JVM_GetMethodIxLocalsCount(JNIEnv *env, jclass cb, int index){
+
+}
+
+/*
+ * Returns the number of arguments (including this pointer) of a given method.
+ * The method is identified by method_index.
+ */
+JNIEXPORT jint JNICALL
+_JVM_GetMethodIxArgsSize(JNIEnv *env, jclass cb, int index){
+
+}
+
+/*
+ * Returns the maximum amount of stack (in words) used by a given method.
+ * The method is identified by method_index.
+ */
+JNIEXPORT jint JNICALL
+_JVM_GetMethodIxMaxStack(JNIEnv *env, jclass cb, int index){
+
+}
+
+/*
+ * Is a given method a constructor.
+ * The method is identified by method_index.
+ */
+JNIEXPORT jboolean JNICALL
+_JVM_IsConstructorIx(JNIEnv *env, jclass cb, int index){
+
+}
+
+/*
+ * Is the given method generated by the VM.
+ * The method is identified by method_index.
+ */
+JNIEXPORT jboolean JNICALL
+_JVM_IsVMGeneratedMethodIx(JNIEnv *env, jclass cb, int index){
+
+}
+
+/*
+ * Returns the name of a given method in UTF format.
+ * The result remains valid until JVM_ReleaseUTF is called.
+ *
+ * The caller must treat the string as a constant and not modify it
+ * in any way.
+ */
+JNIEXPORT const char * JNICALL
+_JVM_GetMethodIxNameUTF(JNIEnv *env, jclass cb, jint index){
+
+}
+
+/*
+ * Returns the signature of a given method in UTF format.
+ * The result remains valid until JVM_ReleaseUTF is called.
+ *
+ * The caller must treat the string as a constant and not modify it
+ * in any way.
+ */
+JNIEXPORT const char * JNICALL
+_JVM_GetMethodIxSignatureUTF(JNIEnv *env, jclass cb, jint index){
+
+}
+
+/*
+ * Returns the name of the field referred to at a given constant pool
+ * index.
+ *
+ * The result is in UTF format and remains valid until JVM_ReleaseUTF
+ * is called.
+ *
+ * The caller must treat the string as a constant and not modify it
+ * in any way.
+ */
+JNIEXPORT const char * JNICALL
+_JVM_GetCPFieldNameUTF(JNIEnv *env, jclass cb, jint index){
+
+}
+
+/*
+ * Returns the name of the method referred to at a given constant pool
+ * index.
+ *
+ * The result is in UTF format and remains valid until JVM_ReleaseUTF
+ * is called.
+ *
+ * The caller must treat the string as a constant and not modify it
+ * in any way.
+ */
+JNIEXPORT const char * JNICALL
+_JVM_GetCPMethodNameUTF(JNIEnv *env, jclass cb, jint index){
+
+}
+
+/*
+ * Returns the signature of the method referred to at a given constant pool
+ * index.
+ *
+ * The result is in UTF format and remains valid until JVM_ReleaseUTF
+ * is called.
+ *
+ * The caller must treat the string as a constant and not modify it
+ * in any way.
+ */
+JNIEXPORT const char * JNICALL
+_JVM_GetCPMethodSignatureUTF(JNIEnv *env, jclass cb, jint index){
+
+}
+
+/*
+ * Returns the signature of the field referred to at a given constant pool
+ * index.
+ *
+ * The result is in UTF format and remains valid until JVM_ReleaseUTF
+ * is called.
+ *
+ * The caller must treat the string as a constant and not modify it
+ * in any way.
+ */
+JNIEXPORT const char * JNICALL
+_JVM_GetCPFieldSignatureUTF(JNIEnv *env, jclass cb, jint index){
+
+}
+
+/*
+ * Returns the class name referred to at a given constant pool index.
+ *
+ * The result is in UTF format and remains valid until JVM_ReleaseUTF
+ * is called.
+ *
+ * The caller must treat the string as a constant and not modify it
+ * in any way.
+ */
+JNIEXPORT const char * JNICALL
+_JVM_GetCPClassNameUTF(JNIEnv *env, jclass cb, jint index){
+
+}
+
+/*
+ * Returns the class name referred to at a given constant pool index.
+ *
+ * The constant pool entry must refer to a CONSTANT_Fieldref.
+ *
+ * The result is in UTF format and remains valid until JVM_ReleaseUTF
+ * is called.
+ *
+ * The caller must treat the string as a constant and not modify it
+ * in any way.
+ */
+JNIEXPORT const char * JNICALL
+_JVM_GetCPFieldClassNameUTF(JNIEnv *env, jclass cb, jint index){
+
+}
+
+/*
+ * Returns the class name referred to at a given constant pool index.
+ *
+ * The constant pool entry must refer to CONSTANT_Methodref or
+ * CONSTANT_InterfaceMethodref.
+ *
+ * The result is in UTF format and remains valid until JVM_ReleaseUTF
+ * is called.
+ *
+ * The caller must treat the string as a constant and not modify it
+ * in any way.
+ */
+JNIEXPORT const char * JNICALL
+_JVM_GetCPMethodClassNameUTF(JNIEnv *env, jclass cb, jint index){
+
+}
+
+/*
+ * Returns the modifiers of a field in calledClass. The field is
+ * referred to in class cb at constant pool entry index.
+ *
+ * The caller must treat the string as a constant and not modify it
+ * in any way.
+ *
+ * Returns -1 if the field does not exist in calledClass.
+ */
+JNIEXPORT jint JNICALL
+_JVM_GetCPFieldModifiers(JNIEnv *env, jclass cb, int index, jclass calledClass){
+
+}
+
+/*
+ * Returns the modifiers of a method in calledClass. The method is
+ * referred to in class cb at constant pool entry index.
+ *
+ * Returns -1 if the method does not exist in calledClass.
+ */
+JNIEXPORT jint JNICALL
+_JVM_GetCPMethodModifiers(JNIEnv *env, jclass cb, int index, jclass calledClass){
+
+}
+
+/*
+ * Releases the UTF string obtained from the VM.
+ */
+JNIEXPORT void JNICALL
+_JVM_ReleaseUTF(const char *utf){
+
+}
+
+/*
+ * Compare if two classes are in the same package.
+ */
+JNIEXPORT jboolean JNICALL
+_JVM_IsSameClassPackage(JNIEnv *env, jclass class1, jclass class2){
+
+}
+
+/* Get classfile constants */
+//#include "classfile_constants.h"  todo
+
+/*
+ * A function defined by the byte-code verifier and called by the VM.
+ * This is not a function implemented in the VM.
+ *
+ * Returns JNI_FALSE if verification fails. A detailed error message
+ * will be places in msg_buf, whose length is specified by buf_len.
+ */
+typedef jboolean (*verifier_fn_t)(JNIEnv *env,
+                                  jclass cb,
+                                  char * msg_buf,
+                                  jint buf_len);
+
+
+/*
+ * Support for a VM-independent class format checker.
+ */
+typedef struct {
+    unsigned long code;    /* byte code */
+    unsigned long excs;    /* exceptions */
+    unsigned long etab;    /* catch table */
+    unsigned long lnum;    /* line number */
+    unsigned long lvar;    /* local vars */
+} method_size_info;
+
+typedef struct {
+    unsigned int constants;    /* constant pool */
+    unsigned int fields;
+    unsigned int methods;
+    unsigned int interfaces;
+    unsigned int fields2;      /* number of static 2-word fields */
+    unsigned int innerclasses; /* # of records in InnerClasses attr */
+
+    method_size_info clinit;   /* memory used in clinit */
+    method_size_info main;     /* used everywhere else */
+} class_size_info;
+
+/*
+ * Functions defined in libjava.so to perform string conversions.
+ *
+ */
+
+typedef jstring (*to_java_string_fn_t)(JNIEnv *env, char *str);
+
+typedef char *(*to_c_string_fn_t)(JNIEnv *env, jstring s, jboolean *b);
+
+/* This is the function defined in libjava.so that performs class
+ * format checks. This functions fills in size information about
+ * the class file and returns:
+ *
+ *   0: good
+ *  -1: out of memory
+ *  -2: bad format
+ *  -3: unsupported version
+ *  -4: bad class name
+ */
+
+typedef jint (*check_format_fn_t)(char *class_name,
+                                  unsigned char *data,
+                                  unsigned int data_size,
+                                  class_size_info *class_size,
+                                  char *message_buffer,
+                                  jint buffer_length,
+                                  jboolean measure_only,
+                                  jboolean check_relaxed);
+
+#define JVM_RECOGNIZED_CLASS_MODIFIERS (JVM_ACC_PUBLIC | \
+                                        JVM_ACC_FINAL | \
+                                        JVM_ACC_SUPER | \
+                                        JVM_ACC_INTERFACE | \
+                                        JVM_ACC_ABSTRACT | \
+                                        JVM_ACC_ANNOTATION | \
+                                        JVM_ACC_ENUM | \
+                                        JVM_ACC_SYNTHETIC)
+
+#define JVM_RECOGNIZED_FIELD_MODIFIERS (JVM_ACC_PUBLIC | \
+                                        JVM_ACC_PRIVATE | \
+                                        JVM_ACC_PROTECTED | \
+                                        JVM_ACC_STATIC | \
+                                        JVM_ACC_FINAL | \
+                                        JVM_ACC_VOLATILE | \
+                                        JVM_ACC_TRANSIENT | \
+                                        JVM_ACC_ENUM | \
+                                        JVM_ACC_SYNTHETIC)
+
+#define JVM_RECOGNIZED_METHOD_MODIFIERS (JVM_ACC_PUBLIC | \
+                                         JVM_ACC_PRIVATE | \
+                                         JVM_ACC_PROTECTED | \
+                                         JVM_ACC_STATIC | \
+                                         JVM_ACC_FINAL | \
+                                         JVM_ACC_SYNCHRONIZED | \
+                                         JVM_ACC_BRIDGE | \
+                                         JVM_ACC_VARARGS | \
+                                         JVM_ACC_NATIVE | \
+                                         JVM_ACC_ABSTRACT | \
+                                         JVM_ACC_STRICT | \
+                                         JVM_ACC_SYNTHETIC)
+
+/*
+ * This is the function defined in libjava.so to perform path
+ * canonicalization. VM call this function before opening jar files
+ * to load system classes.
+ *
+ */
+
+typedef int (*canonicalize_fn_t)(JNIEnv *env, char *orig, char *out, int len);
+
+/*************************************************************************
+ PART 3: I/O and Network Support
+ ************************************************************************/
+
+/*
+ * Convert a pathname into native format.  This function does syntactic
+ * cleanup, such as removing redundant separator characters.  It modifies
+ * the given pathname string in place.
+ */
+JNIEXPORT char * JNICALL
+_JVM_NativePath(char *){
+
+}
+
+/*
+ * The standard printing functions supported by the Java VM. (Should they
+ * be renamed to JVM_* in the future?
+ */
+
+/* jio_snprintf() and jio_vsnprintf() behave like snprintf(3) and vsnprintf(3),
+ *  respectively, with the following differences:
+ * - The string written to str is always zero-terminated, also in case of
+ *   truncation (count is too small to hold the result string), unless count
+ *   is 0. In case of truncation count-1 characters are written and '\0'
+ *   appendend.
+ * - If count is too small to hold the whole string, -1 is returned across
+ *   all platforms. */
+
+JNIEXPORT int
+jio_vsnprintf(char *str, size_t count, const char *fmt, va_list args){
+
+}
+
+JNIEXPORT int
+jio_snprintf(char *str, size_t count, const char *fmt, ...){
+
+}
+
+JNIEXPORT int
+jio_fprintf(FILE *, const char *fmt, ...){
+
+}
+
+JNIEXPORT int
+jio_vfprintf(FILE *, const char *fmt, va_list args){
+
+}
+
+
+JNIEXPORT void * JNICALL
+_JVM_RawMonitorCreate(void){
+
+}
+
+JNIEXPORT void JNICALL
+_JVM_RawMonitorDestroy(void *mon){
+
+}
+
+JNIEXPORT jint JNICALL
+_JVM_RawMonitorEnter(void *mon){
+
+}
+
+JNIEXPORT void JNICALL
+_JVM_RawMonitorExit(void *mon){
+
+}
+
+/*
+ * java.lang.management support
+ */
+JNIEXPORT void* JNICALL
+_JVM_GetManagement(jint version){
+
+}
+
+/*
+ * com.sun.tools.attach.VirtualMachine support
+ *
+ * Initialize the agent properties with the properties maintained in the VM.
+ */
+JNIEXPORT jobject JNICALL
+_JVM_InitAgentProperties(JNIEnv *env, jobject agent_props){
+
+}
+
+JNIEXPORT jstring JNICALL
+_JVM_GetTemporaryDirectory(JNIEnv *env){
+
+}
+
+/* Generics reflection support.
+ *
+ * Returns information about the given class's EnclosingMethod
+ * attribute, if present, or null if the class had no enclosing
+ * method.
+ *
+ * If non-null, the returned array contains three elements. Element 0
+ * is the java.lang.Class of which the enclosing method is a member,
+ * and elements 1 and 2 are the java.lang.Strings for the enclosing
+ * method's name and descriptor, respectively.
+ */
+JNIEXPORT jobjectArray JNICALL
+_JVM_GetEnclosingMethodInfo(JNIEnv* env, jclass ofClass){
+
+}
+
+/* =========================================================================
+ * The following defines a private JVM interface that the JDK can query
+ * for the JVM version and capabilities.  sun.misc.Version defines
+ * the methods for getting the VM version and its capabilities.
+ *
+ * When a new bit is added, the following should be updated to provide
+ * access to the new capability:
+ *    HS:   JVM_GetVersionInfo and Abstract_VM_Version class
+ *    SDK:  Version class
+ *
+ * Similary, a private JDK interface JDK_GetVersionInfo0 is defined for
+ * JVM to query for the JDK version and capabilities.
+ *
+ * When a new bit is added, the following should be updated to provide
+ * access to the new capability:
+ *    HS:   JDK_Version class
+ *    SDK:  JDK_GetVersionInfo0
+ *
+ * ==========================================================================
+ */
+typedef struct {
+    unsigned int jvm_version;  /* Encoded $VNUM as specified by JEP-223 */
+    unsigned int patch_version : 8; /* JEP-223 patch version */
+    unsigned int reserved3 : 8;
+    unsigned int reserved1 : 16;
+    unsigned int reserved2;
+
+    /* The following bits represents JVM supports that JDK has dependency on.
+     * JDK can use these bits to determine which JVM version
+     * and support it has to maintain runtime compatibility.
+     *
+     * When a new bit is added in a minor or update release, make sure
+     * the new bit is also added in the main/baseline.
+     */
+    unsigned int is_attach_supported : 1;
+    unsigned int : 31;
+    unsigned int : 32;
+    unsigned int : 32;
+} jvm_version_info;
+
+#define JVM_VERSION_MAJOR(version) ((version & 0xFF000000) >> 24)
+#define JVM_VERSION_MINOR(version) ((version & 0x00FF0000) >> 16)
+#define JVM_VERSION_SECURITY(version) ((version & 0x0000FF00) >> 8)
+#define JVM_VERSION_BUILD(version) ((version & 0x000000FF))
+
+JNIEXPORT void JNICALL
+_JVM_GetVersionInfo(JNIEnv* env, jvm_version_info* info, size_t info_size){
+
+}
+
+typedef struct {
+    unsigned int jdk_version; /* Encoded $VNUM as specified by JEP-223 */
+    unsigned int patch_version : 8; /* JEP-223 patch version */
+    unsigned int reserved3 : 8;
+    unsigned int reserved1 : 16;
+    unsigned int reserved2;
+    unsigned int : 32;
+    unsigned int : 32;
+    unsigned int : 32;
+} jdk_version_info;
+
+#define JDK_VERSION_MAJOR(version) ((version & 0xFF000000) >> 24)
+#define JDK_VERSION_MINOR(version) ((version & 0x00FF0000) >> 16)
+#define JDK_VERSION_SECURITY(version) ((version & 0x0000FF00) >> 8)
+#define JDK_VERSION_BUILD(version) ((version & 0x000000FF))
+
+/*
+ * This is the function JDK_GetVersionInfo0 defined in libjava.so
+ * that is dynamically looked up by JVM.
+ */
+typedef void (*jdk_version_info_fn_t)(jdk_version_info* info, size_t info_size);
+
+/*
+ * This structure is used by the launcher to get the default thread
+ * stack size from the VM using JNI_GetDefaultJavaVMInitArgs() with a
+ * version of 1.1.  As it is not supported otherwise, it has been removed
+ * from jni.h
+ */
+typedef struct JDK1_1InitArgs {
+    jint version;
+
+    char **properties;
+    jint checkSource;
+    jint nativeStackSize;
+    jint javaStackSize;
+    jint minHeapSize;
+    jint maxHeapSize;
+    jint verifyMode;
+    char *classpath;
+
+    jint (JNICALL *vfprintf)(FILE *fp, const char *format, va_list args);
+    void (JNICALL *exit)(jint code);
+    void (JNICALL *abort)(void);
+
+    jint enableClassGC;
+    jint enableVerboseGC;
+    jint disableAsyncGC;
+    jint verbose;
+    jboolean debugging;
+    jint debugPort;
+} JDK1_1InitArgs;
+
+
+} /* extern "C" */

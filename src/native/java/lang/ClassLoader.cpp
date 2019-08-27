@@ -3,7 +3,7 @@
  */
 
 #include "../../registry.h"
-#include "../../../jvm.h"
+#include "../../../kayo.h"
 #include "../../../rtda/thread/Frame.h"
 #include "../../../rtda/heap/Object.h"
 #include "../../../rtda/heap/StringObject.h"
@@ -59,7 +59,8 @@ static void findBuiltinLib(Frame *frame)
     const char *name = name0->getUtf8Value();
     if (strcmp(name, "zip.dll") == 0) {
         // C:\Program Files\Java\jre1.8.0_162\bin
-        char buf[1024] = R"(C:\Program Files\Java\jre1.8.0_162\bin\zip.dll)";  // todo
+//        char buf[1024] = R"(C:\Program Files\Java\jre1.8.0_162\bin\zip.dll)";  // todo
+        char buf[1024] = R"(C:\Progles (x86)\Java\jre1.8.0_221\bin\zip.dll)";  // todo
         frame->pushr(StringObject::newInst(buf));    // todo
     } else {
         jvm_abort(name);

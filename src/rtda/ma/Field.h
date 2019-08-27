@@ -7,7 +7,7 @@
 
 #include "Access.h"
 #include "../../slot.h"
-#include "../../jvm.h"
+#include "../../kayo.h"
 #include "../../util/BytecodeReader.h"
 #include "Class.h"
 #include "Member.h"

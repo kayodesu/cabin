@@ -2,7 +2,7 @@
  * Author: kayo
  */
 
-#include "../jvm.h"
+#include "../kayo.h"
 #include "Attribute.h"
 #include "../util/BytecodeReader.h"
 
