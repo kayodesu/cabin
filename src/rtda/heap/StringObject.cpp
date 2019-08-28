@@ -67,7 +67,7 @@ StringObject::StringObject(const char *str): Object(java_lang_String_class)
 
     // todo 要不要调用<init>方法。
     // 给 java/lang/String 类的 value 变量赋值
-    setInstFieldValue(S(value), S(array_C), (const slot_t *) &jchars);
+    setFieldValue(S(value), S(array_C), (slot_t) jchars);
 }
 
 const char *StringObject::getUtf8Value()

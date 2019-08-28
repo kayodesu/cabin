@@ -28,8 +28,7 @@ static void load(Frame *frame)
     // todo load
 
     // set boolean loaded is true
-    slot_t s = 1;
-    thisObj->setInstFieldValue("loaded", "Z", &s);
+    thisObj->setFieldValue("loaded", "Z", 1);
 }
 
 // native void unload(String name, boolean isBuiltin);

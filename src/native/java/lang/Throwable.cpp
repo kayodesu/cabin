@@ -62,10 +62,10 @@ static void fillInStackTrace(Frame *frame)
         auto methodName = StringObject::newInst(f->method->name);
         int lineNumber = f->method->getLineNumber(f->reader.pc - 1); // todo why 减1？ 减去opcode的长度
 
-        o->setInstFieldValue("fileName", "Ljava/lang/String;", (const slot_t *) &fileName);
-        o->setInstFieldValue("declaringClass", "Ljava/lang/String;", (const slot_t *) &className);
-        o->setInstFieldValue("methodName", "Ljava/lang/String;", (const slot_t *) &methodName);
-        o->setInstFieldValue("lineNumber", S(I), (const slot_t *) &lineNumber);
+        o->setFieldValue("fileName", "Ljava/lang/String;", (slot_t) (fileName));
+        o->setFieldValue("declaringClass", "Ljava/lang/String;", (slot_t) className);
+        o->setFieldValue("methodName", "Ljava/lang/String;", (slot_t) methodName);
+        o->setFieldValue("lineNumber", S(I), (slot_t) lineNumber);
     }
 
     thisObj->extra = trace;

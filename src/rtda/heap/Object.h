@@ -14,9 +14,6 @@ protected:
     explicit Object(Class *c): clazz(c)
     {
         data = reinterpret_cast<slot_t *>(this + 1);
-
-        // todo java的静态变量和类变量是有初始默认值的
-//        memset(data, 0, clazz->instance_fields_count * sizeof(slot_t));
     }
 
 public:
@@ -34,8 +31,10 @@ public:
     bool isArray() const;
     Object *clone() const;
 
-    void setInstFieldValue(Field *f, const slot_t *value);
-    void setInstFieldValue(const char *name, const char *descriptor, const slot_t *value);
+    void setFieldValue(Field *f, slot_t v); // only for category one field
+    void setFieldValue(Field *f, const slot_t *value);
+    void setFieldValue(const char *name, const char *descriptor, slot_t v); // only for category one field
+    void setFieldValue(const char *name, const char *descriptor, const slot_t *value);
 
     // @id: id of the field
     template <typename T>

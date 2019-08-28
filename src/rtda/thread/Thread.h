@@ -87,22 +87,27 @@ class Monitor {
      */
 };
 
-struct Thread {
-    Object *jltobj = nullptr; // 所关联的 Object of java.lang.Thread
+class Thread {
+    void bind(Object *jThread0);
+    static Thread *from(Object *jThread0);
+public:
+    Object *jThread = nullptr; // 所关联的 Object of java.lang.Thread
     pthread_t pid;  // 所关联的 POSIX 线程对应的id
 
     u1 vmStack[VM_STACK_SIZE]; // 虚拟机栈，一个线程只有一个虚拟机栈
     Frame *topFrame = nullptr;
 
-    explicit Thread(Object *jltobj, Object *threadGroup = nullptr,
-           const char *threadName = nullptr, int priority = NORM_PRIORITY);
+    explicit Thread(pthread_t pid, Object *jThread = nullptr, jint priority = NORM_PRIORITY);
+    explicit Thread(Object *jThread = nullptr, jint priority = NORM_PRIORITY);
 
     void setThreadGroupAndName(Object *threadGroup, const char *threadName);
 
     bool isAlive();
 };
 
-void init_thread_module();
+Thread *initMainThread();
+Thread *createVMThread(void *(*start)(void *));
+Thread *createCustomerThread(Object *jThread);
 
 Thread *thread_self();
 

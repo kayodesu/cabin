@@ -56,6 +56,8 @@ public:
     VMEnv();
 };
 
+extern std::vector<Thread *> vmThreads;
+
 extern VMEnv vmEnv;
 
 /*

@@ -1130,7 +1130,7 @@ static slot_t *exec()
                     thread_throw_null_pointer_exception();
                 }
 
-                obj->setInstFieldValue(f, value);//set_instance_field_value(obj, f, value);
+                obj->setFieldValue(f, value);
                 break;
             }
 

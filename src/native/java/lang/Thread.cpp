@@ -16,7 +16,7 @@
 static void currentThread(Frame *frame)
 {
     // push a Object of java/lang/Thread of current thread
-    frame->pushr(thread_self()->jltobj);
+    frame->pushr(thread_self()->jThread);
 }
 
 // public static native void yield();
@@ -113,44 +113,11 @@ static void setPriority0(Frame *frame)
 //    set_instance_field_value_by_nt(this, "priority", "I", &priority);
 }
 
-/* execute new thread's run function */
-static void *exec_new_thread_run(void *arg)
-{
-    // 已经在新线程里面了！
-    assert(arg != nullptr);
-
-    auto thread = new Thread((jref) arg);
-    Method *run = thread->jltobj->clazz->lookupInstMethod("run", "()V");
-    return execJavaFunc(run, thread->jltobj);
-}
-
 // private native void start0();
 static void start0(Frame *frame)
 {
-    // todo
-    jref jltobj = frame->getLocalAsRef(0); // object of java.lang.Thread
-    pthread_t pid;
-    int ret = pthread_create(&pid, NULL, exec_new_thread_run, jltobj);
-    if (ret != 0) {
-        vm_internal_error("create Thread failed");
-    }
-
-    /*
-     * 	vars := frame.LocalVars()
-	this := vars.GetThis()
-
-	newThread := rtda.NewThread(this)
-	runMethod := this.Class().GetInstanceMethod("run", "()V")
-	newFrame := newThread.NewFrame(runMethod)
-	newFrame.LocalVars().SetRef(0, this)
-	newThread.PushFrame(newFrame)
-
-	this.LockState()
-	this.SetExtra(newThread)
-	this.UnlockState()
-
-	go interpreter.Loop(newThread)
-     */
+    jref _this = frame->getLocalAsRef(0); // object of java.lang.Thread
+    createCustomerThread(_this);
 }
 
 // @Deprecated

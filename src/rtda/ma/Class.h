@@ -171,6 +171,8 @@ public:
      */
     void clinit();
 
+    virtual Object *newInst();
+
     Field *lookupField(const char *name, const char *descriptor);
     Field *lookupStaticField(const char *name, const char *descriptor);
     Field *lookupInstField(const char *name, const char *descriptor);

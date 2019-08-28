@@ -21,6 +21,7 @@ using namespace std;
 HeapMgr g_heap_mgr;
 
 VMEnv vmEnv;
+vector<Thread *> vmThreads;
 
 VMEnv::VMEnv()
 {
@@ -30,48 +31,36 @@ VMEnv::VMEnv()
 void init_symbol();
 
 // main thread is current thread
-static void initMainThread()
-{
-    auto mainThread = new Thread(nullptr);
+//static void initMainThread()
+//{
+//    auto mainThread = new Thread(nullptr);
+//
+//    Class *jltgClass = java_lang_ThreadGroup_class;
+//    vmEnv.sysThreadGroup = Object::newInst(jltgClass);
+//
+//    // 初始化 system_thread_group
+//    // java/lang/ThreadGroup 的无参数构造函数主要用来：
+//    // Creates an empty Thread group that is not in any Thread group.
+//    // This method is used to create the system Thread group.
+//    jltgClass->clinit();
+//    execJavaFunc(jltgClass->getConstructor(S(___V)), vmEnv.sysThreadGroup);
+//
+//    mainThread->setThreadGroupAndName(vmEnv.sysThreadGroup, MAIN_THREAD_NAME);
+//}
 
-    Class *jltgClass = java_lang_ThreadGroup_class;
-    vmEnv.sysThreadGroup = Object::newInst(jltgClass);
-
-    // 初始化 system_thread_group
-    // java/lang/ThreadGroup 的无参数构造函数主要用来：
-    // Creates an empty Thread group that is not in any Thread group.
-    // This method is used to create the system Thread group.
-    jltgClass->clinit();
-    execJavaFunc(jltgClass->getConstructor(S(___V)), vmEnv.sysThreadGroup);
-
-    mainThread->setThreadGroupAndName(vmEnv.sysThreadGroup, MAIN_THREAD_NAME);
-}
-
-static void *execGCThread(void *arg)
+static void *gcLoop(void *arg)
 {
     // todo
     return nullptr;
-}
-
-// create gc thread
-static void createGCThread()
-{
-    // todo
-    pthread_t pid;
-    int ret = pthread_create(&pid, NULL, execGCThread, nullptr);
-    if (ret != 0) {
-        vm_internal_error("create Thread failed");
-    }
 }
 
 static void startJVM(const char *main_class_name)
 {
     init_symbol();
     initBootClassLoader();
-    init_thread_module();
 
     initMainThread();
-    createGCThread();
+    createVMThread(gcLoop); // gc thread
 
     // 先加载 sun.mis.VM 类，然后执行其类初始化方法
     Class *vm_class = loadSysClass("sun/misc/VM");

@@ -31,20 +31,39 @@ Object *Object::clone() const
     return (Object *) memcpy(g_heap_mgr.get(s), this, s);
 }
 
-void Object::setInstFieldValue(Field *f, const slot_t *value)
+void Object::setFieldValue(Field *f, slot_t v)
 {
-    assert(f != nullptr && value != nullptr);
+    assert(f != nullptr);
+    assert(!f->isStatic());
 
-    data[f->id] =  value[0];
+    if (!f->categoryTwo) {
+        data[f->id] = v;
+    } else { // categoryTwo
+        data[f->id] = 0; // 高字节清零
+        data[f->id + 1] = v; // 低字节存值
+    }
+}
+
+void Object::setFieldValue(Field *f, const slot_t *value)
+{
+    assert(f != nullptr && !f->isStatic() && value != nullptr);
+
+    data[f->id] = value[0];
     if (f->categoryTwo) {
         data[f->id + 1] = value[1];
     }
 }
 
-void Object::setInstFieldValue(const char *name, const char *descriptor, const slot_t *value)
+void Object::setFieldValue(const char *name, const char *descriptor, slot_t v)
+{
+    assert(name != nullptr && descriptor != nullptr);
+    setFieldValue(clazz->lookupInstField(name, descriptor), v);
+}
+
+void Object::setFieldValue(const char *name, const char *descriptor, const slot_t *value)
 {
     assert(name != nullptr && descriptor != nullptr && value != nullptr);
-    setInstFieldValue(clazz->lookupInstField(name, descriptor), value);
+    setFieldValue(clazz->lookupInstField(name, descriptor), value);
 }
 
 //const slot_t *Object::getInstFieldValue(Field *f) const

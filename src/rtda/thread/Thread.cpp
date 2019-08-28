@@ -28,28 +28,112 @@ static inline void set_thread_self(Thread *thread)
     pthread_setspecific(thread_key, thread);
 }
 
-void init_thread_module()
+static Field *eetopField;
+static Method *runMethod;
+
+Thread *initMainThread()
 {
     pthread_key_create(&thread_key, nullptr);
+
+    eetopField = java_lang_Thread_class->lookupInstField("eetop", S(J));
+    runMethod = java_lang_Thread_class->lookupInstMethod(S(run), S(___V));
+
+    auto mainThread = new Thread(pthread_self());
+
+    java_lang_Thread_class->clinit();
+
+    Class *jltgClass = java_lang_ThreadGroup_class;
+    vmEnv.sysThreadGroup = jltgClass->newInst();
+
+    // 初始化 system_thread_group
+    // java/lang/ThreadGroup 的无参数构造函数主要用来：
+    // Creates an empty Thread group that is not in any Thread group.
+    // This method is used to create the system Thread group.
+    jltgClass->clinit();
+    execJavaFunc(jltgClass->getConstructor(S(___V)), vmEnv.sysThreadGroup);
+
+    mainThread->setThreadGroupAndName(vmEnv.sysThreadGroup, MAIN_THREAD_NAME);
+    return mainThread;
 }
 
-Thread::Thread(Object *jltobj, Object *threadGroup, const char *threadName, int priority)
+Thread *createVMThread(void *(*start)(void *))
+{
+    assert(start != nullptr);
+
+    pthread_t pid;
+    Thread *vmThread = nullptr;
+    void *args[] = { &vmThread, (void *) start };
+    int ret = pthread_create(&pid, nullptr,
+                             [](void *args) {
+                                 auto a = (void **)args;
+
+                                 *(Thread **) a[0] = new Thread();
+                                 return ((void *(*)(void *))a[1])(nullptr);
+                             }, args);
+    if (ret != 0) {
+        vm_internal_error("create Thread failed");
+    }
+
+    while (vmThread == nullptr); // 等待子线程设置 vmThread 的值。
+    vmThread->pid = pid;
+    return vmThread;
+}
+
+Thread *createCustomerThread(Object *jThread)
+{
+    assert(jThread != nullptr);
+
+    pthread_t pid;
+    Thread *customer = nullptr;
+    void *args[] = { &customer, jThread };
+    int ret = pthread_create(&pid, nullptr,
+                                [](void *args) {
+                                    auto a = (void **)args;
+
+                                    *(Thread **) a[0] = new Thread((jref) a[1]);
+                                    return (void *) execJavaFunc(runMethod, (jref) a[1]);
+                                }, args);
+    if (ret != 0) {
+        vm_internal_error("create Thread failed");
+    }
+
+    while (customer == nullptr); // 等待子线程设置 customer 的值。
+    customer->pid = pid;
+    return customer;
+}
+
+Thread::Thread(pthread_t pid, Object *jThread0, jint priority): pid(pid)
+{
+    new (this)Thread(jThread0, priority);
+}
+
+Thread::Thread(Object *jThread0, jint priority): jThread(jThread0)
 {
     assert(MIN_PRIORITY <= priority && priority <= MAX_PRIORITY);
 
     set_thread_self(this);
-    vmEnv.threads.push_back(this);
+    vmThreads.push_back(this);
 
-    java_lang_Thread_class->clinit();
+    if (jThread == nullptr)
+        jThread = java_lang_Thread_class->newInst();
 
-    if (jltobj != nullptr)
-        this->jltobj = jltobj;
-    else
-        this->jltobj = Object::newInst(java_lang_Thread_class);
-    this->jltobj->setInstFieldValue(S(priority), S(I), (slot_t *) &priority);
+    bind(jThread);
+    jThread->setFieldValue(S(priority), S(I), (slot_t) priority);
+//    if (vmEnv.sysThreadGroup != nullptr)   todo
+//        setThreadGroupAndName(vmEnv.sysThreadGroup, nullptr);
+}
 
-    if (threadGroup != nullptr)
-        setThreadGroupAndName(threadGroup, threadName);
+void Thread::bind(Object *jThread0)
+{
+    assert(jThread0 != nullptr);
+    jThread = jThread0;
+    jThread->setFieldValue(eetopField, (slot_t) this);
+}
+
+Thread *Thread::from(Object *jThread0)
+{
+    assert(jThread0 != nullptr);
+    return jThread0->getInstFieldValue<Thread *>(eetopField);
 }
 
 void Thread::setThreadGroupAndName(Object *threadGroup, const char *threadName)
@@ -62,20 +146,15 @@ void Thread::setThreadGroupAndName(Object *threadGroup, const char *threadName)
     }
 
     // 调用 java/lang/Thread 的构造函数
-    Method *constructor = jltobj->clazz->getConstructor("(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");
-//    slot_t args[] = {
-//            (slot_t) jltobj,
-//            (slot_t) threadGroup,
-//            (slot_t) StringObject::newInst(threadName) // thread name
-//    };
-    execJavaFunc(constructor, { (slot_t) jltobj,
+    Method *constructor = jThread->clazz->getConstructor("(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");
+    execJavaFunc(constructor, { (slot_t) jThread,
                                 (slot_t) threadGroup,
                                 (slot_t) StringObject::newInst(threadName) });
 }
 
 bool Thread::isAlive() {
-    assert(jltobj != nullptr);
-    auto status = jltobj->getInstFieldValue<jint>("threadStatus", "I");
+    assert(jThread != nullptr);
+    auto status = jThread->getInstFieldValue<jint>("threadStatus", "I");
     // todo
     return false;
 }
