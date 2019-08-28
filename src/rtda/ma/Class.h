@@ -171,7 +171,7 @@ public:
      */
     void clinit();
 
-    virtual Object *newInst();
+//    Object *newInst();
 
     Field *lookupField(const char *name, const char *descriptor);
     Field *lookupStaticField(const char *name, const char *descriptor);
@@ -241,6 +241,8 @@ class ArrayClass: public Class {
     size_t eleSize = 0;
 public:
     explicit ArrayClass(const char *className);
+
+//    Object *newInst() = delete;
 
     // 判断数组单个元素的大小
     // 除了基本类型的数组外，其他都是引用类型的数组

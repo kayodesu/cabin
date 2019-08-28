@@ -515,11 +515,11 @@ void Class::clinit()
     }
 }
 
-Object *Class::newInst()
-{
-    clinit();
-    return Object::newInst(this);
-}
+//Object *Class::newInst()
+//{
+//    clinit();
+//    return Object::newInst(this);
+//}
 
 Field *Class::lookupField(const char *name, const char *descriptor)
 {

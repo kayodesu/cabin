@@ -20,6 +20,9 @@
 
 #include <sys/stat.h>
 #include "native/jni.h"
+#include "loader/bootstrap_class_loader.h"
+#include "loader/ClassLoader.h"
+#include "rtda/primitive_types.h"
 
 extern "C" {
     
@@ -51,27 +54,32 @@ _JVM_GetInterfaceVersion(void)
  * java.lang.Object
  */
 JNIEXPORT jint JNICALL
-_JVM_IHashCode(JNIEnv *env, jobject obj){
+_JVM_IHashCode(JNIEnv *env, jobject obj)
+{
 
 }
 
 JNIEXPORT void JNICALL
-_JVM_MonitorWait(JNIEnv *env, jobject obj, jlong ms){
+_JVM_MonitorWait(JNIEnv *env, jobject obj, jlong ms)
+{
 
 }
 
 JNIEXPORT void JNICALL
-_JVM_MonitorNotify(JNIEnv *env, jobject obj){
+_JVM_MonitorNotify(JNIEnv *env, jobject obj)
+{
 
 }
 
 JNIEXPORT void JNICALL
-_JVM_MonitorNotifyAll(JNIEnv *env, jobject obj){
+_JVM_MonitorNotifyAll(JNIEnv *env, jobject obj)
+{
 
 }
 
 JNIEXPORT jobject JNICALL
-_JVM_Clone(JNIEnv *env, jobject obj){
+_JVM_Clone(JNIEnv *env, jobject obj)
+{
 
 }
 
@@ -79,7 +87,8 @@ _JVM_Clone(JNIEnv *env, jobject obj){
  * java.lang.String
  */
 JNIEXPORT jstring JNICALL
-_JVM_InternString(JNIEnv *env, jstring str){
+_JVM_InternString(JNIEnv *env, jstring str)
+{
 
 }
 
@@ -87,23 +96,26 @@ _JVM_InternString(JNIEnv *env, jstring str){
  * java.lang.System
  */
 JNIEXPORT jlong JNICALL
-_JVM_CurrentTimeMillis(JNIEnv *env, jclass ignored){
+_JVM_CurrentTimeMillis(JNIEnv *env, jclass ignored)
+{
 
 }
 
 JNIEXPORT jlong JNICALL
-_JVM_NanoTime(JNIEnv *env, jclass ignored){
+_JVM_NanoTime(JNIEnv *env, jclass ignored)
+{
 
 }
 
 JNIEXPORT jlong JNICALL
-_JVM_GetNanoTimeAdjustment(JNIEnv *env, jclass ignored, jlong offset_secs){
+_JVM_GetNanoTimeAdjustment(JNIEnv *env, jclass ignored, jlong offset_secs)
+{
 
 }
 
 JNIEXPORT void JNICALL
-_JVM_ArrayCopy(JNIEnv *env, jclass ignored, jobject src, jint src_pos,
-              jobject dst, jint dst_pos, jint length){
+_JVM_ArrayCopy(JNIEnv *env, jclass ignored, jobject src, jint src_pos, jobject dst, jint dst_pos, jint length)
+{
 
 }
 
@@ -111,7 +123,8 @@ _JVM_ArrayCopy(JNIEnv *env, jclass ignored, jobject src, jint src_pos,
  * Return an array of all properties as alternating name and value pairs.
  */
 JNIEXPORT jobjectArray JNICALL
-_JVM_GetProperties(JNIEnv *env){
+_JVM_GetProperties(JNIEnv *env)
+{
 
 }
 
@@ -119,17 +132,20 @@ _JVM_GetProperties(JNIEnv *env){
  * java.lang.Runtime
  */
 JNIEXPORT void JNICALL
-_JVM_BeforeHalt(){
+_JVM_BeforeHalt()
+{
 
 }
 
 JNIEXPORT void JNICALL
-_JVM_Halt(jint code){
+_JVM_Halt(jint code)
+{
 
 }
 
 JNIEXPORT void JNICALL
-_JVM_GC(void){
+_JVM_GC(void)
+{
 
 }
 
@@ -148,57 +164,68 @@ _JVM_GC(void){
  * can be reclaimed.
  */
 JNIEXPORT jlong JNICALL
-_JVM_MaxObjectInspectionAge(void){
+_JVM_MaxObjectInspectionAge(void)
+{
 
 }
 
 JNIEXPORT jlong JNICALL
-_JVM_TotalMemory(void){
+_JVM_TotalMemory(void)
+{
 
 }
 
 JNIEXPORT jlong JNICALL
-_JVM_FreeMemory(void){
+_JVM_FreeMemory(void)
+{
 
 }
 
 JNIEXPORT jlong JNICALL
-_JVM_MaxMemory(void){
+_JVM_MaxMemory(void)
+{
 
 }
 
 JNIEXPORT jint JNICALL
-_JVM_ActiveProcessorCount(void){
+_JVM_ActiveProcessorCount(void)
+{
 
 }
 
 JNIEXPORT void * JNICALL
-_JVM_LoadLibrary(const char *name){
+_JVM_LoadLibrary(const char *name)
+{
 
 }
 
 JNIEXPORT void JNICALL
-_JVM_UnloadLibrary(void * handle){
+_JVM_UnloadLibrary(void * handle)
+{
 
 }
 
 JNIEXPORT void * JNICALL
-_JVM_FindLibraryEntry(void *handle, const char *name){
+_JVM_FindLibraryEntry(void *handle, const char *name)
+{
 
 }
 
 JNIEXPORT jboolean JNICALL
-_JVM_IsSupportedJNIVersion(jint version){
+_JVM_IsSupportedJNIVersion(jint version)
+{
 
 }
 
 JNIEXPORT jobjectArray JNICALL
-_JVM_GetVmArguments(JNIEnv *env){
+_JVM_GetVmArguments(JNIEnv *env)
+{
 
 }
 
 JNIEXPORT void JNICALL
-_JVM_InitializeFromArchive(JNIEnv* env, jclass cls){
+_JVM_InitializeFromArchive(JNIEnv* env, jclass cls)
+{
 
 }
 
@@ -206,7 +233,8 @@ _JVM_InitializeFromArchive(JNIEnv* env, jclass cls){
  * java.lang.Throwable
  */
 JNIEXPORT void JNICALL
-_JVM_FillInStackTrace(JNIEnv *env, jobject throwable){
+_JVM_FillInStackTrace(JNIEnv *env, jobject throwable)
+{
 
 }
 
@@ -214,12 +242,14 @@ _JVM_FillInStackTrace(JNIEnv *env, jobject throwable){
  * java.lang.StackTraceElement
  */
 JNIEXPORT void JNICALL
-_JVM_InitStackTraceElementArray(JNIEnv *env, jobjectArray elements, jobject throwable){
+_JVM_InitStackTraceElementArray(JNIEnv *env, jobjectArray elements, jobject throwable)
+{
 
 }
 
 JNIEXPORT void JNICALL
-_JVM_InitStackTraceElement(JNIEnv* env, jobject element, jobject stackFrameInfo){
+_JVM_InitStackTraceElement(JNIEnv* env, jobject element, jobject stackFrameInfo)
+{
 
 }
 
@@ -235,15 +265,15 @@ enum {
 
 JNIEXPORT jobject JNICALL
 _JVM_CallStackWalk(JNIEnv *env, jobject stackStream, jlong mode,
-                  jint skip_frames, jint frame_count, jint start_index,
-                  jobjectArray frames){
+                  jint skip_frames, jint frame_count, jint start_index, jobjectArray frames)
+{
 
 }
 
 JNIEXPORT jint JNICALL
 _JVM_MoreStackWalk(JNIEnv *env, jobject stackStream, jlong mode, jlong anchor,
-                  jint frame_count, jint start_index,
-                  jobjectArray frames){
+                  jint frame_count, jint start_index, jobjectArray frames)
+{
 
 }
 
@@ -251,88 +281,105 @@ _JVM_MoreStackWalk(JNIEnv *env, jobject stackStream, jlong mode, jlong anchor,
  * java.lang.Thread
  */
 JNIEXPORT void JNICALL
-_JVM_StartThread(JNIEnv *env, jobject thread){
+_JVM_StartThread(JNIEnv *env, jobject thread)
+{
 
 }
 
 JNIEXPORT void JNICALL
-_JVM_StopThread(JNIEnv *env, jobject thread, jobject exception){
+_JVM_StopThread(JNIEnv *env, jobject thread, jobject exception)
+{
 
 }
 
 JNIEXPORT jboolean JNICALL
-_JVM_IsThreadAlive(JNIEnv *env, jobject thread){
+_JVM_IsThreadAlive(JNIEnv *env, jobject thread)
+{
 
 }
 
 JNIEXPORT void JNICALL
-_JVM_SuspendThread(JNIEnv *env, jobject thread){
+_JVM_SuspendThread(JNIEnv *env, jobject thread)
+{
 
 }
 
 JNIEXPORT void JNICALL
-_JVM_ResumeThread(JNIEnv *env, jobject thread){
+_JVM_ResumeThread(JNIEnv *env, jobject thread)
+{
 
 }
 
 JNIEXPORT void JNICALL
-_JVM_SetThreadPriority(JNIEnv *env, jobject thread, jint prio){
+_JVM_SetThreadPriority(JNIEnv *env, jobject thread, jint prio)
+{
 
 }
 
 JNIEXPORT void JNICALL
-_JVM_Yield(JNIEnv *env, jclass threadClass){
+_JVM_Yield(JNIEnv *env, jclass threadClass)
+{
 
 }
 
 JNIEXPORT void JNICALL
-_JVM_Sleep(JNIEnv *env, jclass threadClass, jlong millis){
+_JVM_Sleep(JNIEnv *env, jclass threadClass, jlong millis)
+{
 
 }
 
 JNIEXPORT jobject JNICALL
-_JVM_CurrentThread(JNIEnv *env, jclass threadClass){
+_JVM_CurrentThread(JNIEnv *env, jclass threadClass)
+{
 
 }
 
 JNIEXPORT jint JNICALL
-_JVM_CountStackFrames(JNIEnv *env, jobject thread){
+_JVM_CountStackFrames(JNIEnv *env, jobject thread)
+{
 
 }
 
 JNIEXPORT void JNICALL
-_JVM_Interrupt(JNIEnv *env, jobject thread){
+_JVM_Interrupt(JNIEnv *env, jobject thread)
+{
 
 }
 
 JNIEXPORT jboolean JNICALL
-_JVM_IsInterrupted(JNIEnv *env, jobject thread, jboolean clearInterrupted){
+_JVM_IsInterrupted(JNIEnv *env, jobject thread, jboolean clearInterrupted)
+{
 
 }
 
 JNIEXPORT jboolean JNICALL
-_JVM_HoldsLock(JNIEnv *env, jclass threadClass, jobject obj){
+_JVM_HoldsLock(JNIEnv *env, jclass threadClass, jobject obj)
+{
 
 }
 
 JNIEXPORT void JNICALL
-_JVM_DumpAllStacks(JNIEnv *env, jclass unused){
+_JVM_DumpAllStacks(JNIEnv *env, jclass unused)
+{
 
 }
 
 JNIEXPORT jobjectArray JNICALL
-_JVM_GetAllThreads(JNIEnv *env, jclass dummy){
+_JVM_GetAllThreads(JNIEnv *env, jclass dummy)
+{
 
 }
 
 JNIEXPORT void JNICALL
-_JVM_SetNativeThreadName(JNIEnv *env, jobject jthread, jstring name){
+_JVM_SetNativeThreadName(JNIEnv *env, jobject jthread, jstring name)
+{
 
 }
 
 /* getStackTrace() and getAllStackTraces() method */
 JNIEXPORT jobjectArray JNICALL
-_JVM_DumpThreads(JNIEnv *env, jclass threadClass, jobjectArray threads){
+_JVM_DumpThreads(JNIEnv *env, jclass threadClass, jobjectArray threads)
+{
 
 }
 
@@ -340,7 +387,8 @@ _JVM_DumpThreads(JNIEnv *env, jclass threadClass, jobjectArray threads){
  * java.lang.SecurityManager
  */
 JNIEXPORT jobjectArray JNICALL
-_JVM_GetClassContext(JNIEnv *env){
+_JVM_GetClassContext(JNIEnv *env)
+{
 
 }
 
@@ -348,12 +396,14 @@ _JVM_GetClassContext(JNIEnv *env){
  * java.lang.Package
  */
 JNIEXPORT jstring JNICALL
-_JVM_GetSystemPackage(JNIEnv *env, jstring name){
+_JVM_GetSystemPackage(JNIEnv *env, jstring name)
+{
 
 }
 
 JNIEXPORT jobjectArray JNICALL
-_JVM_GetSystemPackages(JNIEnv *env){
+_JVM_GetSystemPackages(JNIEnv *env)
+{
 
 }
 
@@ -361,17 +411,20 @@ _JVM_GetSystemPackages(JNIEnv *env){
  * java.lang.ref.Reference
  */
 JNIEXPORT jobject JNICALL
-_JVM_GetAndClearReferencePendingList(JNIEnv *env){
+_JVM_GetAndClearReferencePendingList(JNIEnv *env)
+{
 
 }
 
 JNIEXPORT jboolean JNICALL
-_JVM_HasReferencePendingList(JNIEnv *env){
+_JVM_HasReferencePendingList(JNIEnv *env)
+{
 
 }
 
 JNIEXPORT void JNICALL
-_JVM_WaitForReferencePendingList(JNIEnv *env){
+_JVM_WaitForReferencePendingList(JNIEnv *env)
+{
 
 }
 
@@ -379,7 +432,8 @@ _JVM_WaitForReferencePendingList(JNIEnv *env){
  * java.io.ObjectInputStream
  */
 JNIEXPORT jobject JNICALL
-_JVM_LatestUserDefinedLoader(JNIEnv *env){
+_JVM_LatestUserDefinedLoader(JNIEnv *env)
+{
 
 }
 
@@ -387,41 +441,46 @@ _JVM_LatestUserDefinedLoader(JNIEnv *env){
  * java.lang.reflect.Array
  */
 JNIEXPORT jint JNICALL
-_JVM_GetArrayLength(JNIEnv *env, jobject arr){
+_JVM_GetArrayLength(JNIEnv *env, jobject arr)
+{
 
 }
 
 JNIEXPORT jobject JNICALL
-_JVM_GetArrayElement(JNIEnv *env, jobject arr, jint index){
+_JVM_GetArrayElement(JNIEnv *env, jobject arr, jint index)
+{
 
 }
 
 JNIEXPORT jvalue JNICALL
-_JVM_GetPrimitiveArrayElement(JNIEnv *env, jobject arr, jint index, jint wCode){
+_JVM_GetPrimitiveArrayElement(JNIEnv *env, jobject arr, jint index, jint wCode)
+{
 
 }
 
 JNIEXPORT void JNICALL
-_JVM_SetArrayElement(JNIEnv *env, jobject arr, jint index, jobject val){
+_JVM_SetArrayElement(JNIEnv *env, jobject arr, jint index, jobject val)
+{
 
 }
 
 JNIEXPORT void JNICALL
-_JVM_SetPrimitiveArrayElement(JNIEnv *env, jobject arr, jint index, jvalue v,
-                             unsigned char vCode){
+_JVM_SetPrimitiveArrayElement(JNIEnv *env, jobject arr, jint index, jvalue v, unsigned char vCode)
+{
 
 }
 
 JNIEXPORT jobject JNICALL
-_JVM_NewArray(JNIEnv *env, jclass eltClass, jint length){
+_JVM_NewArray(JNIEnv *env, jclass eltClass, jint length)
+{
 
 }
 
 JNIEXPORT jobject JNICALL
-_JVM_NewMultiArray(JNIEnv *env, jclass eltClass, jintArray dim){
+_JVM_NewMultiArray(JNIEnv *env, jclass eltClass, jintArray dim)
+{
 
 }
-
 
 /*
  * Returns the immediate caller class of the native method invoking
@@ -433,26 +492,27 @@ _JVM_NewMultiArray(JNIEnv *env, jclass eltClass, jintArray dim){
  * error if it is not marked properly.
  */
 JNIEXPORT jclass JNICALL
-_JVM_GetCallerClass(JNIEnv *env){
+_JVM_GetCallerClass(JNIEnv *env)
+{
 
 }
-
 
 /*
  * Find primitive classes
  * utf: class name
  */
 JNIEXPORT jclass JNICALL
-_JVM_FindPrimitiveClass(JNIEnv *env, const char *utf){
-
+_JVM_FindPrimitiveClass(JNIEnv *env, const char *utf)
+{
+//    return getPrimitiveClass(utf); // todo
 }
-
 
 /*
  * Find a class from a boot class loader. Returns NULL if class not found.
  */
 JNIEXPORT jclass JNICALL
-_JVM_FindClassFromBootLoader(JNIEnv *env, const char *name){
+_JVM_FindClassFromBootLoader(JNIEnv *env, const char *name)
+{
 
 }
 
@@ -466,8 +526,8 @@ _JVM_FindClassFromBootLoader(JNIEnv *env, const char *name){
  *          manager is not installed.
  */
 JNIEXPORT jclass JNICALL
-_JVM_FindClassFromCaller(JNIEnv *env, const char *name, jboolean init,
-                        jobject loader, jclass caller){
+_JVM_FindClassFromCaller(JNIEnv *env, const char *name, jboolean init, jobject loader, jclass caller)
+{
 
 }
 
@@ -475,29 +535,30 @@ _JVM_FindClassFromCaller(JNIEnv *env, const char *name, jboolean init,
  * Find a class from a given class.
  */
 JNIEXPORT jclass JNICALL
-_JVM_FindClassFromClass(JNIEnv *env, const char *name, jboolean init,
-                             jclass from){
+_JVM_FindClassFromClass(JNIEnv *env, const char *name, jboolean init, jclass from)
+{
 
 }
 
 /* Find a loaded class cached by the VM */
 JNIEXPORT jclass JNICALL
-_JVM_FindLoadedClass(JNIEnv *env, jobject loader, jstring name){
+_JVM_FindLoadedClass(JNIEnv *env, jobject loader, jstring name)
+{
 
 }
 
 /* Define a class */
 JNIEXPORT jclass JNICALL
-_JVM_DefineClass(JNIEnv *env, const char *name, jobject loader, const jbyte *buf,
-                jsize len, jobject pd){
+_JVM_DefineClass(JNIEnv *env, const char *name, jobject loader, const jbyte *buf, jsize len, jobject pd)
+{
 
 }
 
 /* Define a class with a source (added in JDK1.5) */
 JNIEXPORT jclass JNICALL
 _JVM_DefineClassWithSource(JNIEnv *env, const char *name, jobject loader,
-                          const jbyte *buf, jsize len, jobject pd,
-                          const char *source){
+                          const jbyte *buf, jsize len, jobject pd, const char *source)
+{
 
 }
 
@@ -517,7 +578,8 @@ _JVM_DefineClassWithSource(JNIEnv *env, const char *name, jobject loader,
  */
 JNIEXPORT void JNICALL
 _JVM_DefineModule(JNIEnv *env, jobject module, jboolean is_open, jstring version,
-                 jstring location, const char* const* packages, jsize num_packages){
+                 jstring location, const char* const* packages, jsize num_packages)
+{
 
 }
 
@@ -526,7 +588,8 @@ _JVM_DefineModule(JNIEnv *env, jobject module, jboolean is_open, jstring version
  *  module: boot loader's unnamed module
  */
 JNIEXPORT void JNICALL
-_JVM_SetBootLoaderUnnamedModule(JNIEnv *env, jobject module){
+_JVM_SetBootLoaderUnnamedModule(JNIEnv *env, jobject module)
+{
 
 }
 
@@ -537,7 +600,8 @@ _JVM_SetBootLoaderUnnamedModule(JNIEnv *env, jobject module){
  *  to_module:   module to export the package to
  */
 JNIEXPORT void JNICALL
-_JVM_AddModuleExports(JNIEnv *env, jobject from_module, const char* package, jobject to_module){
+_JVM_AddModuleExports(JNIEnv *env, jobject from_module, const char* package, jobject to_module)
+{
 
 }
 
@@ -547,7 +611,8 @@ _JVM_AddModuleExports(JNIEnv *env, jobject from_module, const char* package, job
  *  package:     name of the package to export to all unnamed modules
  */
 JNIEXPORT void JNICALL
-_JVM_AddModuleExportsToAllUnnamed(JNIEnv *env, jobject from_module, const char* package){
+_JVM_AddModuleExportsToAllUnnamed(JNIEnv *env, jobject from_module, const char* package)
+{
 
 }
 
@@ -557,7 +622,8 @@ _JVM_AddModuleExportsToAllUnnamed(JNIEnv *env, jobject from_module, const char* 
  *  package:     name of the package to export
  */
 JNIEXPORT void JNICALL
-_JVM_AddModuleExportsToAll(JNIEnv *env, jobject from_module, const char* package){
+_JVM_AddModuleExportsToAll(JNIEnv *env, jobject from_module, const char* package)
+{
 
 }
 
@@ -567,7 +633,8 @@ _JVM_AddModuleExportsToAll(JNIEnv *env, jobject from_module, const char* package
  *  source_module: module that from_module wants to read
  */
 JNIEXPORT void JNICALL
-_JVM_AddReadsModule(JNIEnv *env, jobject from_module, jobject source_module){
+_JVM_AddReadsModule(JNIEnv *env, jobject from_module, jobject source_module)
+{
 
 }
 
@@ -576,91 +643,108 @@ _JVM_AddReadsModule(JNIEnv *env, jobject from_module, jobject source_module){
  */
 
 JNIEXPORT jstring JNICALL
-_JVM_InitClassName(JNIEnv *env, jclass cls){
+_JVM_InitClassName(JNIEnv *env, jclass cls)
+{
 
 }
 
 JNIEXPORT jobjectArray JNICALL
-_JVM_GetClassInterfaces(JNIEnv *env, jclass cls){
+_JVM_GetClassInterfaces(JNIEnv *env, jclass cls)
+{
 
 }
 
 JNIEXPORT jboolean JNICALL
-_JVM_IsInterface(JNIEnv *env, jclass cls){
+_JVM_IsInterface(JNIEnv *env, jclass cls)
+{
 
 }
 
 JNIEXPORT jobjectArray JNICALL
-_JVM_GetClassSigners(JNIEnv *env, jclass cls){
+_JVM_GetClassSigners(JNIEnv *env, jclass cls)
+{
 
 }
 
 JNIEXPORT void JNICALL
-_JVM_SetClassSigners(JNIEnv *env, jclass cls, jobjectArray signers){
+_JVM_SetClassSigners(JNIEnv *env, jclass cls, jobjectArray signers)
+{
 
 }
 
 JNIEXPORT jobject JNICALL
-_JVM_GetProtectionDomain(JNIEnv *env, jclass cls){
+_JVM_GetProtectionDomain(JNIEnv *env, jclass cls)
+{
 
 }
 
 JNIEXPORT jboolean JNICALL
-_JVM_IsArrayClass(JNIEnv *env, jclass cls){
+_JVM_IsArrayClass(JNIEnv *env, jclass cls)
+{
 
 }
 
 JNIEXPORT jboolean JNICALL
-_JVM_IsPrimitiveClass(JNIEnv *env, jclass cls){
+_JVM_IsPrimitiveClass(JNIEnv *env, jclass cls)
+{
 
 }
 
 JNIEXPORT jint JNICALL
-_JVM_GetClassModifiers(JNIEnv *env, jclass cls){
+_JVM_GetClassModifiers(JNIEnv *env, jclass cls)
+{
 
 }
 
 JNIEXPORT jobjectArray JNICALL
-_JVM_GetDeclaredClasses(JNIEnv *env, jclass ofClass){
+_JVM_GetDeclaredClasses(JNIEnv *env, jclass ofClass)
+{
 
 }
 
 JNIEXPORT jclass JNICALL
-_JVM_GetDeclaringClass(JNIEnv *env, jclass ofClass){
+_JVM_GetDeclaringClass(JNIEnv *env, jclass ofClass)
+{
 
 }
 
 JNIEXPORT jstring JNICALL
-_JVM_GetSimpleBinaryName(JNIEnv *env, jclass ofClass){
+_JVM_GetSimpleBinaryName(JNIEnv *env, jclass ofClass)
+{
 
 }
 
 /* Generics support (JDK 1.5) */
 JNIEXPORT jstring JNICALL
-_JVM_GetClassSignature(JNIEnv *env, jclass cls){
+_JVM_GetClassSignature(JNIEnv *env, jclass cls)
+{
 
 }
 
 /* Annotations support (JDK 1.5) */
 JNIEXPORT jbyteArray JNICALL
-_JVM_GetClassAnnotations(JNIEnv *env, jclass cls){
+_JVM_GetClassAnnotations(JNIEnv *env, jclass cls)
+{
 
 }
 
 /* Type use annotations support (JDK 1.8) */
 
 JNIEXPORT jbyteArray JNICALL
-_JVM_GetClassTypeAnnotations(JNIEnv *env, jclass cls){
+_JVM_GetClassTypeAnnotations(JNIEnv *env, jclass cls)
+{
 
 }
 
 JNIEXPORT jbyteArray JNICALL
-_JVM_GetFieldTypeAnnotations(JNIEnv *env, jobject field){
+_JVM_GetFieldTypeAnnotations(JNIEnv *env, jobject field)
+{
 
 }
 
 JNIEXPORT jbyteArray JNICALL
-_JVM_GetMethodTypeAnnotations(JNIEnv *env, jobject method){
+_JVM_GetMethodTypeAnnotations(JNIEnv *env, jobject method)
+{
 
 }
 
@@ -669,17 +753,20 @@ _JVM_GetMethodTypeAnnotations(JNIEnv *env, jobject method){
  */
 
 JNIEXPORT jobjectArray JNICALL
-_JVM_GetClassDeclaredMethods(JNIEnv *env, jclass ofClass, jboolean publicOnly){
+_JVM_GetClassDeclaredMethods(JNIEnv *env, jclass ofClass, jboolean publicOnly)
+{
 
 }
 
 JNIEXPORT jobjectArray JNICALL
-_JVM_GetClassDeclaredFields(JNIEnv *env, jclass ofClass, jboolean publicOnly){
+_JVM_GetClassDeclaredFields(JNIEnv *env, jclass ofClass, jboolean publicOnly)
+{
 
 }
 
 JNIEXPORT jobjectArray JNICALL
-_JVM_GetClassDeclaredConstructors(JNIEnv *env, jclass ofClass, jboolean publicOnly){
+_JVM_GetClassDeclaredConstructors(JNIEnv *env, jclass ofClass, jboolean publicOnly)
+{
 
 }
 
@@ -690,24 +777,28 @@ _JVM_GetClassDeclaredConstructors(JNIEnv *env, jclass ofClass, jboolean publicOn
    the low 13 bits (i.e., a mask of 0x1FFF) are guaranteed to be
    valid. */
 JNIEXPORT jint JNICALL
-_JVM_GetClassAccessFlags(JNIEnv *env, jclass cls){
+_JVM_GetClassAccessFlags(JNIEnv *env, jclass cls)
+{
 
 }
 
 /* Nestmates - since JDK 11 */
 
 JNIEXPORT jboolean JNICALL
-_JVM_AreNestMates(JNIEnv *env, jclass current, jclass member){
+_JVM_AreNestMates(JNIEnv *env, jclass current, jclass member)
+{
 
 }
 
 JNIEXPORT jclass JNICALL
-_JVM_GetNestHost(JNIEnv *env, jclass current){
+_JVM_GetNestHost(JNIEnv *env, jclass current)
+{
 
 }
 
 JNIEXPORT jobjectArray JNICALL
-_JVM_GetNestMembers(JNIEnv *env, jclass current){
+_JVM_GetNestMembers(JNIEnv *env, jclass current)
+{
 
 }
 
@@ -716,7 +807,8 @@ _JVM_GetNestMembers(JNIEnv *env, jclass current){
  * java.lang.reflect.Method
  */
 JNIEXPORT jobject JNICALL
-_JVM_InvokeMethod(JNIEnv *env, jobject method, jobject obj, jobjectArray args0){
+_JVM_InvokeMethod(JNIEnv *env, jobject method, jobject obj, jobjectArray args0)
+{
 
 }
 
@@ -724,7 +816,8 @@ _JVM_InvokeMethod(JNIEnv *env, jobject method, jobject obj, jobjectArray args0){
  * java.lang.reflect.Constructor
  */
 JNIEXPORT jobject JNICALL
-_JVM_NewInstanceFromConstructor(JNIEnv *env, jobject c, jobjectArray args0){
+_JVM_NewInstanceFromConstructor(JNIEnv *env, jobject c, jobjectArray args0)
+{
 
 }
 
@@ -733,97 +826,116 @@ _JVM_NewInstanceFromConstructor(JNIEnv *env, jobject c, jobjectArray args0){
  */
 
 JNIEXPORT jobject JNICALL
-_JVM_GetClassConstantPool(JNIEnv *env, jclass cls){
+_JVM_GetClassConstantPool(JNIEnv *env, jclass cls)
+{
 
 }
 
 JNIEXPORT jint JNICALL _JVM_ConstantPoolGetSize
-(JNIEnv *env, jobject unused, jobject jcpool){
+(JNIEnv *env, jobject unused, jobject jcpool)
+{
 
 }
 
 JNIEXPORT jclass JNICALL _JVM_ConstantPoolGetClassAt
-(JNIEnv *env, jobject unused, jobject jcpool, jint index){
+(JNIEnv *env, jobject unused, jobject jcpool, jint index)
+{
 
 }
 
 JNIEXPORT jclass JNICALL _JVM_ConstantPoolGetClassAtIfLoaded
-(JNIEnv *env, jobject unused, jobject jcpool, jint index){
+(JNIEnv *env, jobject unused, jobject jcpool, jint index)
+{
 
 }
 
 JNIEXPORT jint JNICALL _JVM_ConstantPoolGetClassRefIndexAt
-(JNIEnv *env, jobject obj, jobject unused, jint index){
+(JNIEnv *env, jobject obj, jobject unused, jint index)
+{
 
 }
 
 JNIEXPORT jobject JNICALL _JVM_ConstantPoolGetMethodAt
-(JNIEnv *env, jobject unused, jobject jcpool, jint index){
+(JNIEnv *env, jobject unused, jobject jcpool, jint index)
+{
 
 }
 
 JNIEXPORT jobject JNICALL _JVM_ConstantPoolGetMethodAtIfLoaded
-(JNIEnv *env, jobject unused, jobject jcpool, jint index){
+(JNIEnv *env, jobject unused, jobject jcpool, jint index)
+{
 
 }
 
 JNIEXPORT jobject JNICALL _JVM_ConstantPoolGetFieldAt
-(JNIEnv *env, jobject unused, jobject jcpool, jint index){
+(JNIEnv *env, jobject unused, jobject jcpool, jint index)
+{
 
 }
 
 JNIEXPORT jobject JNICALL _JVM_ConstantPoolGetFieldAtIfLoaded
-(JNIEnv *env, jobject unused, jobject jcpool, jint index){
+(JNIEnv *env, jobject unused, jobject jcpool, jint index)
+{
 
 }
 
 JNIEXPORT jobjectArray JNICALL _JVM_ConstantPoolGetMemberRefInfoAt
-(JNIEnv *env, jobject unused, jobject jcpool, jint index){
+(JNIEnv *env, jobject unused, jobject jcpool, jint index)
+{
 
 }
 
 JNIEXPORT jint JNICALL _JVM_ConstantPoolGetNameAndTypeRefIndexAt
-(JNIEnv *env, jobject obj, jobject unused, jint index){
+(JNIEnv *env, jobject obj, jobject unused, jint index)
+{
 
 }
 
 JNIEXPORT jobjectArray JNICALL _JVM_ConstantPoolGetNameAndTypeRefInfoAt
-(JNIEnv *env, jobject obj, jobject unused, jint index){
+(JNIEnv *env, jobject obj, jobject unused, jint index)
+{
 
 }
 
 JNIEXPORT jint JNICALL _JVM_ConstantPoolGetIntAt
-(JNIEnv *env, jobject unused, jobject jcpool, jint index){
+(JNIEnv *env, jobject unused, jobject jcpool, jint index)
+{
 
 }
 
 JNIEXPORT jlong JNICALL _JVM_ConstantPoolGetLongAt
-(JNIEnv *env, jobject unused, jobject jcpool, jint index){
+(JNIEnv *env, jobject unused, jobject jcpool, jint index)
+{
 
 }
 
 JNIEXPORT jfloat JNICALL _JVM_ConstantPoolGetFloatAt
-(JNIEnv *env, jobject unused, jobject jcpool, jint index){
+(JNIEnv *env, jobject unused, jobject jcpool, jint index)
+{
 
 }
 
 JNIEXPORT jdouble JNICALL _JVM_ConstantPoolGetDoubleAt
-(JNIEnv *env, jobject unused, jobject jcpool, jint index){
+(JNIEnv *env, jobject unused, jobject jcpool, jint index)
+{
 
 }
 
 JNIEXPORT jstring JNICALL _JVM_ConstantPoolGetStringAt
-(JNIEnv *env, jobject unused, jobject jcpool, jint index){
+(JNIEnv *env, jobject unused, jobject jcpool, jint index)
+{
 
 }
 
 JNIEXPORT jstring JNICALL _JVM_ConstantPoolGetUTF8At
-(JNIEnv *env, jobject unused, jobject jcpool, jint index){
+(JNIEnv *env, jobject unused, jobject jcpool, jint index)
+{
 
 }
 
 JNIEXPORT jbyte JNICALL _JVM_ConstantPoolGetTagAt
-(JNIEnv *env, jobject unused, jobject jcpool, jint index){
+(JNIEnv *env, jobject unused, jobject jcpool, jint index)
+{
 
 }
 
@@ -832,7 +944,8 @@ JNIEXPORT jbyte JNICALL _JVM_ConstantPoolGetTagAt
  */
 
 JNIEXPORT jobjectArray JNICALL
-_JVM_GetMethodParameters(JNIEnv *env, jobject method){
+_JVM_GetMethodParameters(JNIEnv *env, jobject method)
+{
 
 }
 
@@ -841,7 +954,8 @@ _JVM_GetMethodParameters(JNIEnv *env, jobject method){
  */
 
 JNIEXPORT jobject JNICALL
-_JVM_GetInheritedAccessControlContext(JNIEnv *env, jclass cls){
+_JVM_GetInheritedAccessControlContext(JNIEnv *env, jclass cls)
+{
 
 }
 
@@ -855,7 +969,8 @@ _JVM_GetInheritedAccessControlContext(JNIEnv *env, jclass cls){
                    // through a native method is enough.
 
 JNIEXPORT jobject JNICALL
-_JVM_GetStackAccessControlContext(JNIEnv *env, jclass cls){
+_JVM_GetStackAccessControlContext(JNIEnv *env, jclass cls)
+{
 
 }
 
@@ -867,17 +982,20 @@ _JVM_GetStackAccessControlContext(JNIEnv *env, jclass cls){
  */
 
 JNIEXPORT void * JNICALL
-_JVM_RegisterSignal(jint sig, void *handler){
+_JVM_RegisterSignal(jint sig, void *handler)
+{
 
 }
 
 JNIEXPORT jboolean JNICALL
-_JVM_RaiseSignal(jint sig){
+_JVM_RaiseSignal(jint sig)
+{
 
 }
 
 JNIEXPORT jint JNICALL
-_JVM_FindSignal(const char *name){
+_JVM_FindSignal(const char *name)
+{
 
 }
 
@@ -885,7 +1003,8 @@ _JVM_FindSignal(const char *name){
  * Retrieve the assertion directives for the specified class.
  */
 JNIEXPORT jboolean JNICALL
-_JVM_DesiredAssertionStatus(JNIEnv *env, jclass unused, jclass cls){
+_JVM_DesiredAssertionStatus(JNIEnv *env, jclass unused, jclass cls)
+{
 
 }
 
@@ -893,7 +1012,8 @@ _JVM_DesiredAssertionStatus(JNIEnv *env, jclass unused, jclass cls){
  * Retrieve the assertion directives from the VM.
  */
 JNIEXPORT jobject JNICALL
-_JVM_AssertionStatusDirectives(JNIEnv *env, jclass unused){
+_JVM_AssertionStatusDirectives(JNIEnv *env, jclass unused)
+{
 
 }
 
@@ -901,7 +1021,8 @@ _JVM_AssertionStatusDirectives(JNIEnv *env, jclass unused){
  * java.util.concurrent.atomic.AtomicLong
  */
 JNIEXPORT jboolean JNICALL
-_JVM_SupportsCX8(void){
+_JVM_SupportsCX8(void)
+{
 
 }
 
@@ -949,7 +1070,8 @@ typedef struct {
  * Get the version number the JVM was built with
  */
 JNIEXPORT jint JNICALL
-_JVM_DTraceGetVersion(JNIEnv* env){
+_JVM_DTraceGetVersion(JNIEnv* env)
+{
 
 }
 
@@ -961,7 +1083,8 @@ _JVM_DTraceGetVersion(JNIEnv* env){
  */
 JNIEXPORT jlong JNICALL
 _JVM_DTraceActivate(JNIEnv* env, jint version, jstring module_name,
-  jint providers_count, JVM_DTraceProvider* providers){
+                    int providers_count, JVM_DTraceProvider* providers)
+{
 
 }
 
@@ -969,7 +1092,8 @@ _JVM_DTraceActivate(JNIEnv* env, jint version, jstring module_name,
  * Check JSDT probe
  */
 JNIEXPORT jboolean JNICALL
-_JVM_DTraceIsProbeEnabled(JNIEnv* env, jmethodID method){
+_JVM_DTraceIsProbeEnabled(JNIEnv* env, jmethodID method)
+{
 
 }
 
@@ -977,7 +1101,8 @@ _JVM_DTraceIsProbeEnabled(JNIEnv* env, jmethodID method){
  * Destroy custom DOF
  */
 JNIEXPORT void JNICALL
-_JVM_DTraceDispose(JNIEnv* env, jlong activation_handle){
+_JVM_DTraceDispose(JNIEnv* env, jlong activation_handle)
+{
 
 }
 
@@ -985,7 +1110,8 @@ _JVM_DTraceDispose(JNIEnv* env, jlong activation_handle){
  * Check to see if DTrace is supported by OS
  */
 JNIEXPORT jboolean JNICALL
-_JVM_DTraceIsSupported(JNIEnv* env){
+_JVM_DTraceIsSupported(JNIEnv* env)
+{
 
 }
 
@@ -1000,7 +1126,8 @@ _JVM_DTraceIsSupported(JNIEnv* env){
  * in any way.
  */
 JNIEXPORT const char * JNICALL
-_JVM_GetClassNameUTF(JNIEnv *env, jclass cb){
+_JVM_GetClassNameUTF(JNIEnv *env, jclass cb)
+{
 
 }
 
@@ -1008,7 +1135,8 @@ _JVM_GetClassNameUTF(JNIEnv *env, jclass cb){
  * Returns the constant pool types in the buffer provided by "types."
  */
 JNIEXPORT void JNICALL
-_JVM_GetClassCPTypes(JNIEnv *env, jclass cb, unsigned char *types){
+_JVM_GetClassCPTypes(JNIEnv *env, jclass cb, unsigned char *types)
+{
 
 }
 
@@ -1016,7 +1144,8 @@ _JVM_GetClassCPTypes(JNIEnv *env, jclass cb, unsigned char *types){
  * Returns the number of Constant Pool entries.
  */
 JNIEXPORT jint JNICALL
-_JVM_GetClassCPEntriesCount(JNIEnv *env, jclass cb){
+_JVM_GetClassCPEntriesCount(JNIEnv *env, jclass cb)
+{
 
 }
 
@@ -1024,12 +1153,14 @@ _JVM_GetClassCPEntriesCount(JNIEnv *env, jclass cb){
  * Returns the number of *declared* fields or methods.
  */
 JNIEXPORT jint JNICALL
-_JVM_GetClassFieldsCount(JNIEnv *env, jclass cb){
+_JVM_GetClassFieldsCount(JNIEnv *env, jclass cb)
+{
 
 }
 
 JNIEXPORT jint JNICALL
-_JVM_GetClassMethodsCount(JNIEnv *env, jclass cb){
+_JVM_GetClassMethodsCount(JNIEnv *env, jclass cb)
+{
 
 }
 
@@ -1040,8 +1171,8 @@ _JVM_GetClassMethodsCount(JNIEnv *env, jclass cb){
  * The method is identified by method_index.
  */
 JNIEXPORT void JNICALL
-_JVM_GetMethodIxExceptionIndexes(JNIEnv *env, jclass cb, jint method_index,
-                                unsigned short *exceptions){
+_JVM_GetMethodIxExceptionIndexes(JNIEnv *env, jclass cb, jint method_index, signed short *exceptions)
+{
 
 }
 /*
@@ -1049,7 +1180,8 @@ _JVM_GetMethodIxExceptionIndexes(JNIEnv *env, jclass cb, jint method_index,
  * The method is identified by method_index.
  */
 JNIEXPORT jint JNICALL
-_JVM_GetMethodIxExceptionsCount(JNIEnv *env, jclass cb, jint method_index){
+_JVM_GetMethodIxExceptionsCount(JNIEnv *env, jclass cb, jint method_index)
+{
 
 }
 
@@ -1060,8 +1192,8 @@ _JVM_GetMethodIxExceptionsCount(JNIEnv *env, jclass cb, jint method_index){
  * The method is identified by method_index.
  */
 JNIEXPORT void JNICALL
-_JVM_GetMethodIxByteCode(JNIEnv *env, jclass cb, jint method_index,
-                        unsigned char *code){
+_JVM_GetMethodIxByteCode(JNIEnv *env, jclass cb, jint method_index, unsigned char *code)
+{
 
 }
 
@@ -1070,7 +1202,8 @@ _JVM_GetMethodIxByteCode(JNIEnv *env, jclass cb, jint method_index,
  * The method is identified by method_index.
  */
 JNIEXPORT jint JNICALL
-_JVM_GetMethodIxByteCodeLength(JNIEnv *env, jclass cb, jint method_index){
+_JVM_GetMethodIxByteCodeLength(JNIEnv *env, jclass cb, jint method_index)
+{
 
 }
 
@@ -1092,8 +1225,8 @@ typedef struct {
  */
 JNIEXPORT void JNICALL
 _JVM_GetMethodIxExceptionTableEntry(JNIEnv *env, jclass cb, jint method_index,
-                                   jint entry_index,
-                                   JVM_ExceptionTableEntryType *entry){
+                                   jint entry_index, JVM_ExceptionTableEntryType *entry)
+{
 
 }
 
@@ -1102,7 +1235,8 @@ _JVM_GetMethodIxExceptionTableEntry(JNIEnv *env, jclass cb, jint method_index,
  * The method is identified by method_index.
  */
 JNIEXPORT jint JNICALL
-_JVM_GetMethodIxExceptionTableLength(JNIEnv *env, jclass cb, int index){
+_JVM_GetMethodIxExceptionTableLength(JNIEnv *env, jclass cb, int index)
+{
 
 }
 
@@ -1111,7 +1245,8 @@ _JVM_GetMethodIxExceptionTableLength(JNIEnv *env, jclass cb, int index){
  * The field is identified by field_index.
  */
 JNIEXPORT jint JNICALL
-_JVM_GetFieldIxModifiers(JNIEnv *env, jclass cb, int index){
+_JVM_GetFieldIxModifiers(JNIEnv *env, jclass cb, int index)
+{
 
 }
 
@@ -1120,7 +1255,8 @@ _JVM_GetFieldIxModifiers(JNIEnv *env, jclass cb, int index){
  * The method is identified by method_index.
  */
 JNIEXPORT jint JNICALL
-_JVM_GetMethodIxModifiers(JNIEnv *env, jclass cb, int index){
+_JVM_GetMethodIxModifiers(JNIEnv *env, jclass cb, int index)
+{
 
 }
 
@@ -1129,7 +1265,8 @@ _JVM_GetMethodIxModifiers(JNIEnv *env, jclass cb, int index){
  * The method is identified by method_index.
  */
 JNIEXPORT jint JNICALL
-_JVM_GetMethodIxLocalsCount(JNIEnv *env, jclass cb, int index){
+_JVM_GetMethodIxLocalsCount(JNIEnv *env, jclass cb, int index)
+{
 
 }
 
@@ -1138,7 +1275,8 @@ _JVM_GetMethodIxLocalsCount(JNIEnv *env, jclass cb, int index){
  * The method is identified by method_index.
  */
 JNIEXPORT jint JNICALL
-_JVM_GetMethodIxArgsSize(JNIEnv *env, jclass cb, int index){
+_JVM_GetMethodIxArgsSize(JNIEnv *env, jclass cb, int index)
+{
 
 }
 
@@ -1147,7 +1285,8 @@ _JVM_GetMethodIxArgsSize(JNIEnv *env, jclass cb, int index){
  * The method is identified by method_index.
  */
 JNIEXPORT jint JNICALL
-_JVM_GetMethodIxMaxStack(JNIEnv *env, jclass cb, int index){
+_JVM_GetMethodIxMaxStack(JNIEnv *env, jclass cb, int index)
+{
 
 }
 
@@ -1156,7 +1295,8 @@ _JVM_GetMethodIxMaxStack(JNIEnv *env, jclass cb, int index){
  * The method is identified by method_index.
  */
 JNIEXPORT jboolean JNICALL
-_JVM_IsConstructorIx(JNIEnv *env, jclass cb, int index){
+_JVM_IsConstructorIx(JNIEnv *env, jclass cb, int index)
+{
 
 }
 
@@ -1165,7 +1305,8 @@ _JVM_IsConstructorIx(JNIEnv *env, jclass cb, int index){
  * The method is identified by method_index.
  */
 JNIEXPORT jboolean JNICALL
-_JVM_IsVMGeneratedMethodIx(JNIEnv *env, jclass cb, int index){
+_JVM_IsVMGeneratedMethodIx(JNIEnv *env, jclass cb, int index)
+{
 
 }
 
@@ -1177,7 +1318,8 @@ _JVM_IsVMGeneratedMethodIx(JNIEnv *env, jclass cb, int index){
  * in any way.
  */
 JNIEXPORT const char * JNICALL
-_JVM_GetMethodIxNameUTF(JNIEnv *env, jclass cb, jint index){
+_JVM_GetMethodIxNameUTF(JNIEnv *env, jclass cb, jint index)
+{
 
 }
 
@@ -1189,7 +1331,8 @@ _JVM_GetMethodIxNameUTF(JNIEnv *env, jclass cb, jint index){
  * in any way.
  */
 JNIEXPORT const char * JNICALL
-_JVM_GetMethodIxSignatureUTF(JNIEnv *env, jclass cb, jint index){
+_JVM_GetMethodIxSignatureUTF(JNIEnv *env, jclass cb, jint index)
+{
 
 }
 
@@ -1204,7 +1347,8 @@ _JVM_GetMethodIxSignatureUTF(JNIEnv *env, jclass cb, jint index){
  * in any way.
  */
 JNIEXPORT const char * JNICALL
-_JVM_GetCPFieldNameUTF(JNIEnv *env, jclass cb, jint index){
+_JVM_GetCPFieldNameUTF(JNIEnv *env, jclass cb, jint index)
+{
 
 }
 
@@ -1219,7 +1363,8 @@ _JVM_GetCPFieldNameUTF(JNIEnv *env, jclass cb, jint index){
  * in any way.
  */
 JNIEXPORT const char * JNICALL
-_JVM_GetCPMethodNameUTF(JNIEnv *env, jclass cb, jint index){
+_JVM_GetCPMethodNameUTF(JNIEnv *env, jclass cb, jint index)
+{
 
 }
 
@@ -1234,7 +1379,8 @@ _JVM_GetCPMethodNameUTF(JNIEnv *env, jclass cb, jint index){
  * in any way.
  */
 JNIEXPORT const char * JNICALL
-_JVM_GetCPMethodSignatureUTF(JNIEnv *env, jclass cb, jint index){
+_JVM_GetCPMethodSignatureUTF(JNIEnv *env, jclass cb, jint index)
+{
 
 }
 
@@ -1249,7 +1395,8 @@ _JVM_GetCPMethodSignatureUTF(JNIEnv *env, jclass cb, jint index){
  * in any way.
  */
 JNIEXPORT const char * JNICALL
-_JVM_GetCPFieldSignatureUTF(JNIEnv *env, jclass cb, jint index){
+_JVM_GetCPFieldSignatureUTF(JNIEnv *env, jclass cb, jint index)
+{
 
 }
 
@@ -1263,7 +1410,8 @@ _JVM_GetCPFieldSignatureUTF(JNIEnv *env, jclass cb, jint index){
  * in any way.
  */
 JNIEXPORT const char * JNICALL
-_JVM_GetCPClassNameUTF(JNIEnv *env, jclass cb, jint index){
+_JVM_GetCPClassNameUTF(JNIEnv *env, jclass cb, jint index)
+{
 
 }
 
@@ -1279,7 +1427,8 @@ _JVM_GetCPClassNameUTF(JNIEnv *env, jclass cb, jint index){
  * in any way.
  */
 JNIEXPORT const char * JNICALL
-_JVM_GetCPFieldClassNameUTF(JNIEnv *env, jclass cb, jint index){
+_JVM_GetCPFieldClassNameUTF(JNIEnv *env, jclass cb, jint index)
+{
 
 }
 
@@ -1296,7 +1445,8 @@ _JVM_GetCPFieldClassNameUTF(JNIEnv *env, jclass cb, jint index){
  * in any way.
  */
 JNIEXPORT const char * JNICALL
-_JVM_GetCPMethodClassNameUTF(JNIEnv *env, jclass cb, jint index){
+_JVM_GetCPMethodClassNameUTF(JNIEnv *env, jclass cb, jint index)
+{
 
 }
 
@@ -1310,7 +1460,8 @@ _JVM_GetCPMethodClassNameUTF(JNIEnv *env, jclass cb, jint index){
  * Returns -1 if the field does not exist in calledClass.
  */
 JNIEXPORT jint JNICALL
-_JVM_GetCPFieldModifiers(JNIEnv *env, jclass cb, int index, jclass calledClass){
+_JVM_GetCPFieldModifiers(JNIEnv *env, jclass cb, int index, jclass calledClass)
+{
 
 }
 
@@ -1321,7 +1472,8 @@ _JVM_GetCPFieldModifiers(JNIEnv *env, jclass cb, int index, jclass calledClass){
  * Returns -1 if the method does not exist in calledClass.
  */
 JNIEXPORT jint JNICALL
-_JVM_GetCPMethodModifiers(JNIEnv *env, jclass cb, int index, jclass calledClass){
+_JVM_GetCPMethodModifiers(JNIEnv *env, jclass cb, int index, jclass calledClass)
+{
 
 }
 
@@ -1329,7 +1481,8 @@ _JVM_GetCPMethodModifiers(JNIEnv *env, jclass cb, int index, jclass calledClass)
  * Releases the UTF string obtained from the VM.
  */
 JNIEXPORT void JNICALL
-_JVM_ReleaseUTF(const char *utf){
+_JVM_ReleaseUTF(const char *utf)
+{
 
 }
 
@@ -1337,7 +1490,8 @@ _JVM_ReleaseUTF(const char *utf){
  * Compare if two classes are in the same package.
  */
 JNIEXPORT jboolean JNICALL
-_JVM_IsSameClassPackage(JNIEnv *env, jclass class1, jclass class2){
+_JVM_IsSameClassPackage(JNIEnv *env, jclass class1, jclass class2)
+{
 
 }
 
@@ -1460,7 +1614,8 @@ typedef int (*canonicalize_fn_t)(JNIEnv *env, char *orig, char *out, int len);
  * the given pathname string in place.
  */
 JNIEXPORT char * JNICALL
-_JVM_NativePath(char *){
+_JVM_NativePath(char *)
+{
 
 }
 
@@ -1479,43 +1634,51 @@ _JVM_NativePath(char *){
  *   all platforms. */
 
 JNIEXPORT int
-jio_vsnprintf(char *str, size_t count, const char *fmt, va_list args){
+jio_vsnprintf(char *str, size_t count, const char *fmt, va_list args)
+{
 
 }
 
 JNIEXPORT int
-jio_snprintf(char *str, size_t count, const char *fmt, ...){
+jio_snprintf(char *str, size_t count, const char *fmt, ...)
+{
 
 }
 
 JNIEXPORT int
-jio_fprintf(FILE *, const char *fmt, ...){
+jio_fprintf(FILE *, const char *fmt, ...)
+{
 
 }
 
 JNIEXPORT int
-jio_vfprintf(FILE *, const char *fmt, va_list args){
+jio_vfprintf(FILE *, const char *fmt, va_list args)
+{
 
 }
 
 
 JNIEXPORT void * JNICALL
-_JVM_RawMonitorCreate(void){
+_JVM_RawMonitorCreate(void)
+{
 
 }
 
 JNIEXPORT void JNICALL
-_JVM_RawMonitorDestroy(void *mon){
+_JVM_RawMonitorDestroy(void *mon)
+{
 
 }
 
 JNIEXPORT jint JNICALL
-_JVM_RawMonitorEnter(void *mon){
+_JVM_RawMonitorEnter(void *mon)
+{
 
 }
 
 JNIEXPORT void JNICALL
-_JVM_RawMonitorExit(void *mon){
+_JVM_RawMonitorExit(void *mon)
+{
 
 }
 
@@ -1523,7 +1686,8 @@ _JVM_RawMonitorExit(void *mon){
  * java.lang.management support
  */
 JNIEXPORT void* JNICALL
-_JVM_GetManagement(jint version){
+_JVM_GetManagement(jint version)
+{
 
 }
 
@@ -1533,12 +1697,14 @@ _JVM_GetManagement(jint version){
  * Initialize the agent properties with the properties maintained in the VM.
  */
 JNIEXPORT jobject JNICALL
-_JVM_InitAgentProperties(JNIEnv *env, jobject agent_props){
+_JVM_InitAgentProperties(JNIEnv *env, jobject agent_props)
+{
 
 }
 
 JNIEXPORT jstring JNICALL
-_JVM_GetTemporaryDirectory(JNIEnv *env){
+_JVM_GetTemporaryDirectory(JNIEnv *env)
+{
 
 }
 
@@ -1554,7 +1720,8 @@ _JVM_GetTemporaryDirectory(JNIEnv *env){
  * method's name and descriptor, respectively.
  */
 JNIEXPORT jobjectArray JNICALL
-_JVM_GetEnclosingMethodInfo(JNIEnv* env, jclass ofClass){
+_JVM_GetEnclosingMethodInfo(JNIEnv* env, jclass ofClass)
+{
 
 }
 
@@ -1604,7 +1771,8 @@ typedef struct {
 #define JVM_VERSION_BUILD(version) ((version & 0x000000FF))
 
 JNIEXPORT void JNICALL
-_JVM_GetVersionInfo(JNIEnv* env, jvm_version_info* info, size_t info_size){
+_JVM_GetVersionInfo(JNIEnv* env, jvm_version_info* info, size_t info_size)
+{
 
 }
 

@@ -5,8 +5,10 @@
 #ifndef JVM_PRIMITIVE_TYPES_H
 #define JVM_PRIMITIVE_TYPES_H
 
+class PrimitiveClass;
 
 void loadPrimitiveTypes();
+PrimitiveClass *getPrimitiveClass(const char *className);
 
 bool isPrimitiveClassName(const char *class_name);
 bool isPrimitiveDescriptor(char descriptor);

@@ -43,7 +43,7 @@ Thread *initMainThread()
     java_lang_Thread_class->clinit();
 
     Class *jltgClass = java_lang_ThreadGroup_class;
-    vmEnv.sysThreadGroup = jltgClass->newInst();
+    vmEnv.sysThreadGroup = Object::newInst(jltgClass);
 
     // 初始化 system_thread_group
     // java/lang/ThreadGroup 的无参数构造函数主要用来：
@@ -115,7 +115,7 @@ Thread::Thread(Object *jThread0, jint priority): jThread(jThread0)
     vmThreads.push_back(this);
 
     if (jThread == nullptr)
-        jThread = java_lang_Thread_class->newInst();
+        jThread = Object::newInst(java_lang_Thread_class);
 
     bind(jThread);
     jThread->setFieldValue(S(priority), S(I), (slot_t) priority);

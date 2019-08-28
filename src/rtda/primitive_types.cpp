@@ -14,25 +14,35 @@ static const struct {
     char descriptor;
     const char *array_class_name;
     const char *wrapper_class_name;
+    PrimitiveClass *clazz;
 } primitiveTypes[] = {
-        { "void",    'V', "[V", "java/lang/Void" },
-        { "boolean", 'Z', "[Z", "java/lang/Boolean" },
-        { "byte",    'B', "[B", "java/lang/Byte" },
-        { "char",    'C', "[C", "java/lang/Character" },
-        { "short",   'S', "[S", "java/lang/Short" },
-        { "int",     'I', "[I", "java/lang/Integer" },
-        { "long",    'J', "[J", "java/lang/Long" },
-        { "float",   'F', "[F", "java/lang/Float" },
-        { "double",  'D', "[D", "java/lang/Double" },
+        { "void",    'V', "[V", "java/lang/Void",      nullptr },
+        { "boolean", 'Z', "[Z", "java/lang/Boolean",   nullptr },
+        { "byte",    'B', "[B", "java/lang/Byte",      nullptr },
+        { "char",    'C', "[C", "java/lang/Character", nullptr },
+        { "short",   'S', "[S", "java/lang/Short",     nullptr },
+        { "int",     'I', "[I", "java/lang/Integer",   nullptr },
+        { "long",    'J', "[J", "java/lang/Long",      nullptr },
+        { "float",   'F', "[F", "java/lang/Float",     nullptr },
+        { "double",  'D', "[D", "java/lang/Double",    nullptr },
 };
 
 void loadPrimitiveTypes()
 {
     // 加载基本类型（int, float, etc.）的 class
     for (auto t : primitiveTypes) {
-        Class *c = new PrimitiveClass(t.class_name);
-        bootClassLoader->putToPool(t.class_name, c);
+        t.clazz = new PrimitiveClass(t.class_name);
+        bootClassLoader->putToPool(t.class_name, t.clazz);
     }
+}
+
+PrimitiveClass *getPrimitiveClass(const char *className)
+{
+    for (auto t : primitiveTypes) {
+        if (strcmp(t.class_name, className) == 0)
+            return t.clazz;
+    }
+    return nullptr;
 }
 
 bool isPrimitiveClassName(const char *class_name)

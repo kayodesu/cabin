@@ -52,6 +52,7 @@
       <w>jpriobj</w>
       <w>jsize</w>
       <w>jstrobj</w>
+      <w>jthrowable</w>
       <w>jvms</w>
       <w>kayovm</w>
       <w>klass</w>
