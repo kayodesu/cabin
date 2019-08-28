@@ -15,8 +15,8 @@ static void getLongAt0(Frame *frame)
     // todo 对不对
     jref o = frame->getLocalAsRef(1);
     jint i = frame->getLocalAsInt(2);
-    jlong result = CP_LONG(&(o->clazz->constant_pool), i);//rtcp_get_long(o->clazz->rtcp, i);
-    frame->pushl(result);
+
+    frame->pushl(CP_LONG(&(o->clazz->constant_pool), i));
 }
 
 // private native String getUTF8At0(Object o, int i);
@@ -26,8 +26,6 @@ static void getUTF8At0(Frame *frame)
     jref o = frame->getLocalAsRef(1);
     jint i = frame->getLocalAsInt(2);
 
-//    resolve_single_constant(o->clazz, i);
-//    jref result = get_str_from_pool(frame->m.method->clazz->loader, CP_STRING(&(o->clazz->constant_pool), i));//rtcp_get_str(o->clazz->rtcp, i));
     frame->pushr(resolve_string(o->clazz, i));
 }
 

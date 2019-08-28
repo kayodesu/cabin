@@ -119,9 +119,9 @@ static void getPrimitiveClass(Frame *frame)
 // private native String getName0();
 static void getName0(Frame *frame)
 {
-    auto thisObj = frame->getLocalAsRef<ClassObject>(0);
+    auto _this = frame->getLocalAsRef<ClassObject>(0);
 
-    Class *c = thisObj->entityClass;//clsobj_entity_class(this);
+    Class *c = _this->entityClass;//clsobj_entity_class(this);
     char className[strlen(c->className) + 1];
     strcpy(className, c->className);
     // 这里需要的是 java.lang.Object 这样的类名，而非 java/lang/Object
@@ -220,10 +220,10 @@ static void desiredAssertionStatus0(Frame *frame)
  */
 static void isInstance(Frame *frame)
 {
-    auto thisObj = frame->getLocalAsRef<ClassObject>(0);
+    auto _this = frame->getLocalAsRef<ClassObject>(0);
 
     jref obj = frame->getLocalAsRef(1);
-    frame->pushi((obj != nullptr && obj->isInstanceOf(thisObj->entityClass)) ? 1 : 0);
+    frame->pushi((obj != nullptr && obj->isInstanceOf(_this->entityClass)) ? 1 : 0);
 }
 
 /**
@@ -253,14 +253,14 @@ static void isInstance(Frame *frame)
  */
 static void isAssignableFrom(Frame *frame)
 {
-    auto thisObj = frame->getLocalAsRef<ClassObject>(0);
+    auto _this = frame->getLocalAsRef<ClassObject>(0);
     auto cls = frame->getLocalAsRef<ClassObject>(1);
     if (cls == nullptr) {
         thread_throw_null_pointer_exception();
     }
 
 //    bool b = class_is_subclass_of(clsobj_entity_class(cls), clsobj_entity_class(this));
-    bool b = cls->entityClass->isSubclassOf(thisObj->entityClass);
+    bool b = cls->entityClass->isSubclassOf(_this->entityClass);
     frame->pushi(b ? 1 : 0);
 }
 
@@ -271,8 +271,8 @@ static void isAssignableFrom(Frame *frame)
  */
 static void isInterface(Frame *frame)
 {
-    auto thisObj = frame->getLocalAsRef<ClassObject>(0);
-    frame->pushi(thisObj->entityClass->isInterface() ? 1 : 0);
+    auto _this = frame->getLocalAsRef<ClassObject>(0);
+    frame->pushi(_this->entityClass->isInterface() ? 1 : 0);
 }
 
 /*
@@ -282,8 +282,8 @@ static void isInterface(Frame *frame)
  */
 static void isArray(Frame *frame)
 {
-    auto thisObj = frame->getLocalAsRef<ClassObject>(0);
-    frame->pushi(thisObj->entityClass->isArray() ? 1 : 0);  // todo
+    auto _this = frame->getLocalAsRef<ClassObject>(0);
+    frame->pushi(_this->entityClass->isArray() ? 1 : 0);  // todo
 }
 
 /**
@@ -318,8 +318,8 @@ static void isArray(Frame *frame)
  */
 static void isPrimitive(Frame *frame)
 {
-    auto thisObj = frame->getLocalAsRef<ClassObject>(0);
-    bool b = thisObj->entityClass->isPrimitive();
+    auto _this = frame->getLocalAsRef<ClassObject>(0);
+    bool b = _this->entityClass->isPrimitive();
     frame->pushi(b ? 1 : 0);
 }
 
@@ -338,9 +338,9 @@ static void isPrimitive(Frame *frame)
  */
 static void getSuperclass(Frame *frame)
 {
-    auto thisObj = frame->getLocalAsRef<ClassObject>(0);
+    auto _this = frame->getLocalAsRef<ClassObject>(0);
 
-    Class *c = frame->method->clazz->loader->loadClass(thisObj->entityClass->className);
+    Class *c = frame->method->clazz->loader->loadClass(_this->entityClass->className);
     frame->pushr(c->superClass != nullptr ? c->superClass->clsobj : nullptr);
 }
 
@@ -391,9 +391,9 @@ static void getSuperclass(Frame *frame)
 //private native Class<?>[] getInterfaces0();
 static void getInterfaces0(Frame *frame)
 {
-    auto thisObj = frame->getLocalAsRef<ClassObject>(0);
+    auto _this = frame->getLocalAsRef<ClassObject>(0);
 
-    Class *entity_class = thisObj->entityClass;
+    Class *entity_class = _this->entityClass;
     auto interfaces = ArrayObject::newInst(java_lang_Class_array_class, entity_class->interfaces.size());
     for (size_t i = 0; i < entity_class->interfaces.size(); i++) {
         assert(entity_class->interfaces[i] != nullptr);
@@ -411,10 +411,10 @@ static void getInterfaces0(Frame *frame)
  */
 static void getComponentType(Frame *frame)
 {
-    auto thisObj = frame->getLocalAsRef<ClassObject>(0);
+    auto _this = frame->getLocalAsRef<ClassObject>(0);
 
-    if (thisObj->entityClass->isArray()) {
-        frame->pushr(((ArrayClass *) thisObj->entityClass)->componentClass()->clsobj);
+    if (_this->entityClass->isArray()) {
+        frame->pushr(((ArrayClass *) _this->entityClass)->componentClass()->clsobj);
     } else {
         frame->pushr(nullptr);
     }
@@ -457,8 +457,8 @@ static void getComponentType(Frame *frame)
 //public native int getModifiers();
 static void getModifiers(Frame *frame)
 {
-    auto thisObj = frame->getLocalAsRef<ClassObject>(0);
-    frame->pushi(thisObj->entityClass->access_flags);
+    auto _this = frame->getLocalAsRef<ClassObject>(0);
+    frame->pushi(_this->entityClass->access_flags);
 }
 
 /**
@@ -488,9 +488,9 @@ static void setSigners(Frame *frame)
 // private native Object[] getEnclosingMethod0();
 static void getEnclosingMethod0(Frame *frame)
 {
-    auto thisObj = frame->getLocalAsRef<ClassObject>(0);
+    auto _this = frame->getLocalAsRef<ClassObject>(0);
 
-    Class *c = thisObj->entityClass;
+    Class *c = _this->entityClass;
     if (c->enclosing_info[0] == nullptr) {
         frame->pushr(nullptr);
         return;
@@ -543,11 +543,11 @@ static void getConstantPool(Frame *frame)
 // private native Field[] getDeclaredFields0(boolean publicOnly);
 static void getDeclaredFields0(Frame *frame)
 {
-    auto thisObj = frame->getLocalAsRef<ClassObject>(0);
+    auto _this = frame->getLocalAsRef<ClassObject>(0);
     bool public_only = frame->getLocalAsBool(1);
 
     ClassLoader *loader = frame->method->clazz->loader;
-    Class *cls = loader->loadClass(thisObj->entityClass->className);
+    Class *cls = loader->loadClass(_this->entityClass->className);
 
 //    Field *fields = cls->fields;
     jint fields_count = public_only ? cls->publicFieldsCount : cls->fields.size();
@@ -579,7 +579,7 @@ static void getDeclaredFields0(Frame *frame)
 
         execJavaFunc(field_constructor, {
                 (slot_t) jlrf_obj, // this
-                (slot_t) thisObj, // declaring class
+                (slot_t) _this, // declaring class
                 (slot_t) vmEnv.strPool->get(cls->fields[i]->name), // name
                 (slot_t) cls->fields[i]->getType(), // type
                 cls->fields[i]->access_flags, /* modifiers */
@@ -601,11 +601,11 @@ static void getDeclaredFields0(Frame *frame)
  */
 static void getDeclaredMethods0(Frame *frame)
 {
-    auto thisObj = frame->getLocalAsRef<ClassObject>(0);
+    auto _this = frame->getLocalAsRef<ClassObject>(0);
     bool public_only = frame->getLocalAsBool(1);
 
     ClassLoader *loader = frame->method->clazz->loader;
-    Class *cls = loader->loadClass(thisObj->entityClass->className);
+    Class *cls = loader->loadClass(_this->entityClass->className);
 
 //    struct method *methods = cls->methods;
     jint methods_count = public_only ? cls->publicMethodsCount : cls->methods.size();
@@ -634,7 +634,7 @@ static void getDeclaredMethods0(Frame *frame)
 
         execJavaFunc(method_constructor, {
                 (slot_t) jlrf_obj,        /* this  */
-                (slot_t) thisObj, /* declaring class */
+                (slot_t) _this, /* declaring class */
                 (slot_t) vmEnv.strPool->get(method->name), /* name */
                 (slot_t) method->getParameterTypes(), /* parameter types */
                 (slot_t) method->getReturnType(),     /* return type */
@@ -652,11 +652,11 @@ static void getDeclaredMethods0(Frame *frame)
 // private native Constructor<T>[] getDeclaredConstructors0(boolean publicOnly);
 static void getDeclaredConstructors0(Frame *frame)
 {
-    auto thisObj = frame->getLocalAsRef<ClassObject>(0);
+    auto _this = frame->getLocalAsRef<ClassObject>(0);
     bool public_only = frame->getLocalAsBool(1);
 
     ClassLoader *loader = frame->method->clazz->loader;
-    Class *cls = loader->loadClass(thisObj->entityClass->className);
+    Class *cls = loader->loadClass(_this->entityClass->className);
 
     std::vector<Method *> constructors = cls->getConstructors(public_only);
     int constructors_count = constructors.size();
@@ -685,7 +685,7 @@ static void getDeclaredConstructors0(Frame *frame)
 
         execJavaFunc(constructor_constructor, {
                 (slot_t) jlrf_obj, // this
-                (slot_t) thisObj, // declaring class
+                (slot_t) _this, // declaring class
                 (slot_t) constructor->getParameterTypes(),  // parameter types
                 (slot_t) constructor->getExceptionTypes(),  // checked exceptions
                 constructor->access_flags, // modifiers
@@ -756,8 +756,7 @@ void java_lang_Class_registerNatives()
     register_native_method(C"getPrimitiveClass", "(Ljava/lang/String;)Ljava/lang/Class;", getPrimitiveClass);
     register_native_method(C"getName0", "()Ljava/lang/String;", getName0);
     register_native_method(C"forName0",
-                                   "(Ljava/lang/String;ZLjava/lang/ClassLoader;Ljava/lang/Class;)Ljava/lang/Class;",
-                           forName0);
+                           "(Ljava/lang/String;ZLjava/lang/ClassLoader;Ljava/lang/Class;)Ljava/lang/Class;", forName0);
     register_native_method(C"desiredAssertionStatus0", "(Ljava/lang/Class;)Z", desiredAssertionStatus0);
 
     register_native_method(C"isInstance", "(Ljava/lang/Object;)Z", isInstance);

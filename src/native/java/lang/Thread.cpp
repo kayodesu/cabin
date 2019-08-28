@@ -116,8 +116,7 @@ static void setPriority0(Frame *frame)
 // private native void start0();
 static void start0(Frame *frame)
 {
-    jref _this = frame->getLocalAsRef(0); // object of java.lang.Thread
-    createCustomerThread(_this);
+    createCustomerThread(frame->getLocalAsRef(0));
 }
 
 // @Deprecated

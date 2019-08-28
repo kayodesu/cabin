@@ -10,10 +10,10 @@
 static void intern(Frame *frame)
 {
     // todo
-    auto thisObj = frame->getLocalAsRef<StringObject>(0);
+    auto _this = frame->getLocalAsRef<StringObject>(0);
 
 //    put_so_to_pool(this);
-    auto soInPool = vmEnv.strPool->put(thisObj);
+    auto soInPool = vmEnv.strPool->put(_this);
     frame->pushr(soInPool);
 }
 

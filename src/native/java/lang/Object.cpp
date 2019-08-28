@@ -11,26 +11,26 @@
 // public native int hashCode();
 static void hashCode(Frame *frame)
 {
-    jref thisObj = frame->getLocalAsRef(0);
-    frame->pushi((jint) (intptr_t) thisObj);
+    jref _this = frame->getLocalAsRef(0);
+    frame->pushi((jint) (intptr_t) _this);
 }
 
 // protected native Object clone() throws CloneNotSupportedException;
 static void clone(Frame *frame)
 {
-    jref thisObj = frame->getLocalAsRef(0);
+    jref _this = frame->getLocalAsRef(0);
     Class *cloneable = java_lang_Cloneable_class;
-    if (!thisObj->clazz->isSubclassOf(cloneable)) {
+    if (!_this->clazz->isSubclassOf(cloneable)) {
         jvm_abort("java.lang.CloneNotSupportedException"); // todo
     }
-    frame->pushr(thisObj->clone());
+    frame->pushr(_this->clone());
 }
 
 // public final native Class<?> getClass();
 static void getClass(Frame *frame)
 {
-    jref thisObj = frame->getLocalAsRef(0);
-    frame->pushr(thisObj->clazz->clsobj); // todo 对不对
+    jref _this = frame->getLocalAsRef(0);
+    frame->pushr(_this->clazz->clsobj); // todo 对不对
 }
 
 // public final native void notifyAll();

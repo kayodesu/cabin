@@ -14,8 +14,8 @@ using namespace std;
 // private native Throwable fillInStackTrace(int dummy);
 static void fillInStackTrace(Frame *frame)
 {
-    jref thisObj = frame->getLocalAsRef(0);
-    frame->pushr(thisObj);
+    jref _this = frame->getLocalAsRef(0);
+    frame->pushr(_this);
 
     int num = vm_stack_depth();
     /*
@@ -40,7 +40,7 @@ static void fillInStackTrace(Frame *frame)
     Frame *f = frame->prev->prev;
 //    num -= 2; // 减去执行fillInStackTrace(int) 和 fillInStackTrace() 方法的frame
 
-    for (Class *c = thisObj->clazz; c != nullptr; c = c->superClass) {
+    for (Class *c = _this->clazz; c != nullptr; c = c->superClass) {
         f = f->prev; // jump 执行异常类的构造函数的frame
         if (utf8_equals(c->className, S(java_lang_Throwable))) {
             break; // 可以了，遍历到 Throwable 就行了，因为现在在执行 Throwable 的 fillInStackTrace 方法。
@@ -68,16 +68,16 @@ static void fillInStackTrace(Frame *frame)
         o->setFieldValue("lineNumber", S(I), (slot_t) lineNumber);
     }
 
-    thisObj->extra = trace;
+    _this->extra = trace;
 }
 
 // native StackTraceElement getStackTraceElement(int index);
 static void getStackTraceElement(Frame *frame)
 {
-    jref thisObj = frame->getLocalAsRef(0);
+    jref _this = frame->getLocalAsRef(0);
     jint index = frame->getLocalAsInt(1);
 
-    auto trace = (vector<Object *> *) thisObj->extra;
+    auto trace = (vector<Object *> *) _this->extra;
     assert(trace != nullptr);
     frame->pushr(trace->at(index));
 }
@@ -85,8 +85,8 @@ static void getStackTraceElement(Frame *frame)
 // native int getStackTraceDepth();
 static void getStackTraceDepth(Frame *frame)
 {
-    jref thisObj = frame->getLocalAsRef(0);
-    auto trace = (vector<Object *> *) thisObj->extra;
+    jref _this = frame->getLocalAsRef(0);
+    auto trace = (vector<Object *> *) _this->extra;
     assert(trace != nullptr);
     frame->pushi(trace->size());
 }

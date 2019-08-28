@@ -29,6 +29,7 @@ static const struct {
 
 void loadPrimitiveTypes()
 {
+    assert(bootClassLoader != nullptr);
     // 加载基本类型（int, float, etc.）的 class
     for (auto t : primitiveTypes) {
         t.clazz = new PrimitiveClass(t.class_name);

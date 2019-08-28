@@ -727,6 +727,7 @@ ArrayClass *Class::arrayClass() const
     const char *tmp = primitiveClassName2arrayClassName(className);
     if (tmp != nullptr)
         return loadArrayClass(tmp); // todo
+
     // 类引用
     sprintf(arrayClassName, "[L%s;", className);
     return loadArrayClass(arrayClassName); // todo
@@ -800,6 +801,7 @@ Class *ArrayClass::componentClass()
     for (; *component_name == '['; component_name++);
 
     if (*component_name != 'L') {
+        // todo 基本类型这里实现错误
         return loader->loadClass(component_name);
     }
 

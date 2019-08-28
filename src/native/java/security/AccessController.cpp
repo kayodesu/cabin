@@ -12,7 +12,7 @@
 static void doPrivileged(Frame *frame)
 {
     // todo 这个函数干什么用的。。。。
-    jref thisObj = frame->getLocalAsRef(0);
+    jref _this = frame->getLocalAsRef(0);
 
     /*
      * run 函数返回 T类型 的对象
@@ -21,8 +21,8 @@ static void doPrivileged(Frame *frame)
      *     T run();
      * }
      */
-    Method *m = thisObj->clazz->getDeclaredMethod(S(run), S(___java_lang_Object));
-    slot_t *s = execJavaFunc(m, thisObj);
+    Method *m = _this->clazz->getDeclaredMethod(S(run), S(___java_lang_Object));
+    slot_t *s = execJavaFunc(m, _this);
     frame->pushr(RSLOT(s));
 }
 

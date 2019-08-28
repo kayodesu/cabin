@@ -80,11 +80,9 @@ void java_lang_ClassLoader_registerNatives()
 #undef C
 #define C "java/lang/ClassLoader",
     register_native_method(C"defineClass0",
-             "(Ljava/lang/String;[BIILjava/security/ProtectionDomain;)Ljava/lang/Class;",
-                           defineClass0);
+             "(Ljava/lang/String;[BIILjava/security/ProtectionDomain;)Ljava/lang/Class;", defineClass0);
     register_native_method(C"defineClass1",
-             "(Ljava/lang/String;[BIILjava/security/ProtectionDomain;Ljava/lang/String;)Ljava/lang/Class;",
-                           defineClass1);
+             "(Ljava/lang/String;[BIILjava/security/ProtectionDomain;Ljava/lang/String;)Ljava/lang/Class;", defineClass1);
     register_native_method(C"defineClass2",
              "(Ljava/lang/String;Ljava/nio/ByteBuffer;IILjava/security/ProtectionDomain;Ljava/lang/String;)Ljava/lang/Class;",
                            defineClass2);

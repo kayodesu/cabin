@@ -21,14 +21,14 @@ static void find(Frame *frame)
 static void load(Frame *frame)
 {
     // todo
-    jref thisObj = frame->getLocalAsRef(0);
+    jref _this = frame->getLocalAsRef(0);
     jref name = frame->getLocalAsRef(1);
 //    bool is_builtin = slot_geti(frame->local_vars + 2) == 0 ? false : true;
 
     // todo load
 
     // set boolean loaded is true
-    thisObj->setFieldValue("loaded", "Z", 1);
+    _this->setFieldValue("loaded", "Z", 1);
 }
 
 // native void unload(String name, boolean isBuiltin);

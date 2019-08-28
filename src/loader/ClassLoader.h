@@ -17,10 +17,6 @@ class ArrayClass;
 
 
 class ClassLoader {
-//    HashMap loaded_class_pool; // 保存 class *
-//    struct hashmap *classobj_pool; // java.lang.Class 类的对象池，保存 object *
-
-
     // map使用我们给定的Comparator函数指针来判断两个key的大小，也判断两个key是否相等。
     struct Comparator {
         bool operator()(const char *s, const char *t) const
