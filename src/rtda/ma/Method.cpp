@@ -4,7 +4,6 @@
 
 #include <sstream>
 #include "Method.h"
-#include "descriptor.h"
 #include "../heap/Object.h"
 #include "../heap/ArrayObject.h"
 #include "../heap/ClassObject.h"
@@ -42,15 +41,78 @@ Method::ExceptionTable::ExceptionTable(Class *clazz, BytecodeReader &r)
 ArrayObject *Method::getParameterTypes()
 {
     if (parameterTypes == nullptr) {
-        parameterTypes = methodDescriptorToParameterTypes(clazz->loader, descriptor);
+        int dlen = strlen(descriptor);
+        char desc[dlen + 1];
+        strcpy(desc, descriptor);
+
+        Object* buf[METHOD_PARAMETERS_MAX_COUNT];
+
+        int parameter_types_count = 0;
+
+        char *b = strchr(desc, '(');
+        const char *e = strchr(desc, ')');
+        if (b == nullptr || e == nullptr) {
+            VM_UNKNOWN_ERROR("descriptor error. %s", desc); // todo
+            return nullptr;
+        }
+
+        // parameter types
+        while (++b < e) {
+            if (*b == 'L') { // reference
+                char *t = strchr(b, ';');
+                if (t == nullptr) {
+                    VM_UNKNOWN_ERROR("descriptor error. %s", descriptor); // todo
+                    return nullptr;
+                }
+
+                *t = 0;   // end string
+                buf[parameter_types_count++] = clazz->loader->loadClass(b + 1 /* jump 'L' */)->clsobj;
+                *t = ';'; // recover
+                b = t;
+            } else if (*b == '[') { // array reference, 描述符形如 [B 或 [[Ljava/lang/String; 的形式
+                char *t = b;
+                while (*(++t) == '[');
+                if (!isPrimitiveDescriptor(*t)) {
+                    t = strchr(t, ';');
+                    if (t == nullptr) {
+                        VM_UNKNOWN_ERROR("descriptor error. %s", descriptor); // todo
+                        return nullptr;
+                    }
+                }
+
+                char k = *(++t);
+                *t = 0; // end string
+                buf[parameter_types_count++] = clazz->loader->loadClass(b)->clsobj;
+                *t = k; // recover
+                b = t;
+            } else if (isPrimitiveDescriptor(*b)) {
+                const char *class_name = primitiveDescriptor2className(*b);
+                buf[parameter_types_count++] = clazz->loader->loadClass(class_name)->clsobj;
+            } else {
+                VM_UNKNOWN_ERROR("descriptor error %s", descriptor); // todo
+                return nullptr;
+            }
+        }
+
+        // todo parameter_types_count == 0 是不是要填一个 void.class
+
+        parameterTypes = ArrayObject::newInst(java_lang_Class_array_class, parameter_types_count);
+        for (int i = 0; i < parameter_types_count; i++)
+            parameterTypes->set(i, buf[i]);
     }
+
     return parameterTypes;
 }
 
 ClassObject *Method::getReturnType()
 {
     if (returnType == nullptr) {
-        returnType = methodDescriptorToTeturnType(clazz->loader, descriptor);
+        const char *e = strchr(descriptor, ')');
+        if (e == nullptr) {
+            VM_UNKNOWN_ERROR("descriptor error. %s", descriptor); // todo
+            return nullptr;
+        }
+        returnType = clazz->loader->loadClass(descriptorToClassName(++e).c_str())->clsobj;
     }
     return returnType;
 }

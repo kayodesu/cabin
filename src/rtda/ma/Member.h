@@ -5,9 +5,12 @@
 #ifndef JVM_MEMBER_H
 #define JVM_MEMBER_H
 
+#include <string>
 #include "Access.h"
 
 class Class;
+class ClassObject;
+class ClassLoader;
 
 /*
  * 类的成员，包括 Field and Method
@@ -33,5 +36,11 @@ protected:
     explicit Member(Class *c): clazz(c) { }
 };
 
+// [xxx -> [xxx
+// Lx/y/z; -> x/y/z
+// I -> int, ...
+const std::string descriptorToClassName(const char *descriptor);
+
+//ClassObject *descriptorToType(ClassLoader *loader, const char *descriptor);
 
 #endif //JVM_MEMBER_H

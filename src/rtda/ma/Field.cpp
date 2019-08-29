@@ -4,7 +4,6 @@
 
 #include <sstream>
 #include "Field.h"
-#include "descriptor.h"
 #include "../../symbol.h"
 #include "resolve.h"
 
@@ -69,7 +68,7 @@ Field::Field(Class *c, BytecodeReader &r): Member(c)
 ClassObject *Field::getType()
 {
     if (type == nullptr) {
-        type = descriptorToType(clazz->loader, descriptor);
+        type = clazz->loader->loadClass(descriptorToClassName(descriptor).c_str())->clsobj;
     }
 
     return type;

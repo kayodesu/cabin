@@ -2,15 +2,17 @@
  * Author: Jia Yang
  */
 
+#include <sstream>
 #include "../../registry.h"
 #include "../../../rtda/thread/Frame.h"
 #include "../../../rtda/heap/Object.h"
-#include "../../../rtda/ma/descriptor.h"
 #include "../../../rtda/ma/Method.h"
 #include "../../../rtda/heap/ArrayObject.h"
 #include "../../../rtda/heap/ClassObject.h"
 #include "../../../interpreter/interpreter.h"
 #include "../../../symbol.h"
+
+using namespace std;
 
 static slot_t* convert_args(jref this_obj, Method *m, ArrayObject *args)
 {
@@ -42,6 +44,29 @@ static slot_t* convert_args(jref this_obj, Method *m, ArrayObject *args)
     }
 
     return result;
+}
+
+static string typesToDescriptor(const ArrayObject *types)
+{
+    assert(types != nullptr);
+    assert(types->isArray());
+
+    ostringstream os;
+
+    for (int t = 0; t < types->len; t++) {
+        auto type = types->get<ClassObject *>(t);
+        Class *c = type->entityClass;
+        char d = primitiveClassName2descriptor(c->className);
+        if (d != 0) { // primitive type
+            os << d;
+        } else if (c->isArray()) { // 数组
+            os << c->className;
+        } else { // 普通类
+            os << 'L' << c->className << ';';
+        }
+    }
+
+    return os.str();
 }
 
 /*
