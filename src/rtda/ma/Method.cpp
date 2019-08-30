@@ -25,15 +25,15 @@ Method::ExceptionTable::ExceptionTable(Class *clazz, BytecodeReader &r)
         catchType = nullptr;
     } else {
         catchType = new CatchType;
-        if (CP_TYPE(&clazz->constant_pool, type) == CONSTANT_ResolvedClass) {
+        if (CP_TYPE(clazz->cp, type) == CONSTANT_ResolvedClass) {
             catchType->resolved = true;
-            catchType->u.clazz = (Class *) CP_INFO(&clazz->constant_pool, type);
+            catchType->u.clazz = (Class *) CP_INFO(clazz->cp, type);
         } else {
             // 不能在这里load class，有形成死循环的可能。
             // 比如当前方法是 Throwable 中的方法，而此方法又抛出了 Throwable 子类的Exception（记为A），
             // 而此时 Throwable 还没有构造完成，所以无法构造其子类 A。
             catchType->resolved = false;
-            catchType->u.className = CP_CLASS_NAME(&clazz->constant_pool, type);
+            catchType->u.className = CP_CLASS_NAME(clazz->cp, type);
         }
     }
 }
@@ -202,7 +202,7 @@ void Method::parseCodeAttr(BytecodeReader &r)
     // parse attributes of code's attribute
     u2 attr_count = r.readu2();
     for (int k = 0; k < attr_count; k++) {
-        const char *attr_name = CP_UTF8(&clazz->constant_pool, r.readu2());
+        const char *attr_name = CP_UTF8(clazz->cp, r.readu2());
         u4 attr_len = r.readu4();
 
         if (S(LineNumberTable) == attr_name) {
@@ -243,7 +243,7 @@ void Method::parseCodeAttr(BytecodeReader &r)
 
 Method::Method(Class *c, BytecodeReader &r): Member(c)
 {
-    auto cp = &c->constant_pool;
+    ConstantPool &cp = c->cp;
 
     accessFlags = r.readu2();
     name = CP_UTF8(cp, r.readu2());

@@ -111,7 +111,7 @@ static const char *instruction_names[] = {
 // constant instructions -----------------------------------------------------------------------------------------------
 static void __ldc(Frame *frame, int index)
 {
-    auto cp = &frame->method->clazz->constant_pool;
+    ConstantPool &cp = frame->method->clazz->cp;
     u1 type = CP_TYPE(cp, index);
 
     if (type == CONSTANT_Integer) {
@@ -135,7 +135,7 @@ static void __ldc(Frame *frame, int index)
 void ldc2_w(Frame *frame)
 {
     int index = frame->reader.readu2();
-    auto cp = &frame->method->clazz->constant_pool;
+    ConstantPool &cp = frame->method->clazz->cp;
     u1 type = CP_TYPE(cp, index);
 
     if (type == CONSTANT_Long) {
@@ -230,7 +230,7 @@ static void multianewarray(Frame *frame)
 {
     Class *curr_class = frame->method->clazz;
     int index = frame->reader.readu2();
-    const char *class_name = CP_UTF8(&curr_class->constant_pool, index); // 这里解析出来的直接就是数组类。
+    const char *class_name = CP_UTF8(curr_class->cp, index); // 这里解析出来的直接就是数组类。
 
     auto arr_dim = frame->reader.readu1(); // 多维数组的维度
     size_t arr_lens[arr_dim]; // 每一维数组的长度
@@ -296,7 +296,7 @@ static void anewarray(Frame *frame)
     // todo arrLen == 0 的情况
 
     int index = frame->reader.readu2();
-    auto cp = &frame->method->clazz->constant_pool;
+    ConstantPool &cp = frame->method->clazz->cp;
 
     const char *class_name;
     u1 type = CP_TYPE(cp, index);

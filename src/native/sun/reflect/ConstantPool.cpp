@@ -16,7 +16,7 @@ static void getLongAt0(Frame *frame)
     jref o = frame->getLocalAsRef(1);
     jint i = frame->getLocalAsInt(2);
 
-    frame->pushl(CP_LONG(&(o->clazz->constant_pool), i));
+    frame->pushl(CP_LONG(o->clazz->cp, i));
 }
 
 // private native String getUTF8At0(Object o, int i);

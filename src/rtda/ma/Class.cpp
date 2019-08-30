@@ -88,7 +88,6 @@ void Class::calcFieldsId()
 void Class::parseAttribute(BytecodeReader &r)
 {
     u2 attr_count = r.readu2();
-    auto cp = &constant_pool;
 
     for (int i = 0; i < attr_count; i++) {
         const char *attr_name = CP_UTF8(cp, r.readu2());
@@ -337,9 +336,8 @@ Class::Class(ClassLoader *loader, const u1 *bytecode, size_t len)
 
     // init constant pool
     u2 cp_count = r.readu2();
-    constant_pool.type = new u1[cp_count];
-    constant_pool.info = new slot_t[cp_count];
-    auto cp = &constant_pool;
+    cp.type = new u1[cp_count];
+    cp.info = new slot_t[cp_count];
 
     // constant pool 从 1 开始计数，第0位无效
     CP_TYPE(cp, 0) = CONSTANT_Invalid;
@@ -487,8 +485,8 @@ Class::Class(ClassLoader *loader, const u1 *bytecode, size_t len)
 
 Class::~Class()
 {
-//    rtcp_destroy(rtcp);
-
+    delete cp.type;
+    delete cp.info;
     // todo
 }
 

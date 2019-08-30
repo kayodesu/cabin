@@ -64,7 +64,7 @@ struct Class: public Access {
     u2 minor_version;
     u2 major_version;
 
-    ConstantPool constant_pool; // 命名为 cp 算了
+    ConstantPool cp;
 
     // Object of java/lang/Class of this class
     // 通过此字段，每个Class结构体实例都与一个类对象关联。

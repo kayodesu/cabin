@@ -13,15 +13,15 @@ Field::Field(Class *c, BytecodeReader &r): Member(c)
 {
     constant_value_index = INVALID_CONSTANT_VALUE_INDEX;
     accessFlags = r.readu2();
-    name = CP_UTF8(&(c->constant_pool), r.readu2());
-    descriptor = CP_UTF8(&(c->constant_pool), r.readu2());
+    name = CP_UTF8(c->cp, r.readu2());
+    descriptor = CP_UTF8(c->cp, r.readu2());
 
     categoryTwo = descriptor[0] == 'J' || descriptor[0]== 'D';
 
     // parse field's attributes
     u2 attr_count = r.readu2();
     for (int i = 0; i < attr_count; i++) {
-        const char *attr_name = CP_UTF8(&(c->constant_pool), r.readu2());
+        const char *attr_name = CP_UTF8(c->cp, r.readu2());
         u4 attr_len = r.readu4();
 
         if (S(Deprecated) == attr_name) {
@@ -41,7 +41,7 @@ Field::Field(Class *c, BytecodeReader &r): Member(c)
         } else if (S(Synthetic) == attr_name) {
             setSynthetic();
         } else if (S(Signature) == attr_name) {
-            c->signature = CP_UTF8(&(c->constant_pool), r.readu2());
+            c->signature = CP_UTF8(c->cp, r.readu2());
         } else if (S(RuntimeVisibleAnnotations) == attr_name) { // ignore
 //            u2 num = field->runtime_visible_annotations_num = readu2(reader);
 //            field->runtime_visible_annotations = malloc(sizeof(struct annotation) * num);
