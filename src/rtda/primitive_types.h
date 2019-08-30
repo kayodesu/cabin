@@ -9,6 +9,7 @@ class PrimitiveClass;
 
 void loadPrimitiveTypes();
 PrimitiveClass *getPrimitiveClass(const char *className);
+PrimitiveClass *getPrimitiveClass(char descriptor);
 
 bool isPrimitiveClassName(const char *class_name);
 bool isPrimitiveDescriptor(char descriptor);

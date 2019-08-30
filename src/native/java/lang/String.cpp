@@ -13,7 +13,7 @@ static void intern(Frame *frame)
     auto _this = frame->getLocalAsRef<StringObject>(0);
 
 //    put_so_to_pool(this);
-    auto soInPool = vmEnv.strPool->put(_this);
+    auto soInPool = g_str_pool->put(_this);
     frame->pushr(soInPool);
 }
 

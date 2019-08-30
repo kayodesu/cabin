@@ -243,9 +243,9 @@ void Method::parseCodeAttr(BytecodeReader &r)
 
 Method::Method(Class *c, BytecodeReader &r): Member(c)
 {
-    constant_pool *cp = &c->constant_pool;
+    auto cp = &c->constant_pool;
 
-    access_flags = r.readu2();
+    accessFlags = r.readu2();
     name = CP_UTF8(cp, r.readu2());
     descriptor = CP_UTF8(cp, r.readu2());
     u2 attr_count = r.readu2();

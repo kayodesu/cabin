@@ -12,7 +12,7 @@ using namespace std;
 Field::Field(Class *c, BytecodeReader &r): Member(c)
 {
     constant_value_index = INVALID_CONSTANT_VALUE_INDEX;
-    access_flags = r.readu2();
+    accessFlags = r.readu2();
     name = CP_UTF8(&(c->constant_pool), r.readu2());
     descriptor = CP_UTF8(&(c->constant_pool), r.readu2());
 

@@ -418,13 +418,6 @@ static void getComponentType(Frame *frame)
     } else {
         frame->pushr(nullptr);
     }
-
-//    Class *component_cls = class_component_class(thisObj->entityClass);
-//    if (component_cls != nullptr) {
-//        frame_stack_pushr(frame, component_cls->clsobj);
-//    } else {
-//        frame_stack_pushr(frame, nullptr);
-//    }
 }
 
 /**
@@ -458,7 +451,7 @@ static void getComponentType(Frame *frame)
 static void getModifiers(Frame *frame)
 {
     auto _this = frame->getLocalAsRef<ClassObject>(0);
-    frame->pushi(_this->entityClass->access_flags);
+    frame->pushi(_this->entityClass->accessFlags);
 }
 
 /**
@@ -580,9 +573,9 @@ static void getDeclaredFields0(Frame *frame)
         execJavaFunc(field_constructor, {
                 (slot_t) jlrf_obj, // this
                 (slot_t) _this, // declaring class
-                (slot_t) vmEnv.strPool->get(cls->fields[i]->name), // name
+                (slot_t) g_str_pool->get(cls->fields[i]->name), // name
                 (slot_t) cls->fields[i]->getType(), // type
-                cls->fields[i]->access_flags, /* modifiers */
+                cls->fields[i]->accessFlags, /* modifiers */
                 (slot_t) cls->fields[i]->id, /* slot   todo */
                 (slot_t) nullptr, /* signature  todo */
                 (slot_t) nullptr, /* annotations  todo */
@@ -635,11 +628,11 @@ static void getDeclaredMethods0(Frame *frame)
         execJavaFunc(method_constructor, {
                 (slot_t) jlrf_obj,        /* this  */
                 (slot_t) _this, /* declaring class */
-                (slot_t) vmEnv.strPool->get(method->name), /* name */
+                (slot_t) g_str_pool->get(method->name), /* name */
                 (slot_t) method->getParameterTypes(), /* parameter types */
                 (slot_t) method->getReturnType(),     /* return type */
                 (slot_t) method->getExceptionTypes(), /* checked exceptions */
-                method->access_flags, /* modifiers*/
+                method->accessFlags, /* modifiers*/
                 0, /* slot   todo */
                 (slot_t) nullptr, /* signature  todo */
                 (slot_t) nullptr, /* annotations  todo */
@@ -688,7 +681,7 @@ static void getDeclaredConstructors0(Frame *frame)
                 (slot_t) _this, // declaring class
                 (slot_t) constructor->getParameterTypes(),  // parameter types
                 (slot_t) constructor->getExceptionTypes(),  // checked exceptions
-                constructor->access_flags, // modifiers
+                constructor->accessFlags, // modifiers
                 0, // slot   todo
                 (slot_t) nullptr, // signature  todo
                 (slot_t) nullptr, // annotations  todo

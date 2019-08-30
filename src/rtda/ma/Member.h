@@ -41,6 +41,4 @@ protected:
 // I -> int, ...
 const std::string descriptorToClassName(const char *descriptor);
 
-//ClassObject *descriptorToType(ClassLoader *loader, const char *descriptor);
-
 #endif //JVM_MEMBER_H

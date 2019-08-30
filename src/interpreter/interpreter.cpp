@@ -111,7 +111,7 @@ static const char *instruction_names[] = {
 // constant instructions -----------------------------------------------------------------------------------------------
 static void __ldc(Frame *frame, int index)
 {
-    struct constant_pool *cp = &frame->method->clazz->constant_pool;
+    auto cp = &frame->method->clazz->constant_pool;
     u1 type = CP_TYPE(cp, index);
 
     if (type == CONSTANT_Integer) {
@@ -135,7 +135,7 @@ static void __ldc(Frame *frame, int index)
 void ldc2_w(Frame *frame)
 {
     int index = frame->reader.readu2();
-    struct constant_pool *cp = &frame->method->clazz->constant_pool;
+    auto cp = &frame->method->clazz->constant_pool;
     u1 type = CP_TYPE(cp, index);
 
     if (type == CONSTANT_Long) {
@@ -296,7 +296,7 @@ static void anewarray(Frame *frame)
     // todo arrLen == 0 的情况
 
     int index = frame->reader.readu2();
-    struct constant_pool *cp = &frame->method->clazz->constant_pool;
+    auto cp = &frame->method->clazz->constant_pool;
 
     const char *class_name;
     u1 type = CP_TYPE(cp, index);

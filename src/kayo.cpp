@@ -13,40 +13,25 @@
 #include "rtda/ma/Access.h"
 #include "interpreter/interpreter.h"
 #include "rtda/heap/StrPool.h"
-#include "symbol.h"
-#include "loader/bootstrap_class_loader.h"
 
 using namespace std;
 
 HeapMgr g_heap_mgr;
 
-VMEnv vmEnv;
-vector<Thread *> vmThreads;
+//VMEnv vmEnv;
 
-VMEnv::VMEnv()
-{
-    strPool = new StrPool;
-}
+vector<std::string> jreLibJars;
+vector<std::string> jreExtJars;
+vector<std::string> userDirs;
+vector<std::string> userJars;
+
+StrPool *g_str_pool;
+
+Object *sysThreadGroup;
+
+vector<Thread *> g_all_threads;
 
 void init_symbol();
-
-// main thread is current thread
-//static void initMainThread()
-//{
-//    auto mainThread = new Thread(nullptr);
-//
-//    Class *jltgClass = java_lang_ThreadGroup_class;
-//    vmEnv.sysThreadGroup = Object::newInst(jltgClass);
-//
-//    // 初始化 system_thread_group
-//    // java/lang/ThreadGroup 的无参数构造函数主要用来：
-//    // Creates an empty Thread group that is not in any Thread group.
-//    // This method is used to create the system Thread group.
-//    jltgClass->clinit();
-//    execJavaFunc(jltgClass->getConstructor(S(___V)), vmEnv.sysThreadGroup);
-//
-//    mainThread->setThreadGroupAndName(vmEnv.sysThreadGroup, MAIN_THREAD_NAME);
-//}
 
 static void *gcLoop(void *arg)
 {
@@ -56,6 +41,7 @@ static void *gcLoop(void *arg)
 
 static void startJVM(const char *main_class_name)
 {
+    g_str_pool = new StrPool;
     init_symbol();
     initBootClassLoader();
 
@@ -179,15 +165,15 @@ int main(int argc, char* argv[])
         strcat(bootstrap_classpath, "/jre/lib");
     }
 
-    findJars(bootstrap_classpath, vmEnv.jreLibJars);
+    findJars(bootstrap_classpath, jreLibJars);
 
     // 第0个位置放rt.jar，因为rt.jar常用，所以放第0个位置首先搜索。
-    for (auto iter = vmEnv.jreLibJars.begin(); iter != vmEnv.jreLibJars.end(); iter++) {
+    for (auto iter = jreLibJars.begin(); iter != jreLibJars.end(); iter++) {
         auto i = iter->rfind('\\');
         auto j = iter->rfind('/');
         if ((i != iter->npos && iter->compare(i + 1, 6, "rt.jar") == 0)
                 || (j != iter->npos && iter->compare(j + 1, 6, "rt.jar") == 0)) {
-            std::swap(*(vmEnv.jreLibJars.begin()), *iter);
+            std::swap(*(jreLibJars.begin()), *iter);
             break;
         }
     }
@@ -198,7 +184,7 @@ int main(int argc, char* argv[])
         strcat(extension_classpath, "/ext");  // todo JDK9+ 的目录结构有变动！！！！！！！
     }
 
-    findJars(extension_classpath, vmEnv.jreExtJars);
+    findJars(extension_classpath, jreExtJars);
 
     // parse user classpath
     if (user_classpath[0] == 0) {  // empty
@@ -206,9 +192,9 @@ int main(int argc, char* argv[])
         if (classpath == nullptr) {
             char buf[PATH_MAX + 1];
             getcwd(buf, PATH_MAX); // current working path
-            vmEnv.userDirs.emplace_back(buf);
+            userDirs.emplace_back(buf);
         } else {
-            vmEnv.userDirs.emplace_back(classpath);
+            userDirs.emplace_back(classpath);
         }
     } else {
         const char *delim = ";"; // 各个path以分号分隔
@@ -216,9 +202,9 @@ int main(int argc, char* argv[])
         while (path != nullptr) {
             const char *suffix = strrchr(path, '.');
             if (suffix != nullptr && strcmp(suffix, ".jar") == 0) { // jar file
-                vmEnv.userJars.emplace_back(path);
+                userJars.emplace_back(path);
             } else { // directory
-                vmEnv.userDirs.emplace_back(path);
+                userDirs.emplace_back(path);
             }
             path = strtok(nullptr, delim);
         }

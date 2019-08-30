@@ -43,16 +43,16 @@ Thread *initMainThread()
     java_lang_Thread_class->clinit();
 
     Class *jltgClass = java_lang_ThreadGroup_class;
-    vmEnv.sysThreadGroup = Object::newInst(jltgClass);
+    sysThreadGroup = Object::newInst(jltgClass);
 
     // 初始化 system_thread_group
     // java/lang/ThreadGroup 的无参数构造函数主要用来：
     // Creates an empty Thread group that is not in any Thread group.
     // This method is used to create the system Thread group.
     jltgClass->clinit();
-    execJavaFunc(jltgClass->getConstructor(S(___V)), vmEnv.sysThreadGroup);
+    execJavaFunc(jltgClass->getConstructor(S(___V)), sysThreadGroup);
 
-    mainThread->setThreadGroupAndName(vmEnv.sysThreadGroup, MAIN_THREAD_NAME);
+    mainThread->setThreadGroupAndName(sysThreadGroup, MAIN_THREAD_NAME);
     return mainThread;
 }
 
@@ -112,7 +112,7 @@ Thread::Thread(Object *jThread0, jint priority): jThread(jThread0)
     assert(MIN_PRIORITY <= priority && priority <= MAX_PRIORITY);
 
     set_thread_self(this);
-    vmThreads.push_back(this);
+    g_all_threads.push_back(this);
 
     if (jThread == nullptr)
         jThread = Object::newInst(java_lang_Thread_class);

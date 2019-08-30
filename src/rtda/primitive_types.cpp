@@ -30,6 +30,8 @@ static const struct {
 void loadPrimitiveTypes()
 {
     assert(bootClassLoader != nullptr);
+    assert(java_lang_Class_class != nullptr);
+
     // 加载基本类型（int, float, etc.）的 class
     for (auto t : primitiveTypes) {
         t.clazz = new PrimitiveClass(t.class_name);
@@ -46,11 +48,20 @@ PrimitiveClass *getPrimitiveClass(const char *className)
     return nullptr;
 }
 
-bool isPrimitiveClassName(const char *class_name)
+PrimitiveClass *getPrimitiveClass(char descriptor)
 {
-    assert(class_name != nullptr);
     for (auto t : primitiveTypes) {
-        if (strcmp(t.class_name, class_name) == 0)
+        if (t.descriptor == descriptor)
+            return t.clazz;
+    }
+    return nullptr;
+}
+
+bool isPrimitiveClassName(const char *className)
+{
+    assert(className != nullptr);
+    for (auto t : primitiveTypes) {
+        if (strcmp(t.class_name, className) == 0)
             return true;
     }
     return false;
@@ -65,12 +76,12 @@ bool isPrimitiveDescriptor(char descriptor)
     return false;
 }
 
-const char *primitiveClassName2arrayClassName(const char *class_name)
+const char *primitiveClassName2arrayClassName(const char *className)
 {
-    assert(class_name != nullptr);
+    assert(className != nullptr);
 
     for (auto t : primitiveTypes) {
-        if (strcmp(t.class_name, class_name) == 0)
+        if (strcmp(t.class_name, className) == 0)
             return t.array_class_name;
     }
     return nullptr;
@@ -85,12 +96,12 @@ const char *primitiveDescriptor2className(char descriptor)
     return nullptr;
 }
 
-char primitiveClassName2descriptor(const char *class_name)
+char primitiveClassName2descriptor(const char *className)
 {
-    assert(class_name != nullptr);
+    assert(className != nullptr);
 
     for (auto t : primitiveTypes) {
-        if (strcmp(t.class_name, class_name) == 0)
+        if (strcmp(t.class_name, className) == 0)
             return t.descriptor;
     }
 

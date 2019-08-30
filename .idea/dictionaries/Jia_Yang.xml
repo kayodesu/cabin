@@ -10,6 +10,7 @@
       <w>calloc</w>
       <w>cfcp</w>
       <w>clsobj</w>
+      <w>constantpool</w>
       <w>ddata</w>
       <w>delim</w>
       <w>dlen</w>

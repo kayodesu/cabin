@@ -129,28 +129,28 @@ static unique_ptr<pair<u1 *, size_t>> read_class_from_dir(const char *dir_path, 
 static unique_ptr<pair<u1 *, size_t>> read_class(const char *class_name)
 {
     // search jre/lib
-    for (auto &jar : vmEnv.jreLibJars) {
+    for (auto &jar : jreLibJars) {
         auto content = read_class_from_jar(jar.c_str(), class_name);
         if (content) // find out
             return content;
     }
 
     // search jre/lib/ext
-    for (auto &jar : vmEnv.jreExtJars) {
+    for (auto &jar : jreExtJars) {
         auto content = read_class_from_jar(jar.c_str(), class_name);
         if (content) // find out
             return content;
     }
 
     // search user paths
-    for (auto &dir : vmEnv.userDirs) {
+    for (auto &dir : userDirs) {
         auto content = read_class_from_dir(dir.c_str(), class_name);
         if (content) // find out
             return content;
     }
 
     // search user jars
-    for (auto &jar : vmEnv.userJars) {
+    for (auto &jar : userJars) {
         auto content = read_class_from_jar(jar.c_str(), class_name);
         if (content) // find out
             return content;

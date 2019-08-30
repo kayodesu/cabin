@@ -35,32 +35,32 @@
 
 
 struct Access {
-    u2 access_flags = 0;
+    u2 accessFlags = 0;
 
     Access() = default;
 
-    explicit Access(u2 access_flags): access_flags(access_flags) { }
+    explicit Access(u2 accessFlags): accessFlags(accessFlags) { }
 
-    bool isPublic() const       { return (access_flags & ACC_PUBLIC)       != 0; }
-    bool isPrivate() const      { return (access_flags & ACC_PRIVATE)      != 0; }
-    bool isProtected() const    { return (access_flags & ACC_PROTECTED)    != 0; }
-    bool isStatic() const       { return (access_flags & ACC_STATIC)       != 0; }
-    bool isFinal() const        { return (access_flags & ACC_FINAL)        != 0; }
-    bool isSuper() const        { return (access_flags & ACC_SUPER)        != 0; }
-    bool isSynchronized() const { return (access_flags & ACC_SYNCHRONIZED) != 0; }
-    bool isVolatile() const     { return (access_flags & ACC_VOLATILE)     != 0; }
-    bool isBridge() const       { return (access_flags & ACC_BRIDGE)       != 0; }
-    bool isTransient() const    { return (access_flags & ACC_TRANSIENT)    != 0; }
-    bool isVarargs() const      { return (access_flags & ACC_VARARGS)      != 0; }
-    bool isNative() const       { return (access_flags & ACC_NATIVE)       != 0; }
-    bool isInterface() const    { return (access_flags & ACC_INTERFACE)    != 0; }
-    bool isAbstract() const     { return (access_flags & ACC_ABSTRACT)     != 0; }
-    bool isStrict() const       { return (access_flags & ACC_STRICT)       != 0; }
-    bool isSynthetic() const    { return (access_flags & ACC_SYNTHETIC)    != 0; }
-    bool isAnnotation() const   { return (access_flags & ACC_ANNOTATION)   != 0; }
-    bool isEnum() const         { return (access_flags & ACC_ENUM)         != 0; }
+    bool isPublic() const       { return (accessFlags & ACC_PUBLIC)       != 0; }
+    bool isPrivate() const      { return (accessFlags & ACC_PRIVATE)      != 0; }
+    bool isProtected() const    { return (accessFlags & ACC_PROTECTED)    != 0; }
+    bool isStatic() const       { return (accessFlags & ACC_STATIC)       != 0; }
+    bool isFinal() const        { return (accessFlags & ACC_FINAL)        != 0; }
+    bool isSuper() const        { return (accessFlags & ACC_SUPER)        != 0; }
+    bool isSynchronized() const { return (accessFlags & ACC_SYNCHRONIZED) != 0; }
+    bool isVolatile() const     { return (accessFlags & ACC_VOLATILE)     != 0; }
+    bool isBridge() const       { return (accessFlags & ACC_BRIDGE)       != 0; }
+    bool isTransient() const    { return (accessFlags & ACC_TRANSIENT)    != 0; }
+    bool isVarargs() const      { return (accessFlags & ACC_VARARGS)      != 0; }
+    bool isNative() const       { return (accessFlags & ACC_NATIVE)       != 0; }
+    bool isInterface() const    { return (accessFlags & ACC_INTERFACE)    != 0; }
+    bool isAbstract() const     { return (accessFlags & ACC_ABSTRACT)     != 0; }
+    bool isStrict() const       { return (accessFlags & ACC_STRICT)       != 0; }
+    bool isSynthetic() const    { return (accessFlags & ACC_SYNTHETIC)    != 0; }
+    bool isAnnotation() const   { return (accessFlags & ACC_ANNOTATION)   != 0; }
+    bool isEnum() const         { return (accessFlags & ACC_ENUM)         != 0; }
 
-    void setSynthetic() { access_flags |= ACC_SYNTHETIC; }  // todo
+    void setSynthetic() { accessFlags |= ACC_SYNTHETIC; }  // todo
 };
 
 #endif //JVM_ACCESS_H

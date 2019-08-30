@@ -53,7 +53,7 @@ static void getCallerClass(Frame *frame)
 static void getClassAccessFlags(Frame *frame)
 {
     Object *type = frame->getLocalAsRef(0);
-    frame->pushi(type->clazz->access_flags);
+    frame->pushi(type->clazz->accessFlags);
 }
 
 void sun_reflect_Reflection_registerNatives()

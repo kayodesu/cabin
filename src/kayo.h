@@ -23,42 +23,30 @@ class StrPool;
 struct Thread;
 
 
-// 一个 VM 只有一个 VMEnv 对象
-class VMEnv {
-private:
+// 启动类路径（bootstrap classpath）默认对应 jre/lib 目录，Java标准库（大部分在rt.jar里）位于该路径
+extern std::vector<std::string> jreLibJars;
 
-public:
-    // 启动类路径（bootstrap classpath）默认对应 jre/lib 目录，Java标准库（大部分在rt.jar里）位于该路径
-    std::vector<std::string> jreLibJars;
+// 扩展类路径（extension classpath）默认对应 jre/lib/ext 目录，使用Java扩展机制的类位于这个路径。
+extern std::vector<std::string> jreExtJars;
 
-    // 扩展类路径（extension classpath）默认对应 jre/lib/ext 目录，使用Java扩展机制的类位于这个路径。
-    std::vector<std::string> jreExtJars;
+/*
+ * 用户类路径（user classpath）我们自己实现的类，以及第三方类库位于用户类路径
+ *
+ * 用户类路径的默认值是当前目录。可以设置CLASSPATH环境变量来修改用户类路径。
+ * 可以通过 -cp 选项修改，
+ * -cp 选项的优先级更高，可以覆盖CLASSPATH环境变量设置。
+ * -cp 选项既可以指定目录，也可以指定JAR文件。
+ */
+extern std::vector<std::string> userDirs;
+extern std::vector<std::string> userJars;
 
-    /*
-     * 用户类路径（user classpath）我们自己实现的类，以及第三方类库位于用户类路径
-     *
-     * 用户类路径的默认值是当前目录。可以设置CLASSPATH环境变量来修改用户类路径。
-     * 可以通过 -cp 选项修改，
-     * -cp 选项的优先级更高，可以覆盖CLASSPATH环境变量设置。
-     * -cp 选项既可以指定目录，也可以指定JAR文件。
-     */
-    std::vector<std::string> userDirs;
-    std::vector<std::string> userJars;
+extern StrPool *g_str_pool;
 
-    StrPool *strPool; // string pool
+// The system Thread group.
+extern Object *sysThreadGroup;
 
-    // The system Thread group.
-    Object *sysThreadGroup;
-
-    // todo 所有线程
-    std::vector<Thread *> threads;
-
-    VMEnv();
-};
-
-extern std::vector<Thread *> vmThreads;
-
-extern VMEnv vmEnv;
+// todo 所有线程
+extern std::vector<Thread *> g_all_threads;
 
 /*
  * jvms规定函数最多有255个参数，this也算，long和double占两个长度

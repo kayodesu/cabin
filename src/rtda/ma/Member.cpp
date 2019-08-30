@@ -43,11 +43,3 @@ const string descriptorToClassName(const char *descriptor)
         return primitiveDescriptor2className(*descriptor);
     }
 }
-
-//ClassObject *descriptorToType(ClassLoader *loader, const char *descriptor)
-//{
-//    assert(loader != nullptr);
-//    assert(descriptor != nullptr);
-//
-//    return loader->loadClass(descriptorToClassName(descriptor).c_str())->clsobj;
-//}

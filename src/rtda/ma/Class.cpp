@@ -38,9 +38,10 @@ void Class::calcFieldsId()
     }
 
     instFieldsCount = insId;
-    static_fields_count = staticId;
+    staticFieldsCount = staticId;
 
-    static_fields_values = (slot_t *)vm_calloc(static_fields_count, sizeof(slot_t));
+    staticFieldsValues =(slot_t *)vm_calloc(staticFieldsCount, sizeof(slot_t)); // 清零
+
 //    static_fields_values = new slot_t[static_fields_count];//vm_calloc(static_fields_count, sizeof(slot_t));
 //    memset(static_fields_values, 0, static_fields_count*sizeof(slot_t)); // todo java的静态变量和类变量是有初始默认值的
 
@@ -87,7 +88,7 @@ void Class::calcFieldsId()
 void Class::parseAttribute(BytecodeReader &r)
 {
     u2 attr_count = r.readu2();
-    struct constant_pool *cp = &constant_pool;
+    auto cp = &constant_pool;
 
     for (int i = 0; i < attr_count; i++) {
         const char *attr_name = CP_UTF8(cp, r.readu2());
@@ -334,11 +335,11 @@ Class::Class(ClassLoader *loader, const u1 *bytecode, size_t len)
     minor_version = r.readu2();
     major_version = r.readu2();
 
+    // init constant pool
     u2 cp_count = r.readu2();
-
     constant_pool.type = new u1[cp_count];
     constant_pool.info = new slot_t[cp_count];
-    struct constant_pool *cp = &constant_pool;
+    auto cp = &constant_pool;
 
     // constant pool 从 1 开始计数，第0位无效
     CP_TYPE(cp, 0) = CONSTANT_Invalid;
@@ -425,7 +426,8 @@ Class::Class(ClassLoader *loader, const u1 *bytecode, size_t len)
         }
     }
 
-    access_flags = r.readu2();
+
+    accessFlags = r.readu2();
 
     className = CP_CLASS_NAME(cp, r.readu2());
     genPkgName();
@@ -697,15 +699,15 @@ void Class::setStaticFieldValue(Field *f, const slot_t *value)
 {
     assert(f != nullptr && value != nullptr);
 
-    static_fields_values[f->id] =  value[0];
+    staticFieldsValues[f->id] =  value[0];
     if (f->categoryTwo) {
-        static_fields_values[f->id + 1] = value[1];
+        staticFieldsValues[f->id + 1] = value[1];
     }
 }
 
 const slot_t* Class::getStaticFieldValue(const Field *f)
 {
-    return static_fields_values + f->id;
+    return staticFieldsValues + f->id;
 }
 
 bool Class::isArray() const
@@ -764,8 +766,9 @@ string Class::toString() const
 ArrayClass::ArrayClass(const char *className): Class(bootClassLoader, strdup(className))
 {
     assert(className != nullptr);
-    // todo className 是不是 array
-    access_flags = ACC_PUBLIC;
+    assert(className[0] == '[');
+
+    accessFlags = ACC_PUBLIC;
     inited = true; // 数组类不需要初始化
     pkgName = "";
     superClass = java_lang_Object_class;
@@ -792,29 +795,35 @@ size_t ArrayClass::getEleSize()
         else if (t == 'J') { eleSize = sizeof(jlong); }
         else if (t == 'D') { eleSize = sizeof(jdouble); }
     }
+
     return eleSize;
 }
 
 Class *ArrayClass::componentClass()
 {
-    const char *component_name = className;
-    for (; *component_name == '['; component_name++);
+    if (compClass != nullptr)
+        return compClass;
 
-    if (*component_name != 'L') {
-        // todo 基本类型这里实现错误
-        return loader->loadClass(component_name);
+    const char *compName = className;
+    for (; *compName == '['; compName++); // jump all '['
+
+    if (*compName != 'L') { // primitive type
+        compClass = getPrimitiveClass(*compName);
+        assert(compClass != nullptr);
+        return compClass;
     }
 
-    component_name++;
-    int last = strlen(component_name) - 1;
+    compName++;
+    int last = strlen(compName) - 1;
     assert(last > 0);
-    if (component_name[last] != ';') {
+    if (compName[last] != ';') {
         VM_UNKNOWN_ERROR("%s", className); // todo
         return nullptr;
     } else {
         char buf[last + 1];
-        strncpy(buf, component_name, (size_t) last);
+        strncpy(buf, compName, (size_t) last);
         buf[last] = 0;
-        return loader->loadClass(buf);
+        compClass = loader->loadClass(buf);
+        return compClass;
     }
 }
