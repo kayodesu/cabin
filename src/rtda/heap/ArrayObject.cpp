@@ -5,7 +5,7 @@
 #include <cstring>
 #include <cassert>
 #include "ArrayObject.h"
-#include "../../kayo.h"
+#include "../ma/ArrayClass.h"
 
 using namespace std;
 

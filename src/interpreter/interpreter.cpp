@@ -818,7 +818,9 @@ static slot_t *exec()
                 frame->stack[-4] = frame->stack[0];
                 frame->stack += 2;
                 break;
-            CASE(OPC_SWAP, swap(frame->stack[-1], frame->stack[-2]));
+            case OPC_SWAP:
+                swap(frame->stack[-1], frame->stack[-2]);
+                break;
 
 #define BINARY_OP(type, n, oper) \
 { \
@@ -933,24 +935,23 @@ static slot_t *exec()
                 break;
             }
 
-#define x2y(x, y) frame->push##y(x##2##y(frame->pop##x()))
-            CASE(OPC_I2L, x2y(i, l))
-            CASE(OPC_I2F, x2y(i, f))
-            CASE(OPC_I2D, x2y(i, d))
+            CASE(OPC_I2L, frame->pushl(i2l(frame->popi())))
+            CASE(OPC_I2F, frame->pushf(i2f(frame->popi())))
+            CASE(OPC_I2D, frame->pushd(i2d(frame->popi())))
 
-            CASE(OPC_L2I, x2y(l, i))
-            CASE(OPC_L2F, x2y(l, f))
-            CASE(OPC_L2D, x2y(l, d))
+            CASE(OPC_L2I, frame->pushi(l2i(frame->popl())))
+            CASE(OPC_L2F, frame->pushf(l2f(frame->popl())))
+            CASE(OPC_L2D, frame->pushd(l2d(frame->popl())))
 
-            CASE(OPC_F2I, x2y(f, i))
-            CASE(OPC_F2L, x2y(f, l))
-            CASE(OPC_F2D, x2y(f, d))
+            CASE(OPC_F2I, frame->pushi(f2i(frame->popf())))
+            CASE(OPC_F2L, frame->pushl(f2l(frame->popf())))
+            CASE(OPC_F2D, frame->pushd(f2d(frame->popf())))
 
-            CASE(OPC_D2I, x2y(d, i))
-            CASE(OPC_D2L, x2y(d, l))
-            CASE(OPC_D2F, x2y(d, f))
+            CASE(OPC_D2I, frame->pushi(d2i(frame->popd())))
+            CASE(OPC_D2L, frame->pushl(d2l(frame->popd())))
+            CASE(OPC_D2F, frame->pushf(d2f(frame->popd())))
 
-            CASE(OPC_I2B, frame->pushi(i2b(frame->popi())))
+            CASE(OPC_I2B, frame->pushi(i2b(frame->popi()))) // todo byte or bool????
             CASE(OPC_I2C, frame->pushi(i2c(frame->popi())))
             CASE(OPC_I2S, frame->pushi(i2s(frame->popi())))
 
@@ -1146,17 +1147,10 @@ static slot_t *exec()
                     thread_throw_null_pointer_exception();
                 }
 
-          //      assert(m->vtableIndex >= 0);
-        //        assert(m->vtableIndex < obj->clazz->vtable.size());
-//                resolved_method = obj->clazz->vtable[m->vtableIndex];  // todo
-
-                // 下面这样写对不对 todo
-               // if (obj->clazz != frame->method->clazz) {
-          //          // 从对象的类中查找真正要调用的方法
-                    m = obj->clazz->lookupMethod(m->name, m->descriptor);
-            //    }
-
-                resolved_method = m;
+                assert(m->vtableIndex >= 0);
+                assert(m->vtableIndex < obj->clazz->vtable.size());
+                resolved_method = obj->clazz->vtable[m->vtableIndex];
+                assert(resolved_method == obj->clazz->lookupMethod(m->name, m->descriptor));
                 goto invoke_method;
             }
 

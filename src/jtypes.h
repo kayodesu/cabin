@@ -27,7 +27,7 @@ class Object;
  * 5. 对于char类型， 取值范围[0, 65535]。
  */
 typedef int8_t          jbyte;
-typedef jbyte           jbool; // 本虚拟机实现，byte和bool用同一类型
+typedef jbyte           jboolean; // 本虚拟机实现，byte 和 boolean 用同一类型
 typedef uint16_t        jchar;
 typedef int16_t         jshort;
 typedef int32_t         jint;
@@ -36,7 +36,7 @@ typedef float          jfloat;
 typedef double         jdouble;
 typedef Object *        jref; // JVM中的引用类型，只能指向一个object对象。
 
-typedef jbool jboolean;
+typedef jboolean jbool;
 typedef jint jsize;
 
 static inline jlong i2l(jint i)

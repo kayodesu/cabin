@@ -17,47 +17,11 @@
 #include "../../loader/bootstrap_class_loader.h"
 #include "ConstantPool.h"
 
-
 class Field;
 class Method;
 class BytecodeReader;
 class ClassObject;
 class ArrayClass;
-
-//struct constant_pool {
-//    u1 *type;
-//    slot_t *info;
-//};
-//
-//// Macros for accessing constant pool entries
-//#define CP_TYPE(cp, i)                   ((cp)->type[i])
-//#define CP_INFO(cp, i)                   ((cp)->info[i])
-//
-////#define CP_METHOD_CLASS(cp, i)           (u2)(cp)->info[i]
-////#define CP_METHOD_NAME_TYPE(cp, i)       (u2)((cp)->info[i]>>16)
-//#define CP_INTERFACE_CLASS(cp, i)        (u2)(cp)->info[i]
-//#define CP_INTERFACE_NAME_TYPE(cp, i)    (u2)((cp)->info[i]>>16)
-//#undef CP_UTF8
-//#define CP_UTF8(cp, i)                   (char *)((cp)->info[i])
-//#define CP_STRING(cp, i)                 CP_UTF8(cp, (u2)(cp)->info[i])
-//#define CP_CLASS_NAME(cp, i)             CP_UTF8(cp, (u2)(cp)->info[i])
-//#define CP_NAME_TYPE_NAME(cp, i)         CP_UTF8(cp, (u2)(cp)->info[i])
-//#define CP_NAME_TYPE_TYPE(cp, i)         CP_UTF8(cp, (u2)((cp)->info[i]>>16))
-//
-//#define CP_FIELD_CLASS(cp, i)       (u2)(cp)->info[i]
-//#define CP_FIELD_CLASS_NAME(cp, i)  CP_UTF8(cp, (u2)(cp)->info[i])
-//#define CP_FIELD_NAME(cp, i)        CP_NAME_TYPE_NAME(cp, (u2)((cp)->info[i]>>16))
-//#define CP_FIELD_TYPE(cp, i)        CP_NAME_TYPE_TYPE(cp, (u2)((cp)->info[i]>>16))
-//
-//#define CP_METHOD_CLASS       CP_FIELD_CLASS
-//#define CP_METHOD_CLASS_NAME  CP_FIELD_CLASS_NAME
-//#define CP_METHOD_NAME        CP_FIELD_NAME
-//#define CP_METHOD_TYPE        CP_FIELD_TYPE
-//
-//#define CP_INT(cp, i)                    ISLOT((cp)->info + (i))
-//#define CP_FLOAT(cp, i)                  FSLOT((cp)->info + (i))
-//#define CP_LONG(cp, i)                   LSLOT((cp)->info + (i))
-//#define CP_DOUBLE(cp, i)                 DSLOT((cp)->info + (i))
 
 struct Class: public Access {
     u4 magic;
@@ -83,8 +47,6 @@ struct Class: public Access {
     Class *superClass = nullptr;
 
     std::vector<Class *> interfaces;
-
-//    struct rtcp *rtcp;
 
     /*
      * 本类中定义的所有方法（不包括继承而来的）
@@ -132,10 +94,11 @@ struct Class: public Access {
 
 //    struct bootstrap_methods_attribute *bootstrap_methods_attribute;
 
-    // enclosing_info[0]: the immediately enclosing class
-    // enclosing_info[1]: the immediately enclosing method or constructor's name (can be null).
-    // enclosing_info[2]: the immediately enclosing method or constructor's descriptor (null if name is).
-    Object *enclosing_info[3];
+    struct {
+        Object *clazz = nullptr;      // the immediately enclosing class
+        Object *name = nullptr;       // the immediately enclosing method or constructor's name (can be null).
+        Object *descriptor = nullptr; // the immediately enclosing method or constructor's descriptor (null if name is).
+    } enclosing;
 
     bool deprecated = false;
     const char *signature;
@@ -171,8 +134,6 @@ public:
      * clinit are the static initialization blocks for the class, and static Field initialization.
      */
     void clinit();
-
-//    Object *newInst();
 
     Field *lookupField(const char *name, const char *descriptor);
     Field *lookupStaticField(const char *name, const char *descriptor);
@@ -217,60 +178,6 @@ public:
     ArrayClass *arrayClass() const;
 
     std::string toString() const;
-};
-
-// 基本类型（int, float etc.）的 class.
-class PrimitiveClass: public Class {
-public:
-    explicit PrimitiveClass(const char *className): Class(bootClassLoader, className)
-    {
-        assert(className != nullptr);
-        accessFlags = ACC_PUBLIC;
-        pkgName = "";
-        inited = true;
-        // todo super_class ???? java.lang.Object ??????
-        superClass = java_lang_Object_class;
-
-        createVtable();
-    }
-};
-
-/*
- * Array Class 由vm生成。
- */
-class ArrayClass: public Class {
-    size_t eleSize = 0;
-    Class *compClass = nullptr; // component class
-public:
-    explicit ArrayClass(const char *className);
-
-//    Object *newInst() = delete;
-
-    // 判断数组单个元素的大小
-    // 除了基本类型的数组外，其他都是引用类型的数组
-    // 多维数组是数组的数组，也是引用类型的数组
-    size_t getEleSize();
-
-    /*
-     * Returns the representing the component class of an array class.
-     * If this class does not represent an array class this method returns null.
-     */
-    Class *componentClass();
-
-    /*
-      * 是否是基本类型的数组（当然是一维的）。
-      * 基本类型
-      * bool, byte, char, short, int, float, long, double
-      * 分别对应的数组类型为
-      * [Z,   [B,   [C,   [S,    [I,  [F,    [J,   [D
-      */
-    bool isPrimitiveArray() const
-    {
-        if (strlen(className) != 2 || className[0] != '[')
-            return false;
-
-        return strchr("ZBCSIFJD", className[1]) != nullptr;
-    }
 };
 
 #endif //JVM_JCLASS_H

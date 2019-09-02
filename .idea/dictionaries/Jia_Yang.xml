@@ -4,6 +4,7 @@
       <w>acmp</w>
       <w>addr</w>
       <w>allocs</w>
+      <w>arrayclass</w>
       <w>arrobj</w>
       <w>bigendian</w>
       <w>bsms</w>
@@ -78,6 +79,7 @@
       <w>popi</w>
       <w>popl</w>
       <w>popr</w>
+      <w>primitiveclass</w>
       <w>primitivetypes</w>
       <w>printvm</w>
       <w>ptypes</w>

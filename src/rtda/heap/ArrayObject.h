@@ -21,7 +21,7 @@ class ArrayObject: public Object {
     ArrayObject(ArrayClass *ac, size_t arr_dim, const size_t *arr_lens);
 
 public:
-    jint len; // 数组的长度
+    jsize len; // 数组的长度
 
     // 创建一维数组
     static ArrayObject *newInst(ArrayClass *ac, jint arrLen);

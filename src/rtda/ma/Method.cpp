@@ -339,7 +339,7 @@ Method::Method(Class *c, BytecodeReader &r): Member(c)
         maxLocals = arg_slot_count; // todo 因为本地方法帧的局部变量表只用来存放参数值，所以把argSlotCount赋给maxLocals字段刚好。
 
         codeLen = 2;
-        auto code = new u1[codeLen];;
+        auto code = new u1[codeLen];
         code[0] = OPC_INVOKENATIVE;
         const char *t = strchr(descriptor, ')'); // find return
         if (t == nullptr) {

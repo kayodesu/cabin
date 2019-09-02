@@ -3,6 +3,7 @@
  */
 
 #include "../../registry.h"
+#include "../../../rtda/ma/ArrayClass.h"
 #include "../../../rtda/heap/Object.h"
 #include "../../../rtda/heap/ClassObject.h"
 #include "../../../rtda/ma/Field.h"
@@ -13,7 +14,7 @@
 #include "../../../rtda/heap/ArrayObject.h"
 #include "../../../util/encoding.h"
 #include "../../../loader/bootstrap_class_loader.h"
-
+#include "../../../rtda/ma/Class.h"
 
 /*
  * Called after security check for system loader access checks have been made.
@@ -484,16 +485,15 @@ static void getEnclosingMethod0(Frame *frame)
     auto _this = frame->getLocalAsRef<ClassObject>(0);
 
     Class *c = _this->entityClass;
-    if (c->enclosing_info[0] == nullptr) {
+    if (c->enclosing.clazz == nullptr) {
         frame->pushr(nullptr);
         return;
     }
 
     auto result = ArrayObject::newInst(java_lang_Object_array_class, 3);
-    for (int i = 0; i < 3; i++) {
-        result->set(i, c->enclosing_info[i]);
-//        arrobj_set(jref, result, i, c->enclosing_info[i]);
-    }
+    result->set(0, c->enclosing.clazz);
+    result->set(1, c->enclosing.name);
+    result->set(2, c->enclosing.descriptor);
 
     frame->pushr(result);
 }

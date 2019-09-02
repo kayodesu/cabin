@@ -8,11 +8,9 @@
 #include "Field.h"
 #include "resolve.h"
 #include "../../interpreter/interpreter.h"
-#include "../../symbol.h"
 #include "../../classfile/constant.h"
 #include "../heap/ClassObject.h"
 #include "../heap/StringObject.h"
-#include "../../loader/bootstrap_class_loader.h"
 
 using namespace std;
 
@@ -41,48 +39,6 @@ void Class::calcFieldsId()
     staticFieldsCount = staticId;
 
     staticFieldsValues =(slot_t *)vm_calloc(staticFieldsCount, sizeof(slot_t)); // 清零
-
-//    static_fields_values = new slot_t[static_fields_count];//vm_calloc(static_fields_count, sizeof(slot_t));
-//    memset(static_fields_values, 0, static_fields_count*sizeof(slot_t)); // todo java的静态变量和类变量是有初始默认值的
-
-//    VM_MALLOCS(struct slot, c->instance_fields_count, values);
-//    c->inited_instance_fields_values = values;
-//
-//    // 将父类中的变量拷贝过来
-//    if (c->super_class != NULL) {
-//        memcpy(values, c->super_class->inited_instance_fields_values,
-//               c->super_class->instance_fields_count * sizeof(struct slot));
-//    }
-//    // 初始化本类中的实例变量
-//    for (int i = 0; i < c->fields_count; i++) {
-//        Field *field = c->fields + i;
-//        if (!IS_STATIC(field->access_flags)) {
-//            assert(field->id < c->instance_fields_count);
-//            switch (field->descriptor[0]) {
-//                case 'B':
-//                case 'C':
-//                case 'I':
-//                case 'S':
-//                case 'Z':
-//                    values[field->id] = islot(0);
-//                    break;
-//                case 'F':
-//                    values[field->id] = fslot(0.0f);
-//                    break;
-//                case 'J':
-//                    values[field->id] = lslot(0L);
-//                    values[field->id + 1] = phslot;
-//                    break;
-//                case 'D':
-//                    values[field->id] = dslot(0.0);
-//                    values[field->id + 1] = phslot;
-//                    break;
-//                default:
-//                    values[field->id] = rslot(NULL);
-//                    break;
-//            }
-//        }
-//    }
 }
 
 void Class::parseAttribute(BytecodeReader &r)
@@ -116,12 +72,11 @@ void Class::parseAttribute(BytecodeReader &r)
 
             if (enclosing_class_index > 0) {
                 Class *enclosing_class = loader->loadClass(CP_CLASS_NAME(cp, enclosing_class_index));
-                enclosing_info[0] = ClassObject::newInst(enclosing_class);
+                enclosing.clazz = ClassObject::newInst(enclosing_class);
 
                 if (enclosing_method_index > 0) {
-//                    const struct name_and_type *nt = rtcp_get_name_and_type(c->rtcp, enclosing_method_index);
-                    enclosing_info[1] = StringObject::newInst(CP_NAME_TYPE_NAME(cp, enclosing_method_index));//(nt->name);
-                    enclosing_info[2] = StringObject::newInst(CP_NAME_TYPE_TYPE(cp, enclosing_method_index));//(nt->descriptor);
+                    enclosing.name = StringObject::newInst(CP_NAME_TYPE_NAME(cp, enclosing_method_index));
+                    enclosing.descriptor = StringObject::newInst(CP_NAME_TYPE_TYPE(cp, enclosing_method_index));
                 }
             }
         } else if (S(BootstrapMethods) == attr_name) {
@@ -193,38 +148,27 @@ void Class::createVtable()
     }
 
     // 将父类的vtable复制过来
-//    vector<Method *> &superVtable = superClass->vtable;
     vtable.insert(vtable.end(), superClass->vtable.begin(), superClass->vtable.end());
 
-    int jj = superClass->vtable.size();
-    int eee = vtable.size();
-    assert(jj == eee);
-
-//    auto inheritedEnd = vtable.end();
-    int i = 0;
-    for (auto &m : methods) {
+    for (auto m : methods) {
         if (m->isVirtual()) {
 //            if (strcmp(className, "java/util/Vector") == 0) {
 //                int j = 0;
 //                printvm("********    %s\n", m->toString().c_str());
 //            }
-            for (auto iter = vtable.begin(); iter != vtable.end(); iter++) {
-                assert((*iter)->vtableIndex != Method::INVALID_VTABLE_INDEX);
-                if (utf8_equals(m->name, (*iter)->name) && utf8_equals(m->descriptor, (*iter)->descriptor)) {
-                    // 重写了父类的方法，更新
-                    m->vtableIndex = (*iter)->vtableIndex;
-                    *iter = m;
-                    goto NEXT_LOOP;
-                }
+            auto iter = find_if(vtable.begin(), vtable.end(), [=](Method *m0){
+                return utf8_equals(m->name, m0->name) && utf8_equals(m->descriptor, m0->descriptor); });
+            if (iter != vtable.end()) {
+                // 重写了父类的方法，更新
+                m->vtableIndex = (*iter)->vtableIndex;
+                *iter = m;
+            } else {
+                // 子类定义了要给新方法，加到 vtable 后面
+                vtable.push_back(m);
+                m->vtableIndex = vtable.size() - 1;
             }
-
-            // 子类定义了要给新方法，加到 vtable 后面
-            vtable.push_back(m);
-            m->vtableIndex = i++;
         }
-NEXT_LOOP:;
     }
-
 
 //    if (strcmp(className, "java/util/Vector") == 0) {
 //        printvm("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
@@ -233,71 +177,6 @@ NEXT_LOOP:;
 //        }
 //        printvm("----------------------------------------------------------\n");
 //    }
-
-#if 0
-    if (super_class == nullptr) {
-        int vtable_len = methods_count;
-        vtable = vm_malloc(sizeof(*(vtable)) * vtable_len);
-        vtable_len = 0;
-
-        for (int i = 0; i < methods_count; i++) {
-            Method *m = methods + i;
-            if (m->isPrivate()
-                || m->isStatic()
-                || m->isFinal()
-                || m->isAbstract()
-                || utf8_equals(m->name, SYMBOL(class_init))) {  //  todo strcmp(m->name, "<init>") == 0
-                continue;
-            }
-
-            vtable[vtable_len].name = m->name;
-            vtable[vtable_len].descriptor = m->descriptor;
-            vtable[vtable_len].method = m;
-            m->vtable_index = vtable_len;
-            vtable_len++;
- //           printf("444444     %s~%s~%s\n", m->clazz->class_name, m->name, m->descriptor);//////////////////////////
-        }
-
-        return;
-    }
-
-    int vtable_len = super_class->vtable_len + methods_count;
-    vtable = vm_malloc(sizeof(*(vtable)) * vtable_len);
-    memcpy(vtable, super_class->vtable, super_class->vtable_len * sizeof(*(vtable)));
-    vtable_len = super_class->vtable_len;
-
-    for (int i = 0; i < methods_count; i++) {
-        Method *m = methods + i;
-        if ((m->isPrivate()
-             || m->isStatic()
-             || m->isFinal()
-             || m->isAbstract()
-            || utf8_equals(m->name, SYMBOL(class_init))) {  //  todo strcmp(m->name, "<init>") == 0
-//            printf("1111111     %s~%s~%s\n", m->clazz->class_name, m->name, m->descriptor);//////////////////////////
-            continue;
-        }
-
-        int j = 0;
-        for (j = 0; j < super_class->vtable_len; j++) {
-            if (utf8_equals(m->name, vtable[j].name) && utf8_equals(m->descriptor, vtable[j].descriptor)) {
-                // 重写了父类的方法，更新
-                vtable[j].method = m;
-                m->vtable_index = j;
-   //             printf("222222    %s~%s~%s\n", m->clazz->class_name, m->name, m->descriptor);//////////////////////////
-                break;
-            }
-        }
-        if (j == super_class->vtable_len) {
-            // 子类定义了要给新方法，加到 vtable 后面
-            vtable[vtable_len].name = m->name;
-            vtable[vtable_len].descriptor = m->descriptor;
-            vtable[vtable_len].method = m;
-            m->vtable_index = vtable_len;
-    //        printf("33333     %s~%s~%s\n", m->clazz->class_name, m->name, m->descriptor);//////////////////////////
-            vtable_len++;
-        }
-    }
-#endif
 }
 
 const void Class::genPkgName()
@@ -328,7 +207,6 @@ Class::Class(ClassLoader *loader, const u1 *bytecode, size_t len)
     BytecodeReader r(bytecode, len);
 
     this->loader = loader;
-    enclosing_info[0] = enclosing_info[1] = enclosing_info[2] = nullptr;
 
     magic = r.readu4();
     minor_version = r.readu2();
@@ -514,12 +392,6 @@ void Class::clinit()
         execJavaFunc(method);
     }
 }
-
-//Object *Class::newInst()
-//{
-//    clinit();
-//    return Object::newInst(this);
-//}
 
 Field *Class::lookupField(const char *name, const char *descriptor)
 {
@@ -760,68 +632,3 @@ string Class::toString() const
     return s;
 }
 
-/* ----------------------------------------------------- */
-ArrayClass::ArrayClass(const char *className): Class(bootClassLoader, strdup(className))
-{
-    assert(className != nullptr);
-    assert(className[0] == '[');
-
-    accessFlags = ACC_PUBLIC;
-    inited = true; // 数组类不需要初始化
-    pkgName = "";
-    superClass = java_lang_Object_class;
-    interfaces.push_back(java_lang_Cloneable_class);
-    interfaces.push_back(java_io_Serializable_class);
-
-    createVtable();
-}
-
-size_t ArrayClass::getEleSize()
-{
-    if (eleSize == 0) {
-        // 判断数组单个元素的大小
-        // 除了基本类型的数组外，其他都是引用类型的数组
-        // 多维数组是数组的数组，也是引用类型的数组
-        eleSize = sizeof(jref);
-        char t = className[1]; // jump '['
-        if (t == 'Z') { eleSize = sizeof(jbool); }
-        else if (t == 'B') { eleSize = sizeof(jbyte); }
-        else if (t == 'C') { eleSize = sizeof(jchar); }
-        else if (t == 'S') { eleSize = sizeof(jshort); }
-        else if (t == 'I') { eleSize = sizeof(jint); }
-        else if (t == 'F') { eleSize = sizeof(jfloat); }
-        else if (t == 'J') { eleSize = sizeof(jlong); }
-        else if (t == 'D') { eleSize = sizeof(jdouble); }
-    }
-
-    return eleSize;
-}
-
-Class *ArrayClass::componentClass()
-{
-    if (compClass != nullptr)
-        return compClass;
-
-    const char *compName = className;
-    for (; *compName == '['; compName++); // jump all '['
-
-    if (*compName != 'L') { // primitive type
-        compClass = getPrimitiveClass(*compName);
-        assert(compClass != nullptr);
-        return compClass;
-    }
-
-    compName++;
-    int last = strlen(compName) - 1;
-    assert(last > 0);
-    if (compName[last] != ';') {
-        VM_UNKNOWN_ERROR("%s", className); // todo
-        return nullptr;
-    } else {
-        char buf[last + 1];
-        strncpy(buf, compName, (size_t) last);
-        buf[last] = 0;
-        compClass = loader->loadClass(buf);
-        return compClass;
-    }
-}

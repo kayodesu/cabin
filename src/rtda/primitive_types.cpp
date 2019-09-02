@@ -4,7 +4,7 @@
 
 #include <cstring>
 #include "primitive_types.h"
-#include "ma/Class.h"
+#include "ma/PrimitiveClass.h"
 
 /*
  * 基本类型的名称，描述符，等等

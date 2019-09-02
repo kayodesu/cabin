@@ -8,6 +8,7 @@
 #include "ClassLoader.h"
 #include "../../zlib/minizip/unzip.h"
 #include "../rtda/ma/Class.h"
+#include "../rtda/ma/ArrayClass.h"
 #include "../rtda/ma/Field.h"
 #include "../rtda/heap/ClassObject.h"
 
