@@ -42,7 +42,7 @@ StringObject *StringObject::newInst(const char *str)
     return new(g_heap_mgr.get(size)) StringObject(str);
 }
 
-void StringObject::operator delete(void *rawMemory,std::size_t size) throw()
+void StringObject::operator delete(void *rawMemory, size_t size) throw()
 {
     Object::operator delete(rawMemory, size);
 }
@@ -51,7 +51,7 @@ StringObject::StringObject(const char *str): Object(java_lang_String_class)
 {
     assert(str != nullptr);
 
-    data = reinterpret_cast<slot_t *>(this + 1); // todo data怎么办,这样不对
+    data = (slot_t *) (this + 1); // todo data怎么办,这样不对
 
     jchar *wstr = utf8_to_unicode(str);
     len = wcslen(reinterpret_cast<const wchar_t *>(wstr)); // todo
@@ -73,7 +73,7 @@ StringObject::StringObject(const char *str): Object(java_lang_String_class)
 const char *StringObject::getUtf8Value()
 {
     if (utf8Value == nullptr) {
-        ArrayObject *char_arr = getInstFieldValue<ArrayObject *>(S(value), S(array_C));
+        auto char_arr = getInstFieldValue<ArrayObject *>(S(value), S(array_C));
         utf8Value = unicode_to_utf8(reinterpret_cast<const jchar *>(char_arr->data), char_arr->len);
     }
     return utf8Value;

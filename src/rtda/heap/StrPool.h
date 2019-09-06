@@ -29,7 +29,8 @@ class StrPool {
     std::unordered_set<StringObject *, StrObjPointHash, StrObjPointEquals> pool;
 
 public:
-    // return either the newly inserted element or the equivalent element already in the set
+    // return either the newly inserted element
+    // or the equivalent element already in the set
     StringObject *put(StringObject *so)
     {
         assert(so != nullptr);

@@ -108,44 +108,6 @@ static const char *instruction_names[] = {
 };
 #endif
 
-// constant instructions -----------------------------------------------------------------------------------------------
-static void __ldc(Frame *frame, int index)
-{
-    ConstantPool &cp = frame->method->clazz->cp;
-    u1 type = CP_TYPE(cp, index);
-
-    if (type == CONSTANT_Integer) {
-        frame->pushi(CP_INT(cp, index));
-    } else if (type == CONSTANT_Float) {
-        frame->pushf(CP_FLOAT(cp, index));
-    } else if (type == CONSTANT_String) {
-        frame->pushr(resolve_string(frame->method->clazz, index));
-    } else if (type == CONSTANT_ResolvedString) {
-        frame->pushr((jref) CP_INFO(cp, index));
-    } else if (type == CONSTANT_Class) {
-        frame->pushr(resolve_class(frame->method->clazz, index)->clsobj);
-    } else if (type == CONSTANT_ResolvedClass) {
-        auto c = (Class *) CP_INFO(cp, index);
-        frame->pushr(c->clsobj);
-    } else {
-        VM_UNKNOWN_ERROR("unknown type: %d", type);
-    }
-}
-
-void ldc2_w(Frame *frame)
-{
-    int index = frame->reader.readu2();
-    ConstantPool &cp = frame->method->clazz->cp;
-    u1 type = CP_TYPE(cp, index);
-
-    if (type == CONSTANT_Long) {
-        frame->pushl(CP_LONG(cp, index));
-    } else if (type == CONSTANT_Double) {
-        frame->pushd(CP_DOUBLE(cp, index));
-    } else {
-        VM_UNKNOWN_ERROR("unknown type: %d", type);
-    }
-}
 
 /*
  * todo 指令说明  好像是实现 switch 语句
@@ -655,21 +617,66 @@ static slot_t *exec()
 
             CASE(OPC_BIPUSH, frame->pushi(reader->readu1())) // Byte Integer push
             CASE(OPC_SIPUSH, frame->pushi(reader->readu2())) // Short Integer push
+{
+            u2 index;
+            case OPC_LDC:
+                index = reader->readu1();
+                goto ldc;
 
-            CASE(OPC_LDC, __ldc(frame, reader->readu1()))
-            CASE(OPC_LDC_W, __ldc(frame, reader->readu2()))
-            CASE(OPC_LDC2_W, ldc2_w(frame))
+            case OPC_LDC_W:
+                index = reader->readu2();
+ldc:
+                ConstantPool &cp = frame->method->clazz->cp;
+                u1 type = CP_TYPE(cp, index);
 
-            CASE3(OPC_ILOAD, OPC_FLOAD, OPC_ALOAD, {
+                if (type == CONSTANT_Integer) {
+                    frame->pushi(CP_INT(cp, index));
+                } else if (type == CONSTANT_Float) {
+                    frame->pushf(CP_FLOAT(cp, index));
+                } else if (type == CONSTANT_String) {
+                    frame->pushr(resolve_string(frame->method->clazz, index));
+                } else if (type == CONSTANT_ResolvedString) {
+                    frame->pushr((jref) CP_INFO(cp, index));
+                } else if (type == CONSTANT_Class) {
+                    frame->pushr(resolve_class(frame->method->clazz, index)->clsobj);
+                } else if (type == CONSTANT_ResolvedClass) {
+                    auto c = (Class *) CP_INFO(cp, index);
+                    frame->pushr(c->clsobj);
+                } else {
+                    VM_UNKNOWN_ERROR("unknown type: %d", type);
+                }
+                break;
+}
+            case OPC_LDC2_W: {
+                auto index = frame->reader.readu2();
+                ConstantPool &cp = frame->method->clazz->cp;
+                u1 type = CP_TYPE(cp, index);
+
+                if (type == CONSTANT_Long) {
+                    frame->pushl(CP_LONG(cp, index));
+                } else if (type == CONSTANT_Double) {
+                    frame->pushd(CP_DOUBLE(cp, index));
+                } else {
+                    VM_UNKNOWN_ERROR("unknown type: %d", type);
+                }
+                break;
+            }
+
+            case OPC_ILOAD:
+            case OPC_FLOAD:
+            case OPC_ALOAD: {
                 FETCH_WIDE_INDEX
                 *frame->stack++ = locals[index];
-            })
+                break;
+            }
 
-            CASE2(OPC_LLOAD, OPC_DLOAD, {
+            case OPC_LLOAD:
+            case OPC_DLOAD: {
                 FETCH_WIDE_INDEX
                 *frame->stack++ = locals[index];
                 *frame->stack++ = locals[index + 1];
-            })
+                break;
+            }
 
             CASE3(OPC_ILOAD_0, OPC_FLOAD_0, OPC_ALOAD_0, *frame->stack++ = locals[0])
             CASE3(OPC_ILOAD_1, OPC_FLOAD_1, OPC_ALOAD_1, *frame->stack++ = locals[1])
@@ -827,7 +834,10 @@ static slot_t *exec()
     frame->stack -= (n);\
     ((type *) frame->stack)[-1] = ((type *) frame->stack)[-1] oper ((type *) frame->stack)[0]; \
 }
-            CASE(OPC_IADD, BINARY_OP(jint, 1, +))
+            case OPC_IADD: {
+                BINARY_OP(jint, 1, +)
+                break;
+            }
             CASE(OPC_LADD, BINARY_OP(jlong, 2, +))
             CASE(OPC_FADD, BINARY_OP(jfloat, 1, +))
             CASE(OPC_DADD, BINARY_OP(jdouble, 2, +))

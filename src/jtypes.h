@@ -36,8 +36,8 @@ typedef float          jfloat;
 typedef double         jdouble;
 typedef Object *        jref; // JVM中的引用类型，只能指向一个object对象。
 
-typedef jboolean jbool;
-typedef jint jsize;
+typedef jboolean   jbool;
+typedef jint       jsize;
 
 static inline jlong i2l(jint i)
 {  // todo

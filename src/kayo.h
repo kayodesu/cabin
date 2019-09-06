@@ -10,7 +10,7 @@
 #include <vector>
 #include <string>
 #include "jtypes.h"
-#include "rtda/heap/mgr/HeapMgr.h"
+#include "heapmgr/HeapMgr.h"
 
 #ifndef PATH_MAX
 #define PATH_MAX 260 // todo

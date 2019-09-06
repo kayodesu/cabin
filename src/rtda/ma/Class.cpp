@@ -152,10 +152,6 @@ void Class::createVtable()
 
     for (auto m : methods) {
         if (m->isVirtual()) {
-//            if (strcmp(className, "java/util/Vector") == 0) {
-//                int j = 0;
-//                printvm("********    %s\n", m->toString().c_str());
-//            }
             auto iter = find_if(vtable.begin(), vtable.end(), [=](Method *m0){
                 return utf8_equals(m->name, m0->name) && utf8_equals(m->descriptor, m0->descriptor); });
             if (iter != vtable.end()) {
@@ -169,14 +165,6 @@ void Class::createVtable()
             }
         }
     }
-
-//    if (strcmp(className, "java/util/Vector") == 0) {
-//        printvm("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
-//        for (auto m : vtable) {
-//            printvm("%s\n", m->toString().c_str());
-//        }
-//        printvm("----------------------------------------------------------\n");
-//    }
 }
 
 const void Class::genPkgName()

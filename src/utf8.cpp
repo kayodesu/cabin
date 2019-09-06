@@ -9,15 +9,7 @@
 
 using namespace std;
 
-struct Utf8Cmp {
-    bool operator()(const char *s, const char *t) const
-    {
-        assert(s != nullptr && t != nullptr);
-        return utf8_equals(s, t);
-    }
-};
-
-static unordered_set<const char *, Utf8Hash, Utf8Cmp> utf8Set;
+static unordered_set<const char *, Utf8Hash, Utf8Comparator> utf8Set;
 
 const char *save_utf8(const char *utf8)
 {

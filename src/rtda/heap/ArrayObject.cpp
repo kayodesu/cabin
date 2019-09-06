@@ -35,12 +35,12 @@ ArrayObject::ArrayObject(ArrayClass *arrClass, jint arrLen): Object(arrClass), l
 {
     assert(arrClass != nullptr);
     assert(arrClass->isArray());
-    assert(arrLen >= 0); // todo 等于0合不合法?
+    assert(arrLen >= 0); // 长度为0的array是合法的
 
     eleSize = arrClass->getEleSize();
-    data = reinterpret_cast<slot_t *>(this + 1); // todo data怎么办,这样不对
-    // java数组创建后要赋默认值，0, 0.0, false,'\0', NULL 之类的 todo
-    memset(data, 0, eleSize * arrLen);
+    data = (slot_t *) (this + 1); // todo data怎么办,这样不对
+    // java 数组创建后要赋默认值，0, 0.0, false,'\0', NULL 之类的
+    // heap 申请对象时已经清零了。
 }
 
 ArrayObject::ArrayObject(ArrayClass *arrClass, size_t arr_dim, const size_t *arr_lens): Object(arrClass)
