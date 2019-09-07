@@ -168,6 +168,21 @@ void Class::createVtable()
     }
 }
 
+/*
+ * 为什么需要itable,而不是用vtable解决所有问题？
+ * 一个类可以实现多个接口，而每个接口的函数编号是个自己相关的，
+ * vtable 无法解决多个对应接口的函数编号问题。
+ * 而对继承一个类只能继承一个父亲，子类只要包含父类vtable，
+ * 并且和父类的函数包含部分编号是一致的，就可以直接使用父类的函数编号找到对应的子类实现函数。
+ */
+void Class::createItable()
+{
+    // todo
+    for (auto interface : interfaces) {
+
+    }
+}
+
 const void Class::genPkgName()
 {
     char *tmp = strdup(className);
@@ -292,24 +307,17 @@ Class::Class(ClassLoader *loader, const u1 *bytecode, size_t len)
         }
     }
 
-
     accessFlags = r.readu2();
-
     className = CP_CLASS_NAME(cp, r.readu2());
     genPkgName();
 
     u2 super_class = r.readu2();
     if (super_class == 0) { // why 0
-        this->superClass = nullptr; // 可以没有父类
+        // 接口的父类 java/lang/Object，所以没有父类的只能是 java/lang/Object。
+        assert(strcmp(className, "java/lang/Object") == 0);
+        this->superClass = nullptr;
     } else {
         this->superClass = resolve_class(this, super_class);
-//        super_class = classloader_load_class(loader, CP_CLASS_NAME(cp, super_class));//rtcp_get_class_name(rtcp, super_class));
-        // 从父类中拷贝继承来的field   todo 要不要从新new个field不然delete要有问题，继承过来的field的类名问题
-//        for_each(superClass->instanceFields.begin(), superClass->instanceFields.end(), [](JField *f) {
-//            if (!f->isPrivate()) {
-//                instanceFields.push_back(new JField(*f));
-//            }
-//        });
     }
 
     // parse interfaces
@@ -346,9 +354,8 @@ Class::Class(ClassLoader *loader, const u1 *bytecode, size_t len)
     }
 
     parseAttribute(r); // parse class attributes
-    createVtable();
-//    if (strcmp(className, "sun/util/PreHashedMap") == 0)
-//        print_vtable(c);
+    createVtable(); // todo 接口有没有必要创建 vtable
+    createItable();
 }
 
 Class::~Class()

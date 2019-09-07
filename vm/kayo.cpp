@@ -110,7 +110,7 @@ static void findJars(const char *path, vector<std::string> &result)
     closedir(dir);
 }
 
-int main(int argc, char* argv[])
+int runJVM(int argc, char* argv[])
 {
     time_t time0;
     time(&time0);

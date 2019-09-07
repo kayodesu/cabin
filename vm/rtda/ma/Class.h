@@ -82,12 +82,6 @@ struct Class: public Access {
 
     // vtable 只保存虚方法。
     // 该类所有函数自有函数（除了private, static, final, abstract）和 父类的函数虚拟表。
-//    struct {
-//        const char *name; // method name
-//        const char *descriptor; // method descriptor
-//        Method *method;
-//    } *vtable; // todo
-//    int vtable_len;
     std::vector<Method *> vtable;
 
     void *itable; // todo
@@ -117,6 +111,7 @@ protected:
             : className(className), loader(loader) { }
 
     void createVtable();
+    void createItable();
 
 public:
     Class(ClassLoader *loader, const u1 *bytecode, size_t len);

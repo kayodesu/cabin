@@ -1,5 +1,5 @@
 
-add_library (zlibsrc minizip/iowin32.c minizip/iowin32.h minizip/miniunz.c
+add_library(zlibsrc minizip/iowin32.c minizip/iowin32.h minizip/miniunz.c
         minizip/unzip.c minizip/unzip.h minizip/zip.h minizip/crypt.h minizip/ioapi.h minizip/ioapi.c
         minizip/mztools.h minizip/mztools.c minizip/zip.c
         zlib.h crc32.h crc32.c zutil.h inflate.h inflate.c
