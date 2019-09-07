@@ -3,6 +3,7 @@
  */
 
 #include <memory>
+#include <sstream>
 #include "../debug.h"
 #include "../symbol.h"
 #include "ClassLoader.h"
@@ -306,8 +307,9 @@ Class *ClassLoader::loadClass(const char *className)
     }
 
     if (c == nullptr) {
-        VM_UNKNOWN_ERROR("loader class failed. %s", className);
-        return nullptr;
+        stringstream ss;
+        ss << "loader class failed. " << className;
+        raiseException(UNKNOWN_ERROR, ss.str().c_str());
     }
 
     if (java_lang_Class_class != nullptr) {

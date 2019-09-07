@@ -42,8 +42,7 @@ void *HeapMgr::get(size_t len)
         }
     }
 
-    vm_stack_overflow_error(); // todo 堆可以扩张
-    return nullptr;
+    raiseException(STACK_OVERFLOW_ERROR); // todo 堆可以扩张
 }
 
 void HeapMgr::back(void *p, size_t len)

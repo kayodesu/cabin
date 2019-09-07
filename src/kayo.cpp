@@ -159,7 +159,7 @@ int main(int argc, char* argv[])
         // 命令行参数没有设置 bootstrap_classpath 的值，那么使用 JAVA_HOME 环境变量
         char *javaHome = getenv("JAVA_HOME"); // JAVA_HOME 是 JDK 的目录
         if (javaHome == nullptr) {
-            vm_internal_error("no java lib"); // todo
+            raiseException(INTERNAL_ERROR, "no java lib"); // todo
         }
         strcpy(bootstrap_classpath, javaHome);
         strcat(bootstrap_classpath, "/jre/lib");
@@ -222,31 +222,3 @@ int main(int argc, char* argv[])
     printf("run KayoVM: %lds\n", ((long)(time3)) - ((long)(time2)));
     return 0;
 }
-
-void vm_internal_error(const char *msg)
-{
-    assert(msg != nullptr);
-    // todo
-    jvm_abort(msg);
-}
-
-void vm_out_of_memory_error(const char *msg)
-{
-    assert(msg != nullptr);
-    // todo
-    jvm_abort(msg);
-}
-
-void vm_stack_overflow_error()
-{
-    // todo
-    jvm_abort("vm_stack_overflow_error");
-}
-
-void vm_unknown_error(const char *msg)
-{
-    assert(msg != nullptr);
-    // todo
-    jvm_abort(msg);
-}
-

@@ -52,8 +52,9 @@ ArrayObject *Method::getParameterTypes()
         char *b = strchr(desc, '(');
         const char *e = strchr(desc, ')');
         if (b == nullptr || e == nullptr) {
-            VM_UNKNOWN_ERROR("descriptor error. %s", desc); // todo
-            return nullptr;
+            string s = "descriptor error. ";
+            s.append(desc).c_str();
+            raiseException(UNKNOWN_ERROR, s.append(desc).c_str());
         }
 
         // parameter types
@@ -61,8 +62,9 @@ ArrayObject *Method::getParameterTypes()
             if (*b == 'L') { // reference
                 char *t = strchr(b, ';');
                 if (t == nullptr) {
-                    VM_UNKNOWN_ERROR("descriptor error. %s", descriptor); // todo
-                    return nullptr;
+                    string s = "descriptor error. ";
+                    s.append(desc).c_str();
+                    raiseException(UNKNOWN_ERROR, s.append(desc).c_str());
                 }
 
                 *t = 0;   // end string
@@ -75,8 +77,9 @@ ArrayObject *Method::getParameterTypes()
                 if (!isPrimitiveDescriptor(*t)) {
                     t = strchr(t, ';');
                     if (t == nullptr) {
-                        VM_UNKNOWN_ERROR("descriptor error. %s", descriptor); // todo
-                        return nullptr;
+                        string s = "descriptor error. ";
+                        s.append(desc).c_str();
+                        raiseException(UNKNOWN_ERROR, s.append(desc).c_str());
                     }
                 }
 
@@ -89,8 +92,9 @@ ArrayObject *Method::getParameterTypes()
                 const char *class_name = primitiveDescriptor2className(*b);
                 buf[parameter_types_count++] = clazz->loader->loadClass(class_name)->clsobj;
             } else {
-                VM_UNKNOWN_ERROR("descriptor error %s", descriptor); // todo
-                return nullptr;
+                string s = "descriptor error. ";
+                s.append(desc).c_str();
+                raiseException(UNKNOWN_ERROR, s.append(desc).c_str());
             }
         }
 
@@ -109,8 +113,9 @@ ClassObject *Method::getReturnType()
     if (returnType == nullptr) {
         const char *e = strchr(descriptor, ')');
         if (e == nullptr) {
-            VM_UNKNOWN_ERROR("descriptor error. %s", descriptor); // todo
-            return nullptr;
+            string s = "descriptor error. ";
+            s.append(descriptor).c_str();
+            raiseException(UNKNOWN_ERROR, s.append(descriptor).c_str());
         }
         returnType = clazz->loader->loadClass(descriptorToClassName(++e).c_str())->clsobj;
     }

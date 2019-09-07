@@ -21,7 +21,7 @@ static void clone(Frame *frame)
     jref _this = frame->getLocalAsRef(0);
     Class *cloneable = java_lang_Cloneable_class;
     if (!_this->clazz->isSubclassOf(cloneable)) {
-        jvm_abort("java.lang.CloneNotSupportedException"); // todo
+        raiseException(CLONE_NOT_SUPPORTED_EXCEPTION);
     }
     frame->pushr(_this->clone());
 }

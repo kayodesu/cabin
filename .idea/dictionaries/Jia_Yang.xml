@@ -103,6 +103,7 @@
       <w>strobj</w>
       <w>strpool</w>
       <w>strrpl</w>
+      <w>throwables</w>
       <w>treturn</w>
       <w>unbox</w>
       <w>unpark</w>

@@ -2,9 +2,12 @@
  * Author: kayo
  */
 
+#include <sstream>
 #include "../kayo.h"
 #include "Attribute.h"
 #include "../util/BytecodeReader.h"
+
+using namespace std;
 
 void Annotation::read(BytecodeReader &r)
 {
@@ -47,7 +50,9 @@ ElementValue::ElementValue(BytecodeReader &r)
             }
             break;
         default:
-            VM_UNKNOWN_ERROR("unknown tag: %d", tag);
+            stringstream ss;
+            ss << "unknown tag: " << tag;
+            raiseException(UNKNOWN_ERROR, ss.str().c_str()); // todo
     }
 }
 

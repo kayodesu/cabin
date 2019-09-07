@@ -71,7 +71,7 @@ Thread *createVMThread(void *(*start)(void *))
                                  return ((void *(*)(void *))a[1])(nullptr);
                              }, args);
     if (ret != 0) {
-        vm_internal_error("create Thread failed");
+        raiseException(INTERNAL_ERROR, "create Thread failed");
     }
 
     while (vmThread == nullptr); // 等待子线程设置 vmThread 的值。
@@ -94,7 +94,7 @@ Thread *createCustomerThread(Object *jThread)
                                     return (void *) execJavaFunc(runMethod, (jref) a[1]);
                                 }, args);
     if (ret != 0) {
-        vm_internal_error("create Thread failed");
+        raiseException(INTERNAL_ERROR, "create Thread failed");
     }
 
     while (customer == nullptr); // 等待子线程设置 customer 的值。

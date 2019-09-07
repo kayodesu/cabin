@@ -22,7 +22,7 @@ static void getCallerClass(Frame *frame)
 //    Frame *top0 = NULL;
     Frame *top1 = frame->prev;
     if (top1 == nullptr) {
-        vm_unknown_error(""); // todo
+        raiseException(UNKNOWN_ERROR, ""); // todo
     }
     Frame *top2 = top1->prev;
 
@@ -42,7 +42,7 @@ static void getCallerClass(Frame *frame)
 ////        }
 //    }
     if (top2 == nullptr) {
-        vm_unknown_error(""); // todo
+        raiseException(UNKNOWN_ERROR, ""); // todo
     }
 
     jref o = top2->method->clazz->clsobj;

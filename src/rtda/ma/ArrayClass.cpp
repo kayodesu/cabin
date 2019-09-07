@@ -59,8 +59,7 @@ Class *ArrayClass::componentClass()
     int last = strlen(compName) - 1;
     assert(last > 0);
     if (compName[last] != ';') {
-        VM_UNKNOWN_ERROR("%s", className); // todo
-        return nullptr;
+        raiseException(UNKNOWN_ERROR, className); // todo
     } else {
         char buf[last + 1];
         strncpy(buf, compName, (size_t) last);

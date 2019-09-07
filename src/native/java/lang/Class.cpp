@@ -38,16 +38,12 @@ static void forName0(Frame *frame)
 
     Class *c = frame->method->clazz->loader->loadClass(class_name);
     if (c == nullptr) {
-        // todo  ClassNotFoundException
-        jvm_abort("ClassNotFoundException");
+        raiseException(CLASS_NOT_FOUND_EXCEPTION, class_name);
     }
 
-    auto initialize = frame->getLocalAsInt(1);//frame_locals_geti(frame, 1);
+    auto initialize = frame->getLocalAsInt(1);
     if (initialize && !c->inited) {
-        // todo do init
-//        class_clinit(c);
         c->clinit();
-//        bcr_set_pc(Frame->reader, jthread_get_pc(Frame->thread));
     }
 
     frame->pushr((jref) c->clsobj);

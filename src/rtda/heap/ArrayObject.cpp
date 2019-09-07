@@ -99,8 +99,7 @@ void ArrayObject::copy(ArrayObject *dst, jint dst_pos, const ArrayObject *src, j
         || len < 0
         || src_pos + len > src->len
         || dst_pos + len > dst->len) {
-        // todo "java.lang.IndexOutOfBoundsException"
-        jvm_abort("java.lang.IndexOutOfBoundsException\n");
+        raiseException(INDEX_OUT_OF_BOUNDS_EXCEPTION);
     }
 
     memcpy(dst->index(dst_pos), src->index(src_pos), src->eleSize * len);

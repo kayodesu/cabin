@@ -3,6 +3,7 @@
  */
 
 #include <iostream>
+#include <sstream>
 #include "../kayo.h"
 #include "../debug.h"
 #include "../rtda/thread/Thread.h"
@@ -234,8 +235,9 @@ static void newarray(Frame *frame)
         case 10: arr_name = "[I"; break; // AT_INT
         case 11: arr_name = "[J"; break; // AT_LONG
         default:
-            VM_UNKNOWN_ERROR("error. Invalid array type: %d", arr_type);
-            return;
+            stringstream ss;
+            ss << "error. Invalid array type: " << arr_type;
+            raiseException(UNKNOWN_ERROR, ss.str().c_str());
     }
 
     auto c = loadArrayClass(arr_name);
@@ -643,7 +645,9 @@ ldc:
                     auto c = (Class *) CP_INFO(cp, index);
                     frame->pushr(c->clsobj);
                 } else {
-                    VM_UNKNOWN_ERROR("unknown type: %d", type);
+                    stringstream ss;
+                    ss << "unknown type: " << type;
+                    raiseException(UNKNOWN_ERROR, ss.str().c_str());
                 }
                 break;
 }
@@ -657,7 +661,9 @@ ldc:
                 } else if (type == CONSTANT_Double) {
                     frame->pushd(CP_DOUBLE(cp, index));
                 } else {
-                    VM_UNKNOWN_ERROR("unknown type: %d", type);
+                    stringstream ss;
+                    ss << "unknown type: " << type;
+                    raiseException(UNKNOWN_ERROR, ss.str().c_str());
                 }
                 break;
             }
@@ -1033,10 +1039,10 @@ ldc:
             // 在Java 6之前，Oracle的Java编译器使用 jsr, jsr_w 和 ret 指令来实现 finally 子句。
             // 从Java 6开始，已经不再使用这些指令
             case OPC_JSR:
-                vm_internal_error("jsr doesn't support after jdk 6.");
+                raiseException(INTERNAL_ERROR, "jsr doesn't support after jdk 6.");
                 break;
             case OPC_RET:
-                vm_internal_error("ret doesn't support after jdk 6.");
+                raiseException(INTERNAL_ERROR, "ret doesn't support after jdk 6.");
                 break;
 
             case OPC_TABLESWITCH:
@@ -1125,7 +1131,7 @@ ldc:
                 if (f->isFinal()) {
                     // todo
                     if (frame->method->clazz != f->clazz || !utf8_equals(frame->method->name, S(object_init))) {
-                        jvm_abort("java.lang.IllegalAccessError\n"); // todo
+                        raiseException(ILLEGAL_ACCESS_ERROR);
                     }
                 }
 
@@ -1190,12 +1196,10 @@ ldc:
                 }
 
                 if (m->isAbstract()) {
-                    // todo java.lang.AbstractMethodError
-                    jvm_abort("java.lang.AbstractMethodError\n");
+                    raiseException(ABSTRACT_METHOD_ERROR);
                 }
                 if (m->isStatic()) {
-                    // todo java.lang.IncompatibleClassChangeError
-                    jvm_abort("java.lang.IncompatibleClassChangeError\n");
+                    raiseException(INCOMPATIBLE_CLASS_CHANGE_ERROR);
                 }
 
                 frame->stack -= m->arg_slot_count;
@@ -1215,12 +1219,10 @@ ldc:
                 int index = reader->readu2();
                 Method *m = resolve_method(curr_class, index);
                 if (m->isAbstract()) {
-                    // todo java.lang.AbstractMethodError
-                    jvm_abort("java.lang.AbstractMethodError\n");
+                    raiseException(ABSTRACT_METHOD_ERROR);
                 }
                 if (!m->isStatic()) {
-                    // todo java.lang.IncompatibleClassChangeError
-                    jvm_abort("java.lang.IncompatibleClassChangeError\n");
+                    raiseException(INCOMPATIBLE_CLASS_CHANGE_ERROR);
                 }
 
                 if (!m->clazz->inited) {
@@ -1266,12 +1268,10 @@ ldc:
                 }
 
                 if (method->isAbstract()) {
-                    // todo java.lang.AbstractMethodError
-                    jvm_abort("java.lang.AbstractMethodError\n");
+                    raiseException(ABSTRACT_METHOD_ERROR);
                 }
                 if (!method->isPublic()) {
-                    // todo java.lang.IllegalAccessError
-                    jvm_abort("java.lang.IllegalAccessError\n");
+                    raiseException(ILLEGAL_ACCESS_ERROR);
                 }
 
                 resolved_method = method;
@@ -1308,7 +1308,7 @@ invoke_method:
                 }
 
                 if (c->isInterface() || c->isAbstract()) {
-                    jvm_abort("java.lang.InstantiationError\n");  // todo 抛出 InstantiationError 异常
+                    raiseException(INSTANTIATION_ERROR);
                 }
 
                 // todo java/lang/Class 会在这里创建，为什么会这样，怎么处理
@@ -1327,7 +1327,7 @@ invoke_method:
                     thread_throw_null_pointer_exception();
                 }
                 if (!o->isArray()) {
-                    vm_unknown_error("not a array"); // todo
+                    raiseException(UNKNOWN_ERROR, "not a array"); // todo
                 }
                 frame->pushi(((ArrayObject *) o)->len);
 				break;
@@ -1422,10 +1422,10 @@ invoke_method:
             }
 
             case OPC_GOTO_W: // todo
-                vm_internal_error("goto_w doesn't support");
+                raiseException(INTERNAL_ERROR, "goto_w doesn't support");
                 break;
             case OPC_JSR_W: // todo
-                vm_internal_error("jsr_w doesn't support after jdk 6.");
+                raiseException(INTERNAL_ERROR, "jsr_w doesn't support after jdk 6.");
                 break;
             case OPC_INVOKENATIVE:
                 frame->method->nativeMethod(frame);

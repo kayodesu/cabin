@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <algorithm>
+#include <sstream>
 #include "Class.h"
 #include "Field.h"
 #include "resolve.h"
@@ -285,8 +286,9 @@ Class::Class(ClassLoader *loader, const u1 *bytecode, size_t len)
 //                c->u.invoke_dynamic_constant.name_and_type_index = readu2(reader);
 //                break;
             default:
-                // java_lang_ClassFormatError todo
-                jvm_abort("error. bad constant tag: %d\n", tag);
+                stringstream ss;
+                ss << "bad constant tag: " << tag;
+                raiseException(CLASS_FORMAT_ERROR, ss.str().c_str());
         }
     }
 
@@ -401,9 +403,9 @@ Field *Class::lookupField(const char *name, const char *descriptor)
             return field;
     }
 
-    // java.lang.NoSuchFieldError  todo
-    jvm_abort("java.lang.NoSuchFieldError. %s, %s, %s\n", className, name, descriptor);
-    return nullptr;
+    stringstream ss;
+    ss << className << '~' << name << '~' << descriptor;
+    raiseException(NO_SUCH_FIELD_ERROR, ss.str().c_str());
 }
 
 Field *Class::lookupStaticField(const char *name, const char *descriptor)
@@ -411,8 +413,7 @@ Field *Class::lookupStaticField(const char *name, const char *descriptor)
     Field *field = lookupField(name, descriptor);
     // todo Field == nullptr
     if (!field->isStatic()) {
-        // todo java.lang.IncompatibleClassChangeError
-        jvm_abort("java.lang.IncompatibleClassChangeError");
+        raiseException(INCOMPATIBLE_CLASS_CHANGE_ERROR);
     }
     return field;
 }
@@ -422,8 +423,7 @@ Field *Class::lookupInstField(const char *name, const char *descriptor)
     Field* field = lookupField(name, descriptor);
     // todo Field == nullptr
     if (field->isStatic()) {
-        // todo java.lang.IncompatibleClassChangeError
-        jvm_abort("java.lang.IncompatibleClassChangeError");
+        raiseException(INCOMPATIBLE_CLASS_CHANGE_ERROR);
     }
     return field;
 }
@@ -501,17 +501,16 @@ Method *Class::lookupMethod(const char *name, const char *descriptor)
             return method;
     }
 
-    // todo java.lang.NoSuchMethodError
-    VM_UNKNOWN_ERROR("can not find method. %s~%s~%s", className, name, descriptor);
-    return nullptr;
+    stringstream ss;
+    ss << className << '~' << name << '~' << descriptor;
+    raiseException(NO_SUCH_METHOD_ERROR, ss.str().c_str());
 }
 
 Method *Class::lookupStaticMethod(const char *name, const char *descriptor)
 {
     Method *m = lookupMethod(name, descriptor);
     if (!m->isStatic()) {
-        // todo java.lang.IncompatibleClassChangeError
-        jvm_abort("java.lang.IncompatibleClassChangeError");
+        raiseException(INCOMPATIBLE_CLASS_CHANGE_ERROR);
     }
     return m;
 }
@@ -521,8 +520,7 @@ Method *Class::lookupInstMethod(const char *name, const char *descriptor)
     Method *m = lookupMethod(name, descriptor);
     // todo m == nullptr
     if (m->isStatic()) {
-        // todo java.lang.IncompatibleClassChangeError
-        jvm_abort("java.lang.IncompatibleClassChangeError");
+        raiseException(INCOMPATIBLE_CLASS_CHANGE_ERROR);
     }
     return m;
 }
