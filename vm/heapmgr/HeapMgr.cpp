@@ -4,9 +4,12 @@
 
 #include <cstring>
 #include <cassert>
+#include <sstream>
 #include "HeapMgr.h"
 #include "../kayo.h"
 #include "../config.h"
+
+using namespace std;
 
 HeapMgr::HeapMgr()
 {
@@ -98,6 +101,21 @@ void HeapMgr::back(void *p, size_t len)
             }
         }
     }
+}
+
+string HeapMgr::toString() const
+{
+    stringstream ss;
+
+    ss << "heap: " << heap << endl;
+
+    ss << "freelist: " << endl << '|';
+    for (auto node = freelist; node != nullptr; node = node->next) {
+        ss << (void *) node->head << ',';
+        ss << node->len << "(0x" << hex << node->len << ")|";
+    }
+
+    return ss.str();
 }
 
 HeapMgr::~HeapMgr()

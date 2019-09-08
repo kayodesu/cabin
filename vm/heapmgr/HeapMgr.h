@@ -6,6 +6,7 @@
 #define JVM_HEAP_MANAGER_H
 
 #include <cstddef>
+#include <string>
 #include "../jtypes.h"
 
 class HeapMgr {
@@ -24,6 +25,8 @@ public:
 
     void *get(size_t len);
     void back(void *p, size_t len);
+    
+    std::string toString() const;
 };
 
 #endif //JVM_HEAP_MANAGER_H
