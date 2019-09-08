@@ -39,48 +39,6 @@ static void *gcLoop(void *arg)
     return nullptr;
 }
 
-static void startJVM(const char *main_class_name)
-{
-    g_str_pool = new StrPool;
-    init_symbol();
-    initBootClassLoader();
-
-    initMainThread();
-    createVMThread(gcLoop); // gc thread
-
-    // 先加载 sun.mis.VM 类，然后执行其类初始化方法
-    Class *vm_class = loadSysClass("sun/misc/VM");
-    if (vm_class == nullptr) {
-        jvm_abort("vm_class is null\n");  // todo throw exception
-        return;
-    }
-
-    // VM类的 "initialize~()V" 方法需调用执行
-    // 在VM类的类初始化方法中调用了 "initialize" 方法。
-    vm_class->clinit();
-
-    Class *main_class = bootClassLoader->loadClass(main_class_name);
-    Method *main_method = main_class->lookupStaticMethod(S(main), S(_array_java_lang_String__V));
-    if (main_method == nullptr) {
-        jvm_abort("can't find method main."); // todo
-    } else {
-        if (!main_method->isPublic()) {
-            jvm_abort("method main must be public."); // todo
-        }
-        if (!main_method->isStatic()) {
-            jvm_abort("method main must be static."); // todo
-        }
-    }
-
-    // 开始在主线程中执行 main 方法
-    execJavaFunc(main_method, (Object *) nullptr); //  todo
-
-
-    // todo 如果有其他的非后台线程在执行，则main线程需要在此wait
-
-    // todo main_thread 退出，做一些清理工作。
-}
-
 static void findJars(const char *path, vector<std::string> &result)
 {
     DIR *dir = opendir(path);
@@ -110,16 +68,13 @@ static void findJars(const char *path, vector<std::string> &result)
     closedir(dir);
 }
 
-int runJVM(int argc, char* argv[])
-{
-    time_t time0;
-    time(&time0);
+static char main_class_name[FILENAME_MAX] = { 0 };
 
+void initJVM(int argc, char* argv[])
+{
     char bootstrap_classpath[PATH_MAX] = { 0 };
     char extension_classpath[PATH_MAX] = { 0 };
     char user_classpath[PATH_MAX] = { 0 };
-
-    char main_class_name[FILENAME_MAX] = { 0 };
 
     // parse cmd arguments
     // 可执行程序的名字为 argv[0]，跳过。
@@ -142,10 +97,6 @@ int runJVM(int argc, char* argv[])
         } else {
             strcpy(main_class_name, argv[i]);
         }
-    }
-
-    if (main_class_name[0] == 0) {  // empty
-        jvm_abort("no input file\n");
     }
 
     // 如果 main_class_name 有 .class 后缀，去掉后缀。
@@ -172,7 +123,7 @@ int runJVM(int argc, char* argv[])
         auto i = iter->rfind('\\');
         auto j = iter->rfind('/');
         if ((i != iter->npos && iter->compare(i + 1, 6, "rt.jar") == 0)
-                || (j != iter->npos && iter->compare(j + 1, 6, "rt.jar") == 0)) {
+            || (j != iter->npos && iter->compare(j + 1, 6, "rt.jar") == 0)) {
             std::swap(*(jreLibJars.begin()), *iter);
             break;
         }
@@ -212,13 +163,68 @@ int runJVM(int argc, char* argv[])
 
     register_all_native_methods(); // todo 不要一次全注册，需要时再注册
 
+    g_str_pool = new StrPool;
+    init_symbol();
+    initBootClassLoader();
+
+    initMainThread();
+
+    // 先加载 sun.mis.VM 类，然后执行其类初始化方法
+    Class *vm_class = loadSysClass("sun/misc/VM");
+    if (vm_class == nullptr) {
+        jvm_abort("vm_class is null\n");  // todo throw exception
+        return;
+    }
+
+    // VM类的 "initialize~()V" 方法需调用执行
+    // 在VM类的类初始化方法中调用了 "initialize" 方法。
+    vm_class->clinit();
+}
+
+/*
+ * The entry of this JVM
+ */
+int runJVM(int argc, char* argv[])
+{
+    time_t time1;
+    time(&time1);
+
+    initJVM(argc, argv);
+
     time_t time2;
     time(&time2);
 
-    startJVM(main_class_name);
+    if (main_class_name[0] == 0) {  // empty
+        jvm_abort("no input file\n");
+    }
+
+    Class *main_class = bootClassLoader->loadClass(main_class_name);
+    Method *main_method = main_class->lookupStaticMethod(S(main), S(_array_java_lang_String__V));
+    if (main_method == nullptr) {
+        jvm_abort("can't find method main."); // todo
+    } else {
+        if (!main_method->isPublic()) {
+            jvm_abort("method main must be public."); // todo
+        }
+        if (!main_method->isStatic()) {
+            jvm_abort("method main must be static."); // todo
+        }
+    }
+
+    createVMThread(gcLoop); // gc thread
+
+    // 开始在主线程中执行 main 方法
+    execJavaFunc(main_method, (Object *) nullptr); //  todo
+
+
+    // todo 如果有其他的非后台线程在执行，则main线程需要在此wait
+
+    // todo main_thread 退出，做一些清理工作。
 
     time_t time3;
     time(&time3);
-    printf("run KayoVM: %lds\n", ((long)(time3)) - ((long)(time2)));
+
+    printf("init jvm: %lds\n", ((long)(time2)) - ((long)(time1)));
+    printf("run jvm: %lds\n", ((long)(time3)) - ((long)(time2)));
     return 0;
 }
