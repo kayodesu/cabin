@@ -1251,6 +1251,7 @@ ldc:
                 reader->readu1();
 
                 Method *m = resolve_method(curr_class, index);
+                assert(m->clazz->isInterface());
 
                 /* todo 本地方法 */
 

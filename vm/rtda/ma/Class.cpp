@@ -149,7 +149,7 @@ void Class::createVtable()
     }
 
     // 将父类的vtable复制过来
-    vtable.insert(vtable.end(), superClass->vtable.begin(), superClass->vtable.end());
+    vtable.assign(superClass->vtable.begin(), superClass->vtable.end());
 
     for (auto m : methods) {
         if (m->isVirtual()) {
@@ -168,6 +168,19 @@ void Class::createVtable()
     }
 }
 
+Class::ITable::ITable(const Class::ITable &itable)
+{
+    interfaces.assign(itable.interfaces.begin(), itable.interfaces.end());
+    methods.assign(itable.methods.begin(), itable.methods.end());
+}
+
+Class::ITable& Class::ITable::operator=(const Class::ITable &itable)
+{
+    interfaces.assign(itable.interfaces.begin(), itable.interfaces.end());
+    methods.assign(itable.methods.begin(), itable.methods.end());
+    return *this;
+}
+
 /*
  * 为什么需要itable,而不是用vtable解决所有问题？
  * 一个类可以实现多个接口，而每个接口的函数编号是个自己相关的，
@@ -177,9 +190,56 @@ void Class::createVtable()
  */
 void Class::createItable()
 {
-    // todo
-    for (auto interface : interfaces) {
+    if (isInterface()) {
+        int index = 0;
+        if (superClass != nullptr) {
+            itable = superClass->itable;
+            index = itable.methods.size();
+        }
+        for (Method *m : methods) {
+            // todo default 方法怎么处理？进不进 itable？
+            // todo 调用 default 方法 生成什么调用指令？
+            m->itableIndex = index++;
+            itable.methods.push_back(m);
+        }
+        return;
+    }
 
+    /* parse non interface class */
+
+    if (superClass != nullptr) {
+        itable  = superClass->itable;
+    }
+
+    // 遍历 itable.methods，检查有没有接口函数在本类中被重写了。
+    for (auto m : itable.methods) {
+        for (auto m0 : methods) {
+            if (utf8_equals(m->name, m0->name) && utf8_equals(m->descriptor, m0->descriptor)) {
+                m = m0; // 重写了接口方法，更新
+                break;
+            }
+        }
+    }
+
+    for (auto interface : interfaces) {
+        for (auto tmp : itable.interfaces) {
+            if (utf8_equals(tmp.first->className, interface->className)) {
+                // 此接口已经在 itable.interfaces 中了
+                goto next;
+            }
+        }
+
+        itable.interfaces.emplace_back(interface, itable.methods.size());
+        for (auto m : interface->methods) {
+            for (auto m0 : methods) {
+                if (utf8_equals(m->name, m0->name) && utf8_equals(m->descriptor, m0->descriptor)) {
+                    m = m0; // 重写了接口方法，更新
+                    break;
+                }
+            }
+            itable.methods.push_back(m);
+        }
+next:;
     }
 }
 

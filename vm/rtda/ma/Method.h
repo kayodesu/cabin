@@ -24,8 +24,8 @@ class Method: public Member {
     ArrayObject *exceptionTypes = nullptr; // [Ljava/lang/Class;
 
 public:
-    static const int INVALID_VTABLE_INDEX = -1;
-    int vtableIndex = INVALID_VTABLE_INDEX;
+    int vtableIndex = -1;
+    int itableIndex = -1;
 
     u2 maxStack = 0;
     u2 maxLocals = 0;

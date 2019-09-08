@@ -46,6 +46,35 @@ struct Class: public Access {
 
     Class *superClass = nullptr;
 
+    /*
+     * 本类明确实现的interfaces，父类实现的不包括在内。
+     * 但如果父类实现，本类也实现的接口，则包括在内，如：
+     *
+     * interface A {
+     *    void test();
+     * }
+     *
+     * class Base implements A {
+     *     public void test() { }
+     * }
+     *
+     * class Son1 extends Base {
+     *     public void test() { }
+     * }
+     *
+     * class Son2 extends Base implements A {
+     *     public void test() { }
+     * }
+     *
+     * class TestInterface {
+     *     A a1 = new Son1();
+     *     A a2 = new Son2();
+     * }
+     *
+     * class Son1的接口数量为0
+     * class Son2的接口数量为1（interface A）。
+     * 虽然在使用上看不出有任何毛区别。
+     */
     std::vector<Class *> interfaces;
 
     /*
@@ -84,7 +113,16 @@ struct Class: public Access {
     // 该类所有函数自有函数（除了private, static, final, abstract）和 父类的函数虚拟表。
     std::vector<Method *> vtable;
 
-    void *itable; // todo
+    struct ITable {
+        std::vector<std::pair<Class *, size_t /* offset */>> interfaces;
+        std::vector<Method *> methods;
+
+        ITable() = default;
+        ITable(const ITable &itable);
+        ITable& operator=(const ITable &itable);
+    };
+
+    ITable itable;
 
 //    struct bootstrap_methods_attribute *bootstrap_methods_attribute;
 
