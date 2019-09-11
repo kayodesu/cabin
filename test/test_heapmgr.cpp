@@ -1,4 +1,6 @@
 #include <iostream>
+#include <pthread.h>
+#include <unistd.h>
 #include "../vm/heapmgr/HeapMgr.h"
 
 /*
@@ -28,6 +30,30 @@ void test_get_and_back()
     cout << endl << mgr.toString().c_str() << endl;
 }
 
+void *thread_func(void *arg)
+{
+    auto hm = (HeapMgr *) arg;
+    for (int k = 0; k < 1000; k++) {
+        void *p = hm->get(10);
+        sleep(3);
+        hm->back(p, 10);
+    }
+    return nullptr;
+}
+
+/*
+ * 测试并发访问
+ */
+void test_multi_access()
+{
+    HeapMgr mgr;
+
+    for (int i = 0; i < 100; i++) {
+        pthread_t tid;
+        pthread_create(&tid, nullptr, thread_func, &mgr);
+    }
+}
+
 void test_stack_overflow_error()
 {
     HeapMgr mgr;
@@ -45,9 +71,12 @@ int main()
 {
     initJVM(0, nullptr);
 
-    test_get_and_back();
+    test_multi_access();
+
+    //test_get_and_back();
+
     cout << "------------------------------------------------------" << endl;
-    test_stack_overflow_error();
+    //test_stack_overflow_error();
 
     return 0;
 }
