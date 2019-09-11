@@ -1051,27 +1051,35 @@ ldc:
             case OPC_LOOKUPSWITCH:
                 lookupswitch(frame);
                 break;
+{
+            int ret_value_slot_count;
 
-#define METHOD_RETURN(ret_value_slot_count) \
-{ \
-    Frame *invoke_frame = thread->topFrame = frame->prev; \
-    frame->stack -= (ret_value_slot_count); \
-     \
-    if (frame->vm_invoke || invoke_frame == nullptr) { \
-        return frame->stack; \
-    } else { \
-        slot_t *ret_value = frame->stack; \
-        for (int i = 0; i < (ret_value_slot_count); i++) { \
-            *invoke_frame->stack++ = *ret_value++; \
-        } \
-        CHANGE_FRAME(invoke_frame); \
-        TRACE("executing frame: %s\n", frame->toString().c_str()); \
-    } \
+            case OPC_IRETURN:
+            case OPC_FRETURN:
+            case OPC_ARETURN:
+                ret_value_slot_count = 1;
+                goto method_return;
+            case OPC_LRETURN:
+            case OPC_DRETURN:
+                ret_value_slot_count = 2;
+                goto method_return;
+            case OPC_RETURN:
+                ret_value_slot_count = 0;
+method_return:
+                Frame *invoke_frame = thread->topFrame = frame->prev;
+                frame->stack -= (ret_value_slot_count);
+                if (frame->vm_invoke || invoke_frame == nullptr) {
+                    return frame->stack;
+                } else {
+                    slot_t *ret_value = frame->stack;
+                    for (int i = 0; i < ret_value_slot_count; i++) {
+                        *invoke_frame->stack++ = *ret_value++;
+                    }
+                    CHANGE_FRAME(invoke_frame);
+                    TRACE("executing frame: %s\n", frame->toString().c_str());
+                }
+                break;
 }
-            CASE3(OPC_IRETURN, OPC_FRETURN, OPC_ARETURN, METHOD_RETURN(1))
-            CASE2(OPC_LRETURN, OPC_DRETURN, METHOD_RETURN(2))
-            CASE(OPC_RETURN, METHOD_RETURN(0))
-
             case OPC_GETSTATIC: {
                 int index = reader->readu2();
                 Field *f = resolve_field(frame->method->clazz, index);

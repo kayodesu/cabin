@@ -56,50 +56,67 @@ Thread *initMainThread()
     return mainThread;
 }
 
-Thread *createVMThread(void *(*start)(void *))
+static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+static Thread *newThread;
+
+static pthread_mutex_t innerMutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t innerCond = PTHREAD_COND_INITIALIZER;
+
+/*
+ * jThread 和 start 只能有一个不为 nullptr。
+ * if start != nullptr 表示创建 vm thread
+ * if jThread != nullptr 表示创建 customer thread
+ */
+static Thread *createThread(void *(*start)(void *), void *args)
 {
     assert(start != nullptr);
 
-    pthread_t pid;
-    Thread *vmThread = nullptr;
-    void *args[] = { &vmThread, (void *) start };
-    int ret = pthread_create(&pid, nullptr,
-                             [](void *args) {
-                                 auto a = (void **)args;
+    pthread_mutex_lock(&mutex);
+    pthread_mutex_lock(&innerMutex);
+    newThread = nullptr;
 
-                                 *(Thread **) a[0] = new Thread();
-                                 return ((void *(*)(void *))a[1])(nullptr);
-                             }, args);
+    pthread_t pid;
+    int ret = pthread_create(&pid, nullptr, start, args);
     if (ret != 0) {
         raiseException(INTERNAL_ERROR, "create Thread failed");
     }
 
-    while (vmThread == nullptr); // 等待子线程设置 vmThread 的值。
-    vmThread->pid = pid;
-    return vmThread;
+    while (newThread == nullptr) { // 等待子线程设置 newThread 的值。
+        pthread_cond_wait(&innerCond, &innerMutex);
+    }
+    newThread->pid = pid;
+    pthread_mutex_unlock(&innerMutex);
+    pthread_mutex_unlock(&mutex);
+    return newThread;
+}
+
+Thread *createVMThread(void *(*start)(void *))
+{
+    assert(start != nullptr);
+
+    return createThread([](void *args) {
+        pthread_mutex_lock(&innerMutex);
+        newThread = new Thread();
+        pthread_mutex_unlock(&innerMutex);
+        pthread_cond_signal(&innerCond);
+
+        return ((void *(*)(void *))args)(nullptr);
+    }, (void *) start);
 }
 
 Thread *createCustomerThread(Object *jThread)
 {
     assert(jThread != nullptr);
 
-    pthread_t pid;
-    Thread *customer = nullptr;
-    void *args[] = { &customer, jThread };
-    int ret = pthread_create(&pid, nullptr,
-                                [](void *args) {
-                                    auto a = (void **)args;
+    return createThread([](void *args) {
+        pthread_mutex_lock(&innerMutex);
+        auto __jThread = (jref) args;
+        newThread = new Thread(__jThread);
+        pthread_mutex_unlock(&innerMutex);
+        pthread_cond_signal(&innerCond);
 
-                                    *(Thread **) a[0] = new Thread((jref) a[1]);
-                                    return (void *) execJavaFunc(runMethod, (jref) a[1]);
-                                }, args);
-    if (ret != 0) {
-        raiseException(INTERNAL_ERROR, "create Thread failed");
-    }
-
-    while (customer == nullptr); // 等待子线程设置 customer 的值。
-    customer->pid = pid;
-    return customer;
+        return (void *) execJavaFunc(runMethod, __jThread);
+    }, jThread);
 }
 
 Thread::Thread(pthread_t pid, Object *jThread0, jint priority): pid(pid)

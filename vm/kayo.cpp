@@ -8,6 +8,7 @@
 #include <iostream>
 #include <typeinfo>
 #include "kayo.h"
+#include "debug.h"
 #include "loader/ClassLoader.h"
 #include "rtda/thread/Thread.h"
 #include "rtda/ma/Access.h"
@@ -16,9 +17,13 @@
 
 using namespace std;
 
-HeapMgr g_heap_mgr;
+#if TRACE_KAYO
+#define TRACE PRINT_TRACE
+#else
+#define TRACE(...)
+#endif
 
-//VMEnv vmEnv;
+HeapMgr g_heap_mgr;
 
 vector<std::string> jreLibJars;
 vector<std::string> jreExtJars;
@@ -168,14 +173,13 @@ void initJVM(int argc, char* argv[])
     initBootClassLoader();
 
     initMainThread();
-
+    TRACE("init main thread over\n");
     // 先加载 sun.mis.VM 类，然后执行其类初始化方法
     Class *vm_class = loadSysClass("sun/misc/VM");
     if (vm_class == nullptr) {
         jvm_abort("vm_class is null\n");  // todo throw exception
         return;
     }
-
     // VM类的 "initialize~()V" 方法需调用执行
     // 在VM类的类初始化方法中调用了 "initialize" 方法。
     vm_class->clinit();
@@ -190,6 +194,7 @@ int runJVM(int argc, char* argv[])
     time(&time1);
 
     initJVM(argc, argv);
+    TRACE("init jvm is over.\n");
 
     time_t time2;
     time(&time2);
@@ -214,8 +219,8 @@ int runJVM(int argc, char* argv[])
     createVMThread(gcLoop); // gc thread
 
     // 开始在主线程中执行 main 方法
+    TRACE("begin to execute main function.\n");
     execJavaFunc(main_method, (Object *) nullptr); //  todo
-
 
     // todo 如果有其他的非后台线程在执行，则main线程需要在此wait
 
