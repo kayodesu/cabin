@@ -27,7 +27,7 @@ public:
     static ArrayObject *newInst(ArrayClass *ac, jint arrLen);
 
     // 创建多维数组
-    static ArrayObject *newInst(ArrayClass *arrClass, size_t arr_dim, const size_t *arr_lens);
+    static ArrayObject *newInst(ArrayClass *ac, size_t arr_dim, const size_t *arr_lens);
 
     static void operator delete(void *rawMemory,std::size_t size) throw();
 

@@ -11,19 +11,26 @@ using namespace std;
 
 ArrayObject *ArrayObject::newInst(ArrayClass *ac, jint arrLen)
 {
+    assert(ac != nullptr);
+    assert(strlen(ac->className) > 1);
+    assert(ac->className[0] == '[');
+    assert(ac->className[1] != '['); // 只能创建一维数组
     size_t size = sizeof(ArrayObject) + ac->getEleSize()*arrLen;
     return new(g_heap_mgr.get(size)) ArrayObject(ac, arrLen);
 }
 
-ArrayObject *ArrayObject::newInst(ArrayClass *arrClass, size_t arrDim, const size_t *arrLens)
+ArrayObject *ArrayObject::newInst(ArrayClass *ac, size_t arrDim, const size_t *arrLens)
 {
+    assert(ac != nullptr);
+    assert(strlen(ac->className) > 2);
+
     int count = 1;
     for (size_t i = 0; i < arrDim; i++) {
         count *= arrLens[i];
     }
 
-    size_t size = sizeof(ArrayObject) + arrClass->getEleSize()*count;
-    return new(g_heap_mgr.get(size)) ArrayObject(arrClass, arrDim, arrLens);
+    size_t size = sizeof(ArrayObject) + ac->getEleSize()*count;
+    return new(g_heap_mgr.get(size)) ArrayObject(ac, arrDim, arrLens);
 }
 
 void ArrayObject::operator delete(void *rawMemory,std::size_t size) throw()
