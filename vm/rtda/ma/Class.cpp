@@ -81,21 +81,9 @@ void Class::parseAttribute(BytecodeReader &r)
                 }
             }
         } else if (S(BootstrapMethods) == attr_name) {
-//            u2 num = r.readu2();
-//            BootstrapMethod methods[num];
-//
-//            for (u2 k = 0; k < num; k++) {
-//                methods[k].bootstrap_method_ref = r.readu2();
-//                methods[k].num_bootstrap_arguments = r.readu2();
-//                methods[k].bootstrap_arguments = vm_malloc(sizeof(u2) * methods[k].num_bootstrap_arguments); // todo 没有 free
-//                for (int j = 0; j < methods[k].num_bootstrap_arguments; j++) {
-//                    methods[k].bootstrap_arguments[j] = r.readu2();
-//                }
-//            }
-
-//            rtcp_build_invoke_dynamic_constant(c->rtcp, methods);  todo
-
-            r.skip(attr_len);
+            u2 num = r.readu2(); // number of bootstrap methods
+            for (u2 k = 0; k < num; k++)
+                bootstrapMethods.push_back(BootstrapMethod(r));
         } else if (S(InnerClasses) == attr_name) { // ignore
 //            u2 num = readu2(reader);
 //            struct inner_class classes[num];
@@ -263,7 +251,7 @@ const void Class::genPkgName()
     }
 }
 
-Class::Class(ClassLoader *loader, const u1 *bytecode, size_t len)
+Class::Class(ClassLoader *loader, u1 *bytecode, size_t len)
 {
     assert(loader != nullptr);
     assert(bytecode != nullptr);
@@ -297,8 +285,8 @@ Class::Class(ClassLoader *loader, const u1 *bytecode, size_t len)
             case CONSTANT_InterfaceMethodref:
             case CONSTANT_Dynamic:
             case CONSTANT_InvokeDynamic: {
-                u2 index1 = r.readu2(); // class_index
-                u2 index2 = r.readu2(); // name_and_type_index
+                u2 index1 = r.readu2();
+                u2 index2 = r.readu2();
                 CP_INFO(cp, i) = (index2 << 16) + index1;
                 break;
             }
@@ -347,7 +335,7 @@ Class::Class(ClassLoader *loader, const u1 *bytecode, size_t len)
                 break;
             }
             case CONSTANT_MethodHandle: {
-                u2 index1 = r.readu1(); // 这里确实是 bcr_readu1  reference_kind
+                u2 index1 = r.readu1(); // 这里确实是 readu1, reference_kind
                 u2 index2 = r.readu2(); // reference_index
                 CP_INFO(cp, i) = (index2 << 16) + index1;
                 break;
@@ -414,6 +402,7 @@ Class::Class(ClassLoader *loader, const u1 *bytecode, size_t len)
     }
 
     parseAttribute(r); // parse class attributes
+
     createVtable(); // todo 接口有没有必要创建 vtable
     createItable();
 }

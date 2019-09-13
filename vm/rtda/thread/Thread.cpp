@@ -62,11 +62,6 @@ static Thread *newThread;
 static pthread_mutex_t innerMutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t innerCond = PTHREAD_COND_INITIALIZER;
 
-/*
- * jThread 和 start 只能有一个不为 nullptr。
- * if start != nullptr 表示创建 vm thread
- * if jThread != nullptr 表示创建 customer thread
- */
 static Thread *createThread(void *(*start)(void *), void *args)
 {
     assert(start != nullptr);

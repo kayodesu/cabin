@@ -103,19 +103,18 @@ struct ElementValuePair {
 struct BootstrapMethod {
     /*
      * bootstrap_method_ref 项的值必须是一个对常量池的有效索引。
-     * 常量池在该索引处的值必须是一个CONSTANT_MethodHandle_info结构。
+     * 常量池在该索引处的值必须是一个 CONSTANT_MethodHandle_info 结构。
      * 注意：此CONSTANT_MethodHandle_info结构的reference_kind项应为值6（REF_invokeStatic）或8（REF_newInvokeSpecial），
      * 否则在invokedynamic指令解析调用点限定符时，引导方法会执行失败。
      */
     u2 bootstrapMethodRef;
-//    u2 num_bootstrap_arguments;
+
     /*
      * bootstrap_arguments 数组的每个成员必须是一个对常量池的有效索引。
      * 常量池在该索引出必须是下列结构之一：
      * CONSTANT_String_info, CONSTANT_Class_info, CONSTANT_Integer_info, CONSTANT_Long_info,
      * CONSTANT_Float_info, CONSTANT_Double_info, CONSTANT_MethodHandle_info, CONSTANT_MethodType_info。
      */
-//    u2 *bootstrap_arguments;
     std::vector<u2> bootstrapArguments;
 
     explicit BootstrapMethod(BytecodeReader &r);

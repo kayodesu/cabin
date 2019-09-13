@@ -77,6 +77,9 @@ static char main_class_name[FILENAME_MAX] = { 0 };
 
 void initJVM(int argc, char* argv[])
 {
+//    time_t time1;
+//    time(&time1);
+
     char bootstrap_classpath[PATH_MAX] = { 0 };
     char extension_classpath[PATH_MAX] = { 0 };
     char user_classpath[PATH_MAX] = { 0 };
@@ -166,13 +169,29 @@ void initJVM(int argc, char* argv[])
         }
     }
 
+//    time_t time2;
+//    time(&time2);
+//
+//    printf("find jars: %lds\n", ((long)(time2)) - ((long)(time1)));
+
     register_all_native_methods(); // todo 不要一次全注册，需要时再注册
 
     g_str_pool = new StrPool;
     init_symbol();
     initBootClassLoader();
 
+//    time_t time3;
+//    time(&time3);
+//
+//    printf("init...: %lds\n", ((long)(time3)) - ((long)(time2)));
+
     initMainThread();
+
+//    time_t time4;
+//    time(&time4);
+//
+//    printf("initMainThread: %lds\n", ((long)(time4)) - ((long)(time3)));
+
     TRACE("init main thread over\n");
     // 先加载 sun.mis.VM 类，然后执行其类初始化方法
     Class *vm_class = loadSysClass("sun/misc/VM");
@@ -183,6 +202,11 @@ void initJVM(int argc, char* argv[])
     // VM类的 "initialize~()V" 方法需调用执行
     // 在VM类的类初始化方法中调用了 "initialize" 方法。
     vm_class->clinit();
+
+//    time_t time5;
+//    time(&time5);
+//
+//    printf("sun/misc/VM clinit: %lds\n", ((long)(time5)) - ((long)(time4)));
 }
 
 /*
@@ -229,7 +253,7 @@ int runJVM(int argc, char* argv[])
     time_t time3;
     time(&time3);
 
-    printf("init jvm: %lds\n", ((long)(time2)) - ((long)(time1)));
-    printf("run jvm: %lds\n", ((long)(time3)) - ((long)(time2)));
+//    printf("init jvm: %lds\n", ((long)(time2)) - ((long)(time1)));
+    printf("run jvm: %lds\n", ((long)(time3)) - ((long)(time1)));
     return 0;
 }

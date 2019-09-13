@@ -136,6 +136,8 @@ struct Class: public Access {
     const char *signature;
     const char *sourceFileName;
 
+    std::vector<BootstrapMethod> bootstrapMethods;
+
 private:
     // 计算字段的个数，同时给它们编号
     void calcFieldsId();
@@ -152,7 +154,7 @@ protected:
     void createItable();
 
 public:
-    Class(ClassLoader *loader, const u1 *bytecode, size_t len);
+    Class(ClassLoader *loader, u1 *bytecode, size_t len);
     ~Class();
 
     /*

@@ -12,15 +12,15 @@
 #include "convert.h"
 
 class BytecodeReader {
-    const u1 *bytecode = nullptr;
+    u1 *bytecode = nullptr;
     size_t len;  // bytecode len
 
 public:
     size_t pc = 0;   // program count
 
-    BytecodeReader(const u1 *bytecode, size_t len): bytecode(bytecode), len(len) { }
+    BytecodeReader(u1 *bytecode, size_t len): bytecode(bytecode), len(len) { }
 
-    const u1 *currPos()
+    u1 *currPos()
     {
         return bytecode + pc;
     }

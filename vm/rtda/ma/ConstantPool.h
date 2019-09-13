@@ -28,15 +28,22 @@ struct ConstantPool {
 #define CP_NAME_TYPE_NAME(cp, i)         CP_UTF8(cp, (u2)(cp).info[i])
 #define CP_NAME_TYPE_TYPE(cp, i)         CP_UTF8(cp, (u2)((cp).info[i]>>16))
 
-#define CP_FIELD_CLASS(cp, i)       (u2)(cp).info[i]
+#define CP_FIELD_CLASS_INDEX(cp, i)       (u2)(cp).info[i]
 #define CP_FIELD_CLASS_NAME(cp, i)  CP_UTF8(cp, (u2)(cp).info[i])
 #define CP_FIELD_NAME(cp, i)        CP_NAME_TYPE_NAME(cp, (u2)((cp).info[i]>>16))
 #define CP_FIELD_TYPE(cp, i)        CP_NAME_TYPE_TYPE(cp, (u2)((cp).info[i]>>16))
 
-#define CP_METHOD_CLASS       CP_FIELD_CLASS
+#define CP_METHOD_CLASS_INDEX       CP_FIELD_CLASS_INDEX
 #define CP_METHOD_CLASS_NAME  CP_FIELD_CLASS_NAME
 #define CP_METHOD_NAME        CP_FIELD_NAME
 #define CP_METHOD_TYPE        CP_FIELD_TYPE
+
+// The value of the bootstrap_method_attr_index item must be
+// a valid index into the bootstrap_methods array of the bootstrap method table of this class file
+#define CP_BOOTSTRAP_METHOD_ATTR_INDEX(cp, i)    ((u2)(cp).info[i])
+
+#define CP_METHOD_HANDLE_REFERENCE_KIND(cp, i)    ((u2)(cp).info[i])
+#define CP_METHOD_HANDLE_REFERENCE_INDEX(cp, i)   ((u2)((cp).info[i]>>16))
 
 #define CP_INT(cp, i)                    ISLOT((cp).info + (i))
 #define CP_FLOAT(cp, i)                  FSLOT((cp).info + (i))

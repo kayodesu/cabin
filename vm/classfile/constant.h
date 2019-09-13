@@ -5,6 +5,7 @@
 #ifndef JVM_CONSTANT_H
 #define JVM_CONSTANT_H
 
+
 #define CONSTANT_Invalid                0 // invalid constant
 #define CONSTANT_Utf8                   1
 #define CONSTANT_Integer                3
@@ -21,6 +22,8 @@
 #define CONSTANT_MethodType             16
 #define CONSTANT_Dynamic                17
 #define CONSTANT_InvokeDynamic          18
+#define CONSTANT_Module                 19
+#define CONSTANT_Package                20
 
 // 以下为自定义常量，数值不同于以上定义的常量即可。
 #define CONSTANT_ResolvedMethod         (INT8_MAX - 4)

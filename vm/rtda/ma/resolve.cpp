@@ -33,7 +33,7 @@ Method* resolve_method(Class *visitor, int cp_index)
         return (Method *) CP_INFO(cp, cp_index);
     }
 
-    Class *resolved_class = resolve_class(visitor, CP_METHOD_CLASS(cp, cp_index));
+    Class *resolved_class = resolve_class(visitor, CP_METHOD_CLASS_INDEX(cp, cp_index));
     Method *m = resolved_class->lookupMethod(CP_METHOD_NAME(cp, cp_index), CP_METHOD_TYPE(cp, cp_index));
     if (!m->isAccessibleTo(visitor)) {
         raiseException(ILLEGAL_ACCESS_ERROR);
@@ -53,7 +53,7 @@ Field* resolve_field(Class *visitor, int cp_index)
         return (Field *) CP_INFO(cp, cp_index);
     }
 
-    Class *resolved_class = resolve_class(visitor, CP_FIELD_CLASS(cp, cp_index));
+    Class *resolved_class = resolve_class(visitor, CP_FIELD_CLASS_INDEX(cp, cp_index));
     Field *f = resolved_class->lookupField(CP_FIELD_NAME(cp, cp_index), CP_FIELD_TYPE(cp, cp_index));
     if (!f->isAccessibleTo(visitor)) {
         raiseException(ILLEGAL_ACCESS_ERROR);

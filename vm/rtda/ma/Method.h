@@ -33,7 +33,7 @@ public:
 
     std::vector<LineNumberTable> lineNumberTables;
 
-    const u1 *code = nullptr;
+    u1 *code = nullptr;
     size_t codeLen = 0;
 
     native_method_t nativeMethod = nullptr; // present only if native

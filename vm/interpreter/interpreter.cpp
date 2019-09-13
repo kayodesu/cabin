@@ -326,223 +326,6 @@ static void anewarray(Frame *frame)
     } ref_constant, field_ref_constant, method_ref_constant, interface_method_ref_constant;
  */
 
-#if 0
-static void set_bootstrap_method_type(Frame *frame)
-{
-    assert(frame != nullptr);
-    frame->Thread->dyn.bootstrap_method_type = frame_stack_popr(Frame);
-    int i = 3;
-}
-
-static void set_lookup(Frame *frame)
-{
-    assert(frame != nullptr);
-    frame->Thread->dyn.lookup = frame_stack_popr(Frame);
-    int i = 3;
-}
-
-static void set_call_set0(Frame *frame)
-{
-    assert(frame != nullptr);
-    frame->Thread->dyn.call_set = frame_stack_popr(Frame);
-    int i = 3;
-}
-
-static void set_exact_method_handle(Frame *frame)
-{
-    assert(frame != nullptr);
-    frame->Thread->dyn.exact_method_handle = frame_stack_popr(Frame);
-    int i = 3;
-}
-
-static void parse_bootstrap_method_type(
-        Class *curr_class, struct Thread *curr_thread, struct invoke_dynamic_ref *ref)
-{
-// todo 注意有一个这个方法： MethodType.fromMethodDescriptorString 更方便
-    struct Object *parameter_types = method_descriptor_to_parameter_types(curr_class->loader, ref->nt->descriptor);
-    struct Object *return_type = method_descriptor_to_return_type(curr_class->loader, ref->nt->descriptor);
-    Class *c = load_class(g_bootstrap_loader, "java/lang/invoke/MethodType");
-
-    // public static MethodType methodType(Class<?> rtype, Class<?>[] ptypes)
-    if (arrobj_len(parameter_types) > 0) {
-        Method *get_method_type = class_lookup_static_method(
-                c, "methodType", "(Ljava/lang/Class;[Ljava/lang/Class;)Ljava/lang/invoke/MethodType;");
-
-        struct slot args[] = { rslot(return_type), rslot(parameter_types) };
-        thread_invoke_method_with_shim(curr_thread, get_method_type, args, set_bootstrap_method_type);
-    } else {
-        Method *get_method_type = class_lookup_static_method(
-                c, "methodType", "(Ljava/lang/Class;)Ljava/lang/invoke/MethodType;");
-        struct slot args[] = { rslot(return_type) };
-        thread_invoke_method_with_shim(curr_thread, get_method_type, args, set_bootstrap_method_type);
-    }
-
-    if (!c->inited) { // 后压栈，先执行
-        class_clinit(c, curr_thread);
-    }
-}
-
-static void get_lookup(struct Thread *curr_thread)
-{
-    Class *c = load_class(g_bootstrap_loader, "java/lang/invoke/MethodHandles");
-    Method *m = class_lookup_static_method(c, "lookup", "()Ljava/lang/invoke/MethodHandles$Lookup;");
-    thread_invoke_method_with_shim(curr_thread, m, NULL, set_lookup);
-
-    if (!c->inited) { // 后压栈，先执行
-        class_clinit(c, curr_thread);
-    }
-}
-
-//static struct slot rtc_to_slot(struct ClassLoader *loader, const struct rtcp *rtcp, int index)
-//{
-//    assert(rtcp != nullptr);
-//
-//    switch (rtcp->pool[index].t) {
-//        case STRING_CONSTANT:
-//            return rslot(strobj_create(rtcp_get_str(rtcp, index)));
-//        case CLASS_CONSTANT:
-//            return rslot(clsobj_create(load_class(loader, rtcp_get_class_name(rtcp, index))));
-//        case INTEGER_CONSTANT:
-//            return islot(rtcp_get_int(rtcp, index));
-//        case LONG_CONSTANT:
-//            return lslot(rtcp_get_long(rtcp, index));
-//        case FLOAT_CONSTANT:
-//            return fslot(rtcp_get_float(rtcp, index));
-//        case DOUBLE_CONSTANT:
-//            return dslot(rtcp_get_double(rtcp, index));
-//        case METHOD_HANDLE_CONSTANT: {
-//            struct method_handle *mh = rtcp_get_method_handle(rtcp, index);
-//            // todo
-//            jvm_abort("");
-//            break;
-//        }
-//        case METHOD_TYPE_CONSTANT: {
-//            const char *descriptor = rtcp_get_method_type(rtcp, index);
-//            // todo
-//            jvm_abort("");
-//            break;
-//        }
-//        default:
-//            VM_UNKNOWN_ERROR("unknown type. t = %d, index = %d\n", rtcp->pool[index].t, index);
-//            break;
-//    }
-//}
-
-static void set_call_set(Class *curr_class, struct Thread *curr_thread,
-                        struct ClassLoader *loader, struct invoke_dynamic_ref *ref)
-{
-
-    struct method_ref *mr = ref->handle->ref.mr;
-
-    Class *bootstrap_class = load_class(loader, mr->class_name);
-    Method *bootstrap_method = class_lookup_static_method(bootstrap_class, mr->name, mr->descriptor);
-    // todo 说明 bootstrap_method 的格式
-    // bootstrap_method is static,  todo 对不对
-    // 前三个参数固定为 MethodHandles.Lookup caller, String invokedName, MethodType invokedType todo 对不对
-    // 后续的参数由 ref->argc and ref->args 决定
-    assert(ref->argc + 3 == bootstrap_method->arg_slot_count);
-    struct slot args[bootstrap_method->arg_slot_count];
-    args[0] = rslot(curr_thread->dyn.lookup);
-    args[1] = rslot(strobj_create(mr->name));
-    args[2] = rslot(curr_thread->dyn.bootstrap_method_type);
-    // parse remaining args
-    for (int i = 0, j = 3; i < ref->argc; i++, j++) {
-        args[j] = rtc_to_slot(curr_class->loader, curr_class->rtcp, ref->args[i]); // todo 用哪个类的 rtcp
-    }
-
-    thread_invoke_method_with_shim(curr_thread, bootstrap_method, args, set_call_set0);
-}
-#endif
-
-// 每一个 invokedynamic 指令都称为 Dynamic Call Site(动态调用点)
-void invokedynamic(Frame *frame)
-{
-    jvm_abort("invokedynamic not implement\n");  // todo
-
-#if 0
-    size_t saved_pc = frame->reader.pc - 1;
-
-    Class *curr_class = frame->m.method->clazz;
-    struct Thread *curr_thread = frame->Thread;
-
-    // The run-time constant pool item at that index must be a symbolic reference to a call site specifier.
-    int index = bcr_readu2(&frame->reader); // CONSTANT_InvokeDynamic_info
-
-    bcr_readu1(&frame->reader); // this byte must always be zero.
-    bcr_readu1(&frame->reader); // this byte must always be zero.
-
-    struct invoke_dynamic_ref *ref = rtcp_get_invoke_dynamic(curr_class->rtcp, index);
-
-    struct Object *bootstrap_method_type = curr_thread->dyn.bootstrap_method_type;
-    if (bootstrap_method_type == NULL) {
-        parse_bootstrap_method_type(curr_class, curr_thread, ref);
-        frame->reader.pc = saved_pc; // recover pc
-        return;
-    }
-
-    struct Object *lookup = curr_thread->dyn.lookup;
-    if (lookup == NULL) {
-        get_lookup(curr_thread);
-        frame->reader.pc = saved_pc; // recover pc
-        return;
-    }
-
-    struct Object *call_set = curr_thread->dyn.call_set;
-    struct Object *exact_method_handle = curr_thread->dyn.exact_method_handle;
-
-    // todo
-    switch (ref->handle->kind) {
-        case REF_KIND_GET_FIELD:
-            break;
-        case REF_KIND_GET_STATIC:
-            break;
-        case REF_KIND_PUT_FIELD:
-            break;
-        case REF_KIND_PUT_STATIC:
-            break;
-        case REF_KIND_INVOKE_VIRTUAL:
-            break;
-        case REF_KIND_INVOKE_STATIC: {
-            if (call_set == NULL) {
-                set_call_set(curr_class, curr_thread, frame->m.method->clazz->loader, ref);
-                frame->reader.pc = saved_pc; // recover pc
-                return;
-            }
-
-            if (exact_method_handle != NULL) {
-                // public final Object invokeExact(Object... args) throws Throwable
-                Method *exact_method = class_lookup_instance_method(
-                        exact_method_handle->clazz, "invokeExact", "[Ljava/lang/Object;");
-                // todo args
-                jvm_abort(""); ////////////////////////////////////////////////////
-                // invoke exact method, invokedynamic completely execute over.
-                thread_invoke_method(curr_thread, exact_method, NULL);
-                return;
-            } else {
-                // public abstract MethodHandle dynamicInvoker()
-                Method *dynamic_invoker = class_lookup_instance_method(
-                        call_set->clazz, "dynamicInvoker", "()Ljava/lang/invoke/MethodHandle;");
-                struct slot arg = rslot(call_set);
-                thread_invoke_method_with_shim(curr_thread, dynamic_invoker, &arg, set_exact_method_handle);
-                frame->reader.pc = saved_pc; // recover pc
-                return;
-            }
-        }
-        case REF_KIND_INVOKE_SPECIAL:
-            break;
-        case REF_KIND_NEW_INVOKE_SPECIAL:
-            break;
-        case REF_KIND_INVOKE_INTERFACE:
-            break;
-        default:
-            VM_UNKNOWN_ERROR("unknown kind. %d", ref->handle->kind);
-            break;
-    }
-
-    // todo rest Thread.dyn 的值，下次调用时这个值要从新解析。
-#endif
-}
-
 #define CASE(x, body) case x: { body; break; }
 #define CASE2(x, y, body) case x: case y: { body; break; }
 #define CASE3(x, y, z, body) case x: case y: case z: { body; break; }
@@ -631,14 +414,10 @@ ldc:
                 ConstantPool &cp = frame->method->clazz->cp;
                 u1 type = CP_TYPE(cp, index);
 
-                if (type == CONSTANT_Integer) {
-                    frame->pushi(CP_INT(cp, index));
-                } else if (type == CONSTANT_Float) {
-                    frame->pushf(CP_FLOAT(cp, index));
+                if (type == CONSTANT_Integer || type == CONSTANT_Float || type == CONSTANT_ResolvedString) {
+                    *frame->stack++ = CP_INFO(cp, index);
                 } else if (type == CONSTANT_String) {
                     frame->pushr(resolve_string(frame->method->clazz, index));
-                } else if (type == CONSTANT_ResolvedString) {
-                    frame->pushr((jref) CP_INFO(cp, index));
                 } else if (type == CONSTANT_Class) {
                     frame->pushr(resolve_class(frame->method->clazz, index)->clsobj);
                 } else if (type == CONSTANT_ResolvedClass) {
@@ -1237,10 +1016,13 @@ method_return:
                     m->clazz->clinit();
                 }
 
-                frame->stack -= m->arg_slot_count;
-                args = frame->stack;
-                resolved_method = m;
-                goto invoke_method;
+                reader->pc -= 2;
+                frame->method->code[-1] = OPC_INVOKESTATIC_QUICK;
+                goto invokeStaticQuick;
+//                frame->stack -= m->arg_slot_count;
+//                args = frame->stack;
+//                resolved_method = m;
+//                goto invoke_method;
             }
             case OPC_INVOKEINTERFACE: {
                 Class *curr_class = frame->method->clazz;
@@ -1286,9 +1068,110 @@ method_return:
                 resolved_method = method;
                 goto invoke_method;
             }
-            case OPC_INVOKEDYNAMIC:
-                invokedynamic(frame);
+            case OPC_INVOKEDYNAMIC: {
+                // 每一个 invokedynamic 指令都称为 Dynamic Call Site(动态调用点)
+
+                jvm_abort("not implement!!!\n"); // todo
+
+                Class *currClass = frame->method->clazz;
+                ConstantPool &cp = currClass->cp;
+                // The run-time constant pool item at that index must be a symbolic reference to a call site specifier.
+                /*
+                 * CONSTANT_InvokeDynamic_info {
+                        u1 tag;
+                        u2 bootstrap_method_attr_index;
+                        u2 name_and_type_index;
+                    }
+                 */
+                int index = reader->readu2(); // point to CONSTANT_InvokeDynamic_info
+                reader->readu1(); // this byte must always be zero.
+                reader->readu1(); // this byte must always be zero.
+
+                // 调用方法
+                // public static MethodType fromMethodDescriptorString(String descriptor, ClassLoader loader);
+                // to get MethodType
+                const char *descriptor = CP_NAME_TYPE_TYPE(cp, index);
+                auto so = StringObject::newInst(descriptor);
+                Class *mt = loadSysClass("java/lang/invoke/MethodType");
+                auto fromMethodDescriptorString = mt->getDeclaredStaticMethod(
+                        "fromMethodDescriptorString",
+                        "(Ljava/lang/String;Ljava/lang/ClassLoader;)Ljava/lang/invoke/MethodType;");
+                slot_t *retValue = execJavaFunc(fromMethodDescriptorString, { (slot_t) so, (slot_t) nullptr });
+                assert(retValue != nullptr);
+                auto methodTypeObj = (jref) retValue[0]; // get MethodType
+
+                // 调用方法
+                // public static Lookup lookup();
+                // to get MethodHandles$Lookup
+                Class *mh = loadSysClass("java/lang/invoke/MethodHandles");
+                auto lookup = mh->getDeclaredStaticMethod("lookup", "()Ljava/lang/invoke/MethodHandles$Lookup;");
+                retValue = execJavaFunc(lookup);
+                assert(retValue != nullptr);
+                auto lookupObj = (jref) retValue[0]; // get MethodHandles$Lookup
+
+                /////////////////////
+                BootstrapMethod &bm = currClass->bootstrapMethods[CP_BOOTSTRAP_METHOD_ATTR_INDEX(currClass->cp, index)];
+                const char *name = CP_NAME_TYPE_NAME(cp, index);
+                descriptor = CP_NAME_TYPE_TYPE(cp, index);
+
+                auto refKind = CP_METHOD_HANDLE_REFERENCE_KIND(cp, bm.bootstrapMethodRef);
+                auto refIndex = CP_METHOD_HANDLE_REFERENCE_INDEX(cp, bm.bootstrapMethodRef);
+                switch (refKind) {
+                    case REF_KIND_GET_FIELD:
+                        break; // todo
+                    case REF_KIND_GET_STATIC:
+                        break; // todo
+                    case REF_KIND_PUT_FIELD:
+                        break; // todo
+                    case REF_KIND_PUT_STATIC:
+                        break; // todo
+                    case REF_KIND_INVOKE_VIRTUAL:
+                        break; // todo
+                    case REF_KIND_INVOKE_STATIC: {
+                        const char *className = CP_METHOD_CLASS_NAME(cp, refIndex);
+                        Class *bootstrapClass = currClass->loader->loadClass(className);
+
+                        // bootstrap method is static,  todo 对不对
+                        // 前三个参数固定为 MethodHandles.Lookup caller, String invokedName, MethodType invokedType todo 对不对
+                        // 后续的参数由 ref->argc and ref->args 决定
+                        Method *bootstrapMethod = bootstrapClass->getDeclaredStaticMethod(
+                                        CP_METHOD_NAME(cp, refIndex), CP_METHOD_TYPE(cp, refIndex));
+                        assert(bm.bootstrapArguments.size() + 3 == bootstrapMethod->arg_slot_count);
+                        retValue = execJavaFunc(bootstrapMethod, { }); // todo 参数是啥？？ bm.bootstrapArguments ???
+                        assert(retValue != nullptr);
+                        auto callSet = (jref) retValue;
+
+                        // public abstract MethodHandle dynamicInvoker()
+                        auto dynamicInvoker = callSet->clazz->lookupInstMethod(
+                                "dynamicInvoker", "()Ljava/lang/invoke/MethodHandle;");
+                        retValue = execJavaFunc(dynamicInvoker, callSet);
+                        assert(retValue != nullptr);
+                        auto exactMethodHandle = (jref) retValue;
+
+                        // public final Object invokeExact(Object... args) throws Throwable
+                        Method *exactMethod
+                                = exactMethodHandle->clazz->lookupInstMethod("invokeExact", "[Ljava/lang/Object;");
+                        // todo args
+                        jvm_abort("");
+
+                        // invoke exact method, invokedynamic completely execute over.
+                        execJavaFunc(exactMethod, { });  // todo 参数是啥？？
+
+                        break;
+                    }
+                    case REF_KIND_INVOKE_SPECIAL:
+                        break; // todo
+                    case REF_KIND_NEW_INVOKE_SPECIAL:
+                        break; // todo
+                    case REF_KIND_INVOKE_INTERFACE:
+                        break; // todo
+                    default:
+                        jvm_abort("never goes here");
+                        break; // todo never goes here
+                }
+                jvm_abort("never goes here"); // todo
                 break;
+            }
 invoke_method:
 {
     assert(resolved_method);
@@ -1436,6 +1319,17 @@ invoke_method:
             case OPC_JSR_W: // todo
                 raiseException(INTERNAL_ERROR, "jsr_w doesn't support after jdk 6.");
                 break;
+
+            case OPC_INVOKESTATIC_QUICK: {
+invokeStaticQuick:
+                int index = reader->readu2();
+                auto m = (Method *) CP_INFO(frame->method->clazz->cp, index);
+                frame->stack -= m->arg_slot_count;
+                args = frame->stack;
+                resolved_method = m;
+                goto invoke_method;
+            }
+
             case OPC_INVOKENATIVE:
                 frame->method->nativeMethod(frame);
                 break;

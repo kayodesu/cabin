@@ -251,8 +251,7 @@ static inline slot_t *execJavaFunc(Method *m, Object *o)
 //#define OPC_GETFIELD_THIS        229
 //#define OPC_LOCK            230
 //#define OPC_ALOAD_THIS            231
-//#define OPC_INVOKESTATIC_QUICK        232
-
+#define OPC_INVOKESTATIC_QUICK        232
 #define OPC_INVOKENATIVE       254
 
 #endif //JVM_INTERPRETER_H
