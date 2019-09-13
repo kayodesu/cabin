@@ -335,26 +335,6 @@ static void anewarray(Frame *frame)
  */
 static slot_t *exec()
 {
-    /*
-     * 标识当前指令是否有 wide 扩展。
-     * 只对
-     * iload, fload, aload, lload, dload,
-     * istore, fstore, astore, lstore, dstore,
-     * ret, iinc
-     * 有效。
-     * 以上指令执行前需检查此标志，执行后需复位（置为false）此标志。
-     */
-    bool wide_extending = false;
-
-#define FETCH_WIDE_INDEX \
-    int index; \
-    if (wide_extending) { \
-        wide_extending = false; /* recover */  \
-        index = frame->reader.readu2(); \
-    } else { \
-        index = frame->reader.readu1(); \
-    }
-
     Thread *thread = thread_self();
 
     Method *resolved_method;
@@ -368,12 +348,14 @@ static slot_t *exec()
 
 #define CHANGE_FRAME(newFrame) \
     do { \
-        /*frame->stack = stack;  stack指针在变动，需要设置一下 */ \
+        /*frame->stack = stack;  stack指针在变动，需要设置一下 todo */ \
         frame = newFrame; \
         reader = &frame->reader; \
         stack = frame->stack; \
         locals = frame->locals; \
     } while (false)
+
+#define ASM __asm__  __volatile__  // __volatile__: 禁止优化
 
     while (true) {
         u1 opcode = reader->readu1();
@@ -381,21 +363,27 @@ static slot_t *exec()
 
         switch (opcode) {
             CASE(OPC_NOP, { })
-            CASE(OPC_ACONST_NULL, frame->pushr(nullptr))
-            CASE(OPC_ICONST_M1, frame->pushi(-1))
-            CASE(OPC_ICONST_0, frame->pushi(0))
-            CASE(OPC_ICONST_1, frame->pushi(1))
-            CASE(OPC_ICONST_2, frame->pushi(2))
-            CASE(OPC_ICONST_3, frame->pushi(3))
-            CASE(OPC_ICONST_4, frame->pushi(4))
-            CASE(OPC_ICONST_5, frame->pushi(5))
+            CASE(OPC_ACONST_NULL, *frame->stack++ = 0;)
+            CASE(OPC_ICONST_M1, *frame->stack++ = -1;)
+            CASE(OPC_ICONST_0, *frame->stack++ = 0;)
+            CASE(OPC_ICONST_1, *frame->stack++ = 1;)
+            CASE(OPC_ICONST_2, *frame->stack++ = 2;)
+            CASE(OPC_ICONST_3, *frame->stack++ = 3;)
+            CASE(OPC_ICONST_4, *frame->stack++ = 4;)
+            CASE(OPC_ICONST_5, *frame->stack++ = 5;)
 
             CASE(OPC_LCONST_0, frame->pushl(0))
             CASE(OPC_LCONST_1, frame->pushl(1))
 
-            CASE(OPC_FCONST_0, frame->pushf(0))
-            CASE(OPC_FCONST_1, frame->pushf(1))
-            CASE(OPC_FCONST_2, frame->pushf(2))
+            CASE(OPC_FCONST_0, *frame->stack++ = 0;)
+            case OPC_FCONST_1:
+                *((float*) frame->stack) = (float) 1.0;
+                frame->stack++;
+                break;
+            case OPC_FCONST_2:
+                *((float*) frame->stack) = (float) 2.0;
+                frame->stack++;
+                break;
 
             CASE(OPC_DCONST_0, frame->pushd(0))
             CASE(OPC_DCONST_1, frame->pushd(1))
@@ -450,14 +438,14 @@ ldc:
             case OPC_ILOAD:
             case OPC_FLOAD:
             case OPC_ALOAD: {
-                FETCH_WIDE_INDEX
+                auto index = reader->readu1();
                 *frame->stack++ = locals[index];
                 break;
             }
 
             case OPC_LLOAD:
             case OPC_DLOAD: {
-                FETCH_WIDE_INDEX
+                auto index = reader->readu1();
                 *frame->stack++ = locals[index];
                 *frame->stack++ = locals[index + 1];
                 break;
@@ -513,12 +501,12 @@ ldc:
             })
 
             CASE3(OPC_ISTORE, OPC_FSTORE, OPC_ASTORE, {
-                FETCH_WIDE_INDEX
+                auto index = reader->readu1();
                 locals[index] = *--frame->stack;
             })
 
             CASE2(OPC_LSTORE, OPC_DSTORE, {
-                FETCH_WIDE_INDEX
+                auto index = reader->readu1();
                 locals[index + 1] = *--frame->stack;
                 locals[index] = *--frame->stack;
             })
@@ -715,17 +703,8 @@ ldc:
             CASE(OPC_LXOR, BINARY_OP(jlong, 2, ^))
 
             case OPC_IINC: {
-                jint index, value;
-
-                if (wide_extending) {
-                    index = reader->readu2();
-                    value = reader->reads2();
-                    wide_extending = false;
-                } else {
-                    index = reader->readu1();
-                    value = reader->reads1();
-                }
-
+                auto index = reader->readu1();
+                auto value = reader->reads1();
                 ISLOT(locals + index) = ISLOT(locals + index) + value;
                 break;
             }
@@ -1016,9 +995,10 @@ method_return:
                     m->clazz->clinit();
                 }
 
-                reader->pc -= 2;
-                frame->method->code[-1] = OPC_INVOKESTATIC_QUICK;
-                goto invokeStaticQuick;
+                reader->pc -= 3;
+                frame->method->code[reader->pc] = OPC_INVOKESTATIC_QUICK;
+                break;
+//                goto invokeStaticQuick;
 //                frame->stack -= m->arg_slot_count;
 //                args = frame->stack;
 //                resolved_method = m;
@@ -1294,8 +1274,41 @@ invoke_method:
                 // todo
                 break;
             }
-
-            CASE(OPC_WIDE, wide_extending = true)
+            case OPC_WIDE: {
+                int __opcode = reader->readu1();
+                TRACE("%d(0x%x), %s, pc = %lu\n", __opcode, __opcode, instruction_names[__opcode], frame->reader.pc);
+                u2 index = reader->readu2();
+                switch (__opcode) {
+                    case OPC_ILOAD:
+                    case OPC_FLOAD:
+                    case OPC_ALOAD:
+                        *frame->stack++ = locals[index];
+                        break;
+                    case OPC_LLOAD:
+                    case OPC_DLOAD:
+                        *frame->stack++ = locals[index];
+                        *frame->stack++ = locals[index + 1];
+                        break;
+                    case OPC_ISTORE:
+                    case OPC_FSTORE:
+                    case OPC_ASTORE:
+                        locals[index] = *--frame->stack;
+                        break;
+                    case OPC_LSTORE:
+                    case OPC_DSTORE:
+                        locals[index + 1] = *--frame->stack;
+                        locals[index] = *--frame->stack;
+                        break;
+                    case OPC_RET:
+                        raiseException(INTERNAL_ERROR, "ret doesn't support after jdk 6.");
+                        break;
+                    case OPC_IINC:
+                        u2 value = reader->readu2();
+                        ISLOT(locals + index) = ISLOT(locals + index) + value;
+                        break;
+                }
+                break;
+            }
             CASE(OPC_MULTIANEWARRAY, multianewarray(frame))
 
             case OPC_IFNULL: {
@@ -1321,7 +1334,6 @@ invoke_method:
                 break;
 
             case OPC_INVOKESTATIC_QUICK: {
-invokeStaticQuick:
                 int index = reader->readu2();
                 auto m = (Method *) CP_INFO(frame->method->clazz->cp, index);
                 frame->stack -= m->arg_slot_count;

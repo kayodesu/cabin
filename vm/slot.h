@@ -39,7 +39,7 @@ struct Slot {//jbyte jbool  jchar  jshort  jint jlong jfloat jdouble jref
 
 // 一个slot_t类型必须可以容纳jbool, jbyte, jchar, jshort，jint，jfloat, jref称为类型一
 // jlong, jdouble 称为类型二，占两个slot
-typedef uintptr_t slot_t;
+typedef intptr_t slot_t;
 
 #define ISLOT(slot_point) (* (jint *) (slot_point))
 #define FSLOT(slot_point) (* (jfloat *) (slot_point))
