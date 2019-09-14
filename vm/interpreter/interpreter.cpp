@@ -993,9 +993,10 @@ method_return:
                     m->clazz->clinit();
                 }
 
-                reader->pc -= 3;
-                frame->method->code[reader->pc] = OPC_INVOKESTATIC_QUICK;
-                break;
+                frame->stack -= m->arg_slot_count;
+                args = frame->stack;
+                resolved_method = m;
+                goto invoke_method;
             }
             case OPC_INVOKEINTERFACE: {
                 int index = reader->readu2();
@@ -1324,16 +1325,6 @@ invoke_method:
             case OPC_JSR_W: // todo
                 raiseException(INTERNAL_ERROR, "jsr_w doesn't support after jdk 6.");
                 break;
-
-            case OPC_INVOKESTATIC_QUICK: {
-                int index = reader->readu2();
-                auto m = (Method *) CP_INFO(frame->method->clazz->cp, index);
-                frame->stack -= m->arg_slot_count;
-                args = frame->stack;
-                resolved_method = m;
-                goto invoke_method;
-            }
-
             case OPC_INVOKENATIVE:
                 frame->method->nativeMethod(frame);
                 break;
