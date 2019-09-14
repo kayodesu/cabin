@@ -343,6 +343,7 @@ static slot_t *exec()
     Frame *frame = thread->topFrame;
     TRACE("executing frame: %s\n", frame->toString().c_str());
     BytecodeReader *reader = &frame->reader;
+    Class *clazz = frame->method->clazz;
     slot_t *stack = frame->stack;
     slot_t *locals = frame->locals;
 
@@ -352,10 +353,9 @@ static slot_t *exec()
         frame = newFrame; \
         reader = &frame->reader; \
         stack = frame->stack; \
+        clazz = frame->method->clazz; \
         locals = frame->locals; \
     } while (false)
-
-#define ASM __asm__  __volatile__  // __volatile__: 禁止优化
 
     while (true) {
         u1 opcode = reader->readu1();
@@ -939,7 +939,6 @@ method_return:
             case OPC_INVOKESPECIAL: {
                 // invokespecial指令用于调用一些需要特殊处理的实例方法，
                 // 包括构造函数、私有方法和通过super关键字调用的超类方法。
-                Class *curr_class = frame->method->clazz;
                 int index = reader->readu2();
 //
 //    // 假定从方法符号引用中解析出来的类是C，方法是M。如果M是构造函数，则声明M的类必须是C，
@@ -948,7 +947,7 @@ method_return:
 ////        jvm_abort("java.lang.NoSuchMethodError\n");
 ////    }
 
-                Method *m = resolve_method(curr_class, index);
+                Method *m = resolve_method(clazz, index);
                 /*
                  * 如果调用的中超类中的函数，但不是构造函数，不是private 函数，且当前类的ACC_SUPER标志被设置，
                  * 需要一个额外的过程查找最终要调用的方法；否则前面从方法符号引用中解析出来的方法就是要调用的方法。
@@ -956,9 +955,9 @@ method_return:
                  */
                 if (m->clazz->isSuper()
                     && !m->isPrivate()
-                    && curr_class->isSubclassOf(m->clazz) // todo
+                    && clazz->isSubclassOf(m->clazz) // todo
                     && !utf8_equals(m->name, S(object_init))) {
-                    m = curr_class->superClass->lookupMethod(m->name, m->descriptor);
+                    m = clazz->superClass->lookupMethod(m->name, m->descriptor);
                 }
 
                 if (m->isAbstract()) {
@@ -981,9 +980,8 @@ method_return:
             case OPC_INVOKESTATIC: {
                 // invokestatic指令用来调用静态方法。
                 // 如果类还没有被初始化，会触发类的初始化。
-                Class *curr_class = frame->method->clazz;
                 int index = reader->readu2();
-                Method *m = resolve_method(curr_class, index);
+                Method *m = resolve_method(clazz, index);
                 if (m->isAbstract()) {
                     raiseException(ABSTRACT_METHOD_ERROR);
                 }
@@ -998,14 +996,8 @@ method_return:
                 reader->pc -= 3;
                 frame->method->code[reader->pc] = OPC_INVOKESTATIC_QUICK;
                 break;
-//                goto invokeStaticQuick;
-//                frame->stack -= m->arg_slot_count;
-//                args = frame->stack;
-//                resolved_method = m;
-//                goto invoke_method;
             }
             case OPC_INVOKEINTERFACE: {
-                Class *curr_class = frame->method->clazz;
                 int index = reader->readu2();
 
                 /*
@@ -1020,7 +1012,7 @@ method_return:
                  */
                 reader->readu1();
 
-                Method *m = resolve_method(curr_class, index);
+                Method *m = resolve_method(clazz, index);
                 assert(m->clazz->isInterface());
 
                 /* todo 本地方法 */
@@ -1174,7 +1166,7 @@ invoke_method:
             case OPC_NEW: {
                 // new指令专门用来创建类实例。数组由专门的指令创建
                 // 如果类还没有被初始化，会触发类的初始化。
-                Class *c = resolve_class(frame->method->clazz, reader->readu2());  // todo
+                Class *c = resolve_class(clazz, reader->readu2());  // todo
                 if (!c->inited) {
                     c->clinit();
                 }
@@ -1255,7 +1247,7 @@ invoke_method:
             }
             case OPC_INSTANCEOF: {
                 int index = reader->readu2();
-                Class *c = resolve_class(frame->method->clazz, index);
+                Class *c = resolve_class(clazz, index);
 
                 jref obj = frame->popr();
                 if (obj == nullptr)
