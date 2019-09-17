@@ -442,11 +442,11 @@ static slot_t *exec()
 
 #if TRACE_INTERPRETER    
 #define DISPATCH \
-do { \
+{ \
     u1 opcode = reader->readu1(); \
     TRACE("%d(0x%x), %s, pc = %lu\n", opcode, opcode, instruction_names[opcode], frame->reader.pc); \
     goto *labels[opcode]; \
-} while(false)
+}
 #else
 #define DISPATCH goto *labels[reader->readu1()];
 #endif
@@ -1152,15 +1152,15 @@ __method_return:
 opc_getstatic: 
     index = reader->readu2();
     Field *f = resolve_field(frame->method->clazz, index);
+    assert(f->isStatic());
 
     if (!f->clazz->inited) {
         f->clazz->clinit();
     }
 
-    value = (slot_t *) f->clazz->getStaticFieldValue(f);
-    *frame->stack++ = value[0];
+    *frame->stack++ = f->staticValue.data[0];
     if (f->categoryTwo) {
-        *frame->stack++ = value[1];
+        *frame->stack++ = f->staticValue.data[1];
     }
     DISPATCH
 
@@ -1168,6 +1168,7 @@ opc_putstatic:
     {
         index = reader->readu2();
         Field *f = resolve_field(frame->method->clazz, index);
+        assert(f->isStatic());
 
         if (!f->clazz->inited) {
             f->clazz->clinit();
@@ -1175,11 +1176,13 @@ opc_putstatic:
 
         if (f->categoryTwo) {
             frame->stack -= 2;
+            f->staticValue.data[0] = frame->stack[0];
+            f->staticValue.data[1] = frame->stack[1];
         } else {
-            frame->stack--;
+            f->staticValue.data[0] = *--frame->stack;
         }
 
-        f->clazz->setStaticFieldValue(f, frame->stack);
+//        f->clazz->setStaticFieldValue(f, frame->stack);
         DISPATCH
     }
 

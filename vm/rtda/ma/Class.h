@@ -23,11 +23,8 @@ class BytecodeReader;
 class ClassObject;
 class ArrayClass;
 
+// Object of java/lang/Class
 struct Class: public Access {
-    u4 magic;
-    u2 minor_version;
-    u2 major_version;
-
     ConstantPool cp;
 
     // Object of java/lang/Class of this class
@@ -102,12 +99,6 @@ struct Class: public Access {
     // instance_field_count 有可能大于 fields_count，因为 instance_field_count 包含了继承过来的 field.
     // 类型二统计为两个数量
     int instFieldsCount;
-
-    /*
-     * 类型二统计为两个数量
-     */
-    int staticFieldsCount;
-    slot_t *staticFieldsValues; // 保存所有类变量的值
 
     // vtable 只保存虚方法。
     // 该类所有函数自有函数（除了private, static, final, abstract）和 父类的函数虚拟表。

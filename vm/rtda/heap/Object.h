@@ -6,8 +6,9 @@
 #define JVM_JOBJECT_H
 
 #include "../../slot.h"
-#include "../ma/Class.h"
 #include "../ma/Field.h"
+
+class Class;
 
 class Object {
 protected:

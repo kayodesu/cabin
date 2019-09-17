@@ -39,6 +39,7 @@
       <w>invokenative</w>
       <w>islot</w>
       <w>itable</w>
+      <w>ivalue</w>
       <w>jarrobj</w>
       <w>jboolean</w>
       <w>jchars</w>

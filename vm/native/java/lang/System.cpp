@@ -9,6 +9,7 @@
 #include "../../../interpreter/interpreter.h"
 #include "../../../rtda/thread/Thread.h"
 #include "../../../rtda/heap/StringObject.h"
+#include "../../../rtda/ma/Field.h"
 
 /**
  * Maps a library name into a platform-specific string representing a native library.
@@ -122,7 +123,7 @@ static void setIn0(Frame *frame)
 {
     jref in = frame->getLocalAsRef(0);
     Class *c = frame->method->clazz;
-    c->setStaticFieldValue(c->lookupField("in", "Ljava/io/InputStream;"), (slot_t *) &in);
+    c->lookupStaticField("in", "Ljava/io/InputStream;")->staticValue.r = in;
 }
 
 // private static native void setOut0(PrintStream out);
@@ -130,7 +131,7 @@ static void setOut0(Frame *frame)
 {
     jref out = frame->getLocalAsRef(0);
     Class *c = frame->method->clazz;
-    c->setStaticFieldValue(c->lookupField("out", "Ljava/io/PrintStream;"), (slot_t *) &out);
+    c->lookupStaticField("out", "Ljava/io/PrintStream;")->staticValue.r = out;
 }
 
 // private static native void setErr0(PrintStream err);
@@ -138,7 +139,7 @@ static void setErr0(Frame *frame)
 {
     jref err = frame->getLocalAsRef(0);
     Class *c = frame->method->clazz;
-    c->setStaticFieldValue(c->lookupField("err", "Ljava/io/PrintStream;"), (slot_t *) &err);
+    c->lookupStaticField("err", "Ljava/io/PrintStream;")->staticValue.r = err;
 }
 
 /*

@@ -18,18 +18,12 @@ using namespace std;
 void Class::calcFieldsId()
 {
     int insId = 0;
-    int staticId = 0;
-
     if (superClass != nullptr) {
         insId = superClass->instFieldsCount; // todo 父类的私有变量是不是也算在了里面，不过问题不大，浪费点空间吧了
     }
 
     for(auto f : fields) {
-        if (f->isStatic()) {
-            f->id = staticId++;
-            if (f->categoryTwo)
-                staticId++;
-        } else {
+        if (!f->isStatic()) {
             f->id = insId++;
             if (f->categoryTwo)
                 insId++;
@@ -37,9 +31,6 @@ void Class::calcFieldsId()
     }
 
     instFieldsCount = insId;
-    staticFieldsCount = staticId;
-
-    staticFieldsValues =(slot_t *)vm_calloc(staticFieldsCount, sizeof(slot_t)); // 清零
 }
 
 void Class::parseAttribute(BytecodeReader &r)
@@ -260,9 +251,27 @@ Class::Class(ClassLoader *loader, u1 *bytecode, size_t len)
 
     this->loader = loader;
 
-    magic = r.readu4();
-    minor_version = r.readu2();
-    major_version = r.readu2();
+    auto magic = r.readu4();
+    if (magic != 0xcafebabe) {
+        raiseException(CLASS_FORMAT_ERROR, "bad magic");
+    }
+
+    auto minor_version = r.readu2();
+    auto major_version = r.readu2();
+    /*
+     * Class版本号和Java版本对应关系
+     * JDK 1.8 = 52
+     * JDK 1.7 = 51
+     * JDK 1.6 = 50
+     * JDK 1.5 = 49
+     * JDK 1.4 = 48
+     * JDK 1.3 = 47
+     * JDK 1.2 = 46
+     * JDK 1.1 = 45
+     */
+    if (major_version != 52) {
+        raiseException(CLASS_FORMAT_ERROR, "bad class version");
+    }
 
     // init constant pool
     u2 cp_count = r.readu2();
@@ -605,21 +614,6 @@ int Class::inheritedDepth() const
         depth++;
     }
     return depth;
-}
-
-void Class::setStaticFieldValue(Field *f, const slot_t *value)
-{
-    assert(f != nullptr && value != nullptr);
-
-    staticFieldsValues[f->id] =  value[0];
-    if (f->categoryTwo) {
-        staticFieldsValues[f->id + 1] = value[1];
-    }
-}
-
-const slot_t* Class::getStaticFieldValue(const Field *f)
-{
-    return staticFieldsValues + f->id;
 }
 
 bool Class::isArray() const

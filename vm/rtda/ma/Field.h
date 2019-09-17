@@ -19,7 +19,22 @@ class Field: public Member {
 public:
     bool categoryTwo;
 
-    int id;
+    union {
+        // static value 必须初始化清零
+        union {
+            jbyte b;
+            jchar c;
+            jshort s;
+            jint i;
+            jlong l;
+            jfloat f;
+            jdouble d;
+            jref r;
+            slot_t data[2] = { 0, 0 };
+        } staticValue;
+
+        int id = 0;
+    };
 
     // 如果field的值已经在常量池中了，@constant_value_index 表示值在常量池中的索引。
     int constant_value_index;
