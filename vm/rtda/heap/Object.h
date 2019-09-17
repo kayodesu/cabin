@@ -65,8 +65,6 @@ public:
         return getInstFieldValue<T>(f->id);
     }
 
-    void storeInstFieldValue(Field *f, slot_t *&value) const;
-
     bool isInstanceOf(const Class *c) const;
 
     // 只适用于 primitive object

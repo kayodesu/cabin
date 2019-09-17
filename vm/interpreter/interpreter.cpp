@@ -451,6 +451,8 @@ static slot_t *exec()
 #define DISPATCH goto *labels[reader->readu1()];
 #endif
 
+    Class *c;
+
 nop:
     DISPATCH
 opc_aconst_null:
@@ -527,8 +529,7 @@ __ldc:
     } else if (type == CONSTANT_Class) {
         frame->pushr(resolve_class(frame->method->clazz, index)->clsobj);
     } else if (type == CONSTANT_ResolvedClass) {
-        auto c = (Class *) CP_INFO(cp, index);
-        frame->pushr(c->clsobj);
+        frame->pushr(((Class *) CP_INFO(cp, index))->clsobj);
     } else {
         stringstream ss;
         ss << "unknown type: " << type;
@@ -1149,89 +1150,84 @@ __method_return:
     }
     DISPATCH
 
+    Field *field;
 opc_getstatic: 
     index = reader->readu2();
-    Field *f = resolve_field(frame->method->clazz, index);
-    assert(f->isStatic());
+    field = resolve_field(frame->method->clazz, index);
+    assert(field->isStatic());
 
-    if (!f->clazz->inited) {
-        f->clazz->clinit();
+    if (!field->clazz->inited) {
+        field->clazz->clinit();
     }
 
-    *frame->stack++ = f->staticValue.data[0];
-    if (f->categoryTwo) {
-        *frame->stack++ = f->staticValue.data[1];
+    *frame->stack++ = field->staticValue.data[0];
+    if (field->categoryTwo) {
+        *frame->stack++ = field->staticValue.data[1];
     }
     DISPATCH
 
 opc_putstatic:
-    {
-        index = reader->readu2();
-        Field *f = resolve_field(frame->method->clazz, index);
-        assert(f->isStatic());
+    index = reader->readu2();
+    field = resolve_field(frame->method->clazz, index);
+    assert(field->isStatic());
 
-        if (!f->clazz->inited) {
-            f->clazz->clinit();
-        }
-
-        if (f->categoryTwo) {
-            frame->stack -= 2;
-            f->staticValue.data[0] = frame->stack[0];
-            f->staticValue.data[1] = frame->stack[1];
-        } else {
-            f->staticValue.data[0] = *--frame->stack;
-        }
-
-//        f->clazz->setStaticFieldValue(f, frame->stack);
-        DISPATCH
+    if (!field->clazz->inited) {
+        field->clazz->clinit();
     }
 
+    if (field->categoryTwo) {
+        frame->stack -= 2;
+        field->staticValue.data[0] = frame->stack[0];
+        field->staticValue.data[1] = frame->stack[1];
+    } else {
+        field->staticValue.data[0] = *--frame->stack;
+    }
+
+    DISPATCH
+
+    jref obj;
 opc_getfield:
-    {
-        index = reader->readu2();
-        Field *f = resolve_field(frame->method->clazz, index);
-        jref obj = frame->popr();
-        if (obj == nullptr) {
-            thread_throw_null_pointer_exception();
-        }
-
-//                const slot_t *value = obj->getInstFieldValue(f);
-//                *frame->stack++ = value[0];
-//                if (f->categoryTwo) {
-//                    *frame->stack++ = value[1];
-//                }
-        obj->storeInstFieldValue(f, frame->stack);
-        DISPATCH
+    index = reader->readu2();
+    field = resolve_field(frame->method->clazz, index);
+    obj = frame->popr();
+    if (obj == nullptr) {
+        thread_throw_null_pointer_exception();
     }
+
+    *frame->stack++ = obj->data[field->id];
+    if (field->categoryTwo) {
+        *frame->stack++ = value[field->id + 1];
+    }
+
+    DISPATCH
 
 opc_putfield:
-    {
-        index = reader->readu2();
-        Field *f = resolve_field(frame->method->clazz, index);
+    index = reader->readu2();
+    field = resolve_field(frame->method->clazz, index);
 
-        // 如果是final字段，则只能在构造函数中初始化，否则抛出java.lang.IllegalAccessError。
-        if (f->isFinal()) {
-            // todo
-            if (frame->method->clazz != f->clazz || !utf8_equals(frame->method->name, S(object_init))) {
-                raiseException(ILLEGAL_ACCESS_ERROR);
-            }
+    // 如果是final字段，则只能在构造函数中初始化，否则抛出java.lang.IllegalAccessError。
+    if (field->isFinal()) {
+        // todo
+        if (frame->method->clazz != field->clazz || !utf8_equals(frame->method->name, S(object_init))) {
+            raiseException(ILLEGAL_ACCESS_ERROR);
         }
-
-        if (f->categoryTwo) {
-            frame->stack -= 2;
-        } else {
-            frame->stack--;
-        }
-        value = frame->stack;
-
-        jref obj = frame->popr();
-        if (obj == nullptr) {
-            thread_throw_null_pointer_exception();
-        }
-
-        obj->setFieldValue(f, value);
-        DISPATCH
     }
+
+    if (field->categoryTwo) {
+        frame->stack -= 2;
+    } else {
+        frame->stack--;
+    }
+    value = frame->stack;
+
+    obj = frame->popr();
+    if (obj == nullptr) {
+        thread_throw_null_pointer_exception();
+    }
+
+    obj->setFieldValue(field, value);
+    DISPATCH
+
 opc_invokevirtual:
     {
         // invokevirtual指令用于调用对象的实例方法，根据对象的实际类型进行分派（虚方法分派）。
@@ -1240,7 +1236,7 @@ opc_invokevirtual:
 
         frame->stack -= m->arg_slot_count;
         args = frame->stack;
-        auto obj = (Object *) args[0];
+        obj = (Object *) args[0];
         if (obj == nullptr) {
             thread_throw_null_pointer_exception();
         }
@@ -1285,7 +1281,7 @@ opc_invokespecial:
 
         frame->stack -= m->arg_slot_count;
         args = frame->stack;
-        auto obj = (jref) args[0];
+        obj = (jref) args[0];
         if (obj == nullptr) {
             thread_throw_null_pointer_exception();
         }
@@ -1339,7 +1335,7 @@ opc_invokeinterface:
         frame->stack -= m->arg_slot_count;
         args = frame->stack;
 
-        auto obj = (jref) args[0];
+        obj = (jref) args[0];
         if (obj == nullptr) {
             thread_throw_null_pointer_exception();
         }
@@ -1365,8 +1361,7 @@ opc_invokedynamic:
 
         jvm_abort("not implement!!!\n"); // todo
 
-        Class *currClass = frame->method->clazz;
-        ConstantPool &cp = currClass->cp;
+        ConstantPool &cp = clazz->cp;
         // The run-time constant pool item at that index must be a symbolic reference to a call site specifier.
         /*
          * CONSTANT_InvokeDynamic_info {
@@ -1402,7 +1397,7 @@ opc_invokedynamic:
         auto lookupObj = (jref) retValue[0]; // get MethodHandles$Lookup
 
         /////////////////////
-        BootstrapMethod &bm = currClass->bootstrapMethods[CP_BOOTSTRAP_METHOD_ATTR_INDEX(currClass->cp, index)];
+        BootstrapMethod &bm = clazz->bootstrapMethods[CP_BOOTSTRAP_METHOD_ATTR_INDEX(clazz->cp, index)];
         const char *name = CP_NAME_TYPE_NAME(cp, index);
         descriptor = CP_NAME_TYPE_TYPE(cp, index);
 
@@ -1421,7 +1416,7 @@ opc_invokedynamic:
                 DISPATCH // todo
             case REF_KIND_INVOKE_STATIC: {
                 const char *className = CP_METHOD_CLASS_NAME(cp, refIndex);
-                Class *bootstrapClass = currClass->loader->loadClass(className);
+                Class *bootstrapClass = clazz->loader->loadClass(className);
 
                 // bootstrap method is static,  todo 对不对
                 // 前三个参数固定为 MethodHandles.Lookup caller, String invokedName, MethodType invokedType todo 对不对
@@ -1482,7 +1477,7 @@ __invoke_method:
 opc_new:
     // new指令专门用来创建类实例。数组由专门的指令创建
     // 如果类还没有被初始化，会触发类的初始化。
-    Class *c = resolve_class(clazz, reader->readu2());  // todo
+    c = resolve_class(clazz, reader->readu2());  // todo
     if (!c->inited) {
         c->clinit();
     }
@@ -1552,12 +1547,12 @@ opc_athrow:
     return nullptr; // todo
 
 opc_checkcast: 
-    jref obj = RSLOT(frame->stack - 1); // 不改变操作数栈
+    obj = RSLOT(frame->stack - 1); // 不改变操作数栈
     index = reader->readu2();
 
     // 如果引用是null，则指令执行结束。也就是说，null 引用可以转换成任何类型
     if (obj != nullptr) {
-        Class *c = resolve_class(frame->method->clazz, index);
+        c = resolve_class(frame->method->clazz, index);
         if (!obj->isInstanceOf(c)) {
             thread_throw_class_cast_exception(obj->clazz->className, c->className);
         }
@@ -1565,17 +1560,16 @@ opc_checkcast:
     DISPATCH
 
 opc_instanceof:
-    {
-        index = reader->readu2();
-        Class *c = resolve_class(clazz, index);
+    index = reader->readu2();
+    c = resolve_class(clazz, index);
 
-        jref obj = frame->popr();
-        if (obj == nullptr)
-            frame->pushi(0);
-        else
-            frame->pushi(obj->isInstanceOf(c) ? 1 : 0);
-        DISPATCH
-    }
+    obj = frame->popr();
+    if (obj == nullptr)
+        frame->pushi(0);
+    else
+        frame->pushi(obj->isInstanceOf(c) ? 1 : 0);
+    DISPATCH
+
 opc_monitorenter:
     frame->popr();
     // todo

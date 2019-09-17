@@ -23,7 +23,6 @@ class BytecodeReader;
 class ClassObject;
 class ArrayClass;
 
-// Object of java/lang/Class
 struct Class: public Access {
     ConstantPool cp;
 
@@ -184,9 +183,6 @@ public:
 
     bool isAccessibleTo(const Class *visitor) const;
     bool isSubclassOf(const Class *father) const;
-
-    void setStaticFieldValue(struct Field *f, const slot_t *value);
-    const slot_t *getStaticFieldValue(const struct Field *f);
 
     bool isArray() const;
     bool isPrimitive() const

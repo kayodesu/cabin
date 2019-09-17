@@ -16,7 +16,6 @@ public:
         accessFlags = ACC_PUBLIC;
         pkgName = "";
         inited = true;
-        // todo super_class ???? java.lang.Object ??????
         superClass = java_lang_Object_class;
 
         createVtable();

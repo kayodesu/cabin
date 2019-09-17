@@ -11,7 +11,7 @@
 // Object of java/lang/String
 class StringObject: public Object {
     const jchar *raw; // 保存字符串的值。
-    const char *utf8Value = nullptr;
+    const char *utf8Value = nullptr; // cached utf8 value
     jint len;
     explicit StringObject(const char *str);
 
