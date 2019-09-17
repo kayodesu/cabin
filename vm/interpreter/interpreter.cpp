@@ -105,7 +105,7 @@ static const char *instruction_names[] = {
         "notused", "notused", "notused", "notused", "notused", "notused", "notused", "notused", // [0xe8 ... 0xef]
         "notused", "notused", "notused", "notused", "notused", "notused", "notused", "notused", // [0xf0 ... 0xf7]
         "notused", "notused", "notused", "notused", "notused", "notused", // [0xf8 ... 0xfd]
-        "invokenative", "impdep2",
+        "invokenative", "impdep2"
 };
 #endif
 
@@ -326,10 +326,6 @@ static void anewarray(Frame *frame)
     } ref_constant, field_ref_constant, method_ref_constant, interface_method_ref_constant;
  */
 
-#define CASE(x, body) case x: { body; break; }
-#define CASE2(x, y, body) case x: case y: { body; break; }
-#define CASE3(x, y, z, body) case x: case y: case z: { body; break; }
-
 /*
  * 执行当前线程栈顶的frame
  */
@@ -342,10 +338,14 @@ static slot_t *exec()
 
     Frame *frame = thread->topFrame;
     TRACE("executing frame: %s\n", frame->toString().c_str());
+
     BytecodeReader *reader = &frame->reader;
     Class *clazz = frame->method->clazz;
     slot_t *stack = frame->stack;
     slot_t *locals = frame->locals;
+    
+    jint index;
+    slot_t *value;
 
 #define CHANGE_FRAME(newFrame) \
     do { \
@@ -357,124 +357,261 @@ static slot_t *exec()
         locals = frame->locals; \
     } while (false)
 
-    while (true) {
-        u1 opcode = reader->readu1();
-        TRACE("%d(0x%x), %s, pc = %lu\n", opcode, opcode, instruction_names[opcode], frame->reader.pc);
+    static void *labels[] = {
+        &&nop,
 
-        switch (opcode) {
-            CASE(OPC_NOP, { })
-            CASE(OPC_ACONST_NULL, *frame->stack++ = 0;)
-            CASE(OPC_ICONST_M1, *frame->stack++ = -1;)
-            CASE(OPC_ICONST_0, *frame->stack++ = 0;)
-            CASE(OPC_ICONST_1, *frame->stack++ = 1;)
-            CASE(OPC_ICONST_2, *frame->stack++ = 2;)
-            CASE(OPC_ICONST_3, *frame->stack++ = 3;)
-            CASE(OPC_ICONST_4, *frame->stack++ = 4;)
-            CASE(OPC_ICONST_5, *frame->stack++ = 5;)
+        // Constants [0x01 ... 0x14]
+        &&opc_aconst_null, 
+        &&opc_iconst_m1, &&opc_iconst_0,  &&opc_iconst_1, &&opc_iconst_2, &&opc_iconst_3, &&opc_iconst_4, &&opc_iconst_5,
+        &&opc_lconst_0, &&opc_lconst_1,
+        &&opc_fconst_0, &&opc_fconst_1, &&opc_fconst_2, 
+        &&opc_dconst_0, &&opc_dconst_1,
+        &&opc_bipush, &&opc_sipush,
+        &&opc_ldc, &&opc_ldc_w, &&opc_ldc2_w, 
 
-            CASE(OPC_LCONST_0, frame->pushl(0))
-            CASE(OPC_LCONST_1, frame->pushl(1))
+        // Loads [0x15 ... 0x35]
+        &&opc_iload, &&opc_lload, &&opc_fload,&&opc_dload, &&opc_aload, 
+        &&opc_iload_0, &&opc_iload_1,  &&opc_iload_2, &&opc_iload_3, 
+        &&opc_lload_0, &&opc_lload_1,  &&opc_lload_2, &&opc_lload_3,
+        &&opc_fload_0, &&opc_fload_1,  &&opc_fload_2,  &&opc_fload_3,
+        &&opc_dload_0, &&opc_dload_1, &&opc_dload_2, &&opc_dload_3,
+        &&opc_aload_0, &&opc_aload_1, &&opc_aload_2, &&opc_aload_3,
+        &&opc_iaload, &&opc_laload, &&opc_faload, &&opc_daload, &&opc_aaload, &&opc_baload, &&opc_caload, &&opc_saload,
 
-            CASE(OPC_FCONST_0, *frame->stack++ = 0;)
-            case OPC_FCONST_1:
-                *((float*) frame->stack) = (float) 1.0;
-                frame->stack++;
-                break;
-            case OPC_FCONST_2:
-                *((float*) frame->stack) = (float) 2.0;
-                frame->stack++;
-                break;
+        // Stores [0x36 ... 0x56]
+        &&opc_istore,  &&opc_lstore, &&opc_fstore, &&opc_dstore,  &&opc_astore, 
+        &&opc_istore_0, &&opc_istore_1, &&opc_istore_2, &&opc_istore_3,
+        &&opc_lstore_0, &&opc_lstore_1, &&opc_lstore_2, &&opc_lstore_3,
+        &&opc_fstore_0, &&opc_fstore_1, &&opc_fstore_2, &&opc_fstore_3,
+        &&opc_dstore_0, &&opc_dstore_1, &&opc_dstore_2, &&opc_dstore_3,
+        &&opc_astore_0, &&opc_astore_1, &&opc_astore_2, &&opc_astore_3,
+        &&opc_iastore, &&opc_lastore, &&opc_fastore, &&opc_dastore, &&opc_aastore, &&opc_bastore, &&opc_castore, &&opc_sastore,
 
-            CASE(OPC_DCONST_0, frame->pushd(0))
-            CASE(OPC_DCONST_1, frame->pushd(1))
+        // Stack [0x57 ... 0x5f]
+        &&opc_pop, &&opc_pop2, 
+        &&opc_dup, &&opc_dup_x1, &&opc_dup_x2, &&opc_dup2, &&opc_dup2_x1, &&opc_dup2_x2, 
+        &&opc_swap,
 
-            CASE(OPC_BIPUSH, frame->pushi(reader->readu1())) // Byte Integer push
-            CASE(OPC_SIPUSH, frame->pushi(reader->readu2())) // Short Integer push
-{
-            u2 index;
-            case OPC_LDC:
-                index = reader->readu1();
-                goto ldc;
+        // Math [0x60 ... 0x84]
+        &&opc_iadd, &&opc_ladd, &&opc_fadd, &&opc_dadd, 
+        &&opc_isub, &&opc_lsub, &&opc_fsub, &&opc_dsub, 
+        &&opc_imul, &&opc_lmul, &&opc_fmul, &&opc_dmul, 
+        &&opc_idiv, &&opc_ldiv, &&opc_fdiv, &&opc_ddiv, 
+        &&opc_irem, &&opc_lrem, &&opc_frem, &&opc_drem,
+        &&opc_ineg, &&opc_lneg, &&opc_fneg, &&opc_dneg, 
+        &&opc_ishl, &&opc_lshl, &&opc_ishr, &&opc_lshr, &&opc_iushr, &&opc_lushr, 
+        &&opc_iand, &&opc_land, &&opc_ior, &&opc_lor, &&opc_ixor, &&opc_lxor, &&opc_iinc,
 
-            case OPC_LDC_W:
-                index = reader->readu2();
-ldc:
-                ConstantPool &cp = frame->method->clazz->cp;
-                u1 type = CP_TYPE(cp, index);
+        // Conversions [0x85 ... 0x93]
+        &&opc_i2l, &&opc_i2f, &&opc_i2d, 
+        &&opc_l2i, &&opc_l2f, &&opc_l2d, 
+        &&opc_f2i, &&opc_f2l, &&opc_f2d,
+        &&opc_d2i, &&opc_d2l, &&opc_d2f, 
+        &&opc_i2b, &&opc_i2c, &&opc_i2s, 
 
-                if (type == CONSTANT_Integer || type == CONSTANT_Float || type == CONSTANT_ResolvedString) {
-                    *frame->stack++ = CP_INFO(cp, index);
-                } else if (type == CONSTANT_String) {
-                    frame->pushr(resolve_string(frame->method->clazz, index));
-                } else if (type == CONSTANT_Class) {
-                    frame->pushr(resolve_class(frame->method->clazz, index)->clsobj);
-                } else if (type == CONSTANT_ResolvedClass) {
-                    auto c = (Class *) CP_INFO(cp, index);
-                    frame->pushr(c->clsobj);
-                } else {
-                    stringstream ss;
-                    ss << "unknown type: " << type;
-                    raiseException(UNKNOWN_ERROR, ss.str().c_str());
-                }
-                break;
-}
-            case OPC_LDC2_W: {
-                auto index = frame->reader.readu2();
-                ConstantPool &cp = frame->method->clazz->cp;
-                u1 type = CP_TYPE(cp, index);
+        // Comparisons [0x94 ... 0xa6]
+        &&opc_lcmp, &&opc_fcmpl, &&opc_fcmpg, &&opc_dcmpl, &&opc_dcmpg, 
+        &&opc_ifeq, &&opc_ifne, &&opc_iflt, &&opc_ifge, &&opc_ifgt,&&opc_ifle, 
+        &&opc_if_icmpeq, &&opc_if_icmpne, &&opc_if_icmplt, &&opc_if_icmpge, &&opc_if_icmpgt, &&opc_if_icmple, 
+        &&opc_if_acmpeq, &&opc_if_acmpne, 
 
-                if (type == CONSTANT_Long) {
-                    frame->pushl(CP_LONG(cp, index));
-                } else if (type == CONSTANT_Double) {
-                    frame->pushd(CP_DOUBLE(cp, index));
-                } else {
-                    stringstream ss;
-                    ss << "unknown type: " << type;
-                    raiseException(UNKNOWN_ERROR, ss.str().c_str());
-                }
-                break;
-            }
+        // Control [0xa7 ... 0xb1]
+        &&opc_goto, &&opc_jsr, &&opc_ret, &&opc_tableswitch, &&opc_lookupswitch, 
+        &&opc_ireturn, &&opc_lreturn, &&opc_freturn, &&opc_dreturn, &&opc_areturn, &&opc_return,
 
-            case OPC_ILOAD:
-            case OPC_FLOAD:
-            case OPC_ALOAD: {
-                auto index = reader->readu1();
-                *frame->stack++ = locals[index];
-                break;
-            }
+        // References [0xb2 ... 0xc3]
+        &&opc_getstatic, &&opc_putstatic, &&opc_getfield, &&opc_putfield,
+        &&opc_invokevirtual, &&opc_invokespecial, &&opc_invokestatic,&&opc_invokeinterface, &&opc_invokedynamic,
+        &&opc_new,&&opc_newarray, &&opc_anewarray, &&opc_arraylength, 
+        &&opc_athrow, &&opc_checkcast, &&opc_instanceof, &&opc_monitorenter, &&opc_monitorexit,
 
-            case OPC_LLOAD:
-            case OPC_DLOAD: {
-                auto index = reader->readu1();
-                *frame->stack++ = locals[index];
-                *frame->stack++ = locals[index + 1];
-                break;
-            }
+        // Extended [0xc4 ... 0xc9]
+        &&opc_wide, &&opc_multianewarray, &&opc_ifnull, &&opc_ifnonnull, &&opc_goto_w, &&opc_jsr_w, 
 
-            CASE3(OPC_ILOAD_0, OPC_FLOAD_0, OPC_ALOAD_0, *frame->stack++ = locals[0])
-            CASE3(OPC_ILOAD_1, OPC_FLOAD_1, OPC_ALOAD_1, *frame->stack++ = locals[1])
-            CASE3(OPC_ILOAD_2, OPC_FLOAD_2, OPC_ALOAD_2, *frame->stack++ = locals[2])
-            CASE3(OPC_ILOAD_3, OPC_FLOAD_3, OPC_ALOAD_3, *frame->stack++ = locals[3])
+        // Reserved [0xca ... 0xff]
+        &&opc_breakpoint,
+        &&opc_notused, &&opc_notused, &&opc_notused, &&opc_notused, &&opc_notused, &&opc_notused, &&opc_notused,
+        &&opc_notused, &&opc_notused, &&opc_notused, &&opc_notused, &&opc_notused, &&opc_notused, &&opc_notused,
+        &&opc_notused, &&opc_notused, &&opc_notused, &&opc_notused, &&opc_notused, &&opc_notused, &&opc_notused,
+        &&opc_notused, &&opc_notused, &&opc_notused, &&opc_notused, &&opc_notused, &&opc_notused, &&opc_notused,
+        &&opc_notused, &&opc_notused, &&opc_notused, &&opc_notused, &&opc_notused, &&opc_notused, &&opc_notused,
+        &&opc_notused, &&opc_notused, &&opc_notused, &&opc_notused, &&opc_notused, &&opc_notused, &&opc_notused,
+        &&opc_notused, &&opc_notused, &&opc_notused, &&opc_notused, &&opc_notused, &&opc_notused, &&opc_notused,
+        &&opc_notused,  &&opc_notused, &&opc_invokenative, &&opc_impdep2
+    };
 
-            CASE2(OPC_LLOAD_0, OPC_DLOAD_0, {
-                *frame->stack++ = locals[0];
-                *frame->stack++ = locals[1];
-            })
-            CASE2(OPC_LLOAD_1, OPC_DLOAD_1, {
-                *frame->stack++ = locals[1];
-                *frame->stack++ = locals[2];
-            })
-            CASE2(OPC_LLOAD_2, OPC_DLOAD_2, {
-                *frame->stack++ = locals[2];
-                *frame->stack++ = locals[3];
-            })
-            CASE2(OPC_LLOAD_3, OPC_DLOAD_3, {
-                *frame->stack++ = locals[3];
-                *frame->stack++ = locals[4];
-            })
+#if TRACE_INTERPRETER    
+#define DISPATCH \
+do { \
+    u1 opcode = reader->readu1(); \
+    TRACE("%d(0x%x), %s, pc = %lu\n", opcode, opcode, instruction_names[opcode], frame->reader.pc); \
+    goto *labels[opcode]; \
+} while(false)
+#else
+#define DISPATCH goto *labels[reader->readu1()];
+#endif
+
+nop:
+    DISPATCH
+opc_aconst_null:
+    *frame->stack++ = 0;
+    DISPATCH
+opc_iconst_m1:
+    *frame->stack++ = -1;
+    DISPATCH
+opc_iconst_0:
+    *frame->stack++ = 0;
+    DISPATCH
+opc_iconst_1:
+    *frame->stack++ = 1; 
+    DISPATCH
+opc_iconst_2:
+    *frame->stack++ = 2;
+    DISPATCH
+opc_iconst_3:
+    *frame->stack++ = 3;
+    DISPATCH
+opc_iconst_4:
+    *frame->stack++ = 4;
+    DISPATCH
+opc_iconst_5:
+    *frame->stack++ = 5;
+    DISPATCH
+
+opc_lconst_0: 
+    frame->pushl(0); 
+    DISPATCH
+opc_lconst_1:
+     frame->pushl(1); 
+     DISPATCH
+
+opc_fconst_0: 
+    *frame->stack++ = 0; 
+    DISPATCH
+opc_fconst_1:
+    *((jfloat*) frame->stack) = (float) 1.0;
+    frame->stack++;
+    DISPATCH
+opc_fconst_2:
+    *((jfloat*) frame->stack) = (float) 2.0;
+    frame->stack++;
+    DISPATCH
+
+opc_dconst_0: 
+    frame->pushd(0); 
+    DISPATCH
+opc_dconst_1: 
+    frame->pushd(1); 
+    DISPATCH
+
+opc_bipush: // Byte Integer push
+    frame->pushi(reader->readu1()); 
+    DISPATCH
+opc_sipush: // Short Integer push
+    frame->pushi(reader->readu2());
+     DISPATCH
+
+opc_ldc:
+    index = reader->readu1();
+    goto __ldc;
+opc_ldc_w:
+    index = reader->readu2();
+__ldc:
+    ConstantPool &cp = frame->method->clazz->cp;
+    u1 type = CP_TYPE(cp, index);
+
+    if (type == CONSTANT_Integer || type == CONSTANT_Float || type == CONSTANT_ResolvedString) {
+        *frame->stack++ = CP_INFO(cp, index);
+    } else if (type == CONSTANT_String) {
+        frame->pushr(resolve_string(frame->method->clazz, index));
+    } else if (type == CONSTANT_Class) {
+        frame->pushr(resolve_class(frame->method->clazz, index)->clsobj);
+    } else if (type == CONSTANT_ResolvedClass) {
+        auto c = (Class *) CP_INFO(cp, index);
+        frame->pushr(c->clsobj);
+    } else {
+        stringstream ss;
+        ss << "unknown type: " << type;
+        raiseException(UNKNOWN_ERROR, ss.str().c_str());
+    }
+    DISPATCH
+
+opc_ldc2_w:
+    {
+        index = frame->reader.readu2();
+        ConstantPool &cp = frame->method->clazz->cp;
+        u1 type = CP_TYPE(cp, index);
+
+        if (type == CONSTANT_Long) {
+            frame->pushl(CP_LONG(cp, index));
+        } else if (type == CONSTANT_Double) {
+            frame->pushd(CP_DOUBLE(cp, index));
+        } else {
+            stringstream ss;
+            ss << "unknown type: " << type;
+            raiseException(UNKNOWN_ERROR, ss.str().c_str());
+        }
+        DISPATCH
+    }
+
+opc_iload:
+opc_fload:
+opc_aload: 
+    index = reader->readu1();
+    *frame->stack++ = locals[index];
+    DISPATCH
+
+opc_lload:
+opc_dload: 
+    index = reader->readu1();
+    *frame->stack++ = locals[index];
+    *frame->stack++ = locals[index + 1];
+    DISPATCH
+
+opc_iload_0:
+opc_fload_0:
+opc_aload_0:
+    *frame->stack++ = locals[0];
+    DISPATCH
+opc_iload_1:
+opc_fload_1: 
+opc_aload_1: 
+    *frame->stack++ = locals[1];
+    DISPATCH
+opc_iload_2:
+opc_fload_2:
+opc_aload_2: 
+    *frame->stack++ = locals[2];
+    DISPATCH
+opc_iload_3: 
+opc_fload_3:
+opc_aload_3: 
+    *frame->stack++ = locals[3];
+    DISPATCH
+
+opc_lload_0:
+opc_dload_0:
+    *frame->stack++ = locals[0];
+    *frame->stack++ = locals[1];
+    DISPATCH
+opc_lload_1: 
+opc_dload_1: 
+    *frame->stack++ = locals[1];
+    *frame->stack++ = locals[2];
+    DISPATCH
+opc_lload_2: 
+opc_dload_2: 
+    *frame->stack++ = locals[2];
+    *frame->stack++ = locals[3];
+    DISPATCH
+opc_lload_3: 
+opc_dload_3: 
+    *frame->stack++ = locals[3];
+    *frame->stack++ = locals[4];
+    DISPATCH
 
 #define GET_AND_CHECK_ARRAY \
-    jint index = frame->popi(); \
+    index = frame->popi(); \
     auto arr = (ArrayObject *) frame->popr(); \
     if ((arr) == nullptr) \
         thread_throw_null_pointer_exception(); \
@@ -486,52 +623,90 @@ ldc:
     GET_AND_CHECK_ARRAY \
     *frame->stack++ = (slot_t) arr->get<type>(index); \
 }
-            CASE(OPC_IALOAD, ARRAY_LOAD_CATEGORY_ONE(jint))
-            CASE(OPC_FALOAD, ARRAY_LOAD_CATEGORY_ONE(jfloat))
-            CASE(OPC_AALOAD, ARRAY_LOAD_CATEGORY_ONE(jref))
-            CASE(OPC_BALOAD, ARRAY_LOAD_CATEGORY_ONE(jbyte))
-            CASE(OPC_CALOAD, ARRAY_LOAD_CATEGORY_ONE(jchar))
-            CASE(OPC_SALOAD, ARRAY_LOAD_CATEGORY_ONE(jshort))
+opc_iaload: 
+    ARRAY_LOAD_CATEGORY_ONE(jint); 
+    DISPATCH
+opc_faload:
+    ARRAY_LOAD_CATEGORY_ONE(jfloat); 
+    DISPATCH
+opc_aaload:
+    ARRAY_LOAD_CATEGORY_ONE(jref);
+    DISPATCH
+opc_baload: 
+    ARRAY_LOAD_CATEGORY_ONE(jbyte); 
+    DISPATCH
+opc_caload: 
+    ARRAY_LOAD_CATEGORY_ONE(jchar); 
+    DISPATCH
+opc_saload: 
+    ARRAY_LOAD_CATEGORY_ONE(jshort); 
+    DISPATCH
 
-            CASE2(OPC_LALOAD, OPC_DALOAD, {
-                GET_AND_CHECK_ARRAY
-                auto value = (slot_t *) arr->index(index);
-                *frame->stack++ = value[0];
-                *frame->stack++ = value[1];
-            })
+opc_laload: 
+opc_daload:
+    {
+        GET_AND_CHECK_ARRAY
+        value = (slot_t *) arr->index(index);
+        *frame->stack++ = value[0];
+        *frame->stack++ = value[1];
+        DISPATCH
+    }
 
-            CASE3(OPC_ISTORE, OPC_FSTORE, OPC_ASTORE, {
-                auto index = reader->readu1();
-                locals[index] = *--frame->stack;
-            })
+opc_istore: 
+opc_fstore: 
+opc_astore:
+    index = reader->readu1();
+    locals[index] = *--frame->stack;
+    DISPATCH
 
-            CASE2(OPC_LSTORE, OPC_DSTORE, {
-                auto index = reader->readu1();
-                locals[index + 1] = *--frame->stack;
-                locals[index] = *--frame->stack;
-            })
+opc_lstore: 
+opc_dstore:
+    index = reader->readu1();
+    locals[index + 1] = *--frame->stack;
+    locals[index] = *--frame->stack;
+    DISPATCH
 
-            CASE3(OPC_ISTORE_0, OPC_FSTORE_0, OPC_ASTORE_0, locals[0] = *--frame->stack)
-            CASE3(OPC_ISTORE_1, OPC_FSTORE_1, OPC_ASTORE_1, locals[1] = *--frame->stack)
-            CASE3(OPC_ISTORE_2, OPC_FSTORE_2, OPC_ASTORE_2, locals[2] = *--frame->stack)
-            CASE3(OPC_ISTORE_3, OPC_FSTORE_3, OPC_ASTORE_3, locals[3] = *--frame->stack)
+opc_istore_0: 
+opc_fstore_0: 
+opc_astore_0:
+    locals[0] = *--frame->stack;
+    DISPATCH
+opc_istore_1: 
+opc_fstore_1: 
+opc_astore_1:
+    locals[1] = *--frame->stack;
+    DISPATCH
+opc_istore_2: 
+opc_fstore_2: 
+opc_astore_2: 
+    locals[2] = *--frame->stack;
+    DISPATCH
+opc_istore_3: 
+opc_fstore_3: 
+opc_astore_3: 
+    locals[3] = *--frame->stack;
+    DISPATCH
 
-            CASE2(OPC_LSTORE_0, OPC_DSTORE_0, {
-                locals[1] = *--frame->stack;
-                locals[0] = *--frame->stack;
-            })
-            CASE2(OPC_LSTORE_1, OPC_DSTORE_1, {
-                locals[2] = *--frame->stack;
-                locals[1] = *--frame->stack;
-            })
-            CASE2(OPC_LSTORE_2, OPC_DSTORE_2, {
-                locals[3] = *--frame->stack;
-                locals[2] = *--frame->stack;
-            })
-            CASE2(OPC_LSTORE_3, OPC_DSTORE_3, {
-                locals[4] = *--frame->stack;
-                locals[3] = *--frame->stack;
-            })
+opc_lstore_0:
+opc_dstore_0:
+    locals[1] = *--frame->stack;
+    locals[0] = *--frame->stack;
+    DISPATCH
+opc_lstore_1:
+opc_dstore_1:
+    locals[2] = *--frame->stack;
+    locals[1] = *--frame->stack;
+    DISPATCH
+opc_lstore_2: 
+opc_dstore_2:
+    locals[3] = *--frame->stack;
+    locals[2] = *--frame->stack;
+    DISPATCH
+opc_lstore_3: 
+opc_dstore_3:
+    locals[4] = *--frame->stack;
+    locals[3] = *--frame->stack;
+    DISPATCH
 
 #define ARRAY_STORE_CATEGORY_ONE(type) \
 { \
@@ -539,195 +714,294 @@ ldc:
     GET_AND_CHECK_ARRAY \
     arr->set(index, value); \
 }
-            CASE(OPC_IASTORE, ARRAY_STORE_CATEGORY_ONE(jint))
-            CASE(OPC_FASTORE, ARRAY_STORE_CATEGORY_ONE(jfloat))
-            CASE(OPC_AASTORE, ARRAY_STORE_CATEGORY_ONE(jref))
-            CASE(OPC_BASTORE, ARRAY_STORE_CATEGORY_ONE(jbyte))
-            CASE(OPC_CASTORE, ARRAY_STORE_CATEGORY_ONE(jchar))
-            CASE(OPC_SASTORE, ARRAY_STORE_CATEGORY_ONE(jshort))
+opc_iastore: 
+    ARRAY_STORE_CATEGORY_ONE(jint); 
+    DISPATCH
+opc_fastore: 
+    ARRAY_STORE_CATEGORY_ONE(jfloat);
+    DISPATCH
+opc_aastore:
+    ARRAY_STORE_CATEGORY_ONE(jref); 
+    DISPATCH
+opc_bastore:
+    ARRAY_STORE_CATEGORY_ONE(jbyte);
+    DISPATCH
+opc_castore:
+    ARRAY_STORE_CATEGORY_ONE(jchar);
+    DISPATCH
+opc_sastore:
+    ARRAY_STORE_CATEGORY_ONE(jshort); 
+    DISPATCH
 
-            CASE2(OPC_LASTORE, OPC_DASTORE, {
-                frame->stack -= 2;
-                slot_t *value = frame->stack;
-                GET_AND_CHECK_ARRAY
-                memcpy(arr->index(index), value, sizeof(slot_t) * 2);
-            })
+opc_lastore: 
+opc_dastore:
+    frame->stack -= 2;
+    value = frame->stack;
+    GET_AND_CHECK_ARRAY
+    memcpy(arr->index(index), value, sizeof(slot_t) * 2);
+    DISPATCH
 
-            CASE(OPC_POP, frame->stack--)
-            CASE(OPC_POP2, frame->stack -= 2)
-            case OPC_DUP:
-                frame->stack[0] = frame->stack[-1];
-                frame->stack++;
-                break;
-            case OPC_DUP_X1:
-                frame->stack[0] = frame->stack[-1];
-                frame->stack[-1] = frame->stack[-2];
-                frame->stack[-2] = frame->stack[0];
-                frame->stack++;
-                break;
-            case OPC_DUP_X2:
-                frame->stack[0] = frame->stack[-1];
-                frame->stack[-1] = frame->stack[-2];
-                frame->stack[-2] = frame->stack[-3];
-                frame->stack[-3] = frame->stack[0];
-                frame->stack++;
-                break;
-            case OPC_DUP2:
-                frame->stack[0] = frame->stack[-2];
-                frame->stack[1] = frame->stack[-1];
-                frame->stack += 2;
-                break;
-            case OPC_DUP2_X1:
-                // ..., value3, value2, value1 →
-                // ..., value2, value1, value3, value2, value1
-                frame->stack[1] = frame->stack[-1];
-                frame->stack[0] = frame->stack[-2];
-                frame->stack[-1] = frame->stack[-3];
-                frame->stack[-2] = frame->stack[1];
-                frame->stack[-3] = frame->stack[0];
-                frame->stack += 2;
-                break;
-            case OPC_DUP2_X2:
-                // ..., value4, value3, value2, value1 →
-                // ..., value2, value1, value4, value3, value2, value1
-                frame->stack[1] = frame->stack[-1];
-                frame->stack[0] = frame->stack[-2];
-                frame->stack[-1] = frame->stack[-3];
-                frame->stack[-2] = frame->stack[-4];
-                frame->stack[-3] = frame->stack[1];
-                frame->stack[-4] = frame->stack[0];
-                frame->stack += 2;
-                break;
-            case OPC_SWAP:
-                swap(frame->stack[-1], frame->stack[-2]);
-                break;
+opc_pop:
+    frame->stack--;
+    DISPATCH
+opc_pop2:
+    frame->stack -= 2;
+    DISPATCH
+opc_dup:
+    frame->stack[0] = frame->stack[-1];
+    frame->stack++;
+    DISPATCH
+opc_dup_x1:
+    frame->stack[0] = frame->stack[-1];
+    frame->stack[-1] = frame->stack[-2];
+    frame->stack[-2] = frame->stack[0];
+    frame->stack++;
+    DISPATCH
+opc_dup_x2:
+    frame->stack[0] = frame->stack[-1];
+    frame->stack[-1] = frame->stack[-2];
+    frame->stack[-2] = frame->stack[-3];
+    frame->stack[-3] = frame->stack[0];
+    frame->stack++;
+    DISPATCH
+opc_dup2:
+    frame->stack[0] = frame->stack[-2];
+    frame->stack[1] = frame->stack[-1];
+    frame->stack += 2;
+    DISPATCH
+opc_dup2_x1:
+    // ..., value3, value2, value1 →
+    // ..., value2, value1, value3, value2, value1
+    frame->stack[1] = frame->stack[-1];
+    frame->stack[0] = frame->stack[-2];
+    frame->stack[-1] = frame->stack[-3];
+    frame->stack[-2] = frame->stack[1];
+    frame->stack[-3] = frame->stack[0];
+    frame->stack += 2;
+    DISPATCH
+opc_dup2_x2:
+    // ..., value4, value3, value2, value1 →
+    // ..., value2, value1, value4, value3, value2, value1
+    frame->stack[1] = frame->stack[-1];
+    frame->stack[0] = frame->stack[-2];
+    frame->stack[-1] = frame->stack[-3];
+    frame->stack[-2] = frame->stack[-4];
+    frame->stack[-3] = frame->stack[1];
+    frame->stack[-4] = frame->stack[0];
+    frame->stack += 2;
+    DISPATCH
+opc_swap:
+    swap(frame->stack[-1], frame->stack[-2]);
+    DISPATCH
 
 #define BINARY_OP(type, n, oper) \
 { \
     frame->stack -= (n);\
     ((type *) frame->stack)[-1] = ((type *) frame->stack)[-1] oper ((type *) frame->stack)[0]; \
 }
-            case OPC_IADD: {
-                BINARY_OP(jint, 1, +)
-                break;
-            }
-            CASE(OPC_LADD, BINARY_OP(jlong, 2, +))
-            CASE(OPC_FADD, BINARY_OP(jfloat, 1, +))
-            CASE(OPC_DADD, BINARY_OP(jdouble, 2, +))
+opc_iadd:
+    BINARY_OP(jint, 1, +)
+    DISPATCH
+opc_ladd:
+    BINARY_OP(jlong, 2, +)
+    DISPATCH
+opc_fadd:
+    BINARY_OP(jfloat, 1, +)
+    DISPATCH
+opc_dadd: 
+    BINARY_OP(jdouble, 2, +)
+    DISPATCH
 
-            CASE(OPC_ISUB, BINARY_OP(jint, 1, -))
-            CASE(OPC_LSUB, BINARY_OP(jlong, 2, -))
-            CASE(OPC_FSUB, BINARY_OP(jfloat, 1, -))
-            CASE(OPC_DSUB, BINARY_OP(jdouble, 2, -))
+opc_isub:
+    BINARY_OP(jint, 1, -)
+    DISPATCH
+opc_lsub:
+    BINARY_OP(jlong, 2, -)
+    DISPATCH
+opc_fsub:
+    BINARY_OP(jfloat, 1, -)
+    DISPATCH
+opc_dsub: 
+    BINARY_OP(jdouble, 2, -)
+    DISPATCH
 
-            CASE(OPC_IMUL, BINARY_OP(jint, 1, *))
-            CASE(OPC_LMUL, BINARY_OP(jlong, 2, *))
-            CASE(OPC_FMUL, BINARY_OP(jfloat, 1, *))
-            CASE(OPC_DMUL, BINARY_OP(jdouble, 2, *))
+opc_imul:
+    BINARY_OP(jint, 1, *)
+    DISPATCH
+opc_lmul:
+    BINARY_OP(jlong, 2, *)
+    DISPATCH
+opc_fmul: 
+    BINARY_OP(jfloat, 1, *)
+    DISPATCH
+opc_dmul:
+    BINARY_OP(jdouble, 2, *)
+    DISPATCH
 
-            CASE(OPC_IDIV, BINARY_OP(jint, 1, /))
-            CASE(OPC_LDIV, BINARY_OP(jlong, 2, /))
-            CASE(OPC_FDIV, BINARY_OP(jfloat, 1, /))
-            CASE(OPC_DDIV, BINARY_OP(jdouble, 2, /))
+opc_idiv:
+    BINARY_OP(jint, 1, /)
+    DISPATCH
+opc_ldiv:
+    BINARY_OP(jlong, 2, /)
+    DISPATCH
+opc_fdiv:
+    BINARY_OP(jfloat, 1, /)
+    DISPATCH
+opc_ddiv:
+    BINARY_OP(jdouble, 2, /)
+    DISPATCH
 
-            CASE(OPC_IREM, BINARY_OP(jint, 1, %))
-            CASE(OPC_LREM, BINARY_OP(jlong, 2, %))
+opc_irem:
+    BINARY_OP(jint, 1, %)
+    DISPATCH
+opc_lrem: 
+    BINARY_OP(jlong, 2, %)
+    DISPATCH
 
-            case OPC_FREM: {
-                jfloat v2 = frame->popf();
-                jfloat v1 = frame->popf();
-                jvm_abort("not implement\n");
-                //    os_pushf(frame->operand_stack, dremf(v1, v2)); /* todo 相加溢出的问题 */
-                break;
-            }
+opc_frem:
+    {
+        jfloat v2 = frame->popf();
+        jfloat v1 = frame->popf();
+        jvm_abort("not implement\n");
+        //    os_pushf(frame->operand_stack, dremf(v1, v2)); /* todo 相加溢出的问题 */
+        DISPATCH
+    }
+opc_drem:
+    {
+        jdouble v2 = frame->popd();
+        jdouble v1 = frame->popd();
+        jvm_abort("not implement\n");
+        //    os_pushd(frame->operand_stack, drem(v1, v2)); /* todo 相加溢出的问题 */
+        DISPATCH
+    }
+    
+opc_ineg:
+    frame->pushi(-frame->popi());
+    DISPATCH
+opc_lneg: 
+    frame->pushl(-frame->popl());
+    DISPATCH
+opc_fneg: 
+    frame->pushf(-frame->popf());
+    DISPATCH
+opc_dneg: 
+    frame->pushd(-frame->popd());
+    DISPATCH
 
-            case OPC_DREM: {
-                jdouble v2 = frame->popd();
-                jdouble v1 = frame->popd();
-                jvm_abort("not implement\n");
-                //    os_pushd(frame->operand_stack, drem(v1, v2)); /* todo 相加溢出的问题 */
-                break;
-            }
+    jint shift;
+    jint ivalue;
+    jlong lvalue;
+opc_ishl:
+    // 与0x1f是因为低5位表示位移距离，位移距离实际上被限制在0到31之间。
+    shift = frame->popi() & 0x1f;
+    ivalue = frame->popi();
+    frame->pushi(ivalue << shift);
+    DISPATCH
+opc_lshl: 
+    // 与0x3f是因为低6位表示位移距离，位移距离实际上被限制在0到63之间。
+    shift = frame->popi() & 0x3f;
+    lvalue = frame->popl();
+    frame->pushl(lvalue << shift);
+    DISPATCH
+opc_ishr:
+    // 逻辑右移 shift logical right
+    shift = frame->popi() & 0x1f;
+    ivalue = frame->popi();
+    frame->pushi((~(((jint)1) >> shift)) & (ivalue >> shift));
+    DISPATCH
 
-            CASE(OPC_INEG, frame->pushi(-frame->popi()))
-            CASE(OPC_LNEG, frame->pushl(-frame->popl()))
-            CASE(OPC_FNEG, frame->pushf(-frame->popf()))
-            CASE(OPC_DNEG, frame->pushd(-frame->popd()))
+opc_lshr: 
+    shift = frame->popi() & 0x3f;
+    lvalue = frame->popl();
+    frame->pushl((~(((jlong)1) >> shift)) & (lvalue >> shift));
+    DISPATCH
 
-            case OPC_ISHL: {
-                // 与0x1f是因为低5位表示位移距离，位移距离实际上被限制在0到31之间。
-                jint shift = frame->popi() & 0x1f;
-                jint value = frame->popi();
-                frame->pushi(value << shift);
-                break;
-            }
-            case OPC_LSHL: {
-                // 与0x3f是因为低6位表示位移距离，位移距离实际上被限制在0到63之间。
-                jint shift = frame->popi() & 0x3f;
-                jlong value = frame->popl();
-                frame->pushl(value << shift);
-                break;
-            }
-            case OPC_ISHR: {
-                // 逻辑右移 shift logical right
-                jint shift = frame->popi() & 0x1f;
-                jint value = frame->popi();
-                frame->pushi((~(((jint)1) >> shift)) & (value >> shift));
-                break;
-            }
-            case OPC_LSHR: {
-                jint shift = frame->popi() & 0x3f;
-                jlong value = frame->popl();
-                frame->pushl((~(((jlong)1) >> shift)) & (value >> shift));
-                break;
-            }
-            case OPC_IUSHR: {
-                // 算术右移 shift arithmetic right
-                jint shift = frame->popi() & 0x1f;
-                jint value = frame->popi();
-                frame->pushi(value >> shift);
-                break;
-            }
-            case OPC_LUSHR: {
-                jint shift = frame->popi() & 0x3f;
-                jlong value = frame->popl();
-                frame->pushl(value >> shift);
-                break;
-            }
+opc_iushr: 
+    // 算术右移 shift arithmetic right
+    shift = frame->popi() & 0x1f;
+    ivalue = frame->popi();
+    frame->pushi(ivalue >> shift);
+    DISPATCH
 
-            CASE(OPC_IAND, BINARY_OP(jint, 1, &))
-            CASE(OPC_LAND, BINARY_OP(jlong, 2, &))
-            CASE(OPC_IOR, BINARY_OP(jint, 1, |))
-            CASE(OPC_LOR, BINARY_OP(jlong, 2, |))
-            CASE(OPC_IXOR, BINARY_OP(jint, 1, ^))
-            CASE(OPC_LXOR, BINARY_OP(jlong, 2, ^))
+opc_lushr: 
+    shift = frame->popi() & 0x3f;
+    lvalue = frame->popl();
+    frame->pushl(lvalue >> shift);
+    DISPATCH
 
-            case OPC_IINC: {
-                auto index = reader->readu1();
-                auto value = reader->reads1();
-                ISLOT(locals + index) = ISLOT(locals + index) + value;
-                break;
-            }
+opc_iand: 
+    BINARY_OP(jint, 1, &);
+    DISPATCH
+opc_land:
+    BINARY_OP(jlong, 2, &);
+    DISPATCH
+opc_ior: 
+    BINARY_OP(jint, 1, |);
+    DISPATCH
+opc_lor: 
+    BINARY_OP(jlong, 2, |);
+    DISPATCH
+opc_ixor: 
+    BINARY_OP(jint, 1, ^);
+    DISPATCH
+opc_lxor:
+    BINARY_OP(jlong, 2, ^);
+    DISPATCH
 
-            CASE(OPC_I2L, frame->pushl(i2l(frame->popi())))
-            CASE(OPC_I2F, frame->pushf(i2f(frame->popi())))
-            CASE(OPC_I2D, frame->pushd(i2d(frame->popi())))
+opc_iinc: 
+    index = reader->readu1();
+    ISLOT(locals + index) = ISLOT(locals + index) + reader->reads1();
+    DISPATCH
 
-            CASE(OPC_L2I, frame->pushi(l2i(frame->popl())))
-            CASE(OPC_L2F, frame->pushf(l2f(frame->popl())))
-            CASE(OPC_L2D, frame->pushd(l2d(frame->popl())))
+opc_i2l: 
+    frame->pushl(i2l(frame->popi()));
+    DISPATCH
+opc_i2f: 
+    frame->pushf(i2f(frame->popi()));
+    DISPATCH
+opc_i2d: 
+    frame->pushd(i2d(frame->popi()));
+    DISPATCH
 
-            CASE(OPC_F2I, frame->pushi(f2i(frame->popf())))
-            CASE(OPC_F2L, frame->pushl(f2l(frame->popf())))
-            CASE(OPC_F2D, frame->pushd(f2d(frame->popf())))
+opc_l2i: 
+    frame->pushi(l2i(frame->popl()));
+    DISPATCH
+opc_l2f: 
+    frame->pushf(l2f(frame->popl()));
+    DISPATCH
+opc_l2d: 
+    frame->pushd(l2d(frame->popl()));
+    DISPATCH
 
-            CASE(OPC_D2I, frame->pushi(d2i(frame->popd())))
-            CASE(OPC_D2L, frame->pushl(d2l(frame->popd())))
-            CASE(OPC_D2F, frame->pushf(d2f(frame->popd())))
+opc_f2i:
+    frame->pushi(f2i(frame->popf()));
+    DISPATCH
+opc_f2l: 
+    frame->pushl(f2l(frame->popf()));
+    DISPATCH
+opc_f2d: 
+    frame->pushd(f2d(frame->popf()));
+    DISPATCH
 
-            CASE(OPC_I2B, frame->pushi(i2b(frame->popi()))) // todo byte or bool????
-            CASE(OPC_I2C, frame->pushi(i2c(frame->popi())))
-            CASE(OPC_I2S, frame->pushi(i2s(frame->popi())))
+opc_d2i:
+    frame->pushi(d2i(frame->popd()));
+    DISPATCH
+opc_d2l:
+    frame->pushl(d2l(frame->popd()));
+    DISPATCH
+opc_d2f: 
+    frame->pushf(d2f(frame->popd()));
+    DISPATCH
+
+opc_i2b:  // todo byte or bool????
+    frame->pushi(i2b(frame->popi()));
+    DISPATCH
+opc_i2c: 
+    frame->pushi(i2c(frame->popi()));
+    DISPATCH
+opc_i2s:
+    frame->pushi(i2s(frame->popi()));
+    DISPATCH
 
 /*
  * NAN 与正常的的浮点数无法比较，即 即不大于 也不小于 也不等于。
@@ -743,11 +1017,21 @@ ldc:
     frame->pushi(cmp_result); \
 }
 
-            CASE(OPC_LCMP, CMP(jlong, l, DO_CMP(v1, v2, -1)))
-            CASE(OPC_FCMPL, CMP(jfloat, f, DO_CMP(v1, v2, -1)))
-            CASE(OPC_FCMPG, CMP(jfloat, f, DO_CMP(v1, v2, 1)))
-            CASE(OPC_DCMPL, CMP(jdouble, d, DO_CMP(v1, v2, -1)))
-            CASE(OPC_DCMPG, CMP(jdouble, d, DO_CMP(v1, v2, 1)))
+opc_lcmp: 
+    CMP(jlong, l, DO_CMP(v1, v2, -1));
+    DISPATCH
+opc_fcmpl:
+    CMP(jfloat, f, DO_CMP(v1, v2, -1));
+    DISPATCH
+opc_fcmpg: 
+    CMP(jfloat, f, DO_CMP(v1, v2, 1));
+    DISPATCH
+opc_dcmpl: 
+    CMP(jdouble, d, DO_CMP(v1, v2, -1));
+    DISPATCH
+opc_dcmpg:
+    CMP(jdouble, d, DO_CMP(v1, v2, 1));
+    DISPATCH
 
 #define IF_COND(cond) \
 { \
@@ -756,12 +1040,24 @@ ldc:
     if (v cond 0) \
         reader->skip(offset - 3);  /* minus instruction length */ \
 }
-            CASE(OPC_IFEQ, IF_COND(==))
-            CASE(OPC_IFNE, IF_COND(!=))
-            CASE(OPC_IFLT, IF_COND(<))
-            CASE(OPC_IFGE, IF_COND(>=))
-            CASE(OPC_IFGT, IF_COND(>))
-            CASE(OPC_IFLE, IF_COND(<=))
+opc_ifeq:
+    IF_COND(==);
+    DISPATCH
+opc_ifne:
+    IF_COND(!=);
+    DISPATCH
+opc_iflt:
+    IF_COND(<);
+    DISPATCH
+opc_ifge: 
+    IF_COND(>=);
+    DISPATCH
+opc_ifgt: 
+    IF_COND(>);
+    DISPATCH
+opc_ifle: 
+    IF_COND(<=);
+    DISPATCH
 
 #define IF_ICMP_COND(cond) \
 { \
@@ -769,14 +1065,26 @@ ldc:
     jint offset = reader->reads2(); \
     if (ISLOT(frame->stack) cond ISLOT(frame->stack + 1)) \
         reader->skip(offset - 3); /* minus instruction length */ \
-    break; \
+    DISPATCH \
 }
-            CASE(OPC_IF_ICMPEQ, IF_ICMP_COND(==))
-            CASE(OPC_IF_ICMPNE, IF_ICMP_COND(!=))
-            CASE(OPC_IF_ICMPLT, IF_ICMP_COND(<))
-            CASE(OPC_IF_ICMPGE, IF_ICMP_COND(>=))
-            CASE(OPC_IF_ICMPGT, IF_ICMP_COND(>))
-            CASE(OPC_IF_ICMPLE, IF_ICMP_COND(<=))
+opc_if_icmpeq: 
+    IF_ICMP_COND(==);
+    DISPATCH
+opc_if_icmpne:
+    IF_ICMP_COND(!=);
+    DISPATCH
+opc_if_icmplt:
+    IF_ICMP_COND(<);
+    DISPATCH
+opc_if_icmpge: 
+    IF_ICMP_COND(>=);
+    DISPATCH
+opc_if_icmpgt: 
+    IF_ICMP_COND(>);
+    DISPATCH
+opc_if_icmple: 
+    IF_ICMP_COND(<=);
+    DISPATCH
 
 #define IF_ACMP_COND(cond) \
 { \
@@ -785,161 +1093,166 @@ ldc:
     if (RSLOT(frame->stack) cond RSLOT(frame->stack + 1)) \
         reader->skip(offset - 3);  /* minus instruction length */ \
 }
-            CASE(OPC_IF_ACMPEQ, IF_ACMP_COND(==))
-            CASE(OPC_IF_ACMPNE, IF_ACMP_COND(!=))
+opc_if_acmpeq:
+    IF_ACMP_COND(==);
+    DISPATCH
+opc_if_acmpne: 
+    IF_ACMP_COND(!=);
+    DISPATCH
 
-            case OPC_GOTO: {
-                int offset = reader->reads2();
-                reader->skip(offset - 3);  // minus instruction length
-                break;
-            }
+opc_goto: 
+    int offset = reader->reads2();
+    reader->skip(offset - 3);  // minus instruction length
+    DISPATCH
 
-            // 在Java 6之前，Oracle的Java编译器使用 jsr, jsr_w 和 ret 指令来实现 finally 子句。
-            // 从Java 6开始，已经不再使用这些指令
-            case OPC_JSR:
-                raiseException(INTERNAL_ERROR, "jsr doesn't support after jdk 6.");
-                break;
-            case OPC_RET:
-                raiseException(INTERNAL_ERROR, "ret doesn't support after jdk 6.");
-                break;
+// 在Java 6之前，Oracle的Java编译器使用 jsr, jsr_w 和 ret 指令来实现 finally 子句。
+// 从Java 6开始，已经不再使用这些指令
+opc_jsr:
+    raiseException(INTERNAL_ERROR, "jsr doesn't support after jdk 6.");
+    DISPATCH
+opc_ret:
+    raiseException(INTERNAL_ERROR, "ret doesn't support after jdk 6.");
+    DISPATCH
 
-            case OPC_TABLESWITCH:
-                tableswitch(frame);
-                break;
-            case OPC_LOOKUPSWITCH:
-                lookupswitch(frame);
-                break;
-{
-            int ret_value_slot_count;
+opc_tableswitch:
+    tableswitch(frame);
+    DISPATCH
+opc_lookupswitch:
+    lookupswitch(frame);
+    DISPATCH
 
-            case OPC_IRETURN:
-            case OPC_FRETURN:
-            case OPC_ARETURN:
-                ret_value_slot_count = 1;
-                goto method_return;
-            case OPC_LRETURN:
-            case OPC_DRETURN:
-                ret_value_slot_count = 2;
-                goto method_return;
-            case OPC_RETURN:
-                ret_value_slot_count = 0;
-method_return:
-                Frame *invoke_frame = thread->topFrame = frame->prev;
-                frame->stack -= (ret_value_slot_count);
-                if (frame->vm_invoke || invoke_frame == nullptr) {
-                    return frame->stack;
-                } else {
-                    slot_t *ret_value = frame->stack;
-                    for (int i = 0; i < ret_value_slot_count; i++) {
-                        *invoke_frame->stack++ = *ret_value++;
-                    }
-                    CHANGE_FRAME(invoke_frame);
-                    TRACE("executing frame: %s\n", frame->toString().c_str());
-                }
-                break;
-}
-            case OPC_GETSTATIC: {
-                int index = reader->readu2();
-                Field *f = resolve_field(frame->method->clazz, index);
+    int ret_value_slot_count;
 
-                if (!f->clazz->inited) {
-                    f->clazz->clinit();
-                }
+opc_ireturn:
+opc_freturn:
+opc_areturn:
+    ret_value_slot_count = 1;
+    goto __method_return;
+opc_lreturn:
+opc_dreturn:
+    ret_value_slot_count = 2;
+    goto __method_return;
+opc_return:
+    ret_value_slot_count = 0;
+__method_return:
+    Frame *invoke_frame = thread->topFrame = frame->prev;
+    frame->stack -= ret_value_slot_count;
+    if (frame->vm_invoke || invoke_frame == nullptr) {
+        return frame->stack;
+    } else {
+        slot_t *ret_value = frame->stack;
+        for (int i = 0; i < ret_value_slot_count; i++) {
+            *invoke_frame->stack++ = *ret_value++;
+        }
+        CHANGE_FRAME(invoke_frame);
+        TRACE("executing frame: %s\n", frame->toString().c_str());
+    }
+    DISPATCH
 
-                const slot_t *value = f->clazz->getStaticFieldValue(f);
-                *frame->stack++ = value[0];
-                if (f->categoryTwo) {
-                    *frame->stack++ = value[1];
-                }
-                break;
-            }
+opc_getstatic: 
+    index = reader->readu2();
+    Field *f = resolve_field(frame->method->clazz, index);
 
-            case OPC_PUTSTATIC: {
-                int index = reader->readu2();
-                Field *f = resolve_field(frame->method->clazz, index);
+    if (!f->clazz->inited) {
+        f->clazz->clinit();
+    }
 
-                if (!f->clazz->inited) {
-                    f->clazz->clinit();
-                }
+    value = (slot_t *) f->clazz->getStaticFieldValue(f);
+    *frame->stack++ = value[0];
+    if (f->categoryTwo) {
+        *frame->stack++ = value[1];
+    }
+    DISPATCH
 
-                if (f->categoryTwo) {
-                    frame->stack -= 2;
-                } else {
-                    frame->stack--;
-                }
+opc_putstatic:
+    {
+        index = reader->readu2();
+        Field *f = resolve_field(frame->method->clazz, index);
 
-                f->clazz->setStaticFieldValue(f, frame->stack);
-                break;
-            }
+        if (!f->clazz->inited) {
+            f->clazz->clinit();
+        }
 
-            case OPC_GETFIELD: {
-                int index = reader->readu2();
-                Field *f = resolve_field(frame->method->clazz, index);
-                jref obj = frame->popr();
-                if (obj == nullptr) {
-                    thread_throw_null_pointer_exception();
-                }
+        if (f->categoryTwo) {
+            frame->stack -= 2;
+        } else {
+            frame->stack--;
+        }
+
+        f->clazz->setStaticFieldValue(f, frame->stack);
+        DISPATCH
+    }
+
+opc_getfield:
+    {
+        index = reader->readu2();
+        Field *f = resolve_field(frame->method->clazz, index);
+        jref obj = frame->popr();
+        if (obj == nullptr) {
+            thread_throw_null_pointer_exception();
+        }
 
 //                const slot_t *value = obj->getInstFieldValue(f);
 //                *frame->stack++ = value[0];
 //                if (f->categoryTwo) {
 //                    *frame->stack++ = value[1];
 //                }
-                obj->storeInstFieldValue(f, frame->stack);
-                break;
+        obj->storeInstFieldValue(f, frame->stack);
+        DISPATCH
+    }
+
+opc_putfield:
+    {
+        index = reader->readu2();
+        Field *f = resolve_field(frame->method->clazz, index);
+
+        // 如果是final字段，则只能在构造函数中初始化，否则抛出java.lang.IllegalAccessError。
+        if (f->isFinal()) {
+            // todo
+            if (frame->method->clazz != f->clazz || !utf8_equals(frame->method->name, S(object_init))) {
+                raiseException(ILLEGAL_ACCESS_ERROR);
             }
+        }
 
-            case OPC_PUTFIELD: {
-                int index = reader->readu2();
-                Field *f = resolve_field(frame->method->clazz, index);
+        if (f->categoryTwo) {
+            frame->stack -= 2;
+        } else {
+            frame->stack--;
+        }
+        value = frame->stack;
 
-                // 如果是final字段，则只能在构造函数中初始化，否则抛出java.lang.IllegalAccessError。
-                if (f->isFinal()) {
-                    // todo
-                    if (frame->method->clazz != f->clazz || !utf8_equals(frame->method->name, S(object_init))) {
-                        raiseException(ILLEGAL_ACCESS_ERROR);
-                    }
-                }
+        jref obj = frame->popr();
+        if (obj == nullptr) {
+            thread_throw_null_pointer_exception();
+        }
 
-                if (f->categoryTwo) {
-                    frame->stack -= 2;
-                } else {
-                    frame->stack--;
-                }
-                slot_t *value = frame->stack;
+        obj->setFieldValue(f, value);
+        DISPATCH
+    }
+opc_invokevirtual:
+    {
+        // invokevirtual指令用于调用对象的实例方法，根据对象的实际类型进行分派（虚方法分派）。
+        index = reader->readu2();
+        Method *m = resolve_method(frame->method->clazz, index);
 
-                jref obj = frame->popr();
-                if (obj == nullptr) {
-                    thread_throw_null_pointer_exception();
-                }
+        frame->stack -= m->arg_slot_count;
+        args = frame->stack;
+        auto obj = (Object *) args[0];
+        if (obj == nullptr) {
+            thread_throw_null_pointer_exception();
+        }
 
-                obj->setFieldValue(f, value);
-                break;
-            }
-
-            case OPC_INVOKEVIRTUAL: {
-                // invokevirtual指令用于调用对象的实例方法，根据对象的实际类型进行分派（虚方法分派）。
-                int index = reader->readu2();
-                Method *m = resolve_method(frame->method->clazz, index);
-
-                frame->stack -= m->arg_slot_count;
-                args = frame->stack;
-                auto obj = (Object *) args[0];
-                if (obj == nullptr) {
-                    thread_throw_null_pointer_exception();
-                }
-
-                assert(m->vtableIndex >= 0);
-                assert(m->vtableIndex < obj->clazz->vtable.size());
-                resolved_method = obj->clazz->vtable[m->vtableIndex];
-                assert(resolved_method == obj->clazz->lookupMethod(m->name, m->descriptor));
-                goto invoke_method;
-            }
-
-            case OPC_INVOKESPECIAL: {
-                // invokespecial指令用于调用一些需要特殊处理的实例方法，
-                // 包括构造函数、私有方法和通过super关键字调用的超类方法。
-                int index = reader->readu2();
+        assert(m->vtableIndex >= 0);
+        assert(m->vtableIndex < obj->clazz->vtable.size());
+        resolved_method = obj->clazz->vtable[m->vtableIndex];
+        assert(resolved_method == obj->clazz->lookupMethod(m->name, m->descriptor));
+        goto __invoke_method;
+    }
+opc_invokespecial:
+    {
+        // invokespecial指令用于调用一些需要特殊处理的实例方法，
+        // 包括构造函数、私有方法和通过super关键字调用的超类方法。
+        index = reader->readu2();
 //
 //    // 假定从方法符号引用中解析出来的类是C，方法是M。如果M是构造函数，则声明M的类必须是C，
 ////    if (method->name == "<init>" && method->class != c) {
@@ -947,206 +1260,207 @@ method_return:
 ////        jvm_abort("java.lang.NoSuchMethodError\n");
 ////    }
 
-                Method *m = resolve_method(clazz, index);
-                /*
-                 * 如果调用的中超类中的函数，但不是构造函数，不是private 函数，且当前类的ACC_SUPER标志被设置，
-                 * 需要一个额外的过程查找最终要调用的方法；否则前面从方法符号引用中解析出来的方法就是要调用的方法。
-                 * todo 详细说明
-                 */
-                if (m->clazz->isSuper()
-                    && !m->isPrivate()
-                    && clazz->isSubclassOf(m->clazz) // todo
-                    && !utf8_equals(m->name, S(object_init))) {
-                    m = clazz->superClass->lookupMethod(m->name, m->descriptor);
-                }
+        Method *m = resolve_method(clazz, index);
+        /*
+         * 如果调用的中超类中的函数，但不是构造函数，不是private 函数，且当前类的ACC_SUPER标志被设置，
+         * 需要一个额外的过程查找最终要调用的方法；否则前面从方法符号引用中解析出来的方法就是要调用的方法。
+         * todo 详细说明
+         */
+        if (m->clazz->isSuper()
+            && !m->isPrivate()
+            && clazz->isSubclassOf(m->clazz) // todo
+            && !utf8_equals(m->name, S(object_init))) {
+            m = clazz->superClass->lookupMethod(m->name, m->descriptor);
+        }
 
-                if (m->isAbstract()) {
-                    raiseException(ABSTRACT_METHOD_ERROR);
-                }
-                if (m->isStatic()) {
-                    raiseException(INCOMPATIBLE_CLASS_CHANGE_ERROR);
-                }
+        if (m->isAbstract()) {
+            raiseException(ABSTRACT_METHOD_ERROR);
+        }
+        if (m->isStatic()) {
+            raiseException(INCOMPATIBLE_CLASS_CHANGE_ERROR);
+        }
 
-                frame->stack -= m->arg_slot_count;
-                args = frame->stack;
-                auto obj = (jref) args[0];
-                if (obj == nullptr) {
-                    thread_throw_null_pointer_exception();
-                }
+        frame->stack -= m->arg_slot_count;
+        args = frame->stack;
+        auto obj = (jref) args[0];
+        if (obj == nullptr) {
+            thread_throw_null_pointer_exception();
+        }
 
-                resolved_method = m;
-                goto invoke_method;
+        resolved_method = m;
+        goto __invoke_method;
+    }
+opc_invokestatic:
+    {
+        // invokestatic指令用来调用静态方法。
+        // 如果类还没有被初始化，会触发类的初始化。
+        index = reader->readu2();
+        Method *m = resolve_method(clazz, index);
+        if (m->isAbstract()) {
+            raiseException(ABSTRACT_METHOD_ERROR);
+        }
+        if (!m->isStatic()) {
+            raiseException(INCOMPATIBLE_CLASS_CHANGE_ERROR);
+        }
+
+        if (!m->clazz->inited) {
+            m->clazz->clinit();
+        }
+
+        frame->stack -= m->arg_slot_count;
+        args = frame->stack;
+        resolved_method = m;
+        goto __invoke_method;
+    }
+opc_invokeinterface:
+    {
+        index = reader->readu2();
+
+        /*
+         * 此字节的值是给方法传递参数需要的slot数，
+         * 其含义和给method结构体定义的arg_slot_count字段相同。
+         * 这个数是可以根据方法描述符计算出来的，它的存在仅仅是因为历史原因。
+         */
+        reader->readu1();
+        /*
+         * 此字节是留给Oracle的某些Java虚拟机实现用的，它的值必须是0。
+         * 该字节的存在是为了保证Java虚拟机可以向后兼容。
+         */
+        reader->readu1();
+
+        Method *m = resolve_method(clazz, index);
+        assert(m->clazz->isInterface());
+
+        /* todo 本地方法 */
+
+        frame->stack -= m->arg_slot_count;
+        args = frame->stack;
+
+        auto obj = (jref) args[0];
+        if (obj == nullptr) {
+            thread_throw_null_pointer_exception();
+        }
+
+        Method *method = obj->clazz->lookupMethod(m->name, m->descriptor);
+        if (method == nullptr) {
+            jvm_abort("error\n"); // todo
+        }
+
+        if (method->isAbstract()) {
+            raiseException(ABSTRACT_METHOD_ERROR);
+        }
+        if (!method->isPublic()) {
+            raiseException(ILLEGAL_ACCESS_ERROR);
+        }
+
+        resolved_method = method;
+        goto __invoke_method;
+    }
+opc_invokedynamic:
+    {
+        // 每一个 invokedynamic 指令都称为 Dynamic Call Site(动态调用点)
+
+        jvm_abort("not implement!!!\n"); // todo
+
+        Class *currClass = frame->method->clazz;
+        ConstantPool &cp = currClass->cp;
+        // The run-time constant pool item at that index must be a symbolic reference to a call site specifier.
+        /*
+         * CONSTANT_InvokeDynamic_info {
+                u1 tag;
+                u2 bootstrap_method_attr_index;
+                u2 name_and_type_index;
             }
-            case OPC_INVOKESTATIC: {
-                // invokestatic指令用来调用静态方法。
-                // 如果类还没有被初始化，会触发类的初始化。
-                int index = reader->readu2();
-                Method *m = resolve_method(clazz, index);
-                if (m->isAbstract()) {
-                    raiseException(ABSTRACT_METHOD_ERROR);
-                }
-                if (!m->isStatic()) {
-                    raiseException(INCOMPATIBLE_CLASS_CHANGE_ERROR);
-                }
+         */
+        index = reader->readu2(); // point to CONSTANT_InvokeDynamic_info
+        reader->readu1(); // this byte must always be zero.
+        reader->readu1(); // this byte must always be zero.
 
-                if (!m->clazz->inited) {
-                    m->clazz->clinit();
-                }
+        // 调用方法
+        // public static MethodType fromMethodDescriptorString(String descriptor, ClassLoader loader);
+        // to get MethodType
+        const char *descriptor = CP_NAME_TYPE_TYPE(cp, index);
+        auto so = StringObject::newInst(descriptor);
+        Class *mt = loadSysClass("java/lang/invoke/MethodType");
+        auto fromMethodDescriptorString = mt->getDeclaredStaticMethod(
+                "fromMethodDescriptorString",
+                "(Ljava/lang/String;Ljava/lang/ClassLoader;)Ljava/lang/invoke/MethodType;");
+        slot_t *retValue = execJavaFunc(fromMethodDescriptorString, {(slot_t) so, (slot_t) nullptr});
+        assert(retValue != nullptr);
+        auto methodTypeObj = (jref) retValue[0]; // get MethodType
 
-                frame->stack -= m->arg_slot_count;
-                args = frame->stack;
-                resolved_method = m;
-                goto invoke_method;
-            }
-            case OPC_INVOKEINTERFACE: {
-                int index = reader->readu2();
+        // 调用方法
+        // public static Lookup lookup();
+        // to get MethodHandles$Lookup
+        Class *mh = loadSysClass("java/lang/invoke/MethodHandles");
+        auto lookup = mh->getDeclaredStaticMethod("lookup", "()Ljava/lang/invoke/MethodHandles$Lookup;");
+        retValue = execJavaFunc(lookup);
+        assert(retValue != nullptr);
+        auto lookupObj = (jref) retValue[0]; // get MethodHandles$Lookup
 
-                /*
-                 * 此字节的值是给方法传递参数需要的slot数，
-                 * 其含义和给method结构体定义的arg_slot_count字段相同。
-                 * 这个数是可以根据方法描述符计算出来的，它的存在仅仅是因为历史原因。
-                 */
-                reader->readu1();
-                /*
-                 * 此字节是留给Oracle的某些Java虚拟机实现用的，它的值必须是0。
-                 * 该字节的存在是为了保证Java虚拟机可以向后兼容。
-                 */
-                reader->readu1();
+        /////////////////////
+        BootstrapMethod &bm = currClass->bootstrapMethods[CP_BOOTSTRAP_METHOD_ATTR_INDEX(currClass->cp, index)];
+        const char *name = CP_NAME_TYPE_NAME(cp, index);
+        descriptor = CP_NAME_TYPE_TYPE(cp, index);
 
-                Method *m = resolve_method(clazz, index);
-                assert(m->clazz->isInterface());
+        auto refKind = CP_METHOD_HANDLE_REFERENCE_KIND(cp, bm.bootstrapMethodRef);
+        auto refIndex = CP_METHOD_HANDLE_REFERENCE_INDEX(cp, bm.bootstrapMethodRef);
+        switch (refKind) {
+            case REF_KIND_GET_FIELD:
+                DISPATCH // todo
+            case REF_KIND_GET_STATIC:
+                DISPATCH // todo
+            case REF_KIND_PUT_FIELD:
+                DISPATCH // todo
+            case REF_KIND_PUT_STATIC:
+                DISPATCH // todo
+            case REF_KIND_INVOKE_VIRTUAL:
+                DISPATCH // todo
+            case REF_KIND_INVOKE_STATIC: {
+                const char *className = CP_METHOD_CLASS_NAME(cp, refIndex);
+                Class *bootstrapClass = currClass->loader->loadClass(className);
 
-                /* todo 本地方法 */
-
-                frame->stack-= m->arg_slot_count;
-                args = frame->stack;
-
-                auto obj = (jref) args[0];
-                if (obj == nullptr) {
-                    thread_throw_null_pointer_exception();
-                }
-
-                Method *method = obj->clazz->lookupMethod(m->name, m->descriptor);
-                if (method == nullptr) {
-                    jvm_abort("error\n"); // todo
-                }
-
-                if (method->isAbstract()) {
-                    raiseException(ABSTRACT_METHOD_ERROR);
-                }
-                if (!method->isPublic()) {
-                    raiseException(ILLEGAL_ACCESS_ERROR);
-                }
-
-                resolved_method = method;
-                goto invoke_method;
-            }
-            case OPC_INVOKEDYNAMIC: {
-                // 每一个 invokedynamic 指令都称为 Dynamic Call Site(动态调用点)
-
-                jvm_abort("not implement!!!\n"); // todo
-
-                Class *currClass = frame->method->clazz;
-                ConstantPool &cp = currClass->cp;
-                // The run-time constant pool item at that index must be a symbolic reference to a call site specifier.
-                /*
-                 * CONSTANT_InvokeDynamic_info {
-                        u1 tag;
-                        u2 bootstrap_method_attr_index;
-                        u2 name_and_type_index;
-                    }
-                 */
-                int index = reader->readu2(); // point to CONSTANT_InvokeDynamic_info
-                reader->readu1(); // this byte must always be zero.
-                reader->readu1(); // this byte must always be zero.
-
-                // 调用方法
-                // public static MethodType fromMethodDescriptorString(String descriptor, ClassLoader loader);
-                // to get MethodType
-                const char *descriptor = CP_NAME_TYPE_TYPE(cp, index);
-                auto so = StringObject::newInst(descriptor);
-                Class *mt = loadSysClass("java/lang/invoke/MethodType");
-                auto fromMethodDescriptorString = mt->getDeclaredStaticMethod(
-                        "fromMethodDescriptorString",
-                        "(Ljava/lang/String;Ljava/lang/ClassLoader;)Ljava/lang/invoke/MethodType;");
-                slot_t *retValue = execJavaFunc(fromMethodDescriptorString, { (slot_t) so, (slot_t) nullptr });
+                // bootstrap method is static,  todo 对不对
+                // 前三个参数固定为 MethodHandles.Lookup caller, String invokedName, MethodType invokedType todo 对不对
+                // 后续的参数由 ref->argc and ref->args 决定
+                Method *bootstrapMethod = bootstrapClass->getDeclaredStaticMethod(
+                                CP_METHOD_NAME(cp, refIndex), CP_METHOD_TYPE(cp, refIndex));
+                assert(bm.bootstrapArguments.size() + 3 == bootstrapMethod->arg_slot_count);
+                retValue = execJavaFunc(bootstrapMethod, {}); // todo 参数是啥？？ bm.bootstrapArguments ???
                 assert(retValue != nullptr);
-                auto methodTypeObj = (jref) retValue[0]; // get MethodType
+                auto callSet = (jref) retValue;
 
-                // 调用方法
-                // public static Lookup lookup();
-                // to get MethodHandles$Lookup
-                Class *mh = loadSysClass("java/lang/invoke/MethodHandles");
-                auto lookup = mh->getDeclaredStaticMethod("lookup", "()Ljava/lang/invoke/MethodHandles$Lookup;");
-                retValue = execJavaFunc(lookup);
+                // public abstract MethodHandle dynamicInvoker()
+                auto dynamicInvoker = callSet->clazz->lookupInstMethod(
+                        "dynamicInvoker", "()Ljava/lang/invoke/MethodHandle;");
+                retValue = execJavaFunc(dynamicInvoker, callSet);
                 assert(retValue != nullptr);
-                auto lookupObj = (jref) retValue[0]; // get MethodHandles$Lookup
+                auto exactMethodHandle = (jref) retValue;
 
-                /////////////////////
-                BootstrapMethod &bm = currClass->bootstrapMethods[CP_BOOTSTRAP_METHOD_ATTR_INDEX(currClass->cp, index)];
-                const char *name = CP_NAME_TYPE_NAME(cp, index);
-                descriptor = CP_NAME_TYPE_TYPE(cp, index);
+                // public final Object invokeExact(Object... args) throws Throwable
+                Method *exactMethod
+                        = exactMethodHandle->clazz->lookupInstMethod("invokeExact", "[Ljava/lang/Object;");
+                // todo args
+                jvm_abort("");
 
-                auto refKind = CP_METHOD_HANDLE_REFERENCE_KIND(cp, bm.bootstrapMethodRef);
-                auto refIndex = CP_METHOD_HANDLE_REFERENCE_INDEX(cp, bm.bootstrapMethodRef);
-                switch (refKind) {
-                    case REF_KIND_GET_FIELD:
-                        break; // todo
-                    case REF_KIND_GET_STATIC:
-                        break; // todo
-                    case REF_KIND_PUT_FIELD:
-                        break; // todo
-                    case REF_KIND_PUT_STATIC:
-                        break; // todo
-                    case REF_KIND_INVOKE_VIRTUAL:
-                        break; // todo
-                    case REF_KIND_INVOKE_STATIC: {
-                        const char *className = CP_METHOD_CLASS_NAME(cp, refIndex);
-                        Class *bootstrapClass = currClass->loader->loadClass(className);
+                // invoke exact method, invokedynamic completely execute over.
+                execJavaFunc(exactMethod, {});  // todo 参数是啥？？
 
-                        // bootstrap method is static,  todo 对不对
-                        // 前三个参数固定为 MethodHandles.Lookup caller, String invokedName, MethodType invokedType todo 对不对
-                        // 后续的参数由 ref->argc and ref->args 决定
-                        Method *bootstrapMethod = bootstrapClass->getDeclaredStaticMethod(
-                                        CP_METHOD_NAME(cp, refIndex), CP_METHOD_TYPE(cp, refIndex));
-                        assert(bm.bootstrapArguments.size() + 3 == bootstrapMethod->arg_slot_count);
-                        retValue = execJavaFunc(bootstrapMethod, { }); // todo 参数是啥？？ bm.bootstrapArguments ???
-                        assert(retValue != nullptr);
-                        auto callSet = (jref) retValue;
-
-                        // public abstract MethodHandle dynamicInvoker()
-                        auto dynamicInvoker = callSet->clazz->lookupInstMethod(
-                                "dynamicInvoker", "()Ljava/lang/invoke/MethodHandle;");
-                        retValue = execJavaFunc(dynamicInvoker, callSet);
-                        assert(retValue != nullptr);
-                        auto exactMethodHandle = (jref) retValue;
-
-                        // public final Object invokeExact(Object... args) throws Throwable
-                        Method *exactMethod
-                                = exactMethodHandle->clazz->lookupInstMethod("invokeExact", "[Ljava/lang/Object;");
-                        // todo args
-                        jvm_abort("");
-
-                        // invoke exact method, invokedynamic completely execute over.
-                        execJavaFunc(exactMethod, { });  // todo 参数是啥？？
-
-                        break;
-                    }
-                    case REF_KIND_INVOKE_SPECIAL:
-                        break; // todo
-                    case REF_KIND_NEW_INVOKE_SPECIAL:
-                        break; // todo
-                    case REF_KIND_INVOKE_INTERFACE:
-                        break; // todo
-                    default:
-                        jvm_abort("never goes here");
-                        break; // todo never goes here
-                }
-                jvm_abort("never goes here"); // todo
+                DISPATCH
+            }
+            case REF_KIND_INVOKE_SPECIAL:
+                DISPATCH // todo
+            case REF_KIND_NEW_INVOKE_SPECIAL:
+                DISPATCH // todo
+            case REF_KIND_INVOKE_INTERFACE:
+                DISPATCH // todo
+            default:
+                jvm_abort("never goes here"); // todo never goes here
                 break;
-            }
-invoke_method:
-{
+        }
+        jvm_abort("never goes here"); // todo
+    }
+__invoke_method:
     assert(resolved_method);
     Frame *new_frame = allocFrame(resolved_method, false);
     if (resolved_method->arg_slot_count > 0 && args == nullptr) {
@@ -1160,180 +1474,188 @@ invoke_method:
     }
 
     CHANGE_FRAME(new_frame);
-    /*printvm("executing frame: %s\n", frame->toString().c_str());*/
-    break;
-}
+    DISPATCH
 
-            case OPC_NEW: {
-                // new指令专门用来创建类实例。数组由专门的指令创建
-                // 如果类还没有被初始化，会触发类的初始化。
-                Class *c = resolve_class(clazz, reader->readu2());  // todo
-                if (!c->inited) {
-                    c->clinit();
-                }
-
-                if (c->isInterface() || c->isAbstract()) {
-                    raiseException(INSTANTIATION_ERROR);
-                }
-
-                // todo java/lang/Class 会在这里创建，为什么会这样，怎么处理
-                //    assert(strcmp(c->class_name, "java/lang/Class") == 0);
-
-                frame->pushr(Object::newInst(c));
-				break;
-            }
-
-            CASE(OPC_NEWARRAY, newarray(frame))
-            CASE(OPC_ANEWARRAY, anewarray(frame))
-
-            case OPC_ARRAYLENGTH: {
-                Object *o = frame->popr();
-                if (o == nullptr) {
-                    thread_throw_null_pointer_exception();
-                }
-                if (!o->isArray()) {
-                    raiseException(UNKNOWN_ERROR, "not a array"); // todo
-                }
-                frame->pushi(((ArrayObject *) o)->len);
-				break;
-            }
-            case OPC_ATHROW: {
-                jref exception = frame->popr();
-                if (exception == nullptr) {
-                    thread_throw_null_pointer_exception();
-                }
-
-                // 遍历虚拟机栈找到可以处理此异常的方法
-                while (true) {
-                    int handler_pc = frame->method->findExceptionHandler(exception->clazz, reader->pc - 1); // instruction length todo 好像是错的
-                    if (handler_pc >= 0) {  // todo 可以等于0吗
-                        /*
-                         * 找到可以处理的函数了
-                         * 操作数栈清空
-                         * 把异常对象引用推入栈顶
-                         * 跳转到异常处理代码之前
-                         */
-//                frame_stack_clear(top);  // todo
-//                frame_stack_pushr(top, exception);
-                        frame->pushr(exception);
-                        reader->pc = (size_t) handler_pc;
-                        break;  // todo
-                    }
-
-                    // frame 无法处理异常，弹出
-                    popFrame();
-
-                    if (frame->prev == nullptr) {
-                        break; // todo 说明下
-                    }
-                    CHANGE_FRAME(frame->prev);
-                    /*printvm("executing frame: %s\n", frame->toString().c_str());*/
-                }
-
-                thread_handle_uncaught_exception(exception);
-                return nullptr; // todo
-            }
-            case OPC_CHECKCAST: {
-                jref obj = RSLOT(frame->stack - 1); // 不改变操作数栈
-                int index = reader->readu2();
-
-                // 如果引用是null，则指令执行结束。也就是说，null 引用可以转换成任何类型
-                if (obj != nullptr) {
-                    Class *c = resolve_class(frame->method->clazz, index);
-                    if (!obj->isInstanceOf(c)) {
-                        thread_throw_class_cast_exception(obj->clazz->className, c->className);
-                    }
-                }
-                break;
-            }
-            case OPC_INSTANCEOF: {
-                int index = reader->readu2();
-                Class *c = resolve_class(clazz, index);
-
-                jref obj = frame->popr();
-                if (obj == nullptr)
-                    frame->pushi(0);
-                else
-                    frame->pushi(obj->isInstanceOf(c) ? 1 : 0);
-                break;
-            }
-            case OPC_MONITORENTER: {
-                jref o = frame->popr();
-                // todo
-                break;
-            }
-            case OPC_MONITOREXIT: {
-                jref o = frame->popr();
-                // todo
-                break;
-            }
-            case OPC_WIDE: {
-                int __opcode = reader->readu1();
-                TRACE("%d(0x%x), %s, pc = %lu\n", __opcode, __opcode, instruction_names[__opcode], frame->reader.pc);
-                u2 index = reader->readu2();
-                switch (__opcode) {
-                    case OPC_ILOAD:
-                    case OPC_FLOAD:
-                    case OPC_ALOAD:
-                        *frame->stack++ = locals[index];
-                        break;
-                    case OPC_LLOAD:
-                    case OPC_DLOAD:
-                        *frame->stack++ = locals[index];
-                        *frame->stack++ = locals[index + 1];
-                        break;
-                    case OPC_ISTORE:
-                    case OPC_FSTORE:
-                    case OPC_ASTORE:
-                        locals[index] = *--frame->stack;
-                        break;
-                    case OPC_LSTORE:
-                    case OPC_DSTORE:
-                        locals[index + 1] = *--frame->stack;
-                        locals[index] = *--frame->stack;
-                        break;
-                    case OPC_RET:
-                        raiseException(INTERNAL_ERROR, "ret doesn't support after jdk 6.");
-                        break;
-                    case OPC_IINC:
-                        u2 value = reader->readu2();
-                        ISLOT(locals + index) = ISLOT(locals + index) + value;
-                        break;
-                }
-                break;
-            }
-            CASE(OPC_MULTIANEWARRAY, multianewarray(frame))
-
-            case OPC_IFNULL: {
-                int offset = reader->reads2();
-                if (frame->popr() == nullptr) {
-                    reader->skip(offset - 3); // minus instruction length
-                }
-                break;
-            }
-            case OPC_IFNONNULL: {
-                int offset = reader->reads2();
-                if (frame->popr() != nullptr) {
-                    reader->skip(offset - 3); // minus instruction length
-                }
-                break;
-            }
-
-            case OPC_GOTO_W: // todo
-                raiseException(INTERNAL_ERROR, "goto_w doesn't support");
-                break;
-            case OPC_JSR_W: // todo
-                raiseException(INTERNAL_ERROR, "jsr_w doesn't support after jdk 6.");
-                break;
-            case OPC_INVOKENATIVE:
-                frame->method->nativeMethod(frame);
-                break;
-            default:
-                jvm_abort("This instruction isn't used. %d(0x%x)\n", opcode, opcode); // todo
-        }
+opc_new:
+    // new指令专门用来创建类实例。数组由专门的指令创建
+    // 如果类还没有被初始化，会触发类的初始化。
+    Class *c = resolve_class(clazz, reader->readu2());  // todo
+    if (!c->inited) {
+        c->clinit();
     }
 
-    jvm_abort("Never goes here!");
+    if (c->isInterface() || c->isAbstract()) {
+        raiseException(INSTANTIATION_ERROR);
+    }
+
+    // todo java/lang/Class 会在这里创建，为什么会这样，怎么处理
+    //    assert(strcmp(c->class_name, "java/lang/Class") == 0);
+
+    frame->pushr(Object::newInst(c));
+    DISPATCH
+
+opc_newarray: 
+    newarray(frame);
+    DISPATCH
+opc_anewarray: 
+    anewarray(frame);
+    DISPATCH
+
+opc_arraylength: 
+    Object *o = frame->popr();
+    if (o == nullptr) {
+        thread_throw_null_pointer_exception();
+    }
+    if (!o->isArray()) {
+        raiseException(UNKNOWN_ERROR, "not a array"); // todo
+    }
+    frame->pushi(((ArrayObject *) o)->len);
+    DISPATCH
+
+opc_athrow:
+    jref exception = frame->popr();
+    if (exception == nullptr) {
+        thread_throw_null_pointer_exception();
+    }
+
+    // 遍历虚拟机栈找到可以处理此异常的方法
+    while (true) {
+        int handler_pc = frame->method->findExceptionHandler(exception->clazz, reader->pc - 1); // instruction length todo 好像是错的
+        if (handler_pc >= 0) {  // todo 可以等于0吗
+            /*
+             * 找到可以处理的函数了
+             * 操作数栈清空
+             * 把异常对象引用推入栈顶
+             * 跳转到异常处理代码之前
+             */
+//                frame_stack_clear(top);  // todo
+//                frame_stack_pushr(top, exception);
+            frame->pushr(exception);
+            reader->pc = (size_t) handler_pc;
+            DISPATCH  // todo
+        }
+
+        // frame 无法处理异常，弹出
+        popFrame();
+
+        if (frame->prev == nullptr) {
+            break; // todo 说明下
+        }
+        CHANGE_FRAME(frame->prev);
+        /*printvm("executing frame: %s\n", frame->toString().c_str());*/
+    }
+
+    thread_handle_uncaught_exception(exception);
+    return nullptr; // todo
+
+opc_checkcast: 
+    jref obj = RSLOT(frame->stack - 1); // 不改变操作数栈
+    index = reader->readu2();
+
+    // 如果引用是null，则指令执行结束。也就是说，null 引用可以转换成任何类型
+    if (obj != nullptr) {
+        Class *c = resolve_class(frame->method->clazz, index);
+        if (!obj->isInstanceOf(c)) {
+            thread_throw_class_cast_exception(obj->clazz->className, c->className);
+        }
+    }
+    DISPATCH
+
+opc_instanceof:
+    {
+        index = reader->readu2();
+        Class *c = resolve_class(clazz, index);
+
+        jref obj = frame->popr();
+        if (obj == nullptr)
+            frame->pushi(0);
+        else
+            frame->pushi(obj->isInstanceOf(c) ? 1 : 0);
+        DISPATCH
+    }
+opc_monitorenter:
+    frame->popr();
+    // todo
+    DISPATCH
+
+opc_monitorexit: 
+    frame->popr();
+    // todo
+    DISPATCH
+
+opc_wide: 
+    int __opcode = reader->readu1();
+    TRACE("%d(0x%x), %s, pc = %lu\n", __opcode, __opcode, instruction_names[__opcode], frame->reader.pc);
+    index = reader->readu2();
+    switch (__opcode) {
+        case OPC_ILOAD:
+        case OPC_FLOAD:
+        case OPC_ALOAD:
+            *frame->stack++ = locals[index];
+            break;
+        case OPC_LLOAD:
+        case OPC_DLOAD:
+            *frame->stack++ = locals[index];
+            *frame->stack++ = locals[index + 1];
+            break;
+        case OPC_ISTORE:
+        case OPC_FSTORE:
+        case OPC_ASTORE:
+            locals[index] = *--frame->stack;
+            break;
+        case OPC_LSTORE:
+        case OPC_DSTORE:
+            locals[index + 1] = *--frame->stack;
+            locals[index] = *--frame->stack;
+            break;
+        case OPC_RET:
+            raiseException(INTERNAL_ERROR, "ret doesn't support after jdk 6.");
+            break;
+        case OPC_IINC:
+            ISLOT(locals + index) = ISLOT(locals + index) + reader->readu2();
+            break;
+        default:
+            // todo never goes here.
+            break;
+    }
+    DISPATCH
+
+opc_multianewarray:
+    multianewarray(frame);
+    DISPATCH
+
+opc_ifnull: 
+    offset = reader->reads2();
+    if (frame->popr() == nullptr) {
+        reader->skip(offset - 3); // minus instruction length
+    }
+    DISPATCH
+
+opc_ifnonnull: 
+    offset = reader->reads2();
+    if (frame->popr() != nullptr) {
+        reader->skip(offset - 3); // minus instruction length
+    }
+    DISPATCH
+
+opc_goto_w: // todo
+    raiseException(INTERNAL_ERROR, "goto_w doesn't support");
+    DISPATCH
+opc_jsr_w: // todo
+    raiseException(INTERNAL_ERROR, "jsr_w doesn't support after jdk 6.");
+    DISPATCH
+opc_breakpoint:
+    // todo
+    DISPATCH
+opc_notused:
+    jvm_abort("This instruction isn't used.\n"); // todo
+    DISPATCH
+opc_invokenative:
+    frame->method->nativeMethod(frame);
+    DISPATCH
+opc_impdep2:
+    jvm_abort("This instruction isn't used.\n"); // todo
+    DISPATCH
 }
 
 slot_t *execJavaFunc(Method *method, const slot_t *args)
