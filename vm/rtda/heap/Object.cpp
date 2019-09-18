@@ -66,6 +66,18 @@ void Object::setFieldValue(const char *name, const char *descriptor, const slot_
     setFieldValue(clazz->lookupInstField(name, descriptor), value);
 }
 
+const slot_t *Object::getInstFieldValue0(const char *name, const char *descriptor) const
+{
+    assert(name != nullptr && descriptor != nullptr);
+
+    Field *f = clazz->lookupField(name, descriptor);
+    if (f == nullptr) {
+        jvm_abort("error, %s, %s\n", name, descriptor); // todo
+    }
+
+    return data + f->id;
+}
+
 bool Object::isInstanceOf(const Class *c) const
 {
     if (c == nullptr)  // todo

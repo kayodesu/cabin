@@ -6,6 +6,8 @@
 #include "Field.h"
 #include "../../symbol.h"
 #include "resolve.h"
+#include "Class.h"
+#include "ConstantPool.h"
 
 using namespace std;
 

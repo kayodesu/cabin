@@ -8,6 +8,8 @@
 #include "../../../rtda/thread/Thread.h"
 #include "../../../utf8.h"
 #include "../../../symbol.h"
+#include "../../../rtda/thread/Frame.h"
+#include "../../../rtda/ma/Class.h"
 
 using namespace std;
 

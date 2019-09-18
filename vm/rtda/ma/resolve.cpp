@@ -6,6 +6,8 @@
 #include "Field.h"
 #include "../../classfile/constant.h"
 #include "../heap/StrPool.h"
+#include "ConstantPool.h"
+#include "../ma/Class.h"
 
 Class* resolve_class(Class *visitor, int cp_index)
 {

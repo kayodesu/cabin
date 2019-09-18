@@ -5,6 +5,9 @@
 #include "../../registry.h"
 #include "../../../rtda/heap/Object.h"
 #include "../../../rtda/heap/ClassObject.h"
+#include "../../../kayo.h"
+#include "../../../rtda/thread/Frame.h"
+#include "../../../rtda/ma/Class.h"
 
 
 // public static native Class<?> getCallerClass(int level)

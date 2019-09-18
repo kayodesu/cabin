@@ -8,6 +8,11 @@
 #include "../heap/Object.h"
 #include "../../interpreter/interpreter.h"
 #include "../heap/StringObject.h"
+#include "../../loader/bootstrap_class_loader.h"
+#include "../../symbol.h"
+#include "../../kayo.h"
+#include "../ma/Class.h"
+#include "../ma/Field.h"
 
 #if TRACE_THREAD
 #define TRACE PRINT_TRACE
@@ -145,7 +150,8 @@ void Thread::bind(Object *jThread0)
 Thread *Thread::from(Object *jThread0)
 {
     assert(jThread0 != nullptr);
-    return jThread0->getInstFieldValue<Thread *>(eetopField);
+    assert(0 <= eetopField->id && eetopField->id < jThread0->clazz->instFieldsCount);
+    return *(Thread **)(jThread0->data + eetopField->id);//jThread0->getInstFieldValue<Thread *>(eetopField);
 }
 
 void Thread::setThreadGroupAndName(Object *threadGroup, const char *threadName)

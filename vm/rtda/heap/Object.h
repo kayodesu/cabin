@@ -5,13 +5,16 @@
 #ifndef JVM_JOBJECT_H
 #define JVM_JOBJECT_H
 
+#include <string>
 #include "../../slot.h"
-#include "../ma/Field.h"
 
 class Class;
+class Field;
 
 class Object {
 protected:
+    Object() { }
+
     explicit Object(Class *c): clazz(c)
     {
         data = reinterpret_cast<slot_t *>(this + 1);
@@ -38,32 +41,29 @@ public:
     void setFieldValue(const char *name, const char *descriptor, const slot_t *value);
 
     // @id: id of the field
-    template <typename T>
-    T getInstFieldValue(int id) const
-    {
-        assert(0 <= id && id < clazz->instFieldsCount);
-        return * (T *) (data + id);
-    }
+//    template <typename T>
+//    T getInstFieldValue(int id) const
+//    {
+//        assert(0 <= id && id < clazz->instFieldsCount);
+//        return * (T *) (data + id);
+//    }
+//
+//    template <typename T>
+//    T getInstFieldValue(Field *f) const
+//    {
+//        assert(f != nullptr);
+//        return getInstFieldValue<T>(f->id);
+//    }
 
-    template <typename T>
-    T getInstFieldValue(Field *f) const
-    {
-        assert(f != nullptr);
-        return getInstFieldValue<T>(f->id);
-    }
-
+private:
+    const slot_t *getInstFieldValue0(const char *name, const char *descriptor) const;
+public:
     template <typename T>
     T getInstFieldValue(const char *name, const char *descriptor) const
     {
-        assert(name != nullptr && descriptor != nullptr);
-
-        Field *f = clazz->lookupField(name, descriptor);
-        if (f == nullptr) {
-            jvm_abort("error, %s, %s\n", name, descriptor); // todo
-        }
-
-        return getInstFieldValue<T>(f->id);
+        return * (T *) getInstFieldValue0(name, descriptor);
     }
+
 
     bool isInstanceOf(const Class *c) const;
 

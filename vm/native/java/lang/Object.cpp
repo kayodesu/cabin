@@ -7,6 +7,7 @@
 #include "../../../rtda/heap/Object.h"
 #include "../../../rtda/heap/ClassObject.h"
 #include "../../../symbol.h"
+#include "../../../rtda/thread/Frame.h"
 
 // public native int hashCode();
 static void hashCode(Frame *frame)

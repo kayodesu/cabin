@@ -6,7 +6,7 @@
 #include "../../../rtda/heap/Object.h"
 #include "../../../util/endianness.h"
 #include "../../../rtda/heap/ArrayObject.h"
-#include "../../../symbol.h"
+#include "../../../rtda/thread/Frame.h"
 
 /* todo
 http://www.docjar.com/docs/api/sun/misc/Unsafe.html#park%28boolean,%20long%29
@@ -55,9 +55,10 @@ static void compareAndSwapInt(Frame *frame)
 
     jint old;
     if (o->isArray()) {
-        old = ((ArrayObject *) o)->get<jint>(offset);//arrobj_get(jint, o, offset);
+        old = ((ArrayObject *) o)->get<jint>(offset);
     } else {
-        old = o->getInstFieldValue<jint>(offset);//ISLOT(o->getInstFieldValue(offset));
+        assert(0 <= offset && offset < o->clazz->instFieldsCount);
+        old = o->data[offset]; //o->getInstFieldValue<jint>(offset);
     }
 
     bool b = __sync_bool_compare_and_swap(&old, expected, x);
@@ -79,7 +80,8 @@ static void compareAndSwapLong(Frame *frame)
         old = ao->get<jlong>(offset);//arrobj_get(jint, o, offset);
     } else {
 //        old = LSLOT(get_instance_field_value_by_id(o, offset));
-        old = o->getInstFieldValue<jlong>(offset);
+        assert(0 <= offset && offset < o->clazz->instFieldsCount);
+        old = *(jlong *)(o->data + offset);//o->getInstFieldValue<jlong>(offset);
     }
 
     bool b = __sync_bool_compare_and_swap(&old, expected, x);
@@ -100,7 +102,8 @@ static void compareAndSwapObject(Frame *frame)
         old = ao->get<jref>(offset);
 //        old = arrobj_get(jref, o, offset);
     } else {
-        old = o->getInstFieldValue<jref>(offset);
+        assert(0 <= offset && offset < o->clazz->instFieldsCount);
+        old = *(jref *)(o->data + offset);//o->getInstFieldValue<jref>(offset);
     }
 
     bool b = __sync_bool_compare_and_swap(&old, expected, x);
@@ -321,7 +324,8 @@ static void getIntVolatile(Frame *frame)
         value = ao->get<jint>(offset);
 //        value = arrobj_get(jint, o, offset);  // todo
     } else {
-        value = o->getInstFieldValue<jint>(offset);  // todo
+        assert(0 <= offset && offset < o->clazz->instFieldsCount);
+        value = o->data[offset];//o->getInstFieldValue<jint>(offset);  // todo
     }
     frame->pushi(value);
 }
@@ -404,7 +408,8 @@ static void getObjectVolatile(Frame *frame)
         ArrayObject *ao = dynamic_cast<ArrayObject *>(o);  // todo
         value = ao->get<jref>(offset);
     } else {
-        value = o->getInstFieldValue<jref>(offset);  // todo
+        assert(0 <= offset && offset < o->clazz->instFieldsCount);
+        value = *(jref *)(o->data + offset);//o->getInstFieldValue<jref>(offset);  // todo
     }
     frame->pushr(value);
 }

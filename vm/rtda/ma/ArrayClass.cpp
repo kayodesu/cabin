@@ -18,6 +18,11 @@ ArrayClass::ArrayClass(const char *className): Class(bootClassLoader, strdup(cla
     interfaces.push_back(java_io_Serializable_class);
 
     createVtable();
+
+    if (java_lang_Class_class != nullptr) {
+        clazz = java_lang_Class_class;
+        data = new slot_t[java_lang_Class_class->instFieldsCount]; // todo
+    }
 }
 
 size_t ArrayClass::getEleSize()

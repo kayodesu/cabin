@@ -4,6 +4,9 @@
 #include "../../../rtda/heap/Object.h"
 #include "../../../rtda/heap/StrPool.h"
 #include "../../../rtda/ma/resolve.h"
+#include "../../../rtda/ma/ConstantPool.h"
+#include "../../../rtda/thread/Frame.h"
+#include "../../../rtda/ma/Class.h"
 
 /*
  * Author: Jia Yang

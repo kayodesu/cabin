@@ -6,6 +6,7 @@
 #include "bootstrap_class_loader.h"
 #include "../symbol.h"
 #include "../rtda/heap/ClassObject.h"
+#include "../rtda/ma/Class.h"
 
 ClassLoader *bootClassLoader;
 
@@ -29,8 +30,21 @@ void initBootClassLoader()
     java_lang_Object_class = bootClassLoader->loadClass(S(java_lang_Object));
     java_lang_Class_class = bootClassLoader->loadClass(S(java_lang_Class));
 
+    java_lang_Object_class->clazz = java_lang_Class_class;
+    java_lang_Object_class->data = new slot_t[java_lang_Class_class->instFieldsCount]; // todo
+
+    java_lang_Class_class->clazz = java_lang_Class_class;
+    java_lang_Class_class->data = new slot_t[java_lang_Class_class->instFieldsCount]; // todo
+
+
+
+
     java_lang_Object_class->clsobj = ClassObject::newInst(java_lang_Object_class);
     java_lang_Class_class->clsobj = ClassObject::newInst(java_lang_Class_class);
+
+
+
+
 
     java_lang_String_class = bootClassLoader->loadClass(S(java_lang_String));
     java_lang_Cloneable_class = bootClassLoader->loadClass(S(java_lang_Cloneable));

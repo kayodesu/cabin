@@ -19,6 +19,11 @@ public:
         superClass = java_lang_Object_class;
 
         createVtable();
+
+        if (java_lang_Class_class != nullptr) {
+            clazz = java_lang_Class_class;
+            data = new slot_t[java_lang_Class_class->instFieldsCount]; // todo
+        }
     }
 };
 

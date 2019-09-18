@@ -6,6 +6,8 @@
 #include "exceptions.h"
 #include "interpreter/interpreter.h"
 #include "rtda/heap/StringObject.h"
+#include "loader/bootstrap_class_loader.h"
+#include "rtda/ma/Class.h"
 
 #define EXCEPTION_EXIT (-1)
 

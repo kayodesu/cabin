@@ -11,9 +11,10 @@
 #include "debug.h"
 #include "loader/ClassLoader.h"
 #include "rtda/thread/Thread.h"
-#include "rtda/ma/Access.h"
+#include "rtda/ma/Class.h"
 #include "interpreter/interpreter.h"
 #include "rtda/heap/StrPool.h"
+#include "native/registry.h"
 
 using namespace std;
 

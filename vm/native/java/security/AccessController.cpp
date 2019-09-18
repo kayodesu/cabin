@@ -6,6 +6,8 @@
 #include "../../../rtda/heap/Object.h"
 #include "../../../interpreter/interpreter.h"
 #include "../../../symbol.h"
+#include "../../../rtda/ma/Class.h"
+#include "../../../rtda/thread/Frame.h"
 
 // @CallerSensitive
 // public static native <T> T doPrivileged(PrivilegedAction<T> action);

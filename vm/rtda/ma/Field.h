@@ -9,8 +9,9 @@
 #include "../../slot.h"
 #include "../../kayo.h"
 #include "../../util/BytecodeReader.h"
-#include "Class.h"
 #include "Member.h"
+
+class Class;
 
 class Field: public Member {
     // the declared type(class Object) of this field

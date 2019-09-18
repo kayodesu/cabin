@@ -16,6 +16,7 @@
 #include "Access.h"
 #include "../../loader/bootstrap_class_loader.h"
 #include "ConstantPool.h"
+#include "../heap/Object.h"
 
 class Field;
 class Method;
@@ -23,7 +24,7 @@ class BytecodeReader;
 class ClassObject;
 class ArrayClass;
 
-struct Class: public Access {
+struct Class: public Object, public Access {
     ConstantPool cp;
 
     // Object of java/lang/Class of this class
@@ -34,6 +35,8 @@ struct Class: public Access {
 
     // 必须是全限定类名
     const char *className;
+
+    int objectSize;
 
     // 如果类没有<clinit>方法，是不是inited直接职位true  todo
     bool inited = false; // 此类是否被初始化过了（是否调用了<clinit>方法）。
@@ -95,9 +98,9 @@ struct Class: public Access {
     std::vector<Field *> fields;
     u2 publicFieldsCount = 0;
 
-    // instance_field_count 有可能大于 fields_count，因为 instance_field_count 包含了继承过来的 field.
+    // instFieldsCount 有可能大于 fieldsCount，因为 instFieldsCount 包含了继承过来的 field.
     // 类型二统计为两个数量
-    int instFieldsCount;
+    int instFieldsCount = 0;
 
     // vtable 只保存虚方法。
     // 该类所有函数自有函数（除了private, static, final, abstract）和 父类的函数虚拟表。

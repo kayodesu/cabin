@@ -1,6 +1,6 @@
 #include "../../registry.h"
 #include "../../../slot.h"
-#include "../../../rtda/heap/Object.h"
+#include "../../../rtda/thread/Frame.h"
 
 /*
  * Author: Jia Yang

@@ -6,7 +6,7 @@
 #include "../../registry.h"
 #include "../../../rtda/heap/Object.h"
 #include "../../../rtda/thread/Thread.h"
-#include "../../../interpreter/interpreter.h"
+#include "../../../rtda/thread/Frame.h"
 
 /*
  * Returns a reference to the currently executing thread Object.

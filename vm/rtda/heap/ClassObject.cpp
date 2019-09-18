@@ -2,7 +2,11 @@
  * Author: kayo
  */
 
+#include <cassert>
 #include "ClassObject.h"
+#include "../../loader/bootstrap_class_loader.h"
+#include "../../kayo.h"
+#include "../ma/Class.h"
 
 /*
  * jdk8下的一些测试：

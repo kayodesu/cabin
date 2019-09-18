@@ -4,6 +4,8 @@
 
 #include "../../registry.h"
 #include "../../../rtda/heap/StrPool.h"
+#include "../../../rtda/thread/Frame.h"
+#include "../../../kayo.h"
 
 // todo 这函数是干嘛的
 // public native String intern();

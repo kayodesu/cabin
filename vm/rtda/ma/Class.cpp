@@ -414,6 +414,11 @@ Class::Class(ClassLoader *loader, u1 *bytecode, size_t len)
 
     createVtable(); // todo 接口有没有必要创建 vtable
     createItable();
+
+    if (java_lang_Class_class != nullptr) {
+        clazz = java_lang_Class_class;
+        data = new slot_t[java_lang_Class_class->instFieldsCount]; // todo
+    }
 }
 
 Class::~Class()
