@@ -11,7 +11,6 @@
 #include "../rtda/ma/Class.h"
 #include "../rtda/ma/ArrayClass.h"
 #include "../rtda/ma/Field.h"
-#include "../rtda/heap/ClassObject.h"
 
 #if TRACE_LOAD_CLASS
 #define TRACE PRINT_TRACE
@@ -293,9 +292,9 @@ Class *ClassLoader::loadClass(const char *className)
         raiseException(UNKNOWN_ERROR, ss.str().c_str());
     }
 
-    if (java_lang_Class_class != nullptr) {
-        c->clsobj = ClassObject::newInst(c);
-    }
+//    if (java_lang_Class_class != nullptr) {
+//        c->clsobj = ClassObject::newInst(c);
+//    }
 
     assert(strcmp(className, c->className) == 0);
     auto res = loadedClasses.insert(make_pair(c->className, c));

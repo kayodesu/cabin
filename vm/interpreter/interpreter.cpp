@@ -11,7 +11,6 @@
 #include "../rtda/heap/StrPool.h"
 #include "../classfile/constant.h"
 #include "../rtda/heap/ArrayObject.h"
-#include "../rtda/heap/ClassObject.h"
 #include "../rtda/ma/Field.h"
 #include "../rtda/ma/resolve.h"
 #include "interpreter.h"
@@ -527,9 +526,9 @@ __ldc:
     } else if (type == CONSTANT_String) {
         frame->pushr(resolve_string(frame->method->clazz, index));
     } else if (type == CONSTANT_Class) {
-        frame->pushr(resolve_class(frame->method->clazz, index)->clsobj);
+        frame->pushr(resolve_class(frame->method->clazz, index));
     } else if (type == CONSTANT_ResolvedClass) {
-        frame->pushr(((Class *) CP_INFO(cp, index))->clsobj);
+        frame->pushr((Class *) CP_INFO(cp, index));
     } else {
         stringstream ss;
         ss << "unknown type: " << type;

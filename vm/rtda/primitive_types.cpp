@@ -30,7 +30,7 @@ static const struct {
 void loadPrimitiveTypes()
 {
     assert(bootClassLoader != nullptr);
-    assert(java_lang_Class_class != nullptr);
+    assert(java_lang_Class != nullptr);
 
     // 加载基本类型（int, float, etc.）的 class
     for (auto t : primitiveTypes) {

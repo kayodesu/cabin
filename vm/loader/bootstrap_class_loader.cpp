@@ -5,19 +5,18 @@
 #include "ClassLoader.h"
 #include "bootstrap_class_loader.h"
 #include "../symbol.h"
-#include "../rtda/heap/ClassObject.h"
 #include "../rtda/ma/Class.h"
 
 ClassLoader *bootClassLoader;
 
-Class *java_lang_Object_class;
-Class *java_lang_Class_class = nullptr;
-Class *java_lang_String_class;
-Class *java_lang_Cloneable_class;
-Class *java_lang_Thread_class;
-Class *java_lang_ThreadGroup_class;
+Class *java_lang_Object;
+Class *java_lang_Class = nullptr;
+Class *java_lang_String;
+Class *java_lang_Cloneable;
+Class *java_lang_Thread;
+Class *java_lang_ThreadGroup;
 
-Class *java_io_Serializable_class;
+Class *java_io_Serializable;
 
 ArrayClass *char_array_class;
 ArrayClass *java_lang_Class_array_class;
@@ -25,37 +24,24 @@ ArrayClass *java_lang_Object_array_class;
 
 void initBootClassLoader()
 {
-    bootClassLoader = new ClassLoader();
+    auto bcl = bootClassLoader = new ClassLoader();
 
-    java_lang_Object_class = bootClassLoader->loadClass(S(java_lang_Object));
-    java_lang_Class_class = bootClassLoader->loadClass(S(java_lang_Class));
+    java_lang_Object = bcl->loadClass(S(java_lang_Object));
+    java_lang_Class = bcl->loadClass(S(java_lang_Class));
 
-    java_lang_Object_class->clazz = java_lang_Class_class;
-    java_lang_Object_class->data = new slot_t[java_lang_Class_class->instFieldsCount]; // todo
+    java_lang_Object->postInit();
+    java_lang_Class->postInit();
 
-    java_lang_Class_class->clazz = java_lang_Class_class;
-    java_lang_Class_class->data = new slot_t[java_lang_Class_class->instFieldsCount]; // todo
+    java_lang_String = bcl->loadClass(S(java_lang_String));
+    java_lang_Cloneable = bcl->loadClass(S(java_lang_Cloneable));
+    java_lang_Thread = bcl->loadClass(S(java_lang_Thread));
+    java_lang_ThreadGroup = bcl->loadClass(S(java_lang_ThreadGroup));
 
+    java_io_Serializable = bcl->loadClass(S(java_io_Serializable));
 
-
-
-    java_lang_Object_class->clsobj = ClassObject::newInst(java_lang_Object_class);
-    java_lang_Class_class->clsobj = ClassObject::newInst(java_lang_Class_class);
-
-
-
-
-
-    java_lang_String_class = bootClassLoader->loadClass(S(java_lang_String));
-    java_lang_Cloneable_class = bootClassLoader->loadClass(S(java_lang_Cloneable));
-    java_lang_Thread_class = bootClassLoader->loadClass(S(java_lang_Thread));
-    java_lang_ThreadGroup_class = bootClassLoader->loadClass(S(java_lang_ThreadGroup));
-
-    java_io_Serializable_class = bootClassLoader->loadClass(S(java_io_Serializable));
-
-    char_array_class = (ArrayClass *) bootClassLoader->loadClass(S(array_C));
-    java_lang_Class_array_class = (ArrayClass *) bootClassLoader->loadClass(S(array_java_lang_Class));
-    java_lang_Object_array_class = (ArrayClass *) bootClassLoader->loadClass(S(array_java_lang_Object));
+    char_array_class = (ArrayClass *) bcl->loadClass(S(array_C));
+    java_lang_Class_array_class = (ArrayClass *) bcl->loadClass(S(array_java_lang_Class));
+    java_lang_Object_array_class = (ArrayClass *) bcl->loadClass(S(array_java_lang_Object));
 
     // 加载基本类型（int, float, etc.）的 class
     loadPrimitiveTypes();

@@ -5,7 +5,6 @@
 #include "../../registry.h"
 #include "../../../rtda/ma/ArrayClass.h"
 #include "../../../rtda/heap/Object.h"
-#include "../../../rtda/heap/ClassObject.h"
 #include "../../../rtda/ma/Field.h"
 #include "../../../rtda/heap/StrPool.h"
 #include "../../../interpreter/interpreter.h"
@@ -46,7 +45,7 @@ static void forName0(Frame *frame)
         c->clinit();
     }
 
-    frame->pushr((jref) c->clsobj);
+    frame->pushr((jref) c);
 }
 
 /*
@@ -59,7 +58,7 @@ static void getPrimitiveClass(Frame *frame)
 
     const char *class_name = so->getUtf8Value(); // 这里得到的 class_name 是诸如 "int, float" 之类的 primitive type
     Class *c = bootClassLoader->loadClass(class_name);
-    frame->pushr(c->clsobj);
+    frame->pushr(c);
 }
 
 /**
@@ -116,11 +115,10 @@ static void getPrimitiveClass(Frame *frame)
 // private native String getName0();
 static void getName0(Frame *frame)
 {
-    auto _this = frame->getLocalAsRef<ClassObject>(0);
+    auto _this = frame->getLocalAsRef<Class>(0);
 
-    Class *c = _this->entityClass;//clsobj_entity_class(this);
-    char className[strlen(c->className) + 1];
-    strcpy(className, c->className);
+    char className[strlen(_this->className) + 1];
+    strcpy(className, _this->className);
     // 这里需要的是 java.lang.Object 这样的类名，而非 java/lang/Object
     // 所以需要进行一下替换
 //    vm_strrpl(className, '/', '.');
@@ -217,10 +215,10 @@ static void desiredAssertionStatus0(Frame *frame)
  */
 static void isInstance(Frame *frame)
 {
-    auto _this = frame->getLocalAsRef<ClassObject>(0);
+    auto _this = frame->getLocalAsRef<Class>(0);
 
     jref obj = frame->getLocalAsRef(1);
-    frame->pushi((obj != nullptr && obj->isInstanceOf(_this->entityClass)) ? 1 : 0);
+    frame->pushi((obj != nullptr && obj->isInstanceOf(_this)) ? 1 : 0);
 }
 
 /**
@@ -250,14 +248,13 @@ static void isInstance(Frame *frame)
  */
 static void isAssignableFrom(Frame *frame)
 {
-    auto _this = frame->getLocalAsRef<ClassObject>(0);
-    auto cls = frame->getLocalAsRef<ClassObject>(1);
+    auto _this = frame->getLocalAsRef<Class>(0);
+    auto cls = frame->getLocalAsRef<Class>(1);
     if (cls == nullptr) {
         thread_throw_null_pointer_exception();
     }
 
-//    bool b = class_is_subclass_of(clsobj_entity_class(cls), clsobj_entity_class(this));
-    bool b = cls->entityClass->isSubclassOf(_this->entityClass);
+    bool b = cls->isSubclassOf(_this);
     frame->pushi(b ? 1 : 0);
 }
 
@@ -268,8 +265,8 @@ static void isAssignableFrom(Frame *frame)
  */
 static void isInterface(Frame *frame)
 {
-    auto _this = frame->getLocalAsRef<ClassObject>(0);
-    frame->pushi(_this->entityClass->isInterface() ? 1 : 0);
+    auto _this = frame->getLocalAsRef<Class>(0);
+    frame->pushi(_this->isInterface() ? 1 : 0);
 }
 
 /*
@@ -279,8 +276,8 @@ static void isInterface(Frame *frame)
  */
 static void isArray(Frame *frame)
 {
-    auto _this = frame->getLocalAsRef<ClassObject>(0);
-    frame->pushi(_this->entityClass->isArray() ? 1 : 0);  // todo
+    auto _this = frame->getLocalAsRef<Class>(0);
+    frame->pushi(_this->isArray() ? 1 : 0);  // todo
 }
 
 /**
@@ -315,8 +312,8 @@ static void isArray(Frame *frame)
  */
 static void isPrimitive(Frame *frame)
 {
-    auto _this = frame->getLocalAsRef<ClassObject>(0);
-    bool b = _this->entityClass->isPrimitive();
+    auto _this = frame->getLocalAsRef<Class>(0);
+    bool b = _this->isPrimitive();
     frame->pushi(b ? 1 : 0);
 }
 
@@ -335,10 +332,10 @@ static void isPrimitive(Frame *frame)
  */
 static void getSuperclass(Frame *frame)
 {
-    auto _this = frame->getLocalAsRef<ClassObject>(0);
+    auto _this = frame->getLocalAsRef<Class>(0);
 
-    Class *c = frame->method->clazz->loader->loadClass(_this->entityClass->className);
-    frame->pushr(c->superClass != nullptr ? c->superClass->clsobj : nullptr);
+    Class *c = frame->method->clazz->loader->loadClass(_this->className);
+    frame->pushr(c->superClass != nullptr ? c->superClass : nullptr);
 }
 
 /**
@@ -388,13 +385,12 @@ static void getSuperclass(Frame *frame)
 //private native Class<?>[] getInterfaces0();
 static void getInterfaces0(Frame *frame)
 {
-    auto _this = frame->getLocalAsRef<ClassObject>(0);
+    auto _this = frame->getLocalAsRef<Class>(0);
 
-    Class *entity_class = _this->entityClass;
-    auto interfaces = ArrayObject::newInst(java_lang_Class_array_class, entity_class->interfaces.size());
-    for (size_t i = 0; i < entity_class->interfaces.size(); i++) {
-        assert(entity_class->interfaces[i] != nullptr);
-        interfaces->set(i, entity_class->interfaces[i]->clsobj);
+    auto interfaces = ArrayObject::newInst(java_lang_Class_array_class, _this->interfaces.size());
+    for (size_t i = 0; i < _this->interfaces.size(); i++) {
+        assert(_this->interfaces[i] != nullptr);
+        interfaces->set(i, _this->interfaces[i]);
     }
 
     frame->pushr(interfaces);
@@ -408,10 +404,10 @@ static void getInterfaces0(Frame *frame)
  */
 static void getComponentType(Frame *frame)
 {
-    auto _this = frame->getLocalAsRef<ClassObject>(0);
+    auto _this = frame->getLocalAsRef<Class>(0);
 
-    if (_this->entityClass->isArray()) {
-        frame->pushr(((ArrayClass *) _this->entityClass)->componentClass()->clsobj);
+    if (_this->isArray()) {
+        frame->pushr(((ArrayClass *) _this)->componentClass());
     } else {
         frame->pushr(nullptr);
     }
@@ -447,8 +443,8 @@ static void getComponentType(Frame *frame)
 //public native int getModifiers();
 static void getModifiers(Frame *frame)
 {
-    auto _this = frame->getLocalAsRef<ClassObject>(0);
-    frame->pushi(_this->entityClass->accessFlags);
+    auto _this = frame->getLocalAsRef<Class>(0);
+    frame->pushi(_this->accessFlags);
 }
 
 /**
@@ -478,18 +474,17 @@ static void setSigners(Frame *frame)
 // private native Object[] getEnclosingMethod0();
 static void getEnclosingMethod0(Frame *frame)
 {
-    auto _this = frame->getLocalAsRef<ClassObject>(0);
+    auto _this = frame->getLocalAsRef<Class>(0);
 
-    Class *c = _this->entityClass;
-    if (c->enclosing.clazz == nullptr) {
+    if (_this->enclosing.clazz == nullptr) {
         frame->pushr(nullptr);
         return;
     }
 
     auto result = ArrayObject::newInst(java_lang_Object_array_class, 3);
-    result->set(0, c->enclosing.clazz);
-    result->set(1, c->enclosing.name);
-    result->set(2, c->enclosing.descriptor);
+    result->set(0, _this->enclosing.clazz);
+    result->set(1, _this->enclosing.name);
+    result->set(2, _this->enclosing.descriptor);
 
     frame->pushr(result);
 }
@@ -532,11 +527,11 @@ static void getConstantPool(Frame *frame)
 // private native Field[] getDeclaredFields0(boolean publicOnly);
 static void getDeclaredFields0(Frame *frame)
 {
-    auto _this = frame->getLocalAsRef<ClassObject>(0);
+    auto _this = frame->getLocalAsRef<Class>(0);
     bool public_only = frame->getLocalAsBool(1);
 
     ClassLoader *loader = frame->method->clazz->loader;
-    Class *cls = loader->loadClass(_this->entityClass->className);
+    Class *cls = loader->loadClass(_this->className);
 
 //    Field *fields = cls->fields;
     jint fields_count = public_only ? cls->publicFieldsCount : cls->fields.size();
@@ -590,11 +585,11 @@ static void getDeclaredFields0(Frame *frame)
  */
 static void getDeclaredMethods0(Frame *frame)
 {
-    auto _this = frame->getLocalAsRef<ClassObject>(0);
+    auto _this = frame->getLocalAsRef<Class>(0);
     bool public_only = frame->getLocalAsBool(1);
 
     ClassLoader *loader = frame->method->clazz->loader;
-    Class *cls = loader->loadClass(_this->entityClass->className);
+    Class *cls = loader->loadClass(_this->className);
 
 //    struct method *methods = cls->methods;
     jint methods_count = public_only ? cls->publicMethodsCount : cls->methods.size();
@@ -641,11 +636,11 @@ static void getDeclaredMethods0(Frame *frame)
 // private native Constructor<T>[] getDeclaredConstructors0(boolean publicOnly);
 static void getDeclaredConstructors0(Frame *frame)
 {
-    auto _this = frame->getLocalAsRef<ClassObject>(0);
+    auto _this = frame->getLocalAsRef<Class>(0);
     bool public_only = frame->getLocalAsBool(1);
 
     ClassLoader *loader = frame->method->clazz->loader;
-    Class *cls = loader->loadClass(_this->entityClass->className);
+    Class *cls = loader->loadClass(_this->className);
 
     std::vector<Method *> constructors = cls->getConstructors(public_only);
     int constructors_count = constructors.size();
@@ -721,20 +716,20 @@ static void getDeclaredClasses0(Frame *frame)
  */
 static void getDeclaringClass0(Frame *frame)
 {
-    Class *entityClass = (frame->getLocalAsRef<ClassObject>(0))->entityClass;
-    if (entityClass->isArray()) {
+    Class *_this = (frame->getLocalAsRef<Class>(0));
+    if (_this->isArray()) {
         frame->pushr(nullptr);
         return;
     }
 
-    char buf[strlen(entityClass->className) + 1];
-    strcpy(buf, entityClass->className);
+    char buf[strlen(_this->className) + 1];
+    strcpy(buf, _this->className);
     char *last_dollar = strrchr(buf, '$'); // 内部类标识：out_class_name$inner_class_name
     if (last_dollar == nullptr) {
         frame->pushr(nullptr);
     } else {
         *last_dollar = 0;
-        frame->pushr(frame->method->clazz->loader->loadClass(buf)->clsobj);
+        frame->pushr(frame->method->clazz->loader->loadClass(buf));
     }
 }
 

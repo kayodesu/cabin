@@ -6,7 +6,6 @@
 #include "Method.h"
 #include "../heap/Object.h"
 #include "../heap/ArrayObject.h"
-#include "../heap/ClassObject.h"
 #include "../../symbol.h"
 #include "../../classfile/constant.h"
 #include "../../interpreter/interpreter.h"
@@ -68,7 +67,7 @@ ArrayObject *Method::getParameterTypes()
                 }
 
                 *t = 0;   // end string
-                buf[parameter_types_count++] = clazz->loader->loadClass(b + 1 /* jump 'L' */)->clsobj;
+                buf[parameter_types_count++] = clazz->loader->loadClass(b + 1 /* jump 'L' */);
                 *t = ';'; // recover
                 b = t;
             } else if (*b == '[') { // array reference, 描述符形如 [B 或 [[Ljava/lang/String; 的形式
@@ -85,12 +84,12 @@ ArrayObject *Method::getParameterTypes()
 
                 char k = *(++t);
                 *t = 0; // end string
-                buf[parameter_types_count++] = clazz->loader->loadClass(b)->clsobj;
+                buf[parameter_types_count++] = clazz->loader->loadClass(b);
                 *t = k; // recover
                 b = t;
             } else if (isPrimitiveDescriptor(*b)) {
                 const char *class_name = primitiveDescriptor2className(*b);
-                buf[parameter_types_count++] = clazz->loader->loadClass(class_name)->clsobj;
+                buf[parameter_types_count++] = clazz->loader->loadClass(class_name);
             } else {
                 string s = "descriptor error. ";
                 s.append(desc).c_str();
@@ -108,7 +107,7 @@ ArrayObject *Method::getParameterTypes()
     return parameterTypes;
 }
 
-ClassObject *Method::getReturnType()
+Class *Method::getReturnType()
 {
     if (returnType == nullptr) {
         const char *e = strchr(descriptor, ')');
@@ -117,7 +116,7 @@ ClassObject *Method::getReturnType()
             s.append(descriptor).c_str();
             raiseException(UNKNOWN_ERROR, s.append(descriptor).c_str());
         }
-        returnType = clazz->loader->loadClass(descriptorToClassName(++e).c_str())->clsobj;
+        returnType = clazz->loader->loadClass(descriptorToClassName(++e).c_str());
     }
     return returnType;
 }
@@ -126,7 +125,7 @@ ArrayObject *Method::getExceptionTypes()
 {
     if (exceptionTypes == nullptr) {
         int count = 0;
-        Object *types[exceptionTables.size()];
+        Class *types[exceptionTables.size()];
         for (auto t : exceptionTables) {
             if (t.catchType == nullptr)
                 continue;
@@ -135,7 +134,7 @@ ArrayObject *Method::getExceptionTypes()
                 t.catchType->u.clazz = clazz->loader->loadClass((t.catchType->u.className));
                 t.catchType->resolved = true;
             }
-            types[count++] = t.catchType->u.clazz->clsobj;
+            types[count++] = t.catchType->u.clazz;
         }
 
         auto ac = (ArrayClass *)(clazz->loader->loadClass(S(array_java_lang_Class)));

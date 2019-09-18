@@ -16,14 +16,11 @@ public:
         accessFlags = ACC_PUBLIC;
         pkgName = "";
         inited = true;
-        superClass = java_lang_Object_class;
+        superClass = java_lang_Object;
 
         createVtable();
 
-        if (java_lang_Class_class != nullptr) {
-            clazz = java_lang_Class_class;
-            data = new slot_t[java_lang_Class_class->instFieldsCount]; // todo
-        }
+        postInit();
     }
 };
 

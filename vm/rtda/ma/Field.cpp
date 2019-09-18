@@ -67,10 +67,10 @@ Field::Field(Class *c, BytecodeReader &r): Member(c)
     }
 }
 
-ClassObject *Field::getType()
+Class *Field::getType()
 {
     if (type == nullptr) {
-        type = clazz->loader->loadClass(descriptorToClassName(descriptor).c_str())->clsobj;
+        type = clazz->loader->loadClass(descriptorToClassName(descriptor).c_str());
     }
 
     return type;

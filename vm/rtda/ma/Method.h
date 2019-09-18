@@ -16,11 +16,10 @@
 
 
 class ArrayObject;
-class ClassObject;
 
 class Method: public Member {
     ArrayObject *parameterTypes = nullptr; // [Ljava/lang/Class;
-    ClassObject *returnType = nullptr;     // java/lang/Class
+    Class *returnType = nullptr;     // java/lang/Class
     ArrayObject *exceptionTypes = nullptr; // [Ljava/lang/Class;
 
 public:
@@ -75,7 +74,7 @@ public:
     }
 
     ArrayObject *getParameterTypes();
-    ClassObject *getReturnType();
+    Class *getReturnType();
     ArrayObject *getExceptionTypes();
 
     int getLineNumber(int pc) const;

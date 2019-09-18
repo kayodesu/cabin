@@ -38,7 +38,7 @@ using namespace std;
 
 StringObject *StringObject::newInst(const char *str)
 {
-    size_t size = sizeof(StringObject) + java_lang_String_class->instFieldsCount*sizeof(slot_t);
+    size_t size = sizeof(StringObject) + java_lang_String->instFieldsCount*sizeof(slot_t);
     return new(g_heap_mgr.get(size)) StringObject(str);
 }
 
@@ -47,7 +47,7 @@ void StringObject::operator delete(void *rawMemory, size_t size) throw()
     Object::operator delete(rawMemory, size);
 }
 
-StringObject::StringObject(const char *str): Object(java_lang_String_class)
+StringObject::StringObject(const char *str): Object(java_lang_String)
 {
     assert(str != nullptr);
 

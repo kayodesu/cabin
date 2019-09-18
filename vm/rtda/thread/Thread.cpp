@@ -40,14 +40,14 @@ Thread *initMainThread()
 {
     pthread_key_create(&thread_key, nullptr);
 
-    eetopField = java_lang_Thread_class->lookupInstField("eetop", S(J));
-    runMethod = java_lang_Thread_class->lookupInstMethod(S(run), S(___V));
+    eetopField = java_lang_Thread->lookupInstField("eetop", S(J));
+    runMethod = java_lang_Thread->lookupInstMethod(S(run), S(___V));
 
     auto mainThread = new Thread(pthread_self());
 
-    java_lang_Thread_class->clinit();
+    java_lang_Thread->clinit();
 
-    Class *jltgClass = java_lang_ThreadGroup_class;
+    Class *jltgClass = java_lang_ThreadGroup;
     sysThreadGroup = Object::newInst(jltgClass);
 
     // 初始化 system_thread_group
@@ -132,7 +132,7 @@ Thread::Thread(Object *jThread0, jint priority): jThread(jThread0)
     g_all_threads.push_back(this);
 
     if (jThread == nullptr)
-        jThread = Object::newInst(java_lang_Thread_class);
+        jThread = Object::newInst(java_lang_Thread);
 
     bind(jThread);
     jThread->setFieldValue(S(priority), S(I), (slot_t) priority);

@@ -12,14 +12,14 @@ class ClassLoader;
 extern ClassLoader *bootClassLoader;
 
 // Cache 常用的类
-extern Class *java_lang_Object_class;
-extern Class *java_lang_Class_class;
-extern Class *java_lang_String_class;
-extern Class *java_lang_Cloneable_class;
-extern Class *java_lang_Thread_class;
-extern Class *java_lang_ThreadGroup_class;
+extern Class *java_lang_Object;
+extern Class *java_lang_Class;
+extern Class *java_lang_String;
+extern Class *java_lang_Cloneable;
+extern Class *java_lang_Thread;
+extern Class *java_lang_ThreadGroup;
 
-extern Class *java_io_Serializable_class;
+extern Class *java_io_Serializable;
 
 extern ArrayClass *char_array_class; // [C
 extern ArrayClass *java_lang_Class_array_class; // [Ljava/lang/Class;

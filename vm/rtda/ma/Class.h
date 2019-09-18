@@ -21,15 +21,15 @@
 class Field;
 class Method;
 class BytecodeReader;
-class ClassObject;
 class ArrayClass;
 
+// java/lang/Class
 struct Class: public Object, public Access {
     ConstantPool cp;
 
     // Object of java/lang/Class of this class
     // 通过此字段，每个Class结构体实例都与一个类对象关联。
-    ClassObject *clsobj;
+//    ClassObject *clsobj;
 
     const char *pkgName;
 
@@ -120,7 +120,7 @@ struct Class: public Object, public Access {
 //    struct bootstrap_methods_attribute *bootstrap_methods_attribute;
 
     struct {
-        Object *clazz = nullptr;      // the immediately enclosing class
+        Class *clazz = nullptr;       // the immediately enclosing class
         Object *name = nullptr;       // the immediately enclosing method or constructor's name (can be null).
         Object *descriptor = nullptr; // the immediately enclosing method or constructor's descriptor (null if name is).
     } enclosing;
@@ -149,6 +149,8 @@ protected:
 public:
     Class(ClassLoader *loader, u1 *bytecode, size_t len);
     ~Class();
+
+    void postInit();
 
     /*
      * 类的初始化在下列情况下触发：

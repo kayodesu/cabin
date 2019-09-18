@@ -16,7 +16,7 @@ class Class;
 class Field: public Member {
     // the declared type(class Object) of this field
     // like, int k; the type of k is int.class
-    ClassObject *type = nullptr;
+    Class *type = nullptr;
 public:
     bool categoryTwo;
 
@@ -50,7 +50,7 @@ public:
 
 public:
     Field(Class *c, BytecodeReader &r);
-    ClassObject *getType();
+    Class *getType();
     std::string toString() const;
 };
 

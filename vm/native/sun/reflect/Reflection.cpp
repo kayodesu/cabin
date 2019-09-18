@@ -4,7 +4,6 @@
 
 #include "../../registry.h"
 #include "../../../rtda/heap/Object.h"
-#include "../../../rtda/heap/ClassObject.h"
 #include "../../../kayo.h"
 #include "../../../rtda/thread/Frame.h"
 #include "../../../rtda/ma/Class.h"
@@ -27,28 +26,13 @@ static void getCallerClass(Frame *frame)
     if (top1 == nullptr) {
         raiseException(UNKNOWN_ERROR, ""); // todo
     }
-    Frame *top2 = top1->prev;
 
-//    int depth = thread_stack_depth(frame->thread);
-//    for (int i = 0; i < depth; i++) {
-//        // 过滤掉 shim frame
-//        Frame *sf = thread_stack_frame_from_top(frame->thread, i);
-////        if (sf->type == SF_TYPE_NORMAL) {
-//            if (top0 == NULL) {
-//                top0 = sf;
-//            } else if (top1 == NULL) {
-//                top1 = sf;
-//            } else {
-//                top2 = sf;
-//                break;
-//            }
-////        }
-//    }
+    Frame *top2 = top1->prev;
     if (top2 == nullptr) {
         raiseException(UNKNOWN_ERROR, ""); // todo
     }
 
-    jref o = top2->method->clazz->clsobj;
+    jref o = top2->method->clazz;
     frame->pushr(o);
 }
 

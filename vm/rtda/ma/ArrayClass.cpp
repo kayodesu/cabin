@@ -13,16 +13,13 @@ ArrayClass::ArrayClass(const char *className): Class(bootClassLoader, strdup(cla
     accessFlags = ACC_PUBLIC;
     inited = true; // 数组类不需要初始化
     pkgName = "";
-    superClass = java_lang_Object_class;
-    interfaces.push_back(java_lang_Cloneable_class);
-    interfaces.push_back(java_io_Serializable_class);
+    superClass = java_lang_Object;
+    interfaces.push_back(java_lang_Cloneable);
+    interfaces.push_back(java_io_Serializable);
 
     createVtable();
 
-    if (java_lang_Class_class != nullptr) {
-        clazz = java_lang_Class_class;
-        data = new slot_t[java_lang_Class_class->instFieldsCount]; // todo
-    }
+    postInit();
 }
 
 size_t ArrayClass::getEleSize()

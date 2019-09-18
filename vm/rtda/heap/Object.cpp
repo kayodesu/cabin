@@ -13,7 +13,7 @@ using namespace std;
 
 Object *Object::newInst(Class *c)
 {
-    if (c == java_lang_String_class) {
+    if (c == java_lang_String) {
         return StringObject::newInst(""); // todo
     }
     size_t size = sizeof(Object) + c->instFieldsCount * sizeof(slot_t);

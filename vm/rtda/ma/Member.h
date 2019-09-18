@@ -9,7 +9,6 @@
 #include "Access.h"
 
 class Class;
-class ClassObject;
 class ClassLoader;
 
 /*

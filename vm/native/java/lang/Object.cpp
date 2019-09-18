@@ -5,7 +5,6 @@
 #include "../../registry.h"
 #include "../../../rtda/ma/Class.h"
 #include "../../../rtda/heap/Object.h"
-#include "../../../rtda/heap/ClassObject.h"
 #include "../../../symbol.h"
 #include "../../../rtda/thread/Frame.h"
 
@@ -20,7 +19,7 @@ static void hashCode(Frame *frame)
 static void clone(Frame *frame)
 {
     jref _this = frame->getLocalAsRef(0);
-    Class *cloneable = java_lang_Cloneable_class;
+    Class *cloneable = java_lang_Cloneable;
     if (!_this->clazz->isSubclassOf(cloneable)) {
         raiseException(CLONE_NOT_SUPPORTED_EXCEPTION);
     }
@@ -31,7 +30,7 @@ static void clone(Frame *frame)
 static void getClass(Frame *frame)
 {
     jref _this = frame->getLocalAsRef(0);
-    frame->pushr(_this->clazz->clsobj); // todo 对不对
+    frame->pushr(_this->clazz); // todo 对不对
 }
 
 // public final native void notifyAll();

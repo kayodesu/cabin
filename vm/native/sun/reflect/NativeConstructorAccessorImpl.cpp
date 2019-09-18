@@ -8,7 +8,6 @@
 #include "../../../rtda/heap/Object.h"
 #include "../../../rtda/ma/Method.h"
 #include "../../../rtda/heap/ArrayObject.h"
-#include "../../../rtda/heap/ClassObject.h"
 #include "../../../interpreter/interpreter.h"
 #include "../../../symbol.h"
 
@@ -28,11 +27,11 @@ static slot_t* convert_args(jref this_obj, Method *m, ArrayObject *args)
     }
 
     for (int i = 0; i < types_len; i++) {
-        auto clsobj = types->get<ClassObject *>(i);
+        auto clsobj = types->get<Class *>(i);
         assert(clsobj != nullptr);
         auto o = args->get<jref>(i);
 
-        if (clsobj->entityClass->isPrimitive()) {
+        if (clsobj->isPrimitive()) {
             const slot_t *unbox = o->unbox();
             result[k++] = *unbox;
             if (strcmp(o->clazz->className, "long") == 0 || strcmp(o->clazz->className, "double") == 0) // category_two
@@ -54,15 +53,14 @@ static string typesToDescriptor(const ArrayObject *types)
     ostringstream os;
 
     for (int t = 0; t < types->len; t++) {
-        auto type = types->get<ClassObject *>(t);
-        Class *c = type->entityClass;
-        char d = primitiveClassName2descriptor(c->className);
+        auto type = types->get<Class *>(t);
+        char d = primitiveClassName2descriptor(type->className);
         if (d != 0) { // primitive type
             os << d;
-        } else if (c->isArray()) { // 数组
-            os << c->className;
+        } else if (type->isArray()) { // 数组
+            os << type->className;
         } else { // 普通类
-            os << 'L' << c->className << ';';
+            os << 'L' << type->className << ';';
         }
     }
 
@@ -84,14 +82,13 @@ static void newInstance0(Frame *frame)
     auto init_args = frame->getLocalAsRef<ArrayObject>(1); // may be NULL
 
     // which class this constructor belongs to.
-    auto ac = constructor_obj->getInstFieldValue<ClassObject *>(S(clazz), S(sig_java_lang_Class));
-    Class *clazz = ac->entityClass;
-    Object *this_obj = Object::newInst(clazz);
+    auto ac = constructor_obj->getInstFieldValue<Class *>(S(clazz), S(sig_java_lang_Class));
+    Object *this_obj = Object::newInst(ac);
     frame->pushr(this_obj); // return value
 
     Method *constructor = nullptr;
     if (init_args == nullptr) { // 构造函数没有参数
-        constructor = clazz->getConstructor("()V");
+        constructor = ac->getConstructor("()V");
         assert(constructor != nullptr);
         assert(constructor->arg_slot_count == 1); // this
 
@@ -105,7 +102,7 @@ static void newInstance0(Frame *frame)
         // parameter types of this constructor
         auto parameter_types
                 =  constructor_obj->getInstFieldValue<ArrayObject *>(S(parameterTypes), S(array_java_lang_Class));
-        constructor = clazz->getConstructor(typesToDescriptor(parameter_types).c_str());
+        constructor = ac->getConstructor(typesToDescriptor(parameter_types).c_str());
         assert(constructor != nullptr);
 
         if (!constructor->clazz->inited) {

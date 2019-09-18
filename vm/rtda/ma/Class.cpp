@@ -10,7 +10,6 @@
 #include "resolve.h"
 #include "../../interpreter/interpreter.h"
 #include "../../classfile/constant.h"
-#include "../heap/ClassObject.h"
 #include "../heap/StringObject.h"
 
 using namespace std;
@@ -63,8 +62,7 @@ void Class::parseAttribute(BytecodeReader &r)
             u2 enclosing_method_index = r.readu2();
 
             if (enclosing_class_index > 0) {
-                Class *enclosing_class = loader->loadClass(CP_CLASS_NAME(cp, enclosing_class_index));
-                enclosing.clazz = ClassObject::newInst(enclosing_class);
+                enclosing.clazz = loader->loadClass(CP_CLASS_NAME(cp, enclosing_class_index));
 
                 if (enclosing_method_index > 0) {
                     enclosing.name = StringObject::newInst(CP_NAME_TYPE_NAME(cp, enclosing_method_index));
@@ -415,9 +413,16 @@ Class::Class(ClassLoader *loader, u1 *bytecode, size_t len)
     createVtable(); // todo 接口有没有必要创建 vtable
     createItable();
 
-    if (java_lang_Class_class != nullptr) {
-        clazz = java_lang_Class_class;
-        data = new slot_t[java_lang_Class_class->instFieldsCount]; // todo
+    postInit();
+}
+
+void Class::postInit()
+{
+    if (java_lang_Class != nullptr) {
+        clazz = java_lang_Class;
+        // new 空间的同时必须清零。
+        // Java 要求类的属性有初始值。
+        data = new slot_t[java_lang_Class->instFieldsCount]();
     }
 }
 
