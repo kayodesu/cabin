@@ -76,7 +76,7 @@ public class BubbleSort {
 ```
 
 ```
-C:\>kayovm array/BubbleSort
+C:\>kayovm array.BubbleSort
 [9, 10, 11, 22, 24, 36, 36, 56, 65, 77, 78, 84, 92, 95, 97]
 
 C:\>
@@ -101,7 +101,7 @@ public class StackTraceTest {
 }
 ```
 ```
-C:\>kayovm exception/StackTraceTest
+C:\>kayovm exception.StackTraceTest
 java.lang.RuntimeException: BAD!
         at exception/StackTraceTest.bad(StackTraceTest.java:15)
         at exception/StackTraceTest.bar(StackTraceTest.java:14)
