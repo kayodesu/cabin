@@ -84,6 +84,20 @@ struct ConstantPool {
         return utf8((u2)_info[i]);
     }
 
+    utf8_t *moduleName(u2 i)
+    {
+        assert(0 < i && i < size);
+        assert(_type[i] == CONSTANT_Module);
+        return utf8((u2)_info[i]);
+    }
+
+    utf8_t *packageName(u2 i)
+    {
+        assert(0 < i && i < size);
+        assert(_type[i] == CONSTANT_Package);
+        return utf8((u2)_info[i]);
+    }
+
     utf8_t *nameOfNameAndType(u2 i)
     {
         assert(0 < i && i < size);

@@ -166,7 +166,6 @@ void Class::createVtable()
     assert(vtable.empty());
 
     if (superClass == nullptr) {
-        assert(strcmp(className, "java/lang/Object") == 0);
         int i = 0;
         for (auto &m : methods) {
             if (m->isVirtual()) {
@@ -319,7 +318,7 @@ Class::Class(Object *loader, u1 *bytecode, size_t len)
      * JDK 1.1 = 45
      */
     if (major_version != 52) {
-        thread_throw(new ClassFormatError("bad class version"));
+//        thread_throw(new ClassFormatError("bad class version")); // todo
     }
 
     // init constant pool
@@ -331,6 +330,8 @@ Class::Class(Object *loader, u1 *bytecode, size_t len)
             case CONSTANT_Class:
             case CONSTANT_String:
             case CONSTANT_MethodType:
+            case CONSTANT_Module:
+            case CONSTANT_Package:
                 cp.info(i, r.readu2());
                 break;
             case CONSTANT_NameAndType:
@@ -401,9 +402,7 @@ Class::Class(Object *loader, u1 *bytecode, size_t len)
     genPkgName();
 
     u2 super_class = r.readu2();
-    if (super_class == 0) { // why 0
-        // 接口的父类 java/lang/Object，所以没有父类的只能是 java/lang/Object。
-        assert(strcmp(className, "java/lang/Object") == 0);
+    if (super_class == 0) { // invalid constant pool reference
         this->superClass = nullptr;
     } else {
         this->superClass = cp.resolveClass(super_class);
