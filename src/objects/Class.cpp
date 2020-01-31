@@ -153,9 +153,59 @@ void Class::parseAttribute(BytecodeReader &r)
             u2 num = r.readu2();
             for (int j = 0; j < num; j++)
                 rtInvisiAnnos.emplace_back(r);
+        } else if (S(Module) == attr_name) {
+            moduleName = cp.moduleName(r.readu2());
+            module_flags = r.readu2();
+            u2 v = r.readu2();
+            moduleVersion = v == 0 ? nullptr : cp.utf8(v);
+
+            u2 requires_count = r.readu2();
+            for (u2 j = 0; j < requires_count; j++) {
+                requires.emplace_back(cp, r);
+            }
+
+            u2 exports_count = r.readu2();
+            for (u2 j = 0; j < exports_count; j++) {
+                exports.emplace_back(cp, r);
+            }
+
+            u2 opens_count = r.readu2();
+            for (u2 j = 0; j < opens_count; j++) {
+                opens.emplace_back(cp, r);
+            }
+
+            u2 uses_count = r.readu2();
+            for (u2 j = 0; j < uses_count; j++) {
+                uses.push_back(cp.className(r.readu2()));
+            }
+
+            u2 provides_count = r.readu2();
+            for (u2 j = 0; j < provides_count; j++) {
+                provides.emplace_back(cp, r);
+            }
+        } else if (S(ModulePackages) == attr_name) {
+            u2 num = r.readu2();
+            for (int j = 0; j < num; j++) {
+                u2 index = r.readu2();
+                modulePackages.push_back(cp.packageName(index));
+            }
         }
-        else {
-            // unknown attribute
+//        else if (S(ModuleHashes) == attr_name) {
+//            r.skip(attr_len); // todo
+//        } else if (S(ModuleTarget) == attr_name) {
+//            r.skip(attr_len); // todo
+//        }
+        else if (S(ModuleMainClass) == attr_name) {
+            u2 main_class_index = r.readu2();
+            moduleMainClass = cp.className(main_class_index);
+        }
+//        else if (S(NestHost) == attr_name) {
+//            r.skip(attr_len); // todo
+//        } else if (S(NestMembers) == attr_name) {
+//            r.skip(attr_len); // todo
+//        }
+        else { // unknown attribute
+            printvm("unknown attribute: %s\n", attr_name); // todo
             r.skip(attr_len);
         }
     }

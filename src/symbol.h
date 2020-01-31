@@ -83,6 +83,13 @@ extern const char *symbol_values[];
     action(Exceptions, "Exceptions"), \
     action(AnnotationDefault, "AnnotationDefault"), \
     action(SourceFile, "SourceFile"), \
+    action(Module, "Module"), \
+    action(ModulePackages, "ModulePackages"), \
+    action(ModuleHashes, "ModuleHashes"), \
+    action(ModuleTarget, "ModuleTarget"), \
+    action(ModuleMainClass, "ModuleMainClass"), \
+    action(NestHost, "NestHost"), \
+    action(NestMembers, "NestMembers"), \
     action(InnerClasses, "InnerClasses"), \
     action(EnclosingMethod, "EnclosingMethod"), \
     action(SourceDebugExtension, "SourceDebugExtension"), \

@@ -28,6 +28,7 @@ public:
     static constexpr jint MOD_SYNTHETIC    = 0x00001000; // class field method 表示成员由编译器自动产生。
     static constexpr jint MOD_ANNOTATION   = 0x00002000; // class
     static constexpr jint MOD_ENUM         = 0x00004000; // class field        表示字段为枚举类型
+    static constexpr jint MOD_MODULE       = 0x00008000; // class              表示class文件描述的是一个模块
     static constexpr jint MOD_MANDATED     = 0x00008000;
 
     static bool isPublic(jint mod)       { return (mod & MOD_PUBLIC)       != 0; }
@@ -48,7 +49,8 @@ public:
     static bool isSynthetic(jint mod)    { return (mod & MOD_SYNTHETIC)    != 0; }
     static bool isAnnotation(jint mod)   { return (mod & MOD_ANNOTATION)   != 0; }
     static bool isEnum(jint mod)         { return (mod & MOD_ENUM)         != 0; }
-    static bool isMandated(jint mod)     { return (mod & MOD_MANDATED)     != 0;  }
+    static bool isModule(jint mod)       { return (mod & MOD_MODULE)       != 0; }
+    static bool isMandated(jint mod)     { return (mod & MOD_MANDATED)     != 0; }
 
     static void setSynthetic(jint &mod)   { mod |= MOD_SYNTHETIC; }
 };

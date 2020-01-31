@@ -15,11 +15,11 @@
 #include "Modifier.h"
 #include "ConstantPool.h"
 #include "Object.h"
+#include "../util/BytecodeReader.h"
 #include "../classfile/Attribute.h"
 
 class Field;
 class Method;
-class BytecodeReader;
 class Class;
 
 // java/lang/Class
@@ -274,8 +274,133 @@ public:
     bool isFinal() const     { return Modifier::isFinal(modifiers); }
     bool isStrict() const    { return Modifier::isStrict(modifiers); }
     bool isSuper() const     { return Modifier::isSuper(modifiers); }
+    bool isModule() const    { return Modifier::isModule(modifiers); }
 
     void setSynthetic() { Modifier::setSynthetic(modifiers); }
+
+    /*---------------------- for module-info.class ----------------------*/
+    const utf8_t *moduleName;
+    const utf8_t *moduleMainClass = nullptr;
+    /*
+     * The value of the module_flags item is as follows:
+        0x0020 (ACC_OPEN)
+        Indicates that this module is open.
+        0x1000 (ACC_SYNTHETIC)
+        Indicates that this module was not explicitly or implicitly declared.
+        0x8000 (ACC_MANDATED)
+        Indicates that this module was implicitly declared.
+     */
+    u2 module_flags;
+    // If moduleVersion is NULL, then no version information about the current module is present.
+    const utf8_t *moduleVersion;
+    std::vector<const utf8_t *> modulePackages;
+
+    struct ModuleRequire {
+        const utf8_t *requireModuleName;
+        /*
+         * The value of the requires_flags item is as follows:
+            0x0020 (ACC_TRANSITIVE)
+            Indicates that any module which depends on the current module,
+            implicitly declares a dependence on the module indicated by this entry.
+            0x0040 (ACC_STATIC_PHASE)
+            Indicates that this dependence is mandatory in the static phase, i.e., at
+            compile time, but is optional in the dynamic phase, i.e., at run time.
+            0x1000 (ACC_SYNTHETIC)
+            Indicates that this dependence was not explicitly or implicitly declared
+            in the source of the module declaration.
+            0x8000 (ACC_MANDATED)
+            Indicates that this dependence was implicitly declared in the source of
+            the module declaration.
+            If the current module is not java.base, and the class file version number
+            is 54.0 or above, then neither ACC_TRANSITIVE nor ACC_STATIC_PHASE
+            may be set in requires_flags.
+         */
+        u2 flags;
+        // If moduleVersion is NULL, then no version information about the current module is present.
+        const utf8_t *version;
+
+        explicit ModuleRequire(ConstantPool &cp, BytecodeReader &r) {
+            requireModuleName = cp.moduleName(r.readu2());
+            flags = r.readu2();
+            u2 v = r.readu2();
+            version = v == 0 ? nullptr : cp.utf8(v);
+        }
+    };
+    std::vector<ModuleRequire> requires;
+
+    struct ModuleExport {
+        const utf8_t *exportPackageName;
+        /*
+         * The value of the exports_flags item is as follows:
+            0x1000 (ACC_SYNTHETIC)
+            Indicates that this export was not explicitly or implicitly declared in
+            the source of the module declaration.
+            0x8000 (ACC_MANDATED)
+            Indicates that this export was implicitly declared in the source of the
+            module declaration.
+         */
+        u2 flags;
+        // denoting a module whose code can access the types and members in this exported package.
+        std::vector<const utf8_t *> exports_to;
+
+        explicit ModuleExport(ConstantPool &cp, BytecodeReader &r)
+        {
+            exportPackageName = cp.packageName(r.readu2());
+            flags = r.readu2();
+            u2 exports_to_count = r.readu2();
+            for (u2 i = 0; i < exports_to_count; i++) {
+                exports_to.push_back(cp.moduleName(r.readu2()));
+            }
+        };
+    };
+    std::vector<ModuleExport> exports;
+
+    struct ModuleOpen {
+        const utf8_t *openPackageName;
+        /*
+         * The value of the opens_flags item is as follows:
+            0x1000 (ACC_SYNTHETIC)
+            Indicates that this opening was not explicitly or implicitly declared in
+            the source of the module declaration.
+            0x8000 (ACC_MANDATED)
+            Indicates that this opening was implicitly declared in the source of the
+            module declaration.
+         */
+        u2 flags;
+        // denoting a module whose code can access the types and members in this opened package.
+        std::vector<const utf8_t *> opens_to;
+
+        explicit ModuleOpen(ConstantPool &cp, BytecodeReader &r)
+        {
+            openPackageName = cp.packageName(r.readu2());
+            flags = r.readu2();
+            u2 exports_to_count = r.readu2();
+            for (u2 i = 0; i < exports_to_count; i++) {
+                opens_to.push_back(cp.moduleName(r.readu2()));
+            }
+        };
+    };
+    std::vector<ModuleOpen> opens;
+
+    // todo 说明
+    std::vector<const utf8_t *> uses;
+
+    struct ModuleProvide {
+        // representing a service interface for which the current module provides a service implementation.
+        const utf8_t *className;
+        std::vector<const utf8_t *> provides_with;
+
+        explicit ModuleProvide(ConstantPool &cp, BytecodeReader &r)
+        {
+            className = cp.className(r.readu2());
+            u2 provides_with_count = r.readu2();
+            for (u2 i = 0; i < provides_with_count; i++) {
+                provides_with.push_back(cp.className(r.readu2()));
+            }
+        }
+    };
+    // todo 说明
+    std::vector<ModuleProvide> provides;
 
     /*---------------------- for array class ----------------------*/
 private:
