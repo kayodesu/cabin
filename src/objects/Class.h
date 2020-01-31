@@ -9,6 +9,7 @@
 #include <vector>
 #include <cassert>
 #include <cstring>
+#include <unordered_set>
 #include "pthread.h"
 #include "../jtypes.h"
 #include "class_loader.h"
