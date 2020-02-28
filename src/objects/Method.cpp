@@ -310,22 +310,22 @@ void Method::parseCodeAttr(BytecodeReader &r)
     }
 }
 
-Method::LineNumberTable::LineNumberTable(BytecodeReader &r)
-{
-    start_pc = r.readu2();
-    line_number = r.readu2();
-}
+//Method::LineNumberTable::LineNumberTable(BytecodeReader &r)
+//{
+//    start_pc = r.readu2();
+//    line_number = r.readu2();
+//}
 
-Method::Parameter::Parameter(ConstantPool &cp, BytecodeReader &r)
-{
-    u2 name_index = r.readu2();
-    // If the value of the name_index item is zero,
-    // then this parameters element indicates a formal parameter with no name.
-    if (name_index > 0) {
-        name = cp.utf8(name_index);
-    }
-    accessFlags = r.readu2();
-}
+//Method::Parameter::Parameter(ConstantPool &cp, BytecodeReader &r)
+//{
+//    u2 name_index = r.readu2();
+//    // If the value of the name_index item is zero,
+//    // then this parameters element indicates a formal parameter with no name.
+//    if (name_index > 0) {
+//        name = cp.utf8(name_index);
+//    }
+//    accessFlags = r.readu2();
+//}
 
 Method::Method(Class *c, BytecodeReader &r)
 {

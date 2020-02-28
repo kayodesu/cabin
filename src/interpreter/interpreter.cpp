@@ -1237,7 +1237,7 @@ opc_invokedynamic: {
     auto invokedType = fromMethodDescriptor(invokedDescriptor, clazz->loader);
     auto caller = getCaller();
 
-    Class::BootstrapMethod &bm = clazz->bootstrapMethods.at(cp->invokeDynamicBootstrapMethodIndex(index));
+    BootstrapMethod &bm = clazz->bootstrapMethods.at(cp->invokeDynamicBootstrapMethodIndex(index));
     u2 refKind = cp->methodHandleReferenceKind(bm.bootstrapMethodRef);
     u2 refIndex = cp->methodHandleReferenceIndex(bm.bootstrapMethodRef);
 

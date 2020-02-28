@@ -42,17 +42,17 @@ public:
     u2 maxLocals = 0;
     u2 arg_slot_count = 0;
 
-    struct LineNumberTable {
-        // The value of the start_pc item must indicate the index into the code array
-        // at which the code for a new line in the original source file begins.
-        // The value of start_pc must be less than the value of the code_length
-        // item of the Code attribute of which this LineNumberTable is an attribute.
-        u2 start_pc;
-        // The value of the line_number item must give the corresponding line number in the original source file.
-        u2 line_number;
-
-        explicit LineNumberTable(BytecodeReader &r);
-    };
+//    struct LineNumberTable {
+//        // The value of the start_pc item must indicate the index into the code array
+//        // at which the code for a new line in the original source file begins.
+//        // The value of start_pc must be less than the value of the code_length
+//        // item of the Code attribute of which this LineNumberTable is an attribute.
+//        u2 start_pc;
+//        // The value of the line_number item must give the corresponding line number in the original source file.
+//        u2 line_number;
+//
+//        explicit LineNumberTable(BytecodeReader &r);
+//    };
     std::vector<LineNumberTable> lineNumberTables;
 
     u1 *code = nullptr;
@@ -60,13 +60,13 @@ public:
 
     native_method_t nativeMethod = nullptr; // present only if native
 
-    struct Parameter {
-        const utf8_t *name = nullptr;
-        u2 accessFlags;
-
-        explicit Parameter(ConstantPool &cp, BytecodeReader &r);
-    };
-    std::vector<Parameter> parameters;
+//    struct Parameter {
+//        const utf8_t *name = nullptr;
+//        u2 accessFlags;
+//
+//        explicit Parameter(ConstantPool &cp, BytecodeReader &r);
+//    };
+    std::vector<MethodParameter> parameters;
 
     /*
      * Each value in the exception_index_table array must be a valid index into

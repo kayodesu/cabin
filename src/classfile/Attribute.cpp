@@ -2,10 +2,10 @@
  * Author: kayo
  */
 
+#include <vector>
 #include <sstream>
 #include "../kayo.h"
 #include "Attribute.h"
-#include "../util/BytecodeReader.h"
 #include "../symbol.h"
 #include "../runtime/Thread.h"
 
@@ -48,6 +48,7 @@ void ElementValue::read(BytecodeReader &r)
         case '[':
             num = r.readu2();
             for (u2 i = 0; i < num; i++) {
+//                arrayValue.push_back(new ElementValue(r));
                 arrayValue.emplace_back(ElementValue(r));
             }
             break;
@@ -62,4 +63,115 @@ ElementValuePair::ElementValuePair(BytecodeReader &r)
 {
     element_name_index = r.readu2();
     value.read(r);
+}
+
+InnerClass::InnerClass(ConstantPool &cp, BytecodeReader &r)
+{
+    inner_class_info_index = r.readu2();
+    outer_class_info_index = r.readu2();
+    inner_name_index = r.readu2();
+    inner_class_access_flags = r.readu2();
+}
+
+BootstrapMethod::BootstrapMethod(BytecodeReader &r)
+{
+    bootstrapMethodRef = r.readu2();
+    u2 num = r.readu2();
+    for (u2 i = 0; i < num; i++) {
+        bootstrapArguments.push_back(r.readu2());
+    }
+}
+
+slot_t *BootstrapMethod::resolveArgs(ConstantPool &cp, slot_t *result)
+{
+    assert(result != nullptr);
+    for (u2 i : bootstrapArguments) {
+        switch (cp.type(i)) {
+            case CONSTANT_String:
+                *result++ = (slot_t) cp.resolveString(i);
+                break;
+            case CONSTANT_Class:
+                *result++ = (slot_t) cp.resolveClass(i);
+                break;
+            case CONSTANT_Integer:
+                *result++ = cp._int(i);
+                break;
+            case CONSTANT_Float:
+                *result++ = (slot_t) cp._float(i);
+                break;
+            case CONSTANT_Long:
+                *(jlong *) result = cp._long(i);
+                result += 2;
+                break;
+            case CONSTANT_Double:
+                *(jdouble *) result = cp._double(i);
+                result += 2;
+                break;
+            case CONSTANT_MethodHandle:
+                *result++ = (slot_t) cp.resolveMethodHandle(i);
+                break;
+            case CONSTANT_MethodType:
+                *result++ = (slot_t) cp.resolveMethodType(i);
+                break;
+            default:
+                jvm_abort("never goes here, wrong type."); // todo
+        }
+    }
+
+    return result;
+}
+
+BootstrapMethod::~BootstrapMethod()
+{
+    //bootstrapArguments.~vector();
+}
+
+LineNumberTable::LineNumberTable(BytecodeReader &r)
+{
+    start_pc = r.readu2();
+    line_number = r.readu2();
+}
+
+MethodParameter::MethodParameter(ConstantPool &cp, BytecodeReader &r)
+{
+    u2 name_index = r.readu2();
+    // If the value of the name_index item is zero,
+    // then this parameters element indicates a formal parameter with no name.
+    if (name_index > 0) {
+        name = cp.utf8(name_index);
+    }
+    accessFlags = r.readu2();
+}
+
+Module::Module(ConstantPool &cp, BytecodeReader &r)
+{
+    moduleName = cp.moduleName(r.readu2());
+    moduleFlags = r.readu2();
+    u2 v = r.readu2();
+    moduleVersion = v == 0 ? nullptr : cp.utf8(v);
+
+    u2 requires_count = r.readu2();
+    for (u2 j = 0; j < requires_count; j++) {
+        requires.emplace_back(cp, r);
+    }
+
+    u2 exports_count = r.readu2();
+    for (u2 j = 0; j < exports_count; j++) {
+        exports.emplace_back(cp, r);
+    }
+
+    u2 opens_count = r.readu2();
+    for (u2 j = 0; j < opens_count; j++) {
+        opens.emplace_back(cp, r);
+    }
+
+    u2 uses_count = r.readu2();
+    for (u2 j = 0; j < uses_count; j++) {
+        uses.push_back(cp.className(r.readu2()));
+    }
+
+    u2 provides_count = r.readu2();
+    for (u2 j = 0; j < provides_count; j++) {
+        provides.emplace_back(cp, r);
+    }
 }

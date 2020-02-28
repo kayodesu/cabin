@@ -23,7 +23,7 @@ class Field;
 class Method;
 class Class;
 
-// java/lang/Class
+// Object of java/lang/Class
 class Class: public Object {
 public:
     enum {
@@ -61,7 +61,7 @@ public:
      * 本类中定义的所有方法（不包括继承而来的）
      * 所有的 public functions 都放在了最前面
      */
-	std::vector<Method *> methods;
+    std::vector<Method *> methods;
     u2 publicMethodsCount = 0;
 
     /*
@@ -102,41 +102,12 @@ public:
         Object *descriptor = nullptr; // the immediately enclosing method or constructor's descriptor (null if name is).
     } enclosing;
 
-    struct InnerClass {
-        u2 inner_class_info_index;
-        u2 outer_class_info_index;
-        u2 inner_name_index;
-        u2 inner_class_access_flags;
-
-        InnerClass(ConstantPool &cp, BytecodeReader &r);
-    };
     std::vector<InnerClass> innerClasses;
 
     bool deprecated = false;
     const char *signature;
     const char *sourceFileName = "Unknown source file";
 
-    struct BootstrapMethod {
-        /*
-         * bootstrap_method_ref 项的值必须是一个对常量池的有效索引。
-         * 常量池在该索引处的值必须是一个 CONSTANT_MethodHandle_info 结构。
-         * 注意：此CONSTANT_MethodHandle_info结构的reference_kind项应为值6（REF_invokeStatic）或8（REF_newInvokeSpecial），
-         * 否则在invokedynamic指令解析调用点限定符时，引导方法会执行失败。
-         */
-        u2 bootstrapMethodRef;
-
-            /*
-             * bootstrap_arguments 数组的每个成员必须是一个对常量池的有效索引。
-             * 常量池在该索引出必须是下列结构之一：
-             * CONSTANT_String_info, CONSTANT_Class_info, CONSTANT_Integer_info, CONSTANT_Long_info,
-             * CONSTANT_Float_info, CONSTANT_Double_info, CONSTANT_MethodHandle_info, CONSTANT_MethodType_info。
-             */
-        std::vector<u2> bootstrapArguments;
-
-        explicit BootstrapMethod(BytecodeReader &r);
-        slot_t *resolveArgs(ConstantPool &cp, slot_t *result);
-        ~BootstrapMethod();
-    };
     std::vector<BootstrapMethod> bootstrapMethods;
 
     std::vector<Annotation> rtVisiAnnos;   // runtime visible annotations
@@ -280,129 +251,9 @@ public:
     void setSynthetic() { Modifier::setSynthetic(modifiers); }
 
     /*---------------------- for module-info.class ----------------------*/
-    const utf8_t *moduleName;
-    const utf8_t *moduleMainClass = nullptr;
-    /*
-     * The value of the module_flags item is as follows:
-        0x0020 (ACC_OPEN)
-        Indicates that this module is open.
-        0x1000 (ACC_SYNTHETIC)
-        Indicates that this module was not explicitly or implicitly declared.
-        0x8000 (ACC_MANDATED)
-        Indicates that this module was implicitly declared.
-     */
-    u2 module_flags;
-    // If moduleVersion is NULL, then no version information about the current module is present.
-    const utf8_t *moduleVersion;
+    Module *module = nullptr;
     std::vector<const utf8_t *> modulePackages;
-
-    struct ModuleRequire {
-        const utf8_t *requireModuleName;
-        /*
-         * The value of the requires_flags item is as follows:
-            0x0020 (ACC_TRANSITIVE)
-            Indicates that any module which depends on the current module,
-            implicitly declares a dependence on the module indicated by this entry.
-            0x0040 (ACC_STATIC_PHASE)
-            Indicates that this dependence is mandatory in the static phase, i.e., at
-            compile time, but is optional in the dynamic phase, i.e., at run time.
-            0x1000 (ACC_SYNTHETIC)
-            Indicates that this dependence was not explicitly or implicitly declared
-            in the source of the module declaration.
-            0x8000 (ACC_MANDATED)
-            Indicates that this dependence was implicitly declared in the source of
-            the module declaration.
-            If the current module is not java.base, and the class file version number
-            is 54.0 or above, then neither ACC_TRANSITIVE nor ACC_STATIC_PHASE
-            may be set in requires_flags.
-         */
-        u2 flags;
-        // If moduleVersion is NULL, then no version information about the current module is present.
-        const utf8_t *version;
-
-        explicit ModuleRequire(ConstantPool &cp, BytecodeReader &r) {
-            requireModuleName = cp.moduleName(r.readu2());
-            flags = r.readu2();
-            u2 v = r.readu2();
-            version = v == 0 ? nullptr : cp.utf8(v);
-        }
-    };
-    std::vector<ModuleRequire> requires;
-
-    struct ModuleExport {
-        const utf8_t *exportPackageName;
-        /*
-         * The value of the exports_flags item is as follows:
-            0x1000 (ACC_SYNTHETIC)
-            Indicates that this export was not explicitly or implicitly declared in
-            the source of the module declaration.
-            0x8000 (ACC_MANDATED)
-            Indicates that this export was implicitly declared in the source of the
-            module declaration.
-         */
-        u2 flags;
-        // denoting a module whose code can access the types and members in this exported package.
-        std::vector<const utf8_t *> exports_to;
-
-        explicit ModuleExport(ConstantPool &cp, BytecodeReader &r)
-        {
-            exportPackageName = cp.packageName(r.readu2());
-            flags = r.readu2();
-            u2 exports_to_count = r.readu2();
-            for (u2 i = 0; i < exports_to_count; i++) {
-                exports_to.push_back(cp.moduleName(r.readu2()));
-            }
-        };
-    };
-    std::vector<ModuleExport> exports;
-
-    struct ModuleOpen {
-        const utf8_t *openPackageName;
-        /*
-         * The value of the opens_flags item is as follows:
-            0x1000 (ACC_SYNTHETIC)
-            Indicates that this opening was not explicitly or implicitly declared in
-            the source of the module declaration.
-            0x8000 (ACC_MANDATED)
-            Indicates that this opening was implicitly declared in the source of the
-            module declaration.
-         */
-        u2 flags;
-        // denoting a module whose code can access the types and members in this opened package.
-        std::vector<const utf8_t *> opens_to;
-
-        explicit ModuleOpen(ConstantPool &cp, BytecodeReader &r)
-        {
-            openPackageName = cp.packageName(r.readu2());
-            flags = r.readu2();
-            u2 exports_to_count = r.readu2();
-            for (u2 i = 0; i < exports_to_count; i++) {
-                opens_to.push_back(cp.moduleName(r.readu2()));
-            }
-        };
-    };
-    std::vector<ModuleOpen> opens;
-
-    // todo 说明
-    std::vector<const utf8_t *> uses;
-
-    struct ModuleProvide {
-        // representing a service interface for which the current module provides a service implementation.
-        const utf8_t *className;
-        std::vector<const utf8_t *> provides_with;
-
-        explicit ModuleProvide(ConstantPool &cp, BytecodeReader &r)
-        {
-            className = cp.className(r.readu2());
-            u2 provides_with_count = r.readu2();
-            for (u2 i = 0; i < provides_with_count; i++) {
-                provides_with.push_back(cp.className(r.readu2()));
-            }
-        }
-    };
-    // todo 说明
-    std::vector<ModuleProvide> provides;
-
+    const utf8_t *moduleMainClass = nullptr;
     /*---------------------- for array class ----------------------*/
 private:
     Class *compClass = nullptr; // component class

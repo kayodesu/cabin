@@ -4,10 +4,10 @@
 
 #include <cstdlib>
 #include "throwables.h"
-#include "interpreter/interpreter.h"
-#include "objects/Class.h"
-#include "objects/class_loader.h"
-#include "runtime/Thread.h"
+#include "../interpreter/interpreter.h"
+#include "Class.h"
+#include "class_loader.h"
+#include "../runtime/Thread.h"
 
 Throwable::Throwable(const utf8_t *exceptionName, const utf8_t *msg)
 {

@@ -9,7 +9,7 @@
 #include <vector>
 #include "../config.h"
 #include "../jtypes.h"
-#include "../throwables.h"
+#include "../objects/throwables.h"
 #include "../util/encoding.h"
 
 class Object;

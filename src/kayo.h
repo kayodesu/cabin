@@ -11,7 +11,7 @@
 #include <string>
 #include "jtypes.h"
 #include "memory/Heap.h"
-#include "throwables.h"
+#include "objects/throwables.h"
 #include "symbol.h"
 
 #ifndef PATH_MAX

@@ -8,8 +8,8 @@
 #include <exception>
 #include <cassert>
 #include <sstream>
-#include "jtypes.h"
-#include "symbol.h"
+#include "../jtypes.h"
+#include "../symbol.h"
 
 class Object;
 
