@@ -1,3 +1,4 @@
+#include <vector>
 #include "Heap.h"
 #include "../objects/Method.h"
 #include "../objects/Field.h"
@@ -25,26 +26,26 @@ Heap::Heap() noexcept
     auto mem = (address) raw;
 
     assert(size > classAreaSize);
-    classArea = new Memory(mem, classAreaSize);
+    classArea = new MemMgr(mem, classAreaSize);
     mem += classAreaSize;
     size -= classAreaSize;
 
     assert(size > bytecodeAreaSize);
-    bytecodeArea = new Memory(mem, bytecodeAreaSize);
+    bytecodeArea = new MemMgr(mem, bytecodeAreaSize);
     mem += bytecodeAreaSize;
     size -= bytecodeAreaSize;
 
     assert(size > methodAreaSize);
-    methodArea = new Memory(mem, methodAreaSize);
+    methodArea = new MemMgr(mem, methodAreaSize);
     mem += methodAreaSize;
     size -= methodAreaSize;
 
     assert(size > fieldAreaSize);
-    fieldArea = new Memory(mem, fieldAreaSize);
+    fieldArea = new MemMgr(mem, fieldAreaSize);
     mem += fieldAreaSize;
     size -= fieldAreaSize;
 
-    objectArea = new Memory(mem, size);
+    objectArea = new MemMgr(mem, size);
 }
 
 Heap::~Heap()
@@ -69,7 +70,7 @@ void *Heap::allocFields(u2 fieldsCount)
     return fieldArea->get(fieldsCount * sizeof(Field));
 }
 
-std::vector<Class *> Heap::getClasses()
+vector<Class *> Heap::getClasses()
 {
     classArea->lock();
 

@@ -30,11 +30,6 @@ using class_map = unordered_map<const utf8_t *, Class *, utf8::Hash, utf8::Compa
 static utf8_set bootPackages;
 static class_map bootClasses;
 
-// 保存每个class loader（不包括 boot class loader）的 classes
-// pair.first: class loader
-// pair.second: the classes loaded by @key class loader.
-static vector<pair<Object *, class_map>> classes;
-
 static unique_ptr<pair<u1 *, size_t>> read_class_from_jar(const char *jar_path, const char *class_name)
 {
     unzFile jar_file = unzOpen64(jar_path);
@@ -76,29 +71,24 @@ static unique_ptr<pair<u1 *, size_t>> read_class_from_jar(const char *jar_path, 
     return make_unique<pair<u1 *, size_t>>(bytecode, file_info.uncompressed_size);
 }
 
-void addClassToClassLoader(Object *classLoader, Class *c)
+static void addClassToClassLoader(Object *classLoader, Class *c)
 {
+    assert(c != nullptr);
     if (classLoader == bootClassLoader) {
         bootClasses.insert(make_pair(c->className, c));
         return;
     }
+
+    if (classLoader->classes == nullptr) {
+        classLoader->classes = new unordered_map<const utf8_t *, Class *, utf8::Hash, utf8::Comparator>;
+    }
+    classLoader->classes->insert(make_pair(c->className, c));
 
     // Invoked by the VM to record every loaded class with this loader.
     // void addClass(Class<?> c);
 //    Method *m = classLoader->clazz->getDeclaredInstMethod("addClass", "Ljava/lang/Class;");
 //    assert(m != nullptr);
 //    execJavaFunc(m, { (slot_t) classLoader, (slot_t) c });
-
-    for (auto &p : classes) {
-        if (p.first == classLoader) {
-            p.second.insert(make_pair(c->className, c));
-            return;
-        }
-    }
-
-    // not find this classLoader, add classLoader first.
-    classes.emplace_back(make_pair(classLoader, class_map()));
-    classes.back().second.insert(make_pair(c->className, c));
 }
 
 Class *loadBootClass(const utf8_t *name)
@@ -153,11 +143,9 @@ Class *findLoadedClass(Object *classLoader, const utf8_t *name)
     }
 
     // is not boot classLoader
-    for (auto &p : classes) {
-        if (p.first == classLoader) {
-            auto iter = p.second.find(name);
-            return iter != p.second.end() ? iter->second : nullptr;
-        }
+    if (classLoader->classes != nullptr) {
+        auto iter = classLoader->classes->find(name);
+        return iter != classLoader->classes->end() ? iter->second : nullptr;
     }
 
     // not find
@@ -264,34 +252,34 @@ void printBootClassLoader()
     printvm("\n");
 }
 
-void printClassLoader(Object *classLoader)
-{
-    if (classLoader == nullptr) {
-        printBootClassLoader();
-        return;
-    }
-
-    for (auto iter : classes) {
-        if (iter.first == classLoader) {
-            printvm("class loader %p.\n", classLoader);
-            for (auto k : iter.second) {
-                printvm("%s\n", k.first);
-            }
-            printvm("\n");
-        }
-    }
-}
-
-void printAllClassLoaders()
-{
-    printBootClassLoader();
-
-    for (auto iter : classes) {
-        printvm("class loader %p.\n", iter.first);
-        for (auto k : iter.second) {
-            printvm("%s\n", k.first);
-        }
-        printvm("\n");
-    }
-}
+//void printClassLoader(Object *classLoader)
+//{
+//    if (classLoader == nullptr) {
+//        printBootClassLoader();
+//        return;
+//    }
+//
+//    for (auto iter : classes) {
+//        if (iter.first == classLoader) {
+//            printvm("class loader %p.\n", classLoader);
+//            for (auto k : iter.second) {
+//                printvm("%s\n", k.first);
+//            }
+//            printvm("\n");
+//        }
+//    }
+//}
+//
+//void printAllClassLoaders()
+//{
+//    printBootClassLoader();
+//
+//    for (auto iter : classes) {
+//        printvm("class loader %p.\n", iter.first);
+//        for (auto k : iter.second) {
+//            printvm("%s\n", k.first);
+//        }
+//        printvm("\n");
+//    }
+//}
 

@@ -4,12 +4,12 @@
 
 #include <cassert>
 #include <sstream>
-#include "Memory.h"
+#include "MemMgr.h"
 #include "../kayo.h"
 
 using namespace std;
 
-Memory::Memory(address mem, size_t size)
+MemMgr::MemMgr(address mem, size_t size)
 {
     assert(mem != 0);
     assert(size > 0);
@@ -23,7 +23,7 @@ Memory::Memory(address mem, size_t size)
     pthread_mutex_init(&mutex, &attr);
 }
 
-Memory::~Memory()
+MemMgr::~MemMgr()
 {
     for (auto p = freelist; p != nullptr;) {
         auto t = p->next;
@@ -32,17 +32,17 @@ Memory::~Memory()
     }
 }
 
-void Memory::lock()
+void MemMgr::lock()
 {
     pthread_mutex_lock(&mutex);
 }
 
-void Memory::unlock()
+void MemMgr::unlock()
 {
     pthread_mutex_unlock(&mutex);
 }
 
-address Memory::jumpFreelist(address p)
+address MemMgr::jumpFreelist(address p)
 {
     assert(in(p));
 
@@ -60,7 +60,7 @@ address Memory::jumpFreelist(address p)
     return p; // p is not in freelist
 }
 
-void *Memory::get(size_t len)
+void *MemMgr::get(size_t len)
 {
     assert(len > 0);
     lock();
@@ -102,7 +102,7 @@ void *Memory::get(size_t len)
     jvm_abort("java_lang_OutOfMemoryError"); // todo 堆可以扩张
 }
 
-void Memory::back(address p, size_t len)
+void MemMgr::back(address p, size_t len)
 {
     assert(in(p));
     assert(len > 0);
@@ -160,7 +160,7 @@ void Memory::back(address p, size_t len)
     unlock();
 }
 
-string Memory::toString()
+string MemMgr::toString()
 {
     lock();
     stringstream ss;

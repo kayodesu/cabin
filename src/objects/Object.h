@@ -6,9 +6,11 @@
 #define JVM_JOBJECT_H
 
 #include <string>
+#include <unordered_map>
 #include "pthread.h"
 #include "slot.h"
 #include "Field.h"
+#include "../util/encoding.h"
 
 class Class;
 
@@ -27,6 +29,13 @@ private:
 public:
     void lock();
     void unlock();
+
+    union {
+        // present only if object of java/lang/ClassLoader
+        // save the all loaded classes by this ClassLoader
+        std::unordered_map<const utf8_t *, Class *, utf8::Hash, utf8::Comparator> *classes = nullptr;
+        //const unicode_t *str;    // present only if object of java/lang/String
+    };
 
 protected:
     explicit Object(Class *c);

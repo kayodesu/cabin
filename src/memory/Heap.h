@@ -12,7 +12,7 @@
 #include <vector>
 #include <cassert>
 #include "../jtypes.h"
-#include "Memory.h"
+#include "MemMgr.h"
 
 class Class;
 
@@ -21,13 +21,13 @@ class Heap {
 
     /* so called method area */
 
-    Memory *classArea;
-    Memory *bytecodeArea;
-    Memory *methodArea;
-    Memory *fieldArea;
+    MemMgr *classArea;
+    MemMgr *bytecodeArea;
+    MemMgr *methodArea;
+    MemMgr *fieldArea;
 
     /* real heap saves objects */
-    Memory *objectArea;
+    MemMgr *objectArea;
 
 public:
     Heap() noexcept;

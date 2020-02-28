@@ -12,7 +12,7 @@
 
 using address = uintptr_t;
 
-class Memory {
+class MemMgr {
     struct Node {
         address head;
         size_t len;
@@ -31,8 +31,8 @@ class Memory {
     }
 
 public:
-    Memory(address mem, size_t size);
-    virtual ~Memory();
+    MemMgr(address mem, size_t size);
+    virtual ~MemMgr();
 
     void lock();
     void unlock();

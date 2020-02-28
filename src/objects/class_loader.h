@@ -85,7 +85,7 @@ static inline bool isDotName(const utf8_t *className)
 }
 
 void printBootClassLoader();
-void printClassLoader(Object *classLoader);
-void printAllClassLoaders();
+//void printClassLoader(Object *classLoader);
+//void printAllClassLoaders();
 
 #endif //KAYOVM_CLASS_LOADER_H

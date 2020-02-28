@@ -7,7 +7,7 @@
 
 #include "../jtypes.h"
 
-class Memory;
+class MemMgr;
 
 void gc();
 

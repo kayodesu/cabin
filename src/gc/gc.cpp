@@ -62,7 +62,7 @@ static bool accessible(jref obj)
 
 void gc()
 {
-    Memory *oa = g_heap.bytecodeArea;
+    MemMgr *oa = g_heap.bytecodeArea;
 
     assert(oa != nullptr);
     oa->lock();
