@@ -1,5 +1,5 @@
-# KayoVM
-A JVM written in C++.
+# Kayo
+A toy JVM written in C++.
 
 ## Development environment
 * Win10
@@ -25,11 +25,11 @@ Two command-line options:
 * -bcp path: set jre lib path.
 * -cp path: set class path.
 ```
-C:\>kayovm HelloWorld -bcp "C:\Program Files\Java\jre1.8.0_162\lib" -cp D:\code\KayoVM\testclasses
+C:\>kayo HelloWorld -bcp "C:\Program Files\Java\jre1.8.0_162\lib" -cp D:\code\kayo\testclasses
 ```
 or, using JAVA_HOME and CLASS_PATH environment variables.
 ```
-C:\>kayovm HelloWorld
+C:\>kayo HelloWorld
 ```
 
 ## Quiz
@@ -43,7 +43,7 @@ public class HelloWorld {
 ```
 
 ```
-C:\>kayovm HelloWorld -bcp "C:\Program Files\Java\jre1.8.0_162\lib" -cp D:\code\KayoVM\testclasses
+C:\>kayo HelloWorld -bcp "C:\Program Files\Java\jre1.8.0_162\lib" -cp D:\code\kayo\testclasses
 Hello, world!
 
 C:\>
@@ -76,7 +76,7 @@ public class BubbleSort {
 ```
 
 ```
-C:\>kayovm array.BubbleSort
+C:\>kayo array.BubbleSort
 [9, 10, 11, 22, 24, 36, 36, 56, 65, 77, 78, 84, 92, 95, 97]
 
 C:\>
@@ -101,7 +101,7 @@ public class StackTraceTest {
 }
 ```
 ```
-C:\>kayovm exception.StackTraceTest
+C:\>kayo exception.StackTraceTest
 java.lang.RuntimeException: BAD!
         at exception/StackTraceTest.bad(StackTraceTest.java:15)
         at exception/StackTraceTest.bar(StackTraceTest.java:14)

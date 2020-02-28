@@ -151,7 +151,7 @@ static void showVersionAndCopyright()
 {
     // todo 完善 License
     printf("Java version \"%s\"\n", JAVA_COMPAT_VERSION);
-    printf("KayoVM version %s\n", VM_VERSION);
+    printf("kayo version %s\n", VM_VERSION);
 #if defined(__GNUC__) && defined(__VERSION__)
     printf("Compiled with: g++ %s\n", __VERSION__);
 #endif
