@@ -15,7 +15,4 @@
 
 #define PRINT_TRACE printvm
 
-// 是否使用quick指令镞？
-#define USE_QUICK_INSTRUCTIONS true
-
 #endif //JVM_DEBUG_H

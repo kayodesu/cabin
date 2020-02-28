@@ -249,27 +249,8 @@ slot_t *execConstructor(Method *constructor, jref _this, Array *args);
 #define OPC_JSR_W              201
 #define OPC_BREAKPOINT         202
 
-#define OPC_LDC_QUICK          203
-#define OPC_LDC_W_QUICK        204
-#define OPC_GETFIELD_QUICK     205
-#define OPC_GETFIELD2_QUICK    206
-#define OPC_INVOKESTATIC_QUICK 207
-#define OPC_INVOKESUPER_QUICK  208
-#define OPC_INVOKENONVIRTUAL_QUICK  209
-//#define OPC_PUTFIELD_QUICK
-//#define OPC_PUTFIELD2_QUICK
-//#define OPC_GETSTATIC_QUICK
-//#define OPC_PUTSTATIC_QUICK
-//#define OPC_GETSTATIC2_QUICK
-//#define OPC_PUTSTATIC2_QUICK
-//#define OPC_INVOKEVIRTUAL_QUICK
-//#define OPC_INVOKEVIRTUAL_QUICK_W
-//#define OPC_GETFIELD_QUICK_W
-//#define OPC_PUTFIELD_QUICK_W
-//#define OPC_GETFIELD_THIS
-//#define OPC_LOCK
-//#define OPC_ALOAD_THIS
-//#define OPC_INVOKESTATIC_QUICK
-#define OPC_INVOKENATIVE       254
+#define OPC_IMPDEP1            254
+#define OPC_IMPDEP2            255
+#define OPC_INVOKENATIVE       OPC_IMPDEP1
 
 #endif //JVM_INTERPRETER_H
