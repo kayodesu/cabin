@@ -109,15 +109,17 @@ void Class::parseAttribute(BytecodeReader &r)
         else if (S(ModuleMainClass) == attr_name) {
             u2 main_class_index = r.readu2();
             moduleMainClass = cp.className(main_class_index);
-        } else if (S(NestHost) == attr_name) {
-            u2 host_class_index = r.readu2(); // todo
-        } else if (S(NestMembers) == attr_name) {
-            u2 num = r.readu2();
-            vector<u2> nest_classes; // todo
-            for (u2 j = 0; j < num; j++) {
-                nest_classes.push_back(r.readu2());
-            }
-        } else { // unknown attribute
+        }
+//        else if (S(NestHost) == attr_name) {
+//            u2 host_class_index = r.readu2(); // todo
+//        } else if (S(NestMembers) == attr_name) {
+//            u2 num = r.readu2();
+//            vector<u2> nest_classes; // todo
+//            for (u2 j = 0; j < num; j++) {
+//                nest_classes.push_back(r.readu2());
+//            }
+//        }
+        else { // unknown attribute
             printvm("unknown attribute: %s\n", attr_name); // todo
             r.skip(attr_len);
         }

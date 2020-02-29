@@ -30,13 +30,6 @@ public:
     void lock();
     void unlock();
 
-    union {
-        // present only if object of java/lang/ClassLoader
-        // save the all loaded classes by this ClassLoader
-        std::unordered_map<const utf8_t *, Class *, utf8::Hash, utf8::Comparator> *classes = nullptr;
-        //const unicode_t *str;    // present only if object of java/lang/String
-    };
-
 protected:
     explicit Object(Class *c);
 
@@ -53,7 +46,7 @@ public:
     virtual size_t size() const;
 
     virtual bool isArrayObject() const;
-    Object *clone() const;
+    Object *clone() const; // todo ClassObject 是否支持clone??????
 
     void setFieldValue(Field *f, slot_t v); // only for category one field
     void setFieldValue(Field *f, const slot_t *value);
@@ -80,7 +73,10 @@ public:
     bool isInstanceOf(Class *c) const;
 
     const slot_t *unbox() const; // present only if primitive Object
-    utf8_t *toUtf8() const;       // present only if String Object
+    utf8_t *toUtf8() const;       // present only if Object of java/lang/String
+    // present only if object of java/lang/ClassLoader
+    // save the all loaded classes by this ClassLoader
+    std::unordered_map<const utf8_t *, Class *, utf8::Hash, utf8::Comparator> *classes = nullptr;
 
     virtual std::string toString() const;
 };

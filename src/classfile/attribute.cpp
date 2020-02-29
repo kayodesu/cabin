@@ -5,7 +5,7 @@
 #include <vector>
 #include <sstream>
 #include "../kayo.h"
-#include "Attribute.h"
+#include "attribute.h"
 #include "../symbol.h"
 #include "../runtime/Thread.h"
 

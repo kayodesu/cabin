@@ -209,7 +209,7 @@ void Thread::popFrame()
 int Thread::countStackFrames()
 {
     int count = 0;
-    for (auto frame = topFrame; frame != nullptr; frame = frame->prev) {
+    for (Frame *frame = topFrame; frame != nullptr; frame = frame->prev) {
         count++;
     }
     return count;

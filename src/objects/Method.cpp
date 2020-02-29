@@ -205,7 +205,7 @@ u2 Method::calArgsSlotsCount(const utf8_t *descriptor, bool isStatic)
         }
     }
 
-    if (!isStatic) {
+    if (!isStatic) { // note: 构造函数（<init>方法）是非static的，也会传递this reference  todo
         count++; // this reference
     }
     return count;
@@ -215,41 +215,6 @@ void Method::calArgsSlotsCount()
 {
     // note: 构造函数（<init>方法）是非static的，也会传递this reference  todo
     arg_slot_count = calArgsSlotsCount(descriptor, isStatic());
-#if 0
-    const char *b = strchr(descriptor, '(');
-    const char *e = strchr(descriptor, ')');
-    if (b == nullptr || e == nullptr) {
-        jvm_abort("error. %s\n", descriptor);
-    }
-
-    while (++b < e) {
-        if (*b == 'B' || *b == 'C' || *b == 'I' || *b == 'F' || *b == 'S'|| *b == 'Z'/* boolean */) {
-            arg_slot_count++;
-        } else if (*b == 'D' || *b == 'J'/* long */) {
-            arg_slot_count += 2;
-        } else if (*b == 'L') { // reference
-            arg_slot_count++;
-            b = strchr(b, ';');
-            if (b == nullptr) {
-                jvm_abort("error. %s\n", descriptor);
-            }
-        } else if (*b == '[') { // array reference
-            arg_slot_count++;
-            while (*(++b) == '[');
-
-            if (*b == 'L') {
-                b = strchr(b, ';');
-                if (b == nullptr) {
-                    jvm_abort("error. %s\n", descriptor);
-                }
-            }
-        }
-    }
-
-    if (!isStatic()) { // note: 构造函数（<init>方法）是非static的，也会传递this reference  todo
-        arg_slot_count++; // this reference
-    }
-#endif
 }
 
 /*

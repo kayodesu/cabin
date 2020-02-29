@@ -9,7 +9,7 @@
 #include "slot.h"
 #include "../kayo.h"
 #include "../util/BytecodeReader.h"
-#include "../classfile/Attribute.h"
+#include "../classfile/attribute.h"
 #include "Modifier.h"
 
 class Class;

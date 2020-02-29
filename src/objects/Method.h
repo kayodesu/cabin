@@ -8,7 +8,7 @@
 #include <cstddef>
 #include <string>
 #include <vector>
-#include "../classfile/Attribute.h"
+#include "../classfile/attribute.h"
 #include "../native/registry.h"
 #include "../symbol.h"
 #include "../util/encoding.h"

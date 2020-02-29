@@ -17,7 +17,7 @@
 #include "ConstantPool.h"
 #include "Object.h"
 #include "../util/BytecodeReader.h"
-#include "../classfile/Attribute.h"
+#include "../classfile/attribute.h"
 
 class Field;
 class Method;
@@ -76,6 +76,10 @@ public:
      */
     std::vector<Field *> fields;
     u2 publicFieldsCount = 0;
+
+//    Field *fields;
+//    u2 fields_count;
+//    u2 public_fields_count;
 
     // instFieldsCount 有可能大于 fieldsCount，因为 instFieldsCount 包含了继承过来的 field.
     // 类型二统计为两个数量
@@ -251,9 +255,11 @@ public:
     void setSynthetic() { Modifier::setSynthetic(modifiers); }
 
     /*---------------------- for module-info.class ----------------------*/
+private:
     Module *module = nullptr;
     std::vector<const utf8_t *> modulePackages;
     const utf8_t *moduleMainClass = nullptr;
+
     /*---------------------- for array class ----------------------*/
 private:
     Class *compClass = nullptr; // component class

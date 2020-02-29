@@ -26,7 +26,8 @@ struct Frame {
     slot_t *ostack;   // operand stack
 
     Frame(Method *m, bool vm_invoke, slot_t *lvars, slot_t *ostack, Frame *prev)
-            : method(m), reader(m->code, m->codeLen), vm_invoke(vm_invoke), lvars(lvars), ostack(ostack), prev(prev)
+            : method(m), reader(m->code, m->codeLen),
+              vm_invoke(vm_invoke), prev(prev), lvars(lvars), ostack(ostack)
     {
         assert(m != nullptr);
         assert(lvars != nullptr);

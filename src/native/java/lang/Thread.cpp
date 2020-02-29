@@ -164,7 +164,7 @@ static void getThreads(Frame *frame)
     size_t size = g_all_threads.size();
     Array *threads = newArray(loadArrayClass(S(array_java_lang_Thread)), size);
 
-    for (jint i = 0; i < size; i++) {
+    for (size_t i = 0; i < size; i++) {
         threads->set(i, g_all_threads[i]->jThread);
     }
 
