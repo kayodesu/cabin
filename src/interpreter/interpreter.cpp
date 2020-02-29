@@ -115,7 +115,6 @@ static const char *instruction_names[] = {
 static slot_t *exec()
 {
     Thread *thread = getCurrentThread();
-
     Method *resolved_method;
 
     Frame *frame = thread->getTopFrame();
@@ -203,14 +202,13 @@ static slot_t *exec()
                 break;
 {
             u2 index;
-            u1 type;
             case OPC_LDC:
                 index = reader->readu1();
                 goto __ldc;
             case OPC_LDC_W:
                 index = reader->readu2();
 __ldc:
-                type = cp->type(index);
+                u1 type = cp->type(index);
                 switch (type) {
                     case CONSTANT_Integer:
                         frame->pushi(cp->_int(index));
@@ -255,7 +253,6 @@ __ldc:
                 *frame->ostack++ = lvars[index];
                 break;
             }
-                
             case OPC_LLOAD:
             case OPC_DLOAD: {
                 u1 index = reader->readu1();
@@ -480,7 +477,6 @@ __ldc:
     ((type *) frame->ostack)[-1] = ((type *) frame->ostack)[-1] oper ((type *) frame->ostack)[0]; \
     break; \
 }
-
             case OPC_IADD:
                 BINARY_OP(jint, 1, +);
             case OPC_LADD:
@@ -489,7 +485,6 @@ __ldc:
                 BINARY_OP(jfloat, 1, +);
             case OPC_DADD:
                 BINARY_OP(jdouble, 2, +);
-
             case OPC_ISUB:
                 BINARY_OP(jint, 1, -);
             case OPC_LSUB:
@@ -498,7 +493,6 @@ __ldc:
                 BINARY_OP(jfloat, 1, -);
             case OPC_DSUB:
                 BINARY_OP(jdouble, 2, -);
-
             case OPC_IMUL:
                 BINARY_OP(jint, 1, *);
             case OPC_LMUL:
@@ -507,7 +501,6 @@ __ldc:
                 BINARY_OP(jfloat, 1, *);
             case OPC_DMUL:
                 BINARY_OP(jdouble, 2, *);
-
             case OPC_IDIV:
                 BINARY_OP(jint, 1, /);
             case OPC_LDIV:
@@ -516,7 +509,6 @@ __ldc:
                 BINARY_OP(jfloat, 1, /);
             case OPC_DDIV:
                 BINARY_OP(jdouble, 2, /);
-
             case OPC_IREM:
                 BINARY_OP(jint, 1, %);
             case OPC_LREM:
@@ -533,7 +525,6 @@ __ldc:
                 frame->pushd(fmod(v1, v2));
                 break;
             }
-
             case OPC_INEG:
                 frame->pushi(-frame->popi());
                 break;
@@ -613,7 +604,6 @@ __ldc:
             case OPC_I2D:
                 frame->pushd(frame->popi());
                 break;
-
             case OPC_L2I:
                 frame->pushi((jint) frame->popl());
                 break;
@@ -623,7 +613,6 @@ __ldc:
             case OPC_L2D:
                 frame->pushd(frame->popl());
                 break;
-
             case OPC_F2I:
                frame->pushi((jint) frame->popf());
                 break;
@@ -633,7 +622,6 @@ __ldc:
             case OPC_F2D:
                 frame->pushd(frame->popf());
                 break;
-
             case OPC_D2I:
                 frame->pushi((jint) frame->popd());
                 break;
@@ -643,7 +631,6 @@ __ldc:
             case OPC_D2F:
                 frame->pushf((jfloat) frame->popd());
                 break;
-
             case OPC_I2B:
                 frame->pushi(jint2jbyte(frame->popi()));
                 break;
@@ -667,8 +654,6 @@ __ldc:
     frame->pushi(cmp_result); \
     break; \
 }
-
-
             case OPC_LCMP:
                 CMP(jlong, l, DO_CMP(v1, v2, -1));
             case OPC_FCMPL:
@@ -688,7 +673,6 @@ __ldc:
         reader->skip(offset - 3);  /* minus instruction length */ \
     break; \
 }
-
             case OPC_IFEQ:
                 IF_COND(==);
             case OPC_IFNE:
@@ -701,7 +685,6 @@ __ldc:
                 IF_COND(>);
             case OPC_IFLE:
                 IF_COND(<=);
-
 #undef IF_COND
 
 #define IF_CMP_COND(cond) \
@@ -712,8 +695,6 @@ __ldc:
         reader->skip(offset - 3); /* minus instruction length */ \
     break; \
 }
-
-
             case OPC_IF_ICMPEQ:
             case OPC_IF_ACMPEQ:
                 IF_CMP_COND(==);
@@ -728,7 +709,6 @@ __ldc:
                 IF_CMP_COND(>);
             case OPC_IF_ICMPLE:
                 IF_CMP_COND(<=);
-
 #undef IF_CMP_COND
 
             case OPC_GOTO: {
@@ -1056,8 +1036,8 @@ __method_return:
 			            // bootstrap method is static,  todo 对不对
 			            // 前三个参数固定为 MethodHandles.Lookup caller, String invokedName, MethodType invokedType todo 对不对
 			            // 后续的参数由 ref->argc and ref->args 决定
-			            Method *bootstrapMethod
-			                    = bootstrapClass->getDeclaredStaticMethod(cp->methodName(refIndex), cp->methodType(refIndex));
+			            Method *bootstrapMethod = bootstrapClass->getDeclaredStaticMethod(
+                                cp->methodName(refIndex), cp->methodType(refIndex));
 			            // args's length is big enough,多余的长度无所谓，bootstrapMethod 会按需读取的。
 			            slot_t args[3 + bm.bootstrapArguments.size() * 2] = {
 			                    (slot_t) caller, (slot_t) newString(invokedName), (slot_t) invokedType };
