@@ -1,3 +1,4 @@
 # Java class files
 *.class
+/.idea
 

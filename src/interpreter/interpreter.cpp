@@ -995,7 +995,7 @@ __method_return:
                 resolved_method = m;
                 goto __invoke_method;
             }            
-             case OPC_INVOKEINTERFACE: {
+            case OPC_INVOKEINTERFACE: {
                 u2 index = reader->readu2();
 
                 /*
