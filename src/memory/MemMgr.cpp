@@ -3,6 +3,7 @@
  */
 
 #include <cassert>
+#include <cstring>
 #include <sstream>
 #include "MemMgr.h"
 #include "../kayo.h"
