@@ -4,8 +4,7 @@
 
 #include "../../registry.h"
 #include "../../../kayo.h"
-#include "../../../objects/Class.h"
-#include "../../../objects/Array.h"
+#include "../../../objects/class.h"
 #include "../../../runtime/Frame.h"
 
 using namespace utf8;

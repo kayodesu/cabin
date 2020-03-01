@@ -1,8 +1,7 @@
 #include "../../../registry.h"
 #include "../../../../kayo.h"
 #include "../../../../runtime/Frame.h"
-#include "../../../../objects/Class.h"
-#include "../../../../objects/Array.h"
+#include "../../../../objects/class.h"
 #include "../../../../objects/invoke.h"
 
 /*

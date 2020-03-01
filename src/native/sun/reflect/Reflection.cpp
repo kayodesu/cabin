@@ -3,10 +3,10 @@
  */
 
 #include "../../registry.h"
-#include "../../../objects/Object.h"
+#include "../../../objects/object.h"
 #include "../../../kayo.h"
 #include "../../../runtime/Frame.h"
-#include "../../../objects/Class.h"
+#include "../../../objects/class.h"
 
 
 // public static native Class<?> getCallerClass(int level)

@@ -1,8 +1,6 @@
 #include <vector>
 #include "Heap.h"
-#include "../objects/Method.h"
-#include "../objects/Field.h"
-#include "../objects/Class.h"
+#include "../objects/class.h"
 #include "../config.h"
 
 /*
@@ -95,14 +93,14 @@ string Heap::toString()
     ss << "class" << endl;
     ss << classArea->toString() << endl;
 
-    ss << "bytecodeArea" << endl;
-    ss << bytecodeArea->toString() << endl;
+//    ss << "bytecodeArea" << endl;
+//    ss << bytecodeArea->toString() << endl;
 
-    ss << "methodArea" << endl;
-    ss << methodArea->toString() << endl;
-
-    ss << "fieldArea" << endl;
-    ss << fieldArea->toString() << endl;
+//    ss << "methodArea" << endl;
+//    ss << methodArea->toString() << endl;
+//
+//    ss << "fieldArea" << endl;
+//    ss << fieldArea->toString() << endl;
 
     ss << "objectArea" << endl;
     ss << objectArea->toString() << endl;

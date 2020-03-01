@@ -3,10 +3,10 @@
  */
 
 #include "../../registry.h"
-#include "../../../objects/Object.h"
+#include "../../../objects/object.h"
 #include "../../../interpreter/interpreter.h"
 #include "../../../symbol.h"
-#include "../../../objects/Class.h"
+#include "../../../objects/class.h"
 #include "../../../runtime/Frame.h"
 
 // @CallerSensitive

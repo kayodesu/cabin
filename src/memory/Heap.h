@@ -20,7 +20,6 @@ class Heap {
     void *raw;
 
     /* so called method area */
-
     MemMgr *classArea;
     MemMgr *bytecodeArea;
     MemMgr *methodArea;
@@ -42,8 +41,10 @@ public:
     }
 
     void *allocMethods(u2 methodsCount);
+    void *allocMethod() { return allocMethods(1); }
 
     void *allocFields(u2 fieldsCount);
+    void *allocField() { return allocFields(1); }
 
     void *allocObject(size_t size)
     {

@@ -5,11 +5,10 @@
 #include <vector>
 #include "gc.h"
 #include "../kayo.h"
-#include "../runtime/Thread.h"
+#include "../runtime/thread.h"
 #include "../runtime/Frame.h"
-#include "../objects/Object.h"
-#include "../objects/Class.h"
-#include "../objects/Field.h"
+#include "../objects/object.h"
+#include "../objects/class.h"
 
 using namespace std;
 
@@ -62,7 +61,7 @@ static bool accessible(jref obj)
 
 void gc()
 {
-    MemMgr *oa = g_heap.bytecodeArea;
+    MemMgr *oa = g_heap.objectArea;
 
     assert(oa != nullptr);
     oa->lock();

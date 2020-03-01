@@ -4,7 +4,7 @@
 
 #include <sstream>
 #include "Frame.h"
-#include "../objects/Class.h"
+#include "../objects/class.h"
 
 using namespace std;
 

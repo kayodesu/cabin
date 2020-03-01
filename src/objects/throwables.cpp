@@ -5,9 +5,9 @@
 #include <cstdlib>
 #include "throwables.h"
 #include "../interpreter/interpreter.h"
-#include "Class.h"
+#include "class.h"
 #include "class_loader.h"
-#include "../runtime/Thread.h"
+#include "../runtime/thread.h"
 
 Throwable::Throwable(const utf8_t *exceptionName, const utf8_t *msg)
 {

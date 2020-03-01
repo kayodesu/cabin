@@ -8,11 +8,10 @@
 #include <unordered_map>
 #include "class_loader.h"
 #include "../symbol.h"
-#include "Class.h"
-#include "Array.h"
+#include "class.h"
 #include "../interpreter/interpreter.h"
 #include "../../zlib/minizip/unzip.h"
-#include "../runtime/Thread.h"
+#include "../runtime/thread.h"
 #include "Prims.h"
 
 using namespace std;

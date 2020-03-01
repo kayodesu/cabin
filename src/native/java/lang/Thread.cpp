@@ -3,10 +3,9 @@
  */
 
 #include "../../registry.h"
-#include "../../../objects/Object.h"
-#include "../../../runtime/Thread.h"
+#include "../../../objects/object.h"
+#include "../../../runtime/thread.h"
 #include "../../../runtime/Frame.h"
-#include "../../../objects/Array.h"
 
 /*
  * Returns a reference to the currently executing thread Object.

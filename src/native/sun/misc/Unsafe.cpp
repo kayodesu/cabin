@@ -4,9 +4,8 @@
 
 #include <iostream>
 #include "../../registry.h"
-#include "../../../objects/Object.h"
+#include "../../../objects/object.h"
 #include "../../../util/endianness.h"
-#include "../../../objects/Array.h"
 #include "../../../runtime/Frame.h"
 
 /* todo

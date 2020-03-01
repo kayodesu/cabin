@@ -4,7 +4,6 @@
 
 #include "../../registry.h"
 #include "../../../runtime/Frame.h"
-#include "../../../objects/Array.h"
 
 // private native void initIDs();
 static void initIDs(Frame *frame)

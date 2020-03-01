@@ -1,9 +1,7 @@
 #include "../../registry.h"
 #include "../../../jtypes.h"
 #include "../../../runtime/Frame.h"
-#include "../../../objects/Object.h"
-#include "../../../objects/ConstantPool.h"
-#include "../../../objects/Class.h"
+#include "../../../objects/class.h"
 
 /*
  * Author: kayo

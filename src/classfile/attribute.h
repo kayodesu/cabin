@@ -7,9 +7,10 @@
 
 #include <vector>
 #include "../jtypes.h"
-#include "../objects/ConstantPool.h"
 #include "../util/BytecodeReader.h"
+#include "../objects/slot.h"
 
+struct ConstantPool;
 struct ElementValuePair;
 class BytecodeReader;
 
@@ -88,7 +89,7 @@ struct InnerClass {
     u2 outer_class_info_index;
     u2 inner_name_index;
     u2 inner_class_access_flags;
-    InnerClass(ConstantPool &cp, BytecodeReader &r);
+    InnerClass( BytecodeReader &r);
 };
 
 struct BootstrapMethod {
@@ -109,7 +110,7 @@ struct BootstrapMethod {
     std::vector<u2> bootstrapArguments;
 
     explicit BootstrapMethod(BytecodeReader &r);
-    slot_t *resolveArgs(ConstantPool &cp, slot_t *result);
+    slot_t *resolveArgs(ConstantPool *cp, slot_t *result);
     ~BootstrapMethod();
 };
 
@@ -132,6 +133,26 @@ struct MethodParameter {
     explicit MethodParameter(ConstantPool &cp, BytecodeReader &r);
 };
 
+struct LocalVariableTable {
+    u2 start_pc;
+    u2 length;
+    u2 name_index;
+    u2 descriptor_index;
+    u2 index;
+
+    explicit LocalVariableTable(BytecodeReader &r);
+};
+
+struct LocalVariableTypeTable {
+    u2 start_pc;
+    u2 length;
+    u2 name_index;
+    u2 signature_index;
+    u2 index;
+
+    explicit LocalVariableTypeTable(BytecodeReader &r);
+};
+
 struct Module {
     const utf8_t *moduleName;
     u2 moduleFlags;
@@ -143,12 +164,7 @@ struct Module {
         // If requires_version is NULL, then no version information about the current module is present.
         const utf8_t *version;
 
-        explicit Require(ConstantPool &cp, BytecodeReader &r) {
-            requireModuleName = cp.moduleName(r.readu2());
-            flags = r.readu2();
-            u2 v = r.readu2();
-            version = v == 0 ? nullptr : cp.utf8(v);
-        }
+        explicit Require(ConstantPool &cp, BytecodeReader &r);
     };
     std::vector<Require> requires;
 
@@ -157,15 +173,7 @@ struct Module {
         u2 flags;
         std::vector<const utf8_t *> exports_to;
 
-        explicit Export(ConstantPool &cp, BytecodeReader &r)
-        {
-            exportPackageName = cp.packageName(r.readu2());
-            flags = r.readu2();
-            u2 exports_to_count = r.readu2();
-            for (u2 i = 0; i < exports_to_count; i++) {
-                exports_to.push_back(cp.moduleName(r.readu2()));
-            }
-        };
+        explicit Export(ConstantPool &cp, BytecodeReader &r);
     };
     std::vector<Export> exports;
 
@@ -174,15 +182,7 @@ struct Module {
         u2 flags;
         std::vector<const utf8_t *> opens_to;
 
-        explicit Open(ConstantPool &cp, BytecodeReader &r)
-        {
-            openPackageName = cp.packageName(r.readu2());
-            flags = r.readu2();
-            u2 exports_to_count = r.readu2();
-            for (u2 i = 0; i < exports_to_count; i++) {
-                opens_to.push_back(cp.moduleName(r.readu2()));
-            }
-        };
+        explicit Open(ConstantPool &cp, BytecodeReader &r);
     };
     std::vector<Open> opens;
 
@@ -192,14 +192,7 @@ struct Module {
         const utf8_t *className;
         std::vector<const utf8_t *> provides_with;
 
-        explicit Provide(ConstantPool &cp, BytecodeReader &r)
-        {
-            className = cp.className(r.readu2());
-            u2 provides_with_count = r.readu2();
-            for (u2 i = 0; i < provides_with_count; i++) {
-                provides_with.push_back(cp.className(r.readu2()));
-            }
-        }
+        explicit Provide(ConstantPool &cp, BytecodeReader &r);
     };
     std::vector<Provide> provides;
 

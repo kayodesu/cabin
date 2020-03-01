@@ -3,8 +3,7 @@
  */
 
 #include "../../../runtime/Frame.h"
-#include "../../../objects/Array.h"
-#include "../../../runtime/Thread.h"
+#include "../../../runtime/thread.h"
 
 /*
  * VM support where maxDepth == -1 to request entire stack dump

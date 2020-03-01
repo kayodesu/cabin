@@ -3,12 +3,11 @@
  */
 
 #include "../../registry.h"
-#include "../../../objects/Object.h"
-#include "../../../objects/Field.h"
+#include "../../../objects/object.h"
+#include "../../../objects/class.h"
 #include "../../../interpreter/interpreter.h"
 #include "../../../runtime/Frame.h"
-#include "../../../runtime/Thread.h"
-#include "../../../objects/Array.h"
+#include "../../../runtime/thread.h"
 
 using namespace utf8;
 
@@ -506,7 +505,7 @@ static void getDeclaredMethods0(Frame *frame)
     jint methodsCount = publicOnly ? cls->publicMethodsCount : cls->methods.size();
 
     Class *methodClass = loadBootClass(S(java_lang_reflect_Method));
-    auto methodArr = newArray(methodClass->arrayClass(), methodsCount);
+    Array *methodArr = newArray(methodClass->arrayClass(), methodsCount);
     frame->pushr(methodArr);
 
     /*
@@ -519,7 +518,7 @@ static void getDeclaredMethods0(Frame *frame)
                 "[Ljava/lang/Class;" "II" "Ljava/lang/String;" "[B[B[B)V");
 
     for (int i = 0; i < methodsCount; i++) {
-        auto method = cls->methods[i];
+        Method *method = cls->methods[i];
         Object *o = newObject(methodClass);
         methodArr->set(i, o);
 
@@ -644,7 +643,8 @@ void java_lang_Class_registerNatives()
     registerNative(C "getPrimitiveClass", "(Ljava/lang/String;)Ljava/lang/Class;", getPrimitiveClass);
     registerNative(C "getName0", "()Ljava/lang/String;", getName0);
     registerNative(C "forName0",
-                   "(Ljava/lang/String;ZLjava/lang/ClassLoader;Ljava/lang/Class;)Ljava/lang/Class;", forName0);
+                   "(Ljava/lang/String;ZLjava/lang/ClassLoader;Ljava/lang/Class;)Ljava/lang/Class;",
+                   forName0);
     registerNative(C "desiredAssertionStatus0", "(Ljava/lang/Class;)Z", desiredAssertionStatus0);
 
     registerNative(C "isInstance", "(Ljava/lang/Object;)Z", isInstance);

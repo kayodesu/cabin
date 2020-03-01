@@ -4,7 +4,7 @@
 
 #include "../../registry.h"
 #include "../../../runtime/Frame.h"
-#include "../../../objects/Class.h"
+#include "../../../objects/class.h"
 
 // public native String intern();
 static void intern(Frame *frame)

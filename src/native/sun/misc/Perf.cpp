@@ -3,7 +3,7 @@
  */
 
 #include "../../registry.h"
-#include "../../../objects/Class.h"
+#include "../../../objects/class.h"
 #include "../../../runtime/Frame.h"
 #include "../../../interpreter/interpreter.h"
 

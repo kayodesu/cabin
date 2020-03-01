@@ -3,8 +3,8 @@
  */
 
 #include "../../registry.h"
-#include "../../../objects/Class.h"
-#include "../../../objects/Object.h"
+#include "../../../objects/class.h"
+#include "../../../objects/object.h"
 #include "../../../symbol.h"
 #include "../../../runtime/Frame.h"
 #include "../../../objects/class_loader.h"

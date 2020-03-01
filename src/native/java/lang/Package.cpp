@@ -1,8 +1,6 @@
 #include <vector>
 #include "../../registry.h"
 #include "../../../runtime/Frame.h"
-#include "../../../objects/class_loader.h"
-#include "../../../objects/Array.h"
 
 /*
  * Author: kayo

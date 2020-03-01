@@ -1,6 +1,6 @@
 #include "../../registry.h"
 #include "../../../runtime/Frame.h"
-#include "../../../objects/Object.h"
+#include "../../../objects/object.h"
 
 /*
  * Author: kayo

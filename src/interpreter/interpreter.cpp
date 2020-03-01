@@ -7,12 +7,10 @@
 #include "interpreter.h"
 #include "../kayo.h"
 #include "../debug.h"
-#include "../runtime/Thread.h"
+#include "../runtime/thread.h"
 #include "../runtime/Frame.h"
 #include "../classfile/constant.h"
-#include "../objects/Array.h"
-#include "../objects/Class.h"
-#include "../objects/Field.h"
+#include "../objects/class.h"
 #include "../objects/invoke.h"
 
 using namespace std;
@@ -836,7 +834,7 @@ __method_return:
                 initClass(field->clazz);
 
                 *frame->ostack++ = field->staticValue.data[0];
-                if (field->categoryTwo) {
+                if (field->category_two) {
                     *frame->ostack++ = field->staticValue.data[1];
                 }
                 break;
@@ -848,7 +846,7 @@ __method_return:
 
                 initClass(field->clazz);
 
-                if (field->categoryTwo) {
+                if (field->category_two) {
                     frame->ostack -= 2;
                     field->staticValue.data[0] = frame->ostack[0];
                     field->staticValue.data[1] = frame->ostack[1];
@@ -869,7 +867,7 @@ __method_return:
 			    }
 
                 *frame->ostack++ = obj->data[field->id];
-                if (field->categoryTwo) {
+                if (field->category_two) {
                     *frame->ostack++ = obj->data[field->id + 1];
                 }
                 break;
@@ -887,7 +885,7 @@ __method_return:
 			        }
                 }
 
-                if (field->categoryTwo) {
+                if (field->category_two) {
                     frame->ostack -= 2;
                 } else {
                     frame->ostack--;
@@ -1024,7 +1022,7 @@ __method_return:
 			    auto invokedType = fromMethodDescriptor(invokedDescriptor, clazz->loader);
 			    auto caller = getCaller();
 
-			    BootstrapMethod &bm = clazz->bootstrapMethods.at(cp->invokeDynamicBootstrapMethodIndex(index));
+			    BootstrapMethod &bm = clazz->bootstrap_methods.at(cp->invokeDynamicBootstrapMethodIndex(index));
 			    u2 refKind = cp->methodHandleReferenceKind(bm.bootstrapMethodRef);
 			    u2 refIndex = cp->methodHandleReferenceIndex(bm.bootstrapMethodRef);
 
@@ -1041,7 +1039,7 @@ __method_return:
 			            // args's length is big enough,多余的长度无所谓，bootstrapMethod 会按需读取的。
 			            slot_t args[3 + bm.bootstrapArguments.size() * 2] = {
 			                    (slot_t) caller, (slot_t) newString(invokedName), (slot_t) invokedType };
-			            bm.resolveArgs(*cp, args + 3);
+			            bm.resolveArgs(cp, args + 3);
 			            auto callSet = (jref) *execJavaFunc(bootstrapMethod, args);
 
 			            // public abstract MethodHandle dynamicInvoker()

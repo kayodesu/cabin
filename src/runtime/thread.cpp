@@ -6,13 +6,11 @@
 #include "../kayo.h"
 #include "../debug.h"
 #include "../objects/class_loader.h"
-#include "Thread.h"
-#include "../objects/Object.h"
+#include "thread.h"
+#include "../objects/object.h"
 #include "../interpreter/interpreter.h"
 #include "Frame.h"
-#include "../objects/Class.h"
-#include "../objects/Field.h"
-#include "../objects/Array.h"
+#include "../objects/class.h"
 
 #if TRACE_THREAD
 #define TRACE PRINT_TRACE

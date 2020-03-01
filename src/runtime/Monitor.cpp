@@ -3,7 +3,7 @@
  */
 
 #include "Monitor.h"
-#include "Thread.h"
+#include "thread.h"
 
 Monitor::Monitor()
 {

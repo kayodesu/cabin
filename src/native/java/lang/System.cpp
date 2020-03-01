@@ -4,12 +4,11 @@
 
 #include <chrono>
 #include "../../registry.h"
-#include "../../../objects/Object.h"
-#include "../../../objects/Array.h"
+#include "../../../objects/object.h"
 #include "../../../interpreter/interpreter.h"
 #include "../../../runtime/Frame.h"
-#include "../../../runtime/Thread.h"
-#include "../../../objects/Field.h"
+#include "../../../runtime/thread.h"
+#include "../../../objects/class.h"
 #include "../../../properties.h"
 
 using namespace std;

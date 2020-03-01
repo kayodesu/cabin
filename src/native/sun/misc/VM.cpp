@@ -5,7 +5,7 @@
 #include "../../registry.h"
 #include "../../../interpreter/interpreter.h"
 #include "../../../symbol.h"
-#include "../../../objects/Class.h"
+#include "../../../objects/class.h"
 #include "../../../objects/class_loader.h"
 
 // private static native void initialize();

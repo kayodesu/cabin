@@ -9,7 +9,7 @@
 #include <dirent.h>
 #include "../../registry.h"
 #include "../../../runtime/Frame.h"
-#include "../../../objects/Object.h"
+#include "../../../objects/object.h"
 
 // private static native void initIDs();
 static void initIDs(Frame *frame)

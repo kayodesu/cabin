@@ -3,9 +3,7 @@
  */
 
 #include "invoke.h"
-#include "Class.h"
-#include "Array.h"
-#include "Method.h"
+#include "class.h"
 #include "../interpreter/interpreter.h"
 
 using namespace method_type;

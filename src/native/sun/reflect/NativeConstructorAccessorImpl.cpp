@@ -5,11 +5,7 @@
 #include <sstream>
 #include "../../registry.h"
 #include "../../../runtime/Frame.h"
-#include "../../../objects/Object.h"
-#include "../../../objects/Method.h"
-#include "../../../objects/Array.h"
 #include "../../../interpreter/interpreter.h"
-#include "../../../symbol.h"
 
 using namespace std;
 

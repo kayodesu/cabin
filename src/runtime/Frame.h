@@ -6,8 +6,10 @@
 #define JVM_STACK_FRAME_H
 
 #include "../objects/slot.h"
-#include "../objects/Method.h"
+#include "../objects/class.h"
 #include "../util/BytecodeReader.h"
+
+class Method;
 
 struct Frame {
     Method *method;

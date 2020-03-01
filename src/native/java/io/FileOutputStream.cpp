@@ -5,9 +5,7 @@
 #include "../../registry.h"
 #include "../../../kayo.h"
 #include "../../../runtime/Frame.h"
-#include "../../../objects/Object.h"
 #include "../../../output.h"
-#include "../../../objects/Array.h"
 
 
 // private static native void initIDs();

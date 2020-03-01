@@ -10,11 +10,9 @@
 #include "kayo.h"
 #include "debug.h"
 #include "native/registry.h"
-#include "runtime/Thread.h"
-#include "objects/Class.h"
-#include "objects/Method.h"
+#include "runtime/thread.h"
+#include "objects/class.h"
 #include "objects/Prims.h"
-#include "objects/Array.h"
 #include "interpreter/interpreter.h"
 
 using namespace std;

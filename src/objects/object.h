@@ -9,9 +9,9 @@
 #include <unordered_map>
 #include "pthread.h"
 #include "slot.h"
-#include "Field.h"
 #include "../util/encoding.h"
 
+class Field;
 class Class;
 
 class Object {
@@ -55,6 +55,7 @@ public:
     void setFieldValue(int id, jref value);
 
 private:
+    const slot_t *getInstFieldValue0(const Field *f) const;
     const slot_t *getInstFieldValue0(const char *name, const char *descriptor) const;
 public:
     template <typename T>
@@ -67,7 +68,7 @@ public:
     T getInstFieldValue(const Field *f) const
     {
         assert(f != nullptr);
-        return * (T *) (data + f->id);
+        return * (T *) getInstFieldValue0(f);
     }
 
     bool isInstanceOf(Class *c) const;
@@ -80,6 +81,50 @@ public:
 
     virtual std::string toString() const;
 };
+
+
+// Object of array
+class Array: public Object {
+    Array(Class *ac, jint arrLen);
+    Array(Class *ac, jint dim, const jint lens[]);
+
+public:
+    jsize len; // 数组的长度
+
+    static Array *newArray(Class *ac, jint arrLen);
+    static Array *newMultiArray(Class *ac, jint dim, const jint lens[]);
+
+    bool isArrayObject() const override { return true; }
+    bool isPrimArray() const;
+
+    bool checkBounds(jint index)
+    {
+        return 0 <= index && index < len;
+    }
+
+    void *index(jint index0) const;
+
+    template <typename T>
+    void set(jint index0, T data)
+    {
+        *(T *) index(index0) = data;
+    }
+
+    void set(int index0, jref value);
+
+    template <typename T>
+    T get(jint index0) const
+    {
+        return *(T *) index(index0);
+    }
+
+
+    static void copy(Array *dst, jint dst_pos, const Array *src, jint src_pos, jint len);
+    size_t size() const override;
+    //Array *clone() const;
+    std::string toString() const override;
+};
+
 
 static inline Object *newObject(Class *c)
 {
@@ -98,5 +143,15 @@ struct StrObjEquals {
 struct StrObjHash {
     size_t operator()(Object *x) const;
 };
+
+static inline Array *newArray(Class *ac, jint arrLen)
+{
+    return Array::newArray(ac, arrLen);
+}
+
+static inline Array *newMultiArray(Class *ac, jint dim, const jint lens[])
+{
+    return Array::newMultiArray(ac, dim, lens);
+}
 
 #endif //JVM_JOBJECT_H
