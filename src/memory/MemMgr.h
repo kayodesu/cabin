@@ -5,10 +5,11 @@
 #ifndef KAYOVM_MEM_MGR_H
 #define KAYOVM_MEM_MGR_H
 
+#include <pthread.h>
 #include <cstddef>
 #include <cstdint>
 #include <string>
-#include <pthread.h>
+//#include <mutex>
 
 using address = uintptr_t;
 
@@ -21,6 +22,7 @@ class MemMgr {
     } *freelist;
 
     pthread_mutex_t mutex;
+//    std::recursive_mutex mutex;
 
     address mem;
     size_t size;
@@ -34,8 +36,8 @@ public:
     MemMgr(address mem, size_t size);
     virtual ~MemMgr();
 
-    void lock();
-    void unlock();
+    void lock() { pthread_mutex_lock(&mutex); }
+    void unlock() { pthread_mutex_unlock(&mutex); /*mutex.unlock();*/ }
 
     virtual void *get(size_t len);
     void back(address p, size_t len);

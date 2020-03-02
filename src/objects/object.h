@@ -5,9 +5,9 @@
 #ifndef JVM_JOBJECT_H
 #define JVM_JOBJECT_H
 
+//#include <mutex>
 #include <string>
 #include <unordered_map>
-#include "pthread.h"
 #include "slot.h"
 #include "../util/encoding.h"
 
@@ -24,11 +24,11 @@ public:
         uintptr_t allFlags; // 以指针的大小对齐 todo 这样对齐有什么用
     };
 
-private:
-    pthread_mutex_t mutex; // 同一线程可重入的锁
-public:
-    void lock();
-    void unlock();
+//private:
+//    std::recursive_mutex mutex;
+//public:
+//    void lock() { mutex.lock(); }
+//    void unlock() { mutex.unlock(); }
 
 protected:
     explicit Object(Class *c);
@@ -48,10 +48,22 @@ public:
     virtual bool isArrayObject() const;
     Object *clone() const; // todo ClassObject 是否支持clone??????
 
-    void setFieldValue(Field *f, slot_t v); // only for category one field
+    void setFieldValue(Field *f, jint v);
+    void setFieldValue(Field *f, jfloat v);
+    void setFieldValue(Field *f, jlong v);
+    void setFieldValue(Field *f, jdouble v);
+    void setFieldValue(Field *f, jref v);
+
+    void setFieldValue(const char *name, const char *descriptor, jint v);
+    void setFieldValue(const char *name, const char *descriptor, jfloat v);
+    void setFieldValue(const char *name, const char *descriptor, jlong v);
+    void setFieldValue(const char *name, const char *descriptor, jdouble v);
+    void setFieldValue(const char *name, const char *descriptor, jref v);
+
+//    void setFieldValue(Field *f, slot_t v); // only for category one field
     void setFieldValue(Field *f, const slot_t *value);
-    void setFieldValue(const char *name, const char *descriptor, slot_t v); // only for category one field
-    void setFieldValue(const char *name, const char *descriptor, const slot_t *value);
+//    void setFieldValue(const char *name, const char *descriptor, slot_t v); // only for category one field
+//    void setFieldValue(const char *name, const char *descriptor, const slot_t *value);
     void setFieldValue(int id, jref value);
 
 private:

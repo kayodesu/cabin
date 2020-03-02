@@ -4,7 +4,7 @@
 
 #include "../../registry.h"
 #include "../../../objects/object.h"
-#include "../../../runtime/thread.h"
+#include "../../../runtime/thread_info.h"
 #include "../../../runtime/Frame.h"
 
 /*
@@ -15,7 +15,7 @@
 static void currentThread(Frame *frame)
 {
     // push a Object of java/lang/Thread of current thread
-    frame->pushr(getCurrentThread()->jThread);
+    frame->pushr(getCurrentThread()->tobj);
 }
 
 // public static native void yield();
@@ -164,7 +164,7 @@ static void getThreads(Frame *frame)
     Array *threads = newArray(loadArrayClass(S(array_java_lang_Thread)), size);
 
     for (size_t i = 0; i < size; i++) {
-        threads->set(i, g_all_threads[i]->jThread);
+        threads->set(i, g_all_threads[i]->tobj);
     }
 
     frame->pushr(threads);

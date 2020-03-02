@@ -7,7 +7,7 @@
 #include "interpreter.h"
 #include "../kayo.h"
 #include "../debug.h"
-#include "../runtime/thread.h"
+#include "../runtime/thread_info.h"
 #include "../runtime/Frame.h"
 #include "../classfile/constant.h"
 #include "../objects/class.h"
@@ -101,7 +101,7 @@ static const char *instruction_names[] = {
         "invokenative", "impdep2"
 };
 #define TRACE PRINT_TRACE
-#define PRINT_OPCODE TRACE("%d(0x%x), %s, pc = %lu\n", opcode, opcode, instruction_names[opcode], frame->reader.pc);
+#define PRINT_OPCODE TRACE("%d(0x%x), %s, pc = %d\n", opcode, opcode, instruction_names[opcode], (int)frame->reader.pc);
 #else
 #define TRACE(...)
 #define PRINT_OPCODE
@@ -124,7 +124,7 @@ static slot_t *exec()
     slot_t *ostack = frame->ostack;
     slot_t *lvars = frame->lvars;
 
-    jref _this = frame->method->isStatic() ? (jref) clazz : (jref) lvars[0];
+    jref _this = frame->method->isStatic() ? (jref) clazz : RSLOT(lvars);
 
 #define CHANGE_FRAME(newFrame) \
     do { \
@@ -135,7 +135,7 @@ static slot_t *exec()
         cp = &frame->method->clazz->cp; \
         ostack = frame->ostack; \
         lvars = frame->lvars; \
-        _this = frame->method->isStatic() ? (jref) clazz : (jref) lvars[0]; \
+        _this = frame->method->isStatic() ? (jref) clazz : RSLOT(lvars); \
         TRACE("executing frame: %s\n", frame->toString().c_str()); \
     } while (false)
 
@@ -146,28 +146,28 @@ static slot_t *exec()
             case OPC_NOP:
                 break;
             case OPC_ACONST_NULL:
-                *frame->ostack++ = (slot_t) jnull;
+                frame->pushr(jnull);
                 break;
             case OPC_ICONST_M1:
-                *frame->ostack++ = -1;
+                frame->pushi(-1);
                 break;
             case OPC_ICONST_0:
-                *frame->ostack++ = 0;
+                frame->pushi(0);
                 break;
             case OPC_ICONST_1:
-                *frame->ostack++ = 1;
+                frame->pushi(1);
                 break;
             case OPC_ICONST_2:
-                *frame->ostack++ = 2;
+                frame->pushi(2);
                 break;
             case OPC_ICONST_3:
-                *frame->ostack++ = 3;
+                frame->pushi(3);
                 break;
             case OPC_ICONST_4:
-                *frame->ostack++ = 4;
+                frame->pushi(4);
                 break;
             case OPC_ICONST_5:
-                *frame->ostack++ = 5;
+                frame->pushi(5);
                 break;
             case OPC_LCONST_0:
                 frame->pushl(0);
@@ -176,15 +176,13 @@ static slot_t *exec()
                 frame->pushl(1);
                 break;
             case OPC_FCONST_0:
-                *frame->ostack++ = 0;
+                frame->pushf(0);
                 break;
             case OPC_FCONST_1:
-                *((jfloat*) frame->ostack) = (jfloat) 1.0;
-                frame->ostack++;
+                frame->pushf(1);
                 break;
             case OPC_FCONST_2:
-                *((jfloat*) frame->ostack) = (jfloat) 2.0;
-                frame->ostack++;
+                frame->pushf(2);
                 break;
             case OPC_DCONST_0:
                 frame->pushd(0);
@@ -192,7 +190,7 @@ static slot_t *exec()
             case OPC_DCONST_1:
                 frame->pushd(1);
                 break;
-            case OPC_BIPUSH: // Byte Integer push
+            case OPC_BIPUSH: // bipush, Byte Integer push
                 frame->pushi(reader->readu1());
                 break;
             case OPC_SIPUSH: // Short Integer push
@@ -305,33 +303,59 @@ __ldc:
         thread_throw(new NullPointerException); \
     if (!arr->checkBounds(index)) \
         thread_throw(new ArrayIndexOutOfBoundsException);
-
-#define ARRAY_LOAD_CATEGORY_ONE(type) \
-{ \
-    GET_AND_CHECK_ARRAY \
-    *frame->ostack++ = (slot_t) arr->get<type>(index); \
-    break; \
-}
-            case OPC_IALOAD:
-                ARRAY_LOAD_CATEGORY_ONE(jint);
-            case OPC_FALOAD:
-                ARRAY_LOAD_CATEGORY_ONE(jfloat);
-            case OPC_AALOAD:
-                ARRAY_LOAD_CATEGORY_ONE(jref);
-            case OPC_BALOAD:
-                ARRAY_LOAD_CATEGORY_ONE(jbyte);
-            case OPC_CALOAD:
-                ARRAY_LOAD_CATEGORY_ONE(jchar);
-            case OPC_SALOAD:
-                ARRAY_LOAD_CATEGORY_ONE(jshort);
-#undef ARRAY_LOAD_CATEGORY_ONE
-
-            case OPC_LALOAD:
+//#define ARRAY_LOAD_CATEGORY_ONE(type, t) \
+//{ \
+//    GET_AND_CHECK_ARRAY \
+//    auto value = arr->get<type>(index); \
+//    frame->push##t(value); \
+//    break; \
+//}
+            case OPC_IALOAD: {
+                GET_AND_CHECK_ARRAY
+                auto value = arr->get<jint>(index);
+                frame->pushi(value);
+                break;
+            }
+            case OPC_FALOAD: {
+                GET_AND_CHECK_ARRAY
+                auto value = arr->get<jfloat>(index);
+                frame->pushf(value);
+                break;
+            }
+            case OPC_AALOAD: {
+                GET_AND_CHECK_ARRAY
+                auto value = arr->get<jref>(index);
+                frame->pushr(value);
+                break;
+            }
+            case OPC_BALOAD: {
+                GET_AND_CHECK_ARRAY
+                jint value = arr->get<jbyte>(index);
+                frame->pushi(value);
+                break;
+            }
+            case OPC_CALOAD: {
+                GET_AND_CHECK_ARRAY
+                jint value = arr->get<jchar>(index);
+                frame->pushi(value);
+                break;
+            }
+            case OPC_SALOAD: {
+                GET_AND_CHECK_ARRAY
+                jint value = arr->get<jshort>(index);
+                frame->pushi(value);
+                break;
+            }
+            case OPC_LALOAD: {
+                GET_AND_CHECK_ARRAY
+                auto value = arr->get<jlong>(index);
+                frame->pushl(value);
+                break;
+            }
             case OPC_DALOAD: {
                 GET_AND_CHECK_ARRAY
-            	auto value = (slot_t *) arr->index(index);
-                *frame->ostack++ = value[0];
-                *frame->ostack++ = value[1];
+                auto value = arr->get<jdouble>(index);
+                frame->pushd(value);
                 break;
             }
             case OPC_ISTORE:
@@ -388,32 +412,59 @@ __ldc:
                 lvars[4] = *--frame->ostack;
                 lvars[3] = *--frame->ostack;
                 break;
-#define ARRAY_STORE_CATEGORY_ONE(type) \
-{ \
-    auto value = (type) *--frame->ostack; \
-    GET_AND_CHECK_ARRAY \
-    arr->set(index, value); \
-    break; \
-}
-            case OPC_IASTORE:
-                ARRAY_STORE_CATEGORY_ONE(jint);
-            case OPC_FASTORE:
-                ARRAY_STORE_CATEGORY_ONE(jfloat);
-            case OPC_AASTORE:
-                ARRAY_STORE_CATEGORY_ONE(jref);
-            case OPC_BASTORE:
-                ARRAY_STORE_CATEGORY_ONE(jbyte);
-            case OPC_CASTORE:
-                ARRAY_STORE_CATEGORY_ONE(jchar);
-            case OPC_SASTORE:
-                ARRAY_STORE_CATEGORY_ONE(jshort);
-#undef ARRAY_STORE_CATEGORY_ONE
-            case OPC_LASTORE:
-            case OPC_DASTORE: {
-                frame->ostack -= 2;
-                slot_t *value = frame->ostack;
+//#define ARRAY_STORE_CATEGORY_ONE(type, t) \
+//{ \
+//    auto value = frame->pop##t(); \
+//    GET_AND_CHECK_ARRAY \
+//    arr->set(index, value); \
+//    break; \
+//}
+            case OPC_IASTORE: {
+                auto value = frame->popi();
                 GET_AND_CHECK_ARRAY
-                memcpy(arr->index(index), value, sizeof(slot_t) * 2);
+                arr->set<jint>(index, value);
+                break;
+            }
+            case OPC_FASTORE: {
+                auto value = frame->popf();
+                GET_AND_CHECK_ARRAY
+                arr->set<jfloat>(index, value);
+                break;
+            }
+            case OPC_AASTORE: {
+                auto value = frame->popr();
+                GET_AND_CHECK_ARRAY
+                arr->set<jref>(index, value);
+                break;
+            }
+            case OPC_BASTORE: {
+                auto value = frame->popi();
+                GET_AND_CHECK_ARRAY
+                arr->set<jbyte>(index, (jbyte) value);
+                break;
+            }
+            case OPC_CASTORE: {
+                auto value = frame->popi();
+                GET_AND_CHECK_ARRAY
+                arr->set<jchar>(index, (jchar) value);
+                break;
+            }
+            case OPC_SASTORE: {
+                auto value = frame->popi();
+                GET_AND_CHECK_ARRAY
+                arr->set<jshort>(index, (jshort) value);
+                break;
+            }
+            case OPC_LASTORE: {
+                auto value = frame->popl();
+                GET_AND_CHECK_ARRAY
+                arr->set<jlong>(index, value);
+                break;
+            }
+            case OPC_DASTORE: {
+                auto value = frame->popd();
+                GET_AND_CHECK_ARRAY
+                arr->set<jdouble>(index, value);
                 break;
             }
 #undef GET_AND_CHECK_ARRAY
@@ -469,48 +520,50 @@ __ldc:
             case OPC_SWAP:
                 swap(frame->ostack[-1], frame->ostack[-2]);
                 break;
-#define BINARY_OP(type, n, oper) \
+
+#define BINARY_OP(type, t, oper) \
 { \
-    frame->ostack -= (n);\
-    ((type *) frame->ostack)[-1] = ((type *) frame->ostack)[-1] oper ((type *) frame->ostack)[0]; \
+    type v2 = frame->pop##t();\
+    type v1 = frame->pop##t();\
+    frame->push##t(v1 oper v2); \
     break; \
 }
             case OPC_IADD:
-                BINARY_OP(jint, 1, +);
+                BINARY_OP(jint, i, +);
             case OPC_LADD:
-                BINARY_OP(jlong, 2, +);
+                BINARY_OP(jlong, l, +);
             case OPC_FADD:
-                BINARY_OP(jfloat, 1, +);
+                BINARY_OP(jfloat, f, +);
             case OPC_DADD:
-                BINARY_OP(jdouble, 2, +);
+                BINARY_OP(jdouble, d, +);
             case OPC_ISUB:
-                BINARY_OP(jint, 1, -);
+                BINARY_OP(jint, i, -);
             case OPC_LSUB:
-                BINARY_OP(jlong, 2, -);
+                BINARY_OP(jlong, l, -);
             case OPC_FSUB:
-                BINARY_OP(jfloat, 1, -);
+                BINARY_OP(jfloat, f, -);
             case OPC_DSUB:
-                BINARY_OP(jdouble, 2, -);
+                BINARY_OP(jdouble, d, -);
             case OPC_IMUL:
-                BINARY_OP(jint, 1, *);
+                BINARY_OP(jint, i, *);
             case OPC_LMUL:
-                BINARY_OP(jlong, 2, *);
+                BINARY_OP(jlong, l, *);
             case OPC_FMUL:
-                BINARY_OP(jfloat, 1, *);
+                BINARY_OP(jfloat, f, *);
             case OPC_DMUL:
-                BINARY_OP(jdouble, 2, *);
+                BINARY_OP(jdouble, d, *);
             case OPC_IDIV:
-                BINARY_OP(jint, 1, /);
+                BINARY_OP(jint, i, /);
             case OPC_LDIV:
-                BINARY_OP(jlong, 2, /);
+                BINARY_OP(jlong, l, /);
             case OPC_FDIV:
-                BINARY_OP(jfloat, 1, /);
+                BINARY_OP(jfloat, f, /);
             case OPC_DDIV:
-                BINARY_OP(jdouble, 2, /);
+                BINARY_OP(jdouble, d, /);
             case OPC_IREM:
-                BINARY_OP(jint, 1, %);
+                BINARY_OP(jint, i, %);
             case OPC_LREM:
-                BINARY_OP(jlong, 2, %);
+                BINARY_OP(jlong, l, %);
             case OPC_FREM: {
                 jfloat v2 = frame->popf();
    				jfloat v1 = frame->popf();
@@ -576,17 +629,17 @@ __ldc:
                 break;
             }
             case OPC_IAND:
-                BINARY_OP(jint, 1, &);
+                BINARY_OP(jint, i, &);
             case OPC_LAND:
-                BINARY_OP(jlong, 2, &);
+                BINARY_OP(jlong, l, &);
             case OPC_IOR:
-                BINARY_OP(jint, 1, |);
+                BINARY_OP(jint, i, |);
             case OPC_LOR:
-                BINARY_OP(jlong, 2, |);
+                BINARY_OP(jlong, l, |);
             case OPC_IXOR:
-                BINARY_OP(jint, 1, ^);
+                BINARY_OP(jint, i, ^);
             case OPC_LXOR:
-                BINARY_OP(jlong, 2, ^);
+                BINARY_OP(jlong, l, ^);
 #undef BINARY_OP
             case OPC_IINC: {
                 u1 index = reader->readu1();
@@ -685,28 +738,39 @@ __ldc:
                 IF_COND(<=);
 #undef IF_COND
 
-#define IF_CMP_COND(cond) \
+//#define IF_CMP_COND(cond)
+//{
+//    frame->ostack -= 2;
+//    jint offset = reader->reads2();
+//    if (frame->ostack[0] cond frame->ostack[1])
+//        reader->skip(offset - 3); /* minus instruction length */
+//    break;
+//}
+#define IF_CMP_COND(t, cond) \
 { \
-    frame->ostack -= 2;\
-    jint offset = reader->reads2(); \
-    if (frame->ostack[0] cond frame->ostack[1]) \
+    s2 offset = reader->reads2(); \
+    auto v2 = frame->pop##t(); \
+    auto v1 = frame->pop##t(); \
+    if (v1 cond v2) \
         reader->skip(offset - 3); /* minus instruction length */ \
     break; \
 }
             case OPC_IF_ICMPEQ:
+                IF_CMP_COND(i, ==);
             case OPC_IF_ACMPEQ:
-                IF_CMP_COND(==);
+                IF_CMP_COND(r, ==);
             case OPC_IF_ICMPNE:
+                IF_CMP_COND(i, !=);
             case OPC_IF_ACMPNE:
-                IF_CMP_COND(!=);
+                IF_CMP_COND(r, !=);
             case OPC_IF_ICMPLT:
-                IF_CMP_COND(<);
+                IF_CMP_COND(i, <);
             case OPC_IF_ICMPGE:
-                IF_CMP_COND(>=);
+                 IF_CMP_COND(i, >=);
             case OPC_IF_ICMPGT:
-                IF_CMP_COND(>);
+                IF_CMP_COND(i, >);
             case OPC_IF_ICMPLE:
-                IF_CMP_COND(<=);
+                IF_CMP_COND(i, <=);
 #undef IF_CMP_COND
 
             case OPC_GOTO: {
@@ -812,7 +876,7 @@ __method_return:
                 slot_t *ret_value = frame->ostack;
                 if (frame->vm_invoke || invokeFrame == nullptr) {
                     if (frame->method->isSynchronized()) {
-                        _this->unlock();
+//                        _this->unlock();
                     }
                     return ret_value;
                 }
@@ -821,7 +885,7 @@ __method_return:
                     *invokeFrame->ostack++ = *ret_value++;
                 }
                 if (frame->method->isSynchronized()) {
-                    _this->unlock();
+//                    _this->unlock();
                 }
                 CHANGE_FRAME(invokeFrame);
                 break;
@@ -906,7 +970,7 @@ __method_return:
                 Method *m = cp->resolveMethod(index);
 
                 frame->ostack -= m->arg_slot_count;
-                auto obj = (jref) frame->ostack[0];
+                jref obj = RSLOT(frame->ostack);
                 if (obj == jnull) {
                     thread_throw(new NullPointerException);
                 }
@@ -945,7 +1009,7 @@ __method_return:
 			    }
 
 			    frame->ostack -= m->arg_slot_count;
-			    auto obj = (jref) frame->ostack[0];
+                jref obj = RSLOT(frame->ostack);
 			    if (obj == jnull) {
 			        thread_throw(new NullPointerException);
 			    }
@@ -994,7 +1058,7 @@ __method_return:
                 /* todo 本地方法 */
 
                 frame->ostack -= m->arg_slot_count;
-                auto obj = (jref) frame->ostack[0];
+                jref obj = RSLOT(frame->ostack);
                 if (obj == jnull) {
                     thread_throw(new NullPointerException);
                 }
@@ -1078,7 +1142,7 @@ __invoke_method: {
     newFrame->lvars = frame->ostack;
     CHANGE_FRAME(newFrame);    
     if (resolved_method->isSynchronized()) {
-        _this->unlock();
+//        _this->unlock(); // todo why unlock 而不是 lock ................................................
     }
     break;
 }
@@ -1095,8 +1159,9 @@ __invoke_method: {
                 frame->pushr(newObject(c));
                 break;
             }
-            case OPC_NEWARRAY: {
-                // 创建一维基本类型数组。包括 boolean[], byte[], char[], short[], int[], long[], float[] 和 double[] 8种。
+            case OPC_NEWARRAY: { // newarray
+                // 创建一维基本类型数组。
+                // 包括 boolean[], byte[], char[], short[], int[], long[], float[] 和 double[] 8种。
                 jint arrLen = frame->popi();
                 if (arrLen < 0) {
                     thread_throw(new NegativeArraySizeException);
@@ -1119,20 +1184,18 @@ __invoke_method: {
 
 			    auto c = loadArrayClass(arrClassName);
 			    frame->pushr(newArray(c, arrLen));
-
                 break;
             }
-            case OPC_ANEWARRAY: {
+            case OPC_ANEWARRAY: { // anewarray
                 // 创建一维引用类型数组
-                jint arrLen = frame->popi();
-                if (arrLen < 0) {
+                jint arr_len = frame->popi();
+                if (arr_len < 0) {
                     thread_throw(new ArrayIndexOutOfBoundsException);
                 }
 
 			    u2 index = reader->readu2();
-			    auto ac = cp->resolveClass(index)->arrayClass();
-			    frame->pushr(newArray(ac, arrLen));
-
+			    Class *ac = cp->resolveClass(index)->arrayClass();
+			    frame->pushr(newArray(ac, arr_len));
                 break;
             }
             case OPC_MULTIANEWARRAY: {
@@ -1154,7 +1217,6 @@ __invoke_method: {
                     lens[i] = frame->popi();
                 }
                 frame->pushr(newMultiArray(ac, dim, lens));
-
                 break;
             }           
             case OPC_ARRAYLENGTH: {
@@ -1244,7 +1306,7 @@ __opc_athrow:
 			    if (o == jnull) {
 			        thread_throw(new NullPointerException);
 			    }
-			    o->lock();
+//			    o->lock();
                 break;
             }
             case OPC_MONITOREXIT: {
@@ -1252,12 +1314,12 @@ __opc_athrow:
 			    if (o == jnull) {
 			        thread_throw(new NullPointerException);
 			    }
-			    o->unlock();
+//			    o->unlock();
                 break;
             }
             case OPC_WIDE: {
                 int __opcode = reader->readu1();
-                TRACE("%d(0x%x), %s, pc = %lu\n", __opcode, __opcode, instruction_names[__opcode], frame->reader.pc);
+                PRINT_OPCODE
                 u2 index = reader->readu2();
                 switch (__opcode) {
                     case OPC_ILOAD:

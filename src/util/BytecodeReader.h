@@ -22,6 +22,7 @@ public:
 
     u1 *currPos()
     {
+        assert(pc < len);
         return bytecode + pc;
     }
     
@@ -51,6 +52,7 @@ public:
     void skip(int offset)
     {
         pc += offset;
+        assert(pc < len);
     }
 
     /*
@@ -61,6 +63,7 @@ public:
         while (pc % 4 != 0) {
             pc++;
         }
+        assert(pc < len);
     }
 
     void readBytes(u1 *buf, size_t len)
@@ -73,16 +76,19 @@ public:
 
     s1 reads1()
     {
+        assert(pc < len);
         return bytecode[pc++];
     }
 
     u1 readu1()
     {
+        assert(pc < len);
         return (u1) bytecode[pc++];
     }
 
     u2 readu2()
     {
+        assert(pc < len);
         u2 x = readu1();
         u2 y = (u2) (readu1() & 0x00ff);
 
@@ -91,6 +97,7 @@ public:
 
     u2 peeku2()
     {
+        assert(pc < len);
         u2 data = readu2();
         pc -= 2;
         return data;
@@ -98,11 +105,13 @@ public:
 
     s2 reads2()
     {
+        assert(pc < len);
         return readu2();
     }
 
     u4 readu4()
     {
+        assert(pc < len);
         u1 buf[4];
         readBytes(buf, 4);
 
@@ -111,6 +120,7 @@ public:
 
     u8 readu8()
     {
+        assert(pc < len);
         const u1 *p = bytecode;
         u8 v = ((u8)(p)[0]<<56)
                |((u8)(p)[1]<<48)
@@ -126,6 +136,7 @@ public:
 
     s4 reads4()
     {
+        assert(pc < len);
         u1 buf[4];
         readBytes(buf, 4);
 
@@ -137,6 +148,7 @@ public:
      */
     void reads4s(int n, s4 *s4s)
     {
+        assert(pc < len);
         for (int i = 0; i < n; i++) {
             u1 buf[4];
             readBytes(buf, 4);

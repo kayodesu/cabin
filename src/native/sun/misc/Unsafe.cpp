@@ -58,7 +58,7 @@ static void compareAndSwapInt(Frame *frame)
         old = (jint *)(((Array *) o)->index(offset));
     } else {
         assert(0 <= offset && offset < o->clazz->instFieldsCount);
-        old = o->data + offset;
+        old = (jint *) o->data + offset;
     }
 
     bool b = __sync_bool_compare_and_swap(old, expected, x);

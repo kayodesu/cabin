@@ -7,7 +7,7 @@
 #include "../../../objects/class.h"
 #include "../../../interpreter/interpreter.h"
 #include "../../../runtime/Frame.h"
-#include "../../../runtime/thread.h"
+#include "../../../runtime/thread_info.h"
 
 using namespace utf8;
 
@@ -442,7 +442,7 @@ static void getConstantPool(Frame *frame)
 
     Class *cpClass = loadBootClass("sun/reflect/ConstantPool");
     jref cp = newObject(cpClass);
-    cp->setFieldValue("constantPoolOop", "Ljava/lang/Object;", (slot_t) &_this->cp);
+    cp->setFieldValue("constantPoolOop", "Ljava/lang/Object;", (jref) &_this->cp); // todo 应该传递一个正在的 Object *
 
     frame->pushr(cp);
 }

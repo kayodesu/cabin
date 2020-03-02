@@ -30,7 +30,7 @@ static void createLong(Frame *frame)
 //    bb->clinit();
 
     Method *allocate = bb->getDeclaredStaticMethod("allocate", "(I)Ljava/nio/ByteBuffer;");
-    int slot = 8; // todo sizeof(jlong) ???????????
+    slot_t slot = 8; // todo sizeof(jlong) ???????????
     slot_t *ret = execJavaFunc(allocate, &slot);
     frame->pushr((jref) *(ret));
 }

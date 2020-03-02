@@ -89,7 +89,7 @@ static void resolve(Frame *frame)
     // Object[]: (Class<?>) Object[0] is return type
     //           (Class<?>[]) Object[1] is parameter types
     auto type = mn->getInstFieldValue<jref>("type", "Ljava/lang/Object;");
-    auto flags = mn->getInstFieldValue<jint>("flags", "I");
+    jint flags = mn->getInstFieldValue<jint>("flags", "I");
     auto resolution = mn->getInstFieldValue<jref>("resolution", "Ljava/lang/Object;");
 
     auto refKind = getRefKind(mn);
@@ -131,7 +131,7 @@ static void resolve(Frame *frame)
             Method *m = clazz->getDeclaredStaticMethod(name->toUtf8(), descriptor->toUtf8());
             assert(m->isStatic());
             resolvedMemberName = memberName(m, refKind);
-            auto newFlags = flags | Modifier::MOD_STATIC; // todo
+            jint newFlags = flags | Modifier::MOD_STATIC; // todo
             resolvedMemberName->setFieldValue("flags", "I", newFlags); // todo
             assert(isStatic(resolvedMemberName));
         } else {

@@ -11,7 +11,7 @@
 #include "class.h"
 #include "../interpreter/interpreter.h"
 #include "../../zlib/minizip/unzip.h"
-#include "../runtime/thread.h"
+#include "../runtime/thread_info.h"
 #include "Prims.h"
 
 using namespace std;

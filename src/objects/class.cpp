@@ -6,7 +6,8 @@
 #include <algorithm>
 #include <sstream>
 #include <cassert>
-#include "../runtime/thread.h"
+#include <pthread.h>
+#include "../runtime/thread_info.h"
 #include "class.h"
 #include "../interpreter/interpreter.h"
 #include "Prims.h"
@@ -989,22 +990,21 @@ Class::Class(Object *loader, u1 *bytecode, size_t len)
             case CONSTANT_InterfaceMethodref:
             case CONSTANT_Dynamic:
             case CONSTANT_InvokeDynamic: {
-                u2 index1 = r.readu2();
-                u2 index2 = r.readu2();
-                cp.info(i, (index2 << 16) + index1); //  CP_INFO(cp, i) = (index2 << 16) + index1;
+                slot_t index1 = r.readu2();
+                slot_t index2 = r.readu2();
+                cp.info(i, (index2 << 16) + index1);
                 break;
             }
             case CONSTANT_Integer: {
                 u1 bytes[4];
                 r.readBytes(bytes, 4);
-                cp._int(i, bytes_to_int32(bytes)); // CP_INT(cp, i) = bytes_to_int32(bytes);
+                cp._int(i, bytes_to_int32(bytes));
                 break;
             }
             case CONSTANT_Float: {
                 u1 bytes[4];
                 r.readBytes(bytes, 4);
                 cp._float(i, bytes_to_float(bytes));
-                // CP_FLOAT(cp, i) = bytes_to_float(bytes);
                 break;
             }
             case CONSTANT_Long: {
@@ -1036,8 +1036,8 @@ Class::Class(Object *loader, u1 *bytecode, size_t len)
                 break;
             }
             case CONSTANT_MethodHandle: {
-                u2 index1 = r.readu1(); // 这里确实是 readu1, reference_kind
-                u2 index2 = r.readu2(); // reference_index
+                slot_t index1 = r.readu1(); // 这里确实是 readu1, reference_kind
+                slot_t index2 = r.readu2(); // reference_index
                 cp.info(i, (index2 << 16) + index1);
                 break;
             }
@@ -1136,6 +1136,7 @@ void Class::clinit()
         return;
     }
 
+//    scoped_lock lock(clinit_mutex);
     pthread_mutex_lock(&clinitLock);
     if (inited) { // 需要再次判断 inited，有可能被其他线程置为 true
         pthread_mutex_unlock(&clinitLock);

@@ -5,8 +5,9 @@
 #ifndef JVM_JTHREAD_H
 #define JVM_JTHREAD_H
 
-#include <pthread.h>
 #include <vector>
+#include <thread>
+#include <pthread.h>
 #include "../config.h"
 #include "../jtypes.h"
 #include "../objects/throwables.h"
@@ -88,14 +89,18 @@ class Thread {
     u1 vmStack[VM_STACK_SIZE]; // 虚拟机栈，一个线程只有一个虚拟机栈
     Frame *topFrame = nullptr;
 
+    explicit Thread(Object *jThread = nullptr, jint priority = THREAD_NORM_PRIORITY);
+
+    friend Thread *initMainThread();
+    friend void createVMThread(void *(*start)(void *), const utf8_t *thread_name);
+    friend void createCustomerThread(Object *jThread);
+
 public:
-    // 所关联的 Object of java.lang.Thread
-    Object *jThread = nullptr;
+    Object *tobj = nullptr; // 所关联的 Object of java.lang.Thread
+//    std::thread::id tid; // 所关联的 local thread 对应的id
 
     // 所关联的 POSIX thread 对应的id
     pthread_t tid;
-
-    explicit Thread(Object *jThread = nullptr, jint priority = THREAD_NORM_PRIORITY);
 
     void setThreadGroupAndName(Object *threadGroup, const char *threadName);
 
@@ -142,18 +147,18 @@ extern Thread *mainThread;
 
 Thread *initMainThread();
 
-struct VMThreadInitInfo {
-    void *(*start)(void *);
-    const utf8_t *threadName;
+//struct VMThreadInitInfo {
+//    void *(*start)(void *);
+//    const utf8_t *threadName;
+//
+//    VMThreadInitInfo(void *(*start0)(void *), const utf8_t *threadName0): start(start0), threadName(threadName0)
+//    {
+//        assert(start != nullptr);
+//        assert(threadName != nullptr and utf8::length(threadName) > 0);
+//    }
+//};
 
-    VMThreadInitInfo(void *(*start0)(void *), const utf8_t *threadName0): start(start0), threadName(threadName0)
-    {
-        assert(start != nullptr);
-        assert(threadName != nullptr and utf8::length(threadName) > 0);
-    }
-};
-
-void createVMThread(VMThreadInitInfo *info);
+void createVMThread(void *(*start)(void *), const utf8_t *thread_name);
 
 void createCustomerThread(Object *jThread);
 

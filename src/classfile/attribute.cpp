@@ -6,7 +6,7 @@
 #include <sstream>
 #include "../kayo.h"
 #include "attribute.h"
-#include "../runtime/thread.h"
+#include "../runtime/thread_info.h"
 #include "constant.h"
 #include "../objects/class.h"
 

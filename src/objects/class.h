@@ -5,12 +5,13 @@
 #ifndef JVM_JCLASS_H
 #define JVM_JCLASS_H
 
-#include <pthread.h>
 #include <string>
 #include <vector>
 #include <cassert>
 #include <cstring>
 #include <unordered_set>
+#include <mutex>
+#include <pthread.h>
 #include "../jtypes.h"
 #include "class_loader.h"
 #include "Modifier.h"
@@ -115,12 +116,6 @@ public:
 
     native_method_t nativeMethod = nullptr; // present only if native
 
-//    struct Parameter {
-//        const utf8_t *name = nullptr;
-//        u2 accessFlags;
-//
-//        explicit Parameter(ConstantPool &cp, BytecodeReader &r);
-//    };
     std::vector<MethodParameter> parameters;
 
     /*
@@ -230,11 +225,13 @@ public:
 
 
 // 从 1 开始计数，第0位无效
-struct ConstantPool {
-    Class *clazz;
-    u2 size = 0;
+class ConstantPool {
     u1 *_type = nullptr;
     slot_t *_info = nullptr;
+
+public:
+    Class *clazz;
+    u2 size = 0;
 
     ConstantPool() = default;
 
@@ -458,56 +455,56 @@ struct ConstantPool {
     {
         assert(0 < i && i < size);
         assert(_type[i] == CONSTANT_Integer);
-        return _info[i];
+        return ISLOT(_info + i);
     }
 
     void _int(u2 i, jint newInt)
     {
         assert(0 < i && i < size);
         assert(_type[i] == CONSTANT_Integer);
-        _info[i] = newInt;
+        ISLOT(_info + i) = newInt;
     }
 
     jfloat _float(u2 i)
     {
         assert(0 < i && i < size);
         assert(_type[i] == CONSTANT_Float);
-        return *(jfloat *)(_info + i);
+        return FSLOT(_info + i);
     }
 
     void _float(u2 i, jfloat newFloat)
     {
         assert(0 < i && i < size);
         assert(_type[i] == CONSTANT_Float);
-        *(jfloat *)(_info + i) = newFloat;
+        FSLOT(_info + i) = newFloat;
     }
 
     jlong _long(u2 i)
     {
         assert(0 < i && i < size);
         assert(_type[i] == CONSTANT_Long);
-        return *(jlong *)(_info + i);
+        return LSLOT(_info + i);
     }
 
     void _long(u2 i, jlong newLong)
     {
         assert(0 < i && i < size);
         assert(_type[i] == CONSTANT_Long);
-        *(jlong *)(_info + i) = newLong;
+        LSLOT(_info + i) = newLong;
     }
 
     jdouble _double(u2 i)
     {
         assert(0 < i && i < size);
         assert(_type[i] == CONSTANT_Double);
-        return *(jdouble *)(_info + i);
+        return DSLOT(_info + i);
     }
 
     void _double(u2 i, jdouble newDouble)
     {
         assert(0 < i && i < size);
         assert(_type[i] == CONSTANT_Double);
-        *(jdouble *)(_info + i) = newDouble;
+        DSLOT(_info + i) = newDouble;
     }
 
     Class *resolveClass(u2 i);
@@ -523,7 +520,7 @@ struct ConstantPool {
 // Object of java/lang/Class
 class Class: public Object {
 public:
-    enum {
+    enum State {
         EMPTY,
         LOADED,
         LINKED,
@@ -627,6 +624,7 @@ private:
 
     u1 *bytecode = nullptr;
 
+//    std::mutex clinit_mutex;
     pthread_mutex_t clinitLock = PTHREAD_MUTEX_INITIALIZER;
 
     Class(Object *loader, u1 *bytecode, size_t len);

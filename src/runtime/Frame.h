@@ -38,7 +38,7 @@ struct Frame {
 
     jint getLocalAsInt(int index)
     {
-        return * (jint *) (lvars + index);
+        return ISLOT(lvars + index);
     }
 
     jshort getLocalAsShort(int index)
@@ -53,38 +53,38 @@ struct Frame {
 
     jfloat getLocalAsFloat(int index)
     {
-        return * (jfloat *) (lvars + index);
+        return FSLOT(lvars + index);
     }
 
     jlong getLocalAsLong(int index)
     {
-        return * (jlong *) (lvars + index);
+        return LSLOT(lvars + index);
     }
 
     jdouble getLocalAsDouble(int index)
     {
-        return * (jdouble *) (lvars + index);
+        return DSLOT(lvars + index);
     }
 
     template <typename T = Object>
     T *getLocalAsRef(int index)
     {
-        return (* (T **) (lvars + index));
+        return (T *) RSLOT(lvars + index);
     }
 
     // push to ostack.
-    void pushi(jint v)    { *(jint *) ostack = v; ostack++; }
-    void pushf(jfloat v)  { *(jfloat *) ostack = v; ostack++; }
-    void pushl(jlong v)   { *(jlong *) ostack = v; ostack += 2; }
-    void pushd(jdouble v) { *(jdouble *) ostack = v; ostack += 2; }
-    void pushr(jref v)    { *(jref *) ostack = v; ostack++; }
+    void pushi(jint v)    { ISLOT(ostack) = v; ostack++; }
+    void pushf(jfloat v)  { FSLOT(ostack) = v; ostack++; }
+    void pushl(jlong v)   { LSLOT(ostack) = v; ostack += 2; }
+    void pushd(jdouble v) { DSLOT(ostack) = v; ostack += 2; }
+    void pushr(jref v)    { RSLOT(ostack) = v; ostack++; }
 
     // pop from ostack.
-    jint    popi() { ostack--;    return * (jint *) ostack; }
-    jfloat  popf() { ostack--;    return * (jfloat *) ostack; }
-    jlong   popl() { ostack -= 2; return * (jlong *) ostack; }
-    jdouble popd() { ostack -= 2; return * (jdouble *) ostack; }
-    jref    popr() { ostack--;    return * (jref *) ostack; }
+    jint    popi() { ostack--;    return ISLOT(ostack); }
+    jfloat  popf() { ostack--;    return FSLOT(ostack); }
+    jlong   popl() { ostack -= 2; return LSLOT(ostack); }
+    jdouble popd() { ostack -= 2; return DSLOT(ostack); }
+    jref    popr() { ostack--;    return RSLOT(ostack); }
 
     // the end address of this frame
     intptr_t end()

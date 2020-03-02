@@ -7,7 +7,7 @@
 #include "../../../objects/object.h"
 #include "../../../interpreter/interpreter.h"
 #include "../../../runtime/Frame.h"
-#include "../../../runtime/thread.h"
+#include "../../../runtime/thread_info.h"
 #include "../../../objects/class.h"
 #include "../../../properties.h"
 

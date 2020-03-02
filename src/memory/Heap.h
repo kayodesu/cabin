@@ -8,7 +8,6 @@
 #include <cstddef>
 #include <string>
 #include <sstream>
-#include <pthread.h>
 #include <vector>
 #include <cassert>
 #include "../jtypes.h"

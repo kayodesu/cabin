@@ -2,15 +2,15 @@
  * Author: kayo
  */
 
-#include <pthread.h>
+//#include <thread>
+#include "thread_info.h"
 #include "../kayo.h"
 #include "../debug.h"
 #include "../objects/class_loader.h"
-#include "thread.h"
 #include "../objects/object.h"
+#include "../objects/class.h"
 #include "../interpreter/interpreter.h"
 #include "Frame.h"
-#include "../objects/class.h"
 
 #if TRACE_THREAD
 #define TRACE PRINT_TRACE
@@ -23,14 +23,18 @@ using namespace std;
 // Thread specific key holding a Thread
 static pthread_key_t thread_key;
 
+//thread_local Thread *curr_thread;
+
 Thread *getCurrentThread()
 {
     return (Thread *) pthread_getspecific(thread_key);
+//    return curr_thread;
 }
 
 static inline void saveCurrentThread(Thread *thread)
 {
     pthread_setspecific(thread_key, thread);
+//    curr_thread = thread;
 }
 
 // Various field and method into java.lang.Thread cached at startup and used in thread creation
@@ -74,22 +78,31 @@ Thread *initMainThread()
     return mainThread;
 }
 
-void createVMThread(VMThreadInitInfo *info)
+void createVMThread(void *(*start)(void *), const utf8_t *thread_name)
 {
-    assert(info != nullptr);
+    assert(start != nullptr && thread_name != nullptr); // vm thread must have a name
 
-    static auto start = [](void *args) {
-        auto a = (VMThreadInitInfo *) args;
-        auto newThread = new Thread();
-        newThread->setThreadGroupAndName(sysThreadGroup, a->threadName);
-        return a->start(nullptr);
-    };
+//    static auto start = [](void *args) {
+//        auto a = (VMThreadInitInfo *) args;
+//        auto newThread = new Thread();
+//        newThread->setThreadGroupAndName(sysThreadGroup, a->threadName);
+//        return a->start(nullptr);
+//    };
+//
+//    pthread_t tid;
+//    int ret = pthread_create(&tid, nullptr, start, (void *) info);
+//    if (ret != 0) {
+//        thread_throw(new InternalError("create Thread failed"));
+//    }
 
-    pthread_t tid;
-    int ret = pthread_create(&tid, nullptr, start, (void *) info);
-    if (ret != 0) {
-        thread_throw(new InternalError("create Thread failed"));
-    }
+//    static auto __start = [](void *(*start)(void *), const utf8_t *thread_name) {
+//        auto new_thread = new Thread();
+//        new_thread->setThreadGroupAndName(sysThreadGroup, thread_name);
+//        return start(nullptr);
+//    };
+//
+//    std::thread t(__start, start, thread_name);
+//    t.detach();
 }
 
 void createCustomerThread(Object *jThread)
@@ -107,42 +120,56 @@ void createCustomerThread(Object *jThread)
     if (ret != 0) {
         thread_throw(new InternalError("create Thread failed"));
     }
+
+//    static auto __start = [](Object *jThread) {
+//        auto new_thread = new Thread(jThread);
+//        return (void *) execJavaFunc(runMethod, jThread);
+//    };
+//
+//    std::thread t(__start, jThread);
+//    t.detach();
 }
 
 static pthread_mutex_t newThreadMutex = PTHREAD_MUTEX_INITIALIZER;
+//static mutex new_thread_mutex;
 
-Thread::Thread(Object *jThread0, jint priority): jThread(jThread0)
+Thread::Thread(Object *tobj0, jint priority): tobj(tobj0)
 {
     assert(THREAD_MIN_PRIORITY <= priority && priority <= THREAD_MAX_PRIORITY);
 
+//    scoped_lock lock(new_thread_mutex);
     pthread_mutex_lock(&newThreadMutex);
+
     saveCurrentThread(this);
     g_all_threads.push_back(this);
 
     tid = pthread_self();
+//    tid = this_thread::get_id();
 
-    if (jThread == nullptr)
-        jThread = newObject(threadClass);
+    if (tobj == nullptr)
+        tobj = newObject(threadClass);
 
-    jThread->setFieldValue(eetopField, (slot_t) this);
-    jThread->setFieldValue(S(priority), S(I), (slot_t) priority);
+    tobj->setFieldValue(eetopField, (jlong) this);
+    tobj->setFieldValue(S(priority), S(I), priority);
 //    if (vmEnv.sysThreadGroup != nullptr)   todo
 //        setThreadGroupAndName(vmEnv.sysThreadGroup, nullptr);
+
     pthread_mutex_unlock(&newThreadMutex);
 }
 
-Thread *Thread::from(Object *jThread0)
+Thread *Thread::from(Object *tobj0)
 {
-    assert(jThread0 != nullptr);
-    assert(0 <= eetopField->id && eetopField->id < jThread0->clazz->instFieldsCount);
-    return *(Thread **)(jThread0->data + eetopField->id);//jThread0->getInstFieldValue<Thread *>(eetopField);
+    assert(tobj0 != nullptr);
+    assert(0 <= eetopField->id && eetopField->id < tobj0->clazz->instFieldsCount);
+    return *(Thread **)(tobj0->data + eetopField->id);//jThread0->getInstFieldValue<Thread *>(eetopField);
 }
 
 Thread *Thread::from(jlong threadId)
 {
+    jvm_abort("ffffffffffffffffffffffff");
     for (Thread *t : g_all_threads) {
         // private long tid; // Thread ID
-        auto tid = t->jThread->getInstFieldValue<jlong>("tid", "J");
+        auto tid = t->tobj->getInstFieldValue<jlong>("tid", "J");
         if (tid == threadId)
             return t;
     }
@@ -157,24 +184,24 @@ void Thread::setThreadGroupAndName(Object *threadGroup, const char *threadName)
     assert(threadName != nullptr);
 
     // 调用 java/lang/Thread 的构造函数
-    Method *constructor = jThread->clazz->getConstructor("(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");
-    execJavaFunc(constructor, jThread, threadGroup, newString(threadName));
+    Method *constructor = tobj->clazz->getConstructor("(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");
+    execJavaFunc(constructor, tobj, threadGroup, newString(threadName));
 }
 
 void Thread::setStatus(jint status)
 {
-    jThread->setFieldValue(threadStatusField, (slot_t) status);
+    tobj->setFieldValue(threadStatusField, status);
 }
 
 jint Thread::getStatus()
 {
-    return jThread->getInstFieldValue<jint>(threadStatusField);
+    return tobj->getInstFieldValue<jint>(threadStatusField);
 }
 
 bool Thread::isAlive()
 {
-    assert(jThread != nullptr);
-    auto status = jThread->getInstFieldValue<jint>("threadStatus", "I");
+    assert(tobj != nullptr);
+    auto status = tobj->getInstFieldValue<jint>("threadStatus", "I");
     // todo
     return false;
 }
@@ -231,17 +258,17 @@ jref Thread::to_java_lang_management_ThreadInfo(jbool lockedMonitors, jbool lock
 //    return nullptr;
 
     // private volatile String name;
-    auto name = jThread->getInstFieldValue<jstrref>("name", "Ljava/lang/String;");
+    auto name = tobj->getInstFieldValue<jstrref>("name", "Ljava/lang/String;");
     // private long tid;
-    auto tid = jThread->getInstFieldValue<jlong>("tid", "J");
+    auto tid = tobj->getInstFieldValue<jlong>("tid", "J");
 
     Class *c = loadBootClass("java/lang/management/ThreadInfo");
     c->clinit();
     jref threadInfo = newObject(c);
     // private String threadName;
-    threadInfo->setFieldValue("threadName", "Ljava/lang/String;", (slot_t) name);
+    threadInfo->setFieldValue("threadName", "Ljava/lang/String;", name);
     // private long threadId;
-    threadInfo->setFieldValue("threadId", "J", (slot_t *) &tid);
+    threadInfo->setFieldValue("threadId", "J", tid);
 
     return threadInfo;
 

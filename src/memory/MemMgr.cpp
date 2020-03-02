@@ -33,16 +33,6 @@ MemMgr::~MemMgr()
     }
 }
 
-void MemMgr::lock()
-{
-    pthread_mutex_lock(&mutex);
-}
-
-void MemMgr::unlock()
-{
-    pthread_mutex_unlock(&mutex);
-}
-
 address MemMgr::jumpFreelist(address p)
 {
     assert(in(p));

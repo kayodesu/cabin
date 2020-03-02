@@ -4,7 +4,7 @@
 
 #include "../../registry.h"
 #include "../../../objects/object.h"
-#include "../../../runtime/thread.h"
+#include "../../../runtime/thread_info.h"
 #include "../../../symbol.h"
 #include "../../../runtime/Frame.h"
 #include "../../../objects/class.h"
@@ -65,10 +65,10 @@ static void fillInStackTrace(Frame *frame)
         auto methodName = newString(f->method->name);
         auto lineNumber = f->method->getLineNumber(f->reader.pc - 1); // todo why 减1？ 减去opcode的长度
 
-        o->setFieldValue("fileName", "Ljava/lang/String;", (slot_t) (fileName));
-        o->setFieldValue("declaringClass", "Ljava/lang/String;", (slot_t) className);
-        o->setFieldValue("methodName", "Ljava/lang/String;", (slot_t) methodName);
-        o->setFieldValue("lineNumber", S(I), (slot_t) lineNumber);
+        o->setFieldValue("fileName", "Ljava/lang/String;", fileName);
+        o->setFieldValue("declaringClass", "Ljava/lang/String;", className);
+        o->setFieldValue("methodName", "Ljava/lang/String;", methodName);
+        o->setFieldValue("lineNumber", S(I), lineNumber);
     }
 
     /*
@@ -76,7 +76,7 @@ static void fillInStackTrace(Frame *frame)
      *
      * private transient Object backtrace;
      */
-    _this->setFieldValue(S(backtrace), S(sig_java_lang_Object), (slot_t) backtrace);
+    _this->setFieldValue(S(backtrace), S(sig_java_lang_Object), backtrace);
 
     frame->pushr(_this);
 }

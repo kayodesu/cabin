@@ -32,7 +32,7 @@ static void open0(Frame *frame)
     auto fd = _this->getInstFieldValue<jref>("fd", "Ljava/io/FileDescriptor;");
 
     // private long handle;
-    fd->setFieldValue("handle", "J", (slot_t *) &file);
+    fd->setFieldValue("handle", "J",  (jlong) file);
 }
 
 static inline FILE *getFileHandle(jref _this)

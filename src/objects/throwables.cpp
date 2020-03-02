@@ -7,7 +7,7 @@
 #include "../interpreter/interpreter.h"
 #include "class.h"
 #include "class_loader.h"
-#include "../runtime/thread.h"
+#include "../runtime/thread_info.h"
 
 Throwable::Throwable(const utf8_t *exceptionName, const utf8_t *msg)
 {

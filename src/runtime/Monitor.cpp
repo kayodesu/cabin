@@ -3,8 +3,9 @@
  */
 
 #include "Monitor.h"
-#include "thread.h"
+#include "thread_info.h"
 
+#if 0
 Monitor::Monitor()
 {
     pthread_mutexattr_t attr;
@@ -90,3 +91,4 @@ bool Monitor::notifyAll(Thread *thread)
 {
     assert(thread != nullptr);
 }
+#endif

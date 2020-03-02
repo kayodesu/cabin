@@ -6,6 +6,7 @@
 #define JVM_SLOT_H
 
 #include <cstdint>
+#include <cassert>
 #include "../jtypes.h"
 
 
@@ -18,5 +19,6 @@ typedef intptr_t slot_t;
 #define LSLOT(slot_point) (* (jlong *) (slot_point))
 #define DSLOT(slot_point) (* (jdouble *) (slot_point))
 #define RSLOT(slot_point) (* (jref *) (slot_point))
+
 
 #endif //JVM_SLOT_H

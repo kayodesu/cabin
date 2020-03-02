@@ -3,7 +3,7 @@
  */
 
 #include "../../../runtime/Frame.h"
-#include "../../../runtime/thread.h"
+#include "../../../runtime/thread_info.h"
 
 /*
  * VM support where maxDepth == -1 to request entire stack dump

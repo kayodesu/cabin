@@ -6,7 +6,6 @@
 #define JVM_JTYPES_H
 
 #include <cstdint>
-#include <stdint-gcc.h>
 
 typedef int8_t  s1;  // s: signed
 typedef int16_t s2;
