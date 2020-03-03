@@ -6,11 +6,11 @@
 #include <sstream>
 #include <unordered_set>
 #include <unordered_map>
+#include <minizip/unzip.h>
 #include "class_loader.h"
 #include "../symbol.h"
 #include "class.h"
 #include "../interpreter/interpreter.h"
-#include "../../zlib/minizip/unzip.h"
 #include "../runtime/thread_info.h"
 #include "Prims.h"
 
