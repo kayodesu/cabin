@@ -230,7 +230,7 @@ bool StrObjEquals::operator()(Object *x, Object *y) const
 
     // public boolean equals(Object anObject);
     Method *equals = stringClass->getDeclaredInstMethod("equals", "(Ljava/lang/Object;)Z");
-    return *(jint *)execJavaFunc(equals, x, y) != 0;
+    return ISLOT(execJavaFunc(equals, x, y)) != 0;
 }
 
 size_t StrObjHash::operator()(Object *x) const
@@ -240,7 +240,7 @@ size_t StrObjHash::operator()(Object *x) const
 
     // public int hashCode();
     Method *hashCode = stringClass->getDeclaredInstMethod("hashCode", "()I");
-    return (size_t) *(jint *)execJavaFunc(hashCode, x);
+    return (size_t) ISLOT(execJavaFunc(hashCode, x));
 
 }
 

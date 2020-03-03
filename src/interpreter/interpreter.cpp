@@ -1101,14 +1101,16 @@ __method_return:
 			            Method *bootstrapMethod = bootstrapClass->getDeclaredStaticMethod(
                                 cp->methodName(refIndex), cp->methodType(refIndex));
 			            // args's length is big enough,多余的长度无所谓，bootstrapMethod 会按需读取的。
-			            slot_t args[3 + bm.bootstrapArguments.size() * 2] = {
-			                    (slot_t) caller, (slot_t) newString(invokedName), (slot_t) invokedType };
+			            slot_t args[3 + bm.bootstrapArguments.size() * 2];
+                        RSLOT(args) = caller;
+                        RSLOT(args + 1) = newString(invokedName);
+                        RSLOT(args + 2) = invokedType;
 			            bm.resolveArgs(cp, args + 3);
-			            auto callSet = (jref) *execJavaFunc(bootstrapMethod, args);
+			            auto callSet = RSLOT(execJavaFunc(bootstrapMethod, args));
 
 			            // public abstract MethodHandle dynamicInvoker()
 			            auto dynInvoker = callSet->clazz->lookupInstMethod("dynamicInvoker", "()Ljava/lang/invoke/MethodHandle;");
-			            auto exactMethodHandle = (jref) *execJavaFunc(dynInvoker, callSet);
+			            auto exactMethodHandle = RSLOT(execJavaFunc(dynInvoker, callSet));
 
 			            // public final Object invokeExact(Object... args) throws Throwable
 			            Method *invokeExact = exactMethodHandle->clazz->lookupInstMethod(
@@ -1116,7 +1118,7 @@ __method_return:
 			            assert(invokeExact->isVarargs());
 			            u2 slotsCount = Method::calArgsSlotsCount(invokedDescriptor, true);
 			            slot_t __args[slotsCount];
-			            __args[0] = (slot_t) exactMethodHandle;
+                        RSLOT(__args) = exactMethodHandle; // __args[0] = (slot_t) exactMethodHandle;
 			            slotsCount--; // 减去"this"
 			            frame->ostack -= slotsCount; // pop all args
 			            memcpy(__args + 1, frame->ostack, slotsCount * sizeof(slot_t));
@@ -1469,9 +1471,8 @@ slot_t *execConstructor(Method *constructor, jref _this, Array *args)
 
     // 因为有 category two 的存在，result 的长度最大为 types_len * 2 + this_obj
     auto realArgs = new slot_t[2 * types->len + 1];
-    int k = 0;
-    realArgs[k++] = (slot_t) _this;
-
+    RSLOT(realArgs) = _this;
+    int k = 1; // 第0位已经存放_this了，下面从第一位开始。
     for (int i = 0; i < types->len; i++) {
         auto c = types->get<Class *>(i);
         auto o = args->get<jref>(i);

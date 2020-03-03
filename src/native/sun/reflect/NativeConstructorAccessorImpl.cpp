@@ -83,13 +83,13 @@ static void newInstance0(Frame *frame)
     Object *obj = newObject(ac);
 
     if (args == nullptr) { // 构造函数没有参数
-        Method * constructor = ac->getConstructor("()V");
+        Method *constructor = ac->getConstructor("()V");
         assert(constructor->arg_slot_count == 1); // this
         execJavaFunc(constructor, obj);
     } else {
         // parameter types of this constructor
         auto parameterTypes = co->getInstFieldValue<Array *>(S(parameterTypes), S(array_java_lang_Class));
-        Method * constructor = ac->getConstructor(parameterTypes);
+        Method *constructor = ac->getConstructor(parameterTypes);
         execConstructor(constructor, obj, args);
     }
 

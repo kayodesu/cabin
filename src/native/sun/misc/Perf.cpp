@@ -30,9 +30,7 @@ static void createLong(Frame *frame)
 //    bb->clinit();
 
     Method *allocate = bb->getDeclaredStaticMethod("allocate", "(I)Ljava/nio/ByteBuffer;");
-    slot_t slot = 8; // todo sizeof(jlong) ???????????
-    slot_t *ret = execJavaFunc(allocate, &slot);
-    frame->pushr((jref) *(ret));
+    frame->pushr(RSLOT(execJavaFunc(allocate, { to_islot(sizeof(jlong)) })));
 }
 
 void sun_misc_Perf_registerNatives()

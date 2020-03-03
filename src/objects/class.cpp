@@ -533,7 +533,7 @@ Class *ConstantPool::resolveClass(u2 i)
     return c;
 }
 
-Method* ConstantPool::resolveMethod(u2 i)
+Method *ConstantPool::resolveMethod(u2 i)
 {
     assert(0 < i && i < size);
     assert(_type[i] == CONSTANT_Methodref or _type[i] == CONSTANT_ResolvedMethod);
@@ -631,8 +631,7 @@ Object *ConstantPool::resolveMethodHandle(u2 i)
             // public MethodHandle findGetter(Class<?> refc, String name, Class<?> type)
             //                      throws NoSuchFieldException, IllegalAccessException;
             Method *m = caller->clazz->getDeclaredInstMethod("findGetter", d1);
-            auto r = execJavaFunc(m, caller, f->clazz, newString(f->name), f->getType());
-            return (jref) *r;
+            return RSLOT(execJavaFunc(m, caller, f->clazz, newString(f->name), f->getType()));
         }
         case REF_getStatic: {
             Field *f = resolveField(index);
@@ -640,8 +639,7 @@ Object *ConstantPool::resolveMethodHandle(u2 i)
             // public MethodHandle findStaticGetter(Class<?> refc, String name, Class<?> type)
             //                      throws NoSuchFieldException, IllegalAccessException;
             Method *m = caller->clazz->getDeclaredInstMethod("findStaticGetter", d1);
-            auto r = execJavaFunc(m, caller, f->clazz, newString(f->name), f->getType());
-            return (jref) *r;
+            return RSLOT(execJavaFunc(m, caller, f->clazz, newString(f->name), f->getType()));
         }
         case REF_putField: {
             Field *f = resolveField(index);
@@ -649,8 +647,7 @@ Object *ConstantPool::resolveMethodHandle(u2 i)
             // public MethodHandle findSetter(Class<?> refc, String name, Class<?> type)
             //                      throws NoSuchFieldException, IllegalAccessException;
             Method *m = caller->clazz->getDeclaredInstMethod("findSetter", d1);
-            auto r = execJavaFunc(m, caller, f->clazz, newString(f->name), f->getType());
-            return (jref) *r;
+            return RSLOT(execJavaFunc(m, caller, f->clazz, newString(f->name), f->getType()));
         }
         case REF_putStatic: {
             Field *f = resolveField(index);
@@ -658,8 +655,7 @@ Object *ConstantPool::resolveMethodHandle(u2 i)
             // public MethodHandle findStaticSetter(Class<?> refc, String name, Class<?> type)
             //                      throws NoSuchFieldException, IllegalAccessException;
             Method *m = caller->clazz->getDeclaredInstMethod("findStaticSetter", d1);
-            auto r = execJavaFunc(m, caller, f->clazz, newString(f->name), f->getType());
-            return (jref) *r;
+            return RSLOT(execJavaFunc(m, caller, f->clazz, newString(f->name), f->getType()));
         }
         case REF_invokeVirtual :{
             // public MethodHandle findVirtual(Class<?> refc, String name, MethodType type)
@@ -672,9 +668,8 @@ Object *ConstantPool::resolveMethodHandle(u2 i)
 
             // public MethodHandle findStatic(Class<?> refc, String name, MethodType type)
             //                      throws NoSuchMethodException, IllegalAccessException;
-            auto r = execJavaFunc(caller->clazz->getDeclaredInstMethod("findStatic", d2),
-                                  caller, m->clazz, newString(m->name), m->getType());
-            return (jref) *r;
+            return RSLOT(execJavaFunc(caller->clazz->getDeclaredInstMethod("findStatic", d2),
+                                      caller, m->clazz, newString(m->name), m->getType()));
         }
         case REF_invokeSpecial: {
             // public MethodHandle findSpecial(Class<?> refc, String name, MethodType type, Class<?> specialCaller)
@@ -1297,7 +1292,7 @@ Method *Class::getConstructor(Array *parameterTypes)
     // public static MethodType methodType(Class<?> rtype, Class<?>[] ptypes);
     Method *m = c->getDeclaredStaticMethod(
             "methodType", "(Ljava/lang/Class;[Ljava/lang/Class;)Ljava/lang/invoke/MethodType;");
-    auto mt = (jref) *execJavaFunc(m, loadBootClass(S(void)), parameterTypes);
+    auto mt = RSLOT(execJavaFunc(m, loadBootClass(S(void)), parameterTypes));
 
     // public String toMethodDescriptorString();
     m = c->getDeclaredInstMethod("toMethodDescriptorString", "()Ljava/lang/String;");

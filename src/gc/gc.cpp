@@ -30,7 +30,7 @@ static bool accessible(jref obj)
             u2 maxLocals = frame->method->maxLocals;
             for (u2 i = 0; i < maxLocals; i++) {
                 // todo 这里要先判断 locals[i] 存放的是不是 jref
-                if (lvars[i] == (slot_t) obj)
+                if (RSLOT(lvars + i) == obj)
                     return true;
             }
         }

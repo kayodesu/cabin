@@ -89,30 +89,36 @@ slot_t *BootstrapMethod::resolveArgs(ConstantPool *cp, slot_t *result)
     for (u2 i : bootstrapArguments) {
         switch (cp->type(i)) {
             case CONSTANT_String:
-                *result++ = (slot_t) cp->resolveString(i);
+                RSLOT(result) = cp->resolveString(i);
+                result++;
                 break;
             case CONSTANT_Class:
-                *result++ = (slot_t) cp->resolveClass(i);
+                RSLOT(result) = cp->resolveClass(i);
+                result++;
                 break;
             case CONSTANT_Integer:
-                *result++ = cp->_int(i);
+                ISLOT(result) = cp->_int(i);
+                result++;
                 break;
             case CONSTANT_Float:
-                *result++ = (slot_t) cp->_float(i);
+                FSLOT(result) = cp->_float(i);
+                result++;
                 break;
             case CONSTANT_Long:
-                *(jlong *) result = cp->_long(i);
+                LSLOT(result) = cp->_long(i);
                 result += 2;
                 break;
             case CONSTANT_Double:
-                *(jdouble *) result = cp->_double(i);
+                DSLOT(result) = cp->_double(i);
                 result += 2;
                 break;
             case CONSTANT_MethodHandle:
-                *result++ = (slot_t) cp->resolveMethodHandle(i);
+                RSLOT(result) = cp->resolveMethodHandle(i);
+                result++;
                 break;
             case CONSTANT_MethodType:
-                *result++ = (slot_t) cp->resolveMethodType(i);
+                RSLOT(result) = cp->resolveMethodType(i);
+                result++;
                 break;
             default:
                 jvm_abort("never goes here, wrong type."); // todo

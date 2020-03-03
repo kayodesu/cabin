@@ -175,7 +175,7 @@ Class *loadClass(Object *classLoader, const utf8_t *name)
     auto dotName = slash2DotsDup(name);
     slot_t *slot = execJavaFunc(m, classLoader, newString(dotName));
     assert(slot != nullptr);
-    c =  *(Class **) slot;
+    c = (Class *) RSLOT(slot);
     addClassToClassLoader(classLoader, c);
     return c;
 }
@@ -220,7 +220,7 @@ Object *getSystemClassLoader()
 
     // public static ClassLoader getSystemClassLoader();
     Method *get = scl->getDeclaredStaticMethod(S(getSystemClassLoader), S(___java_lang_ClassLoader));
-    return (Object *) *execJavaFunc(get);
+    return RSLOT(execJavaFunc(get));
 }
 
 Class *objectClass;

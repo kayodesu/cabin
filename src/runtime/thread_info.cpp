@@ -290,11 +290,11 @@ Array *Thread::dump(int maxDepth)
     for (size_t i = 0; i < size; i++) {
         Frame *f = vec[i];
         jref o = newObject(c);
-        execJavaFunc(constructor, { (slot_t) o,
-                                    (slot_t) newString(f->method->clazz->className),
-                                    (slot_t) newString(f->method->name),
-                                    (slot_t) newString(f->method->clazz->sourceFileName),
-                                    (slot_t) f->method->getLineNumber(f->reader.pc) }
+        execJavaFunc(constructor, { to_rslot(o),
+                                    to_rslot(newString(f->method->clazz->className)),
+                                    to_rslot(newString(f->method->name)),
+                                    to_rslot(newString(f->method->clazz->sourceFileName)),
+                                    to_islot(f->method->getLineNumber(f->reader.pc)) }
         );
         arr->set(i, o);
     }

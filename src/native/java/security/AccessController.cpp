@@ -24,8 +24,7 @@ static void doPrivileged(Frame *frame)
      * }
      */
     Method *m = _this->clazz->getDeclaredMethod(S(run), S(___java_lang_Object));
-    slot_t *s = execJavaFunc(m, _this);
-    frame->pushr(RSLOT(s));
+    frame->pushr(RSLOT(execJavaFunc(m, _this)));
 }
 
 // @CallerSensitive

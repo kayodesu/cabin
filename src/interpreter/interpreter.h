@@ -22,22 +22,22 @@ slot_t *execJavaFunc(Method *m, std::initializer_list<slot_t> args);
 
 static inline slot_t *execJavaFunc(Method *m, jref o)
 {
-    return execJavaFunc(m, { (slot_t) o });
+    return execJavaFunc(m, { to_rslot(o) });
 }
 
 static inline slot_t *execJavaFunc(Method *m, jref o1, jref o2)
 {
-    return execJavaFunc(m, { (slot_t) o1, (slot_t) o2 });
+    return execJavaFunc(m, { to_rslot(o1), to_rslot(o2) });
 }
 
 static inline slot_t *execJavaFunc(Method *m, jref o1, jref o2, jref o3)
 {
-    return execJavaFunc(m, { (slot_t) o1, (slot_t) o2, (slot_t) o3 });
+    return execJavaFunc(m, { to_rslot(o1), to_rslot(o2), to_rslot(o3) });
 }
 
 static inline slot_t *execJavaFunc(Method *m, jref o1, jref o2, jref o3, jref o4)
 {
-    return execJavaFunc(m, { (slot_t) o1, (slot_t) o2, (slot_t) o3, (slot_t) o4 });
+    return execJavaFunc(m, { to_rslot(o1), to_rslot(o2), to_rslot(o3), to_rslot(o4) });
 }
 
 

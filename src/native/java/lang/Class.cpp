@@ -473,16 +473,16 @@ static void getDeclaredFields0(Frame *frame)
         fieldArr->set(i, o);
 
         execJavaFunc(constructor, {
-                (slot_t) o, // this
-                (slot_t) _this, // declaring class
+                to_rslot(o), // this
+                to_rslot(_this), // declaring class
                 // name must be interned.
                 // 参见 java/lang/reflect/Field 的说明
-                (slot_t) stringClass->intern(cls->fields[i]->name), // name
-                (slot_t) cls->fields[i]->getType(), // type
-                cls->fields[i]->modifiers, /* modifiers */
-                (slot_t) cls->fields[i]->id, /* slot   todo */
-                (slot_t) nullptr, /* signature  todo */
-                (slot_t) nullptr, /* annotations  todo */
+                to_rslot(stringClass->intern(cls->fields[i]->name)), // name
+                to_rslot(cls->fields[i]->getType()), // type
+                to_islot(cls->fields[i]->modifiers), /* modifiers */
+                to_islot(cls->fields[i]->id), /* slot   todo */
+                to_rslot(jnull), /* signature  todo */
+                to_rslot(jnull), /* annotations  todo */
         });
     }
 }
@@ -523,20 +523,20 @@ static void getDeclaredMethods0(Frame *frame)
         methodArr->set(i, o);
 
         execJavaFunc(constructor, {
-                (slot_t) o,        /* this  */
-                (slot_t) _this, /* declaring class */
+                to_rslot(o),        /* this  */
+                to_rslot(_this), /* declaring class */
                 // name must be interned.
                 // 参见 java/lang/reflect/Method 的说明
-                (slot_t) stringClass->intern(method->name), /* name */
-                (slot_t) method->getParameterTypes(), /* parameter types */
-                (slot_t) method->getReturnType(),     /* return type */
-                (slot_t) method->getExceptionTypes(), /* checked exceptions */
-                method->modifiers, /* modifiers*/
-                0, /* slot   todo */
-                (slot_t) nullptr, /* signature  todo */
-                (slot_t) nullptr, /* annotations  todo */
-                (slot_t) nullptr, /* parameter annotations  todo */
-                (slot_t) nullptr, /* annotation default  todo */
+                to_rslot(stringClass->intern(method->name)), /* name */
+                to_rslot(method->getParameterTypes()), /* parameter types */
+                to_rslot(method->getReturnType()),     /* return type */
+                to_rslot(method->getExceptionTypes()), /* checked exceptions */
+                to_islot(method->modifiers), /* modifiers*/
+                to_islot(0), /* slot   todo */
+                to_rslot(jnull), /* signature  todo */
+                to_rslot(jnull), /* annotations  todo */
+                to_rslot(jnull), /* parameter annotations  todo */
+                to_rslot(jnull), /* annotation default  todo */
         });
     }
 }
@@ -571,15 +571,15 @@ static void getDeclaredConstructors0(Frame *frame)
         constructorArr->set(i, o);
 
         execJavaFunc(constructor_constructor, {
-                (slot_t) o, // this
-                (slot_t) _this, // declaring class
-                (slot_t) constructor->getParameterTypes(),  // parameter types
-                (slot_t) constructor->getExceptionTypes(),  // checked exceptions
-                constructor->modifiers, // modifiers
-                0, // slot   todo
-                (slot_t) nullptr, // signature  todo
-                (slot_t) nullptr, // annotations  todo
-                (slot_t) nullptr, // parameter annotations  todo
+                to_rslot(o), // this
+                to_rslot(_this), // declaring class
+                to_rslot(constructor->getParameterTypes()),  // parameter types
+                to_rslot(constructor->getExceptionTypes()),  // checked exceptions
+                to_islot(constructor->modifiers), // modifiers
+                to_islot(0), // slot   todo
+                to_rslot(jnull), // signature  todo
+                to_rslot(jnull), // annotations  todo
+                to_rslot(jnull), // parameter annotations  todo
         });
     }
 }
