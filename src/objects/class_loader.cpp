@@ -57,7 +57,7 @@ static unique_ptr<pair<u1 *, size_t>> read_class_from_jar(const char *jar_path, 
         thread_throw(new IOException(NEW_MSG("unzOpenCurrentFile failed: %s\n", jar_path)));
     }
 
-    unz_file_info64 file_info;
+    unz_file_info64 file_info{ };
     unzGetCurrentFileInfo64(jar_file, &file_info, buf, sizeof(buf), nullptr, 0, nullptr, 0);
 
     auto bytecode = (u1 *) g_heap.allocBytecode(file_info.uncompressed_size); //new u1[file_info.uncompressed_size];
