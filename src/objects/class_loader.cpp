@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <sstream>
+#include <optional>
 #include <unordered_set>
 #include <unordered_map>
 #include <minizip/unzip.h>
@@ -29,7 +30,7 @@ using class_map = unordered_map<const utf8_t *, Class *, utf8::Hash, utf8::Compa
 static utf8_set bootPackages;
 static class_map bootClasses;
 
-static unique_ptr<pair<u1 *, size_t>> read_class_from_jar(const char *jar_path, const char *class_name)
+static optional<pair<u1 *, size_t>> read_class_from_jar(const char *jar_path, const char *class_name)
 {
     unzFile jar_file = unzOpen64(jar_path);
     if (jar_file == nullptr) {
@@ -48,7 +49,7 @@ static unique_ptr<pair<u1 *, size_t>> read_class_from_jar(const char *jar_path, 
     if (k != UNZ_OK) {
         // not found
         unzClose(jar_file);
-        return nullptr;
+        return nullopt;
     }
 
     // find out!
@@ -67,7 +68,7 @@ static unique_ptr<pair<u1 *, size_t>> read_class_from_jar(const char *jar_path, 
     if (size != file_info.uncompressed_size) {
         thread_throw(new IOException(NEW_MSG("unzReadCurrentFile failed: %s.\n", jar_path)));
     }
-    return make_unique<pair<u1 *, size_t>>(bytecode, file_info.uncompressed_size);
+    return make_pair(bytecode, file_info.uncompressed_size);
 }
 
 static void addClassToClassLoader(Object *classLoader, Class *c)
@@ -106,8 +107,8 @@ Class *loadBootClass(const utf8_t *name)
         c = Class::newClass(name);
     } else {
         for (auto &jar : jreLibJars) {
-            auto content = read_class_from_jar(jar.c_str(), name);
-            if (content) { // find out
+            auto content = read_class_from_jar(jar.c_str(), name);//content.value().first
+            if (content.has_value()) { // find out
                 c = defineClass(bootClassLoader, content->first, content->second);
             }
         }
