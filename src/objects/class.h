@@ -72,6 +72,7 @@ public:
     bool isPrim() const;
 
     std::string toString() const;
+    friend std::ostream &operator <<(std::ostream &os, const Field &field);
 
     bool isPublic() const    { return Modifier::isPublic(modifiers); }
     bool isProtected() const { return Modifier::isProtected(modifiers); }
@@ -84,6 +85,7 @@ public:
     void setSynthetic() { Modifier::setSynthetic(modifiers); }
 };
 
+//std::ostream &operator<<(std::ostream &os, const Field &field);
 
 class Array;
 

@@ -121,6 +121,11 @@ string Field::toString() const
     return oss.str();
 }
 
+ostream &operator <<(ostream &os, const Field &field)
+{
+    os << field.toString() << endl;
+    return os;
+}
 
 Method::ExceptionTable::ExceptionTable(Class *clazz, BytecodeReader &r)
 {
