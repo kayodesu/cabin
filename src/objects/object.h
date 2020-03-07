@@ -8,7 +8,6 @@
 //#include <mutex>
 #include <string>
 #include <unordered_map>
-#include "slot.h"
 #include "../util/encoding.h"
 
 class Field;

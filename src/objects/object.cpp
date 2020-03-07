@@ -8,7 +8,7 @@
 #include "object.h"
 #include "class.h"
 #include "../interpreter/interpreter.h"
-#include "Prims.h"
+#include "prims.h"
 #include "../runtime/thread_info.h"
 
 using namespace std;
@@ -291,7 +291,7 @@ Array::Array(Class *ac, jint dim, const jint lens[]): Object(ac), len(lens[0])
 
 bool Array::isPrimArray() const
 {
-    return Prims::isPrimDescriptor(clazz->className[1]);
+    return isPrimDescriptor(clazz->className[1]);
 }
 
 void *Array::index(jint index0) const

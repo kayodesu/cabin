@@ -5,8 +5,6 @@
 #include "../../registry.h"
 #include "../../../kayo.h"
 #include "../../../runtime/Frame.h"
-#include "../../../objects/slot.h"
-#include "../../../objects/object.h"
 
 // native long find(String name);
 static void find(Frame *frame)

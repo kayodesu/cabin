@@ -4,7 +4,6 @@
 
 #include <windows.h> // todo
 #include "../../registry.h"
-#include "../../../objects/slot.h"
 #include "../../../runtime/Frame.h"
 
 // public native int availableProcessors();

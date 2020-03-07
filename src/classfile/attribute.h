@@ -8,7 +8,6 @@
 #include <vector>
 #include "../jtypes.h"
 #include "../util/BytecodeReader.h"
-#include "../objects/slot.h"
 
 struct ConstantPool;
 struct ElementValuePair;

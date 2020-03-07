@@ -10,7 +10,7 @@
 #include "../runtime/thread_info.h"
 #include "class.h"
 #include "../interpreter/interpreter.h"
-#include "Prims.h"
+#include "prims.h"
 #include "invoke.h"
 #include "../native/registry.h"
 
@@ -100,7 +100,7 @@ Class *Field::getType()
             type = loadClass(clazz->loader, buf);
         } else { // primitive
             assert(strlen(descriptor) == 1);
-            auto name = Prims::descriptor2className(*descriptor);
+            auto name = getPrimClassName(*descriptor);
             assert(name != nullptr);
             type = loadBootClass(name);
         }
@@ -111,7 +111,7 @@ Class *Field::getType()
 
 bool Field::isPrim() const
 {
-    return Prims::descriptor2className(*descriptor) != nullptr;
+    return getPrimClassName(*descriptor) != nullptr;
 }
 
 string Field::toString() const
@@ -1109,7 +1109,7 @@ Class::Class(const char *className)
           loader(nullptr), superClass(objectClass)
 {
     assert(className != nullptr);
-    assert(className[0] == '[' || Prims::isPrimClassName(className));
+    assert(className[0] == '[' || isPrimClassName(className));
 
     pkgName = "";
 
@@ -1391,7 +1391,7 @@ bool Class::isArrayClass() const
 
 bool Class::isPrimClass() const
 {
-    return Prims::isPrimClassName(className);
+    return isPrimClassName(className);
 }
 
 bool Class::isPrimArrayClass() const
@@ -1413,7 +1413,7 @@ Class *Class::arrayClass() const
     }
 
     // 基本类型
-    const char *tmp = Prims::getArrayClassName(className);
+    const char *tmp = getPrimArrayClassName(className);
     if (tmp != nullptr)
         return loadArrayClass(tmp);
 
@@ -1486,7 +1486,7 @@ Class *Class::componentClass()
         return compClass;
     }
 
-    auto primClassName = Prims::descriptor2className(*compName);
+    auto primClassName = getPrimClassName(*compName);
     if (primClassName != nullptr) {  // primitive type
         compClass = loadBootClass(primClassName);
         return compClass;

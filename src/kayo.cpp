@@ -13,7 +13,7 @@
 #include "native/registry.h"
 #include "runtime/thread_info.h"
 #include "objects/class.h"
-#include "objects/Prims.h"
+#include "objects/prims.h"
 #include "interpreter/interpreter.h"
 
 using namespace std;
@@ -283,7 +283,6 @@ static void initJVM(int argc, char *argv[])
 
     /* order is important */
     initSymbol();
-    Prims::init();
     initJNI();
     initClassLoader();
     initMainThread();

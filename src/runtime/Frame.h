@@ -5,7 +5,6 @@
 #ifndef JVM_STACK_FRAME_H
 #define JVM_STACK_FRAME_H
 
-#include "../objects/slot.h"
 #include "../objects/class.h"
 #include "../util/BytecodeReader.h"
 

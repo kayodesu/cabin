@@ -6,7 +6,7 @@
 #define JVM_INTERPRETER_H
 
 #include <initializer_list>
-#include "../objects/slot.h"
+#include "../jtypes.h"
 
 class Method;
 class Array;

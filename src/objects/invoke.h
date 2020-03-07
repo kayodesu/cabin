@@ -1,7 +1,7 @@
 #ifndef KAYOVM_INVOKE_H
 #define KAYOVM_INVOKE_H
 
-#include "slot.h"
+#include "../jtypes.h"
 
 /*
  * java/lang/invoke 包下类的便利操作函数

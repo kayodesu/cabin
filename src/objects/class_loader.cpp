@@ -2,7 +2,6 @@
  * Author: kayo
  */
 
-#include <memory>
 #include <sstream>
 #include <optional>
 #include <unordered_set>
@@ -13,7 +12,7 @@
 #include "class.h"
 #include "../interpreter/interpreter.h"
 #include "../runtime/thread_info.h"
-#include "Prims.h"
+#include "prims.h"
 
 using namespace std;
 using namespace utf8;
@@ -25,12 +24,10 @@ using namespace utf8;
 #define TRACE(...)
 #endif
 
-using class_map = unordered_map<const utf8_t *, Class *, utf8::Hash, utf8::Comparator>;
-
 static utf8_set bootPackages;
-static class_map bootClasses;
+static unordered_map<const utf8_t *, Class *, utf8::Hash, utf8::Comparator> bootClasses;
 
-static optional<pair<u1 *, size_t>> read_class_from_jar(const char *jar_path, const char *class_name)
+static optional<pair<u1 *, size_t>> readClassFromJar(const char *jar_path, const char *class_name)
 {
     unzFile jar_file = unzOpen64(jar_path);
     if (jar_file == nullptr) {
@@ -103,13 +100,13 @@ Class *loadBootClass(const utf8_t *name)
     }
 
     Class *c = nullptr;
-    if (name[0] == '[' or Prims::isPrimClassName(name)) {
+    if (name[0] == '[' or isPrimClassName(name)) {
         c = Class::newClass(name);
     } else {
         for (auto &jar : jreLibJars) {
-            auto content = read_class_from_jar(jar.c_str(), name);//content.value().first
+            auto content = readClassFromJar(jar.c_str(), name);
             if (content.has_value()) { // find out
-                c = defineClass(bootClassLoader, content->first, content->second);
+                c = defineClass(bootClassLoader, content->first, content->second); //content.value().first
             }
         }
     }
