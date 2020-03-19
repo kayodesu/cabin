@@ -13,6 +13,7 @@
 #include "prims.h"
 #include "invoke.h"
 #include "../native/registry.h"
+#include "../classfile/constants.h"
 
 using namespace std;
 using namespace utf8;
@@ -139,7 +140,7 @@ Method::ExceptionTable::ExceptionTable(Class *clazz, BytecodeReader &r)
         catchType = nullptr;
     } else {
         catchType = new CatchType;
-        if (clazz->cp.type(index) == CONSTANT_ResolvedClass) {
+        if (clazz->cp.type(index) == JVM_CONSTANT_ResolvedClass) {
             catchType->resolved = true;
             catchType->u.clazz = clazz->cp.resolveClass(index); // (Class *) CP_INFO(clazz->cp, index);
         } else {
@@ -448,27 +449,26 @@ Method::Method(Class *c, BytecodeReader &r)
         maxLocals = arg_slot_count;
 
         codeLen = 2;
-        auto code = new u1[codeLen];
-        code[0] = OPC_INVOKENATIVE;
+        code = new u1[codeLen];
+        code[0] = JVM_OPC_invokenative;
         const char *t = strchr(descriptor, ')'); // find return
         assert(t != nullptr);
 
         ++t;
         if (*t == 'V') {
-            code[1] = OPC_RETURN;
+            code[1] = JVM_OPC_return;
         } else if (*t == 'D') {
-            code[1] = OPC_DRETURN;
+            code[1] = JVM_OPC_dreturn;
         } else if (*t == 'F') {
-            code[1] = OPC_FRETURN;
+            code[1] = JVM_OPC_freturn;
         } else if (*t == 'J') {
-            code[1] = OPC_LRETURN;
+            code[1] = JVM_OPC_lreturn;
         } else if (*t == 'L' || *t == '[') {
-            code[1] = OPC_ARETURN;
+            code[1] = JVM_OPC_areturn;
         } else {
-            code[1] = OPC_IRETURN;
+            code[1] = JVM_OPC_ireturn;
         }
 
-        this->code = code;
         nativeMethod = findNative(clazz->className, name, descriptor);
     }
 }
@@ -526,13 +526,13 @@ string Method::toString() const
 Class *ConstantPool::resolveClass(u2 i)
 {
     assert(0 < i && i < size);
-    assert(_type[i] == CONSTANT_Class or _type[i] == CONSTANT_ResolvedClass);
+    assert(_type[i] == JVM_CONSTANT_Class or _type[i] == JVM_CONSTANT_ResolvedClass);
 
-    if (_type[i] == CONSTANT_ResolvedClass)
+    if (_type[i] == JVM_CONSTANT_ResolvedClass)
         return (Class *) _info[i];
 
     Class *c = loadClass(clazz->loader, className(i));
-    type(i, CONSTANT_ResolvedClass);
+    type(i, JVM_CONSTANT_ResolvedClass);
     info(i, (slot_t) c);
 
     return c;
@@ -541,15 +541,15 @@ Class *ConstantPool::resolveClass(u2 i)
 Method *ConstantPool::resolveMethod(u2 i)
 {
     assert(0 < i && i < size);
-    assert(_type[i] == CONSTANT_Methodref or _type[i] == CONSTANT_ResolvedMethod);
+    assert(_type[i] == JVM_CONSTANT_Methodref or _type[i] == JVM_CONSTANT_ResolvedMethod);
 
-    if (type(i) == CONSTANT_ResolvedMethod)
+    if (type(i) == JVM_CONSTANT_ResolvedMethod)
         return (Method *) _info[i];
 
     Class *c = resolveClass(methodClassIndex(i));
     Method *m = c->lookupMethod(methodName(i), methodType(i));
 
-    type(i, CONSTANT_ResolvedMethod);
+    type(i, JVM_CONSTANT_ResolvedMethod);
     info(i, (slot_t) m);
 
     return m;
@@ -558,15 +558,15 @@ Method *ConstantPool::resolveMethod(u2 i)
 Method* ConstantPool::resolveInterfaceMethod(u2 i)
 {
     assert(0 < i && i < size);
-    assert(_type[i] == CONSTANT_InterfaceMethodref or _type[i] == CONSTANT_ResolvedInterfaceMethod);
+    assert(_type[i] == JVM_CONSTANT_InterfaceMethodref or _type[i] == JVM_CONSTANT_ResolvedInterfaceMethod);
 
-    if (type(i) == CONSTANT_ResolvedInterfaceMethod)
+    if (type(i) == JVM_CONSTANT_ResolvedInterfaceMethod)
         return (Method *) _info[i];
 
     Class *c = resolveClass(interfaceMethodClassIndex(i));
     Method *m = c->lookupMethod(interfaceMethodName(i), interfaceMethodType(i));
 
-    type(i, CONSTANT_ResolvedInterfaceMethod);
+    type(i, JVM_CONSTANT_ResolvedInterfaceMethod);
     info(i, (slot_t) m);
 
     return m;
@@ -575,15 +575,15 @@ Method* ConstantPool::resolveInterfaceMethod(u2 i)
 Field *ConstantPool::resolveField(u2 i)
 {
     assert(0 < i && i < size);
-    assert(_type[i] == CONSTANT_Fieldref or _type[i] == CONSTANT_ResolvedField);
+    assert(_type[i] == JVM_CONSTANT_Fieldref or _type[i] == JVM_CONSTANT_ResolvedField);
 
-    if (type(i) == CONSTANT_ResolvedField)
+    if (type(i) == JVM_CONSTANT_ResolvedField)
         return (Field *) _info[i];
 
     Class *c = resolveClass(fieldClassIndex(i));
     Field *f = c->lookupField(fieldName(i), fieldType(i));
 
-    type(i, CONSTANT_ResolvedField);
+    type(i, JVM_CONSTANT_ResolvedField);
     info(i, (slot_t) f);
 
     return f;
@@ -592,15 +592,15 @@ Field *ConstantPool::resolveField(u2 i)
 Object *ConstantPool::resolveString(u2 i)
 {
     assert(0 < i && i < size);
-    assert(_type[i] == CONSTANT_String or _type[i] == CONSTANT_ResolvedString);
+    assert(_type[i] == JVM_CONSTANT_String or _type[i] == JVM_CONSTANT_ResolvedString);
 
-    if (type(i) == CONSTANT_ResolvedString)
+    if (type(i) == JVM_CONSTANT_ResolvedString)
         return (Object *) _info[i];
 
     const utf8_t *str = string(i);
     Object *so = stringClass->intern(str);
 
-    type(i, CONSTANT_ResolvedString);
+    type(i, JVM_CONSTANT_ResolvedString);
     info(i, (slot_t) so);
     return so;
 }
@@ -608,14 +608,14 @@ Object *ConstantPool::resolveString(u2 i)
 Object *ConstantPool::resolveMethodType(u2 i)
 {
     assert(0 < i && i < size);
-    assert(_type[i] == CONSTANT_MethodType);
+    assert(_type[i] == JVM_CONSTANT_MethodType);
     return fromMethodDescriptor(methodTypeDescriptor(i), clazz->loader);
 }
 
 Object *ConstantPool::resolveMethodHandle(u2 i)
 {
     assert(0 < i && i < size);
-    assert(_type[i] == CONSTANT_MethodHandle);
+    assert(_type[i] == JVM_CONSTANT_MethodHandle);
 
     auto caller = getCaller();
 
@@ -630,7 +630,7 @@ Object *ConstantPool::resolveMethodHandle(u2 i)
             "Ljava/lang/invoke/MethodHandle;";
 
     switch (kind) {
-        case REF_getField: {
+        case JVM_REF_getField: {
             Field *f = resolveField(index);
 
             // public MethodHandle findGetter(Class<?> refc, String name, Class<?> type)
@@ -638,7 +638,7 @@ Object *ConstantPool::resolveMethodHandle(u2 i)
             Method *m = caller->clazz->getDeclaredInstMethod("findGetter", d1);
             return RSLOT(execJavaFunc(m, caller, f->clazz, newString(f->name), f->getType()));
         }
-        case REF_getStatic: {
+        case JVM_REF_getStatic: {
             Field *f = resolveField(index);
 
             // public MethodHandle findStaticGetter(Class<?> refc, String name, Class<?> type)
@@ -646,7 +646,7 @@ Object *ConstantPool::resolveMethodHandle(u2 i)
             Method *m = caller->clazz->getDeclaredInstMethod("findStaticGetter", d1);
             return RSLOT(execJavaFunc(m, caller, f->clazz, newString(f->name), f->getType()));
         }
-        case REF_putField: {
+        case JVM_REF_putField: {
             Field *f = resolveField(index);
 
             // public MethodHandle findSetter(Class<?> refc, String name, Class<?> type)
@@ -654,7 +654,7 @@ Object *ConstantPool::resolveMethodHandle(u2 i)
             Method *m = caller->clazz->getDeclaredInstMethod("findSetter", d1);
             return RSLOT(execJavaFunc(m, caller, f->clazz, newString(f->name), f->getType()));
         }
-        case REF_putStatic: {
+        case JVM_REF_putStatic: {
             Field *f = resolveField(index);
 
             // public MethodHandle findStaticSetter(Class<?> refc, String name, Class<?> type)
@@ -662,12 +662,12 @@ Object *ConstantPool::resolveMethodHandle(u2 i)
             Method *m = caller->clazz->getDeclaredInstMethod("findStaticSetter", d1);
             return RSLOT(execJavaFunc(m, caller, f->clazz, newString(f->name), f->getType()));
         }
-        case REF_invokeVirtual :{
+        case JVM_REF_invokeVirtual :{
             // public MethodHandle findVirtual(Class<?> refc, String name, MethodType type)
             //                      throws NoSuchMethodException, IllegalAccessException;
             jvm_abort("");
         }
-        case REF_invokeStatic: {
+        case JVM_REF_invokeStatic: {
             Method *m = resolveMethod(index);
             assert(m->isStatic());
 
@@ -676,12 +676,12 @@ Object *ConstantPool::resolveMethodHandle(u2 i)
             return RSLOT(execJavaFunc(caller->clazz->getDeclaredInstMethod("findStatic", d2),
                                       caller, m->clazz, newString(m->name), m->getType()));
         }
-        case REF_invokeSpecial: {
+        case JVM_REF_invokeSpecial: {
             // public MethodHandle findSpecial(Class<?> refc, String name, MethodType type, Class<?> specialCaller)
             //                      throws NoSuchMethodException, IllegalAccessException;
             jvm_abort("");
         }
-        case REF_newInvokeSpecial: {
+        case JVM_REF_newInvokeSpecial: {
             // public MethodHandle findConstructor(Class<?> refc, MethodType type)
             //                      throws NoSuchMethodException, IllegalAccessException;
 
@@ -689,7 +689,7 @@ Object *ConstantPool::resolveMethodHandle(u2 i)
             //                      throws NoSuchMethodException, IllegalAccessException;
             jvm_abort("");
         }
-        case REF_invokeInterface: {
+        case JVM_REF_invokeInterface: {
             // public MethodHandle findVirtual(Class<?> refc, String name, MethodType type)
             //                      throws NoSuchMethodException, IllegalAccessException;
             jvm_abort("");
@@ -977,51 +977,51 @@ Class::Class(Object *loader, u1 *bytecode, size_t len)
         u1 tag = r.readu1();
         cp.type(i, tag);
         switch (tag) {
-            case CONSTANT_Class:
-            case CONSTANT_String:
-            case CONSTANT_MethodType:
-            case CONSTANT_Module:
-            case CONSTANT_Package:
+            case JVM_CONSTANT_Class:
+            case JVM_CONSTANT_String:
+            case JVM_CONSTANT_MethodType:
+            case JVM_CONSTANT_Module:
+            case JVM_CONSTANT_Package:
                 cp.info(i, r.readu2());
                 break;
-            case CONSTANT_NameAndType:
-            case CONSTANT_Fieldref:
-            case CONSTANT_Methodref:
-            case CONSTANT_InterfaceMethodref:
-            case CONSTANT_Dynamic:
-            case CONSTANT_InvokeDynamic: {
+            case JVM_CONSTANT_NameAndType:
+            case JVM_CONSTANT_Fieldref:
+            case JVM_CONSTANT_Methodref:
+            case JVM_CONSTANT_InterfaceMethodref:
+            case JVM_CONSTANT_Dynamic:
+            case JVM_CONSTANT_InvokeDynamic: {
                 slot_t index1 = r.readu2();
                 slot_t index2 = r.readu2();
                 cp.info(i, (index2 << 16) + index1);
                 break;
             }
-            case CONSTANT_Integer: {
+            case JVM_CONSTANT_Integer: {
                 u1 bytes[4];
                 r.readBytes(bytes, 4);
                 cp._int(i, bytes_to_int32(bytes));
                 break;
             }
-            case CONSTANT_Float: {
+            case JVM_CONSTANT_Float: {
                 u1 bytes[4];
                 r.readBytes(bytes, 4);
                 cp._float(i, bytes_to_float(bytes));
                 break;
             }
-            case CONSTANT_Long: {
+            case JVM_CONSTANT_Long: {
                 u1 bytes[8];
                 r.readBytes(bytes, 8);
                 cp._long(i, bytes_to_int64(bytes));
-                cp.type(++i, CONSTANT_Placeholder);
+                cp.type(++i, JVM_CONSTANT_Placeholder);
                 break;
             }
-            case CONSTANT_Double: {
+            case JVM_CONSTANT_Double: {
                 u1 bytes[8];
                 r.readBytes(bytes, 8);
                 cp._double(i, bytes_to_double(bytes));
-                cp.type(++i, CONSTANT_Placeholder);
+                cp.type(++i, JVM_CONSTANT_Placeholder);
                 break;
             }
-            case CONSTANT_Utf8: {
+            case JVM_CONSTANT_Utf8: {
                 u2 utf8_len = r.readu2();
                 char buf[utf8_len + 1];
                 r.readBytes((u1 *) buf, utf8_len);
@@ -1035,7 +1035,7 @@ Class::Class(Object *loader, u1 *bytecode, size_t len)
                 cp.info(i, (slot_t) utf8);
                 break;
             }
-            case CONSTANT_MethodHandle: {
+            case JVM_CONSTANT_MethodHandle: {
                 slot_t index1 = r.readu1(); // 这里确实是 readu1, reference_kind
                 slot_t index2 = r.readu2(); // reference_index
                 cp.info(i, (index2 << 16) + index1);
@@ -1171,7 +1171,7 @@ Field *Class::lookupField(const utf8_t *name, const utf8_t *descriptor)
     }
 
     // todo 在父类中查找
-    struct Field *field;
+    Field *field;
     if (superClass != nullptr) {
         if ((field = superClass->lookupField(name, descriptor)) != nullptr)
             return field;

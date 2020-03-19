@@ -126,7 +126,7 @@ static void resolve(Frame *frame)
         assert(descriptor != nullptr);
 
         jref resolvedMemberName = nullptr;
-        if (refKind == REF_invokeStatic) {
+        if (refKind == JVM_REF_invokeStatic) {
 //            assert(isStatic(mn));
             Method *m = clazz->getDeclaredStaticMethod(name->toUtf8(), descriptor->toUtf8());
             assert(m->isStatic());

@@ -2,6 +2,8 @@
 #ifndef CLASSFILE_CONSTANTS_H
 #define CLASSFILE_CONSTANTS_H
 
+#include <cstdint>
+
 /* Flags */
 
 enum {
@@ -48,21 +50,21 @@ enum {
 /* Used in newarray instruction. */
 
 enum {
-    JVM_T_BOOLEAN = 4,
-    JVM_T_CHAR    = 5,
-    JVM_T_FLOAT   = 6,
-    JVM_T_DOUBLE  = 7,
-    JVM_T_BYTE    = 8,
-    JVM_T_SHORT   = 9,
-    JVM_T_INT     = 10,
-    JVM_T_LONG    = 11
+    JVM_AT_BOOLEAN = 4,
+    JVM_AT_CHAR    = 5,
+    JVM_AT_FLOAT   = 6,
+    JVM_AT_DOUBLE  = 7,
+    JVM_AT_BYTE    = 8,
+    JVM_AT_SHORT   = 9,
+    JVM_AT_INT     = 10,
+    JVM_AT_LONG    = 11
 };
 
 /* Constant Pool Entries */
-
 enum {
+    JVM_CONSTANT_Invalid                = 0, // invalid constant
     JVM_CONSTANT_Utf8                   = 1,
-    JVM_CONSTANT_Unicode                = 2, /* unused */
+    JVM_CONSTANT_Unicode                = 2, // unused
     JVM_CONSTANT_Integer                = 3,
     JVM_CONSTANT_Float                  = 4,
     JVM_CONSTANT_Long                   = 5,
@@ -79,11 +81,21 @@ enum {
     JVM_CONSTANT_InvokeDynamic          = 18,
     JVM_CONSTANT_Module                 = 19,
     JVM_CONSTANT_Package                = 20,
-    JVM_CONSTANT_ExternalMax            = 20 
+
+    // 以下为自定义常量，数值不同于以上定义的常量即可。
+//JVM_CONSTANT_ResolvedMethodHandle = INT8_MAX - 6
+    JVM_CONSTANT_ResolvedInterfaceMethod = INT8_MAX - 5,
+    JVM_CONSTANT_ResolvedMethod          = INT8_MAX - 4,
+    JVM_CONSTANT_ResolvedField           = INT8_MAX - 3,
+    JVM_CONSTANT_ResolvedClass           = INT8_MAX - 2,
+    JVM_CONSTANT_ResolvedString          = INT8_MAX - 1,
+    JVM_CONSTANT_Placeholder             = INT8_MAX // long 和 double 的占位符
 };
 
 /* JVM_CONSTANT_MethodHandle subtypes */
+
 enum {
+    JVM_REF_NONE                    = 0,
     JVM_REF_getField                = 1,
     JVM_REF_getStatic               = 2,
     JVM_REF_putField                = 3,
@@ -92,7 +104,8 @@ enum {
     JVM_REF_invokeStatic            = 6,
     JVM_REF_invokeSpecial           = 7,
     JVM_REF_newInvokeSpecial        = 8,
-    JVM_REF_invokeInterface         = 9
+    JVM_REF_invokeInterface         = 9,
+    JVM_REF_LIMIT                   = 10
 };
 
 /* StackMapTable type item numbers */
@@ -334,7 +347,11 @@ enum {
     JVM_OPC_ifnonnull           = 199,
     JVM_OPC_goto_w              = 200,
     JVM_OPC_jsr_w               = 201,
-    JVM_OPC_MAX                 = 201
+    JVM_OPC_breakpoint          = 202,
+
+    JVM_OPC_impdep1             = 254,
+    JVM_OPC_impdep2             = 255,
+    JVM_OPC_invokenative        = JVM_OPC_impdep1,
 };
 
 /* Opcode length initializer, use with something like:

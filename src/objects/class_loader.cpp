@@ -27,43 +27,61 @@ using namespace utf8;
 static utf8_set bootPackages;
 static unordered_map<const utf8_t *, Class *, utf8::Hash, utf8::Comparator> bootClasses;
 
-static optional<pair<u1 *, size_t>> readClassFromJar(const char *jar_path, const char *class_name)
+
+enum ClassLocation {
+    IN_JAR,
+    IN_MODULE
+};
+
+/*
+ * @param class_name: xxx/xxx/xxx
+ */
+static optional<pair<u1 *, size_t>> readClass(const char *path,
+                                        const char *class_name, ClassLocation location)
 {
-    unzFile jar_file = unzOpen64(jar_path);
-    if (jar_file == nullptr) {
-        thread_throw(new IOException(NEW_MSG("unzOpen64 failed: %s\n", jar_path)));
+    unzFile module_file = unzOpen64(path);
+    if (module_file == nullptr) {
+        thread_throw(new IOException(NEW_MSG("unzOpen64 failed: %s\n", path)));
     }
 
-    if (unzGoToFirstFile(jar_file) != UNZ_OK) {
-        unzClose(jar_file);
-        thread_throw(new IOException(NEW_MSG("unzGoToFirstFile failed: %s\n", jar_path)));
+    if (unzGoToFirstFile(module_file) != UNZ_OK) {
+        unzClose(module_file);
+        thread_throw(new IOException(NEW_MSG("unzGoToFirstFile failed: %s\n", path)));
     }
 
-    char buf[strlen(class_name) + 8];
-    strcat(strcpy(buf, class_name), ".class");
+    char buf[strlen(class_name) + 32]; // big enough
+    if (location == IN_JAR) {
+        strcat(strcpy(buf, class_name), ".class");
+    } else if (location == IN_MODULE) {
+        // All classes 放在 module 的 "classes" 目录下
+        strcat(strcat(strcpy(buf, "classes/"), class_name), ".class");
+    } else {
+        jvm_abort("never goes here."); // todo
+    }
 
-    int k = unzLocateFile(jar_file, buf, 1);
+    int k = unzLocateFile(module_file, buf, 1);
     if (k != UNZ_OK) {
         // not found
-        unzClose(jar_file);
+        unzClose(module_file);
         return nullopt;
     }
 
     // find out!
-    if (unzOpenCurrentFile(jar_file) != UNZ_OK) {
-        unzClose(jar_file);
-        thread_throw(new IOException(NEW_MSG("unzOpenCurrentFile failed: %s\n", jar_path)));
+    if (unzOpenCurrentFile(module_file) != UNZ_OK) {
+        unzClose(module_file);
+        thread_throw(new IOException(NEW_MSG("unzOpenCurrentFile failed: %s\n", path)));
     }
 
     unz_file_info64 file_info{ };
-    unzGetCurrentFileInfo64(jar_file, &file_info, buf, sizeof(buf), nullptr, 0, nullptr, 0);
+    unzGetCurrentFileInfo64(module_file, &file_info, buf, sizeof(buf),
+            nullptr, 0, nullptr, 0);
 
     auto bytecode = (u1 *) g_heap.allocBytecode(file_info.uncompressed_size); //new u1[file_info.uncompressed_size];
-    int size = unzReadCurrentFile(jar_file, bytecode, (unsigned int)(file_info.uncompressed_size));
-    unzCloseCurrentFile(jar_file);
-    unzClose(jar_file);
+    int size = unzReadCurrentFile(module_file, bytecode, (unsigned int)(file_info.uncompressed_size));
+    unzCloseCurrentFile(module_file);
+    unzClose(module_file);
     if (size != file_info.uncompressed_size) {
-        thread_throw(new IOException(NEW_MSG("unzReadCurrentFile failed: %s.\n", jar_path)));
+        thread_throw(new IOException(NEW_MSG("unzReadCurrentFile failed: %s.\n", path)));
     }
     return make_pair(bytecode, file_info.uncompressed_size);
 }
@@ -103,10 +121,21 @@ Class *loadBootClass(const utf8_t *name)
     if (name[0] == '[' or isPrimClassName(name)) {
         c = Class::newClass(name);
     } else {
-        for (auto &jar : jreLibJars) {
-            auto content = readClassFromJar(jar.c_str(), name);
-            if (content.has_value()) { // find out
-                c = defineClass(bootClassLoader, content->first, content->second); //content.value().first
+        if (g_jdk_version_9_and_upper) {
+            for (auto &mod : g_jdk_modules) {
+                auto content = readClass(mod.c_str(), name, IN_MODULE);
+                if (content.has_value()) { // find out
+                    c = defineClass(bootClassLoader, content->first,
+                                    content->second); //content.value().first
+                }
+            }
+        } else {
+            for (auto &jar : jreLibJars) {
+                auto content = readClass(jar.c_str(), name, IN_JAR);
+                if (content.has_value()) { // find out
+                    c = defineClass(bootClassLoader, content->first,
+                                    content->second); //content.value().first
+                }
             }
         }
     }
@@ -230,8 +259,8 @@ void initClassLoader()
     objectClass = loadBootClass(S(java_lang_Object));
     classClass = loadBootClass(S(java_lang_Class));
 
-    if (classClass->instFieldsCount != CLASS_CLASS_INST_FIELDS_COUNT) {
-        jvm_abort("What the fuck! java/lang/Class.java 文件有变动？！"); // todo
+    if (classClass->instFieldsCount > CLASS_CLASS_INST_FIELDS_COUNT) {
+        jvm_abort("What the fuck! [%d]", classClass->instFieldsCount); // todo
     }
 
     objectClass->clazz = classClass->clazz = classClass;

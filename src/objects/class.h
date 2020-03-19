@@ -20,7 +20,7 @@
 #include "../util/BytecodeReader.h"
 #include "../classfile/attribute.h"
 #include "../native/registry.h"
-#include "../classfile/constant.h"
+#include "../classfile/constants.h"
 
 class Class;
 
@@ -220,8 +220,12 @@ private:
 public:
     ~Method()
     {
-        for (auto &t : exceptionTables)
+        if (isNative()) {
+            delete[] code;
+        }
+        for (auto &t : exceptionTables) {
             delete t.catchType;
+        }
     }
 };
 
@@ -243,7 +247,7 @@ public:
         assert(size > 0);
 
         _type = new u1[size];
-        _type[0] = CONSTANT_Invalid; // constant pool 从 1 开始计数，第0位无效
+        _type[0] = JVM_CONSTANT_Invalid; // constant pool 从 1 开始计数，第0位无效
 
         _info = new slot_t[size];
     }
@@ -281,231 +285,231 @@ public:
     utf8_t *utf8(u2 i)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_Utf8);
+        assert(_type[i] == JVM_CONSTANT_Utf8);
         return (utf8_t *)(_info[i]);
     }
 
     utf8_t *string(u2 i)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_String);
+        assert(_type[i] == JVM_CONSTANT_String);
         return utf8((u2)_info[i]);
     }
 
     utf8_t *className(u2 i)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_Class);
+        assert(_type[i] == JVM_CONSTANT_Class);
         return utf8((u2)_info[i]);
     }
 
     utf8_t *moduleName(u2 i)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_Module);
+        assert(_type[i] == JVM_CONSTANT_Module);
         return utf8((u2)_info[i]);
     }
 
     utf8_t *packageName(u2 i)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_Package);
+        assert(_type[i] == JVM_CONSTANT_Package);
         return utf8((u2)_info[i]);
     }
 
     utf8_t *nameOfNameAndType(u2 i)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_NameAndType);
+        assert(_type[i] == JVM_CONSTANT_NameAndType);
         return utf8((u2)_info[i]);
     }
 
     utf8_t *typeOfNameAndType(u2 i)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_NameAndType);
+        assert(_type[i] == JVM_CONSTANT_NameAndType);
         return utf8((u2) (_info[i] >> 16));
     }
 
     u2 fieldClassIndex(u2 i)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_Fieldref);
+        assert(_type[i] == JVM_CONSTANT_Fieldref);
         return (u2)_info[i];
     }
 
     utf8_t *fieldClassName(u2 i)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_Fieldref);
+        assert(_type[i] == JVM_CONSTANT_Fieldref);
         return className((u2)_info[i]);
     }
 
     utf8_t *fieldName(u2 i)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_Fieldref);
+        assert(_type[i] == JVM_CONSTANT_Fieldref);
         return nameOfNameAndType((u2) (_info[i] >> 16));
     }
 
     utf8_t *fieldType(u2 i)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_Fieldref);
+        assert(_type[i] == JVM_CONSTANT_Fieldref);
         return typeOfNameAndType((u2) (_info[i] >> 16));
     }
 
     u2 methodClassIndex(u2 i)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_Methodref);
+        assert(_type[i] == JVM_CONSTANT_Methodref);
         return (u2)_info[i];
     }
 
     utf8_t *methodClassName(u2 i)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_Methodref);
+        assert(_type[i] == JVM_CONSTANT_Methodref);
         return className((u2)_info[i]);
     }
 
     utf8_t *methodName(u2 i)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_Methodref);
+        assert(_type[i] == JVM_CONSTANT_Methodref);
         return nameOfNameAndType((u2) (_info[i] >> 16));
     }
 
     utf8_t *methodType(u2 i)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_Methodref);
+        assert(_type[i] == JVM_CONSTANT_Methodref);
         return typeOfNameAndType((u2) (_info[i] >> 16));
     }
 
     u2 interfaceMethodClassIndex(u2 i)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_InterfaceMethodref);
+        assert(_type[i] == JVM_CONSTANT_InterfaceMethodref);
         return (u2)_info[i];
     }
 
     utf8_t *interfaceMethodClassName(u2 i)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_InterfaceMethodref);
+        assert(_type[i] == JVM_CONSTANT_InterfaceMethodref);
         return className((u2)_info[i]);
     }
 
     utf8_t *interfaceMethodName(u2 i)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_InterfaceMethodref);
+        assert(_type[i] == JVM_CONSTANT_InterfaceMethodref);
         return nameOfNameAndType((u2) (_info[i] >> 16));
     }
 
     utf8_t *interfaceMethodType(u2 i)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_InterfaceMethodref);
+        assert(_type[i] == JVM_CONSTANT_InterfaceMethodref);
         return typeOfNameAndType((u2) (_info[i] >> 16));
     }
 
     utf8_t *methodTypeDescriptor(u2 i)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_MethodType);
+        assert(_type[i] == JVM_CONSTANT_MethodType);
         return utf8((u2)_info[i]);
     }
 
     u2 methodHandleReferenceKind(u2 i)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_MethodHandle);
+        assert(_type[i] == JVM_CONSTANT_MethodHandle);
         return (u2) _info[i];
     }
 
     u2 methodHandleReferenceIndex(u2 i)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_MethodHandle);
+        assert(_type[i] == JVM_CONSTANT_MethodHandle);
         return (u2) (_info[i] >> 16);
     }
 
     u2 invokeDynamicBootstrapMethodIndex(u2 i)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_InvokeDynamic);
+        assert(_type[i] == JVM_CONSTANT_InvokeDynamic);
         return (u2) _info[i];
     }
 
     utf8_t *invokeDynamicMethodName(u2 i)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_InvokeDynamic);
+        assert(_type[i] == JVM_CONSTANT_InvokeDynamic);
         return nameOfNameAndType((u2) (_info[i] >> 16));
     }
 
     utf8_t *invokeDynamicMethodType(u2 i)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_InvokeDynamic);
+        assert(_type[i] == JVM_CONSTANT_InvokeDynamic);
         return typeOfNameAndType((u2) (_info[i] >> 16));
     }
 
     jint _int(u2 i)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_Integer);
+        assert(_type[i] == JVM_CONSTANT_Integer);
         return ISLOT(_info + i);
     }
 
     void _int(u2 i, jint newInt)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_Integer);
+        assert(_type[i] == JVM_CONSTANT_Integer);
         ISLOT(_info + i) = newInt;
     }
 
     jfloat _float(u2 i)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_Float);
+        assert(_type[i] == JVM_CONSTANT_Float);
         return FSLOT(_info + i);
     }
 
     void _float(u2 i, jfloat newFloat)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_Float);
+        assert(_type[i] == JVM_CONSTANT_Float);
         FSLOT(_info + i) = newFloat;
     }
 
     jlong _long(u2 i)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_Long);
+        assert(_type[i] == JVM_CONSTANT_Long);
         return LSLOT(_info + i);
     }
 
     void _long(u2 i, jlong newLong)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_Long);
+        assert(_type[i] == JVM_CONSTANT_Long);
         LSLOT(_info + i) = newLong;
     }
 
     jdouble _double(u2 i)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_Double);
+        assert(_type[i] == JVM_CONSTANT_Double);
         return DSLOT(_info + i);
     }
 
     void _double(u2 i, jdouble newDouble)
     {
         assert(0 < i && i < size);
-        assert(_type[i] == CONSTANT_Double);
+        assert(_type[i] == JVM_CONSTANT_Double);
         DSLOT(_info + i) = newDouble;
     }
 
@@ -792,7 +796,7 @@ public:
      */
     Class *elementClass();
     
-    /*---------------------- for String class ----------------------*/
+    /*---------------------- for java.lang.String class ----------------------*/
 private:
     // A pool of strings, initially empty, is maintained privately by the String class.
     std::unordered_set<Object *, StrObjHash, StrObjEquals> *strpool;
@@ -807,6 +811,11 @@ public:
     friend void initClassLoader();
     friend Class *loadBootClass(const utf8_t *name);
     friend Class *defineClass(jref classLoader, u1 *bytecode, size_t len);
+
+    /*---------------------- for java.lang.Class class ----------------------*/
+    // set by VM
+   // private transient Module module;
+   jref modulexxxxxxx;// set by VM  todo
 };
 
 #endif //JVM_JCLASS_H

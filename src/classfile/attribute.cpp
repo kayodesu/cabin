@@ -9,6 +9,7 @@
 #include "../runtime/thread_info.h"
 #include "constant.h"
 #include "../objects/class.h"
+#include "constants.h"
 
 using namespace std;
 
@@ -88,35 +89,35 @@ slot_t *BootstrapMethod::resolveArgs(ConstantPool *cp, slot_t *result)
     assert(result != nullptr);
     for (u2 i : bootstrapArguments) {
         switch (cp->type(i)) {
-            case CONSTANT_String:
+            case JVM_CONSTANT_String:
                 RSLOT(result) = cp->resolveString(i);
                 result++;
                 break;
-            case CONSTANT_Class:
+            case JVM_CONSTANT_Class:
                 RSLOT(result) = cp->resolveClass(i);
                 result++;
                 break;
-            case CONSTANT_Integer:
+            case JVM_CONSTANT_Integer:
                 ISLOT(result) = cp->_int(i);
                 result++;
                 break;
-            case CONSTANT_Float:
+            case JVM_CONSTANT_Float:
                 FSLOT(result) = cp->_float(i);
                 result++;
                 break;
-            case CONSTANT_Long:
+            case JVM_CONSTANT_Long:
                 LSLOT(result) = cp->_long(i);
                 result += 2;
                 break;
-            case CONSTANT_Double:
+            case JVM_CONSTANT_Double:
                 DSLOT(result) = cp->_double(i);
                 result += 2;
                 break;
-            case CONSTANT_MethodHandle:
+            case JVM_CONSTANT_MethodHandle:
                 RSLOT(result) = cp->resolveMethodHandle(i);
                 result++;
                 break;
-            case CONSTANT_MethodType:
+            case JVM_CONSTANT_MethodType:
                 RSLOT(result) = cp->resolveMethodType(i);
                 result++;
                 break;

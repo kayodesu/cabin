@@ -7,38 +7,6 @@
 
 #include <cassert>
 
-// All compile-time constants go here.
-// from java.lang.invoke.MethodHandleNatives.java
-
-// Constant pool entry types.
-#define CONSTANT_Invalid                0 // invalid constant
-#define CONSTANT_Utf8                   1
-#define CONSTANT_Integer                3
-#define CONSTANT_Float                  4
-#define CONSTANT_Long                   5
-#define CONSTANT_Double                 6
-#define CONSTANT_Class                  7
-#define CONSTANT_String                 8
-#define CONSTANT_Fieldref               9
-#define CONSTANT_Methodref              10
-#define CONSTANT_InterfaceMethodref     11
-#define CONSTANT_NameAndType            12
-#define CONSTANT_MethodHandle           15
-#define CONSTANT_MethodType             16
-#define CONSTANT_Dynamic                17
-#define CONSTANT_InvokeDynamic          18
-#define CONSTANT_Module                 19
-#define CONSTANT_Package                20
-
-// 以下为自定义常量，数值不同于以上定义的常量即可。
-//#define CONSTANT_ResolvedMethodHandle (INT8_MAX - 6)
-#define CONSTANT_ResolvedInterfaceMethod (INT8_MAX - 5)
-#define CONSTANT_ResolvedMethod          (INT8_MAX - 4)
-#define CONSTANT_ResolvedField           (INT8_MAX - 3)
-#define CONSTANT_ResolvedClass           (INT8_MAX - 2)
-#define CONSTANT_ResolvedString          (INT8_MAX - 1)
-#define CONSTANT_Placeholder             INT8_MAX // long 和 double 的占位符
-
 // MemberName
 #define MN_IS_METHOD             0x00010000 // method (not constructor)
 #define MN_IS_CONSTRUCTOR        0x00020000 // constructor

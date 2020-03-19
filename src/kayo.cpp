@@ -8,6 +8,7 @@
 #include <iostream>
 #include <typeinfo>
 #include <thread>
+#include <fstream>
 #include "kayo.h"
 #include "debug.h"
 #include "native/registry.h"
@@ -27,12 +28,19 @@ using namespace utf8;
 
 Heap g_heap;
 
-vector<std::string> jreLibJars;
-vector<std::string> jreExtJars;
+bool g_jdk_version_9_and_upper;
+
+vector<string> jreLibJars;
+vector<string> jreExtJars;
+
+vector<string> g_jdk_modules;
+
 //vector<std::string> userDirs;
 //vector<std::string> userJars;
 
 //StrPool *g_str_pool;
+
+vector<pair<const utf8_t *, const utf8_t *>> g_properties;
 
 Object *sysThreadGroup;
 
@@ -74,11 +82,46 @@ static void findJars(const char *path, vector<std::string> &result)
     closedir(dir);
 }
 
+static void findModules(const char *path, vector<std::string> &result)
+{
+    DIR *dir = opendir(path);
+    if (dir == nullptr) {
+        jvm_abort("open dir failed. %s\n", path);
+    }
+
+    struct dirent *entry;
+    struct stat statbuf;
+    while ((entry = readdir(dir)) != nullptr) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+
+        char abspath[PATH_MAX];
+        // sprintf 和 snprintf 会自动在加上字符串结束符'\0'
+        sprintf(abspath, "%s/%s", path, entry->d_name); // 绝对路径
+
+        stat(abspath, &statbuf);
+        if (S_ISREG(statbuf.st_mode)) { // 常规文件
+            char *suffix = strrchr(abspath, '.');
+            if (suffix != nullptr && strcmp(suffix, ".jmod") == 0)
+                result.emplace_back(abspath);
+        }
+    }
+
+    closedir(dir);
+}
+
+
 static char main_class_name[FILENAME_MAX] = { 0 };
 static char *main_func_args[METHOD_PARAMETERS_MAX_COUNT];
 static int main_func_args_count = 0;
 
-char javaHome[PATH_MAX] = { 0 };
+//char javaHome[PATH_MAX] = { 0 };
+string g_java_home;
+
+u2 g_classfile_major_version = 0;
+u2 g_classfile_manor_version = 0;
+
 static char bootstrap_classpath[PATH_MAX] = { 0 };
 char classpath[PATH_MAX] = { 0 };
 
@@ -99,9 +142,6 @@ static void showUsage(const char *name)
     printf("   or  %s [-options] -jar jarfile [arg1 arg2 ...]\n", name); // todo
     printf("                 (to run a standalone jar file)\n");
     printf("\nwhere options include:\n");
-    printf("  -bcp\t\t   <jar/zip files and directories separated by :>\n");
-    printf("  -bootclasspath   <jar/zip files and directories separated by :>\n"); // todo
-    printf("\t\t   locations where to find the system classes\n");
     printf("  -cp\t\t   <jar/zip files and directories separated by :>\n");
     printf("  -classpath\t   <jar/zip files and directories separated by :>\n"); // todo
     printf("\t\t   locations where to find application classes\n");
@@ -215,48 +255,148 @@ static void parseCommandLine(int argc, char *argv[])
     }
 }
 
+/*
+ * System properties. The following properties are guaranteed to be defined:
+ * java.version         Java version number
+ * java.vendor          Java vendor specific string
+ * java.vendor.url      Java vendor URL
+ * java.home            Java installation directory
+ * java.class.version   Java class version number
+ * java.class.path      Java classpath
+ * os.name              Operating System Name
+ * os.arch              Operating System Architecture
+ * os.version           Operating System Version
+ * file.separator       File separator ("/" on Unix)
+ * path.separator       Path separator (":" on Unix)
+ * line.separator       Line separator ("\n" on Unix)
+ * user.name            User account name
+ * user.home            User home directory
+ * user.dir             User's current working directory
+ */
+static void initProperties()
+{
+    g_properties.emplace_back("java.version", VM_VERSION);
+    g_properties.emplace_back("java.vendor", "kayo" );
+    g_properties.emplace_back("java.vendor.url", "doesn't have");
+    g_properties.emplace_back("java.home", g_java_home.c_str());
+    auto class_version = new utf8_t[32];
+    sprintf(class_version, "%d.%d",
+            JVM_MUST_SUPPORT_CLASSFILE_MAJOR_VERSION, JVM_MUST_SUPPORT_CLASSFILE_MINOR_VERSION);
+    g_properties.emplace_back("java.class.version", class_version);
+    g_properties.emplace_back("java.class.path", classpath);
+    g_properties.emplace_back("os.name", "");
+    g_properties.emplace_back("os.arch", "");
+    g_properties.emplace_back("os.version",  "");
+    g_properties.emplace_back("file.separator", "\\"); // todo 根据操作系统判断
+    g_properties.emplace_back("path.separator", ";"); // todo 根据操作系统判断
+    g_properties.emplace_back("line.separator", "\r\n"); // System.out.println最后输出换行符就会用到这个  // todo 根据操作系统判断
+    g_properties.emplace_back("user.name", "");
+    g_properties.emplace_back("user.home", "");
+    g_properties.emplace_back("user.dir", "");
+    g_properties.emplace_back("user.country", "CN");
+    g_properties.emplace_back("file.encoding", "UTF-8");
+    g_properties.emplace_back("sun.stdout.encoding", "UTF-8");
+    g_properties.emplace_back("sun.stderr.encoding", "UTF-8");
+}
+
 static void initJVM(int argc, char *argv[])
 {
-//    char *home = getenv("JAVA_HOME");
-//    if (home == nullptr) {
-//        jvm_abort("java_lang_InternalError, %s\n", "no java lib"); // todo
-//    }
-//    strcpy(javaHome, home);
-
-    char extension_classpath[PATH_MAX] = { 0 };
-//    char user_classpath[PATH_MAX] = { 0 };
-
-    // parse bootstrap classpath
-    if (bootstrap_classpath[0] == 0) { // empty
-        // 命令行参数没有设置 bootstrap_classpath 的值，那么使用 JAVA_HOME 环境变量
-        char *javaHome = getenv("JAVA_HOME"); // JAVA_HOME 是 JDK 的目录
-        if (javaHome == nullptr) {
-            jvm_abort("java_lang_InternalError, %s\n", "no java lib"); // todo
-        }
-        strcpy(bootstrap_classpath, javaHome);
-        strcat(bootstrap_classpath, "/jre/lib");
+    char *home = getenv("JAVA_HOME");
+    if (home == nullptr) {
+        jvm_abort("java_lang_InternalError, %s\n", "no java lib"); // todo
     }
+    g_java_home = home;
 
-    findJars(bootstrap_classpath, jreLibJars);
+//    g_java_home = R"(C:\Program Files\Java\jdk1.8.0_221)"; // todo for testing
 
-    // 第0个位置放rt.jar，因为rt.jar常用，所以放第0个位置首先搜索。
-    for (auto iter = jreLibJars.begin(); iter != jreLibJars.end(); iter++) {
-        auto i = iter->rfind('\\');
-        auto j = iter->rfind('/');
-        if ((i != iter->npos && iter->compare(i + 1, 6, "rt.jar") == 0)
-            || (j != iter->npos && iter->compare(j + 1, 6, "rt.jar") == 0)) {
-            std::swap(*(jreLibJars.begin()), *iter);
+    /* Access JAVA_HOME/release file to get the version of JDK */
+    ifstream ifs(g_java_home + "/release");
+    if(!ifs.is_open()){
+        jvm_abort("打开文件失败" ); // todo
+    }
+    string line;
+    while(getline(ifs, line)){
+        // JAVA_VERSION="x.x.x_xxx" // jdk8及其以下的jdk， JAVA_VERSION="1.8.0_221"
+        // JAVA_VERSION="xx.xx.xx"  // jdk9及其以上的jdk, JAVA_VERSION="11.0.1"
+
+        // JDK版本与class file版本对应关系
+        // JDK 1.1 = 45，JDK 1.2 = 46, ... 以此类推。
+        const char *begin = R"(JAVA_VERSION=")";
+        size_t pos = line.find(begin);
+        if (pos != string::npos) {
+            pos += strlen(begin);
+            size_t underline;
+            if ((underline = line.find_first_of('_', pos)) != string::npos) {
+                // jdk8及其以下的jdk
+                g_jdk_version_9_and_upper = false;
+                assert(line[pos] == '1');
+                assert(line[pos+1] == '.');
+                pos += 2; // jump "1."
+                g_classfile_major_version = stoi(line.substr(pos, 1)) - 1 + 45;
+                pos += 2; // jump "x."
+                g_classfile_manor_version = stoi(line.substr(pos, underline - pos));
+            } else {
+                // jdk9及其以上的jdk
+                g_jdk_version_9_and_upper = true;
+                size_t t = line.find_first_of('.', pos);
+                g_classfile_major_version = stoi(line.substr(pos, t - pos)) - 1 + 45;
+                pos = ++t; // jump '.'
+                t = line.find_first_of('.', pos);
+                g_classfile_manor_version = stoi(line.substr(pos, t - pos));
+            }
             break;
         }
     }
-
-    // parse extension classpath
-    if (extension_classpath[0] == 0) {  // empty
-        strcpy(extension_classpath, bootstrap_classpath);
-        strcat(extension_classpath, "/ext");  // todo JDK9+ 的目录结构有变动！！！！！！！
+    ifs.close();
+    if (g_classfile_major_version > JVM_MUST_SUPPORT_CLASSFILE_MAJOR_VERSION
+            || g_classfile_manor_version > JVM_MUST_SUPPORT_CLASSFILE_MINOR_VERSION) {
+        jvm_abort("不支持的jdk版本"); // todo
     }
 
-    findJars(extension_classpath, jreExtJars);
+    if (g_jdk_version_9_and_upper) { // jdk9 开始使用模块
+        findModules((g_java_home + "/jmods").c_str(), g_jdk_modules);
+
+        // 第0个位置放java.base.jmod，因为java.base.jmod常用，所以放第0个位置首先搜索。
+        for (auto iter = g_jdk_modules.begin(); iter != g_jdk_modules.end(); iter++) {
+            auto i = iter->rfind('\\');
+            auto j = iter->rfind('/');
+            if ((i != iter->npos && iter->compare(i + 1, 6, "java.base.jmod") == 0)
+                || (j != iter->npos && iter->compare(j + 1, 6, "java.base.jmod") == 0)) {
+                std::swap(*(g_jdk_modules.begin()), *iter);
+                break;
+            }
+        }
+    } else {
+        char extension_classpath[PATH_MAX] = { 0 };
+//    char user_classpath[PATH_MAX] = { 0 };
+
+        // parse bootstrap classpath
+        if (bootstrap_classpath[0] == 0) { // empty
+            strcpy(bootstrap_classpath, g_java_home.c_str());
+            strcat(bootstrap_classpath, "/jre/lib");
+        }
+
+        findJars(bootstrap_classpath, jreLibJars);
+
+        // 第0个位置放rt.jar，因为rt.jar常用，所以放第0个位置首先搜索。
+        for (auto iter = jreLibJars.begin(); iter != jreLibJars.end(); iter++) {
+            auto i = iter->rfind('\\');
+            auto j = iter->rfind('/');
+            if ((i != iter->npos && iter->compare(i + 1, 6, "rt.jar") == 0)
+                || (j != iter->npos && iter->compare(j + 1, 6, "rt.jar") == 0)) {
+                std::swap(*(jreLibJars.begin()), *iter);
+                break;
+            }
+        }
+
+        // parse extension classpath
+        if (extension_classpath[0] == 0) {  // empty
+            strcpy(extension_classpath, bootstrap_classpath);
+            strcat(extension_classpath, "/ext");  // todo JDK9+ 的目录结构有变动！！！！！！！
+        }
+
+        findJars(extension_classpath, jreExtJars);
+    }
 
     if (classpath[0] == 0) {  // empty
         char *cp = getenv("CLASSPATH");
@@ -280,9 +420,9 @@ static void initJVM(int argc, char *argv[])
 //        }
 //    }
 
-
     /* order is important */
     initSymbol();
+    initProperties();
     initJNI();
     initClassLoader();
     initMainThread();
@@ -298,9 +438,6 @@ static void initJVM(int argc, char *argv[])
     // 在VM类的类初始化方法中调用了 "initialize" 方法。
     initClass(vm);
 }
-
-
-
 
 
 //void threadFunc(std::string &str, int a)

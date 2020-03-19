@@ -9,7 +9,6 @@
 #include "../../../runtime/Frame.h"
 #include "../../../runtime/thread_info.h"
 #include "../../../objects/class.h"
-#include "../../../properties.h"
 
 using namespace std;
 using namespace chrono;
@@ -70,8 +69,9 @@ static void initProperties(Frame *frame)
     Method *setProperty = props->clazz->lookupInstMethod(
             "setProperty", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;");
 
-    for (auto &prop : properties) {
-        execJavaFunc(setProperty, props, newString(prop[0]), newString(prop[1]));
+    for (auto &prop : g_properties) {
+        assert(prop.first != nullptr && prop.second != nullptr);
+        execJavaFunc(setProperty, props, newString(prop.first), newString(prop.second));
     }
 
     frame->pushr(props);

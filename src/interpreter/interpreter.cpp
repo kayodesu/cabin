@@ -9,7 +9,7 @@
 #include "../debug.h"
 #include "../runtime/thread_info.h"
 #include "../runtime/Frame.h"
-#include "../classfile/constant.h"
+#include "../classfile/constants.h"
 #include "../objects/class.h"
 #include "../objects/invoke.h"
 
@@ -143,81 +143,81 @@ static slot_t *exec()
         u1 opcode = reader->readu1();
         PRINT_OPCODE
         switch (opcode) {
-            case OPC_NOP:
+            case JVM_OPC_nop:
                 break;
-            case OPC_ACONST_NULL:
+            case JVM_OPC_aconst_null:
                 frame->pushr(jnull);
                 break;
-            case OPC_ICONST_M1:
+            case JVM_OPC_iconst_m1:
                 frame->pushi(-1);
                 break;
-            case OPC_ICONST_0:
+            case JVM_OPC_iconst_0:
                 frame->pushi(0);
                 break;
-            case OPC_ICONST_1:
+            case JVM_OPC_iconst_1:
                 frame->pushi(1);
                 break;
-            case OPC_ICONST_2:
+            case JVM_OPC_iconst_2:
                 frame->pushi(2);
                 break;
-            case OPC_ICONST_3:
+            case JVM_OPC_iconst_3:
                 frame->pushi(3);
                 break;
-            case OPC_ICONST_4:
+            case JVM_OPC_iconst_4:
                 frame->pushi(4);
                 break;
-            case OPC_ICONST_5:
+            case JVM_OPC_iconst_5:
                 frame->pushi(5);
                 break;
-            case OPC_LCONST_0:
+            case JVM_OPC_lconst_0:
                 frame->pushl(0);
                 break;
-            case OPC_LCONST_1:
+            case JVM_OPC_lconst_1:
                 frame->pushl(1);
                 break;
-            case OPC_FCONST_0:
+            case JVM_OPC_fconst_0:
                 frame->pushf(0);
                 break;
-            case OPC_FCONST_1:
+            case JVM_OPC_fconst_1:
                 frame->pushf(1);
                 break;
-            case OPC_FCONST_2:
+            case JVM_OPC_fconst_2:
                 frame->pushf(2);
                 break;
-            case OPC_DCONST_0:
+            case JVM_OPC_dconst_0:
                 frame->pushd(0);
                 break;
-            case OPC_DCONST_1:
+            case JVM_OPC_dconst_1:
                 frame->pushd(1);
                 break;
-            case OPC_BIPUSH: // bipush, Byte Integer push
+            case JVM_OPC_bipush: // bipush, Byte Integer push
                 frame->pushi(reader->readu1());
                 break;
-            case OPC_SIPUSH: // Short Integer push
+            case JVM_OPC_sipush: // Short Integer push
                 frame->pushi(reader->readu2());
                 break;
 {
             u2 index;
-            case OPC_LDC:
+            case JVM_OPC_ldc:
                 index = reader->readu1();
                 goto __ldc;
-            case OPC_LDC_W:
+            case JVM_OPC_ldc_w:
                 index = reader->readu2();
 __ldc:
                 u1 type = cp->type(index);
                 switch (type) {
-                    case CONSTANT_Integer:
+                    case JVM_CONSTANT_Integer:
                         frame->pushi(cp->_int(index));
                         break;
-                    case CONSTANT_Float:
+                    case JVM_CONSTANT_Float:
                         frame->pushf(cp->_float(index));
                         break;
-                    case CONSTANT_String:
-                    case CONSTANT_ResolvedString:
+                    case JVM_CONSTANT_String:
+                    case JVM_CONSTANT_ResolvedString:
                         frame->pushr(cp->resolveString(index));
                         break;
-                    case CONSTANT_Class:
-                    case CONSTANT_ResolvedClass:
+                    case JVM_CONSTANT_Class:
+                    case JVM_CONSTANT_ResolvedClass:
                         frame->pushr(cp->resolveClass(index));
                         break;
                     default:
@@ -226,14 +226,14 @@ __ldc:
                 }
                 break;
 }
-            case OPC_LDC2_W: {
+            case JVM_OPC_ldc2_w: {
                 u2 index = reader->readu2();
                 u1 type = cp->type(index);
                 switch (type) {
-                    case CONSTANT_Long:
+                    case JVM_CONSTANT_Long:
                         frame->pushl(cp->_long(index));
                         break;
-                    case CONSTANT_Double:
+                    case JVM_CONSTANT_Double:
                         frame->pushd(cp->_double(index));
                         break;
                     default:
@@ -242,57 +242,57 @@ __ldc:
                 }
                 break;
             }
-            case OPC_ILOAD:
-            case OPC_FLOAD:
-            case OPC_ALOAD: {
+            case JVM_OPC_iload:
+            case JVM_OPC_fload:
+            case JVM_OPC_aload: {
                 u1 index = reader->readu1();
                 *frame->ostack++ = lvars[index];
                 break;
             }
-            case OPC_LLOAD:
-            case OPC_DLOAD: {
+            case JVM_OPC_lload:
+            case JVM_OPC_dload: {
                 u1 index = reader->readu1();
                 *frame->ostack++ = lvars[index];
                 *frame->ostack++ = lvars[index + 1];
                 break;
             }
-            case OPC_ILOAD_0:
-            case OPC_FLOAD_0:
-            case OPC_ALOAD_0:
+            case JVM_OPC_iload_0:
+            case JVM_OPC_fload_0:
+            case JVM_OPC_aload_0:
                 *frame->ostack++ = lvars[0];
                 break;
-            case OPC_ILOAD_1:
-            case OPC_FLOAD_1:
-            case OPC_ALOAD_1:
+            case JVM_OPC_iload_1:
+            case JVM_OPC_fload_1:
+            case JVM_OPC_aload_1:
                 *frame->ostack++ = lvars[1];
                 break;
-            case OPC_ILOAD_2:
-            case OPC_FLOAD_2:
-            case OPC_ALOAD_2:
+            case JVM_OPC_iload_2:
+            case JVM_OPC_fload_2:
+            case JVM_OPC_aload_2:
                 *frame->ostack++ = lvars[2];
                 break;
-            case OPC_ILOAD_3:
-            case OPC_FLOAD_3:
-            case OPC_ALOAD_3:
+            case JVM_OPC_iload_3:
+            case JVM_OPC_fload_3:
+            case JVM_OPC_aload_3:
                 *frame->ostack++ = lvars[3];
                 break;
-            case OPC_LLOAD_0:
-            case OPC_DLOAD_0:
+            case JVM_OPC_lload_0:
+            case JVM_OPC_dload_0:
                 *frame->ostack++ = lvars[0];
                 *frame->ostack++ = lvars[1];
                 break;
-            case OPC_LLOAD_1:
-            case OPC_DLOAD_1:
+            case JVM_OPC_lload_1:
+            case JVM_OPC_dload_1:
                 *frame->ostack++ = lvars[1];
                 *frame->ostack++ = lvars[2];
                 break;
-            case OPC_LLOAD_2:
-            case OPC_DLOAD_2:
+            case JVM_OPC_lload_2:
+            case JVM_OPC_dload_2:
                 *frame->ostack++ = lvars[2];
                 *frame->ostack++ = lvars[3];
                 break;
-            case OPC_LLOAD_3:
-            case OPC_DLOAD_3:
+            case JVM_OPC_lload_3:
+            case JVM_OPC_dload_3:
                 *frame->ostack++ = lvars[3];
                 *frame->ostack++ = lvars[4];
                 break;
@@ -310,105 +310,105 @@ __ldc:
 //    frame->push##t(value); \
 //    break; \
 //}
-            case OPC_IALOAD: {
+            case JVM_OPC_iaload: {
                 GET_AND_CHECK_ARRAY
                 auto value = arr->get<jint>(index);
                 frame->pushi(value);
                 break;
             }
-            case OPC_FALOAD: {
+            case JVM_OPC_faload: {
                 GET_AND_CHECK_ARRAY
                 auto value = arr->get<jfloat>(index);
                 frame->pushf(value);
                 break;
             }
-            case OPC_AALOAD: {
+            case JVM_OPC_aaload: {
                 GET_AND_CHECK_ARRAY
                 auto value = arr->get<jref>(index);
                 frame->pushr(value);
                 break;
             }
-            case OPC_BALOAD: {
+            case JVM_OPC_baload: {
                 GET_AND_CHECK_ARRAY
                 jint value = arr->get<jbyte>(index);
                 frame->pushi(value);
                 break;
             }
-            case OPC_CALOAD: {
+            case JVM_OPC_caload: {
                 GET_AND_CHECK_ARRAY
                 jint value = arr->get<jchar>(index);
                 frame->pushi(value);
                 break;
             }
-            case OPC_SALOAD: {
+            case JVM_OPC_saload: {
                 GET_AND_CHECK_ARRAY
                 jint value = arr->get<jshort>(index);
                 frame->pushi(value);
                 break;
             }
-            case OPC_LALOAD: {
+            case JVM_OPC_laload: {
                 GET_AND_CHECK_ARRAY
                 auto value = arr->get<jlong>(index);
                 frame->pushl(value);
                 break;
             }
-            case OPC_DALOAD: {
+            case JVM_OPC_daload: {
                 GET_AND_CHECK_ARRAY
                 auto value = arr->get<jdouble>(index);
                 frame->pushd(value);
                 break;
             }
-            case OPC_ISTORE:
-            case OPC_FSTORE:
-            case OPC_ASTORE: {
+            case JVM_OPC_istore:
+            case JVM_OPC_fstore:
+            case JVM_OPC_astore: {
                 u1 index = reader->readu1();
                 lvars[index] = *--frame->ostack;
                 break;
             }
-            case OPC_LSTORE:
-            case OPC_DSTORE: {
+            case JVM_OPC_lstore:
+            case JVM_OPC_dstore: {
                 u1 index = reader->readu1();
                 lvars[index + 1] = *--frame->ostack;
                 lvars[index] = *--frame->ostack;
                 break;
             }
-            case OPC_ISTORE_0:
-            case OPC_FSTORE_0:
-            case OPC_ASTORE_0:
+            case JVM_OPC_istore_0:
+            case JVM_OPC_fstore_0:
+            case JVM_OPC_astore_0:
                 lvars[0] = *--frame->ostack;
                 break;
-            case OPC_ISTORE_1:
-            case OPC_FSTORE_1:
-            case OPC_ASTORE_1:
+            case JVM_OPC_istore_1:
+            case JVM_OPC_fstore_1:
+            case JVM_OPC_astore_1:
                 lvars[1] = *--frame->ostack;
                 break;
-            case OPC_ISTORE_2:
-            case OPC_FSTORE_2:
-            case OPC_ASTORE_2:
+            case JVM_OPC_istore_2:
+            case JVM_OPC_fstore_2:
+            case JVM_OPC_astore_2:
                 lvars[2] = *--frame->ostack;
                 break;
-            case OPC_ISTORE_3:
-            case OPC_FSTORE_3:
-            case OPC_ASTORE_3:
+            case JVM_OPC_istore_3:
+            case JVM_OPC_fstore_3:
+            case JVM_OPC_astore_3:
                 lvars[3] = *--frame->ostack;
                 break;
-            case OPC_LSTORE_0:
-            case OPC_DSTORE_0:
+            case JVM_OPC_lstore_0:
+            case JVM_OPC_dstore_0:
                 lvars[1] = *--frame->ostack;
                 lvars[0] = *--frame->ostack;
                 break;
-            case OPC_LSTORE_1:
-            case OPC_DSTORE_1:
+            case JVM_OPC_lstore_1:
+            case JVM_OPC_dstore_1:
                 lvars[2] = *--frame->ostack;
                 lvars[1] = *--frame->ostack;
                 break;
-            case OPC_LSTORE_2:
-            case OPC_DSTORE_2:
+            case JVM_OPC_lstore_2:
+            case JVM_OPC_dstore_2:
                 lvars[3] = *--frame->ostack;
                 lvars[2] = *--frame->ostack;
                 break;
-            case OPC_LSTORE_3:
-            case OPC_DSTORE_3:
+            case JVM_OPC_lstore_3:
+            case JVM_OPC_dstore_3:
                 lvars[4] = *--frame->ostack;
                 lvars[3] = *--frame->ostack;
                 break;
@@ -419,84 +419,84 @@ __ldc:
 //    arr->set(index, value); \
 //    break; \
 //}
-            case OPC_IASTORE: {
+            case JVM_OPC_iastore: {
                 auto value = frame->popi();
                 GET_AND_CHECK_ARRAY
                 arr->set<jint>(index, value);
                 break;
             }
-            case OPC_FASTORE: {
+            case JVM_OPC_fastore: {
                 auto value = frame->popf();
                 GET_AND_CHECK_ARRAY
                 arr->set<jfloat>(index, value);
                 break;
             }
-            case OPC_AASTORE: {
+            case JVM_OPC_aastore: {
                 auto value = frame->popr();
                 GET_AND_CHECK_ARRAY
                 arr->set<jref>(index, value);
                 break;
             }
-            case OPC_BASTORE: {
+            case JVM_OPC_bastore: {
                 auto value = frame->popi();
                 GET_AND_CHECK_ARRAY
                 arr->set<jbyte>(index, (jbyte) value);
                 break;
             }
-            case OPC_CASTORE: {
+            case JVM_OPC_castore: {
                 auto value = frame->popi();
                 GET_AND_CHECK_ARRAY
                 arr->set<jchar>(index, (jchar) value);
                 break;
             }
-            case OPC_SASTORE: {
+            case JVM_OPC_sastore: {
                 auto value = frame->popi();
                 GET_AND_CHECK_ARRAY
                 arr->set<jshort>(index, (jshort) value);
                 break;
             }
-            case OPC_LASTORE: {
+            case JVM_OPC_lastore: {
                 auto value = frame->popl();
                 GET_AND_CHECK_ARRAY
                 arr->set<jlong>(index, value);
                 break;
             }
-            case OPC_DASTORE: {
+            case JVM_OPC_dastore: {
                 auto value = frame->popd();
                 GET_AND_CHECK_ARRAY
                 arr->set<jdouble>(index, value);
                 break;
             }
 #undef GET_AND_CHECK_ARRAY
-            case OPC_POP:
+            case JVM_OPC_pop:
                 frame->ostack--;
                 break;
-            case OPC_POP2:
+            case JVM_OPC_pop2:
                 frame->ostack -= 2;
                 break;
-            case OPC_DUP:
+            case JVM_OPC_dup:
                 frame->ostack[0] = frame->ostack[-1];
                 frame->ostack++;
                 break;
-            case OPC_DUP_X1:
+            case JVM_OPC_dup_x1:
                 frame->ostack[0] = frame->ostack[-1];
                 frame->ostack[-1] = frame->ostack[-2];
                 frame->ostack[-2] = frame->ostack[0];
                 frame->ostack++;
                 break;
-            case OPC_DUP_X2:
+            case JVM_OPC_dup_x2:
                 frame->ostack[0] = frame->ostack[-1];
                 frame->ostack[-1] = frame->ostack[-2];
                 frame->ostack[-2] = frame->ostack[-3];
                 frame->ostack[-3] = frame->ostack[0];
                 frame->ostack++;
                 break;
-            case OPC_DUP2:
+            case JVM_OPC_dup2:
                 frame->ostack[0] = frame->ostack[-2];
                 frame->ostack[1] = frame->ostack[-1];
                 frame->ostack += 2;
                 break;
-            case OPC_DUP2_X1:
+            case JVM_OPC_dup2_x1:
                 // ..., value3, value2, value1 →
                 // ..., value2, value1, value3, value2, value1
                 frame->ostack[1] = frame->ostack[-1];
@@ -506,7 +506,7 @@ __ldc:
                 frame->ostack[-3] = frame->ostack[0];
                 frame->ostack += 2;
                 break;
-            case OPC_DUP2_X2:
+            case JVM_OPC_dup2_x2:
                 // ..., value4, value3, value2, value1 →
                 // ..., value2, value1, value4, value3, value2, value1
                 frame->ostack[1] = frame->ostack[-1];
@@ -517,7 +517,7 @@ __ldc:
                 frame->ostack[-4] = frame->ostack[0];
                 frame->ostack += 2;
                 break;
-            case OPC_SWAP:
+            case JVM_OPC_swap:
                 swap(frame->ostack[-1], frame->ostack[-2]);
                 break;
 
@@ -528,167 +528,167 @@ __ldc:
     frame->push##t(v1 oper v2); \
     break; \
 }
-            case OPC_IADD:
+            case JVM_OPC_iadd:
                 BINARY_OP(jint, i, +);
-            case OPC_LADD:
+            case JVM_OPC_ladd:
                 BINARY_OP(jlong, l, +);
-            case OPC_FADD:
+            case JVM_OPC_fadd:
                 BINARY_OP(jfloat, f, +);
-            case OPC_DADD:
+            case JVM_OPC_dadd:
                 BINARY_OP(jdouble, d, +);
-            case OPC_ISUB:
+            case JVM_OPC_isub:
                 BINARY_OP(jint, i, -);
-            case OPC_LSUB:
+            case JVM_OPC_lsub:
                 BINARY_OP(jlong, l, -);
-            case OPC_FSUB:
+            case JVM_OPC_fsub:
                 BINARY_OP(jfloat, f, -);
-            case OPC_DSUB:
+            case JVM_OPC_dsub:
                 BINARY_OP(jdouble, d, -);
-            case OPC_IMUL:
+            case JVM_OPC_imul:
                 BINARY_OP(jint, i, *);
-            case OPC_LMUL:
+            case JVM_OPC_lmul:
                 BINARY_OP(jlong, l, *);
-            case OPC_FMUL:
+            case JVM_OPC_fmul:
                 BINARY_OP(jfloat, f, *);
-            case OPC_DMUL:
+            case JVM_OPC_dmul:
                 BINARY_OP(jdouble, d, *);
-            case OPC_IDIV:
+            case JVM_OPC_idiv:
                 BINARY_OP(jint, i, /);
-            case OPC_LDIV:
+            case JVM_OPC_ldiv:
                 BINARY_OP(jlong, l, /);
-            case OPC_FDIV:
+            case JVM_OPC_fdiv:
                 BINARY_OP(jfloat, f, /);
-            case OPC_DDIV:
+            case JVM_OPC_ddiv:
                 BINARY_OP(jdouble, d, /);
-            case OPC_IREM:
+            case JVM_OPC_irem:
                 BINARY_OP(jint, i, %);
-            case OPC_LREM:
+            case JVM_OPC_lrem:
                 BINARY_OP(jlong, l, %);
-            case OPC_FREM: {
+            case JVM_OPC_frem: {
                 jfloat v2 = frame->popf();
    				jfloat v1 = frame->popf();
                 frame->pushf(fmod(v1, v2));
                 break;
             }
-            case OPC_DREM: {
+            case JVM_OPC_drem: {
                 jdouble v2 = frame->popd();
                 jdouble v1 = frame->popd();
                 frame->pushd(fmod(v1, v2));
                 break;
             }
-            case OPC_INEG:
+            case JVM_OPC_ineg:
                 frame->pushi(-frame->popi());
                 break;
-            case OPC_LNEG:
+            case JVM_OPC_lneg:
                 frame->pushl(-frame->popl());
                 break;
-            case OPC_FNEG:
+            case JVM_OPC_fneg:
                 frame->pushf(-frame->popf());
                 break;
-            case OPC_DNEG:
+            case JVM_OPC_dneg:
                 frame->pushd(-frame->popd());
                 break; 
-            case OPC_ISHL: {
+            case JVM_OPC_ishl: {
                 // 与0x1f是因为低5位表示位移距离，位移距离实际上被限制在0到31之间。
                 jint shift = frame->popi() & 0x1f;
                 jint ivalue = frame->popi();
                 frame->pushi(ivalue << shift);
                 break;
             }
-            case OPC_LSHL: {
+            case JVM_OPC_lshl: {
                 // 与0x3f是因为低6位表示位移距离，位移距离实际上被限制在0到63之间。
                 jint shift = frame->popi() & 0x3f;
 			    jlong lvalue = frame->popl();
 			    frame->pushl(lvalue << shift);
                 break;
             }
-            case OPC_ISHR: {
+            case JVM_OPC_ishr: {
                 // 逻辑右移 shift logical right
 			    jint shift = frame->popi() & 0x1f;
 			    jint ivalue = frame->popi();
 			    frame->pushi((~(((jint)1) >> shift)) & (ivalue >> shift));
                 break;
             }
-            case OPC_LSHR: {
+            case JVM_OPC_lshr: {
 			    jint shift = frame->popi() & 0x3f;
 			    jlong lvalue = frame->popl();
 			    frame->pushl((~(((jlong)1) >> shift)) & (lvalue >> shift));
                 break;
             }
-            case OPC_IUSHR: {
+            case JVM_OPC_iushr: {
                 // 算术右移 shift arithmetic right
                 jint shift = frame->popi() & 0x1f;
                 jint ivalue = frame->popi();
                 frame->pushi(ivalue >> shift);
                 break;
             }
-            case OPC_LUSHR: {
+            case JVM_OPC_lushr: {
 			    jint shift = frame->popi() & 0x3f;
 			    jlong lvalue = frame->popl();
 			    frame->pushl(lvalue >> shift);
                 break;
             }
-            case OPC_IAND:
+            case JVM_OPC_iand:
                 BINARY_OP(jint, i, &);
-            case OPC_LAND:
+            case JVM_OPC_land:
                 BINARY_OP(jlong, l, &);
-            case OPC_IOR:
+            case JVM_OPC_ior:
                 BINARY_OP(jint, i, |);
-            case OPC_LOR:
+            case JVM_OPC_lor:
                 BINARY_OP(jlong, l, |);
-            case OPC_IXOR:
+            case JVM_OPC_ixor:
                 BINARY_OP(jint, i, ^);
-            case OPC_LXOR:
+            case JVM_OPC_lxor:
                 BINARY_OP(jlong, l, ^);
 #undef BINARY_OP
-            case OPC_IINC: {
+            case JVM_OPC_iinc: {
                 u1 index = reader->readu1();
                 ISLOT(lvars + index) = ISLOT(lvars + index) + reader->reads1();
                 break;
             }
-            case OPC_I2L:
+            case JVM_OPC_i2l:
                 frame->pushl(frame->popi());
                 break;
-            case OPC_I2F:
+            case JVM_OPC_i2f:
                 frame->pushf(frame->popi());
                 break;
-            case OPC_I2D:
+            case JVM_OPC_i2d:
                 frame->pushd(frame->popi());
                 break;
-            case OPC_L2I:
+            case JVM_OPC_l2i:
                 frame->pushi((jint) frame->popl());
                 break;
-            case OPC_L2F:
+            case JVM_OPC_l2f:
                 frame->pushf((jfloat) frame->popl());
                 break;
-            case OPC_L2D:
+            case JVM_OPC_l2d:
                 frame->pushd(frame->popl());
                 break;
-            case OPC_F2I:
+            case JVM_OPC_f2i:
                frame->pushi((jint) frame->popf());
                 break;
-            case OPC_F2L:
+            case JVM_OPC_f2l:
                 frame->pushl((jlong) frame->popf());
                 break;
-            case OPC_F2D:
+            case JVM_OPC_f2d:
                 frame->pushd(frame->popf());
                 break;
-            case OPC_D2I:
+            case JVM_OPC_d2i:
                 frame->pushi((jint) frame->popd());
                 break;
-            case OPC_D2L:
+            case JVM_OPC_d2l:
                 frame->pushl((jlong) frame->popd());
                 break;
-            case OPC_D2F:
+            case JVM_OPC_d2f:
                 frame->pushf((jfloat) frame->popd());
                 break;
-            case OPC_I2B:
+            case JVM_OPC_i2b:
                 frame->pushi(jint2jbyte(frame->popi()));
                 break;
-            case OPC_I2C:
+            case JVM_OPC_i2c:
                 frame->pushi(jint2jchar(frame->popi()));
                 break;
-            case OPC_I2S:
+            case JVM_OPC_i2s:
                 frame->pushi(jint2jshort(frame->popi()));
                 break;
 /*
@@ -705,15 +705,15 @@ __ldc:
     frame->pushi(cmp_result); \
     break; \
 }
-            case OPC_LCMP:
+            case JVM_OPC_lcmp:
                 CMP(jlong, l, DO_CMP(v1, v2, -1));
-            case OPC_FCMPL:
+            case JVM_OPC_fcmpl:
                 CMP(jfloat, f, DO_CMP(v1, v2, -1));
-            case OPC_FCMPG:
+            case JVM_OPC_fcmpg:
                 CMP(jfloat, f, DO_CMP(v1, v2, 1));
-            case OPC_DCMPL:
+            case JVM_OPC_dcmpl:
                 CMP(jdouble, d, DO_CMP(v1, v2, -1));
-            case OPC_DCMPG:
+            case JVM_OPC_dcmpg:
                 CMP(jdouble, d, DO_CMP(v1, v2, 1));
 
 #define IF_COND(cond) \
@@ -724,17 +724,17 @@ __ldc:
         reader->skip(offset - 3);  /* minus instruction length */ \
     break; \
 }
-            case OPC_IFEQ:
+            case JVM_OPC_ifeq:
                 IF_COND(==);
-            case OPC_IFNE:
+            case JVM_OPC_ifne:
                 IF_COND(!=);
-            case OPC_IFLT:
+            case JVM_OPC_iflt:
                 IF_COND(<);
-            case OPC_IFGE:
+            case JVM_OPC_ifge:
                 IF_COND(>=);
-            case OPC_IFGT:
+            case JVM_OPC_ifgt:
                 IF_COND(>);
-            case OPC_IFLE:
+            case JVM_OPC_ifle:
                 IF_COND(<=);
 #undef IF_COND
 
@@ -755,25 +755,25 @@ __ldc:
         reader->skip(offset - 3); /* minus instruction length */ \
     break; \
 }
-            case OPC_IF_ICMPEQ:
+            case JVM_OPC_if_icmpeq:
                 IF_CMP_COND(i, ==);
-            case OPC_IF_ACMPEQ:
+            case JVM_OPC_if_acmpeq:
                 IF_CMP_COND(r, ==);
-            case OPC_IF_ICMPNE:
+            case JVM_OPC_if_icmpne:
                 IF_CMP_COND(i, !=);
-            case OPC_IF_ACMPNE:
+            case JVM_OPC_if_acmpne:
                 IF_CMP_COND(r, !=);
-            case OPC_IF_ICMPLT:
+            case JVM_OPC_if_icmplt:
                 IF_CMP_COND(i, <);
-            case OPC_IF_ICMPGE:
+            case JVM_OPC_if_icmpge:
                  IF_CMP_COND(i, >=);
-            case OPC_IF_ICMPGT:
+            case JVM_OPC_if_icmpgt:
                 IF_CMP_COND(i, >);
-            case OPC_IF_ICMPLE:
+            case JVM_OPC_if_icmple:
                 IF_CMP_COND(i, <=);
 #undef IF_CMP_COND
 
-            case OPC_GOTO: {
+            case JVM_OPC_goto: {
                 s2 offset = reader->reads2();
                 reader->skip(offset - 3);  // minus instruction length
                 break;
@@ -781,12 +781,12 @@ __ldc:
 
             // 在Java 6之前，Oracle的Java编译器使用 jsr, jsr_w 和 ret 指令来实现 finally 子句。
             // 从Java 6开始，已经不再使用这些指令
-            case OPC_JSR:
+            case JVM_OPC_jsr:
                 thread_throw(new InternalError("jsr doesn't support after jdk 6."));
-            case OPC_RET:
+            case JVM_OPC_ret:
                 thread_throw(new InternalError("ret doesn't support after jdk 6."));
 
-            case OPC_TABLESWITCH: {
+            case JVM_OPC_tableswitch: {
                 // todo 指令说明  好像是实现 switch 语句
                 size_t saved_pc = reader->pc - 1; // save the pc before 'tableswitch' instruction
                 reader->align4();
@@ -821,7 +821,7 @@ __ldc:
 
                 break;
             }
-            case OPC_LOOKUPSWITCH: {
+            case JVM_OPC_lookupswitch: {
                 // todo 指令说明  好像是实现 switch 语句
                 size_t saved_pc = reader->pc - 1; // save the pc before 'lookupswitch' instruction
                 reader->align4();
@@ -856,16 +856,16 @@ __ldc:
             }                
 {
             int ret_value_slots_count;
-            case OPC_IRETURN:
-            case OPC_FRETURN:
-            case OPC_ARETURN:
+            case JVM_OPC_ireturn:
+            case JVM_OPC_freturn:
+            case JVM_OPC_areturn:
                 ret_value_slots_count = 1;
                 goto __method_return;
-            case OPC_LRETURN:
-            case OPC_DRETURN:
+            case JVM_OPC_lreturn:
+            case JVM_OPC_dreturn:
                 ret_value_slots_count = 2;
                 goto __method_return;
-            case OPC_RETURN:
+            case JVM_OPC_return:
                 ret_value_slots_count = 0;
 __method_return:
                 TRACE("will return: %s\n", frame->toString().c_str());
@@ -890,7 +890,7 @@ __method_return:
                 CHANGE_FRAME(invokeFrame);
                 break;
 }                
-            case OPC_GETSTATIC: {
+            case JVM_OPC_getstatic: {
 			    u2 index = reader->readu2();
 			    Field *field = cp->resolveField(index);
 			    assert(field->isStatic()); // todo
@@ -903,7 +903,7 @@ __method_return:
                 }
                 break;
             }
-            case OPC_PUTSTATIC: {
+            case JVM_OPC_putstatic: {
 			    u2 index = reader->readu2();
 			    Field *field = cp->resolveField(index);
 			    assert(field->isStatic()); // todo
@@ -920,7 +920,7 @@ __method_return:
 
                 break;
             }                
-            case OPC_GETFIELD: {
+            case JVM_OPC_getfield: {
 			    u2 index = reader->readu2();
 			    Field *field = cp->resolveField(index);
 			    assert(!field->isStatic()); // todo
@@ -936,7 +936,7 @@ __method_return:
                 }
                 break;
             }
-            case OPC_PUTFIELD: {
+            case JVM_OPC_putfield: {
                 u2 index = reader->readu2();
                 Field *field = cp->resolveField(index);
                 assert(!field->isStatic()); // todo
@@ -964,7 +964,7 @@ __method_return:
                 obj->setFieldValue(field, value);
                 break;
             }                   
-            case OPC_INVOKEVIRTUAL: {
+            case JVM_OPC_invokevirtual: {
                 // invokevirtual指令用于调用对象的实例方法，根据对象的实际类型进行分派（虚方法分派）。
                 u2 index = reader->readu2();
                 Method *m = cp->resolveMethod(index);
@@ -983,7 +983,7 @@ __method_return:
                 TRACE("obj: %p, %s\n", obj, resolved_method->toString().c_str());
                 goto __invoke_method;
             }
-            case OPC_INVOKESPECIAL: {
+            case JVM_OPC_invokespecial: {
                 // invokespecial指令用于调用一些需要特殊处理的实例方法，
                 // 包括构造函数、私有方法和通过super关键字调用的超类方法。
                 u2 index = reader->readu2();
@@ -1018,7 +1018,7 @@ __method_return:
                 resolved_method = m;
                 goto __invoke_method;
             }
-            case OPC_INVOKESTATIC: {
+            case JVM_OPC_invokestatic: {
                 // invokestatic指令用来调用静态方法。
                 // 如果类还没有被初始化，会触发类的初始化。
 			    u2 index = reader->readu2();
@@ -1037,7 +1037,7 @@ __method_return:
                 resolved_method = m;
                 goto __invoke_method;
             }            
-            case OPC_INVOKEINTERFACE: {
+            case JVM_OPC_invokeinterface: {
                 u2 index = reader->readu2();
 
                 /*
@@ -1075,8 +1075,8 @@ __method_return:
                 resolved_method = method;
                 goto __invoke_method;
             }           
-            case OPC_INVOKEDYNAMIC: {
-			    u2 index = reader->readu2(); // point to CONSTANT_InvokeDynamic_info
+            case JVM_OPC_invokedynamic: {
+			    u2 index = reader->readu2(); // point to JVM_CONSTANT_InvokeDynamic_info
 			    reader->readu1(); // this byte must always be zero.
 			    reader->readu1(); // this byte must always be zero.
 
@@ -1091,7 +1091,7 @@ __method_return:
 			    u2 refIndex = cp->methodHandleReferenceIndex(bm.bootstrapMethodRef);
 
                 switch (refKind) {
-                    case REF_invokeStatic: {
+                    case JVM_REF_invokeStatic: {
                         const utf8_t *className = cp->methodClassName(refIndex);
                         Class *bootstrapClass = loadClass(clazz->loader, className);
 
@@ -1127,7 +1127,7 @@ __method_return:
 
                         break;
                     }
-                    case REF_newInvokeSpecial:
+                    case JVM_REF_newInvokeSpecial:
                         jvm_abort(" "); // todo
                         break;
                     default:
@@ -1148,7 +1148,7 @@ __invoke_method: {
     }
     break;
 }
-            case OPC_NEW: {
+            case JVM_OPC_new: {
                 // new指令专门用来创建类实例。数组由专门的指令创建
                 // 如果类还没有被初始化，会触发类的初始化。
                 Class *c = cp->resolveClass(reader->readu2());
@@ -1161,7 +1161,7 @@ __invoke_method: {
                 frame->pushr(newObject(c));
                 break;
             }
-            case OPC_NEWARRAY: { // newarray
+            case JVM_OPC_newarray: {
                 // 创建一维基本类型数组。
                 // 包括 boolean[], byte[], char[], short[], int[], long[], float[] 和 double[] 8种。
                 jint arrLen = frame->popi();
@@ -1172,14 +1172,14 @@ __invoke_method: {
                 int arrType = reader->readu1();
                 const char *arrClassName;
                 switch (arrType) {
-                    case AT_BOOLEAN: arrClassName = "[Z"; break;
-                    case AT_CHAR:    arrClassName = "[C"; break;
-                    case AT_FLOAT:   arrClassName = "[F"; break;
-                    case AT_DOUBLE:  arrClassName = "[D"; break;
-                    case AT_BYTE:    arrClassName = "[B"; break;
-                    case AT_SHORT:   arrClassName = "[S"; break;
-                    case AT_INT:     arrClassName = "[I"; break;
-                    case AT_LONG:    arrClassName = "[J"; break;
+                    case JVM_AT_BOOLEAN: arrClassName = "[Z"; break;
+                    case JVM_AT_CHAR:    arrClassName = "[C"; break;
+                    case JVM_AT_FLOAT:   arrClassName = "[F"; break;
+                    case JVM_AT_DOUBLE:  arrClassName = "[D"; break;
+                    case JVM_AT_BYTE:    arrClassName = "[B"; break;
+                    case JVM_AT_SHORT:   arrClassName = "[S"; break;
+                    case JVM_AT_INT:     arrClassName = "[I"; break;
+                    case JVM_AT_LONG:    arrClassName = "[J"; break;
                     default:
                         thread_throw(new UnknownError(NEW_MSG("error. Invalid array type: %d\n", arrType)));
                 }
@@ -1188,7 +1188,7 @@ __invoke_method: {
 			    frame->pushr(newArray(c, arrLen));
                 break;
             }
-            case OPC_ANEWARRAY: { // anewarray
+            case JVM_OPC_anewarray: {
                 // 创建一维引用类型数组
                 jint arr_len = frame->popi();
                 if (arr_len < 0) {
@@ -1200,7 +1200,7 @@ __invoke_method: {
 			    frame->pushr(newArray(ac, arr_len));
                 break;
             }
-            case OPC_MULTIANEWARRAY: {
+            case JVM_OPC_multianewarray: {
                 /*
                  * 创建多维数组
                  * todo 注意这种情况，基本类型的多维数组 int[][][]
@@ -1221,7 +1221,7 @@ __invoke_method: {
                 frame->pushr(newMultiArray(ac, dim, lens));
                 break;
             }           
-            case OPC_ARRAYLENGTH: {
+            case JVM_OPC_arraylength: {
 			    Object *o = frame->popr();
 			    if (o == jnull) {
 			        thread_throw(new NullPointerException);
@@ -1233,7 +1233,7 @@ __invoke_method: {
 			    frame->pushi(((Array *) o)->len);
                 break;
             }
-            case OPC_ATHROW: {
+            case JVM_OPC_athrow: {
 __opc_athrow:
 			    jref eo = frame->popr(); // exception object
 			    if (eo == jnull) {
@@ -1277,7 +1277,7 @@ __opc_athrow:
                 }
                 break;
             }
-            case OPC_CHECKCAST: {
+            case JVM_OPC_checkcast: {
                 jref obj = RSLOT(frame->ostack - 1); // 不改变操作数栈
 			    u2 index = reader->readu2();
 
@@ -1291,7 +1291,7 @@ __opc_athrow:
 			    }
                 break;
             }
-            case OPC_INSTANCEOF: {
+            case JVM_OPC_instanceof: {
                 u2 index =  reader->readu2();
                 Class *c = cp->resolveClass(index);
 
@@ -1303,7 +1303,7 @@ __opc_athrow:
                 }
                 break;
             }
-            case OPC_MONITORENTER: {
+            case JVM_OPC_monitorenter: {
 			    jref o = frame->popr();
 			    if (o == jnull) {
 			        thread_throw(new NullPointerException);
@@ -1311,7 +1311,7 @@ __opc_athrow:
 //			    o->lock();
                 break;
             }
-            case OPC_MONITOREXIT: {
+            case JVM_OPC_monitorexit: {
 			    jref o = frame->popr();
 			    if (o == jnull) {
 			        thread_throw(new NullPointerException);
@@ -1319,35 +1319,35 @@ __opc_athrow:
 //			    o->unlock();
                 break;
             }
-            case OPC_WIDE: {
+            case JVM_OPC_wide: {
                 int __opcode = reader->readu1();
                 PRINT_OPCODE
                 u2 index = reader->readu2();
                 switch (__opcode) {
-                    case OPC_ILOAD:
-                    case OPC_FLOAD:
-                    case OPC_ALOAD:
+                    case JVM_OPC_iload:
+                    case JVM_OPC_fload:
+                    case JVM_OPC_aload:
                         *frame->ostack++ = lvars[index];
                         break;
-                    case OPC_LLOAD:
-                    case OPC_DLOAD:
+                    case JVM_OPC_lload:
+                    case JVM_OPC_dload:
                         *frame->ostack++ = lvars[index];
                         *frame->ostack++ = lvars[index + 1];
                         break;
-                    case OPC_ISTORE:
-                    case OPC_FSTORE:
-                    case OPC_ASTORE:
+                    case JVM_OPC_istore:
+                    case JVM_OPC_fstore:
+                    case JVM_OPC_astore:
                         lvars[index] = *--frame->ostack;
                         break;
-                    case OPC_LSTORE:
-                    case OPC_DSTORE:
+                    case JVM_OPC_lstore:
+                    case JVM_OPC_dstore:
                         lvars[index + 1] = *--frame->ostack;
                         lvars[index] = *--frame->ostack;
                         break;
-                    case OPC_RET:
+                    case JVM_OPC_ret:
                         thread_throw(new InternalError("ret doesn't support after jdk 6."));
                         break;
-                    case OPC_IINC:
+                    case JVM_OPC_iinc:
                         ISLOT(lvars + index) = ISLOT(lvars + index) + reader->readu2();
                         break;
                     default:
@@ -1356,30 +1356,30 @@ __opc_athrow:
                 }
                 break;
             }
-            case OPC_IFNULL: {
+            case JVM_OPC_ifnull: {
 			    s2 offset = reader->reads2();
 			    if (frame->popr() == jnull) {
 			        reader->skip(offset - 3); // minus instruction length
 			    }
                 break;
             }
-            case OPC_IFNONNULL: {
+            case JVM_OPC_ifnonnull: {
 			    s2 offset = reader->reads2();
 			    if (frame->popr() != jnull) {
 			        reader->skip(offset - 3); // minus instruction length
 			    }
                 break;
             }
-            case OPC_GOTO_W: // todo
+            case JVM_OPC_goto_w: // todo
                 thread_throw(new InternalError("goto_w doesn't support"));
                 break;
-            case OPC_JSR_W: // todo
+            case JVM_OPC_jsr_w: // todo
                 thread_throw(new InternalError("jsr_w doesn't support after jdk 6."));
                 break;
-            case OPC_BREAKPOINT: // todo
+            case JVM_OPC_breakpoint: // todo
                 thread_throw(new InternalError("breakpoint doesn't support in this jvm."));
                 break;
-            case OPC_INVOKENATIVE: {
+            case JVM_OPC_invokenative: {
 			    TRACE("%s\n", frame->toString().c_str());
 			    if (frame->method->nativeMethod == nullptr){ // todo 
 			        jvm_abort("not find native method: %s\n", frame->method->toString().c_str());
@@ -1411,7 +1411,7 @@ __opc_athrow:
 			//    }
                 break;
             }
-            case OPC_IMPDEP2:
+            case JVM_OPC_impdep2:
                 jvm_abort("This instruction isn't used.\n"); // todo
                 break;            
             default:

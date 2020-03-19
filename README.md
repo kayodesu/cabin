@@ -9,6 +9,7 @@ A toy JVM written in C++.
 ## Dependence
 * pthread lib
 * jre8 lib
+* zlib
 
 ## Features Support
 * Java arithmetic, flow control, object-oriented programming(virtual method, inherit, etc.)
@@ -19,15 +20,14 @@ A toy JVM written in C++.
 * Multi-thread
 * Garbage collection -->
 ## Run
-Ensure your Java version is Java8.
+Ensure your Java version is Java8, and already set `JAVA_HOME` environment variable.
 
-Two command-line options:
-* -bcp path: set jre lib path.
+One command-line option:
 * -cp path: set class path.
 ```
-C:\>kayo HelloWorld -bcp "C:\Program Files\Java\jre1.8.0_162\lib" -cp D:\code\kayo\testclasses
+C:\>kayo HelloWorld -cp D:\code\kayo\testclasses
 ```
-or, using JAVA_HOME and CLASS_PATH environment variables.
+or, using CLASS_PATH environment variable.
 ```
 C:\>kayo HelloWorld
 ```
@@ -43,7 +43,7 @@ public class HelloWorld {
 ```
 
 ```
-C:\>kayo HelloWorld -bcp "C:\Program Files\Java\jre1.8.0_162\lib" -cp D:\code\kayo\testclasses
+C:\>kayo HelloWorld -cp D:\code\kayo\testclasses
 Hello, world!
 
 C:\>

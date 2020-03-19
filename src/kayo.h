@@ -28,12 +28,16 @@ class ClassLoader;
 //class StrPool;
 struct Thread;
 
+extern bool g_jdk_version_9_and_upper;
+
 
 // 启动类路径（bootstrap classpath）默认对应 jre/lib 目录，Java标准库（大部分在rt.jar里）位于该路径
 extern std::vector<std::string> jreLibJars;
 
 // 扩展类路径（extension classpath）默认对应 jre/lib/ext 目录，使用Java扩展机制的类位于这个路径。
 extern std::vector<std::string> jreExtJars;
+
+extern std::vector<std::string> g_jdk_modules;
 
 /*
  * 用户类路径（user classpath）我们自己实现的类，以及第三方类库位于用户类路径
@@ -46,8 +50,12 @@ extern std::vector<std::string> jreExtJars;
 //extern std::vector<std::string> userDirs;
 //extern std::vector<std::string> userJars;
 
-extern char javaHome[];
+//extern char javaHome[];
+extern std::string g_java_home;
 extern char classpath[];
+
+extern u2 g_classfile_major_version;
+extern u2 g_classfile_manor_version;
 
 //extern StrPool *g_str_pool;
 
@@ -56,6 +64,8 @@ extern Object *sysThreadGroup;
 
 // todo 所有线程
 extern std::vector<Thread *> g_all_threads;
+
+extern std::vector<std::pair<const utf8_t *, const utf8_t *>> g_properties;
 
 /*
  * jvms规定函数最多有255个参数，this也算，long和double占两个长度
