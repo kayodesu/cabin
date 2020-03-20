@@ -1,4 +1,4 @@
-# Kayo
+# Kayo JVM
 A toy JVM written in C++.
 
 ## Development environment
