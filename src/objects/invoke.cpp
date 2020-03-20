@@ -4,6 +4,7 @@
 
 #include "invoke.h"
 #include "class.h"
+#include "method.h"
 #include "../interpreter/interpreter.h"
 
 using namespace method_type;

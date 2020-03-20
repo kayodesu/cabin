@@ -9,6 +9,7 @@
 #include <string>
 #include <unordered_map>
 #include "../util/encoding.h"
+#include "../kayo.h"
 
 class Field;
 class Class;
@@ -40,7 +41,8 @@ public:
     Class *clazz;
 
     static Object *newObject(Class *c);
-    static Object *newString(const utf8_t *str);
+    static Object *newString_jdk_8_and_under(const utf8_t *str);
+    static Object *newString_jdk_9_and_upper(const utf8_t *str);
 
     virtual size_t size() const;
 
@@ -144,7 +146,11 @@ static inline Object *newObject(Class *c)
 
 static inline jstrref newString(const utf8_t *str)
 {
-    return Object::newString(str);
+    if (g_jdk_version_9_and_upper) {
+        return Object::newString_jdk_9_and_upper(str);
+    } else {
+        return Object::newString_jdk_8_and_under(str);
+    }
 }
 
 struct StrObjEquals {

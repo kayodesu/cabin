@@ -32,6 +32,7 @@ extern const char *symbol_values[];
     action(slot, "slot"), \
     action(type, "type"), \
     action(flag, "flag"), \
+    action(coder, "coder"), \
     action(clazz, "clazz"), \
     action(queue, "queue"), \
     action(group, "group"), \

@@ -5,6 +5,8 @@
 #ifndef KAYOVM_MODIFIER_H
 #define KAYOVM_MODIFIER_H
 
+#include "../jtypes.h"
+
 class Modifier {
 private:
     Modifier() = default;

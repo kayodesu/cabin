@@ -11,6 +11,8 @@
 #include "../runtime/Frame.h"
 #include "../classfile/constants.h"
 #include "../objects/class.h"
+#include "../objects/method.h"
+#include "../objects/field.h"
 #include "../objects/invoke.h"
 
 using namespace std;
@@ -975,12 +977,15 @@ __method_return:
                     thread_throw(new NullPointerException);
                 }
 
-                assert(m->vtableIndex >= 0);
-			    assert(m->vtableIndex < obj->clazz->vtable.size());
-			    resolved_method = obj->clazz->vtable[m->vtableIndex];
-			    assert(resolved_method == obj->clazz->lookupMethod(m->name, m->descriptor));
+                if (m->isPrivate()) {
+                    resolved_method = m;
+                } else {
+                    assert(m->vtableIndex >= 0);
+                    assert(m->vtableIndex < obj->clazz->vtable.size());
+                    resolved_method = obj->clazz->vtable[m->vtableIndex];
+                }
 
-                TRACE("obj: %p, %s\n", obj, resolved_method->toString().c_str());
+                assert(resolved_method == obj->clazz->lookupMethod(m->name, m->descriptor));
                 goto __invoke_method;
             }
             case JVM_OPC_invokespecial: {

@@ -7,6 +7,7 @@
 #include "class_loader.h"
 #include "object.h"
 #include "class.h"
+#include "field.h"
 #include "../interpreter/interpreter.h"
 #include "prims.h"
 #include "../runtime/thread_info.h"
@@ -25,7 +26,7 @@ Object *Object::newObject(Class *c)
     return new(g_heap.allocObject(size)) Object(c);
 }
 
-Object *Object::newString(const utf8_t *str)
+Object *Object::newString_jdk_8_and_under(const utf8_t *str)
 {
     assert(stringClass != nullptr);
 
@@ -37,6 +38,30 @@ Object *Object::newString(const utf8_t *str)
     Array *value = newArray(loadBootClass(S(array_C) /* [C */ ), len);
     toUnicode(str, (unicode_t *) (value->data));
     strobj->setFieldValue(S(value), S(array_C), value);
+
+    return strobj;
+}
+
+Object *Object::newString_jdk_9_and_upper(const utf8_t *str)
+{
+    assert(stringClass != nullptr);
+
+    initClass(stringClass);
+    auto strobj =  newObject(stringClass);
+    auto len = length(str);
+
+    // set java/lang/String 的 value 变量赋值
+    // private final byte[] value;
+    Array *value = newArray(loadBootClass(S(array_B) /* [B */ ), len);
+    memcpy(value->data, str, len);
+    strobj->setFieldValue(S(value), S(array_B), value);
+
+    // set java/lang/String 的 coder 变量赋值
+    // private final byte coder;
+    // 可取一下两值之一：
+    // @Native static final byte LATIN1 = 0;
+    // @Native static final byte UTF16  = 1;
+    strobj->setFieldValue(S(coder), "B", 0);
 
     return strobj;
 }
@@ -210,8 +235,17 @@ utf8_t *Object::toUtf8() const
     assert(stringClass != nullptr);
     assert(clazz == stringClass);
 
-    auto value = getInstFieldValue<Array *>(S(value), S(array_C));
-    return unicode::toUtf8((const unicode_t *) (value->data), value->len);
+    if (g_jdk_version_9_and_upper) {
+        auto value = getInstFieldValue<Array *>(S(value), S(array_B));
+        assert(sizeof(utf8_t) == sizeof(jbyte));
+        auto utf8 = new utf8_t[value->len + 1];
+        utf8[value->len] = 0;
+        memcpy(utf8, value->data, value->len * sizeof(jbyte));
+        return utf8;
+    } else {
+        auto value = getInstFieldValue<Array *>(S(value), S(array_C));
+        return unicode::toUtf8((const unicode_t *) (value->data), value->len);
+    }
 }
 
 string Object::toString() const

@@ -108,6 +108,87 @@ enum {
     JVM_REF_LIMIT                   = 10
 };
 
+
+//static inline bool refKindIsValid(jint refKind)
+//{
+//    return (refKind > REF_NONE && refKind < REF_LIMIT);
+//}
+//
+//static inline bool refKindIsField(jbyte refKind)
+//{
+//    assert(refKindIsValid(refKind));
+//    return (refKind <= REF_putStatic);
+//}
+//
+//static inline bool refKindIsGetter(jbyte refKind)
+//{
+//    assert(refKindIsValid(refKind));
+//    return (refKind <= REF_getStatic);
+//}
+//
+//static inline bool refKindIsSetter(jbyte refKind)
+//{
+//    return refKindIsField(refKind) && !refKindIsGetter(refKind);
+//}
+//
+//static inline bool refKindIsMethod(jbyte refKind)
+//{
+//    return !refKindIsField(refKind) && (refKind != REF_newInvokeSpecial);
+//}
+//
+//static inline bool refKindIsConstructor(jbyte refKind)
+//{
+//    return (refKind == REF_newInvokeSpecial);
+//}
+//
+//static inline bool refKindHasReceiver(jbyte refKind)
+//{
+//    assert(refKindIsValid(refKind));
+//    return (refKind & 1) != 0;
+//}
+//
+//static inline bool refKindIsStatic(jbyte refKind)
+//{
+//    return !refKindHasReceiver(refKind) && (refKind != REF_newInvokeSpecial);
+//}
+//
+//static inline bool refKindDoesDispatch(jbyte refKind)
+//{
+//    assert(refKindIsValid(refKind));
+//    return (refKind == REF_invokeVirtual || refKind == REF_invokeInterface);
+//}
+
+//static {
+//final int HR_MASK = ((1 << REF_getField) |
+//                     (1 << REF_putField) |
+//                     (1 << REF_invokeVirtual) |
+//                     (1 << REF_invokeSpecial) |
+//                     (1 << REF_invokeInterface)
+//);
+//for (byte refKind = REF_NONE+1; refKind < REF_LIMIT; refKind++) {
+//assert(refKindHasReceiver(refKind) == (((1<<refKind) & HR_MASK) != 0)) : refKind;
+//}
+//}
+
+//static const char *refKindName(byte refKind)
+// {
+//    assert(refKindIsValid(refKind));
+//    switch (refKind) {
+//        case REF_getField:          return "getField";
+//        case REF_getStatic:         return "getStatic";
+//        case REF_putField:          return "putField";
+//        case REF_putStatic:         return "putStatic";
+//        case REF_invokeVirtual:     return "invokeVirtual";
+//        case REF_invokeStatic:      return "invokeStatic";
+//        case REF_invokeSpecial:     return "invokeSpecial";
+//        case REF_newInvokeSpecial:  return "newInvokeSpecial";
+//        case REF_invokeInterface:   return "invokeInterface";
+//        default:                    return "REF_???";
+//    }
+//}
+
+
+
 /* StackMapTable type item numbers */
 
 enum {

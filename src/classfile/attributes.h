@@ -7,7 +7,7 @@
 
 #include <vector>
 #include "../jtypes.h"
-#include "../util/BytecodeReader.h"
+#include "../util/bytecode_reader.h"
 
 struct ConstantPool;
 struct ElementValuePair;

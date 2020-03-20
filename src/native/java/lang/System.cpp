@@ -5,6 +5,7 @@
 #include <chrono>
 #include "../../registry.h"
 #include "../../../objects/object.h"
+#include "../../../objects/field.h"
 #include "../../../interpreter/interpreter.h"
 #include "../../../runtime/Frame.h"
 #include "../../../runtime/thread_info.h"

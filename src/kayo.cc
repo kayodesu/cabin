@@ -14,6 +14,7 @@
 #include "native/registry.h"
 #include "runtime/thread_info.h"
 #include "objects/class.h"
+#include "objects/method.h"
 #include "objects/prims.h"
 #include "interpreter/interpreter.h"
 
@@ -307,7 +308,7 @@ static void initJVM(int argc, char *argv[])
     }
     g_java_home = home;
 
-//    g_java_home = R"(C:\Program Files\Java\jdk1.8.0_221)"; // todo for testing
+    g_java_home = R"(C:\Program Files\Java\jdk1.8.0_221)"; // todo for testing
 
     /* Access JAVA_HOME/release file to get the version of JDK */
     ifstream ifs(g_java_home + "/release");
@@ -428,10 +429,13 @@ static void initJVM(int argc, char *argv[])
     initMainThread();
 
     TRACE("init main thread over\n");
-    // 先加载 sun.mis.VM 类，然后执行其类初始化方法
+    // 先加载 sun.mis.VM or jdk.internal.misc.VM 类，然后执行其类初始化方法
     Class *vm = loadBootClass("sun/misc/VM");
     if (vm == nullptr) {
-        jvm_abort("sun/misc/VM is null\n");  // todo throw exception
+        vm = loadBootClass("jdk/internal/misc/VM");
+    }
+    if (vm == nullptr) {
+        jvm_abort("xxx/misc/VM is null\n");  // todo throw exception
         return;
     }
     // VM类的 "initialize~()V" 方法需调用执行

@@ -29,8 +29,10 @@ static void getJvmVersionInfo(Frame *frame)
 
 void sun_misc_Version_registerNatives()
 {
-    registerNative("sun/misc/Version", "getJdkSpecialVersion", "()Ljava/lang/String;", getJdkSpecialVersion);
-    registerNative("sun/misc/Version", "getJvmSpecialVersion", "()Ljava/lang/String;", getJvmSpecialVersion);
-    registerNative("sun/misc/Version", "getJdkVersionInfo", "()V", getJdkVersionInfo);
-    registerNative("sun/misc/Version", "getJvmVersionInfo", "()Z", getJvmVersionInfo);
+#undef C
+#define C "sun/misc/Version"
+    registerNative(C, "getJdkSpecialVersion", "()Ljava/lang/String;", getJdkSpecialVersion);
+    registerNative(C, "getJvmSpecialVersion", "()Ljava/lang/String;", getJvmSpecialVersion);
+    registerNative(C, "getJdkVersionInfo", "()V", getJdkVersionInfo);
+    registerNative(C, "getJvmVersionInfo", "()Z", getJvmVersionInfo);
 }

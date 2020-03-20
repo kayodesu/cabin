@@ -9,6 +9,7 @@
 #include "../objects/class_loader.h"
 #include "../objects/object.h"
 #include "../objects/class.h"
+#include "../objects/field.h"
 #include "../interpreter/interpreter.h"
 #include "Frame.h"
 

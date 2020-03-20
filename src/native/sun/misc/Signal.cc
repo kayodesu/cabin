@@ -30,7 +30,9 @@ static void raise0(Frame *frame)
 
 void sun_misc_Signal_registerNatives()
 {
-    registerNative("sun/misc/Signal", "findSignal", "(Ljava/lang/String;)I", findSignal);
-    registerNative("sun/misc/Signal", "handle0", "(IJ)J", handle0);
-    registerNative("sun/misc/Signal", "raise0", "(I)V", raise0);
+#undef C
+#define C "sun/misc/Signal"
+    registerNative(C, "findSignal", "(Ljava/lang/String;)I", findSignal);
+    registerNative(C, "handle0", "(IJ)J", handle0);
+    registerNative(C, "raise0", "(I)V", raise0);
 }

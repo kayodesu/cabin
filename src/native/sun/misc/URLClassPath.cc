@@ -14,6 +14,7 @@ static void getLookupCacheURLs(Frame *frame)
 
 void sun_misc_URLClassPath_registerNatives()
 {
-    registerNative("sun/misc/URLClassPath",
-                   "getLookupCacheURLs", "(Ljava/lang/ClassLoader;)[Ljava/net/URL;", getLookupCacheURLs);
+#undef C
+#define C "sun/misc/URLClassPath"
+    registerNative(C, "getLookupCacheURLs", "(Ljava/lang/ClassLoader;)[Ljava/net/URL;", getLookupCacheURLs);
 }

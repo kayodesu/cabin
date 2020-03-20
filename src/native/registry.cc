@@ -114,6 +114,10 @@ void java_security_AccessController_registerNatives();
 void java_util_concurrent_atomic_AtomicLong_registerNatives();
 void java_util_zip_ZipFile_registerNatives();
 
+void jdk_internal_misc_VM_registerNatives();
+void jdk_internal_misc_Unsafe_registerNatives();
+void jdk_internal_util_SystemProps$Raw_registerNatives();
+
 static struct {
     const char *className;
     void (*registerNatives)();
@@ -168,6 +172,10 @@ static struct {
 
         { "java/util/concurrent/atomic/AtomicLong", java_util_concurrent_atomic_AtomicLong_registerNatives },
         { "java/util/zip/ZipFile", java_util_zip_ZipFile_registerNatives },
+
+        { "jdk/internal/misc/VM", jdk_internal_misc_VM_registerNatives },
+        { "jdk/internal/misc/Unsafe", jdk_internal_misc_Unsafe_registerNatives },
+        { "jdk/internal/util/SystemProps$Raw", jdk_internal_util_SystemProps$Raw_registerNatives },
 };
 
 // 注册所有的本地方法  // todo 不要一次全注册，需要时再注册

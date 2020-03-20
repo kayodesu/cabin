@@ -5,9 +5,8 @@
 #include <vector>
 #include <sstream>
 #include "../kayo.h"
-#include "attribute.h"
+#include "attributes.h"
 #include "../runtime/thread_info.h"
-#include "constant.h"
 #include "../objects/class.h"
 #include "constants.h"
 

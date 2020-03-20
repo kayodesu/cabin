@@ -35,5 +35,7 @@ static void createLong(Frame *frame)
 
 void sun_misc_Perf_registerNatives()
 {
-    registerNative("sun/misc/Perf", "createLong", "(Ljava/lang/String;IIJ)Ljava/nio/ByteBuffer;", createLong);
+#undef C
+#define C "sun/misc/Perf"
+    registerNative(C, "createLong", "(Ljava/lang/String;IIJ)Ljava/nio/ByteBuffer;", createLong);
 }
