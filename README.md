@@ -1,5 +1,5 @@
 # Kayo JVM
-A experimental JVM written in C++.
+An experimental JVM written in C++.
 
 ## Development environment
 * Win10

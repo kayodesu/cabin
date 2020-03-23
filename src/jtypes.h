@@ -119,6 +119,11 @@ static inline slot_t to_islot(jint v)
     return s;
 }
 
+static inline jbool from_zslot(const slot_t *s)
+{
+    return jint2jbool(ISLOT(s));
+}
+
 //static inline slot_t to_fslot(jfloat v)
 //{
 //    slot_t s;

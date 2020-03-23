@@ -1176,21 +1176,6 @@ __invoke_method: {
                 }
 
                 auto arrType = reader->readu1();
-//                const char *arrClassName;
-//                switch (arrType) {
-//                    case JVM_AT_BOOLEAN: arrClassName = "[Z"; break;
-//                    case JVM_AT_CHAR:    arrClassName = "[C"; break;
-//                    case JVM_AT_FLOAT:   arrClassName = "[F"; break;
-//                    case JVM_AT_DOUBLE:  arrClassName = "[D"; break;
-//                    case JVM_AT_BYTE:    arrClassName = "[B"; break;
-//                    case JVM_AT_SHORT:   arrClassName = "[S"; break;
-//                    case JVM_AT_INT:     arrClassName = "[I"; break;
-//                    case JVM_AT_LONG:    arrClassName = "[J"; break;
-//                    default:
-//                        thread_throw(new UnknownError(NEW_MSG("error. Invalid array type: %d\n", arrType)));
-//                }
-//
-//			    auto c = loadArrayClass(arrClassName);
 			    frame->pushr(newTypeArray(ArrayType(arrType), arrLen));
                 break;
             }

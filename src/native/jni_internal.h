@@ -74,13 +74,13 @@ struct GlobalRefTable {
 };
 
 extern GlobalRefTable global_refs;
-extern GlobalRefTable weak_global_refs;
 
 static jobject addJNIGlobalRef(Object *ref)
 {
     // todo
     global_refs.lock();
     global_refs.table.push_back(ref);
+    ref->jni_obj_ref_type = JNIGlobalRefType;
     global_refs.unlock();
 
     jvm_abort("not implement.");
@@ -88,10 +88,37 @@ static jobject addJNIGlobalRef(Object *ref)
 
 static void deleteJNIGlobalRef(Object *ref)
 {
-    // todo
+    if (ref->jni_obj_ref_type != JNIGlobalRefType) {
+        // todo error
+    }
     global_refs.lock();
 //    global_refs.table.erase(ref); // todo
     global_refs.unlock();
+
+    jvm_abort("not implement.");
+}
+
+extern GlobalRefTable weak_global_refs;
+
+static jweak addJNIWeakGlobalRef(Object *ref)
+{
+    // todo
+    weak_global_refs.lock();
+    weak_global_refs.table.push_back(ref);
+    ref->jni_obj_ref_type = JNIWeakGlobalRefType;
+    weak_global_refs.unlock();
+
+    jvm_abort("not implement.");
+}
+
+static void deleteJNIWeakGlobalRef(Object *ref)
+{
+    if (ref->jni_obj_ref_type != JNIWeakGlobalRefType) {
+        // todo error
+    }
+    weak_global_refs.lock();
+//    weak_global_refs.table.erase(ref); // todo
+    weak_global_refs.unlock();
 
     jvm_abort("not implement.");
 }
@@ -176,6 +203,52 @@ ret_type JNICALL Kayo_Call##T##MethodV(JNIEnv *env, jobject obj, jmethodID metho
 { \
     DEFINE_CALL_T_METHOD_BODY \
     return ret_value; \
+}
+
+static void parse_args_va_list(const char *signature, va_list &args, jvalue *values)
+{
+    assert(signature != nullptr && values != nullptr);
+    const char *p = signature;
+    assert(*p == '(');
+    p++; // skip start (
+
+    for (; *p != ')'; values++) {
+        if(*p == 'Z') {
+            values->z = va_arg(args, jboolean);
+            p++;
+        } else if(*p == 'B') {
+            values->b = va_arg(args, jbyte);
+            p++;
+        } else if(*p == 'C') {
+            values->c = va_arg(args, jchar);
+            p++;
+        } else if(*p == 'S') {
+            values->s = va_arg(args, jshort);
+            p++;
+        } else if(*p == 'I') {
+            values->i = va_arg(args, jint);
+            p++;
+        } else if(*p == 'F') {
+            values->f = va_arg(args, jfloat);
+            p++;
+        } else if(*p == 'J') {
+            values->j = va_arg(args, jdouble);
+            p++;
+        } else if(*p == 'D') {
+            values->d = va_arg(args, jdouble);
+            p++;
+        } else {
+            if(*p == '[')
+                for(p++; *p == '['; p++);
+
+            if(*p == 'L')
+                while(*p++ != ';');
+            else
+                p++;
+
+            values->l = va_arg(args, jobject);
+        }
+    }
 }
 
 #define DEFINE_CALL_T_METHOD_A(T, ret_type, ret_value) \
@@ -280,6 +353,5 @@ ret_type JNICALL Kayo_CallStatic##T##MethodA(JNIEnv *env, \
     DEFINE_CALL_STATIC_T_METHOD(T, ret_type, ret_value) \
     DEFINE_CALL_STATIC_T_METHOD_V(T, ret_type, ret_value) \
     DEFINE_CALL_STATIC_T_METHOD_A(T, ret_type, ret_value)
-
 
 #endif //KAYO_JNI_INTERNAL_H

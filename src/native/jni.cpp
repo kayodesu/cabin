@@ -224,6 +224,52 @@ jmethodID JNICALL Kayo_GetMethodID(JNIEnv *env, jclass clazz, const char *name, 
     return getMethodID(env, clazz, name, sig, false);
 }
 
+
+//static jobject getJobjectRetValue(const slot_t *ret) { return addJNILocalRef(RSLOT(ret)); }
+//
+//template <typename RetType, RetType (*getRetValue)(const slot_t *) = nullptr>
+//RetType JNICALL Kayo_CallMethodA(JNIEnv *env, jobject obj, jmethodID methodID, const jvalue *args)
+//{
+//    jref _this = to_object_ref(obj);
+//    Method *m0 = to_method(methodID);
+//    Method *m = _this->clazz->lookupMethod(m0->name, m0->signature);
+//    if (m == nullptr) {
+//        /* todo error */
+//    }
+//    slot_t *ret = execJavaFunc(m, _this, args);
+//    if (getRetValue != nullptr)
+//        return getRetValue(ret);
+//}
+//
+//template <typename RetType, RetType (*getRetValue)(const slot_t *) = nullptr>
+//RetType JNICALL Kayo_CallMethodV(JNIEnv *env, jobject obj, jmethodID methodID, va_list args)
+//{
+//    jvalue values[METHOD_PARAMETERS_MAX_COUNT];
+//    parse_args_va_list(to_method(methodID)->signature, args, values);
+//    if (getRetValue != nullptr)
+//        return Kayo_CallMethodA<RetType, getRetValue>(env, obj, methodID, values);
+//    else
+//        Kayo_CallMethodA<RetType, getRetValue>(env, obj, methodID, values);
+//}
+//
+//template <typename RetType, RetType (*getRetValue)(const slot_t *) = nullptr>
+//RetType JNICALL Kayo_CallMethod(JNIEnv *env, jobject obj, jmethodID methodID, ...)
+//{
+//    va_list args;
+//    va_start(args, methodID);
+//    auto o = Kayo_CallMethodV<RetType, getRetValue>(env, obj, methodID, args);
+//    va_end(args);
+//    return o;
+//}
+//
+//void JNICALL Kayo_CallMethod(JNIEnv *env, jobject obj, jmethodID methodID, ...)
+//{
+//    va_list args;
+//    va_start(args, methodID);
+//    Kayo_CallMethodV<void>(env, obj, methodID, args);
+//    va_end(args);
+//}
+
 DEFINE_3_CALL_T_METHODS(Object, jobject, addJNILocalRef(RSLOT(ret)))
 DEFINE_3_CALL_T_METHODS(Boolean, jboolean, jint2jbool(ISLOT(ret)))
 DEFINE_3_CALL_T_METHODS(Byte, jbyte, jint2jbyte(ISLOT(ret)))
@@ -537,6 +583,7 @@ void JNICALL Kayo_ReleaseStringUTFChars(JNIEnv *env, jstring str, const char* ch
 
 jsize JNICALL Kayo_GetArrayLength(JNIEnv *env, jarray array)
 {
+    assert(env != nullptr && array != nullptr);
     auto arr = to_object_ref<Array>(array);
     return arr->len;
 }
@@ -572,265 +619,84 @@ void JNICALL Kayo_SetObjectArrayElement(JNIEnv *env, jobjectArray array, jsize i
     jvm_abort("not implement.");
 }
 
-jbooleanArray JNICALL Kayo_NewBooleanArray(JNIEnv *env, jsize len)
+template <typename jtypeArray, ArrayType arr_type>
+jtypeArray JNICALL Kayo_NewTypeArray(JNIEnv *env, jsize len)
 {
     assert(env != nullptr);
     if (len < 0) {
         /* todo java_lang_NegativeArraySizeException */
     }
 
-    Array *arr = newTypeArray(JVM_AT_BOOLEAN, len);
-    return (jbooleanArray) addJNILocalRef(arr);
+    Array *arr = newTypeArray(arr_type, len);
+    return (jtypeArray) addJNILocalRef(arr);
 }
 
-jbyteArray JNICALL Kayo_NewByteArray(JNIEnv *env, jsize len)
+template <typename jtypeArray, typename raw_type>
+raw_type* JNICALL Kayo_GetTypeArrayElements(JNIEnv *env, jtypeArray array, jboolean *isCopy)
 {
-    // todo
-    jvm_abort("not implement.");
+    assert(env != nullptr && array != nullptr);
+    auto arr = to_object_ref<Array>(array);
+    if (isCopy != nullptr)
+        *isCopy = JNI_FALSE;
+    addJNIGlobalRef(arr);
+    return (raw_type *) arr->data;
 }
 
-jcharArray JNICALL Kayo_NewCharArray(JNIEnv *env, jsize len)
+template <typename jtypeArray, typename raw_type>
+void JNICALL Kayo_ReleaseTypeArrayElements(JNIEnv *env, jtypeArray array, raw_type *elems, jint mode)
 {
-    // todo
-    jvm_abort("not implement.");
+    assert(env != nullptr);
+    deleteJNIGlobalRef(to_object_ref(array));
 }
 
-jshortArray JNICALL Kayo_NewShortArray(JNIEnv *env, jsize len)
+template <typename jtypeArray, typename raw_type>
+void JNICALL Kayo_GetTypeArrayRegion(JNIEnv *env, jtypeArray array, jsize start, jsize len, raw_type *buf)
 {
-    // todo
-    jvm_abort("not implement.");
+    assert(env != nullptr && array != nullptr && buf != nullptr);
+    auto arr = to_object_ref<Array>(array);
+    assert(start + len <= arr->len);
+    assert(arr->clazz->getEleSize() == sizeof(raw_type));
+    memcpy(buf, arr->index(start), len*sizeof(raw_type));
 }
 
-jintArray JNICALL Kayo_NewIntArray(JNIEnv *env, jsize len)
+template <typename jtypeArray, typename raw_type>
+void JNICALL Kayo_SetTypeArrayRegion(JNIEnv *env, jtypeArray array, jsize start, jsize len, const raw_type *buf)
 {
-    // todo
-    jvm_abort("not implement.");
-}
-
-jlongArray JNICALL Kayo_NewLongArray(JNIEnv *env, jsize len)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-jfloatArray JNICALL Kayo_NewFloatArray(JNIEnv *env, jsize len)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-jdoubleArray JNICALL Kayo_NewDoubleArray(JNIEnv *env, jsize len)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-jboolean * JNICALL Kayo_GetBooleanArrayElements(JNIEnv *env, jbooleanArray array, jboolean *isCopy)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-jbyte * JNICALL Kayo_GetByteArrayElements(JNIEnv *env, jbyteArray array, jboolean *isCopy)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-jchar * JNICALL Kayo_GetCharArrayElements(JNIEnv *env, jcharArray array, jboolean *isCopy)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-jshort * JNICALL Kayo_GetShortArrayElements(JNIEnv *env, jshortArray array, jboolean *isCopy)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-jint * JNICALL Kayo_GetIntArrayElements(JNIEnv *env, jintArray array, jboolean *isCopy)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-jlong * JNICALL Kayo_GetLongArrayElements(JNIEnv *env, jlongArray array, jboolean *isCopy)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-jfloat * JNICALL Kayo_GetFloatArrayElements(JNIEnv *env, jfloatArray array, jboolean *isCopy)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-jdouble * JNICALL Kayo_GetDoubleArrayElements(JNIEnv *env, jdoubleArray array, jboolean *isCopy)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-void JNICALL Kayo_ReleaseBooleanArrayElements(JNIEnv *env, jbooleanArray array, jboolean *elems, jint mode)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-void JNICALL Kayo_ReleaseByteArrayElements(JNIEnv *env, jbyteArray array, jbyte *elems, jint mode)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-void JNICALL Kayo_ReleaseCharArrayElements(JNIEnv *env, jcharArray array, jchar *elems, jint mode)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-void JNICALL Kayo_ReleaseShortArrayElements(JNIEnv *env, jshortArray array, jshort *elems, jint mode)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-void JNICALL Kayo_ReleaseIntArrayElements(JNIEnv *env, jintArray array, jint *elems, jint mode)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-void JNICALL Kayo_ReleaseLongArrayElements(JNIEnv *env, jlongArray array, jlong *elems, jint mode)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-void JNICALL Kayo_ReleaseFloatArrayElements(JNIEnv *env, jfloatArray array, jfloat *elems, jint mode)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-void JNICALL Kayo_ReleaseDoubleArrayElements(JNIEnv *env, jdoubleArray array, jdouble *elems, jint mode)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-void JNICALL Kayo_GetBooleanArrayRegion(JNIEnv *env, jbooleanArray array, jsize start, jsize l, jboolean *buf)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-void JNICALL Kayo_GetByteArrayRegion(JNIEnv *env, jbyteArray array, jsize start, jsize len, jbyte *buf)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-void JNICALL Kayo_GetCharArrayRegion(JNIEnv *env, jcharArray array, jsize start, jsize len, jchar *buf)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-void JNICALL Kayo_GetShortArrayRegion(JNIEnv *env, jshortArray array, jsize start, jsize len, jshort *buf)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-void JNICALL Kayo_GetIntArrayRegion(JNIEnv *env, jintArray array, jsize start, jsize len, jint *buf)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-void JNICALL Kayo_GetLongArrayRegion(JNIEnv *env, jlongArray array, jsize start, jsize len, jlong *buf)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-void JNICALL Kayo_GetFloatArrayRegion(JNIEnv *env, jfloatArray array, jsize start, jsize len, jfloat *buf)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-void JNICALL Kayo_GetDoubleArrayRegion(JNIEnv *env, jdoubleArray array, jsize start, jsize len, jdouble *buf)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-void JNICALL Kayo_SetBooleanArrayRegion(JNIEnv *env, jbooleanArray array, jsize start, jsize l, const jboolean *buf)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-void JNICALL Kayo_SetByteArrayRegion(JNIEnv *env, jbyteArray array, jsize start, jsize len, const jbyte *buf)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-void JNICALL Kayo_SetCharArrayRegion(JNIEnv *env, jcharArray array, jsize start, jsize len, const jchar *buf)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-void JNICALL Kayo_SetShortArrayRegion(JNIEnv *env, jshortArray array, jsize start, jsize len, const jshort *buf)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-void JNICALL Kayo_SetIntArrayRegion(JNIEnv *env, jintArray array, jsize start, jsize len, const jint *buf)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-void JNICALL Kayo_SetLongArrayRegion(JNIEnv *env, jlongArray array, jsize start, jsize len, const jlong *buf)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-void JNICALL Kayo_SetFloatArrayRegion(JNIEnv *env, jfloatArray array, jsize start, jsize len, const jfloat *buf)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-void JNICALL Kayo_SetDoubleArrayRegion(JNIEnv *env, jdoubleArray array, jsize start, jsize len, const jdouble *buf)
-{
-    // todo
-    jvm_abort("not implement.");
+    assert(env != nullptr && array != nullptr && buf != nullptr);
+    auto arr = to_object_ref<Array>(array);
+    assert(start + len <= arr->len);
+    assert(arr->clazz->getEleSize() == sizeof(raw_type));
+    memcpy(arr->index(start), buf, len*sizeof(raw_type));
 }
 
 jint JNICALL Kayo_RegisterNatives(JNIEnv *env, jclass clazz, const JNINativeMethod *methods, jint nMethods)
 {
-    // todo
-    jvm_abort("not implement.");
+    assert(env != nullptr && clazz != nullptr);
+
+    auto c = to_object_ref<Class>(clazz);
+    for (int i = 0; i < nMethods; i++) {
+        Method *m = c->lookupMethod(methods[i].name, methods[i].signature);
+        if (m == nullptr or !m->isNative()) {
+            // todo java_lang_NoSuchMethodError
+            return JNI_ERR;
+        }
+
+        // todo
+        jvm_abort("not implement.");
+    }
+    return JNI_OK;
 }
 
 jint JNICALL Kayo_UnregisterNatives(JNIEnv *env, jclass clazz)
 {
+    assert(env != nullptr && clazz != nullptr);
     // todo
     jvm_abort("not implement.");
 }
 
 jint JNICALL Kayo_MonitorEnter(JNIEnv *env, jobject obj)
 {
+    assert(env != nullptr && obj != nullptr);
     // todo
 //    jref o = to_object_ref(obj);
 //    o->lock();
@@ -840,6 +706,7 @@ jint JNICALL Kayo_MonitorEnter(JNIEnv *env, jobject obj)
 
 jint JNICALL Kayo_MonitorExit(JNIEnv *env, jobject obj)
 {
+    assert(env != nullptr && obj != nullptr);
     // todo
 //    jref o = to_object_ref(obj);
 //    o->unlock();
@@ -865,16 +732,23 @@ void JNICALL Kayo_GetStringUTFRegion(JNIEnv *env, jstring str, jsize start, jsiz
     jvm_abort("not implement.");
 }
 
-void * JNICALL Kayo_GetPrimitiveArrayCritical(JNIEnv *env, jarray array, jboolean *isCopy)
+void* JNICALL Kayo_GetPrimitiveArrayCritical(JNIEnv *env, jarray array, jboolean *isCopy)
 {
-    // todo
-    jvm_abort("not implement.");
+    assert(env != nullptr && array != nullptr);
+    auto arr = to_object_ref<Array>(array);
+
+    if(isCopy != nullptr)
+        *isCopy = JNI_FALSE;
+
+    /* Pin the array */ //  todo
+    addJNIGlobalRef(arr);
+    return arr->data;
 }
 
 void JNICALL Kayo_ReleasePrimitiveArrayCritical(JNIEnv *env, jarray array, void *carray, jint mode)
 {
-    // todo
-    jvm_abort("not implement.");
+    assert(env != nullptr && array != nullptr);
+    deleteJNIGlobalRef(to_object_ref<Array>(array));
 }
 
 const jchar * JNICALL Kayo_GetStringCritical(JNIEnv *env, jstring string, jboolean *isCopy)
@@ -891,14 +765,14 @@ void JNICALL Kayo_ReleaseStringCritical(JNIEnv *env, jstring string, const jchar
 
 jweak JNICALL Kayo_NewWeakGlobalRef(JNIEnv *env, jobject obj)
 {
-    // todo
-    jvm_abort("not implement.");
+    assert(env != nullptr && obj != nullptr);
+    return addJNIWeakGlobalRef(to_object_ref(obj));
 }
 
 void JNICALL Kayo_DeleteWeakGlobalRef(JNIEnv *env, jweak ref)
 {
-    // todo
-    jvm_abort("not implement.");
+    assert(env != nullptr && ref != nullptr);
+    deleteJNIWeakGlobalRef(to_object_ref(ref));
 }
 
 jboolean JNICALL Kayo_ExceptionCheck(JNIEnv *env)
@@ -927,7 +801,7 @@ jlong JNICALL Kayo_GetDirectBufferCapacity(JNIEnv *env, jobject buf)
 
 jobjectRefType JNICALL Kayo_GetObjectRefType(JNIEnv* env, jobject obj)
 {
-    jref o = (jref) obj;
+    jref o = to_object_ref(obj);
     return o != nullptr ? o->jni_obj_ref_type : JNIInvalidRefType;
 }
 
@@ -986,6 +860,9 @@ static struct JNINativeInterface_ Kayo_JNINativeInterface = {
 
     .GetMethodID = Kayo_GetMethodID,
 
+//    .CallObjectMethod = Kayo_CallMethod<jobject, getJobjectRetValue>,
+//    .CallObjectMethodV = Kayo_CallMethodV<jobject, getJobjectRetValue>,
+//    .CallObjectMethodA = Kayo_CallMethodA<jobject, getJobjectRetValue>,
     .CallObjectMethod = Kayo_CallObjectMethod,
     .CallObjectMethodV = Kayo_CallObjectMethodV,
     .CallObjectMethodA = Kayo_CallObjectMethodA,
@@ -1166,50 +1043,50 @@ static struct JNINativeInterface_ Kayo_JNINativeInterface = {
     .NewObjectArray = Kayo_NewObjectArray,
     .GetObjectArrayElement = Kayo_GetObjectArrayElement,
     .SetObjectArrayElement = Kayo_SetObjectArrayElement,
-    .NewBooleanArray = Kayo_NewBooleanArray,
-    .NewByteArray = Kayo_NewByteArray,
-    .NewCharArray = Kayo_NewCharArray,
-    .NewShortArray = Kayo_NewShortArray,
-    .NewIntArray = Kayo_NewIntArray,
-    .NewLongArray = Kayo_NewLongArray,
-    .NewFloatArray = Kayo_NewFloatArray,
-    .NewDoubleArray = Kayo_NewDoubleArray,
+    .NewBooleanArray = Kayo_NewTypeArray<jbooleanArray, JVM_AT_BOOLEAN>,
+    .NewByteArray = Kayo_NewTypeArray<jbyteArray, JVM_AT_BYTE>,
+    .NewCharArray = Kayo_NewTypeArray<jcharArray, JVM_AT_CHAR>,
+    .NewShortArray = Kayo_NewTypeArray<jshortArray, JVM_AT_SHORT>,
+    .NewIntArray = Kayo_NewTypeArray<jintArray, JVM_AT_INT>,
+    .NewLongArray = Kayo_NewTypeArray<jlongArray, JVM_AT_LONG>,
+    .NewFloatArray = Kayo_NewTypeArray<jfloatArray, JVM_AT_FLOAT>,
+    .NewDoubleArray = Kayo_NewTypeArray<jdoubleArray, JVM_AT_DOUBLE>,
 
-    .GetBooleanArrayElements = Kayo_GetBooleanArrayElements,
-    .GetByteArrayElements = Kayo_GetByteArrayElements,
-    .GetCharArrayElements = Kayo_GetCharArrayElements,
-    .GetShortArrayElements = Kayo_GetShortArrayElements,
-    .GetIntArrayElements = Kayo_GetIntArrayElements,
-    .GetLongArrayElements = Kayo_GetLongArrayElements,
-    .GetFloatArrayElements = Kayo_GetFloatArrayElements,
-    .GetDoubleArrayElements = Kayo_GetDoubleArrayElements,
+    .GetBooleanArrayElements = Kayo_GetTypeArrayElements<jbooleanArray, jboolean>,
+    .GetByteArrayElements = Kayo_GetTypeArrayElements<jbyteArray, jbyte>,
+    .GetCharArrayElements = Kayo_GetTypeArrayElements<jcharArray, jchar>,
+    .GetShortArrayElements = Kayo_GetTypeArrayElements<jshortArray, jshort>,
+    .GetIntArrayElements = Kayo_GetTypeArrayElements<jintArray, jint>,
+    .GetLongArrayElements = Kayo_GetTypeArrayElements<jlongArray, jlong>,
+    .GetFloatArrayElements = Kayo_GetTypeArrayElements<jfloatArray, jfloat>,
+    .GetDoubleArrayElements = Kayo_GetTypeArrayElements<jdoubleArray, jdouble>,
 
-    .ReleaseBooleanArrayElements = Kayo_ReleaseBooleanArrayElements,
-    .ReleaseByteArrayElements = Kayo_ReleaseByteArrayElements,
-    .ReleaseCharArrayElements = Kayo_ReleaseCharArrayElements,
-    .ReleaseShortArrayElements = Kayo_ReleaseShortArrayElements,
-    .ReleaseIntArrayElements = Kayo_ReleaseIntArrayElements,
-    .ReleaseLongArrayElements = Kayo_ReleaseLongArrayElements,
-    .ReleaseFloatArrayElements = Kayo_ReleaseFloatArrayElements,
-    .ReleaseDoubleArrayElements = Kayo_ReleaseDoubleArrayElements,
+    .ReleaseBooleanArrayElements = Kayo_ReleaseTypeArrayElements<jbooleanArray, jboolean>,
+    .ReleaseByteArrayElements = Kayo_ReleaseTypeArrayElements<jbyteArray, jbyte>,
+    .ReleaseCharArrayElements = Kayo_ReleaseTypeArrayElements<jcharArray, jchar>,
+    .ReleaseShortArrayElements = Kayo_ReleaseTypeArrayElements<jshortArray, jshort>,
+    .ReleaseIntArrayElements = Kayo_ReleaseTypeArrayElements<jintArray, jint>,
+    .ReleaseLongArrayElements = Kayo_ReleaseTypeArrayElements<jlongArray, jlong>,
+    .ReleaseFloatArrayElements = Kayo_ReleaseTypeArrayElements<jfloatArray, jfloat>,
+    .ReleaseDoubleArrayElements = Kayo_ReleaseTypeArrayElements<jdoubleArray, jdouble>,
 
-    .GetBooleanArrayRegion = Kayo_GetBooleanArrayRegion,
-    .GetByteArrayRegion = Kayo_GetByteArrayRegion,
-    .GetCharArrayRegion = Kayo_GetCharArrayRegion,
-    .GetShortArrayRegion = Kayo_GetShortArrayRegion,
-    .GetIntArrayRegion = Kayo_GetIntArrayRegion,
-    .GetLongArrayRegion = Kayo_GetLongArrayRegion,
-    .GetFloatArrayRegion = Kayo_GetFloatArrayRegion,
-    .GetDoubleArrayRegion = Kayo_GetDoubleArrayRegion,
+    .GetBooleanArrayRegion = Kayo_GetTypeArrayRegion<jbooleanArray, jboolean>,
+    .GetByteArrayRegion = Kayo_GetTypeArrayRegion<jbyteArray, jbyte>,
+    .GetCharArrayRegion = Kayo_GetTypeArrayRegion<jcharArray, jchar>,
+    .GetShortArrayRegion = Kayo_GetTypeArrayRegion<jshortArray, jshort>,
+    .GetIntArrayRegion = Kayo_GetTypeArrayRegion<jintArray, jint>,
+    .GetLongArrayRegion = Kayo_GetTypeArrayRegion<jlongArray, jlong>,
+    .GetFloatArrayRegion = Kayo_GetTypeArrayRegion<jfloatArray, jfloat>,
+    .GetDoubleArrayRegion = Kayo_GetTypeArrayRegion<jdoubleArray, jdouble>,
 
-    .SetBooleanArrayRegion = Kayo_SetBooleanArrayRegion,
-    .SetByteArrayRegion = Kayo_SetByteArrayRegion,
-    .SetCharArrayRegion = Kayo_SetCharArrayRegion,
-    .SetShortArrayRegion = Kayo_SetShortArrayRegion,
-    .SetIntArrayRegion = Kayo_SetIntArrayRegion,
-    .SetLongArrayRegion = Kayo_SetLongArrayRegion,
-    .SetFloatArrayRegion = Kayo_SetFloatArrayRegion,
-    .SetDoubleArrayRegion = Kayo_SetDoubleArrayRegion,
+    .SetBooleanArrayRegion = Kayo_SetTypeArrayRegion<jbooleanArray, jboolean>,
+    .SetByteArrayRegion = Kayo_SetTypeArrayRegion<jbyteArray, jbyte>,
+    .SetCharArrayRegion = Kayo_SetTypeArrayRegion<jcharArray, jchar>,
+    .SetShortArrayRegion = Kayo_SetTypeArrayRegion<jshortArray, jshort>,
+    .SetIntArrayRegion = Kayo_SetTypeArrayRegion<jintArray, jint>,
+    .SetLongArrayRegion = Kayo_SetTypeArrayRegion<jlongArray, jlong>,
+    .SetFloatArrayRegion = Kayo_SetTypeArrayRegion<jfloatArray, jfloat>,
+    .SetDoubleArrayRegion = Kayo_SetTypeArrayRegion<jdoubleArray, jdouble>,
 
     .RegisterNatives = Kayo_RegisterNatives,
     .UnregisterNatives = Kayo_UnregisterNatives,
