@@ -1,8 +1,9 @@
 #include "../../../registry.h"
 #include "../../../../kayo.h"
-#include "../../../../runtime/Frame.h"
+#include "../../../../runtime/frame.h"
 #include "../../../../objects/class.h"
 #include "../../../../objects/invoke.h"
+#include "../../../../objects/array_object.h"
 
 /*
  * Author: kayo

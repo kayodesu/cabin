@@ -11,7 +11,8 @@
 
 class Method;
 
-struct Frame {
+class Frame {
+public:
     Method *method;
     BytecodeReader reader;
 
@@ -35,6 +36,8 @@ struct Frame {
         assert(lvars != nullptr);
         assert(ostack != nullptr);
     }
+
+    slot_t getLocal(int index) { return lvars[index]; }
 
     jint getLocalAsInt(int index)
     {
@@ -73,6 +76,7 @@ struct Frame {
     }
 
     // push to ostack.
+    void push(slot_t v)   { *ostack++ = v; }
     void pushi(jint v)    { ISLOT(ostack) = v; ostack++; }
     void pushf(jfloat v)  { FSLOT(ostack) = v; ostack++; }
     void pushl(jlong v)   { LSLOT(ostack) = v; ostack += 2; }
@@ -100,7 +104,7 @@ struct Frame {
 //    static size_t size(const Method *m);
 //    size_t size() const;
 
-    std::string toString() const;
+    virtual std::string toString() const;
 };
 
 #endif //JVM_STACK_FRAME_H

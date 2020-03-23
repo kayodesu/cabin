@@ -6,7 +6,7 @@
 #include "../../../objects/class.h"
 #include "../../../objects/object.h"
 #include "../../../symbol.h"
-#include "../../../runtime/Frame.h"
+#include "../../../runtime/frame.h"
 #include "../../../objects/class_loader.h"
 
 // public native int hashCode();

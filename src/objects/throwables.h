@@ -22,6 +22,8 @@ public:
         assert(this->javaThrowable != nullptr);
     }
 
+    explicit Throwable(Class *ec, const utf8_t *msg = nullptr);
+
     explicit Throwable(const utf8_t *exceptionName, const utf8_t *msg = nullptr);
 
     Object *getJavaThrowable()

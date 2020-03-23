@@ -5,7 +5,7 @@
 #include "../../registry.h"
 #include "../../../objects/object.h"
 #include "../../../kayo.h"
-#include "../../../runtime/Frame.h"
+#include "../../../runtime/frame.h"
 #include "../../../objects/class.h"
 
 

@@ -4,7 +4,7 @@
 
 #include "../../registry.h"
 #include "../../../objects/class.h"
-#include "../../../runtime/Frame.h"
+#include "../../../runtime/frame.h"
 #include "../../../interpreter/interpreter.h"
 
 // public native ByteBuffer createLong(String name, int variability, int units, long value);

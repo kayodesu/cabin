@@ -49,7 +49,7 @@ enum {
 
 /* Used in newarray instruction. */
 
-enum {
+enum ArrayType {
     JVM_AT_BOOLEAN = 4,
     JVM_AT_CHAR    = 5,
     JVM_AT_FLOAT   = 6,

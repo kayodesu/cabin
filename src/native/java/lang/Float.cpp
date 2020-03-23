@@ -3,7 +3,7 @@
  */
 
 #include "../../registry.h"
-#include "../../../runtime/Frame.h"
+#include "../../../runtime/frame.h"
 
 // public static native int floatToRawIntBits(float value);
 static void floatToRawIntBits(Frame *frame)

@@ -3,7 +3,7 @@
  */
 
 #include <sstream>
-#include "Frame.h"
+#include "frame.h"
 #include "../objects/class.h"
 
 using namespace std;
@@ -33,7 +33,7 @@ string Frame::toString() const
     oss << "(" << this << ")";
     if (method->isNative())
         oss << "(native)";
-    oss << method->clazz->className << "~" << method->name << "~" << method->descriptor;
+    oss << method->clazz->className << "~" << method->name << "~" << method->type;
     oss << ", pc = " << reader.pc;
     return oss.str();
 }

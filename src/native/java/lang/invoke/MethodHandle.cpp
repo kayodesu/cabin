@@ -1,14 +1,14 @@
 #include "../../../registry.h"
 #include "../../../../kayo.h"
-#include "../../../../runtime/Frame.h"
+#include "../../../../runtime/frame.h"
 
 /*
  * Author: kayo
  */
 
 /**
- * Invokes the method handle, allowing any caller type descriptor, but requiring an exact type match.
- * The symbolic type descriptor at the call site of {@code invokeExact} must
+ * Invokes the method handle, allowing any caller type type, but requiring an exact type match.
+ * The symbolic type type at the call site of {@code invokeExact} must
  * exactly match this method handle's {@link #type type}.
  * No conversions are allowed on arguments or return values.
  * <p>
@@ -20,7 +20,7 @@
  * it will throw an {@code UnsupportedOperationException}.
  * @param args the signature-polymorphic parameter list, statically represented using varargs
  * @return the signature-polymorphic result, statically represented using {@code Object}
- * @throws WrongMethodTypeException if the target's type is not identical with the caller's symbolic type descriptor
+ * @throws WrongMethodTypeException if the target's type is not identical with the caller's symbolic type type
  * @throws Throwable anything thrown by the underlying method propagates unchanged through the method handle call
  */
 // public final native @PolymorphicSignature Object invokeExact(Object... args) throws Throwable;
@@ -35,10 +35,10 @@ static void invokeExact(Frame *frame)
 }
 
 /**
- * Invokes the method handle, allowing any caller type descriptor,
+ * Invokes the method handle, allowing any caller type type,
  * and optionally performing conversions on arguments and return values.
  * <p>
- * If the call site's symbolic type descriptor exactly matches this method handle's {@link #type type},
+ * If the call site's symbolic type type exactly matches this method handle's {@link #type type},
  * the call proceeds as if by {@link #invokeExact invokeExact}.
  * <p>
  * Otherwise, the call proceeds as if this method handle were first
@@ -51,7 +51,7 @@ static void invokeExact(Frame *frame)
  * adaptations directly on the caller's arguments,
  * and call the target method handle according to its own exact type.
  * <p>
- * The resolved type descriptor at the call site of {@code invoke} must
+ * The resolved type type at the call site of {@code invoke} must
  * be a valid argument to the receivers {@code asType} method.
  * In particular, the caller must specify the same argument arity
  * as the callee's type,
@@ -65,7 +65,7 @@ static void invokeExact(Frame *frame)
  * it will throw an {@code UnsupportedOperationException}.
  * @param args the signature-polymorphic parameter list, statically represented using varargs
  * @return the signature-polymorphic result, statically represented using {@code Object}
- * @throws WrongMethodTypeException if the target's type cannot be adjusted to the caller's symbolic type descriptor
+ * @throws WrongMethodTypeException if the target's type cannot be adjusted to the caller's symbolic type type
  * @throws ClassCastException if the target's type can be adjusted to the caller, but a reference cast fails
  * @throws Throwable anything thrown by the underlying method propagates unchanged through the method handle call
  */

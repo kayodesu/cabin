@@ -47,16 +47,16 @@ typedef jboolean   jbool;
 #define jtrue 1
 #define jfalse 0
 
-static inline bool is_jtrue(jbool b)
-{
-    // 不能用 b == jtrue 判断，
-    // 非 0 就为 jtrue
-    return b != jfalse;
-}
-
 static inline bool is_jfalse(jbool b)
 {
     return b == jfalse;
+}
+
+static inline bool is_jtrue(jbool b)
+{
+    // 不能用 b == jtrue 判断，
+    // 非 jfalse 就为 jtrue
+    return !is_jfalse(b);
 }
 
 #define jnull       ((jref) 0)
@@ -68,7 +68,7 @@ typedef jchar unicode_t;
 
 static inline jbool jint2jbool(jint i)
 {
-    return i != 0;
+    return i != 0 ? jtrue : jfalse;
 }
 
 static inline jbyte jint2jbyte(jint i)
@@ -106,6 +106,11 @@ static_assert(2 * sizeof(slot_t) >= sizeof(jdouble));
 #define LSLOT(slot_point) (* (jlong *) (slot_point))
 #define DSLOT(slot_point) (* (jdouble *) (slot_point))
 #define RSLOT(slot_point) (* (jref *) (slot_point))
+
+static inline jint from_islot(const slot_t *s)
+{
+    return ISLOT(s);
+}
 
 static inline slot_t to_islot(jint v)
 {

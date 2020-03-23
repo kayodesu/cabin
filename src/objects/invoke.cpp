@@ -5,6 +5,7 @@
 #include "invoke.h"
 #include "class.h"
 #include "method.h"
+#include "array_object.h"
 #include "../interpreter/interpreter.h"
 
 using namespace method_type;
@@ -14,7 +15,7 @@ jref method_type::fromMethodDescriptor(const utf8_t *descriptor, jref loader)
     assert(descriptor != nullptr);
 
     Class *mt = loadBootClass("java/lang/invoke/MethodType");
-    // public static MethodType fromMethodDescriptorString(String descriptor, ClassLoader loader)
+    // public static MethodType fromMethodDescriptorString(String type, ClassLoader loader)
     //                      throws IllegalArgumentException, TypeNotPresentException
     Method *m = mt->getDeclaredStaticMethod(
             "fromMethodDescriptorString",

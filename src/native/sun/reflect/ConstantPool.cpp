@@ -1,6 +1,6 @@
 #include "../../registry.h"
 #include "../../../jtypes.h"
-#include "../../../runtime/Frame.h"
+#include "../../../runtime/frame.h"
 #include "../../../objects/class.h"
 
 /*

@@ -4,6 +4,7 @@
 
 #include "method.h"
 #include "class.h"
+#include "array_object.h"
 #include "invoke.h"
 
 using namespace std;
@@ -44,9 +45,9 @@ Array *Method::getParameterTypes()
     return ptypes;
 
 //    if (parameterTypes == nullptr) {
-//        int dlen = strlen(descriptor);
+//        int dlen = strlen(type);
 //        char desc[dlen + 1];
-//        strcpy(desc, descriptor);
+//        strcpy(desc, type);
 //
 //        Object* buf[METHOD_PARAMETERS_MAX_COUNT];
 //
@@ -55,7 +56,7 @@ Array *Method::getParameterTypes()
 //        char *b = strchr(desc, '(');
 //        const char *e = strchr(desc, ')');
 //        if (b == nullptr || e == nullptr) {
-//            thread_throw(new UnknownError(NEW_MSG("descriptor error. %s\n", desc)));
+//            thread_throw(new UnknownError(NEW_MSG("type error. %s\n", desc)));
 //        }
 //
 //        // parameter types
@@ -63,7 +64,7 @@ Array *Method::getParameterTypes()
 //            if (*b == 'L') { // reference
 //                char *t = strchr(b, ';');
 //                if (t == nullptr) {
-//                    thread_throw(new UnknownError(NEW_MSG("descriptor error. %s\n", desc)));
+//                    thread_throw(new UnknownError(NEW_MSG("type error. %s\n", desc)));
 //                }
 //
 //                *t = 0;   // end string
@@ -76,7 +77,7 @@ Array *Method::getParameterTypes()
 //                if (!isPrimDescriptor(*t)) {
 //                    t = strchr(t, ';');
 //                    if (t == nullptr) {
-//                        thread_throw(new UnknownError(NEW_MSG("descriptor error. %s\n", desc)));
+//                        thread_throw(new UnknownError(NEW_MSG("type error. %s\n", desc)));
 //                    }
 //                }
 //
@@ -89,7 +90,7 @@ Array *Method::getParameterTypes()
 //                const char *class_name = primDescriptor2className(*b);
 //                buf[parameter_types_count++] = loadClass(clazz->loader, class_name);
 //            } else {
-//                thread_throw(new UnknownError(NEW_MSG("descriptor error. %s\n", desc)));
+//                thread_throw(new UnknownError(NEW_MSG("type error. %s\n", desc)));
 //            }
 //        }
 //
@@ -113,9 +114,9 @@ Class *Method::getReturnType()
     assert(rtype != nullptr);
     return rtype;
 //    if (returnType == nullptr) {
-//        const char *e = strchr(descriptor, ')');
+//        const char *e = strchr(type, ')');
 //        if (e == nullptr) {
-//            thread_throw(new UnknownError(NEW_MSG("descriptor error. %s\n", descriptor)));
+//            thread_throw(new UnknownError(NEW_MSG("type error. %s\n", type)));
 //        }
 //        returnType = loadClass(clazz->loader, descriptorToClassName(++e).c_str());
 //    }
@@ -124,17 +125,17 @@ Class *Method::getReturnType()
 
 Object *Method::getType()
 {
-    if (type == nullptr) {
-        // public static MethodType fromMethodDescriptorString(String descriptor, ClassLoader loader)
+    if (type_obj == nullptr) {
+        // public static MethodType fromMethodDescriptorString(String type, ClassLoader loader)
         //                      throws IllegalArgumentException, TypeNotPresentException
 //        Method *m = loadBootClass("java/lang/invoke/MethodType")->getDeclaredStaticMethod(
 //                "fromMethodDescriptorString", "(Ljava/lang/String;Ljava/lang/ClassLoader;)Ljava/lang/invoke/MethodType;");
-//        slot_t *r = execJavaFunc(m, { (slot_t) newString(descriptor), (slot_t) clazz->loader });
+//        slot_t *r = execJavaFunc(m, { (slot_t) newString(type), (slot_t) clazz->loader });
 //        assert(r != nullptr);
 //        type = (Object *) *r;
-        type = method_type::fromMethodDescriptor(descriptor, clazz->loader);
+        type_obj = method_type::fromMethodDescriptor(type, clazz->loader);
     }
-    return type;
+    return type_obj;
 }
 
 Array *Method::getExceptionTypes()
@@ -207,7 +208,7 @@ u2 Method::calArgsSlotsCount(const utf8_t *descriptor, bool isStatic)
 void Method::calArgsSlotsCount()
 {
     // note: 构造函数（<init>方法）是非static的，也会传递this reference  todo
-    arg_slot_count = calArgsSlotsCount(descriptor, isStatic());
+    arg_slot_count = calArgsSlotsCount(type, isStatic());
 }
 
 /*
@@ -262,7 +263,7 @@ Method::Method(Class *c, BytecodeReader &r)
 
     modifiers = r.readu2();
     name = cp.utf8(r.readu2());
-    descriptor = cp.utf8(r.readu2());
+    type = cp.utf8(r.readu2());
     u2 attr_count = r.readu2();
 
     calArgsSlotsCount();
@@ -325,13 +326,13 @@ Method::Method(Class *c, BytecodeReader &r)
         // 4 slots are big enough.
         maxStack = 4;
         // 因为本地方法帧的局部变量表只用来存放参数值，
-        // 所以把argSlotCount赋给maxLocals字段刚好。
+        // 所以把arg_slot_count赋给maxLocals字段刚好。
         maxLocals = arg_slot_count;
 
         codeLen = 2;
         code = new u1[codeLen];
         code[0] = JVM_OPC_invokenative;
-        const char *t = strchr(descriptor, ')'); // find return
+        const char *t = strchr(type, ')'); // find return
         assert(t != nullptr);
 
         ++t;
@@ -349,7 +350,7 @@ Method::Method(Class *c, BytecodeReader &r)
             code[1] = JVM_OPC_ireturn;
         }
 
-        nativeMethod = findNative(clazz->className, name, descriptor);
+        nativeMethod = findNative(clazz->className, name, type);
     }
 }
 
@@ -398,6 +399,6 @@ string Method::toString() const
     oss << "method";
     if (isNative())
         oss << "(native)";
-    oss << ": "  << clazz->className << "~" << name << "~" << descriptor;
+    oss << ": " << clazz->className << "~" << name << "~" << type;
     return oss.str();
 }

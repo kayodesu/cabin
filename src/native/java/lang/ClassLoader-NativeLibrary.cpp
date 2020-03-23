@@ -4,7 +4,7 @@
 
 #include "../../registry.h"
 #include "../../../kayo.h"
-#include "../../../runtime/Frame.h"
+#include "../../../runtime/frame.h"
 
 // native long find(String name);
 static void find(Frame *frame)

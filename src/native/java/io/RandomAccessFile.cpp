@@ -13,7 +13,7 @@
  */
 
 /*
- * Opens a file and returns the file descriptor. The file is
+ * Opens a file and returns the file type. The file is
  * opened in read-write mode if the O_RDWR bit in mode
  * is true, else the file is opened as read-only.
  * If the name refers to a directory, an IOException

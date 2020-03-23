@@ -4,8 +4,9 @@
 
 #include "../../registry.h"
 #include "../../../kayo.h"
-#include "../../../runtime/Frame.h"
+#include "../../../runtime/frame.h"
 #include "../../../output.h"
+#include "../../../objects/array_object.h"
 
 
 // private static native void initIDs();

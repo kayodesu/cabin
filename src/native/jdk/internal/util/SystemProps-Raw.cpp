@@ -2,7 +2,8 @@
  * Author: kayo
  */
 
-#include "../../../../runtime/Frame.h"
+#include "../../../../runtime/frame.h"
+#include "../../../../objects/array_object.h"
 
 /*
  * Gather the VM and command line properties and return as a String[].

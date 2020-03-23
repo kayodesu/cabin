@@ -3,7 +3,8 @@
  */
 
 #include "../../registry.h"
-#include "../../../runtime/Frame.h"
+#include "../../../runtime/frame.h"
+#include "../../../objects/array_object.h"
 
 // private native void initIDs();
 static void initIDs(Frame *frame)

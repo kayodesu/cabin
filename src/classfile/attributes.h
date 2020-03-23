@@ -15,8 +15,8 @@ class BytecodeReader;
 
 struct Annotation {
     // The value of the type_index item must be a valid index into the constant_pool table.
-    // The constant_pool entry at that index must be a CONSTANT_Utf8_info structure representing a Field descriptor.
-    // The Field descriptor denotes the type of the annotation represented  by this annotation structure.
+    // The constant_pool entry at that index must be a CONSTANT_Utf8_info structure representing a Field type.
+    // The Field type denotes the type of the annotation represented  by this annotation structure.
     u2 type_index = 0;
     std::vector<ElementValuePair> elementValuePairs;
 

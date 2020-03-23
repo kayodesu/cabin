@@ -18,14 +18,14 @@ class Class;
 class Method {
 //    Array *parameterTypes = nullptr; // [Ljava/lang/Class;
 //    Class *returnType = nullptr;     // Ljava/lang/Class;
-    Object *type = nullptr;          // Ljava/lang/invoke/MethodType;
+    Object *type_obj = nullptr;          // Ljava/lang/invoke/MethodType;
     Array *exceptionTypes = nullptr; // [Ljava/lang/Class;
 
 public:
     // 定义此 Method 的类
     Class *clazz;
     const utf8_t *name = nullptr;
-    const utf8_t *descriptor = nullptr;
+    const utf8_t *type = nullptr;
 
     jint modifiers;
 
@@ -80,7 +80,7 @@ public:
      * 一个 final non-private 方法则可以覆写基类的虚方法，并且可以被基类引用通过invokevirtual调用到。
      * 参考 https://www.zhihu.com/question/45131640
      */
-    bool isVirtual() const
+    [[nodiscard]] bool isVirtual() const
     {
         return !isPrivate() && !isStatic() && !utf8::equals(name, S(object_init));
     }
@@ -97,25 +97,25 @@ public:
     Object *getType();
     Array *getExceptionTypes();
 
-    jint getLineNumber(int pc) const;
+    [[nodiscard]] jint getLineNumber(int pc) const;
 
     /*
      * @pc, 发生异常的位置
      */
     int findExceptionHandler(Class *exception_type, size_t pc);
 
-    std::string toString() const;
+    [[nodiscard]] std::string toString() const;
 
-    bool isPublic() const       { return Modifier::isPublic(modifiers); }
-    bool isProtected() const    { return Modifier::isProtected(modifiers); }
-    bool isPrivate() const      { return Modifier::isPrivate(modifiers); }
-    bool isAbstract() const     { return Modifier::isAbstract(modifiers); }
-    bool isStatic() const       { return Modifier::isStatic(modifiers); }
-    bool isFinal() const        { return Modifier::isFinal(modifiers); }
-    bool isSynchronized() const { return Modifier::isSynchronized(modifiers); }
-    bool isNative() const       { return Modifier::isNative(modifiers); }
-    bool isStrict() const       { return Modifier::isStrict(modifiers); }
-    bool isVarargs() const      { return Modifier::isVarargs(modifiers); }
+    [[nodiscard]] bool isPublic() const       { return Modifier::isPublic(modifiers); }
+    [[nodiscard]] bool isProtected() const    { return Modifier::isProtected(modifiers); }
+    [[nodiscard]] bool isPrivate() const      { return Modifier::isPrivate(modifiers); }
+    [[nodiscard]] bool isAbstract() const     { return Modifier::isAbstract(modifiers); }
+    [[nodiscard]] bool isStatic() const       { return Modifier::isStatic(modifiers); }
+    [[nodiscard]] bool isFinal() const        { return Modifier::isFinal(modifiers); }
+    [[nodiscard]] bool isSynchronized() const { return Modifier::isSynchronized(modifiers); }
+    [[nodiscard]] bool isNative() const       { return Modifier::isNative(modifiers); }
+    [[nodiscard]] bool isStrict() const       { return Modifier::isStrict(modifiers); }
+    [[nodiscard]] bool isVarargs() const      { return Modifier::isVarargs(modifiers); }
 
     void setSynthetic() { Modifier::setSynthetic(modifiers); }
 

@@ -8,7 +8,7 @@
 #include <fcntl.h>
 #include <dirent.h>
 #include "../../registry.h"
-#include "../../../runtime/Frame.h"
+#include "../../../runtime/frame.h"
 #include "../../../objects/object.h"
 
 // private static native void initIDs();

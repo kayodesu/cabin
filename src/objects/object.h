@@ -8,8 +8,10 @@
 //#include <mutex>
 #include <string>
 #include <unordered_map>
+#include "../classfile/constants.h"
 #include "../util/encoding.h"
 #include "../kayo.h"
+#include "../native/jni.h"
 
 class Field;
 class Class;
@@ -40,9 +42,9 @@ public:
     slot_t *data;
     Class *clazz;
 
+    JNIObjRefType jni_obj_ref_type = JNIInvalidRefType;
+
     static Object *newObject(Class *c);
-    static Object *newString_jdk_8_and_under(const utf8_t *str);
-    static Object *newString_jdk_9_and_upper(const utf8_t *str);
 
     virtual size_t size() const;
 
@@ -63,8 +65,8 @@ public:
 
 //    void setFieldValue(Field *f, slot_t v); // only for category one field
     void setFieldValue(Field *f, const slot_t *value);
-//    void setFieldValue(const char *name, const char *descriptor, slot_t v); // only for category one field
-//    void setFieldValue(const char *name, const char *descriptor, const slot_t *value);
+//    void setFieldValue(const char *name, const char *type, slot_t v); // only for category one field
+//    void setFieldValue(const char *name, const char *type, const slot_t *value);
     void setFieldValue(int id, jref value);
 
 private:
@@ -95,80 +97,10 @@ public:
     virtual std::string toString() const;
 };
 
-
-// Object of array
-class Array: public Object {
-    Array(Class *ac, jint arrLen);
-    Array(Class *ac, jint dim, const jint lens[]);
-
-public:
-    jsize len; // 数组的长度
-
-    static Array *newArray(Class *ac, jint arrLen);
-    static Array *newMultiArray(Class *ac, jint dim, const jint lens[]);
-
-    bool isArrayObject() const override { return true; }
-    bool isPrimArray() const;
-
-    bool checkBounds(jint index)
-    {
-        return 0 <= index && index < len;
-    }
-
-    void *index(jint index0) const;
-
-    template <typename T>
-    void set(jint index0, T data)
-    {
-        *(T *) index(index0) = data;
-    }
-
-    void set(int index0, jref value);
-
-    template <typename T>
-    T get(jint index0) const
-    {
-        return *(T *) index(index0);
-    }
-
-
-    static void copy(Array *dst, jint dst_pos, const Array *src, jint src_pos, jint len);
-    size_t size() const override;
-    //Array *clone() const;
-    std::string toString() const override;
-};
-
-
 static inline Object *newObject(Class *c)
 {
     return Object::newObject(c);
 }
 
-static inline jstrref newString(const utf8_t *str)
-{
-    if (g_jdk_version_9_and_upper) {
-        return Object::newString_jdk_9_and_upper(str);
-    } else {
-        return Object::newString_jdk_8_and_under(str);
-    }
-}
-
-struct StrObjEquals {
-    bool operator()(Object *x, Object *y) const;
-};
-
-struct StrObjHash {
-    size_t operator()(Object *x) const;
-};
-
-static inline Array *newArray(Class *ac, jint arrLen)
-{
-    return Array::newArray(ac, arrLen);
-}
-
-static inline Array *newMultiArray(Class *ac, jint dim, const jint lens[])
-{
-    return Array::newMultiArray(ac, dim, lens);
-}
 
 #endif //JVM_JOBJECT_H

@@ -4,8 +4,9 @@
 
 #include "../../registry.h"
 #include "../../../objects/object.h"
+#include "../../../objects/array_object.h"
 #include "../../../runtime/thread_info.h"
-#include "../../../runtime/Frame.h"
+#include "../../../runtime/frame.h"
 
 /*
  * Returns a reference to the currently executing thread Object.

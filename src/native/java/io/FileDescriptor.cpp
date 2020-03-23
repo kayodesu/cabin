@@ -3,7 +3,7 @@
  */
 
 #include "../../registry.h"
-#include "../../../runtime/Frame.h"
+#include "../../../runtime/frame.h"
 
 /*
  * This routine initializes JNI field offsets for the class

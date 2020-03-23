@@ -4,9 +4,10 @@
 
 #include "../../registry.h"
 #include "../../../objects/object.h"
+#include "../../../objects/array_object.h"
 #include "../../../runtime/thread_info.h"
 #include "../../../symbol.h"
-#include "../../../runtime/Frame.h"
+#include "../../../runtime/frame.h"
 #include "../../../objects/class.h"
 #include "../../../objects/class_loader.h"
 

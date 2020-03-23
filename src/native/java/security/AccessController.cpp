@@ -7,7 +7,7 @@
 #include "../../../interpreter/interpreter.h"
 #include "../../../symbol.h"
 #include "../../../objects/class.h"
-#include "../../../runtime/Frame.h"
+#include "../../../runtime/frame.h"
 
 // @CallerSensitive
 // public static native <T> T doPrivileged(PrivilegedAction<T> action);

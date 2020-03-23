@@ -10,8 +10,9 @@
 #include "../objects/object.h"
 #include "../objects/class.h"
 #include "../objects/field.h"
+#include "../objects/array_object.h"
 #include "../interpreter/interpreter.h"
-#include "Frame.h"
+#include "frame.h"
 
 #if TRACE_THREAD
 #define TRACE PRINT_TRACE

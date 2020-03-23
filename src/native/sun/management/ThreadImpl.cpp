@@ -2,8 +2,9 @@
  * Author: kayo
  */
 
-#include "../../../runtime/Frame.h"
+#include "../../../runtime/frame.h"
 #include "../../../runtime/thread_info.h"
+#include "../../../objects/array_object.h"
 
 /*
  * VM support where maxDepth == -1 to request entire stack dump

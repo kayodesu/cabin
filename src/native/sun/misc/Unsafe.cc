@@ -5,8 +5,9 @@
 #include <iostream>
 #include "../../registry.h"
 #include "../../../objects/object.h"
+#include "../../../objects/array_object.h"
 #include "../../../util/endianness.h"
-#include "../../../runtime/Frame.h"
+#include "../../../runtime/frame.h"
 
 /* todo
 http://www.docjar.com/docs/api/sun/misc/Unsafe.html#park%28boolean,%20long%29

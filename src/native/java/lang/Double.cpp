@@ -3,7 +3,7 @@
  */
 
 #include "../../registry.h"
-#include "../../../runtime/Frame.h"
+#include "../../../runtime/frame.h"
 
 // public static native long doubleToRawLongBits(double value);
 static void doubleToRawLongBits(Frame *frame)

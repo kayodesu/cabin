@@ -10,6 +10,7 @@
 #include "class_loader.h"
 #include "../symbol.h"
 #include "class.h"
+#include "array_object.h"
 #include "../interpreter/interpreter.h"
 #include "../runtime/thread_info.h"
 #include "prims.h"

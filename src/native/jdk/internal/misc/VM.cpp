@@ -2,7 +2,7 @@
  * Author: kayo
  */
 
-#include "../../../../runtime/Frame.h"
+#include "../../../../runtime/frame.h"
 #include "../../../../interpreter/interpreter.h"
 
 // private static native void initialize();

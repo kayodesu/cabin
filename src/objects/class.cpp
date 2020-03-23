@@ -7,10 +7,12 @@
 #include <sstream>
 #include <cassert>
 #include <pthread.h>
+#include <iostream>
 #include "../runtime/thread_info.h"
 #include "class.h"
 #include "method.h"
 #include "field.h"
+#include "array_object.h"
 #include "../interpreter/interpreter.h"
 #include "prims.h"
 #include "invoke.h"
@@ -109,13 +111,15 @@ void Class::parseAttribute(BytecodeReader &r)
         } else if (S(ModuleMainClass) == attr_name) {
             moduleMainClass = cp.className(r.readu2());
         } else if (S(NestHost) == attr_name) {
-            utf8_t *name = cp.className(r.readu2());
-            nest_host = loadClass(loader, name);
+//            utf8_t *name = cp.className(r.readu2());
+            nest_host = cp.resolveClass(r.reads2());//loadClass(loader, name);
         } else if (S(NestMembers) == attr_name) {
             u2 num = r.readu2();
             for (u2 j = 0; j < num; j++) {
                 utf8_t *name = cp.className(r.readu2());
-                nest_members.push_back(loadClass(loader, name));
+                // todo 不要在这里 loadClass，有死循环的问题。
+                // 比如java.lang.invoke.TypeDescriptor和其NestMember：java.lang.invoke.TypeDescriptor$OfField
+//                nest_members.push_back(loadClass(loader, name));
             }
         } else { // unknown attribute
             printvm("unknown attribute: %s\n", attr_name); // todo
@@ -152,7 +156,7 @@ void Class::createVtable()
     for (auto m : methods) {
         if (m->isVirtual()) {
             auto iter = find_if(vtable.begin(), vtable.end(), [=](Method *m0){
-                return utf8::equals(m->name, m0->name) && utf8::equals(m->descriptor, m0->descriptor); });
+                return utf8::equals(m->name, m0->name) && utf8::equals(m->type, m0->type); });
             if (iter != vtable.end()) {
                 // 重写了父类的方法，更新
                 m->vtableIndex = (*iter)->vtableIndex;
@@ -212,7 +216,7 @@ void Class::createItable()
     // 遍历 itable.methods，检查有没有接口函数在本类中被重写了。
     for (auto m : itable.methods) {
         for (auto m0 : methods) {
-            if (utf8::equals(m->name, m0->name) && utf8::equals(m->descriptor, m0->descriptor)) {
+            if (utf8::equals(m->name, m0->name) && utf8::equals(m->type, m0->type)) {
                 m = m0; // 重写了接口方法，更新
                 break;
             }
@@ -230,7 +234,7 @@ void Class::createItable()
         itable.interfaces.emplace_back(ifc, itable.methods.size());
         for (auto m : ifc->methods) {
             for (auto m0 : methods) {
-                if (utf8::equals(m->name, m0->name) && utf8::equals(m->descriptor, m0->descriptor)) {
+                if (utf8::equals(m->name, m0->name) && utf8::equals(m->type, m0->type)) {
                     m = m0; // 重写了接口方法，更新
                     break;
                 }
@@ -545,7 +549,7 @@ Field *Class::getDeclaredInstField(int id, bool ensureExist)
 Method *Class::getDeclaredMethod(const utf8_t *name, const utf8_t *descriptor, bool ensureExist)
 {
     for (auto m : methods) {
-        if (utf8::equals(m->name, name) && utf8::equals(m->descriptor, descriptor))
+        if (utf8::equals(m->name, name) && utf8::equals(m->type, descriptor))
             return m;
     }
 
@@ -561,7 +565,7 @@ Method *Class::getDeclaredMethod(const utf8_t *name, const utf8_t *descriptor, b
 Method *Class::getDeclaredStaticMethod(const utf8_t *name, const utf8_t *descriptor, bool ensureExist)
 {
     for (auto m : methods) {
-        if (m->isStatic() && utf8::equals(m->name, name) && utf8::equals(m->descriptor, descriptor))
+        if (m->isStatic() && utf8::equals(m->name, name) && utf8::equals(m->type, descriptor))
             return m;
     }
 
@@ -577,7 +581,7 @@ Method *Class::getDeclaredStaticMethod(const utf8_t *name, const utf8_t *descrip
 Method *Class::getDeclaredInstMethod(const utf8_t *name, const utf8_t *descriptor, bool ensureExist)
 {
     for (auto m : methods) {
-        if (!m->isStatic() && utf8::equals(m->name, name) && utf8::equals(m->descriptor, descriptor))
+        if (!m->isStatic() && utf8::equals(m->name, name) && utf8::equals(m->type, descriptor))
             return m;
     }
 

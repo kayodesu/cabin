@@ -4,7 +4,7 @@
 
 #include <sstream>
 #include "../../registry.h"
-#include "../../../runtime/Frame.h"
+#include "../../../runtime/frame.h"
 #include "../../../interpreter/interpreter.h"
 
 using namespace std;

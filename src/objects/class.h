@@ -18,6 +18,7 @@
 #include "Modifier.h"
 #include "class.h"
 #include "object.h"
+#include "string_object.h"
 #include "../util/bytecode_reader.h"
 #include "../classfile/attributes.h"
 #include "../native/registry.h"
@@ -109,7 +110,7 @@ public:
     struct {
         Class *clazz = nullptr;       // the immediately enclosing class
         Object *name = nullptr;       // the immediately enclosing method or constructor's name (can be null).
-        Object *descriptor = nullptr; // the immediately enclosing method or constructor's descriptor (null if name is).
+        Object *descriptor = nullptr; // the immediately enclosing method or constructor's type (null if name is).
     } enclosing;
 
     std::vector<InnerClass> inner_classes;

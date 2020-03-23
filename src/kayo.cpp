@@ -16,6 +16,7 @@
 #include "objects/class.h"
 #include "objects/method.h"
 #include "objects/prims.h"
+#include "objects/array_object.h"
 #include "interpreter/interpreter.h"
 
 using namespace std;
@@ -308,7 +309,7 @@ static void initJVM(int argc, char *argv[])
     }
     g_java_home = home;
 
-    g_java_home = R"(C:\Program Files\Java\jdk1.8.0_221)"; // todo for testing
+//    g_java_home = R"(C:\Program Files\Java\jdk1.8.0_221)"; // todo for testing
 
     /* Access JAVA_HOME/release file to get the version of JDK */
     ifstream ifs(g_java_home + "/release");

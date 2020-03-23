@@ -6,8 +6,9 @@
 #include "../../../objects/object.h"
 #include "../../../objects/class.h"
 #include "../../../objects/field.h"
+#include "../../../objects/array_object.h"
 #include "../../../interpreter/interpreter.h"
-#include "../../../runtime/Frame.h"
+#include "../../../runtime/frame.h"
 #include "../../../runtime/thread_info.h"
 
 using namespace utf8;

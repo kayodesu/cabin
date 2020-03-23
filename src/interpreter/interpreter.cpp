@@ -8,9 +8,10 @@
 #include "../kayo.h"
 #include "../debug.h"
 #include "../runtime/thread_info.h"
-#include "../runtime/Frame.h"
+#include "../runtime/frame.h"
 #include "../classfile/constants.h"
 #include "../objects/class.h"
+#include "../objects/array_object.h"
 #include "../objects/method.h"
 #include "../objects/field.h"
 #include "../objects/invoke.h"
@@ -985,7 +986,7 @@ __method_return:
                     resolved_method = obj->clazz->vtable[m->vtableIndex];
                 }
 
-                assert(resolved_method == obj->clazz->lookupMethod(m->name, m->descriptor));
+                assert(resolved_method == obj->clazz->lookupMethod(m->name, m->type));
                 goto __invoke_method;
             }
             case JVM_OPC_invokespecial: {
@@ -1003,7 +1004,7 @@ __method_return:
                     && !m->isPrivate()
                     && clazz->isSubclassOf(m->clazz) // todo
                     && !utf8::equals(m->name, S(object_init))) {
-                    m = clazz->superClass->lookupMethod(m->name, m->descriptor);
+                    m = clazz->superClass->lookupMethod(m->name, m->type);
                 }
 
 			    if (m->isAbstract()) {
@@ -1068,7 +1069,7 @@ __method_return:
                     thread_throw(new NullPointerException);
                 }
 
-			    Method *method = obj->clazz->lookupMethod(m->name, m->descriptor);
+			    Method *method = obj->clazz->lookupMethod(m->name, m->type);
 			    if (method->isAbstract()) {
 			        thread_throw(new AbstractMethodError());
 			    }
@@ -1174,23 +1175,23 @@ __invoke_method: {
                     thread_throw(new NegativeArraySizeException);
                 }
 
-                int arrType = reader->readu1();
-                const char *arrClassName;
-                switch (arrType) {
-                    case JVM_AT_BOOLEAN: arrClassName = "[Z"; break;
-                    case JVM_AT_CHAR:    arrClassName = "[C"; break;
-                    case JVM_AT_FLOAT:   arrClassName = "[F"; break;
-                    case JVM_AT_DOUBLE:  arrClassName = "[D"; break;
-                    case JVM_AT_BYTE:    arrClassName = "[B"; break;
-                    case JVM_AT_SHORT:   arrClassName = "[S"; break;
-                    case JVM_AT_INT:     arrClassName = "[I"; break;
-                    case JVM_AT_LONG:    arrClassName = "[J"; break;
-                    default:
-                        thread_throw(new UnknownError(NEW_MSG("error. Invalid array type: %d\n", arrType)));
-                }
-
-			    auto c = loadArrayClass(arrClassName);
-			    frame->pushr(newArray(c, arrLen));
+                auto arrType = reader->readu1();
+//                const char *arrClassName;
+//                switch (arrType) {
+//                    case JVM_AT_BOOLEAN: arrClassName = "[Z"; break;
+//                    case JVM_AT_CHAR:    arrClassName = "[C"; break;
+//                    case JVM_AT_FLOAT:   arrClassName = "[F"; break;
+//                    case JVM_AT_DOUBLE:  arrClassName = "[D"; break;
+//                    case JVM_AT_BYTE:    arrClassName = "[B"; break;
+//                    case JVM_AT_SHORT:   arrClassName = "[S"; break;
+//                    case JVM_AT_INT:     arrClassName = "[I"; break;
+//                    case JVM_AT_LONG:    arrClassName = "[J"; break;
+//                    default:
+//                        thread_throw(new UnknownError(NEW_MSG("error. Invalid array type: %d\n", arrType)));
+//                }
+//
+//			    auto c = loadArrayClass(arrClassName);
+			    frame->pushr(newTypeArray(ArrayType(arrType), arrLen));
                 break;
             }
             case JVM_OPC_anewarray: {

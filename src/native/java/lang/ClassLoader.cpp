@@ -5,7 +5,7 @@
 #include "../../registry.h"
 #include "../../../kayo.h"
 #include "../../../objects/class.h"
-#include "../../../runtime/Frame.h"
+#include "../../../runtime/frame.h"
 
 using namespace utf8;
 
