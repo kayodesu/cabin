@@ -16,9 +16,15 @@
  * Copyright (c) 1996 Netscape Communications Corporation. All rights reserved.
  *****************************************************************************/
 
+#ifdef __cplusplus
+#include <cstdio>
+#include <cstdarg>
+#else
 #include <stdio.h>
 #include <stdarg.h>
-#include "../jtypes.h"
+#endif
+
+#include "jtypes.h"
 
 #define JNIEXPORT __declspec(dllexport)
 #define JNIIMPORT __declspec(dllimport)
@@ -501,8 +507,6 @@ struct JNINativeInterface_ {
 struct JNIEnv_ {
     const struct JNINativeInterface_ *functions;
 #ifdef __cplusplus
-
-    JNIEnv_(const struct JNINativeInterface_ *functions) noexcept;
 
     jint GetVersion()
     {

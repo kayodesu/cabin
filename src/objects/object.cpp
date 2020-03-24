@@ -167,16 +167,7 @@ bool Object::isInstanceOf(Class *c) const
 
 const slot_t *Object::unbox() const
 {
-    if (!clazz->isPrimClass()) {
-        jvm_abort(""); // todo
-    }
-
-    // value 的描述符就是基本类型的类名。比如，private final boolean value;
-    Field *f = clazz->lookupField(S(value), clazz->className);
-    if (f == nullptr) {
-        jvm_abort("error, %s, %s\n", S(value), clazz->className); // todo
-    }
-    return data + f->id;
+    return primObjUnbox((jprimref) this);
 }
 
 size_t Object::size() const
@@ -192,21 +183,7 @@ bool Object::isArrayObject() const
 
 utf8_t *Object::toUtf8() const
 {
-    assert(clazz != nullptr);
-    assert(stringClass != nullptr);
-    assert(clazz == stringClass);
-
-    if (g_jdk_version_9_and_upper) {
-        auto value = getInstFieldValue<Array *>(S(value), S(array_B));
-        assert(sizeof(utf8_t) == sizeof(jbyte));
-        auto utf8 = new utf8_t[value->len + 1];
-        utf8[value->len] = 0;
-        memcpy(utf8, value->data, value->len * sizeof(jbyte));
-        return utf8;
-    } else {
-        auto value = getInstFieldValue<Array *>(S(value), S(array_C));
-        return unicode::toUtf8((const unicode_t *) (value->data), value->len);
-    }
+    return strObjToUtf8((jstrref) this);
 }
 
 string Object::toString() const

@@ -1,7 +1,11 @@
 #include <algorithm>
-#include "Prims.h"
+#include "prims.h"
 #include "../symbol.h"
 #include "../util/encoding.h"
+#include "../kayo.h"
+#include "field.h"
+#include "object.h"
+#include "class.h"
 
 /*
  * Author: kayo
@@ -60,4 +64,21 @@ const utf8_t *getPrimClassName(utf8_t descriptor)
             return t.class_name;
     }
     return nullptr;
+}
+
+const slot_t *primObjUnbox(jprimref po)
+{
+    assert(po != nullptr);
+
+    Class *c = po->clazz;
+    if (!c->isPrimClass()) {
+        jvm_abort(""); // todo
+    }
+
+    // value 的描述符就是基本类型的类名。比如，private final boolean value;
+    Field *f = c->lookupField(S(value), c->className);
+    if (f == nullptr) {
+        jvm_abort("error, %s, %s\n", S(value), c->className); // todo
+    }
+    return po->data + f->id;
 }

@@ -9,7 +9,7 @@
 #include <cstdlib>
 #include <vector>
 #include <string>
-#include "jtypes.h"
+#include "vmdef.h"
 #include "memory/Heap.h"
 #include "objects/throwables.h"
 #include "symbol.h"

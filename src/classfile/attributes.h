@@ -6,7 +6,8 @@
 #define JVM_ATTRIBUTE_H
 
 #include <vector>
-#include "../jtypes.h"
+#include "../vmdef.h"
+#include "../slot.h"
 #include "../util/bytecode_reader.h"
 
 struct ConstantPool;

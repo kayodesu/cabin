@@ -2,6 +2,7 @@
  * Author: kayo
  */
 
+#include "../slot.h"
 #include "invoke.h"
 #include "class.h"
 #include "method.h"
@@ -9,6 +10,7 @@
 #include "../interpreter/interpreter.h"
 
 using namespace method_type;
+using namespace slot;
 
 jref method_type::fromMethodDescriptor(const utf8_t *descriptor, jref loader)
 {
@@ -61,8 +63,8 @@ jref member_name::memberName(Method *m, jbyte refKind)
     // public MemberName(Class<?> defClass, String name, MethodType type, byte refKind);
     auto cons = mn->getConstructor("(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/invoke/MethodType;B)V");
     jref o = newObject(mn);
-    execJavaFunc(cons, { to_rslot(o), to_rslot(m->clazz), to_rslot(newString(m->name)),
-                         to_rslot(methodType(m)), to_islot(refKind) });
+    execJavaFunc(cons, { rslot(o), rslot(m->clazz), rslot(newString(m->name)),
+                         rslot(methodType(m)), islot(refKind) });
     return o;
 }
 

@@ -205,52 +205,6 @@ ret_type JNICALL Kayo_Call##T##MethodV(JNIEnv *env, jobject obj, jmethodID metho
     return ret_value; \
 }
 
-static void parse_args_va_list(const char *signature, va_list &args, jvalue *values)
-{
-    assert(signature != nullptr && values != nullptr);
-    const char *p = signature;
-    assert(*p == '(');
-    p++; // skip start (
-
-    for (; *p != ')'; values++) {
-        if(*p == 'Z') {
-            values->z = va_arg(args, jboolean);
-            p++;
-        } else if(*p == 'B') {
-            values->b = va_arg(args, jbyte);
-            p++;
-        } else if(*p == 'C') {
-            values->c = va_arg(args, jchar);
-            p++;
-        } else if(*p == 'S') {
-            values->s = va_arg(args, jshort);
-            p++;
-        } else if(*p == 'I') {
-            values->i = va_arg(args, jint);
-            p++;
-        } else if(*p == 'F') {
-            values->f = va_arg(args, jfloat);
-            p++;
-        } else if(*p == 'J') {
-            values->j = va_arg(args, jdouble);
-            p++;
-        } else if(*p == 'D') {
-            values->d = va_arg(args, jdouble);
-            p++;
-        } else {
-            if(*p == '[')
-                for(p++; *p == '['; p++);
-
-            if(*p == 'L')
-                while(*p++ != ';');
-            else
-                p++;
-
-            values->l = va_arg(args, jobject);
-        }
-    }
-}
-
 #define DEFINE_CALL_T_METHOD_A(T, ret_type, ret_value) \
 ret_type JNICALL Kayo_Call##T##MethodA(JNIEnv *env, \
                                        jobject obj, jmethodID methodID, const jvalue *args) \
@@ -305,9 +259,9 @@ ret_type JNICALL Kayo_CallNonvirtual##T##MethodA(JNIEnv *env, jobject obj, \
 }
 
 #define DEFINE_3_CALL_NONVIRTUAL_T_METHODS(T, ret_type, ret_value) \
-    DEFINE_CALL_NONVIRTUAL_T_METHOD(T, ret_type, ret_value) \
+    DEFINE_CALL_NONVIRTUAL_T_METHOD_A(T, ret_type, ret_value) \
     DEFINE_CALL_NONVIRTUAL_T_METHOD_V(T, ret_type, ret_value) \
-    DEFINE_CALL_NONVIRTUAL_T_METHOD_A(T, ret_type, ret_value)
+    DEFINE_CALL_NONVIRTUAL_T_METHOD(T, ret_type, ret_value)
 
 /*
 * 定义 CallStatic_T_Method 镞函数：

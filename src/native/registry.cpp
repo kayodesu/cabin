@@ -187,7 +187,7 @@ void register_all_native_methods()
     }
 }
 
-void initJNI()
-{
-    register_all_native_methods();
-}
+//void initJNI()
+//{
+//    register_all_native_methods();
+//}

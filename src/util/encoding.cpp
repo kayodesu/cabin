@@ -7,6 +7,7 @@
 #include <unordered_set>
 #include <pthread.h>
 #include "encoding.h"
+#include "../kayo.h"
 
 using namespace std;
 
@@ -138,7 +139,10 @@ utf8_t *utf8::slash2DotsDup(const utf8_t *utf8)
 
 unicode_t *utf8::toUnicode(const utf8_t *utf8, unicode_t *buf)
 {
-    assert(utf8 != nullptr && buf != nullptr);
+    assert(utf8 != nullptr);
+    if (buf == nullptr) {
+        buf = new unicode_t[length(utf8) + 1];
+    }
 
     auto tmp = buf;
     while (*utf8) {
@@ -148,11 +152,15 @@ unicode_t *utf8::toUnicode(const utf8_t *utf8, unicode_t *buf)
     return buf;
 }
 
-//unicode_t *utf8::toUnicode(const utf8_t *utf8)
-//{
-//    assert(utf8 != nullptr);
-//    return toUnicode(utf8, new unicode_t[length(utf8) + 1]);
-//}
+unicode_t *utf8::toUnicode(const utf8_t *utf8, jsize utf8_len, unicode_t *buf)
+{
+    assert(utf8 != nullptr);
+    if (buf == nullptr) {
+        buf = new unicode_t[utf8_len + 1];
+    }
+
+    jvm_abort("not implement.");  //  todo
+}
 
 // 将此unicode转化为utf8时，有多少字节
 static size_t utf8ByteCount(const unicode_t *unicode, size_t len)

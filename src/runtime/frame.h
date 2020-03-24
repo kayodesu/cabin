@@ -37,8 +37,6 @@ public:
         assert(ostack != nullptr);
     }
 
-    slot_t getLocal(int index) { return lvars[index]; }
-
     jint getLocalAsInt(int index)
     {
         return ISLOT(lvars + index);
@@ -46,12 +44,12 @@ public:
 
     jshort getLocalAsShort(int index)
     {
-        return (jshort) getLocalAsInt(index);
+        return jint2jshort(getLocalAsInt(index));
     }
 
     jbool getLocalAsBool(int index)
     {
-        return getLocalAsInt(index) != 0;
+        return jint2jbool(getLocalAsInt(index));
     }
 
     jfloat getLocalAsFloat(int index)

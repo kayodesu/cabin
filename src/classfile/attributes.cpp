@@ -5,6 +5,7 @@
 #include <vector>
 #include <sstream>
 #include "../kayo.h"
+#include "../slot.h"
 #include "attributes.h"
 #include "../runtime/thread_info.h"
 #include "../objects/class.h"

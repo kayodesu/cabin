@@ -8,7 +8,7 @@
 #include <exception>
 #include <cassert>
 #include <sstream>
-#include "../jtypes.h"
+#include "../vmdef.h"
 #include "../symbol.h"
 
 class Object;

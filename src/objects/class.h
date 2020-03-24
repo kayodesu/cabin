@@ -12,7 +12,7 @@
 #include <unordered_set>
 #include <mutex>
 #include <pthread.h>
-#include "../jtypes.h"
+#include "../vmdef.h"
 #include "constant_pool.h"
 #include "class_loader.h"
 #include "Modifier.h"

@@ -5,7 +5,7 @@
 #ifndef JVM_GC_H
 #define JVM_GC_H
 
-#include "../jtypes.h"
+#include "../vmdef.h"
 
 class MemMgr;
 

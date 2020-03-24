@@ -1,5 +1,5 @@
 #include "../../registry.h"
-#include "../../../jtypes.h"
+#include "../../../vmdef.h"
 #include "../../../runtime/frame.h"
 #include "../../../objects/class.h"
 

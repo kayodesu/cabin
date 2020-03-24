@@ -11,6 +11,7 @@
 #include "../classfile/constants.h"
 #include "../util/encoding.h"
 #include "../kayo.h"
+#include "../slot.h"
 #include "../native/jni.h"
 
 class Field;
@@ -89,7 +90,7 @@ public:
     bool isInstanceOf(Class *c) const;
 
     const slot_t *unbox() const; // present only if primitive Object
-    utf8_t *toUtf8() const;       // present only if Object of java/lang/String
+    utf8_t *toUtf8() const;      // present only if Object of java/lang/String
     // present only if object of java/lang/ClassLoader
     // save the all loaded classes by this ClassLoader
     std::unordered_map<const utf8_t *, Class *, utf8::Hash, utf8::Comparator> *classes = nullptr;

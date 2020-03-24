@@ -5,7 +5,7 @@
 #ifndef JVM_CONVERT_H
 #define JVM_CONVERT_H
 
-#include "../jtypes.h"
+#include "../vmdef.h"
 
 /*
  * 将字节数组转换为32位整形.

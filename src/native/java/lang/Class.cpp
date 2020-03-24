@@ -12,6 +12,7 @@
 #include "../../../runtime/thread_info.h"
 
 using namespace utf8;
+using namespace slot;
 
 /*
  * Called after security check for system loader access checks have been made.
@@ -475,16 +476,16 @@ static void getDeclaredFields0(Frame *frame)
         fieldArr->set(i, o);
 
         execJavaFunc(constructor, {
-                to_rslot(o), // this
-                to_rslot(_this), // declaring class
+                rslot(o), // this
+                rslot(_this), // declaring class
                 // name must be interned.
                 // 参见 java/lang/reflect/Field 的说明
-                to_rslot(stringClass->intern(cls->fields[i]->name)), // name
-                to_rslot(cls->fields[i]->getType()), // type
-                to_islot(cls->fields[i]->modifiers), /* modifiers */
-                to_islot(cls->fields[i]->id), /* slot   todo */
-                to_rslot(jnull), /* signature  todo */
-                to_rslot(jnull), /* annotations  todo */
+                rslot(stringClass->intern(cls->fields[i]->name)), // name
+                rslot(cls->fields[i]->getType()), // type
+                islot(cls->fields[i]->modifiers), /* modifiers */
+                islot(cls->fields[i]->id), /* slot   todo */
+                rslot(jnull), /* signature  todo */
+                rslot(jnull), /* annotations  todo */
         });
     }
 }
@@ -525,20 +526,20 @@ static void getDeclaredMethods0(Frame *frame)
         methodArr->set(i, o);
 
         execJavaFunc(constructor, {
-                to_rslot(o),        /* this  */
-                to_rslot(_this), /* declaring class */
+                rslot(o),        /* this  */
+                rslot(_this), /* declaring class */
                 // name must be interned.
                 // 参见 java/lang/reflect/Method 的说明
-                to_rslot(stringClass->intern(method->name)), /* name */
-                to_rslot(method->getParameterTypes()), /* parameter types */
-                to_rslot(method->getReturnType()),     /* return type */
-                to_rslot(method->getExceptionTypes()), /* checked exceptions */
-                to_islot(method->modifiers), /* modifiers*/
-                to_islot(0), /* slot   todo */
-                to_rslot(jnull), /* signature  todo */
-                to_rslot(jnull), /* annotations  todo */
-                to_rslot(jnull), /* parameter annotations  todo */
-                to_rslot(jnull), /* annotation default  todo */
+                rslot(stringClass->intern(method->name)), /* name */
+                rslot(method->getParameterTypes()), /* parameter types */
+                rslot(method->getReturnType()),     /* return type */
+                rslot(method->getExceptionTypes()), /* checked exceptions */
+                islot(method->modifiers), /* modifiers*/
+                islot(0), /* slot   todo */
+                rslot(jnull), /* signature  todo */
+                rslot(jnull), /* annotations  todo */
+                rslot(jnull), /* parameter annotations  todo */
+                rslot(jnull), /* annotation default  todo */
         });
     }
 }
@@ -569,19 +570,19 @@ static void getDeclaredConstructors0(Frame *frame)
     // invoke constructor of class java/lang/reflect/Constructor
     for (int i = 0; i < constructorsCount; i++) {
         auto constructor = constructors[i];
-        struct Object *o = newObject(constructorClass);
+        Object *o = newObject(constructorClass);
         constructorArr->set(i, o);
 
         execJavaFunc(constructor_constructor, {
-                to_rslot(o), // this
-                to_rslot(_this), // declaring class
-                to_rslot(constructor->getParameterTypes()),  // parameter types
-                to_rslot(constructor->getExceptionTypes()),  // checked exceptions
-                to_islot(constructor->modifiers), // modifiers
-                to_islot(0), // slot   todo
-                to_rslot(jnull), // signature  todo
-                to_rslot(jnull), // annotations  todo
-                to_rslot(jnull), // parameter annotations  todo
+                rslot(o), // this
+                rslot(_this), // declaring class
+                rslot(constructor->getParameterTypes()),  // parameter types
+                rslot(constructor->getExceptionTypes()),  // checked exceptions
+                islot(constructor->modifiers), // modifiers
+                islot(0), // slot   todo
+                rslot(jnull), // signature  todo
+                rslot(jnull), // annotations  todo
+                rslot(jnull), // parameter annotations  todo
         });
     }
 }

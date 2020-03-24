@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <cstddef>
 #include <cassert>
-#include "../jtypes.h"
+#include "../vmdef.h"
 
 /*
  * jvm内部使用的utf8是一种改进过的utf8，与标准的utf8有所不同，
@@ -41,9 +41,8 @@ namespace utf8 {
     utf8_t *slash2DotsDup(const utf8_t *utf8);
 
     // 不会在buf后面添加字符串结束符'\u0000'
-    unicode_t *toUnicode(const utf8_t *utf8, unicode_t *buf);
-
-//    unicode_t *toUnicode(const utf8_t *utf8);
+    unicode_t *toUnicode(const utf8_t *utf8, unicode_t *buf = nullptr);
+    unicode_t *toUnicode(const utf8_t *utf8, jsize utf8_len, unicode_t *buf = nullptr);
 
     struct Hash {
         size_t operator()(const utf8_t *utf8) const {

@@ -8,12 +8,12 @@
 #include "object.h"
 
 jstrref newString(const utf8_t *str);
+jstrref newString(const unicode_t *str, jsize len);
 
-static inline jstrref newStringUnicode(const unicode_t *str, jsize len)
-{
-    // todo
-    jvm_abort("not implement.");
-}
+utf8_t *strObjToUtf8(jstrref so);
+
+jsize strObjGetLength(jstrref so);
+jsize strObjGetUTFLength(jstrref so);
 
 struct StrObjEquals {
     bool operator()(Object *x, Object *y) const;

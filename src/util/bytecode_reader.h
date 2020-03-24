@@ -7,7 +7,7 @@
 
 #include <cassert>
 #include <cstring>
-#include "../jtypes.h"
+#include "../vmdef.h"
 #include "../kayo.h"
 #include "convert.h"
 

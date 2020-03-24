@@ -5,7 +5,7 @@
 #ifndef JVM_OUTPUT_H
 #define JVM_OUTPUT_H
 
-#include "jtypes.h"
+#include "vmdef.h"
 
 void write_bytes(jref obj, jbyte bytes[], jint len, bool append);
 

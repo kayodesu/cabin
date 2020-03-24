@@ -5,6 +5,7 @@
 #include "jni_internal.h"
 #include "../objects/array_object.h"
 #include "../interpreter/interpreter.h"
+#include "../runtime/thread_info.h"
 
 GlobalRefTable global_refs;
 GlobalRefTable weak_global_refs;
@@ -56,6 +57,7 @@ jobject JNICALL Kayo_ToReflectedMethod(JNIEnv *env, jclass cls, jmethodID method
 
 jclass JNICALL Kayo_GetSuperclass(JNIEnv *env, jclass sub)
 {
+    assert(env != nullptr && sub != nullptr);
     auto c = to_object_ref<Class>(sub);
     return (jclass) addJNILocalRef(c->superClass);
 }
@@ -126,14 +128,15 @@ jobject JNICALL Kayo_PopLocalFrame(JNIEnv *env, jobject result)
     jvm_abort("not implement.");
 }
 
-jobject JNICALL Kayo_NewGlobalRef(JNIEnv *env, jobject lobj)
+jobject JNICALL Kayo_NewGlobalRef(JNIEnv *env, jobject gref)
 {
-    // todo
-    return addJNIGlobalRef(to_object_ref(lobj));
+    assert(env != nullptr && gref != nullptr);
+    return addJNIGlobalRef(to_object_ref(gref));
 }
 
 void JNICALL Kayo_DeleteGlobalRef(JNIEnv *env, jobject gref)
 {
+    assert(env != nullptr && gref != nullptr);
     auto o = to_object_ref(gref);
     if (o->jni_obj_ref_type == JNIGlobalRefType)
         deleteJNIGlobalRef(o);
@@ -141,29 +144,33 @@ void JNICALL Kayo_DeleteGlobalRef(JNIEnv *env, jobject gref)
 
 void JNICALL Kayo_DeleteLocalRef(JNIEnv *env, jobject obj)
 {
+    assert(env != nullptr && obj != nullptr);
     deleteJNILocalRef(to_object_ref(obj));
 }
 
 jboolean JNICALL Kayo_IsSameObject(JNIEnv *env, jobject obj1, jobject obj2)
 {
     // todo
+    assert(env != nullptr && obj1 != nullptr && obj2 != nullptr);
     jvm_abort("not implement.");
 }
 
 jobject JNICALL Kayo_NewLocalRef(JNIEnv *env, jobject obj)
 {
+    assert(env != nullptr && obj != nullptr);
     return addJNILocalRef(to_object_ref(obj));
 }
 
 jint JNICALL Kayo_EnsureLocalCapacity(JNIEnv *env, jint capacity)
 {
     // todo
+    assert(env != nullptr);
     jvm_abort("not implement.");
 }
 
 jobject JNICALL Kayo_AllocObject(JNIEnv *env, jclass clazz)
 {
-    // todo
+    assert(env != nullptr && clazz != nullptr);
     Class *c = checkClassBeforeAllocObject(to_object_ref<Class>(clazz));
     if (c == nullptr) {
         // todo
@@ -174,7 +181,7 @@ jobject JNICALL Kayo_AllocObject(JNIEnv *env, jclass clazz)
 
 jobject JNICALL Kayo_NewObject(JNIEnv *env, jclass clazz, jmethodID methodID, ...)
 {
-    // todo
+    assert(env != nullptr && clazz != nullptr && methodID != nullptr);
     va_list args;
     va_start(args, methodID);
     jobject o = env->NewObjectV(clazz, methodID, args);
@@ -184,7 +191,7 @@ jobject JNICALL Kayo_NewObject(JNIEnv *env, jclass clazz, jmethodID methodID, ..
 
 jobject JNICALL Kayo_NewObjectV(JNIEnv *env, jclass clazz, jmethodID methodID, va_list args)
 {
-    // todo
+    assert(env != nullptr && clazz != nullptr && methodID != nullptr);
     jobject jo = env->AllocObject(clazz);
     if (jo == nullptr) {
         // todo error
@@ -196,7 +203,7 @@ jobject JNICALL Kayo_NewObjectV(JNIEnv *env, jclass clazz, jmethodID methodID, v
 
 jobject JNICALL Kayo_NewObjectA(JNIEnv *env, jclass clazz, jmethodID methodID, const jvalue *args)
 {
-    // todo
+    assert(env != nullptr && clazz != nullptr && methodID != nullptr);
     jobject jo = env->AllocObject(clazz);
     if (jo == nullptr) {
         // todo error
@@ -208,12 +215,14 @@ jobject JNICALL Kayo_NewObjectA(JNIEnv *env, jclass clazz, jmethodID methodID, c
 
 jclass JNICALL Kayo_GetObjectClass(JNIEnv *env, jobject obj)
 {
+    assert(env != nullptr && obj != nullptr);
     Object *o = to_object_ref(obj);
     return (jclass) addJNILocalRef(o->clazz);
 }
 
 jboolean JNICALL Kayo_IsInstanceOf(JNIEnv *env, jobject obj, jclass clazz)
 {
+    assert(env != nullptr && obj != nullptr && clazz != nullptr);
     auto o = to_object_ref(obj);
     auto c = to_object_ref<Class>(clazz);
     return o->isInstanceOf(c) ? JNI_TRUE : JNI_FALSE;
@@ -532,29 +541,46 @@ void JNICALL Kayo_SetStaticDoubleField(JNIEnv *env, jclass clazz, jfieldID field
 jstring JNICALL Kayo_NewString(JNIEnv *env, const jchar *unicode, jsize len)
 {
     assert(env != nullptr && unicode != nullptr && len >= 0);
-    jstrref str = newStringUnicode(unicode, len);
+    jstrref str = newString(unicode, len);
     return (jstring) addJNILocalRef(str);
 }
 
 jsize JNICALL Kayo_GetStringLength(JNIEnv *env, jstring str)
 {
     assert(env != nullptr && str != nullptr);
-//    jstrref s = to_object_ref(str);
-    // todo
-    jvm_abort("not implement.");
+    return strObjGetLength(to_object_ref(str));
 }
 
 const jchar *JNICALL Kayo_GetStringChars(JNIEnv *env, jstring str, jboolean *isCopy)
 {
     assert(env != nullptr && str != nullptr);
-    // todo
-    jvm_abort("not implement.");
+
+    jstrref so = to_object_ref(str);
+    if (g_jdk_version_9_and_upper) {
+        // byte[] value;
+        auto value = so->getInstFieldValue<Array *>(S(value), S(array_B));
+        if (isCopy != nullptr)
+            *isCopy = JNI_TRUE;
+        return utf8::toUnicode((utf8_t *) value->data, value->len);
+    } else {
+        // char[] value;
+        auto value = so->getInstFieldValue<Array *>(S(value), S(array_C));
+        addJNIGlobalRef(so); /* Pin the reference */
+        if (isCopy != nullptr)
+            *isCopy = JNI_FALSE;
+        return (jchar *) value->data;
+    }
 }
 
 void JNICALL Kayo_ReleaseStringChars(JNIEnv *env, jstring str, const jchar *chars)
 {
-    // todo
-    jvm_abort("not implement.");
+    assert(env != nullptr && str != nullptr && chars != nullptr);
+
+    if (g_jdk_version_9_and_upper) {
+        delete[] chars;
+    } else {
+        deleteJNIGlobalRef(to_object_ref(str)); /* Unpin the reference */
+    }
 }
 
 jstring JNICALL Kayo_NewStringUTF(JNIEnv *env, const char *utf)
@@ -565,20 +591,40 @@ jstring JNICALL Kayo_NewStringUTF(JNIEnv *env, const char *utf)
 
 jsize JNICALL Kayo_GetStringUTFLength(JNIEnv *env, jstring str)
 {
-    // todo
-    jvm_abort("not implement.");
+    assert(env != nullptr && str != nullptr);
+    return strObjGetUTFLength(to_object_ref(str));
 }
 
 const char* JNICALL Kayo_GetStringUTFChars(JNIEnv *env, jstring str, jboolean *isCopy)
 {
-    // todo
-    jvm_abort("not implement.");
+    assert(env != nullptr && str != nullptr);
+
+    jstrref so = to_object_ref(str);
+    if (g_jdk_version_9_and_upper) {
+        // byte[] value;
+        auto value = so->getInstFieldValue<Array *>(S(value), S(array_B));
+        addJNIGlobalRef(so); /* Pin the reference */
+        if (isCopy != nullptr)
+            *isCopy = JNI_FALSE;
+        return (char *) value->data;
+    } else {
+        // char[] value;
+        auto value = so->getInstFieldValue<Array *>(S(value), S(array_C));
+        if (isCopy != nullptr)
+            *isCopy = JNI_TRUE;
+        return unicode::toUtf8((unicode_t *) value->data, value->len);
+    }
 }
 
-void JNICALL Kayo_ReleaseStringUTFChars(JNIEnv *env, jstring str, const char* chars)
+void JNICALL Kayo_ReleaseStringUTFChars(JNIEnv *env, jstring str, const char *chars)
 {
-    // todo
-    jvm_abort("not implement.");
+    assert(env != nullptr && str != nullptr && chars != nullptr);
+
+    if (g_jdk_version_9_and_upper) {
+        deleteJNIGlobalRef(to_object_ref(str)); /* Unpin the reference */
+    } else {
+        delete[] chars;
+    }
 }
 
 jsize JNICALL Kayo_GetArrayLength(JNIEnv *env, jarray array)
@@ -609,14 +655,26 @@ jobjectArray JNICALL Kayo_NewObjectArray(JNIEnv *env, jsize len, jclass clazz, j
 
 jobject JNICALL Kayo_GetObjectArrayElement(JNIEnv *env, jobjectArray array, jsize index)
 {
-    // todo
-    jvm_abort("not implement.");
+    assert(env != nullptr && array != nullptr);
+
+    auto ao = to_object_ref<Array>(array);
+    if (index <= 0 || index >= ao->len) {
+        // todo error
+    }
+
+    return to_jobject(ao->get<jref>(index));
 }
 
 void JNICALL Kayo_SetObjectArrayElement(JNIEnv *env, jobjectArray array, jsize index, jobject val)
 {
-    // todo
-    jvm_abort("not implement.");
+    assert(env != nullptr && array != nullptr);
+
+    auto ao = to_object_ref<Array>(array);
+    if (index <= 0 || index >= ao->len) {
+        // todo error
+    }
+
+    ao->set(index, to_object_ref(val));
 }
 
 template <typename jtypeArray, ArrayType arr_type>
@@ -714,22 +772,26 @@ jint JNICALL Kayo_MonitorExit(JNIEnv *env, jobject obj)
     jvm_abort("not implement.");
 }
 
+static JavaVM java_vm;
+
 jint JNICALL Kayo_GetJavaVM(JNIEnv *env, JavaVM **vm)
 {
-    // todo
-    jvm_abort("not implement.");
+    *vm = &java_vm;
+    return JNI_OK;
 }
 
 void JNICALL Kayo_GetStringRegion(JNIEnv *env, jstring str, jsize start, jsize len, jchar *buf)
 {
-    // todo
-    jvm_abort("not implement.");
+    assert(env != nullptr && str != nullptr && buf != nullptr);
+    auto so = to_object_ref(str);
+    jvm_abort("not implement."); // todo
 }
 
 void JNICALL Kayo_GetStringUTFRegion(JNIEnv *env, jstring str, jsize start, jsize len, char *buf)
 {
-    // todo
-    jvm_abort("not implement.");
+    assert(env != nullptr && str != nullptr && buf != nullptr);
+    auto so = to_object_ref(str);
+    jvm_abort("not implement."); // todo
 }
 
 void* JNICALL Kayo_GetPrimitiveArrayCritical(JNIEnv *env, jarray array, jboolean *isCopy)
@@ -751,16 +813,14 @@ void JNICALL Kayo_ReleasePrimitiveArrayCritical(JNIEnv *env, jarray array, void 
     deleteJNIGlobalRef(to_object_ref<Array>(array));
 }
 
-const jchar * JNICALL Kayo_GetStringCritical(JNIEnv *env, jstring string, jboolean *isCopy)
+const jchar* JNICALL Kayo_GetStringCritical(JNIEnv *env, jstring string, jboolean *isCopy)
 {
-    // todo
-    jvm_abort("not implement.");
+    return Kayo_GetStringChars(env, string, isCopy);
 }
 
 void JNICALL Kayo_ReleaseStringCritical(JNIEnv *env, jstring string, const jchar *cstring)
 {
-    // todo
-    jvm_abort("not implement.");
+    Kayo_ReleaseStringChars(env, string, cstring);
 }
 
 jweak JNICALL Kayo_NewWeakGlobalRef(JNIEnv *env, jobject obj)
@@ -1119,9 +1179,67 @@ static struct JNINativeInterface_ Kayo_JNINativeInterface = {
     .GetModule = Kayo_GetModule,
 };
 
-JNIEnv_::JNIEnv_(const struct JNINativeInterface_ *functions) noexcept
+////////////////////////////////////////////////////////////////////////////////
+
+jint JNICALL Kayo_DestroyJavaVM(JavaVM *vm)
 {
-    this->functions = functions;
+    jvm_abort("not implement.");  //  todo
+    return JNI_OK;
 }
 
-JNIEnv g_jni_env(&Kayo_JNINativeInterface);
+jint JNICALL Kayo_AttachCurrentThread(JavaVM *vm, void **penv, void *args)
+{
+    jvm_abort("not implement.");  //  todo
+    return JNI_OK;
+}
+
+jint JNICALL Kayo_DetachCurrentThread(JavaVM *vm)
+{
+    jvm_abort("not implement.");  //  todo
+    return JNI_OK;
+}
+
+static JNIEnv jni_env;
+
+jint JNICALL Kayo_GetEnv(JavaVM *vm, void **penv, jint version)
+{
+    assert(vm != nullptr && penv != nullptr);
+
+    if (getCurrentThread() == nullptr) {
+        *penv = nullptr;
+        return JNI_EDETACHED;
+    }
+
+    *penv = &jni_env;
+    return JNI_OK;
+}
+
+jint JNICALL Kayo_AttachCurrentThreadAsDaemon(JavaVM *vm, void **penv, void *args)
+{
+    jvm_abort("not implement.");  //  todo
+    return JNI_OK;
+}
+
+const static struct JNIInvokeInterface_ Kayo_JNIInvokeInterface = {
+    .reserved0 = nullptr,
+    .reserved1 = nullptr,
+    .reserved2 = nullptr,
+
+    .DestroyJavaVM = Kayo_DestroyJavaVM,
+    .AttachCurrentThread = Kayo_AttachCurrentThread,
+    .DetachCurrentThread = Kayo_DetachCurrentThread,
+    .GetEnv = Kayo_GetEnv,
+    .AttachCurrentThreadAsDaemon = Kayo_AttachCurrentThreadAsDaemon,
+};
+
+/////////////////////////////////////////////////////////////////////////////
+
+void register_all_native_methods();
+
+void initJNI()
+{
+    jni_env.functions = &Kayo_JNINativeInterface;
+    java_vm.functions = &Kayo_JNIInvokeInterface;
+
+    register_all_native_methods();
+}

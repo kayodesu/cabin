@@ -85,3 +85,42 @@ jstrref newString(const utf8_t *str)
         return newString_jdk_8_and_under(str);
     }
 }
+
+jstrref newString(const unicode_t *str, jsize len)
+{
+    // todo
+    jvm_abort("not implement.");
+}
+
+utf8_t *strObjToUtf8(jstrref so)
+{
+    assert(so != nullptr);
+    assert(stringClass != nullptr);
+    assert(so->clazz == stringClass);
+
+    if (g_jdk_version_9_and_upper) {
+        // byte[] value;
+        auto value = so->getInstFieldValue<Array *>(S(value), S(array_B));
+        static_assert(sizeof(utf8_t) == sizeof(jbyte), ""); // todo
+        auto utf8 = new utf8_t[value->len + 1];
+        utf8[value->len] = 0;
+        memcpy(utf8, value->data, value->len * sizeof(jbyte));
+        return utf8;
+    } else {
+        // char[] value;
+        auto value = so->getInstFieldValue<Array *>(S(value), S(array_C));
+        return unicode::toUtf8((const unicode_t *) (value->data), value->len);
+    }
+}
+
+jsize strObjGetLength(jstrref so)
+{
+    // todo
+    jvm_abort("not implement.");
+}
+
+jsize strObjGetUTFLength(jstrref so)
+{
+    // todo
+    jvm_abort("not implement.");
+}

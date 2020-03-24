@@ -9,7 +9,7 @@
 #include <thread>
 #include <pthread.h>
 #include "../config.h"
-#include "../jtypes.h"
+#include "../vmdef.h"
 #include "../objects/throwables.h"
 #include "../util/encoding.h"
 

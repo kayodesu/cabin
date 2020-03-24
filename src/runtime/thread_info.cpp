@@ -21,6 +21,7 @@
 #endif
 
 using namespace std;
+using namespace slot;
 
 // Thread specific key holding a Thread
 static pthread_key_t thread_key;
@@ -292,11 +293,11 @@ Array *Thread::dump(int maxDepth)
     for (size_t i = 0; i < size; i++) {
         Frame *f = vec[i];
         jref o = newObject(c);
-        execJavaFunc(constructor, { to_rslot(o),
-                                    to_rslot(newString(f->method->clazz->className)),
-                                    to_rslot(newString(f->method->name)),
-                                    to_rslot(newString(f->method->clazz->sourceFileName)),
-                                    to_islot(f->method->getLineNumber(f->reader.pc)) }
+        execJavaFunc(constructor, { rslot(o),
+                                    rslot(newString(f->method->clazz->className)),
+                                    rslot(newString(f->method->name)),
+                                    rslot(newString(f->method->clazz->sourceFileName)),
+                                    islot(f->method->getLineNumber(f->reader.pc)) }
         );
         arr->set(i, o);
     }
