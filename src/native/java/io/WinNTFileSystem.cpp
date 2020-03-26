@@ -2,14 +2,15 @@
  * Author: kayo
  */
 
-#include <unistd.h>
-#include <sys/stat.h>
 #include <fstream>
-#include <fcntl.h>
-#include <dirent.h>
+#include <filesystem>
+#include <sys/stat.h>
 #include "../../registry.h"
 #include "../../../runtime/frame.h"
 #include "../../../objects/object.h"
+
+using namespace std;
+using namespace std::filesystem;
 
 // private static native void initIDs();
 static void initIDs(Frame *frame)
@@ -46,32 +47,19 @@ static void canonicalize0(Frame *frame)
     frame->pushr(so);
 }
 
-// 判断文件或目录是否存在
-static inline bool __exist(const char *path)
-{
-    // todo 这个判断不对，打不开有可能是权限问题或其他问题
-    if (open(path, O_RDONLY) != -1 || opendir(path) != NULL) {
-        return true;
-    }
-    return false;
-}
-
 // public native int getBooleanAttributes(File f);
 static void getBooleanAttributes(Frame *frame)
 {
     auto f = frame->getLocalAsRef(1);
-    auto path = f->getInstFieldValue<Object *>("path", "Ljava/lang/String;")->toUtf8();
+    auto __path = f->getInstFieldValue<Object *>("path", "Ljava/lang/String;")->toUtf8();
 
     jint attr = 0;
-    if (__exist(path)) {
+    path p(__path);
+    if (exists(p)) {
         attr |= 0x01;
 
-        struct stat buf;
-        if (stat(path, &buf) == -1) {
-            jvm_abort("stat faild: %s\n", path);  // todo
-        }
-
-        if (S_ISDIR(buf.st_mode)) {
+        directory_entry entry(p);
+        if (entry.status().type() == file_type::directory) {
             attr |= 0x04;
         }
     }
@@ -84,11 +72,12 @@ static void getLastModifiedTime(Frame *frame)
 {
     // todo
     auto f = frame->getLocalAsRef(1);
-    auto path = f->getInstFieldValue<Object *>("path", "Ljava/lang/String;")->toUtf8();
+    auto __path = f->getInstFieldValue<Object *>("path", "Ljava/lang/String;")->toUtf8();
 
-    struct stat buf;
-    if (stat(path, &buf) == -1) {
-        jvm_abort("stat faild: %s\n", path);  // todo
+//    file_time_type mtime = last_write_time(__path);
+    struct stat buf; // todo 平台相关代码
+    if (stat(__path, &buf) == -1) {
+        jvm_abort("stat faild: %s\n", __path);  // todo
     }
     frame->pushl(buf.st_mtime);
 }
@@ -98,13 +87,10 @@ static void getLength(Frame *frame)
 {
     // todo
     auto f = frame->getLocalAsRef(1);
-    auto path = f->getInstFieldValue<Object *>("path", "Ljava/lang/String;")->toUtf8();
+    auto __path = f->getInstFieldValue<Object *>("path", "Ljava/lang/String;")->toUtf8();
 
-    struct stat buf;
-    if (stat(path, &buf) == -1) {
-        jvm_abort("stat faild: %s\n", path);  // todo
-    }
-    frame->pushl(buf.st_size);
+    uintmax_t size = file_size(__path);
+    frame->pushl(size);
 }
 
 void java_io_WinNTFileSystem_registerNatives()

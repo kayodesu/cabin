@@ -2,13 +2,12 @@
  * Author: Kayo
  */
 
-#include <dirent.h>
-#include <sys/stat.h>
 #include <ctime>
 #include <iostream>
+#include <filesystem>
+#include <fstream>
 #include <typeinfo>
 #include <thread>
-#include <fstream>
 #include "kayo.h"
 #include "debug.h"
 #include "native/registry.h"
@@ -20,6 +19,7 @@
 #include "interpreter/interpreter.h"
 
 using namespace std;
+using namespace std::filesystem;
 using namespace utf8;
 
 #if TRACE_KAYO
@@ -55,70 +55,38 @@ static void *gcLoop(void *arg)
     return nullptr;
 }
 
-static void findJars(const char *path, vector<std::string> &result)
+static void findFilesBySuffix(const char *__path, const char *suffix, vector<std::string> &result)
 {
-    DIR *dir = opendir(path);
-    if (dir == nullptr) {
-        jvm_abort("open dir failed. %s\n", path);
+    path curr_path(__path);
+    if (!exists(curr_path)) {
+        // todo error
+        return;
     }
 
-    struct dirent *entry;
-    struct stat statbuf;
-    while ((entry = readdir(dir)) != nullptr) {
-        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
-            continue;
-        }
+    directory_entry entry(curr_path);
+    if (entry.status().type() != file_type::directory) {
+        // todo error
+        return;
+    }
 
-        char abspath[PATH_MAX];
-        // sprintf 和 snprintf 会自动在加上字符串结束符'\0'
-        sprintf(abspath, "%s/%s", path, entry->d_name); // 绝对路径
+    directory_iterator files(curr_path);
+    for (auto& f: files) {
+        if (f.is_regular_file()) {
+            char abspath[PATH_MAX];
+            // sprintf 和 snprintf 会自动在加上字符串结束符'\0'
+            sprintf(abspath, "%s/%s", __path, f.path().filename().string().c_str()); // 绝对路径
 
-        stat(abspath, &statbuf);
-        if (S_ISREG(statbuf.st_mode)) { // 常规文件
-            char *suffix = strrchr(abspath, '.');
-            if (suffix != nullptr && strcmp(suffix, ".jar") == 0)
+            char *tmp = strrchr(abspath, '.');
+            if (tmp != nullptr && strcmp(++tmp, suffix) == 0)
                 result.emplace_back(abspath);
         }
     }
-
-    closedir(dir);
 }
-
-static void findModules(const char *path, vector<std::string> &result)
-{
-    DIR *dir = opendir(path);
-    if (dir == nullptr) {
-        jvm_abort("open dir failed. %s\n", path);
-    }
-
-    struct dirent *entry;
-    struct stat statbuf;
-    while ((entry = readdir(dir)) != nullptr) {
-        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
-            continue;
-        }
-
-        char abspath[PATH_MAX];
-        // sprintf 和 snprintf 会自动在加上字符串结束符'\0'
-        sprintf(abspath, "%s/%s", path, entry->d_name); // 绝对路径
-
-        stat(abspath, &statbuf);
-        if (S_ISREG(statbuf.st_mode)) { // 常规文件
-            char *suffix = strrchr(abspath, '.');
-            if (suffix != nullptr && strcmp(suffix, ".jmod") == 0)
-                result.emplace_back(abspath);
-        }
-    }
-
-    closedir(dir);
-}
-
 
 static char main_class_name[FILENAME_MAX] = { 0 };
 static char *main_func_args[METHOD_PARAMETERS_MAX_COUNT];
 static int main_func_args_count = 0;
 
-//char javaHome[PATH_MAX] = { 0 };
 string g_java_home;
 
 u2 g_classfile_major_version = 0;
@@ -127,88 +95,8 @@ u2 g_classfile_manor_version = 0;
 static char bootstrap_classpath[PATH_MAX] = { 0 };
 char classpath[PATH_MAX] = { 0 };
 
-static void showUsage(const char *name)
-{
-//    printf("Usage: %s [-options] class [arg1 arg2 ...]\n", name);
-//    printf("\nwhere options include:\n");
-//    printf("\t-help\t\tprint out this message\n");
-//    printf("\t-version\tprint out version number and copyright information\n");
-//    printf("\t-verbose\tprint out information about class loading, etc.\n"); // todo verbose
-//    printf("\t-verbosegc\tprint out results of garbage collection\n"); // todo verbose gc
-//    printf("\t-noasyncgc\tturn off asynchronous garbage collection\n"); // todo noasync gc
-//    printf("\t-bcp<path>\tset the bootstrap class path\n");
-//    printf("\t-cp<path>\tset the class path\n");
-
-    printf("Usage: %s [-options] class [arg1 arg2 ...]\n", name);
-    printf("                 (to run a class file)\n");
-    printf("   or  %s [-options] -jar jarfile [arg1 arg2 ...]\n", name); // todo
-    printf("                 (to run a standalone jar file)\n");
-    printf("\nwhere options include:\n");
-    printf("  -cp\t\t   <jar/zip files and directories separated by :>\n");
-    printf("  -classpath\t   <jar/zip files and directories separated by :>\n"); // todo
-    printf("\t\t   locations where to find application classes\n");
-    printf("  -D<name>=<value> set a system property\n");
-    printf("  -verbose[:class|gc|jni]\n");// todo
-    printf("\t\t   :class print out information about class loading, etc.\n");// todo
-    printf("\t\t   :gc print out results of garbage collection\n");
-    printf("\t\t   :jni print out native method dynamic resolution\n");
-    printf("  -version\t   print out version number and copyright information\n");// todo
-    printf("  -? -help\t   print out this message\n");
-
-//    printf("  -Xbootclasspath:%s\n", BCP_MESSAGE);
-//    printf("\t\t   locations where to find the system classes\n");
-//    printf("  -Xbootclasspath/a:%s\n", BCP_MESSAGE);
-//    printf("\t\t   locations are appended to the bootstrap class path\n");
-//    printf("  -Xbootclasspath/p:%s\n", BCP_MESSAGE);
-//    printf("\t\t   locations are prepended to the bootstrap class path\n");
-//    printf("  -Xbootclasspath/c:%s\n", BCP_MESSAGE);
-//    printf("\t\t   locations where to find Classpath's classes\n");
-//    printf("  -Xbootclasspath/v:%s\n", BCP_MESSAGE);
-//    printf("\t\t   locations where to find JamVM's classes\n");
-//    printf("  -Xasyncgc\t   turn on asynchronous garbage collection\n");
-//    printf("  -Xcompactalways  always compact the heap when garbage-collecting\n");
-//    printf("  -Xnocompact\t   turn off heap-compaction\n");
-//#ifdef INLINING
-//    printf("  -Xnoinlining\t   turn off interpreter inlining\n");
-//    printf("  -Xshowreloc\t   show opcode relocatability\n");
-//    printf("  -Xreplication:[none|always|<value>]\n");
-//    printf("\t\t   none : always re-use super-instructions\n");
-//    printf("\t\t   always : never re-use super-instructions\n");
-//    printf("\t\t   <value> copy when usage reaches threshold value\n");
-//    printf("  -Xcodemem:[unlimited|<size>] (default maximum heapsize/4)\n");
-//#endif
-//    printf("  -Xms<size>\t   set the initial size of the heap\n");
-//    printf("\t\t   (default = MAX(physical memory/64, %dM))\n",
-//           DEFAULT_MIN_HEAP/MB);
-//    printf("  -Xmx<size>\t   set the maximum size of the heap\n");
-//    printf("\t\t   (default = MIN(physical memory/4, %dM))\n",
-//           DEFAULT_MAX_HEAP/MB);
-//    printf("  -Xss<size>\t   set the Java stack size for each thread "
-//                   "(default = %dK)\n", DEFAULT_STACK/KB);
-//    printf("\t\t   size may be followed by K,k or M,m (e.g. 2M)\n");
-}
-
-static void showVersionAndCopyright()
-{
-    // todo 完善 License
-    printf("Java version \"%s\"\n", JAVA_COMPAT_VERSION);
-    printf("kayo version %s\n", VM_VERSION);
-#if defined(__GNUC__) && defined(__VERSION__)
-    printf("Compiled with: g++ %s\n", __VERSION__);
-#endif
-    printf("Copyright (C) 2020 kayo <kayodesu@outlook.com>\n\n");
-    printf("This program is free software; you can redistribute it and/or\n");
-    printf("modify it under the terms of the GNU General Public License\n");
-    printf("as published by the Free Software Foundation; either version 2,\n");
-    printf("or (at your option) any later version.\n\n");
-    printf("This program is distributed in the hope that it will be useful,\n");
-    printf("but WITHOUT ANY WARRANTY; without even the implied warranty of\n");
-    printf("MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n");
-    printf("GNU General Public License for more details.\n");
-//    printf("\nBuild information:\n\nExecution Engine: %s\n", getExecutionEngineName());  // todo
- //   printf("\nBoot Library Path: %s\n", classlibDefaultBootDllPath());  // todo
- //   printf("Boot Class Path: %s\n", classlibDefaultBootClassPath());  // todo
-}
+static void showUsage(const char *name);
+static void showVersionAndCopyright();
 
 static void parseCommandLine(int argc, char *argv[])
 {
@@ -309,7 +197,7 @@ static void initJVM(int argc, char *argv[])
     }
     g_java_home = home;
 
-//    g_java_home = R"(C:\Program Files\Java\jdk1.8.0_221)"; // todo for testing
+    g_java_home = R"(C:\Program Files\Java\jdk1.8.0_221)"; // todo for testing
 
     /* Access JAVA_HOME/release file to get the version of JDK */
     ifstream ifs(g_java_home + "/release");
@@ -356,7 +244,7 @@ static void initJVM(int argc, char *argv[])
     }
 
     if (g_jdk_version_9_and_upper) { // jdk9 开始使用模块
-        findModules((g_java_home + "/jmods").c_str(), g_jdk_modules);
+        findFilesBySuffix((g_java_home + "/jmods").c_str(), "jmod", g_jdk_modules);
 
         // 第0个位置放java.base.jmod，因为java.base.jmod常用，所以放第0个位置首先搜索。
         for (auto iter = g_jdk_modules.begin(); iter != g_jdk_modules.end(); iter++) {
@@ -378,7 +266,7 @@ static void initJVM(int argc, char *argv[])
             strcat(bootstrap_classpath, "/jre/lib");
         }
 
-        findJars(bootstrap_classpath, jreLibJars);
+        findFilesBySuffix(bootstrap_classpath, "jar", jreLibJars);
 
         // 第0个位置放rt.jar，因为rt.jar常用，所以放第0个位置首先搜索。
         for (auto iter = jreLibJars.begin(); iter != jreLibJars.end(); iter++) {
@@ -397,7 +285,7 @@ static void initJVM(int argc, char *argv[])
             strcat(extension_classpath, "/ext");  // todo JDK9+ 的目录结构有变动！！！！！！！
         }
 
-        findJars(extension_classpath, jreExtJars);
+        findFilesBySuffix(extension_classpath, "jar", jreExtJars);
     }
 
     if (classpath[0] == 0) {  // empty
@@ -405,7 +293,7 @@ static void initJVM(int argc, char *argv[])
         if (cp != nullptr) {
             strcpy(classpath, cp);
         } else {
-           getcwd(classpath, PATH_MAX); // current working path
+           // todo error. no CLASSPATH！
         }
     }
 //    else {
@@ -520,4 +408,88 @@ int main(int argc, char* argv[])
 
     printf("init jvm: %lds\n", ((long)(time2)) - ((long)(time1)));
     return 0;
+}
+
+
+static void showUsage(const char *name)
+{
+//    printf("Usage: %s [-options] class [arg1 arg2 ...]\n", name);
+//    printf("\nwhere options include:\n");
+//    printf("\t-help\t\tprint out this message\n");
+//    printf("\t-version\tprint out version number and copyright information\n");
+//    printf("\t-verbose\tprint out information about class loading, etc.\n"); // todo verbose
+//    printf("\t-verbosegc\tprint out results of garbage collection\n"); // todo verbose gc
+//    printf("\t-noasyncgc\tturn off asynchronous garbage collection\n"); // todo noasync gc
+//    printf("\t-bcp<path>\tset the bootstrap class path\n");
+//    printf("\t-cp<path>\tset the class path\n");
+
+    printf("Usage: %s [-options] class [arg1 arg2 ...]\n", name);
+    printf("                 (to run a class file)\n");
+    printf("   or  %s [-options] -jar jarfile [arg1 arg2 ...]\n", name); // todo
+    printf("                 (to run a standalone jar file)\n");
+    printf("\nwhere options include:\n");
+    printf("  -cp\t\t   <jar/zip files and directories separated by :>\n");
+    printf("  -classpath\t   <jar/zip files and directories separated by :>\n"); // todo
+    printf("\t\t   locations where to find application classes\n");
+    printf("  -D<name>=<value> set a system property\n");
+    printf("  -verbose[:class|gc|jni]\n");// todo
+    printf("\t\t   :class print out information about class loading, etc.\n");// todo
+    printf("\t\t   :gc print out results of garbage collection\n");
+    printf("\t\t   :jni print out native method dynamic resolution\n");
+    printf("  -version\t   print out version number and copyright information\n");// todo
+    printf("  -? -help\t   print out this message\n");
+
+//    printf("  -Xbootclasspath:%s\n", BCP_MESSAGE);
+//    printf("\t\t   locations where to find the system classes\n");
+//    printf("  -Xbootclasspath/a:%s\n", BCP_MESSAGE);
+//    printf("\t\t   locations are appended to the bootstrap class path\n");
+//    printf("  -Xbootclasspath/p:%s\n", BCP_MESSAGE);
+//    printf("\t\t   locations are prepended to the bootstrap class path\n");
+//    printf("  -Xbootclasspath/c:%s\n", BCP_MESSAGE);
+//    printf("\t\t   locations where to find Classpath's classes\n");
+//    printf("  -Xbootclasspath/v:%s\n", BCP_MESSAGE);
+//    printf("\t\t   locations where to find JamVM's classes\n");
+//    printf("  -Xasyncgc\t   turn on asynchronous garbage collection\n");
+//    printf("  -Xcompactalways  always compact the heap when garbage-collecting\n");
+//    printf("  -Xnocompact\t   turn off heap-compaction\n");
+//#ifdef INLINING
+//    printf("  -Xnoinlining\t   turn off interpreter inlining\n");
+//    printf("  -Xshowreloc\t   show opcode relocatability\n");
+//    printf("  -Xreplication:[none|always|<value>]\n");
+//    printf("\t\t   none : always re-use super-instructions\n");
+//    printf("\t\t   always : never re-use super-instructions\n");
+//    printf("\t\t   <value> copy when usage reaches threshold value\n");
+//    printf("  -Xcodemem:[unlimited|<size>] (default maximum heapsize/4)\n");
+//#endif
+//    printf("  -Xms<size>\t   set the initial size of the heap\n");
+//    printf("\t\t   (default = MAX(physical memory/64, %dM))\n",
+//           DEFAULT_MIN_HEAP/MB);
+//    printf("  -Xmx<size>\t   set the maximum size of the heap\n");
+//    printf("\t\t   (default = MIN(physical memory/4, %dM))\n",
+//           DEFAULT_MAX_HEAP/MB);
+//    printf("  -Xss<size>\t   set the Java stack size for each thread "
+//                   "(default = %dK)\n", DEFAULT_STACK/KB);
+//    printf("\t\t   size may be followed by K,k or M,m (e.g. 2M)\n");
+}
+
+static void showVersionAndCopyright()
+{
+    // todo 完善 License
+    printf("Java version \"%s\"\n", JAVA_COMPAT_VERSION);
+    printf("kayo version %s\n", VM_VERSION);
+#if defined(__GNUC__) && defined(__VERSION__)
+    printf("Compiled with: g++ %s\n", __VERSION__);
+#endif
+    printf("Copyright (C) 2020 kayo <kayodesu@outlook.com>\n\n");
+    printf("This program is free software; you can redistribute it and/or\n");
+    printf("modify it under the terms of the GNU General Public License\n");
+    printf("as published by the Free Software Foundation; either version 2,\n");
+    printf("or (at your option) any later version.\n\n");
+    printf("This program is distributed in the hope that it will be useful,\n");
+    printf("but WITHOUT ANY WARRANTY; without even the implied warranty of\n");
+    printf("MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n");
+    printf("GNU General Public License for more details.\n");
+//    printf("\nBuild information:\n\nExecution Engine: %s\n", getExecutionEngineName());  // todo
+    //   printf("\nBoot Library Path: %s\n", classlibDefaultBootDllPath());  // todo
+    //   printf("Boot Class Path: %s\n", classlibDefaultBootClassPath());  // todo
 }
