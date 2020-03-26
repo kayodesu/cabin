@@ -9,7 +9,7 @@ An experimental JVM written in C++.
 ## Dependence
 * pthread lib
 * jre8 lib
-* zlib
+* zlib, minizip
 
 ## Features Support
 * Java arithmetic, flow control, object-oriented programming(virtual method, inherit, etc.)
