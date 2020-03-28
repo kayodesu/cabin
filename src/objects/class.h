@@ -21,7 +21,6 @@
 #include "string_object.h"
 #include "../util/bytecode_reader.h"
 #include "../classfile/attributes.h"
-#include "../native/registry.h"
 #include "../classfile/constants.h"
 
 class Method;

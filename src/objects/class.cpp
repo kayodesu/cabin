@@ -16,7 +16,6 @@
 #include "../interpreter/interpreter.h"
 #include "prims.h"
 #include "invoke.h"
-#include "../native/registry.h"
 #include "../classfile/constants.h"
 
 using namespace std;

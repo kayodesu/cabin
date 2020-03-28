@@ -1,5 +1,6 @@
-#include "../../registry.h"
+#include "../../jni_inner.h"
 #include "../../../kayo.h"
+#include "../../../runtime/frame.h"
 
 /*
  * Author: kayo
@@ -80,18 +81,21 @@ static void setLength(Frame *frame)
     jvm_abort("setLength");
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "open0", "(Ljava/lang/String;I)V", (void *) open0 },
+        { "close0", "()V", (void *) close0 },
+        { "writeBytes", "([BII)V", (void *) writeBytes },
+        { "write0", "(I)V", (void *) write0 },
+        { "readBytes", "([BII)I", (void *) readBytes },
+        { "read", "()I", (void *) read },
+        { "seek0", "(J)V", (void *) seek0 },
+        { "getFilePointer", "()J", (void *) getFilePointer },
+        { "length", "()J", (void *) length },
+        { "setLength", "(J)V", (void *) setLength },
+};
+
 void java_io_RandomAccessFile_registerNatives()
 {
-#undef C
-#define C "java/io/RandomAccessFile"
-    registerNative(C, "open0", "(Ljava/lang/String;I)V", open0);
-    registerNative(C, "close0", "()V", close0);
-    registerNative(C, "writeBytes", "([BII)V", writeBytes);
-    registerNative(C, "write0", "(I)V", write0);
-    registerNative(C, "readBytes", "([BII)I", readBytes);
-    registerNative(C, "read", "()I", read);
-    registerNative(C, "seek0", "(J)V", seek0);
-    registerNative(C, "getFilePointer", "()J", getFilePointer);
-    registerNative(C, "length", "()J", length);
-    registerNative(C, "setLength", "(J)V", setLength);
+    registerNatives("java/io/RandomAccessFile", methods, ARRAY_LENGTH(methods));
 }

@@ -2,7 +2,7 @@
  * Author: Jia Yang
  */
 
-#include "../../registry.h"
+#include "../../jni_inner.h"
 #include "../../../objects/object.h"
 #include "../../../kayo.h"
 #include "../../../runtime/frame.h"
@@ -38,9 +38,14 @@ static void getClassAccessFlags(Frame *frame)
     frame->pushi(type->clazz->modifiers);
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "getCallerClass", "()Ljava/lang/Class;", (void *) getCallerClass },
+        { "getCallerClass", "(I)Ljava/lang/Class;", (void *) getCallerClass0 },
+        { "getClassAccessFlags", "(Ljava/lang/Class;)I", (void *) getClassAccessFlags },
+};
+
 void sun_reflect_Reflection_registerNatives()
 {
-    registerNative("sun/reflect/Reflection", "getCallerClass", "()Ljava/lang/Class;", getCallerClass);
-    registerNative("sun/reflect/Reflection", "getCallerClass", "(I)Ljava/lang/Class;", getCallerClass0);
-    registerNative("sun/reflect/Reflection", "getClassAccessFlags", "(Ljava/lang/Class;)I", getClassAccessFlags);
+    registerNatives("sun/reflect/Reflection", methods, ARRAY_LENGTH(methods));
 }

@@ -2,7 +2,7 @@
  * Author: kayo
  */
 
-#include "../../registry.h"
+#include "../../jni_inner.h"
 #include "../../../runtime/frame.h"
 
 /*
@@ -60,9 +60,14 @@ static void sync(Frame *frame)
     jvm_abort("error\n"); // todo
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "initIDs", "()V", (void *) initIDs },
+        { "set", "(I)J", (void *) set },
+        { "sync", "()V", (void *) sync },
+};
+
 void java_io_FileDescriptor_registerNatives()
 {
-    registerNative("java/io/FileDescriptor", "initIDs", "()V", initIDs);
-    registerNative("java/io/FileDescriptor", "set", "(I)J", set);
-    registerNative("java/io/FileDescriptor", "sync", "()V", sync);
+    registerNatives("java/io/FileDescriptor", methods, ARRAY_LENGTH(methods));
 }

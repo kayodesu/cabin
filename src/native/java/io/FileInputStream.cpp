@@ -2,7 +2,7 @@
  * Author: kayo
  */
 
-#include "../../registry.h"
+#include "../../jni_inner.h"
 #include "../../../runtime/frame.h"
 #include "../../../objects/array_object.h"
 
@@ -153,14 +153,18 @@ static void close0(Frame *frame)
     }
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "initIDs", "()V", (void *) initIDs },
+        { "open0", "(Ljava/lang/String;)V", (void *) open0 },
+        { "read0", "()I", (void *) read0 },
+        { "readBytes", "([BII)I", (void *) readBytes },
+        { "skip0", "(J)J", (void *) skip0 },
+        { "available0", "()I", (void *) available0 },
+        { "close0", "()V", (void *) close0 },
+};
+
 void java_io_FileInputStream_registerNatives()
 {
-    registerNative("java/io/FileInputStream", "initIDs", "()V", initIDs);
-
-    registerNative("java/io/FileInputStream", "open0", "(Ljava/lang/String;)V", open0);
-    registerNative("java/io/FileInputStream", "read0", "()I", read0);
-    registerNative("java/io/FileInputStream", "readBytes", "([BII)I", readBytes);
-    registerNative("java/io/FileInputStream", "skip0", "(J)J", skip0);
-    registerNative("java/io/FileInputStream", "available0", "()I", available0);
-    registerNative("java/io/FileInputStream", "close0", "()V", close0);
+    registerNatives("java/io/FileInputStream", methods, ARRAY_LENGTH(methods));
 }

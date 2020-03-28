@@ -6,6 +6,7 @@
 #include "class.h"
 #include "array_object.h"
 #include "invoke.h"
+#include "../native/jni_interface.h"
 
 using namespace std;
 
@@ -321,6 +322,34 @@ Method::Method(Class *c, BytecodeReader &r)
         }
     }
 
+    const char *t = strchr(type, ')'); // find return
+    assert(t != nullptr);
+
+    t++;
+    if (*t == 'V') {
+        ret_type = RET_VOID;
+    } else if (*t == 'D') {
+        ret_type = RET_DOUBLE;
+    } else if (*t == 'F') {
+        ret_type = RET_FLOAT;
+    } else if (*t == 'J') {
+        ret_type = RET_LONG;
+    } else if (*t == 'L' || *t == '[') {
+        ret_type = RET_REFERENCE;
+    } else  if (*t == 'I') {
+        ret_type = RET_INT;
+    } else  if (*t == 'B') {
+        ret_type = RET_BYTE;
+    } else  if (*t == 'Z') {
+        ret_type = RET_BOOL;
+    } else  if (*t == 'C') {
+        ret_type = RET_CHAR;
+    } else  if (*t == 'S') {
+        ret_type = RET_SHORT;
+    } else {
+        // todo error
+    }
+
     if (isNative()) {
         // 本地方法帧的操作数栈至少要能容纳返回值，
         // 4 slots are big enough.
@@ -332,25 +361,22 @@ Method::Method(Class *c, BytecodeReader &r)
         codeLen = 2;
         code = new u1[codeLen];
         code[0] = JVM_OPC_invokenative;
-        const char *t = strchr(type, ')'); // find return
-        assert(t != nullptr);
 
-        ++t;
-        if (*t == 'V') {
+        if (ret_type == RET_VOID) {
             code[1] = JVM_OPC_return;
-        } else if (*t == 'D') {
+        } else if (ret_type == RET_DOUBLE) {
             code[1] = JVM_OPC_dreturn;
-        } else if (*t == 'F') {
+        } else if (ret_type == RET_FLOAT) {
             code[1] = JVM_OPC_freturn;
-        } else if (*t == 'J') {
+        } else if (ret_type == RET_LONG) {
             code[1] = JVM_OPC_lreturn;
-        } else if (*t == 'L' || *t == '[') {
+        } else if (ret_type == RET_REFERENCE) {
             code[1] = JVM_OPC_areturn;
         } else {
             code[1] = JVM_OPC_ireturn;
         }
 
-        nativeMethod = findNative(clazz->className, name, type);
+        native_method = findNativeMethod(clazz->className, name, type);
     }
 }
 

@@ -2,8 +2,8 @@
  * Author: kayo
  */
 
-#include "../../registry.h"
 #include "../../../runtime/frame.h"
+#include "../../jni_inner.h"
 
 // public static native long doubleToRawLongBits(double value);
 static void doubleToRawLongBits(Frame *frame)
@@ -19,8 +19,13 @@ static void longBitsToDouble(Frame *frame)
     frame->pushd(long_bits_to_double(l));
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "doubleToRawLongBits", "(D)J", (void *) doubleToRawLongBits },
+        { "longBitsToDouble", "(J)D", (void *) longBitsToDouble }
+};
+
 void java_lang_Double_registerNatives()
 {
-    registerNative("java/lang/Double", "doubleToRawLongBits", "(D)J", doubleToRawLongBits);
-    registerNative("java/lang/Double", "longBitsToDouble", "(J)D", longBitsToDouble);
+    registerNatives("java/lang/Double", methods, ARRAY_LENGTH(methods));
 }

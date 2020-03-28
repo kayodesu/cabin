@@ -2,9 +2,9 @@
  * Author: kayo
  */
 
-#include "../../registry.h"
 #include "../../../kayo.h"
 #include "../../../runtime/frame.h"
+#include "../../jni_inner.h"
 
 // native long find(String name);
 static void find(Frame *frame)
@@ -35,10 +35,15 @@ static void unload(Frame *frame)
     // todo
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "find", "(Ljava/lang/String;)J", (void *) find },
+        { "find", "(Ljava/lang/String;)J", (void *) find },
+        { "load", "(Ljava/lang/String;Z)V", (void *) load },
+        { "unload", "(Ljava/lang/String;Z)V", (void *) unload }
+};
+
 void java_lang_ClassLoader$NativeLibrary_registerNatives()
 {
-    registerNative("java/lang/ClassLoader$NativeLibrary", "find", "(Ljava/lang/String;)J", find);
-    registerNative("java/lang/ClassLoader$NativeLibrary", "load", "(Ljava/lang/String;Z)V", load);
-    registerNative("java/lang/ClassLoader$NativeLibrary", "unload", "(Ljava/lang/String;Z)V", unload);
+    registerNatives("java/lang/ClassLoader$NativeLibrary", methods, ARRAY_LENGTH(methods));
 }
-

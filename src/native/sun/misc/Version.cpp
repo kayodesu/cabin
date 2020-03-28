@@ -1,5 +1,6 @@
-#include "../../registry.h"
+#include "../../jni_inner.h"
 #include "../../../kayo.h"
+#include "../../../runtime/frame.h"
 
 /*
  * Author: kayo
@@ -27,12 +28,15 @@ static void getJvmVersionInfo(Frame *frame)
     jvm_abort("getJvmVersionInfo"); // todo
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "getJdkSpecialVersion", "()Ljava/lang/String;", (void *) getJdkSpecialVersion },
+        { "getJvmSpecialVersion", "()Ljava/lang/String;", (void *) getJvmSpecialVersion },
+        { "getJdkVersionInfo", "()V", (void *) getJdkVersionInfo },
+        { "getJvmVersionInfo", "()Z", (void *) getJvmVersionInfo },
+};
+
 void sun_misc_Version_registerNatives()
 {
-#undef C
-#define C "sun/misc/Version"
-    registerNative(C, "getJdkSpecialVersion", "()Ljava/lang/String;", getJdkSpecialVersion);
-    registerNative(C, "getJvmSpecialVersion", "()Ljava/lang/String;", getJvmSpecialVersion);
-    registerNative(C, "getJdkVersionInfo", "()V", getJdkVersionInfo);
-    registerNative(C, "getJvmVersionInfo", "()Z", getJvmVersionInfo);
+    registerNatives("sun/misc/Version", methods, ARRAY_LENGTH(methods));
 }

@@ -2,12 +2,12 @@
  * Author: kayo
  */
 
-#include "../../registry.h"
 #include "../../../objects/class.h"
 #include "../../../objects/object.h"
 #include "../../../symbol.h"
 #include "../../../runtime/frame.h"
 #include "../../../objects/class_loader.h"
+#include "../../jni_inner.h"
 
 // public native int hashCode();
 static void hashCode(Frame *frame)
@@ -55,12 +55,17 @@ static void wait(Frame *frame)
     // todo
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "hashCode", "()I", (void *) hashCode },
+        { "getClass", "()Ljava/lang/Class;", (void *) getClass },
+        { "clone", "()Ljava/lang/Object;", (void *) clone },
+        { "notifyAll", "()V", (void *) notifyAll },
+        { "notify", "()V", (void *) notify },
+        { "wait", "(J)V", (void *) wait },
+};
+
 void java_lang_Object_registerNatives()
 {
-    registerNative("java/lang/Object", "hashCode", "()I", hashCode);
-    registerNative("java/lang/Object", "getClass", "()Ljava/lang/Class;", getClass);
-    registerNative("java/lang/Object", "clone", "()Ljava/lang/Object;", clone);
-    registerNative("java/lang/Object", "notifyAll", "()V", notifyAll);
-    registerNative("java/lang/Object", "notify", "()V", notify);
-    registerNative("java/lang/Object", "wait", "(J)V", wait);
+    registerNatives("java/lang/Object", methods, ARRAY_LENGTH(methods));
 }

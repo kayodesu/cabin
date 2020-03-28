@@ -3,11 +3,11 @@
  */
 
 #include <iostream>
-#include "../../registry.h"
 #include "../../../objects/object.h"
 #include "../../../objects/array_object.h"
 #include "../../../util/endianness.h"
 #include "../../../runtime/frame.h"
+#include "../../jni_inner.h"
 
 /* todo
 http://www.docjar.com/docs/api/sun/misc/Unsafe.html#park%28boolean,%20long%29
@@ -119,7 +119,7 @@ static void allocateInstance(Frame *frame)
 
 // public native Class defineClass(String name, byte[] b, int off, int len,
 //                                  ClassLoader loader, ProtectionDomain protectionDomain)
-static void defineClass(Frame *frame)
+static void __defineClass(Frame *frame)
 {
     jvm_abort("defineClass");
 }
@@ -163,6 +163,13 @@ static void objectFieldOffset(Frame *frame)
     jref field = frame->getLocalAsRef(1);
     auto offset = field->getInstFieldValue<jint>(S(slot), S(I));
     frame->pushl(offset);
+}
+
+// private native long objectFieldOffset1(Class<?> c, String name);
+static void objectFieldOffset1(Frame *frame)
+{
+    // todo
+    jvm_abort("objectFieldOffset1");
 }
 
 // public native boolean getBoolean(Object o, long offset);
@@ -756,109 +763,117 @@ static void fullFence(Frame *frame)
     jvm_abort("fullFence"); // todo
 }
 
+#undef CLD
+#define CLD "Ljava/lang/ClassLoader;"
+
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "park", "(ZJ)V", (void *) park },
+        { "unpark", "(Ljava/lang/Object;)V", (void *) unpark },
+
+        // compare and swap
+        { "compareAndSwapInt", "(Ljava/lang/Object;JII)Z", (void *) compareAndSwapInt },
+        { "compareAndSwapLong", "(Ljava/lang/Object;JJJ)Z", (void *) compareAndSwapLong },
+        { "compareAndSwapObject", "(" OBJ "J" OBJ OBJ ")Z", (void *) compareAndSwapObject },
+
+        // class
+        { "allocateInstance", "(Ljava/lang/Class;)Ljava/lang/Object;", (void *) allocateInstance },
+        { "defineClass", "(" STR "[BII" CLD "Ljava/security/ProtectionDomain;)" CLS, (void *) __defineClass },
+        { "ensureClassInitialized", "(Ljava/lang/Class;)V", (void *) ensureClassInitialized },
+        { "staticFieldOffset", "(Ljava/lang/reflect/Field;)J", (void *) staticFieldOffset },
+        { "staticFieldBase", "(Ljava/lang/reflect/Field;)" OBJ, (void *) staticFieldBase },
+
+        // Object
+        { "arrayBaseOffset", "(Ljava/lang/Class;)I", (void *) arrayBaseOffset },
+        { "arrayIndexScale", "(Ljava/lang/Class;)I", (void *) arrayIndexScale },
+        { "objectFieldOffset", "(Ljava/lang/reflect/Field;)J", (void *) objectFieldOffset },
+        { "objectFieldOffset0", "(Ljava/lang/reflect/Field;)J", (void *) objectFieldOffset },
+        { "objectFieldOffset1", "(Ljava/lang/Class;Ljava/lang/String;)J", (void *) objectFieldOffset1 },
+
+        { "getBoolean", "(Ljava/lang/Object;J)Z", (void *) getBoolean },
+        { "putBoolean", "(Ljava/lang/Object;JZ)V", (void *) putBoolean },
+        { "getByte", "(Ljava/lang/Object;J)B", (void *) obj_getByte },
+        { "putByte", "(Ljava/lang/Object;JB)V", (void *) obj_putByte },
+        { "getChar", "(Ljava/lang/Object;J)C", (void *) obj_getChar },
+        { "putChar", "(Ljava/lang/Object;JC)V", (void *) obj_putChar },
+        { "getShort", "(Ljava/lang/Object;J)S", (void *) obj_getShort },
+        { "putShort", "(Ljava/lang/Object;JS)V", (void *) obj_putShort },
+        { "getInt", "(Ljava/lang/Object;J)I", (void *) obj_getInt },
+        { "putInt", "(Ljava/lang/Object;JI)V", (void *) obj_putInt },
+        { "getLong", "(Ljava/lang/Object;J)J", (void *) obj_getLong },
+        { "putLong", "(Ljava/lang/Object;JJ)V", (void *) obj_putLong },
+        { "getFloat", "(Ljava/lang/Object;J)F", (void *) obj_getFloat },
+        { "putFloat", "(Ljava/lang/Object;JF)V", (void *) obj_putFloat },
+        { "getDouble", "(Ljava/lang/Object;J)D", (void *) obj_getDouble },
+        { "putDouble", "(Ljava/lang/Object;JD)V", (void *) obj_putDouble },
+        { "getObject", "(Ljava/lang/Object;J)Ljava/lang/Object;", (void *) getObject },
+        { "putObject", "(Ljava/lang/Object;JLjava/lang/Object;)V", (void *) putObject },
+        { "getObjectVolatile", "(Ljava/lang/Object;J)Ljava/lang/Object;", (void *) getObjectVolatile },
+        { "putObjectVolatile", "(Ljava/lang/Object;JLjava/lang/Object;)V", (void *) putObjectVolatile },
+        { "getOrderedObject", "(Ljava/lang/Object;J)Ljava/lang/Object;", (void *) getOrderedObject },
+        { "putOrderedObject", "(Ljava/lang/Object;JLjava/lang/Object;)V", (void *) putOrderedObject },
+        { "putOrderedInt", "(Ljava/lang/Object;JI)V", (void *) putOrderedInt },
+        { "putOrderedLong", "(Ljava/lang/Object;JJ)V", (void *) putOrderedLong },
+
+        { "putIntVolatile", "(Ljava/lang/Object;JI)V", (void *) putIntVolatile },
+        { "putBooleanVolatile", "(Ljava/lang/Object;JZ)V", (void *) putBooleanVolatile },
+        { "putByteVolatile", "(Ljava/lang/Object;JB)V", (void *) putByteVolatile },
+        { "putShortVolatile", "(Ljava/lang/Object;JS)V", (void *) putShortVolatile },
+        { "putCharVolatile", "(Ljava/lang/Object;JC)V", (void *) putCharVolatile },
+        { "putLongVolatile", "(Ljava/lang/Object;JJ)V", (void *) putLongVolatile },
+        { "putFloatVolatile", "(Ljava/lang/Object;JF)V", (void *) putFloatVolatile },
+        { "putDoubleVolatile", "(Ljava/lang/Object;JD)V", (void *) putDoubleVolatile },
+
+        { "getIntVolatile", "(Ljava/lang/Object;J)I", (void *) getIntVolatile },
+        { "getBooleanVolatile", "(Ljava/lang/Object;J)Z", (void *) getBooleanVolatile },
+        { "getByteVolatile", "(Ljava/lang/Object;J)B", (void *) getByteVolatile },
+        { "getShortVolatile", "(Ljava/lang/Object;J)S", (void *) getShortVolatile },
+        { "getCharVolatile", "(Ljava/lang/Object;J)C,", (void *) getCharVolatile },
+        { "getLongVolatile", "(Ljava/lang/Object;J)J", (void *) getLongVolatile },
+        { "getFloatVolatile", "(Ljava/lang/Object;J)F", (void *) getFloatVolatile },
+        { "getDoubleVolatile", "(Ljava/lang/Object;J)D", (void *) getDoubleVolatile },
+
+        // unsafe memory
+        { "allocateMemory", "(J)J", (void *) allocateMemory },
+        { "reallocateMemory", "(JJ)J", (void *) reallocateMemory },
+        { "setMemory", "(Ljava/lang/Object;JJB)V", (void *) setMemory },
+        { "copyMemory", "(Ljava/lang/Object;JLjava/lang/Object;JJ)V", (void *) copyMemory },
+        { "freeMemory", "(J)V", (void *) freeMemory },
+        { "addressSize", "()I", (void *) addressSize },
+        { "putAddress", "(JJ)V", (void *) putAddress },
+        { "getAddress", "(J)J", (void *) getAddress },
+        { "putByte", "(JB)V", (void *) putByte },
+        { "getByte", "(J)B", (void *) getByte },
+        { "putShort", "(JS)V", (void *) putShort },
+        { "getShort", "(J)S", (void *) getShort },
+        { "putChar", "(JC)V", (void *) putChar },
+        { "getChar", "(J)C", (void *) getChar },
+        { "putInt", "(JI)V", (void *) putInt },
+        { "getInt", "(J)I", (void *) getInt },
+        { "putLong", "(JJ)V", (void *) putLong },
+        { "getLong", "(J)J", (void *) getLong },
+        { "putFloat", "(JF)V", (void *) putFloat },
+        { "getFloat", "(J)F", (void *) getFloat },
+        { "putDouble", "(JD)V", (void *) putDouble },
+        { "getDouble", "(J)D", (void *) getDouble },
+
+        { "shouldBeInitialized", "(Ljava/lang/Class;)Z", (void *) shouldBeInitialized },
+        { "getLoadAverage", "([DI)I", (void *) getLoadAverage },
+        { "pageSize", "()I", (void *) pageSize },
+        { "defineAnonymousClass", "(Ljava/lang/Class;[B[Ljava/lang/Object;)" CLS, (void *) defineAnonymousClass },
+        { "monitorEnter", "(Ljava/lang/Object;)V", (void *) monitorEnter },
+        { "monitorExit", "(Ljava/lang/Object;)V", (void *) monitorExit },
+        { "tryMonitorEnter", "(Ljava/lang/Object;)Z", (void *) tryMonitorEnter },
+        { "throwException", "(Ljava/lang/Throwable;)V", (void *) throwException },
+
+        { "loadFence", "()V", (void *) loadFence },
+        { "storeFence", "()V", (void *) storeFence },
+        { "fullFence", "()V", (void *) fullFence },
+};
+
 void sun_misc_Unsafe_registerNatives()
 {
-#undef C
-#define C "sun/misc/Unsafe"
+    registerNatives("sun/misc/Unsafe", methods, ARRAY_LENGTH(methods));
 
-#define LCLD "Ljava/lang/ClassLoader;"
-    registerNative(C, "park", "(ZJ)V", park);
-    registerNative(C, "unpark", "(Ljava/lang/Object;)V", unpark);
-
-    // compare and swap
-    registerNative(C, "compareAndSwapInt", "(Ljava/lang/Object;JII)Z", compareAndSwapInt);
-    registerNative(C, "compareAndSwapLong", "(Ljava/lang/Object;JJJ)Z", compareAndSwapLong);
-    registerNative(C, "compareAndSwapObject", "(" LOBJ "J" LOBJ LOBJ")Z", compareAndSwapObject);
-
-    // class
-    registerNative(C, "allocateInstance", "(Ljava/lang/Class;)Ljava/lang/Object;", allocateInstance);
-    registerNative(C, "defineClass", "(" LSTR "[BII" LCLD "Ljava/security/ProtectionDomain;)" LCLS, defineClass);
-    registerNative(C, "ensureClassInitialized", "(Ljava/lang/Class;)V", ensureClassInitialized);
-    registerNative(C, "staticFieldOffset", "(Ljava/lang/reflect/Field;)J", staticFieldOffset);
-    registerNative(C, "staticFieldBase", "(Ljava/lang/reflect/Field;)" LOBJ, staticFieldBase);
-
-    // Object
-    registerNative(C, "arrayBaseOffset", "(Ljava/lang/Class;)I", arrayBaseOffset);
-    registerNative(C, "arrayIndexScale", "(Ljava/lang/Class;)I", arrayIndexScale);
-    registerNative(C, "objectFieldOffset", "(Ljava/lang/reflect/Field;)J", objectFieldOffset);
-
-    registerNative(C, "getBoolean", "(Ljava/lang/Object;J)Z", getBoolean);
-    registerNative(C, "putBoolean", "(Ljava/lang/Object;JZ)V", putBoolean);
-    registerNative(C, "getByte", "(Ljava/lang/Object;J)B", obj_getByte);
-    registerNative(C, "putByte", "(Ljava/lang/Object;JB)V", obj_putByte);
-    registerNative(C, "getChar", "(Ljava/lang/Object;J)C", obj_getChar);
-    registerNative(C, "putChar", "(Ljava/lang/Object;JC)V", obj_putChar);
-    registerNative(C, "getShort", "(Ljava/lang/Object;J)S", obj_getShort);
-    registerNative(C, "putShort", "(Ljava/lang/Object;JS)V", obj_putShort);
-    registerNative(C, "getInt", "(Ljava/lang/Object;J)I", obj_getInt);
-    registerNative(C, "putInt", "(Ljava/lang/Object;JI)V", obj_putInt);
-    registerNative(C, "getLong", "(Ljava/lang/Object;J)J", obj_getLong);
-    registerNative(C, "putLong", "(Ljava/lang/Object;JJ)V", obj_putLong);
-    registerNative(C, "getFloat", "(Ljava/lang/Object;J)F", obj_getFloat);
-    registerNative(C, "putFloat", "(Ljava/lang/Object;JF)V", obj_putFloat);
-    registerNative(C, "getDouble", "(Ljava/lang/Object;J)D", obj_getDouble);
-    registerNative(C, "putDouble", "(Ljava/lang/Object;JD)V", obj_putDouble);
-    registerNative(C, "getObject", "(Ljava/lang/Object;J)Ljava/lang/Object;", getObject);
-    registerNative(C, "putObject", "(Ljava/lang/Object;JLjava/lang/Object;)V", putObject);
-    registerNative(C, "getObjectVolatile", "(Ljava/lang/Object;J)Ljava/lang/Object;", getObjectVolatile);
-    registerNative(C, "putObjectVolatile", "(Ljava/lang/Object;JLjava/lang/Object;)V", putObjectVolatile);
-    registerNative(C, "getOrderedObject", "(Ljava/lang/Object;J)Ljava/lang/Object;", getOrderedObject);
-    registerNative(C, "putOrderedObject", "(Ljava/lang/Object;JLjava/lang/Object;)V", putOrderedObject);
-    registerNative(C, "putOrderedInt", "(Ljava/lang/Object;JI)V", putOrderedInt);
-    registerNative(C, "putOrderedLong", "(Ljava/lang/Object;JJ)V", putOrderedLong);
-
-    registerNative(C, "putIntVolatile", "(Ljava/lang/Object;JI)V", putIntVolatile);
-    registerNative(C, "putBooleanVolatile", "(Ljava/lang/Object;JZ)V", putBooleanVolatile);
-    registerNative(C, "putByteVolatile", "(Ljava/lang/Object;JB)V", putByteVolatile);
-    registerNative(C, "putShortVolatile", "(Ljava/lang/Object;JS)V", putShortVolatile);
-    registerNative(C, "putCharVolatile", "(Ljava/lang/Object;JC)V", putCharVolatile);
-    registerNative(C, "putLongVolatile", "(Ljava/lang/Object;JJ)V", putLongVolatile);
-    registerNative(C, "putFloatVolatile", "(Ljava/lang/Object;JF)V", putFloatVolatile);
-    registerNative(C, "putDoubleVolatile", "(Ljava/lang/Object;JD)V", putDoubleVolatile);
-
-    registerNative(C, "getIntVolatile", "(Ljava/lang/Object;J)I", getIntVolatile);
-    registerNative(C, "getBooleanVolatile", "(Ljava/lang/Object;J)Z", getBooleanVolatile);
-    registerNative(C, "getByteVolatile", "(Ljava/lang/Object;J)B", getByteVolatile);
-    registerNative(C, "getShortVolatile", "(Ljava/lang/Object;J)S", getShortVolatile);
-    registerNative(C, "getCharVolatile", "(Ljava/lang/Object;J)C,", getCharVolatile);
-    registerNative(C, "getLongVolatile", "(Ljava/lang/Object;J)J", getLongVolatile);
-    registerNative(C, "getFloatVolatile", "(Ljava/lang/Object;J)F", getFloatVolatile);
-    registerNative(C, "getDoubleVolatile", "(Ljava/lang/Object;J)D", getDoubleVolatile);
-
-    // unsafe memory
-    registerNative(C, "allocateMemory", "(J)J", allocateMemory);
-    registerNative(C, "reallocateMemory", "(JJ)J", reallocateMemory);
-    registerNative(C, "setMemory", "(Ljava/lang/Object;JJB)V", setMemory);
-    registerNative(C, "copyMemory", "(Ljava/lang/Object;JLjava/lang/Object;JJ)V", copyMemory);
-    registerNative(C, "freeMemory", "(J)V", freeMemory);
-    registerNative(C, "addressSize", "()I", addressSize);
-    registerNative(C, "putAddress", "(JJ)V", putAddress);
-    registerNative(C, "getAddress", "(J)J", getAddress);
-    registerNative(C, "putByte", "(JB)V", putByte);
-    registerNative(C, "getByte", "(J)B", getByte);
-    registerNative(C, "putShort", "(JS)V", putShort);
-    registerNative(C, "getShort", "(J)S", getShort);
-    registerNative(C, "putChar", "(JC)V", putChar);
-    registerNative(C, "getChar", "(J)C", getChar);
-    registerNative(C, "putInt", "(JI)V", putInt);
-    registerNative(C, "getInt", "(J)I", getInt);
-    registerNative(C, "putLong", "(JJ)V", putLong);
-    registerNative(C, "getLong", "(J)J", getLong);
-    registerNative(C, "putFloat", "(JF)V", putFloat);
-    registerNative(C, "getFloat", "(J)F", getFloat);
-    registerNative(C, "putDouble", "(JD)V", putDouble);
-    registerNative(C, "getDouble", "(J)D", getDouble);
-
-    registerNative(C, "shouldBeInitialized", "(Ljava/lang/Class;)Z", shouldBeInitialized);
-    registerNative(C, "getLoadAverage", "([DI)I", getLoadAverage);
-    registerNative(C, "pageSize", "()I", pageSize);
-    registerNative(C, "defineAnonymousClass", "(Ljava/lang/Class;[B[Ljava/lang/Object;)" LCLS, defineAnonymousClass);
-    registerNative(C, "monitorEnter", "(Ljava/lang/Object;)V", monitorEnter);
-    registerNative(C, "monitorExit", "(Ljava/lang/Object;)V", monitorExit);
-    registerNative(C, "tryMonitorEnter", "(Ljava/lang/Object;)Z", tryMonitorEnter);
-    registerNative(C, "throwException", "(Ljava/lang/Throwable;)V", throwException);
-
-    registerNative(C, "loadFence", "()V", loadFence);
-    registerNative(C, "storeFence", "()V", storeFence);
-    registerNative(C, "fullFence", "()V", fullFence);
+    registerNatives("jdk/internal/misc/Unsafe", methods, ARRAY_LENGTH(methods));
 }

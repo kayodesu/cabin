@@ -3,7 +3,7 @@
  */
 
 #include <sstream>
-#include "../../registry.h"
+#include "../../jni_inner.h"
 #include "../../../runtime/frame.h"
 #include "../../../interpreter/interpreter.h"
 
@@ -96,10 +96,12 @@ static void newInstance0(Frame *frame)
     frame->pushr(obj);
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "newInstance0", "(Ljava/lang/reflect/Constructor;[Ljava/lang/Object;)" OBJ, (void *) newInstance0 },
+};
+
 void sun_reflect_NativeConstructorAccessorImpl_registerNatives()
 {
-#undef C
-#define C "sun/reflect/NativeConstructorAccessorImpl"
-    registerNative(C, "newInstance0",
-                   "(Ljava/lang/reflect/Constructor;[Ljava/lang/Object;)Ljava/lang/Object;", newInstance0);
+    registerNatives("sun/reflect/NativeConstructorAccessorImpl", methods, ARRAY_LENGTH(methods));
 }

@@ -5,7 +5,7 @@
 #include <fstream>
 #include <filesystem>
 #include <sys/stat.h>
-#include "../../registry.h"
+#include "../../jni_inner.h"
 #include "../../../runtime/frame.h"
 #include "../../../objects/object.h"
 
@@ -93,14 +93,17 @@ static void getLength(Frame *frame)
     frame->pushl(size);
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "initIDs", "()V", (void *) initIDs },
+        { "getDriveDirectory", "(I)" STR, (void *) getDriveDirectory },
+        { "canonicalize0", "(Ljava/lang/String;)" STR, (void *) canonicalize0 },
+        { "getBooleanAttributes", "(Ljava/io/File;)I", (void *) getBooleanAttributes },
+        { "getLastModifiedTime", "(Ljava/io/File;)J", (void *) getLastModifiedTime },
+        { "getLength", "(Ljava/io/File;)J", (void *) getLength },
+};
+
 void java_io_WinNTFileSystem_registerNatives()
 {
-#undef C
-#define C "java/io/WinNTFileSystem"
-    registerNative(C, "initIDs", "()V", initIDs);
-    registerNative(C, "getDriveDirectory", "(I)Ljava/lang/String;", getDriveDirectory);
-    registerNative(C, "canonicalize0", "(Ljava/lang/String;)Ljava/lang/String;", canonicalize0);
-    registerNative(C, "getBooleanAttributes", "(Ljava/io/File;)I", getBooleanAttributes);
-    registerNative(C, "getLastModifiedTime", "(Ljava/io/File;)J", getLastModifiedTime);
-    registerNative(C, "getLength", "(Ljava/io/File;)J", getLength);
+    registerNatives("java/io/WinNTFileSystem", methods, ARRAY_LENGTH(methods));
 }

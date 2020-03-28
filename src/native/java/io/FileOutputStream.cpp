@@ -2,7 +2,7 @@
  * Author: kayo
  */
 
-#include "../../registry.h"
+#include "../../jni_inner.h"
 #include "../../../kayo.h"
 #include "../../../runtime/frame.h"
 #include "../../../output.h"
@@ -118,11 +118,16 @@ static void close0(Frame *frame)
     }
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "writeBytes", "([BIIZ)V", (void *) writeBytes },
+        { "initIDs", "()V", (void *) initIDs },
+        { "open0", "(Ljava/lang/String;Z)V", (void *) open0 },
+        { "write", "(IZ)V", (void *) write },
+        { "close0", "()V", (void *) close0 },
+};
+
 void java_io_FileOutputStream_registerNatives()
 {
-    registerNative("java/io/FileOutputStream", "writeBytes", "([BIIZ)V", writeBytes);
-    registerNative("java/io/FileOutputStream", "initIDs", "()V", initIDs);
-    registerNative("java/io/FileOutputStream", "open0", "(Ljava/lang/String;Z)V", open0);
-    registerNative("java/io/FileOutputStream", "write", "(IZ)V", write);
-    registerNative("java/io/FileOutputStream", "close0", "()V", close0);
+    registerNatives("java/io/FileOutputStream", methods, ARRAY_LENGTH(methods));
 }

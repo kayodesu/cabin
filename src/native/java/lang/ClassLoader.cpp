@@ -2,10 +2,10 @@
  * Author: kayo
  */
 
-#include "../../registry.h"
 #include "../../../kayo.h"
 #include "../../../objects/class.h"
 #include "../../../runtime/frame.h"
+#include "../../jni_inner.h"
 
 using namespace utf8;
 
@@ -97,22 +97,23 @@ static void retrieveDirectives(Frame *frame)
     jvm_abort("retrieveDirectives");
 }
 
+#undef PD
+#define PD "Ljava/security/ProtectionDomain;"
+
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "defineClass0", "(" STR "[BII" PD ")" CLS, (void *) defineClass0 },
+        { "defineClass1", "(" STR "[BII" PD STR ")" CLS, (void *) defineClass1 },
+        { "defineClass2", "(" STR "Ljava/nio/ByteBuffer;II" PD STR ")" CLS, (void *) defineClass2 },
+        { "resolveClass0", "(Ljava/lang/Class;)V", (void *) resolveClass0 },
+        { "findBootstrapClass", _STR_ CLS, (void *) findBootstrapClass },
+        { "findLoadedClass0", _STR_ CLS, (void *) findLoadedClass0 },
+        { "findBuiltinLib", _STR_ STR, (void *) findBuiltinLib },
+        { "retrieveDirectives", "()Ljava/lang/AssertionStatusDirectives;", (void *) retrieveDirectives },
+};
+
 void java_lang_ClassLoader_registerNatives()
 {
-#undef C
-#define C "java/lang/ClassLoader"
-    registerNative(C, "defineClass0",
-                   "(Ljava/lang/String;[BIILjava/security/ProtectionDomain;)Ljava/lang/Class;", defineClass0);
-    registerNative(C, "defineClass1",
-                   "(Ljava/lang/String;[BIILjava/security/ProtectionDomain;Ljava/lang/String;)Ljava/lang/Class;",
-                   defineClass1);
-    registerNative(C, "defineClass2",
-                   "(Ljava/lang/String;Ljava/nio/ByteBuffer;IILjava/security/ProtectionDomain;Ljava/lang/String;)Ljava/lang/Class;",
-                   defineClass2);
-    registerNative(C, "resolveClass0", "(Ljava/lang/Class;)V", resolveClass0);
-    registerNative(C, "findBootstrapClass", "(Ljava/lang/String;)Ljava/lang/Class;", findBootstrapClass);
-    registerNative(C, "findLoadedClass0", "(Ljava/lang/String;)Ljava/lang/Class;", findLoadedClass0);
-    registerNative(C, "findBuiltinLib", "(Ljava/lang/String;)Ljava/lang/String;", findBuiltinLib);
-    registerNative(C, "retrieveDirectives", "()Ljava/lang/AssertionStatusDirectives;", retrieveDirectives);
+    registerNatives("java/lang/ClassLoader", methods, ARRAY_LENGTH(methods));
 }
 

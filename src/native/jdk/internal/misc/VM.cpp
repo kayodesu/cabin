@@ -4,6 +4,7 @@
 
 #include "../../../../runtime/frame.h"
 #include "../../../../interpreter/interpreter.h"
+#include "../../../jni_inner.h"
 
 // private static native void initialize();
 static void initialize(Frame *frame)
@@ -28,8 +29,13 @@ static void latestUserDefinedLoader(Frame *frame)
     jvm_abort("latestUserDefinedLoader"); // todo
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "initialize", "()V", (void *) initialize },
+        { "latestUserDefinedLoader", "()Ljava/lang/ClassLoader;", (void *) latestUserDefinedLoader },
+};
+
 void jdk_internal_misc_VM_registerNatives()
 {
-    registerNative("jdk/internal/misc/VM", "initialize", "()V", initialize);
-    registerNative("jdk/internal/misc/VM", "latestUserDefinedLoader", "()Ljava/lang/ClassLoader;", latestUserDefinedLoader);
+    registerNatives("jdk/internal/misc/VM", methods, ARRAY_LENGTH(methods));
 }

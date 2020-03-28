@@ -1,5 +1,4 @@
-#include "../../../registry.h"
-#include "../../../../kayo.h"
+#include "../../../jni_inner.h"
 #include "../../../../runtime/frame.h"
 #include "../../../../objects/array_object.h"
 
@@ -29,7 +28,7 @@ static void getLength(Frame *frame)
 
 // private static native Object newArray(Class<?> componentType, int length)
 //                  throws NegativeArraySizeException;
-static void newArray(Frame *frame)
+static void __newArray(Frame *frame)
 {
     auto componentType = frame->getLocalAsRef<Class>(0);
     auto length = frame->getLocalAsInt(1);
@@ -38,12 +37,15 @@ static void newArray(Frame *frame)
     frame->pushr(arr);
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "get", "(Ljava/lang/Object;I)Ljava/lang/Object;", (void *) get },
+        { "set", "(Ljava/lang/Object;ILjava/lang/Object;)V", (void *) set },
+        { "getLength", "(Ljava/lang/Object;)I", (void *) getLength },
+        { "newArray", "(Ljava/lang/Class;I)" OBJ, (void *) __newArray },
+};
+
 void java_lang_reflect_Array_registerNatives()
 {
-#undef C
-#define C "java/lang/reflect/Array"
-    registerNative(C, "get", "(Ljava/lang/Object;I)Ljava/lang/Object;", get);
-    registerNative(C, "set", "(Ljava/lang/Object;ILjava/lang/Object;)V", set);
-    registerNative(C, "getLength", "(Ljava/lang/Object;)I", getLength);
-    registerNative(C, "newArray", "(Ljava/lang/Class;I)Ljava/lang/Object;", newArray);
+    registerNatives("java/lang/reflect/Array", methods, ARRAY_LENGTH(methods));
 }

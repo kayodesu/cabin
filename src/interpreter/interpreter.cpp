@@ -15,6 +15,7 @@
 #include "../objects/method.h"
 #include "../objects/field.h"
 #include "../objects/invoke.h"
+#include "../native/jni_interface.h"
 
 using namespace std;
 using namespace utf8;
@@ -1372,15 +1373,16 @@ __opc_athrow:
                 break;
             case JVM_OPC_invokenative: {
 			    TRACE("%s\n", frame->toString().c_str());
-			    if (frame->method->nativeMethod == nullptr){ // todo 
+			    if (frame->method->native_method == nullptr){ // todo
 			        jvm_abort("not find native method: %s\n", frame->method->toString().c_str());
 			    }
 
                 // todo 不需要则这里做任何同步的操作
 
-			    assert(frame->method->nativeMethod != nullptr);
+			    assert(frame->method->native_method != nullptr);
 			    try {
-			        frame->method->nativeMethod(frame);
+                    ((void(*)(Frame *))frame->method->native_method)(frame);
+//                    callJNIMethod(frame);
 			    } catch (Throwable &t) {
 			        TRACE("native method throw a exception\n");
 			        assert(t.getJavaThrowable() != nullptr);

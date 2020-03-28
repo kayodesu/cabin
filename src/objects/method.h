@@ -8,7 +8,6 @@
 #include <vector>
 #include "Modifier.h"
 #include "../classfile/attributes.h"
-#include "../native/registry.h"
 #include "../util/encoding.h"
 
 class Object;
@@ -22,6 +21,11 @@ class Method {
     Array *exceptionTypes = nullptr; // [Ljava/lang/Class;
 
 public:
+    enum RetType {
+        RET_INVALID, RET_VOID, RET_BYTE, RET_BOOL, RET_CHAR,
+        RET_SHORT, RET_INT, RET_FLOAT, RET_LONG, RET_DOUBLE, RET_REFERENCE
+    };
+
     // 定义此 Method 的类
     Class *clazz;
     const utf8_t *name = nullptr;
@@ -42,7 +46,10 @@ public:
     u1 *code = nullptr;
     size_t codeLen = 0;
 
-    native_method_t nativeMethod = nullptr; // present only if native
+//    native_method_t nativeMethod = nullptr; // present only if native
+
+    void *native_method = nullptr; // present only if native
+    RetType ret_type = RET_INVALID;
 
     std::vector<MethodParameter> parameters;
 

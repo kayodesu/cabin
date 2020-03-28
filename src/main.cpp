@@ -10,7 +10,7 @@
 #include <thread>
 #include "kayo.h"
 #include "debug.h"
-#include "native/registry.h"
+#include "native/jni_interface.h"
 #include "runtime/thread_info.h"
 #include "objects/class.h"
 #include "objects/method.h"
@@ -332,30 +332,8 @@ static void initJVM(int argc, char *argv[])
     initClass(vm);
 }
 
-
-//void threadFunc(std::string &str, int a)
-//{
-//    str = "change by threadFunc";
-//    a = 13;
-//}
-//void fun(){
-//    std::cout<<"hello world hello world hello world hello world hello world"<<std::endl;
-//}
-
 int main(int argc, char* argv[])
 {
-//    std::string str("main");
-//    int a = 9;
-//    std::thread th(threadFunc, std::ref(str), a);
-//    std::thread t2(fun);
-//    th.join();
-//    t2.join();
-//
-//    std::cout<<"str = " << str << std::endl;
-//    std::cout<<"a = " << a << std::endl;
-//    auto name = 0;
-//    return 0;
-
     time_t time1;
     time(&time1);
 

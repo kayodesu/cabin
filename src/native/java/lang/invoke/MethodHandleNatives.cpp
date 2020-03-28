@@ -1,4 +1,4 @@
-#include "../../../registry.h"
+#include "../../../jni_inner.h"
 #include "../../../../kayo.h"
 #include "../../../../runtime/frame.h"
 #include "../../../../objects/class.h"
@@ -148,12 +148,14 @@ static void resolve(Frame *frame)
     jvm_abort("not support!");
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "getConstant", "(I)I", (void *) getConstant },
+        { "init", "(Ljava/lang/invoke/MemberName;Ljava/lang/Object;)V", (void *) init },
+        { "resolve", "(Ljava/lang/invoke/MemberName;" CLS ")Ljava/lang/invoke/MemberName;", (void *) resolve },
+};
+
 void java_lang_invoke_MethodHandleNatives_registerNatives()
 {
-#undef C
-#define C "java/lang/invoke/MethodHandleNatives"
-    registerNative(C, "getConstant", "(I)I", getConstant);
-    registerNative(C, "init", "(Ljava/lang/invoke/MemberName;Ljava/lang/Object;)V", init);
-    registerNative(C, "resolve",
-                   "(Ljava/lang/invoke/MemberName;Ljava/lang/Class;)Ljava/lang/invoke/MemberName;", resolve);
+    registerNatives("java/lang/invoke/MethodHandleNatives", methods, ARRAY_LENGTH(methods));
 }

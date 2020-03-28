@@ -2,8 +2,8 @@
  * Author: kayo
  */
 
-#ifndef KAYO_JNI_INTERNAL_H
-#define KAYO_JNI_INTERNAL_H
+#ifndef KAYO_JNI_INNER_H
+#define KAYO_JNI_INNER_H
 
 #include <vector>
 #include "jni.h"
@@ -171,11 +171,11 @@ static T getInstFieldValue(jobject obj, jfieldID fieldID)
 /*
  * 定义 Call_T_Method 镞函数：
  *
- * T JNICALL Kayo_Call_T_Method(JNIEnv *env,
+ * T JNICALL JVM_Call_T_Method(JNIEnv *env,
  *                              jobject obj, jmethodID methodID, ...);
- * T JNICALL Kayo_Call_T_MethodV(JNIEnv *env,
+ * T JNICALL JVM_Call_T_MethodV(JNIEnv *env,
  *                              jobject obj, jmethodID methodID, va_list args);
- * T JNICALL Kayo_Call_T_MethodA(JNIEnv *env,
+ * T JNICALL JVM_Call_T_MethodA(JNIEnv *env,
  *                              jobject obj, jmethodID methodID, const jvalue *args);
  */
 
@@ -189,7 +189,7 @@ static T getInstFieldValue(jobject obj, jfieldID fieldID)
     slot_t *ret = execJavaFunc(m, _this, args);
 
 #define DEFINE_CALL_T_METHOD(T, ret_type, ret_value)  \
-ret_type JNICALL Kayo_Call##T##Method(JNIEnv *env, jobject obj, jmethodID methodID, ...) \
+ret_type JNICALL JVM_Call##T##Method(JNIEnv *env, jobject obj, jmethodID methodID, ...) \
 { \
     va_list args; \
     va_start(args, methodID); \
@@ -199,14 +199,14 @@ ret_type JNICALL Kayo_Call##T##Method(JNIEnv *env, jobject obj, jmethodID method
 }
 
 #define DEFINE_CALL_T_METHOD_V(T, ret_type, ret_value) \
-ret_type JNICALL Kayo_Call##T##MethodV(JNIEnv *env, jobject obj, jmethodID methodID, va_list args) \
+ret_type JNICALL JVM_Call##T##MethodV(JNIEnv *env, jobject obj, jmethodID methodID, va_list args) \
 { \
     DEFINE_CALL_T_METHOD_BODY \
     return ret_value; \
 }
 
 #define DEFINE_CALL_T_METHOD_A(T, ret_type, ret_value) \
-ret_type JNICALL Kayo_Call##T##MethodA(JNIEnv *env, \
+ret_type JNICALL JVM_Call##T##MethodA(JNIEnv *env, \
                                        jobject obj, jmethodID methodID, const jvalue *args) \
 { \
     DEFINE_CALL_T_METHOD_BODY \
@@ -221,16 +221,16 @@ ret_type JNICALL Kayo_Call##T##MethodA(JNIEnv *env, \
 /*
  * 定义 CallNonvirtual_T_Method 镞函数：
  *
- * T JNICALL Kayo_CallNonvirtual_T_Method(JNIEnv *env,
+ * T JNICALL JVM_CallNonvirtual_T_Method(JNIEnv *env,
  *                              jobject obj, jclass clazz, jmethodID methodID, ...);
- * T JNICALL Kayo_CallNonvirtual_T_MethodV(JNIEnv *env,
+ * T JNICALL JVM_CallNonvirtual_T_MethodV(JNIEnv *env,
  *                              jobject obj, jclass clazz, jmethodID methodID, va_list args);
- * T JNICALL Kayo_CallNonvirtual_T_MethodA(JNIEnv *env,
+ * T JNICALL JVM_CallNonvirtual_T_MethodA(JNIEnv *env,
  *                              jobject obj, jclass clazz, jmethodID methodID, const jvalue *args);
  */
 
 #define DEFINE_CALL_NONVIRTUAL_T_METHOD(T, ret_type, ret_value)  \
-ret_type JNICALL Kayo_CallNonvirtual##T##Method(JNIEnv *env, jobject obj, jclass clazz, jmethodID methodID, ...) \
+ret_type JNICALL JVM_CallNonvirtual##T##Method(JNIEnv *env, jobject obj, jclass clazz, jmethodID methodID, ...) \
 { \
     va_list args; \
     va_start(args, methodID); \
@@ -241,7 +241,7 @@ ret_type JNICALL Kayo_CallNonvirtual##T##Method(JNIEnv *env, jobject obj, jclass
 }
 
 #define DEFINE_CALL_NONVIRTUAL_T_METHOD_V(T, ret_type, ret_value) \
-ret_type JNICALL Kayo_CallNonvirtual##T##MethodV(JNIEnv *env, jobject obj, \
+ret_type JNICALL JVM_CallNonvirtual##T##MethodV(JNIEnv *env, jobject obj, \
                             jclass clazz, jmethodID methodID, va_list args) \
 { \
     slot_t *ret = execJavaFunc( \
@@ -250,7 +250,7 @@ ret_type JNICALL Kayo_CallNonvirtual##T##MethodV(JNIEnv *env, jobject obj, \
 }
 
 #define DEFINE_CALL_NONVIRTUAL_T_METHOD_A(T, ret_type, ret_value) \
-ret_type JNICALL Kayo_CallNonvirtual##T##MethodA(JNIEnv *env, jobject obj, \
+ret_type JNICALL JVM_CallNonvirtual##T##MethodA(JNIEnv *env, jobject obj, \
                             jclass clazz, jmethodID methodID, const jvalue *args) \
 { \
     slot_t *ret = execJavaFunc( \
@@ -266,16 +266,16 @@ ret_type JNICALL Kayo_CallNonvirtual##T##MethodA(JNIEnv *env, jobject obj, \
 /*
 * 定义 CallStatic_T_Method 镞函数：
 *
-* T JNICALL Kayo_CallStatic_T_Method(JNIEnv *env,
+* T JNICALL JVM_CallStatic_T_Method(JNIEnv *env,
 *                              jobject obj, jclass clazz, jmethodID methodID, ...);
-* T JNICALL Kayo_CallStatic_T_MethodV(JNIEnv *env,
+* T JNICALL JVM_CallStatic_T_MethodV(JNIEnv *env,
 *                              jobject obj, jclass clazz, jmethodID methodID, va_list args);
-* T JNICALL Kayo_CallStatic_T_MethodA(JNIEnv *env,
+* T JNICALL JVM_CallStatic_T_MethodA(JNIEnv *env,
 *                              jobject obj, jclass clazz, jmethodID methodID, const jvalue *args);
 */
 
 #define DEFINE_CALL_STATIC_T_METHOD(T, ret_type, ret_value)  \
-ret_type JNICALL Kayo_CallStatic##T##Method(JNIEnv *env, jclass clazz, jmethodID methodID, ...) \
+ret_type JNICALL JVM_CallStatic##T##Method(JNIEnv *env, jclass clazz, jmethodID methodID, ...) \
 { \
     va_list args; \
     va_start(args, methodID); \
@@ -286,7 +286,7 @@ ret_type JNICALL Kayo_CallStatic##T##Method(JNIEnv *env, jclass clazz, jmethodID
 }
 
 #define DEFINE_CALL_STATIC_T_METHOD_V(T, ret_type, ret_value) \
-ret_type JNICALL Kayo_CallStatic##T##MethodV(JNIEnv *env, \
+ret_type JNICALL JVM_CallStatic##T##MethodV(JNIEnv *env, \
                             jclass clazz, jmethodID methodID, va_list args) \
 { \
     slot_t *ret = execJavaFunc(to_method(methodID), \
@@ -295,7 +295,7 @@ ret_type JNICALL Kayo_CallStatic##T##MethodV(JNIEnv *env, \
 }
 
 #define DEFINE_CALL_STATIC_T_METHOD_A(T, ret_type, ret_value) \
-ret_type JNICALL Kayo_CallStatic##T##MethodA(JNIEnv *env, \
+ret_type JNICALL JVM_CallStatic##T##MethodA(JNIEnv *env, \
                             jclass clazz, jmethodID methodID, const jvalue *args) \
 { \
     slot_t *ret = execJavaFunc(to_method(methodID), \
@@ -308,4 +308,27 @@ ret_type JNICALL Kayo_CallStatic##T##MethodA(JNIEnv *env, \
     DEFINE_CALL_STATIC_T_METHOD_V(T, ret_type, ret_value) \
     DEFINE_CALL_STATIC_T_METHOD_A(T, ret_type, ret_value)
 
-#endif //KAYO_JNI_INTERNAL_H
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#define OBJ "Ljava/lang/Object;"
+#define _OBJ_ "(Ljava/lang/Object;)"
+
+#define CLS "Ljava/lang/Class;"
+#define _CLS_ "(Ljava/lang/Class;)"
+
+#define STR "Ljava/lang/String;"
+#define _STR_ "(Ljava/lang/String;)"
+
+#define ARRAY_LENGTH(arr) (sizeof(arr)/sizeof(*arr))
+
+static void registerNativesEmptyImplement() { }
+#define JNINativeMethod_registerNatives { "registerNatives", "()V", (void *) registerNativesEmptyImplement }
+
+/*
+ * 要保证每个 class name 只会注册一次，
+ * 重复注册后面注册的无效。
+ */
+void registerNatives(const char *class_name, JNINativeMethod *methods, int method_count);
+
+#endif //KAYO_JNI_INNER_H

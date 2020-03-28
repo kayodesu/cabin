@@ -1,4 +1,4 @@
-#include "../../registry.h"
+#include "../../jni_inner.h"
 #include "../../../vmdef.h"
 #include "../../../runtime/frame.h"
 #include "../../../objects/class.h"
@@ -41,12 +41,15 @@ static void getUTF8At0(Frame *frame)
     frame->pushr(cp->resolveString(i));
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "getSize0", "(Ljava/lang/Object;)I", (void *) getSize0 },
+        { "getClassAt0", "(Ljava/lang/Object;I)Ljava/lang/Class;", (void *) getClassAt0 },
+        { "getLongAt0", "(Ljava/lang/Object;I)J", (void *) getLongAt0 },
+        { "getUTF8At0", "(Ljava/lang/Object;I)Ljava/lang/String;", (void *) getUTF8At0 },
+};
+
 void sun_reflect_ConstantPool_registerNatives()
 {
-#undef C
-#define C "sun/reflect/ConstantPool"
-    registerNative(C, "getSize0", "(Ljava/lang/Object;)I", getSize0);
-    registerNative(C, "getClassAt0", "(Ljava/lang/Object;I)Ljava/lang/Class;", getClassAt0);
-    registerNative(C, "getLongAt0", "(Ljava/lang/Object;I)J", getLongAt0);
-    registerNative(C, "getUTF8At0", "(Ljava/lang/Object;I)Ljava/lang/String;", getUTF8At0);
+    registerNatives("sun/reflect/ConstantPool", methods, ARRAY_LENGTH(methods));
 }

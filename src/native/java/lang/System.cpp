@@ -3,7 +3,7 @@
  */
 
 #include <chrono>
-#include "../../registry.h"
+#include "../../jni_inner.h"
 #include "../../../objects/object.h"
 #include "../../../objects/field.h"
 #include "../../../objects/array_object.h"
@@ -126,19 +126,23 @@ static void currentTimeMillis(Frame *frame)
     frame->pushl(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "mapLibraryName", _STR_ STR, (void *) mapLibraryName },
+        { "arraycopy", "(Ljava/lang/Object;ILjava/lang/Object;II)V", (void *) arraycopy },
+        { "identityHashCode", "(Ljava/lang/Object;)I", (void *) identityHashCode },
+        { "initProperties", "(Ljava/util/Properties;)Ljava/util/Properties;", (void *) initProperties },
+
+        { "setIn0", "(Ljava/io/InputStream;)V", (void *) setIn0 },
+        { "setOut0", "(Ljava/io/PrintStream;)V", (void *) setOut0 },
+        { "setErr0", "(Ljava/io/PrintStream;)V", (void *) setErr0 },
+
+        { "nanoTime", "()J", (void *) nanoTime },
+        { "currentTimeMillis", "()J", (void *) currentTimeMillis },
+};
+
+
 void java_lang_System_registerNatives()
 {
-#undef C
-#define C "java/lang/System",
-    registerNative(C "mapLibraryName", "(Ljava/lang/String;)" LSTR, mapLibraryName);
-    registerNative(C "arraycopy", "(Ljava/lang/Object;ILjava/lang/Object;II)V", arraycopy);
-    registerNative(C "identityHashCode", "(Ljava/lang/Object;)I", identityHashCode);
-    registerNative(C "initProperties", "(Ljava/util/Properties;)Ljava/util/Properties;", initProperties);
-
-    registerNative(C "setIn0", "(Ljava/io/InputStream;)V", setIn0);
-    registerNative(C "setOut0", "(Ljava/io/PrintStream;)V", setOut0);
-    registerNative(C "setErr0", "(Ljava/io/PrintStream;)V", setErr0);
-
-    registerNative(C "nanoTime", "()J", nanoTime);
-    registerNative(C "currentTimeMillis", "()J", currentTimeMillis);
+    registerNatives("java/lang/System", methods, ARRAY_LENGTH(methods));
 }

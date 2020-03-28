@@ -2,7 +2,7 @@
  * Author: kayo
  */
 
-#include "../../registry.h"
+#include "../../jni_inner.h"
 #include "../../../objects/object.h"
 #include "../../../interpreter/interpreter.h"
 #include "../../../symbol.h"
@@ -66,18 +66,20 @@ static void getInheritedAccessControlContext(Frame *frame)
     jvm_abort("getInheritedAccessControlContext");
 }
 
-void java_security_AccessController_registerNatives()
-{
-#undef C
 #undef ACC
-#define C "java/security/AccessController",
 #define ACC "Ljava/security/AccessControlContext;"
 
-    registerNative(C "getStackAccessControlContext", "()" ACC, getStackAccessControlContext);
-    registerNative(C "getInheritedAccessControlContext", "()" ACC, getInheritedAccessControlContext);
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "getStackAccessControlContext", "()" ACC, (void *) getStackAccessControlContext },
+        { "getInheritedAccessControlContext", "()" ACC, (void *) getInheritedAccessControlContext },
+        { "doPrivileged", "(Ljava/security/PrivilegedAction;)" OBJ, (void *) doPrivileged },
+        { "doPrivileged", "(Ljava/security/PrivilegedAction;" ACC ")" OBJ, (void *) doPrivileged1 },
+        { "doPrivileged", "(Ljava/security/PrivilegedExceptionAction;)" OBJ, (void *) doPrivileged2 },
+        { "doPrivileged", "(Ljava/security/PrivilegedExceptionAction;" ACC ")" OBJ, (void *) doPrivileged3 },
+};
 
-    registerNative(C "doPrivileged", "(Ljava/security/PrivilegedAction;)" LOBJ, doPrivileged);
-    registerNative(C "doPrivileged", "(Ljava/security/PrivilegedAction;" ACC ")" LOBJ, doPrivileged1);
-    registerNative(C "doPrivileged", "(Ljava/security/PrivilegedExceptionAction;)" LOBJ, doPrivileged2);
-    registerNative(C "doPrivileged", "(Ljava/security/PrivilegedExceptionAction;" ACC ")" LOBJ, doPrivileged3);
+void java_security_AccessController_registerNatives()
+{
+    registerNatives("java/security/AccessController", methods, ARRAY_LENGTH(methods));
 }

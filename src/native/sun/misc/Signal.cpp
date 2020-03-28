@@ -1,4 +1,4 @@
-#include "../../registry.h"
+#include "../../jni_inner.h"
 #include "../../../runtime/frame.h"
 
 /*
@@ -28,11 +28,14 @@ static void raise0(Frame *frame)
     // todo
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "findSignal", "(Ljava/lang/String;)I", (void *) findSignal },
+        { "handle0", "(IJ)J", (void *) handle0 },
+        { "raise0", "(I)V", (void *) raise0 },
+};
+
 void sun_misc_Signal_registerNatives()
 {
-#undef C
-#define C "sun/misc/Signal"
-    registerNative(C, "findSignal", "(Ljava/lang/String;)I", findSignal);
-    registerNative(C, "handle0", "(IJ)J", handle0);
-    registerNative(C, "raise0", "(I)V", raise0);
+    registerNatives("sun/misc/Signal", methods, ARRAY_LENGTH(methods));
 }

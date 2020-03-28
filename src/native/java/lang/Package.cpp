@@ -1,7 +1,7 @@
 #include <vector>
-#include "../../registry.h"
 #include "../../../runtime/frame.h"
 #include "../../../objects/array_object.h"
+#include "../../jni_inner.h"
 
 /*
  * Author: kayo
@@ -37,11 +37,14 @@ static void getSystemPackages0(Frame *frame)
     frame->pushr(ao);
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "getSystemPackage0", _STR_ STR, (void *) getSystemPackage0},
+        { "getSystemPackages0", "()[" STR, (void *) getSystemPackages0 }
+};
+
 void java_lang_Package_registerNatives()
 {
-#undef C
-#define C "java/lang/Package"
-    registerNative(C, "getSystemPackage0", "(Ljava/lang/String;)Ljava/lang/String;", getSystemPackage0);
-    registerNative(C, "getSystemPackages0", "()[Ljava/lang/String;", getSystemPackages0);
+    registerNatives("java/lang/Package", methods, ARRAY_LENGTH(methods));
 }
 

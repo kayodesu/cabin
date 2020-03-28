@@ -1,5 +1,6 @@
-#include "../../registry.h"
+#include "../../jni_inner.h"
 #include "../../../kayo.h"
+#include "../../../runtime/frame.h"
 
 /*
  * Author: Jia Yang
@@ -11,9 +12,12 @@ static void invoke0(Frame *frame)
     jvm_abort("error\n");
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "invoke0", "(Ljava/lang/reflect/Method;" OBJ "[Ljava/lang/Object;)" OBJ, (void *) invoke0 },
+};
+
 void sun_reflect_NativeMethodAccessorImpl_registerNatives()
 {
-    registerNative("sun/reflect/NativeMethodAccessorImpl", "invoke0", ""
-                           "(Ljava/lang/reflect/Method;Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;",
-                   invoke0);
+    registerNatives("sun/reflect/NativeMethodAccessorImpl", methods, ARRAY_LENGTH(methods));
 }

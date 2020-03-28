@@ -2,11 +2,12 @@
  * Author: kayo
  */
 
-#include "../../registry.h"
 #include "../../../interpreter/interpreter.h"
 #include "../../../symbol.h"
 #include "../../../objects/class.h"
 #include "../../../objects/class_loader.h"
+#include "../../jni_inner.h"
+#include "../../../runtime/frame.h"
 
 // private static native void initialize();
 static void initialize(Frame *frame)
@@ -31,8 +32,13 @@ static void latestUserDefinedLoader(Frame *frame)
     jvm_abort("latestUserDefinedLoader"); // todo
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "initialize", "()V", (void *) initialize },
+        { "latestUserDefinedLoader", "()Ljava/lang/ClassLoader;", (void *) latestUserDefinedLoader },
+};
+
 void sun_misc_VM_registerNatives()
 {
-    registerNative("sun/misc/VM", "initialize", "()V", initialize);
-    registerNative("sun/misc/VM", "latestUserDefinedLoader", "()Ljava/lang/ClassLoader;", latestUserDefinedLoader);
+    registerNatives("sun/misc/VM", methods, ARRAY_LENGTH(methods));
 }

@@ -1,4 +1,4 @@
-#include "../../registry.h"
+#include "../../jni_inner.h"
 #include "../../../runtime/frame.h"
 #include "../../../objects/object.h"
 
@@ -61,13 +61,16 @@ static void isThreadAllocatedMemoryEnabled(Frame *frame)
 // public native int  getPeakThreadCount();
 // public native int  getDaemonThreadCount();
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "getVersion0", "()Ljava/lang/String;", (void *) getVersion0 },
+        { "initOptionalSupportFields", "()V", (void *) initOptionalSupportFields },
+        { "isThreadContentionMonitoringEnabled", "()Z", (void *) isThreadContentionMonitoringEnabled },
+        { "isThreadCpuTimeEnabled", "()Z", (void *) isThreadCpuTimeEnabled },
+        { "isThreadAllocatedMemoryEnabled", "()Z", (void *) isThreadAllocatedMemoryEnabled },
+};
+
 void sun_management_VMManagementImpl_registerNatives()
 {
-#undef C
-#define C "sun/management/VMManagementImpl"
-    registerNative(C, "getVersion0", "()Ljava/lang/String;", getVersion0);
-    registerNative(C, "initOptionalSupportFields", "()V", initOptionalSupportFields);
-    registerNative(C, "isThreadContentionMonitoringEnabled", "()Z", isThreadContentionMonitoringEnabled);
-    registerNative(C, "isThreadCpuTimeEnabled", "()Z", isThreadCpuTimeEnabled);
-    registerNative(C, "isThreadAllocatedMemoryEnabled", "()Z", isThreadAllocatedMemoryEnabled);
+    registerNatives("sun/management/VMManagementImpl", methods, ARRAY_LENGTH(methods));
 }

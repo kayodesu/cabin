@@ -5,6 +5,7 @@
 #include "../../../runtime/frame.h"
 #include "../../../runtime/thread_info.h"
 #include "../../../objects/array_object.h"
+#include "../../jni_inner.h"
 
 /*
  * VM support where maxDepth == -1 to request entire stack dump
@@ -46,9 +47,12 @@ static void dumpThreads0(Frame *frame)
     frame->pushr(threadInfos);
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "dumpThreads0", "([JZZ)[Ljava/lang/management/ThreadInfo;", (void *) dumpThreads0 },
+};
+
 void sun_management_ThreadImpl_registerNatives()
 {
-#undef C
-#define C "sun/management/ThreadImpl"
-    registerNative(C, "dumpThreads0", "([JZZ)[Ljava/lang/management/ThreadInfo;", dumpThreads0);
+    registerNatives("sun/management/ThreadImpl", methods, ARRAY_LENGTH(methods));
 }

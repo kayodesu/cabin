@@ -1,4 +1,4 @@
-#include "../../../registry.h"
+#include "../../../jni_inner.h"
 #include "../../../../kayo.h"
 #include "../../../../runtime/frame.h"
 
@@ -150,17 +150,21 @@ static void linkToInterface(Frame *frame)
     jvm_abort("linkToInterface");
 }
 
+#undef T
+#define T "([Ljava/lang/Object;)Ljava/lang/Object;"
+
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "invokeExact",     T, (void *) invokeExact },
+        { "invoke",          T, (void *) invoke },
+        { "invokeBasic",     T, (void *) invokeBasic },
+        { "linkToVirtual",   T, (void *) linkToVirtual },
+        { "linkToStatic",    T, (void *) linkToStatic },
+        { "linkToSpecial",   T, (void *) linkToSpecial },
+        { "linkToInterface", T, (void *) linkToInterface },
+};
+
 void java_lang_invoke_MethodHandle_registerNatives()
 {
-#undef C
-#undef D
-#define C "java/lang/invoke/MethodHandle"
-#define D "([Ljava/lang/Object;)Ljava/lang/Object;"
-    registerNative(C, "invokeExact",     D, invokeExact);
-    registerNative(C, "invoke",          D, invoke);
-    registerNative(C, "invokeBasic",     D, invokeBasic);
-    registerNative(C, "linkToVirtual",   D, linkToVirtual);
-    registerNative(C, "linkToStatic",    D, linkToStatic);
-    registerNative(C, "linkToSpecial",   D, linkToSpecial);
-    registerNative(C, "linkToInterface", D, linkToInterface);
+    registerNatives("java/lang/invoke/MethodHandle", methods, ARRAY_LENGTH(methods));
 }

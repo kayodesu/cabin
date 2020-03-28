@@ -2,8 +2,8 @@
  * Author: kayo
  */
 
-#include "../../registry.h"
 #include "../../../runtime/frame.h"
+#include "../../jni_inner.h"
 
 // public static native int floatToRawIntBits(float value);
 static void floatToRawIntBits(Frame *frame)
@@ -19,8 +19,13 @@ static void intBitsToFloat(Frame *frame)
     frame->pushf(int_bits_to_float(i));
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "floatToRawIntBits", "(F)I", (void *) floatToRawIntBits},
+        { "intBitsToFloat", "(I)F", (void *) intBitsToFloat }
+};
+
 void java_lang_Float_registerNatives()
 {
-    registerNative("java/lang/Float", "floatToRawIntBits", "(F)I", floatToRawIntBits);
-    registerNative("java/lang/Float", "intBitsToFloat", "(I)F", intBitsToFloat);
+    registerNatives("java/lang/Float", methods, ARRAY_LENGTH(methods));
 }

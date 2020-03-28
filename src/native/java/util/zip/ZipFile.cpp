@@ -1,5 +1,5 @@
 #include <minizip/unzip.h>
-#include "../../../registry.h"
+#include "../../../jni_inner.h"
 #include "../../../../objects/object.h"
 #include "../../../../runtime/frame.h"
 
@@ -248,23 +248,26 @@ void read(Frame *frame)
  */
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "initIDs", "()V", (void *) initIDs },
+        { "open", "(Ljava/lang/String;IJZ)J", (void *) open },
+        { "startsWithLOC", "(J)Z", (void *) startsWithLOC },
+        { "getTotal", "(J)I", (void *) getTotal },
+        { "getNextEntry", "(JI)J", (void *) getNextEntry },
+        { "freeEntry", "(JJ)V", (void *) freeEntry },
+        { "getEntry", "(J[BZ)J", (void *) getEntry },
+        { "getEntryBytes", "(JI)[B", (void *) getEntryBytes },
+        { "getEntryFlag", "(J)I", (void *) getEntryFlag },
+        { "getEntryTime", "(J)J", (void *) getEntryTime },
+        { "getEntryCrc", "(J)J", (void *) getEntryCrc },
+        { "getEntrySize", "(J)J", (void *) getEntrySize },
+        { "getEntryCSize", "(J)J", (void *) getEntryCSize },
+        { "getEntryMethod", "(J)I", (void *) getEntryMethod },
+        { "read", "((JJJ[BII)I", (void *) read },
+};
+
 void java_util_zip_ZipFile_registerNatives()
 {
-#undef C
-#define C "java/util/zip/ZipFile"
-    registerNative(C, "initIDs", "()V", initIDs);
-    registerNative(C, "open", "(Ljava/lang/String;IJZ)J", open);
-    registerNative(C, "startsWithLOC", "(J)Z", startsWithLOC);
-    registerNative(C, "getTotal", "(J)I", getTotal);
-    registerNative(C, "getNextEntry", "(JI)J", getNextEntry);
-    registerNative(C, "freeEntry", "(JJ)V", freeEntry);
-    registerNative(C, "getEntry", "(J[BZ)J", getEntry);
-    registerNative(C, "getEntryBytes", "(JI)[B", getEntryBytes);
-    registerNative(C, "getEntryFlag", "(J)I", getEntryFlag);
-    registerNative(C, "getEntryTime", "(J)J", getEntryTime);
-    registerNative(C, "getEntryCrc", "(J)J", getEntryCrc);
-    registerNative(C, "getEntrySize", "(J)J", getEntrySize);
-    registerNative(C, "getEntryCSize", "(J)J", getEntryCSize);
-    registerNative(C, "getEntryMethod", "(J)I", getEntryMethod);
-    registerNative(C, "read", "((JJJ[BII)I", read);
+    registerNatives("java/util/zip/ZipFile", methods, ARRAY_LENGTH(methods));
 }

@@ -2,9 +2,9 @@
  * Author: kayo
  */
 
-#include "../../registry.h"
 #include "../../../runtime/frame.h"
 #include "../../../objects/class.h"
+#include "../../jni_inner.h"
 
 // public native String intern();
 static void intern(Frame *frame)
@@ -13,7 +13,12 @@ static void intern(Frame *frame)
     frame->pushr(_this->clazz->intern(_this));
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "intern", "()Ljava/lang/String;", (void *) intern },
+};
+
 void java_lang_String_registerNatives()
 {
-    registerNative("java/lang/String", "intern", "()Ljava/lang/String;", intern);
+    registerNatives("java/lang/String", methods, ARRAY_LENGTH(methods));
 }

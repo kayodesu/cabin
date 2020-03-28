@@ -2,7 +2,6 @@
  * Author: kayo
  */
 
-#include "../../registry.h"
 #include "../../../objects/object.h"
 #include "../../../objects/class.h"
 #include "../../../objects/field.h"
@@ -10,6 +9,7 @@
 #include "../../../interpreter/interpreter.h"
 #include "../../../runtime/frame.h"
 #include "../../../runtime/thread_info.h"
+#include "../../jni_inner.h"
 
 using namespace utf8;
 using namespace slot;
@@ -639,41 +639,44 @@ static void getDeclaringClass0(Frame *frame)
     }
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "getPrimitiveClass", "(Ljava/lang/String;)Ljava/lang/Class;", (void *) getPrimitiveClass },
+        { "getName0", "()Ljava/lang/String;", (void *) getName0 },
+        { "forName0",
+        "(Ljava/lang/String;ZLjava/lang/ClassLoader;Ljava/lang/Class;)Ljava/lang/Class;",
+          (void *) forName0 },
+        { "desiredAssertionStatus0", "(Ljava/lang/Class;)Z", (void *) desiredAssertionStatus0 },
+
+        { "isInstance", "(Ljava/lang/Object;)Z", (void *) isInstance },
+        { "isAssignableFrom", "(Ljava/lang/Class;)Z", (void *) isAssignableFrom },
+        { "isInterface", "()Z", (void *) isInterface },
+        { "isArray", "()Z", (void *) isArray },
+        { "isPrimitive", "()Z", (void *) isPrimitive },
+
+        { "getSuperclass", "()" CLS, (void *) getSuperclass },
+        { "getInterfaces0", "()[Ljava/lang/Class;", (void *) getInterfaces0 },
+        { "getComponentType", "()Ljava/lang/Class;", (void *) getComponentType },
+        { "getModifiers", "()I", (void *) getModifiers },
+        { "getEnclosingMethod0", "()[Ljava/lang/Object;", (void *) getEnclosingMethod0 },
+        { "getDeclaringClass0", "()" CLS, (void *) getDeclaringClass0 },
+        { "getGenericSignature0", "()" STR, (void *) getGenericSignature0 },
+        { "getProtectionDomain0", "()Ljava/security/ProtectionDomain;", (void *) getProtectionDomain0 },
+        { "getConstantPool", "()Lsun/reflect/ConstantPool;", (void *) getConstantPool },
+
+        { "getSigners", "()[Ljava/lang/Object;", (void *) getSigners },
+        { "setSigners", "([Ljava/lang/Object;)V", (void *) setSigners },
+
+        { "getRawAnnotations", "()[B", (void *) getRawAnnotations },
+        { "getRawTypeAnnotations", "()[B", (void *) getRawTypeAnnotations },
+
+        { "getDeclaredFields0", "(Z)[Ljava/lang/reflect/Field;", (void *) getDeclaredFields0 },
+        { "getDeclaredMethods0", "(Z)[Ljava/lang/reflect/Method;", (void *) getDeclaredMethods0 },
+        { "getDeclaredConstructors0", "(Z)[Ljava/lang/reflect/Constructor;", (void *) getDeclaredConstructors0 },
+        { "getDeclaredClasses0", "()[Ljava/lang/Class;", (void *) getDeclaredClasses0 },
+};
+
 void java_lang_Class_registerNatives()
 {
-#undef C
-#define C "java/lang/Class",
-    registerNative(C "getPrimitiveClass", "(Ljava/lang/String;)Ljava/lang/Class;", getPrimitiveClass);
-    registerNative(C "getName0", "()Ljava/lang/String;", getName0);
-    registerNative(C "forName0",
-                   "(Ljava/lang/String;ZLjava/lang/ClassLoader;Ljava/lang/Class;)Ljava/lang/Class;",
-                   forName0);
-    registerNative(C "desiredAssertionStatus0", "(Ljava/lang/Class;)Z", desiredAssertionStatus0);
-
-    registerNative(C "isInstance", "(Ljava/lang/Object;)Z", isInstance);
-    registerNative(C "isAssignableFrom", "(Ljava/lang/Class;)Z", isAssignableFrom);
-    registerNative(C "isInterface", "()Z", isInterface);
-    registerNative(C "isArray", "()Z", isArray);
-    registerNative(C "isPrimitive", "()Z", isPrimitive);
-
-    registerNative(C "getSuperclass", "()" LCLS, getSuperclass);
-    registerNative(C "getInterfaces0", "()[Ljava/lang/Class;", getInterfaces0);
-    registerNative(C "getComponentType", "()Ljava/lang/Class;", getComponentType);
-    registerNative(C "getModifiers", "()I", getModifiers);
-    registerNative(C "getEnclosingMethod0", "()[Ljava/lang/Object;", getEnclosingMethod0);
-    registerNative(C "getDeclaringClass0", "()" LCLS, getDeclaringClass0);
-    registerNative(C "getGenericSignature0", "()" LSTR, getGenericSignature0);
-    registerNative(C "getProtectionDomain0", "()Ljava/security/ProtectionDomain;", getProtectionDomain0);
-    registerNative(C "getConstantPool", "()Lsun/reflect/ConstantPool;", getConstantPool);
-
-    registerNative(C "getSigners", "()[Ljava/lang/Object;", getSigners);
-    registerNative(C "setSigners", "([Ljava/lang/Object;)V", setSigners);
-
-    registerNative(C "getRawAnnotations", "()[B", getRawAnnotations);
-    registerNative(C "getRawTypeAnnotations", "()[B", getRawTypeAnnotations);
-
-    registerNative(C "getDeclaredFields0", "(Z)[Ljava/lang/reflect/Field;", getDeclaredFields0);
-    registerNative(C "getDeclaredMethods0", "(Z)[Ljava/lang/reflect/Method;", getDeclaredMethods0);
-    registerNative(C "getDeclaredConstructors0", "(Z)[Ljava/lang/reflect/Constructor;", getDeclaredConstructors0);
-    registerNative(C "getDeclaredClasses0", "()[Ljava/lang/Class;", getDeclaredClasses0);
+    registerNatives("java/lang/Class", methods, ARRAY_LENGTH(methods));
 }

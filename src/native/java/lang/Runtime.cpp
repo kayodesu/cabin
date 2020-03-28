@@ -3,8 +3,8 @@
  */
 
 #include <windows.h> // todo
-#include "../../registry.h"
 #include "../../../runtime/frame.h"
+#include "../../jni_inner.h"
 
 // public native int availableProcessors();
 static void availableProcessors(Frame *frame)
@@ -58,14 +58,19 @@ static void traceMethodCalls(Frame *frame)
     jvm_abort("traceMethodCalls");
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "availableProcessors", "()I", (void *) availableProcessors },
+        { "freeMemory", "()J", (void *) freeMemory },
+        { "totalMemory", "()J", (void *) totalMemory },
+        { "maxMemory", "()J", (void *) maxMemory },
+        { "gc", "()V", (void *) gc },
+        { "runFinalization0", "()V", (void *) runFinalization0 },
+        { "traceInstructions", "(Z)V", (void *) traceInstructions },
+        { "traceMethodCalls", "(Z)V", (void *) traceMethodCalls },
+};
+
 void java_lang_Runtime_registerNatives()
 {
-    registerNative("java/lang/Runtime", "availableProcessors", "()I", availableProcessors);
-    registerNative("java/lang/Runtime", "freeMemory", "()J", freeMemory);
-    registerNative("java/lang/Runtime", "totalMemory", "()J", totalMemory);
-    registerNative("java/lang/Runtime", "maxMemory", "()J", maxMemory);
-    registerNative("java/lang/Runtime", "gc", "()V", gc);
-    registerNative("java/lang/Runtime", "runFinalization0", "()V", runFinalization0);
-    registerNative("java/lang/Runtime", "traceInstructions", "(Z)V", traceInstructions);
-    registerNative("java/lang/Runtime", "traceMethodCalls", "(Z)V", traceMethodCalls);
+    registerNatives("java/lang/Runtime", methods, ARRAY_LENGTH(methods));
 }

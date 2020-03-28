@@ -1,4 +1,5 @@
-#include "../../../registry.h"
+#include "../../../jni_inner.h"
+#include "../../../../runtime/frame.h"
 #include "../../../../kayo.h"
 
 /*
@@ -17,10 +18,13 @@ static void getTypeAnnotationBytes0(Frame *frame)
     jvm_abort("getTypeAnnotationBytes0"); // todo
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "getParameters0", "()[Ljava/lang/reflect/Parameter;", (void *) getParameters0 },
+        { "getTypeAnnotationBytes0", "()[B", (void *) getTypeAnnotationBytes0 },
+};
+
 void java_lang_reflect_Executable_registerNatives()
 {
-#undef C
-#define C "java/lang/reflect/Executable",
-    registerNative(C "getParameters0", "()[Ljava/lang/reflect/Parameter;", getParameters0);
-    registerNative(C "getTypeAnnotationBytes0", "()[B", getTypeAnnotationBytes0);
+    registerNatives("java/lang/reflect/Executable", methods, ARRAY_LENGTH(methods));
 }

@@ -3,7 +3,8 @@
  */
 
 #include "../../../kayo.h"
-#include "../../registry.h"
+#include "../../jni_inner.h"
+#include "../../../runtime/frame.h"
 
 // static native void copyFromShortArray(Object src, long srcPos, long dstAddr, long length);
 static void copyFromShortArray(Frame *frame)
@@ -42,13 +43,17 @@ static void copyToLongArray(Frame *frame)
     jvm_abort("copyToLongArray"); // todo
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "copyFromShortArray", "(Ljava/lang/Object;JJJ)V", (void *) copyFromShortArray },
+        { "copyToShortArray", "(JLjava/lang/Object;JJ)V", (void *) copyToShortArray },
+        { "copyFromIntArray", "(Ljava/lang/Object;JJJ)V", (void *) copyFromIntArray },
+        { "copyToIntArray", "(JLjava/lang/Object;JJ)V", (void *) copyToIntArray },
+        { "copyFromLongArray", "(Ljava/lang/Object;JJJ)V", (void *) copyFromLongArray },
+        { "copyToLongArray", "(JLjava/lang/Object;JJ)V", (void *) copyToLongArray },
+};
 
 void java_nio_Bits_registerNatives()
 {
-    registerNative("java/nio/Bits", "copyFromShortArray", "(Ljava/lang/Object;JJJ)V", copyFromShortArray);
-    registerNative("java/nio/Bits", "copyToShortArray", "(JLjava/lang/Object;JJ)V", copyToShortArray);
-    registerNative("java/nio/Bits", "copyFromIntArray", "(Ljava/lang/Object;JJJ)V", copyFromIntArray);
-    registerNative("java/nio/Bits", "copyToIntArray", "(JLjava/lang/Object;JJ)V", copyToIntArray);
-    registerNative("java/nio/Bits", "copyFromLongArray", "(Ljava/lang/Object;JJJ)V", copyFromLongArray);
-    registerNative("java/nio/Bits", "copyToLongArray", "(JLjava/lang/Object;JJ)V", copyToLongArray);
+    registerNatives("java/nio/Bits", methods, ARRAY_LENGTH(methods));
 }

@@ -2,7 +2,7 @@
  * Author: kayo
  */
 
-#include "../../registry.h"
+#include "../../jni_inner.h"
 #include "../../../objects/class.h"
 #include "../../../runtime/frame.h"
 #include "../../../interpreter/interpreter.h"
@@ -33,9 +33,12 @@ static void createLong(Frame *frame)
     frame->pushr(RSLOT(execJavaFunc(allocate, { slot::islot(sizeof(jlong)) })));
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "createLong", "(Ljava/lang/String;IIJ)Ljava/nio/ByteBuffer;", (void *) createLong },
+};
+
 void sun_misc_Perf_registerNatives()
 {
-#undef C
-#define C "sun/misc/Perf"
-    registerNative(C, "createLong", "(Ljava/lang/String;IIJ)Ljava/nio/ByteBuffer;", createLong);
+    registerNatives("sun/misc/Perf", methods, ARRAY_LENGTH(methods));
 }

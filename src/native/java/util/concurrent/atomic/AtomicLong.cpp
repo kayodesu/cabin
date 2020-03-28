@@ -1,4 +1,4 @@
-#include "../../../../registry.h"
+#include "../../../../jni_inner.h"
 #include "../../../../../runtime/frame.h"
 
 /*
@@ -20,7 +20,12 @@ static void VMSupportsCS8(Frame *frame)
     frame->pushi(0); // todo
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "VMSupportsCS8", "()Z", (void *) VMSupportsCS8 },
+};
+
 void java_util_concurrent_atomic_AtomicLong_registerNatives()
 {
-    registerNative("java/util/concurrent/atomic/AtomicLong", "VMSupportsCS8", "()Z", VMSupportsCS8);
+    registerNatives("java/util/concurrent/atomic/AtomicLong", methods, ARRAY_LENGTH(methods));
 }

@@ -4,6 +4,7 @@
 
 #include "../../../../runtime/frame.h"
 #include "../../../../objects/array_object.h"
+#include "../../../jni_inner.h"
 
 /*
  * Gather the VM and command line properties and return as a String[].
@@ -95,9 +96,15 @@ static void platformProperties(Frame *frame)
     frame->pushr(prop_array);
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "vmProperties", "()[Ljava/lang/String;", (void *) vmProperties },
+        { "platformProperties", "()[Ljava/lang/String;", (void *) platformProperties },
+};
+
+
 void jdk_internal_util_SystemProps$Raw_registerNatives()
 {
-    registerNative("jdk/internal/util/SystemProps$Raw", "vmProperties", "()[Ljava/lang/String;", vmProperties);
-    registerNative("jdk/internal/util/SystemProps$Raw", "platformProperties", "()[Ljava/lang/String;", platformProperties);
+    registerNatives("jdk/internal/util/SystemProps$Raw", methods, ARRAY_LENGTH(methods));
 }
 

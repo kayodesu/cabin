@@ -2,7 +2,7 @@
  * Author: kayo
  */
 
-#include "../../registry.h"
+#include "../../jni_inner.h"
 #include "../../../objects/object.h"
 #include "../../../objects/array_object.h"
 #include "../../../runtime/thread_info.h"
@@ -199,24 +199,27 @@ static void setNativeName(Frame *frame)
     jvm_abort("setNativeName"); // todo
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "currentThread", "()Ljava/lang/Thread;", (void *) currentThread },
+        { "yield", "()V", (void *) yield },
+        { "sleep", "(J)V", (void *) sleep },
+        { "interrupt0", "()V", (void *) interrupt0 },
+        { "isInterrupted", "(Z)Z", (void *) isInterrupted },
+        { "isAlive", "()Z", (void *) isAlive },
+        { "start0", "()V", (void *) start0 },
+        { "countStackFrames", "()I", (void *) countStackFrames },
+        { "holdsLock", "(Ljava/lang/Object;)Z", (void *) holdsLock },
+        { "dumpThreads", "([Ljava/lang/Thread;)[[Ljava/lang/StackTraceElement;", (void *) dumpThreads },
+        { "getThreads", "()[Ljava/lang/Thread;", (void *) getThreads },
+        { "setPriority0", "(I)V", (void *) setPriority0 },
+        { "stop0", "(Ljava/lang/Object;)V", (void *) stop0 },
+        { "suspend0", "()V", (void *) suspend0 },
+        { "resume0", "()V", (void *) resume0 },
+        { "setNativeName", "(Ljava/lang/String;)V", (void *) setNativeName },
+};
+
 void java_lang_Thread_registerNatives()
 {
-#undef C
-#define C S(java_lang_Thread)
-    registerNative(C, "currentThread", "()Ljava/lang/Thread;", currentThread);
-    registerNative(C, "yield", "()V", yield);
-    registerNative(C, "sleep", "(J)V", sleep);
-    registerNative(C, "interrupt0", "()V", interrupt0);
-    registerNative(C, "isInterrupted", "(Z)Z", isInterrupted);
-    registerNative(C, "isAlive", "()Z", isAlive);
-    registerNative(C, "start0", "()V", start0);
-    registerNative(C, "countStackFrames", "()I", countStackFrames);
-    registerNative(C, "holdsLock", "(Ljava/lang/Object;)Z", holdsLock);
-    registerNative(C, "dumpThreads", "([Ljava/lang/Thread;)[[Ljava/lang/StackTraceElement;", dumpThreads);
-    registerNative(C, "getThreads", "()[Ljava/lang/Thread;", getThreads);
-    registerNative(C, "setPriority0", "(I)V", setPriority0);
-    registerNative(C, "stop0", "(Ljava/lang/Object;)V", stop0);
-    registerNative(C, "suspend0", "()V", suspend0);
-    registerNative(C, "resume0", "()V", resume0);
-    registerNative(C, "setNativeName", "(Ljava/lang/String;)V", setNativeName);
+    registerNatives(S(java_lang_Thread), methods, ARRAY_LENGTH(methods));
 }

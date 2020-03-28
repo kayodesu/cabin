@@ -2,7 +2,7 @@
  * Author: kayo
  */
 
-#include "../../registry.h"
+#include "../../jni_inner.h"
 #include "../../../objects/object.h"
 #include "../../../objects/array_object.h"
 #include "../../../runtime/thread_info.h"
@@ -103,11 +103,14 @@ static void getStackTraceDepth(Frame *frame)
     frame->pushi(backtrace->len);
 }
 
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "fillInStackTrace", "(I)Ljava/lang/Throwable;", (void *) fillInStackTrace },
+        { "getStackTraceElement", "(I)Ljava/lang/StackTraceElement;", (void *) getStackTraceElement },
+        { "getStackTraceDepth", "()I", (void *) getStackTraceDepth },
+};
+
 void java_lang_Throwable_registerNatives()
 {
-#undef C
-#define C "java/lang/Throwable"
-    registerNative(C, "fillInStackTrace", "(I)Ljava/lang/Throwable;", fillInStackTrace);
-    registerNative(C, "getStackTraceElement", "(I)Ljava/lang/StackTraceElement;", getStackTraceElement);
-    registerNative(C, "getStackTraceDepth", "()I", getStackTraceDepth);
+    registerNatives("java/lang/Throwable", methods, ARRAY_LENGTH(methods));
 }
