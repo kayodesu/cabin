@@ -405,7 +405,6 @@ struct JNINativeInterface_ {
     const char* (JNICALL *GetStringUTFChars)(JNIEnv *env, jstring str, jboolean *isCopy);
     void (JNICALL *ReleaseStringUTFChars)(JNIEnv *env, jstring str, const char* chars);
 
-
     jsize (JNICALL *GetArrayLength)(JNIEnv *env, jarray array);
 
     jobjectArray (JNICALL *NewObjectArray)(JNIEnv *env, jsize len, jclass clazz, jobject init);

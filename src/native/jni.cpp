@@ -1208,7 +1208,7 @@ static JNIEnv jni_env;
 
 jint JNICALL JVM_GetEnv(JavaVM *vm, void **penv, jint version)
 {
-    assert(vm != nullptr && penv != nullptr);
+    assert(penv != nullptr);
 
     if (getCurrentThread() == nullptr) {
         *penv = nullptr;
@@ -1238,8 +1238,6 @@ const static struct JNIInvokeInterface_ JVM_JNIInvokeInterface = {
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void register_all_native_methods();
 
 void initJNI()
 {
@@ -1304,61 +1302,6 @@ void initJNI()
     R(java_util_zip_ZipFile_registerNatives);
 
     R(jdk_internal_misc_VM_registerNatives);
-}
-
-void callJNIMethod(Frame *frame)
-{
-    assert(frame != nullptr && frame->method != nullptr);
-    assert(frame->method->isNative() && frame->method->native_method != nullptr);
-
-    Method *m = frame->method;
-    slot_t *sp;
-    int method_args[m->arg_slot_count + (m->isStatic() ? 2 : 1)]; // 为函数参数在栈上申请空间。
-    asm volatile ("movl %%esp,%0" : "=m" (sp) :); // todo JUST for i386 and gcc.
-
-    // 准备参数
-    *sp++ = (slot_t) &jni_env;
-    if(m->isStatic())
-        *sp++ = slot::rslot(m->clazz);
-    for (int i = 0; i < m->arg_slot_count; i++) {
-        sp[i] = frame->lvars[i];
-    }
-
-    switch (m->ret_type) {
-        case Method::RET_VOID:
-            ((void (*)()) m->native_method)();
-            break;
-        case Method::RET_BYTE:
-            frame->pushi(((jbyte (*)()) m->native_method)());
-            break;
-        case Method::RET_BOOL:
-            frame->pushi(((jbool (*)()) m->native_method)());
-            break;
-        case Method::RET_CHAR:
-            frame->pushi(((jchar (*)()) m->native_method)());
-            break;
-        case Method::RET_SHORT:
-            frame->pushi(((jshort (*)()) m->native_method)());
-            break;
-        case Method::RET_INT:
-            frame->pushi(((jint (*)()) m->native_method)());
-            break;
-        case Method::RET_FLOAT:
-            frame->pushf(((jfloat (*)()) m->native_method)());
-            break;
-        case Method::RET_LONG:
-            frame->pushl(((jlong (*)()) m->native_method)());
-            break;
-        case Method::RET_DOUBLE:
-            frame->pushd(((jdouble (*)()) m->native_method)());
-            break;
-        case Method::RET_REFERENCE:
-            frame->pushr(((jref (*)()) m->native_method)());
-            break;
-        default:
-            // todo error
-            break;
-    }
 }
 
 static vector<tuple<const char * /* class name */, JNINativeMethod *, int /* method count */>> native_methods;

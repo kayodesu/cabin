@@ -6,7 +6,6 @@
 #include <cstdarg>
 #include "signature.h"
 
-
 void parse_method_args_va_list(const char *signature, va_list &args, jvalue *values)
 {
     assert(signature != nullptr && values != nullptr);
@@ -40,15 +39,15 @@ void parse_method_args_va_list(const char *signature, va_list &args, jvalue *val
             values->d = va_arg(args, jdouble);
             p++;
         } else {
-        if(*p == '[')
-        for(p++; *p == '['; p++);
+            if(*p == '[')
+            for(p++; *p == '['; p++);
 
-        if(*p == 'L')
-            while(*p++ != ';');
-        else
-            p++;
+            if(*p == 'L')
+                while(*p++ != ';');
+            else
+                p++;
 
-        values->l = va_arg(args, jobject);
+            values->l = va_arg(args, jobject);
         }
     }
 }

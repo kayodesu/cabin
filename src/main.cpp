@@ -384,7 +384,7 @@ int main(int argc, char* argv[])
     time_t time2;
     time(&time2);
 
-    printf("init jvm: %lds\n", ((long)(time2)) - ((long)(time1)));
+    printf("run jvm: %lds\n", ((long)(time2)) - ((long)(time1)));
     return 0;
 }
 

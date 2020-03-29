@@ -1381,8 +1381,11 @@ __opc_athrow:
 
 			    assert(frame->method->native_method != nullptr);
 			    try {
-                    ((void(*)(Frame *))frame->method->native_method)(frame);
-//                    callJNIMethod(frame);
+			        if (strcmp(frame->method->name, "forName0") == 0) {
+                        callJNIMethod(frame);
+			        } else {
+                        ((void (*)(Frame *)) frame->method->native_method)(frame);
+                    }
 			    } catch (Throwable &t) {
 			        TRACE("native method throw a exception\n");
 			        assert(t.getJavaThrowable() != nullptr);
