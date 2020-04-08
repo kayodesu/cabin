@@ -14,7 +14,7 @@ void initIDs(Frame *frame)
 }
 
 // private static native long open(String name, int mode, long lastModified, boolean usemmap) throws IOException;
-void open(Frame *frame)
+void __open(Frame *frame)
 {
     auto name = frame->getLocalAsRef(0)->toUtf8();
     // todo 其他几个参数怎么搞？？
@@ -226,7 +226,7 @@ void getEntryMethod(Frame *frame)
 }
 
 // private static native int read(long jzfile, long jzentry, long pos, byte[] b, int off, int len);
-void read(Frame *frame)
+void __read(Frame *frame)
 {
     jvm_abort("read");
 /*
@@ -251,7 +251,7 @@ void read(Frame *frame)
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
         { "initIDs", "()V", (void *) initIDs },
-        { "open", "(Ljava/lang/String;IJZ)J", (void *) open },
+        { "open", "(Ljava/lang/String;IJZ)J", (void *) __open },
         { "startsWithLOC", "(J)Z", (void *) startsWithLOC },
         { "getTotal", "(J)I", (void *) getTotal },
         { "getNextEntry", "(JI)J", (void *) getNextEntry },
@@ -264,7 +264,7 @@ static JNINativeMethod methods[] = {
         { "getEntrySize", "(J)J", (void *) getEntrySize },
         { "getEntryCSize", "(J)J", (void *) getEntryCSize },
         { "getEntryMethod", "(J)I", (void *) getEntryMethod },
-        { "read", "((JJJ[BII)I", (void *) read },
+        { "read", "((JJJ[BII)I", (void *) __read },
 };
 
 void java_util_zip_ZipFile_registerNatives()

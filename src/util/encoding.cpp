@@ -97,7 +97,10 @@ bool utf8::equals(const utf8_t *p1, const utf8_t *p2)
 utf8_t *utf8::dup(const utf8_t *utf8)
 {
     assert(utf8 != nullptr);
-    // 因为jvm改进的utf8中除结束符外不包含'\0'，所以用strdup即可。
+    // 因为jvm改进的utf8中除结束符外不包含'\0'，所以用strcpy即可。
+//    char *p = (char *) malloc((strlen(utf8) + 1)*sizeof(char));
+//    strcpy(p, utf8);
+//    return p;
     return strdup(utf8);
 }
 

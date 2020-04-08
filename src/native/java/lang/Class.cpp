@@ -20,40 +20,40 @@ using namespace slot;
  * private static native Class<?> forName0
  *  (String name, boolean initialize, ClassLoader loader, Class<?> caller) throws ClassNotFoundException;
  */
-//static jclass forName0(Frame *frame)
-//{
-//    auto name = frame->getLocalAsRef(0)->toUtf8(); // 形如 xxx.xx.xx 的形式
-//    auto initialize = frame->getLocalAsInt(1);
-//    auto loader = frame->getLocalAsRef(2);
-//    auto caller = frame->getLocalAsRef(3);
-//
-//    Class *c = loadClass(loader, dots2SlashDup(name));
-//    if (c == nullptr) {
-//        throw ClassNotFoundException(name);
-//    }
-//
-//    if (initialize) {
-//        initClass(c);
-//    }
-//
-//    frame->pushr((jref) c);
-//}
-
-static jclsref forName0(JNIEnv *env, jclsref clazz, jstrref name, jboolean initialize, jref loader, jclsref caller)
+static jclass forName0(Frame *frame)
 {
-    const utf8_t *utf8_name = name->toUtf8(); // // 形如 xxx.xx.xx 的形式
+    auto name = frame->getLocalAsRef(0)->toUtf8(); // 形如 xxx.xx.xx 的形式
+    auto initialize = frame->getLocalAsInt(1);
+    auto loader = frame->getLocalAsRef(2);
+    auto caller = frame->getLocalAsRef(3);
 
-    Class *c = loadClass(loader, dots2SlashDup(utf8_name));
+    Class *c = loadClass(loader, dots2SlashDup(name));
     if (c == nullptr) {
-        Class *ec = loadClass(loader, S(java_lang_ClassNotFoundException));
-        env->ThrowNew(to_jclass(ec), utf8_name);
+        throw ClassNotFoundException(name);
     }
+
     if (initialize) {
         initClass(c);
     }
 
-    return c;
+    frame->pushr((jref) c);
 }
+
+//static jclsref forName0(JNIEnv *env, jclsref clazz, jstrref name, jboolean initialize, jref loader, jclsref caller)
+//{
+//    const utf8_t *utf8_name = name->toUtf8(); // // 形如 xxx.xx.xx 的形式
+//
+//    Class *c = loadClass(loader, dots2SlashDup(utf8_name));
+//    if (c == nullptr) {
+//        Class *ec = loadClass(loader, S(java_lang_ClassNotFoundException));
+//        env->ThrowNew(to_jclass(ec), utf8_name);
+//    }
+//    if (initialize) {
+//        initClass(c);
+//    }
+//
+//    return c;
+//}
 
 /*
  * Return the Virtual Machine's Class Object for the named primitive type.
