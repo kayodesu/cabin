@@ -5,10 +5,10 @@ project(kayo)
 #set(CMAKE_CXX_FLAGS "-Wall -pthread -lz -lminizip -m32 -std=c++17")
 
 set(CMAKE_CXX_STANDARD 17)
-#set(CMAKE_CXX_FLAGS "-Wall -pthread -lz -lminizip -m32")
-set(CMAKE_CXX_FLAGS "-Wall -pthread")
+set(CMAKE_CXX_FLAGS "-Wall -pthread -m32")
 
-#set(CMAKE_C_FLAGS "-std=c99 -Wall -pthread -lz -lminizip -m32")
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_FLAGS "-Wall -pthread -m32")
 
 add_subdirectory(zlib)
 
