@@ -197,7 +197,7 @@ static void initJVM(int argc, char *argv[])
     }
     g_java_home = home;
 
-    g_java_home = R"(C:\Program Files\Java\jdk1.8.0_221)"; // todo for testing
+    g_java_home = R"(C:\Program Files\Java\jdk1.8.0_221)"; // todo for testing ...............................
 
     /* Access JAVA_HOME/release file to get the version of JDK */
     ifstream ifs(g_java_home + "/release");
@@ -206,7 +206,7 @@ static void initJVM(int argc, char *argv[])
     }
     string line;
     while(getline(ifs, line)){
-        // JAVA_VERSION="x.x.x_xxx" // jdk8及其以下的jdk， JAVA_VERSION="1.8.0_221"
+        // JAVA_VERSION="x.x.x_xxx" // jdk8及其以下的jdk, JAVA_VERSION="1.8.0_221"
         // JAVA_VERSION="xx.xx.xx"  // jdk9及其以上的jdk, JAVA_VERSION="11.0.1"
 
         // JDK版本与class file版本对应关系
@@ -346,7 +346,7 @@ int main(int argc, char* argv[])
     assert(scl != nullptr);
 
     // Main Thread Set ContextClassLoader
-    mainThread->tobj->setFieldValue(S(contextClassLoader), S(sig_java_lang_ClassLoader), scl);
+    mainThread->tobj->setRefField(S(contextClassLoader), S(sig_java_lang_ClassLoader), scl);
 
     Class *main_class = loadClass(scl, dots2Slash(main_class_name));
     assert(main_class != nullptr);

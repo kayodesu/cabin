@@ -423,6 +423,7 @@ Class::Class(Object *loader, u1 *bytecode, size_t len)
     createItable();
 
     data = (slot_t *)(this + 1);
+    slots_mgr.init(data);
     state = LOADED;
 }
 

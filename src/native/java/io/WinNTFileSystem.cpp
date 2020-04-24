@@ -51,7 +51,7 @@ static void canonicalize0(Frame *frame)
 static void getBooleanAttributes(Frame *frame)
 {
     auto f = frame->getLocalAsRef(1);
-    auto __path = f->getInstFieldValue<Object *>("path", "Ljava/lang/String;")->toUtf8();
+    auto __path = f->getRefField("path", "Ljava/lang/String;")->toUtf8();
 
     jint attr = 0;
     path p(__path);
@@ -72,7 +72,7 @@ static void getLastModifiedTime(Frame *frame)
 {
     // todo
     auto f = frame->getLocalAsRef(1);
-    auto __path = f->getInstFieldValue<Object *>("path", "Ljava/lang/String;")->toUtf8();
+    auto __path = f->getRefField("path", "Ljava/lang/String;")->toUtf8();
 
 //    file_time_type mtime = last_write_time(__path);
     struct stat buf; // todo 平台相关代码
@@ -87,7 +87,7 @@ static void getLength(Frame *frame)
 {
     // todo
     auto f = frame->getLocalAsRef(1);
-    auto __path = f->getInstFieldValue<Object *>("path", "Ljava/lang/String;")->toUtf8();
+    auto __path = f->getRefField("path", "Ljava/lang/String;")->toUtf8();
 
     uintmax_t size = file_size(__path);
     frame->pushl(size);

@@ -161,7 +161,7 @@ static void arrayIndexScale(Frame *frame)
 static void objectFieldOffset(Frame *frame)
 {
     jref field = frame->getLocalAsRef(1);
-    auto offset = field->getInstFieldValue<jint>(S(slot), S(I));
+    auto offset = field->getIntField(S(slot), S(I));
     frame->pushl(offset);
 }
 

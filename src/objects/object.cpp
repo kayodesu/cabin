@@ -19,6 +19,7 @@ using namespace utf8;
 Object::Object(Class *c): clazz(c)
 {
     data = (slot_t *) (this + 1);
+    slots_mgr.init(data);
 }
 
 Object *Object::newObject(Class *c)
@@ -27,40 +28,75 @@ Object *Object::newObject(Class *c)
     return new(g_heap.allocObject(size)) Object(c);
 }
 
+Field *Object::lookupField(const char *name, const char *descriptor)
+{
+    assert(name != nullptr && descriptor != nullptr);
+    return clazz->lookupInstField(name, descriptor);
+}
+
 Object *Object::clone() const
 {
     size_t s = size();
     return (Object *) memcpy(g_heap.allocObject(s), this, s);
 }
 
-void Object::setFieldValue(Field *f, jint v)
+void Object::setByteField(Field *f, jbyte v)
 {
     assert(f != nullptr);
-    ISLOT(data + f->id) = v;
+    slots_mgr.setByte(f->id, v);
 }
 
-void Object::setFieldValue(Field *f, jfloat v)
+void Object::setBoolField(Field *f, jbool v)
 {
     assert(f != nullptr);
-    FSLOT(data + f->id) = v;
+    slots_mgr.setBool(f->id, v);
 }
 
-void Object::setFieldValue(Field *f, jlong v)
+void Object::setCharField(Field *f, jchar v)
 {
     assert(f != nullptr);
-    LSLOT(data + f->id) = v;
+    slots_mgr.setChar(f->id, v);
 }
 
-void Object::setFieldValue(Field *f, jdouble v)
+void Object::setShortField(Field *f, jshort v)
 {
     assert(f != nullptr);
-    DSLOT(data + f->id) = v;
+    slots_mgr.setShort(f->id, v);
 }
 
-void Object::setFieldValue(Field *f, jref v)
+void Object::setIntField(Field *f, jint v)
 {
     assert(f != nullptr);
-    RSLOT(data + f->id) = v;
+    slots_mgr.setInt(f->id, v);
+//    ISLOT(data + f->id) = v;
+}
+
+void Object::setFloatField(Field *f, jfloat v)
+{
+    assert(f != nullptr);
+    slots_mgr.setFloat(f->id, v);
+//    FSLOT(data + f->id) = v;
+}
+
+void Object::setLongField(Field *f, jlong v)
+{
+    assert(f != nullptr);
+    slots_mgr.setLong(f->id, v);
+//    LSLOT(data + f->id) = v;
+}
+
+void Object::setDoubleField(Field *f, jdouble v)
+{
+    assert(f != nullptr);
+    slots_mgr.setDouble(f->id, v);
+//    DSLOT(data + f->id) = v;
+}
+
+void Object::setRefField(Field *f, jref v)
+{
+    assert(f != nullptr);
+    slots_mgr.setRef(f->id, v);
+//    RSLOT(data + f->id) = v;
 }
 
 //void Object::setFieldValue(Field *f, slot_t v)
@@ -86,76 +122,70 @@ void Object::setFieldValue(Field *f, const slot_t *value)
     }
 }
 
-void Object::setFieldValue(const char *name, const char *descriptor, jint v)
-{
-    assert(name != nullptr && descriptor != nullptr);
-    setFieldValue(clazz->lookupInstField(name, descriptor), v);
-}
-
-void Object::setFieldValue(const char *name, const char *descriptor, jfloat v)
-{
-    assert(name != nullptr && descriptor != nullptr);
-    setFieldValue(clazz->lookupInstField(name, descriptor), v);
-}
-
-void Object::setFieldValue(const char *name, const char *descriptor, jlong v)
-{
-    assert(name != nullptr && descriptor != nullptr);
-    setFieldValue(clazz->lookupInstField(name, descriptor), v);
-}
-
-void Object::setFieldValue(const char *name, const char *descriptor, jdouble v)
-{
-    assert(name != nullptr && descriptor != nullptr);
-    setFieldValue(clazz->lookupInstField(name, descriptor), v);
-}
-
-void Object::setFieldValue(const char *name, const char *descriptor, jref v)
-{
-    assert(name != nullptr && descriptor != nullptr);
-    setFieldValue(clazz->lookupInstField(name, descriptor), v);
-}
-
-//void Object::setFieldValue(const char *name, const char *type, slot_t v)
-//{
-//    assert(name != nullptr && type != nullptr);
-//    setFieldValue(clazz->lookupInstField(name, type), v);
-//}
-
-//void Object::setFieldValue(const char *name, const char *type, const slot_t *value)
-//{
-//    assert(name != nullptr && type != nullptr && value != nullptr);
-//    setFieldValue(clazz->lookupInstField(name, type), value);
-//}
-
 void Object::setFieldValue(int id, jref value)
 {
     Field *f = clazz->getDeclaredInstField(id);
 
     if (value == jnull) {
-        RSLOT(data + id) = jnull;
+//        RSLOT(data + id) = jnull;
+        setRefField(f, jnull);
     } else if (f->isPrim()) {
         const slot_t *unbox = value->unbox();
         data[id] = *unbox;
         if (f->category_two)
             data[id+1] = *++unbox;
     } else {
-        RSLOT(data + id) = jnull;
+        setRefField(f, jnull);
+//        RSLOT(data + id) = jnull;
     }
 }
 
-const slot_t *Object::getInstFieldValue0(const Field *f) const
+jbyte Object::getByteField(Field *f)
 {
     assert(f != nullptr);
-    return data + f->id;
+    return slots_mgr.getByte(f->id);
 }
 
-const slot_t *Object::getInstFieldValue0(const char *name, const char *descriptor) const
+jbool Object::getBoolField(Field *f)
 {
-    assert(name != nullptr && descriptor != nullptr);
-    Field *f = clazz->lookupField(name, descriptor);
     assert(f != nullptr);
-    return getInstFieldValue0(f);
+    return slots_mgr.getBool(f->id);
+}
+
+jchar Object::getCharField(Field *f)
+{
+    assert(f != nullptr);
+    return slots_mgr.getChar(f->id);
+}
+
+jshort Object::getShortField(Field *f)
+{
+    assert(f != nullptr);
+    return slots_mgr.getShort(f->id);
+}
+
+jint Object::getIntField(Field *f)
+{
+    assert(f != nullptr);
+    return slots_mgr.getInt(f->id);
+}
+
+jfloat Object::getFloatField(Field *f)
+{
+    assert(f != nullptr);
+    return slots_mgr.getFloat(f->id);
+}
+
+jlong Object::getLongField(Field *f)
+{
+    assert(f != nullptr);
+    return slots_mgr.getLong(f->id);
+}
+
+jdouble Object::getDoubleField(Field *f)
+{
+    assert(f != nullptr);
+    return slots_mgr.getDouble(f->id);
 }
 
 bool Object::isInstanceOf(Class *c) const

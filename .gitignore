@@ -1,4 +1,5 @@
-# Java class files
 *.class
 .idea/
+.vscode/
+build/
 

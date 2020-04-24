@@ -324,92 +324,111 @@ jobject JNICALL JVM_GetObjectField(JNIEnv *env, jobject obj, jfieldID fieldID)
 {
     Object *o = to_object_ref(obj);
     Field *f = to_field(fieldID);
-    return addJNILocalRef(o->getInstFieldValue<jref>(f));
+    return addJNILocalRef(o->getRefField(f));
 }
 
 jboolean JNICALL JVM_GetBooleanField(JNIEnv *env, jobject obj, jfieldID fieldID)
 {
-    return getInstFieldValue<jboolean>(obj, fieldID);
+    return to_object_ref(obj)->getBoolField(to_field(fieldID));
 }
 
 jbyte JNICALL JVM_GetByteField(JNIEnv *env, jobject obj, jfieldID fieldID)
 {
-    return getInstFieldValue<jbyte>(obj, fieldID);
+    return to_object_ref(obj)->getByteField(to_field(fieldID));
 }
 
 jchar JNICALL JVM_GetCharField(JNIEnv *env, jobject obj, jfieldID fieldID)
 {
-    return getInstFieldValue<jchar>(obj, fieldID);
+    return to_object_ref(obj)->getCharField(to_field(fieldID));
 }
 
 jshort JNICALL JVM_GetShortField(JNIEnv *env, jobject obj, jfieldID fieldID)
 {
-    return getInstFieldValue<jshort>(obj, fieldID);
+    return to_object_ref(obj)->getShortField(to_field(fieldID));
 }
 
 jint JNICALL JVM_GetIntField(JNIEnv *env, jobject obj, jfieldID fieldID)
 {
-    return getInstFieldValue<jint>(obj, fieldID);
+    return to_object_ref(obj)->getIntField(to_field(fieldID));
 }
 
 jlong JNICALL JVM_GetLongField(JNIEnv *env, jobject obj, jfieldID fieldID)
 {
-    return getInstFieldValue<jlong>(obj, fieldID);
+    return to_object_ref(obj)->getLongField(to_field(fieldID));
 }
 
 jfloat JNICALL JVM_GetFloatField(JNIEnv *env, jobject obj, jfieldID fieldID)
 {
-    return getInstFieldValue<jfloat>(obj, fieldID);
+    return to_object_ref(obj)->getFloatField(to_field(fieldID));
 }
 
 jdouble JNICALL JVM_GetDoubleField(JNIEnv *env, jobject obj, jfieldID fieldID)
 {
-    return getInstFieldValue<jdouble>(obj, fieldID);
+    return to_object_ref(obj)->getDoubleField(to_field(fieldID));
 }
 
 void JNICALL JVM_SetObjectField(JNIEnv *env, jobject obj, jfieldID fieldID, jobject val)
 {
-    setInstFieldValue(obj, fieldID, to_object_ref(val));
+    Object *o = to_object_ref(obj);
+    Field *f = to_field(fieldID);
+    o->setRefField(f, to_object_ref(val));
+//    setInstFieldValue(obj, fieldID, to_object_ref(val));
 }
 
 void JNICALL JVM_SetBooleanField(JNIEnv *env, jobject obj, jfieldID fieldID, jboolean val)
 {
-    setInstFieldValue(obj, fieldID, val);
+    Object *o = to_object_ref(obj);
+    Field *f = to_field(fieldID);
+    o->setBoolField(f, val);
 }
 
 void JNICALL JVM_SetByteField(JNIEnv *env, jobject obj, jfieldID fieldID, jbyte val)
 {
-    setInstFieldValue(obj, fieldID, val);
+    Object *o = to_object_ref(obj);
+    Field *f = to_field(fieldID);
+    o->setByteField(f, val);
 }
 
 void JNICALL JVM_SetCharField(JNIEnv *env, jobject obj, jfieldID fieldID, jchar val)
 {
-    setInstFieldValue(obj, fieldID, val);
+    Object *o = to_object_ref(obj);
+    Field *f = to_field(fieldID);
+    o->setCharField(f, val);
 }
 
 void JNICALL JVM_SetShortField(JNIEnv *env, jobject obj, jfieldID fieldID, jshort val)
 {
-    setInstFieldValue(obj, fieldID, val);
+    Object *o = to_object_ref(obj);
+    Field *f = to_field(fieldID);
+    o->setShortField(f, val);
 }
 
 void JNICALL JVM_SetIntField(JNIEnv *env, jobject obj, jfieldID fieldID, jint val)
 {
-    setInstFieldValue(obj, fieldID, val);
+    Object *o = to_object_ref(obj);
+    Field *f = to_field(fieldID);
+    o->setIntField(f, val);
 }
 
 void JNICALL JVM_SetLongField(JNIEnv *env, jobject obj, jfieldID fieldID, jlong val)
 {
-    setInstFieldValue(obj, fieldID, val);
+    Object *o = to_object_ref(obj);
+    Field *f = to_field(fieldID);
+    o->setLongField(f, val);
 }
 
 void JNICALL JVM_SetFloatField(JNIEnv *env, jobject obj, jfieldID fieldID, jfloat val)
 {
-    setInstFieldValue(obj, fieldID, val);
+    Object *o = to_object_ref(obj);
+    Field *f = to_field(fieldID);
+    o->setFloatField(f, val);
 }
 
 void JNICALL JVM_SetDoubleField(JNIEnv *env, jobject obj, jfieldID fieldID, jdouble val)
 {
-    setInstFieldValue(obj, fieldID, val);
+    Object *o = to_object_ref(obj);
+    Field *f = to_field(fieldID);
+    o->setDoubleField(f, val);
 }
 
 jmethodID JNICALL JVM_GetStaticMethodID(JNIEnv *env, jclass clazz, const char *name, const char *sig)
@@ -563,13 +582,13 @@ const jchar *JNICALL JVM_GetStringChars(JNIEnv *env, jstring str, jboolean *isCo
     jstrref so = to_object_ref(str);
     if (g_jdk_version_9_and_upper) {
         // byte[] value;
-        auto value = so->getInstFieldValue<Array *>(S(value), S(array_B));
+        auto value = so->getRefField<Array>(S(value), S(array_B));
         if (isCopy != nullptr)
             *isCopy = JNI_TRUE;
         return utf8::toUnicode((utf8_t *) value->data, value->len);
     } else {
         // char[] value;
-        auto value = so->getInstFieldValue<Array *>(S(value), S(array_C));
+        auto value = so->getRefField<Array>(S(value), S(array_C));
         addJNIGlobalRef(so); /* Pin the reference */
         if (isCopy != nullptr)
             *isCopy = JNI_FALSE;
@@ -607,14 +626,14 @@ const char* JNICALL JVM_GetStringUTFChars(JNIEnv *env, jstring str, jboolean *is
     jstrref so = to_object_ref(str);
     if (g_jdk_version_9_and_upper) {
         // byte[] value;
-        auto value = so->getInstFieldValue<Array *>(S(value), S(array_B));
+        auto value = so->getRefField<Array>(S(value), S(array_B));
         addJNIGlobalRef(so); /* Pin the reference */
         if (isCopy != nullptr)
             *isCopy = JNI_FALSE;
         return (char *) value->data;
     } else {
         // char[] value;
-        auto value = so->getInstFieldValue<Array *>(S(value), S(array_C));
+        auto value = so->getRefField<Array>(S(value), S(array_C));
         if (isCopy != nullptr)
             *isCopy = JNI_TRUE;
         return unicode::toUtf8((unicode_t *) value->data, value->len);

@@ -38,9 +38,9 @@ static void init(Frame *frame)
 	 * 3. java/lang/reflect/Method.
 	 */
     // private Class<?> clazz;
-    auto clazz = ref->getInstFieldValue<jclsref>(S(clazz), S(sig_java_lang_Class));
+    auto clazz = ref->getRefField<Class>(S(clazz), S(sig_java_lang_Class));
     // private int modifiers;
-    auto modifiers = ref->getInstFieldValue<jint>("modifiers", "I");
+    auto modifiers = ref->getIntField("modifiers", "I");
 
     if (equals(ref->clazz->className, "java/lang/reflect/Field")) {
 
@@ -84,14 +84,14 @@ static void resolve(Frame *frame)
     // private Object   type;        // may be null if not yet materialized
     // private int      flags;       // modifier bits; see reflect.Modifier
     // private Object   resolution;  // if null, this guy is resolved
-    auto clazz = mn->getInstFieldValue<jclsref>("clazz", "Ljava/lang/Class;");
-    auto name = mn->getInstFieldValue<jstrref>("name", "Ljava/lang/String;");
+    auto clazz = mn->getRefField<Class>("clazz", "Ljava/lang/Class;");
+    auto name = mn->getRefField("name", "Ljava/lang/String;");
     // type maybe a String or an Object[] or a MethodType
     // Object[]: (Class<?>) Object[0] is return type
     //           (Class<?>[]) Object[1] is parameter types
-    auto type = mn->getInstFieldValue<jref>("type", "Ljava/lang/Object;");
-    jint flags = mn->getInstFieldValue<jint>("flags", "I");
-    auto resolution = mn->getInstFieldValue<jref>("resolution", "Ljava/lang/Object;");
+    auto type = mn->getRefField("type", "Ljava/lang/Object;");
+    jint flags = mn->getIntField("flags", "I");
+    auto resolution = mn->getRefField("resolution", "Ljava/lang/Object;");
 
     auto refKind = getRefKind(mn);
 
@@ -133,7 +133,7 @@ static void resolve(Frame *frame)
             assert(m->isStatic());
             resolvedMemberName = memberName(m, refKind);
             jint newFlags = flags | Modifier::MOD_STATIC; // todo
-            resolvedMemberName->setFieldValue("flags", "I", newFlags); // todo
+            resolvedMemberName->setIntField("flags", "I", newFlags); // todo
             assert(isStatic(resolvedMemberName));
         } else {
             jvm_abort("not support!");

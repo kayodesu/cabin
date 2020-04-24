@@ -78,7 +78,7 @@ static void newInstance0(Frame *frame)
     auto args = frame->getLocalAsRef<Array>(1); // may be NULL
 
     // which class this constructor belongs to.
-    auto ac = co->getInstFieldValue<Class *>(S(clazz), S(sig_java_lang_Class));
+    auto ac = co->getRefField<Class>(S(clazz), S(sig_java_lang_Class));
     initClass(co->clazz);
     Object *obj = newObject(ac);
 
@@ -88,7 +88,7 @@ static void newInstance0(Frame *frame)
         execJavaFunc(constructor, obj);
     } else {
         // parameter types of this constructor
-        auto parameterTypes = co->getInstFieldValue<Array *>(S(parameterTypes), S(array_java_lang_Class));
+        auto parameterTypes = co->getRefField<Array>(S(parameterTypes), S(array_java_lang_Class));
         Method *constructor = ac->getConstructor(parameterTypes);
         execConstructor(constructor, obj, args);
     }

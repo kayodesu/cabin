@@ -30,16 +30,16 @@ static void open0(Frame *frame)
 
     // File Descriptor - handle to the open file
     // private final FileDescriptor fd;
-    auto fd = _this->getInstFieldValue<jref>("fd", "Ljava/io/FileDescriptor;");
+    auto fd = _this->getRefField("fd", "Ljava/io/FileDescriptor;");
 
     // private long handle;
-    fd->setFieldValue("handle", "J",  (jlong) file);
+    fd->setLongField("handle", "J",  (jlong) file);
 }
 
 static inline FILE *getFileHandle(jref _this)
 {
-    auto fd = _this->getInstFieldValue<jref>("fd", "Ljava/io/FileDescriptor;");
-    return (FILE *)fd->getInstFieldValue<jlong>("handle", "J");
+    auto fd = _this->getRefField("fd", "Ljava/io/FileDescriptor;");
+    return (FILE *)fd->getLongField("handle", "J");
 }
 
 /*

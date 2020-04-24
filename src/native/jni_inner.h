@@ -153,20 +153,20 @@ static jfieldID getFieldID(JNIEnv *env,
     jvm_abort("not implement.");
 }
 
-template <typename T>
-static T getInstFieldValue(jobject obj, jfieldID fieldID)
-{
-    Object *o = to_object_ref(obj);
-    Field *f = to_field(fieldID);
-    return o->getInstFieldValue<T>(f);
-}
+//template <typename T>
+//static T getInstFieldValue(jobject obj, jfieldID fieldID)
+//{
+//    Object *o = to_object_ref(obj);
+//    Field *f = to_field(fieldID);
+//    return o->getInstFieldValue<T>(f);
+//}
 
-#define setInstFieldValue(obj, fieldID, value) \
-    do { \
-        Object *o = to_object_ref(obj); \
-        Field *f = to_field(fieldID); \
-        o->setFieldValue(f, value); \
-    } while(false)
+//#define setInstFieldValue(obj, fieldID, value) \
+//    do { \
+//        Object *o = to_object_ref(obj); \
+//        Field *f = to_field(fieldID); \
+//        o->setFieldValue(f, value); \
+//    } while(false)
 
 /*
  * 定义 Call_T_Method 镞函数：

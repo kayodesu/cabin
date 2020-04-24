@@ -41,7 +41,7 @@ Array *Method::getParameterTypes()
     Object *type = getType();
 
     // private final Class<?>[] ptypes;
-    auto ptypes = type->getInstFieldValue<jarrref>("ptypes", "[Ljava/lang/Class;");
+    auto ptypes = type->getRefField<Array>("ptypes", "[Ljava/lang/Class;");
     assert(ptypes != nullptr);
     return ptypes;
 
@@ -111,7 +111,7 @@ Class *Method::getReturnType()
     Object *type = getType();
 
     // private final Class<?> rtype;
-    auto rtype = type->getInstFieldValue<Class *>("rtype", "Ljava/lang/Class;");
+    auto rtype = type->getRefField<Class>("rtype", "Ljava/lang/Class;");
     assert(rtype != nullptr);
     return rtype;
 //    if (returnType == nullptr) {

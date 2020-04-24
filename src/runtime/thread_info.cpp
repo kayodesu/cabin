@@ -152,8 +152,8 @@ Thread::Thread(Object *tobj0, jint priority): tobj(tobj0)
     if (tobj == nullptr)
         tobj = newObject(threadClass);
 
-    tobj->setFieldValue(eetopField, (jlong) this);
-    tobj->setFieldValue(S(priority), S(I), priority);
+    tobj->setLongField(eetopField, (jlong) this);
+    tobj->setIntField(S(priority), S(I), priority);
 //    if (vmEnv.sysThreadGroup != nullptr)   todo
 //        setThreadGroupAndName(vmEnv.sysThreadGroup, nullptr);
 
@@ -172,7 +172,7 @@ Thread *Thread::from(jlong threadId)
     jvm_abort("ffffffffffffffffffffffff");
     for (Thread *t : g_all_threads) {
         // private long tid; // Thread ID
-        auto tid = t->tobj->getInstFieldValue<jlong>("tid", "J");
+        auto tid = t->tobj->getLongField("tid", "J");
         if (tid == threadId)
             return t;
     }
@@ -193,18 +193,18 @@ void Thread::setThreadGroupAndName(Object *threadGroup, const char *threadName)
 
 void Thread::setStatus(jint status)
 {
-    tobj->setFieldValue(threadStatusField, status);
+    tobj->setIntField(threadStatusField, status);
 }
 
 jint Thread::getStatus()
 {
-    return tobj->getInstFieldValue<jint>(threadStatusField);
+    return tobj->getIntField(threadStatusField);
 }
 
 bool Thread::isAlive()
 {
     assert(tobj != nullptr);
-    auto status = tobj->getInstFieldValue<jint>("threadStatus", "I");
+    auto status = tobj->getIntField("threadStatus", "I");
     // todo
     return false;
 }
@@ -261,17 +261,17 @@ jref Thread::to_java_lang_management_ThreadInfo(jbool lockedMonitors, jbool lock
 //    return nullptr;
 
     // private volatile String name;
-    auto name = tobj->getInstFieldValue<jstrref>("name", "Ljava/lang/String;");
+    auto name = tobj->getRefField("name", "Ljava/lang/String;");
     // private long tid;
-    auto tid = tobj->getInstFieldValue<jlong>("tid", "J");
+    auto tid = tobj->getLongField("tid", "J");
 
     Class *c = loadBootClass("java/lang/management/ThreadInfo");
     c->clinit();
     jref threadInfo = newObject(c);
     // private String threadName;
-    threadInfo->setFieldValue("threadName", "Ljava/lang/String;", name);
+    threadInfo->setRefField("threadName", "Ljava/lang/String;", name);
     // private long threadId;
-    threadInfo->setFieldValue("threadId", "J", tid);
+    threadInfo->setLongField("threadId", "J", tid);
 
     return threadInfo;
 

@@ -26,7 +26,7 @@ static void load(Frame *frame)
     // todo load
 
     // set boolean loaded is true
-    _this->setFieldValue("loaded", "Z", 1);
+    _this->setBoolField("loaded", "Z", jtrue);
 }
 
 // native void unload(String name, boolean isBuiltin);

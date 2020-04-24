@@ -462,7 +462,7 @@ static void getConstantPool(Frame *frame)
 
     Class *cpClass = loadBootClass("sun/reflect/ConstantPool");
     jref cp = newObject(cpClass);
-    cp->setFieldValue("constantPoolOop", "Ljava/lang/Object;", (jref) &_this->cp); // todo 应该传递一个正在的 Object *
+    cp->setRefField("constantPoolOop", "Ljava/lang/Object;", (jref) &_this->cp); // todo 应该传递一个正在的 Object *
 
     frame->pushr(cp);
 }
