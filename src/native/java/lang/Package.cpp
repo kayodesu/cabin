@@ -29,9 +29,10 @@ static void getSystemPackages0(Frame *frame)
     auto size = packages.size();
 
     auto ao = newArray(loadArrayClass(S(array_java_lang_String)), size);
-    auto p = (Object **) ao->data;
+    int i = 0;
     for (auto pkg : packages) {
-        *p++ = newString(pkg);
+        ao->set(i, newString(pkg));
+        i++;
     }
 
     frame->pushr(ao);

@@ -12,12 +12,12 @@ using namespace utf8;
 // private native Class<?> defineClass0(String name, byte[] b, int off, int len, ProtectionDomain pd);
 static void defineClass0(Frame *frame)
 {
-    auto _this = frame->getLocalAsRef(0);
-    auto name = frame->getLocalAsRef(1);
-    auto b = frame->getLocalAsRef<Array>(2);
-    jint off = frame->getLocalAsInt(3);
-    jint len = frame->getLocalAsInt(4);
-    auto pd = frame->getLocalAsRef(5);
+    auto _this = frame->lvars_mgr.getRef(0);
+    auto name = frame->lvars_mgr.getRef(1);
+    auto b = frame->lvars_mgr.getRef<Array>(2);
+    jint off = frame->lvars_mgr.getInt(3);
+    jint len = frame->lvars_mgr.getInt(4);
+    auto pd = frame->lvars_mgr.getRef(5);
 
     frame->pushr(defineClass(_this, name, b, off, len, pd));
 }

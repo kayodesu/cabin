@@ -12,6 +12,8 @@
 class Method;
 
 class Frame {
+    slot_t *lvars;    // local variables
+
 public:
     Method *method;
     BytecodeReader reader;
@@ -25,16 +27,30 @@ public:
 
     Frame *prev;
 
-    slot_t *lvars;    // local variables
     slot_t *ostack;   // operand stack
+    SlotsMgr lvars_mgr;
 
-    Frame(Method *m, bool vm_invoke, slot_t *lvars, slot_t *ostack, Frame *prev)
+    Frame(Method *m, bool vm_invoke, slot_t *_lvars, slot_t *_ostack, Frame *prev)
             : method(m), reader(m->code, m->codeLen),
-              vm_invoke(vm_invoke), prev(prev), lvars(lvars), ostack(ostack)
+              vm_invoke(vm_invoke), prev(prev), ostack(_ostack)
     {
         assert(m != nullptr);
-        assert(lvars != nullptr);
-        assert(ostack != nullptr);
+        assert(_lvars != nullptr);
+        assert(_ostack != nullptr);
+
+        setLocalVars(_lvars);
+    }
+
+    void setLocalVars(slot_t *_lvars)
+    {
+        assert(_lvars != nullptr);
+        lvars = _lvars;
+        lvars_mgr.reset(lvars);
+    }
+
+    slot_t *getLocalVars() const
+    {
+        return lvars;
     }
 
     jint getLocalAsInt(int index)

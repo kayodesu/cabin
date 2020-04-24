@@ -126,7 +126,7 @@ static slot_t *exec()
     Class *clazz = frame->method->clazz;
     ConstantPool *cp = &frame->method->clazz->cp;
     slot_t *ostack = frame->ostack;
-    slot_t *lvars = frame->lvars;
+    slot_t *lvars = frame->getLocalVars();
 
     jref _this = frame->method->isStatic() ? (jref) clazz : RSLOT(lvars);
 
@@ -138,7 +138,7 @@ static slot_t *exec()
         clazz = frame->method->clazz; \
         cp = &frame->method->clazz->cp; \
         ostack = frame->ostack; \
-        lvars = frame->lvars; \
+        lvars = frame->getLocalVars(); \
         _this = frame->method->isStatic() ? (jref) clazz : RSLOT(lvars); \
         TRACE("executing frame: %s\n", frame->toString().c_str()); \
     } while (false)
@@ -1148,7 +1148,8 @@ __invoke_method: {
     Frame *newFrame = thread->allocFrame(resolved_method, false);
     TRACE("Alloc new frame: %s\n", newFrame->toString().c_str());
 
-    newFrame->lvars = frame->ostack;
+//    newFrame->lvars = frame->ostack;
+    newFrame->setLocalVars(frame->ostack); // todo 什么意思？？？？？？？？
     CHANGE_FRAME(newFrame);    
     if (resolved_method->isSynchronized()) {
 //        _this->unlock(); // todo why unlock 而不是 lock ................................................
@@ -1427,7 +1428,7 @@ slot_t *execJavaFunc(Method *method, const slot_t *args)
     // 准备参数
     for (int i = 0; i < method->arg_slot_count; i++) {
         // 传递参数到被调用的函数。
-        frame->lvars[i] = args[i];
+        frame->getLocalVars()[i] = args[i];
     }
 
     try {
@@ -1477,7 +1478,8 @@ slot_t *execConstructor(Method *constructor, jref _this, Array *args)
         if (c->isPrimClass()) {
             const slot_t *unbox = o->unbox();
             realArgs[k++] = *unbox;
-            if (strcmp(o->clazz->className, "long") == 0 || strcmp(o->clazz->className, "double") == 0) // category_two
+            if (strcmp(o->clazz->className, "long") == 0
+                || strcmp(o->clazz->className, "double") == 0) // category_two
                 realArgs[k++] = *++unbox;
         } else {
             RSLOT(realArgs + k) = o;

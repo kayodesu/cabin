@@ -24,17 +24,17 @@ using namespace std;
 static bool accessible(jref obj)
 {
     // 虚拟机栈(栈桢中的本地变量表)中的引用的对象
-    for (Thread *thread : g_all_threads) {
-        for (Frame *frame = thread->getTopFrame(); frame != nullptr; frame = frame->prev) {
-            slot_t *lvars = frame->lvars;
-            u2 maxLocals = frame->method->maxLocals;
-            for (u2 i = 0; i < maxLocals; i++) {
-                // todo 这里要先判断 locals[i] 存放的是不是 jref
-                if (RSLOT(lvars + i) == obj)
-                    return true;
-            }
-        }
-    }
+//    for (Thread *thread : g_all_threads) {
+//        for (Frame *frame = thread->getTopFrame(); frame != nullptr; frame = frame->prev) {
+//            slot_t *lvars = frame->lvars;
+//            u2 maxLocals = frame->method->maxLocals;
+//            for (u2 i = 0; i < maxLocals; i++) {
+//                // todo 这里要先判断 locals[i] 存放的是不是 jref
+//                if (RSLOT(lvars + i) == obj)
+//                    return true;
+//            }
+//        }
+//    }
 
     // todo 得到方法区的所有类，遍历
     jvm_abort("未实现");

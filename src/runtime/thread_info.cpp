@@ -164,7 +164,8 @@ Thread *Thread::from(Object *tobj0)
 {
     assert(tobj0 != nullptr);
     assert(0 <= eetopField->id && eetopField->id < tobj0->clazz->instFieldsCount);
-    return *(Thread **)(tobj0->data + eetopField->id);//jThread0->getInstFieldValue<Thread *>(eetopField);
+    jlong eetop = tobj0->getLongField(eetopField);
+    return reinterpret_cast<Thread *>(eetop);
 }
 
 Thread *Thread::from(jlong threadId)

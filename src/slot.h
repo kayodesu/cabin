@@ -117,6 +117,12 @@ public:
         slots = _slots;
     }
 
+    void reset(slot_t *_slots)
+    {
+        assert(_slots != nullptr);
+        slots = _slots;
+    }
+
     /* setter */
 
     void setInt(int index, jint v)       { ISLOT(slots + index) = v; }
