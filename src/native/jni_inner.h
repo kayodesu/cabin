@@ -46,14 +46,15 @@ static inline Method *to_method(jmethodID methodID)
 
 static jobject addJNILocalRef(Object *ref)
 {
-    // todo
-    jvm_abort("not implement.");
+    // todo addJNILocalRef
+ //    jvm_abort("not implement.");
+    return to_jobject(ref);
 }
 
 static void deleteJNILocalRef(Object *ref)
 {
-    // todo
-    jvm_abort("not implement.");
+    // todo deleteJNILocalRef
+  //  jvm_abort("not implement.");
 }
 
 struct GlobalRefTable {

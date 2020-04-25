@@ -1,5 +1,5 @@
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 #ifndef KAYO_SLOT_H
@@ -44,39 +44,7 @@ namespace slot {
         ISLOT(&s) = v;
         return s;
     }
-
-//    // get value
-//    template<typename T = slot_t>
-//    void  getValue(const slot_t *s, T &value)
-//    {
-//        if (typeid(T) == typeid(slot_t))
-//            value = *s;
-//        if (typeid(T) == typeid(jbyte))
-//            value = jint2jbyte(ISLOT(s));
-//        if (typeid(T) == typeid(jboolean))
-//            value = jint2jbool(ISLOT(s));
-//        if (typeid(T) == typeid(jchar))
-//            value = jint2jchar(ISLOT(s));
-//        if (typeid(T) == typeid(jshort))
-//            value = jint2jshort(ISLOT(s));
-//        if (typeid(T) == typeid(jint))
-//            value = ISLOT(s);
-//        if (typeid(T) == typeid(jlong))
-//            value = LSLOT(s);
-//        if (typeid(T) == typeid(jfloat))
-//            value = FSLOT(s);
-//        if (typeid(T) == typeid(jdouble))
-//            value = DSLOT(s);
-//        if (typeid(T) == typeid(jref))
-//            value = RSLOT(s);
-//        else {
-//            // todo error
-//            jvm_abort("never go here!");
-//        }
-//    }
 }
-
-
 
 //static inline slot_t to_fslot(jfloat v)
 //{

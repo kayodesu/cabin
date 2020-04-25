@@ -1,5 +1,5 @@
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 #ifndef KAYO_JNI_H
@@ -185,8 +185,8 @@ struct JNINativeInterface_ {
     void *reserved0;
     void *reserved1;
     void *reserved2;
-
     void *reserved3;
+
     jint (JNICALL *GetVersion)(JNIEnv *env);
 
     jclass (JNICALL *DefineClass)(JNIEnv *env,

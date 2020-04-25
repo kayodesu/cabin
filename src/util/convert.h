@@ -1,11 +1,15 @@
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 #ifndef JVM_CONVERT_H
 #define JVM_CONVERT_H
 
-#include "../vmdef.h"
+#include "../native/jtypes.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
  * 将字节数组转换为32位整形.
@@ -38,5 +42,9 @@ jdouble bytes_to_double(const uint8_t bytes[8]);
 jint float_to_raw_int_bits(jfloat f);
 
 jlong double_to_raw_long_bits(jdouble d);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //JVM_CONVERT_H

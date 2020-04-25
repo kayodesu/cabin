@@ -1,5 +1,5 @@
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 #include <vector>
@@ -37,7 +37,10 @@ jclass JNICALL JVM_FindClass(JNIEnv *env, const char *name)
 {
     assert(env != nullptr && name != nullptr);
     // todo
-    jvm_abort("not implement.");
+    jref loader = (jref) env->functions->reserved3;
+    Class *c = loadClass(loader, name);
+    return to_jclass(c);
+   // jvm_abort("not implement.");
 }
 
 jmethodID JNICALL JVM_FromReflectedMethod(JNIEnv *env, jobject method)
@@ -1258,6 +1261,9 @@ const static struct JNIInvokeInterface_ JVM_JNIInvokeInterface = {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+extern "C" void java_lang_Float_registerNatives();
+extern "C" void java_lang_Double_registerNatives();
+
 void initJNI()
 {
     jni_env.functions = &JVM_JNINativeInterface;
@@ -1270,9 +1276,14 @@ void initJNI()
 
     // register all native methods // todo 不要一次全注册，需要时再注册
     R(java_lang_Class_registerNatives);
-    R(java_lang_Float_registerNatives);
+
+//    R(java_lang_Float_registerNatives);
+    java_lang_Float_registerNatives();
+
+//    R(java_lang_Double_registerNatives);
+    java_lang_Double_registerNatives();
+
     R(java_lang_System_registerNatives);
-    R(java_lang_Double_registerNatives);
     R(java_lang_Object_registerNatives);
     R(java_lang_String_registerNatives);
     R(java_lang_Package_registerNatives);
@@ -1329,6 +1340,11 @@ void registerNatives(const char *class_name, JNINativeMethod *methods, int metho
 {
     assert(class_name != nullptr && methods != nullptr && method_count > 0);
     native_methods.emplace_back(class_name, methods, method_count);
+}
+
+extern "C" void registerNatives0(const char *class_name, JNINativeMethod *methods, int method_count)
+{
+    registerNatives(class_name, methods, method_count);
 }
 
 void *findNativeMethod(const char *class_name, const char *method_name, const char *method_type)

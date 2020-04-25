@@ -1,9 +1,10 @@
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 #include <iostream>
 #include <cmath>
+#include <ffi.h>
 #include "interpreter.h"
 #include "../kayo.h"
 #include "../debug.h"
@@ -110,6 +111,8 @@ static const char *instruction_names[] = {
 #define TRACE(...)
 #define PRINT_OPCODE
 #endif
+
+static void callJNIMethod(Frame *frame);
 
 /*
  * 执行当前线程栈顶的frame
@@ -1378,16 +1381,16 @@ __opc_athrow:
 			        jvm_abort("not find native method: %s\n", frame->method->toString().c_str());
 			    }
 
-                // todo 不需要则这里做任何同步的操作
+                // todo 不需要在这里做任何同步的操作
 
 			    assert(frame->method->native_method != nullptr);
 			    try {
-//			        if (strcmp(frame->method->name, "forName0") == 0) {
-//                        callJNIMethod(frame);
-//			        } else {
-//                        ((void (*)(Frame *)) frame->method->native_method)(frame);
-//                    }
-                    ((void (*)(Frame *)) frame->method->native_method)(frame);
+			        if (strcmp(frame->method->clazz->className, "java/lang/Class") == 0) {
+                        callJNIMethod(frame);
+			        } else {
+                        ((void (*)(Frame *)) frame->method->native_method)(frame);
+                    }
+//                    ((void (*)(Frame *)) frame->method->native_method)(frame);
 			    } catch (Throwable &t) {
 			        TRACE("native method throw a exception\n");
 			        assert(t.getJavaThrowable() != nullptr);
@@ -1488,4 +1491,172 @@ slot_t *execConstructor(Method *constructor, jref _this, Array *args)
     }
 
     return execJavaFunc(constructor, realArgs);
+}
+
+jint JNICALL JVM_GetEnv(JavaVM *vm, void **penv, jint version);
+
+static inline void apply(void *func, int argc,
+                         ffi_type *rtype, ffi_type **arg_types,
+                         void *rvalue, void **arg_values)
+{
+    ffi_cif cif;
+    ffi_prep_cif(&cif, FFI_DEFAULT_ABI, argc, rtype, arg_types);
+    ffi_call(&cif, (void (*)(void))func, rvalue, arg_values);
+}
+
+static void callJNIMethod(Frame *frame)
+{
+    assert(frame != nullptr && frame->method != nullptr);
+    assert(frame->method->isNative() && frame->method->native_method != nullptr);
+
+    JNIEnv *jni_env;
+    jint ret = JVM_GetEnv(nullptr, (void **)&jni_env, 0);
+    assert(ret == JNI_OK);
+
+    const_cast<JNINativeInterface_ *>(jni_env->functions)->reserved3 = (void *) frame->method->clazz->loader;
+
+    Method *m = frame->method;
+    int arg_count_max = 1 /* JNIEnv* */ + m->arg_slot_count + (m->isStatic() ? 1 /* jclsref */ : 0);
+
+    ffi_type *arg_types[arg_count_max];
+    void *arg_values[arg_count_max];
+
+    // 准备参数
+    int argc = 0;
+    arg_types[argc] = &ffi_type_pointer;
+    arg_values[argc] = &jni_env;
+    argc++;
+
+    const slot_t *lvars = frame->getLocalVars();
+    if (m->isStatic()) {
+        arg_types[argc] = &ffi_type_pointer;
+        arg_values[argc] = &(m->clazz);
+    } else {
+        arg_types[argc] = &ffi_type_pointer;
+        arg_values[argc] = (void *) lvars; // this
+        lvars++;
+    }
+    argc++;
+
+    const char *p = m->type;
+    assert(*p == '(');
+    p++; // skip start (
+
+    for (; *p != ')'; lvars++, p++, argc++) {
+        switch (*p) {
+            case 'Z':
+            case 'B': {
+                jbyte b = jint2jbyte(ISLOT(lvars));
+                *(jbyte *)lvars = b;
+                arg_types[argc] = &ffi_type_sint8;
+                arg_values[argc] = (void *) lvars;
+                break;
+            }
+            case 'C': {
+                jchar c = jint2jchar(ISLOT(lvars));
+                *(jchar *)lvars = c;
+                arg_types[argc] = &ffi_type_uint16;
+                arg_values[argc] = (void *) lvars;
+                break;
+            }
+            case 'S': {
+                jshort s = jint2jshort(ISLOT(lvars));
+                *(jshort *)lvars = s;
+                arg_types[argc] = &ffi_type_sint16;
+                arg_values[argc] = (void *) lvars;
+                break;
+            }
+            case 'I':
+                arg_types[argc] = &ffi_type_sint32;
+                arg_values[argc] = (void *) lvars;
+                break;
+            case 'F':
+                arg_types[argc] = &ffi_type_float;
+                arg_values[argc] = (void *) lvars;
+                break;
+            case 'J':
+                arg_types[argc] = &ffi_type_sint64;
+                arg_values[argc] = (void *) lvars;
+                lvars++;
+                break;
+            case 'D':
+                arg_types[argc] = &ffi_type_double;
+                arg_values[argc] = (void *) lvars;
+                lvars++;
+                break;
+            case '[':
+                while (*++p == '[');
+                if (*p != 'L') { // 基本类型的数组
+                    goto __ref;
+                }
+            case 'L':
+                while(*++p != ';');
+            __ref:
+                arg_types[argc] = &ffi_type_pointer;
+                arg_values[argc] = (void *) lvars;
+                break;
+            default:
+                // todo error
+                break;
+        }
+    }
+
+    switch (m->ret_type) {
+        case Method::RET_VOID:
+            apply(m->native_method, argc, &ffi_type_void, arg_types, nullptr, arg_values);
+            break;
+        case Method::RET_BYTE:
+        case Method::RET_BOOL: {
+            jbyte ret_value;
+            apply(m->native_method, argc, &ffi_type_sint8, arg_types, &ret_value, arg_values);
+            frame->pushi(ret_value);
+            break;
+        }
+        case Method::RET_CHAR: {
+            jchar ret_value;
+            apply(m->native_method, argc, &ffi_type_uint16, arg_types, &ret_value, arg_values);
+            frame->pushi(ret_value);
+            break;
+        }
+        case Method::RET_SHORT: {
+            jshort ret_value;
+            apply(m->native_method, argc, &ffi_type_sint16, arg_types, &ret_value, arg_values);
+            frame->pushi(ret_value);
+            break;
+        }
+        case Method::RET_INT: {
+            jint ret_value;
+            apply(m->native_method, argc, &ffi_type_sint32, arg_types, &ret_value, arg_values);
+            frame->pushi(ret_value);
+            break;
+        }
+        case Method::RET_FLOAT: {
+            jfloat ret_value;
+            apply(m->native_method, argc, &ffi_type_float, arg_types, &ret_value, arg_values);
+            frame->pushf(ret_value);
+            break;
+        }
+        case Method::RET_LONG: {
+            jlong ret_value;
+            apply(m->native_method, argc, &ffi_type_sint64, arg_types, &ret_value, arg_values);
+            frame->pushl(ret_value);
+            break;
+        }
+        case Method::RET_DOUBLE: {
+            jdouble ret_value;
+            apply(m->native_method, argc, &ffi_type_double, arg_types, &ret_value, arg_values);
+            frame->pushd(ret_value);
+            break;
+        }
+        case Method::RET_REFERENCE: {
+            jref ret_value;
+            apply(m->native_method, argc, &ffi_type_pointer, arg_types, &ret_value, arg_values);
+            frame->pushr(ret_value);
+            break;
+        }
+        default:
+            // todo error
+            jvm_abort("never go here");
+            break;
+    }
 }
