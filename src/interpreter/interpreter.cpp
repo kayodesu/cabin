@@ -1387,7 +1387,8 @@ __opc_athrow:
 			    try {
 			        if (strcmp(frame->method->clazz->className, "java/lang/Class") == 0 
                         || strcmp(frame->method->clazz->className, "java/lang/Float") == 0
-                        || strcmp(frame->method->clazz->className, "java/lang/Double") == 0) {
+                        || strcmp(frame->method->clazz->className, "java/lang/Double") == 0
+                        || strcmp(frame->method->clazz->className, "java/lang/Object") == 0) {
                         callJNIMethod(frame);
 			        } else {
                         ((void (*)(Frame *)) frame->method->native_method)(frame);

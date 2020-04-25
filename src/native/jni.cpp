@@ -1261,8 +1261,11 @@ const static struct JNIInvokeInterface_ JVM_JNIInvokeInterface = {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-extern "C" void java_lang_Float_registerNatives();
-extern "C" void java_lang_Double_registerNatives();
+extern "C" {
+    void java_lang_Float_registerNatives();
+    void java_lang_Double_registerNatives();
+    void java_lang_Object_registerNatives();
+}
 
 void initJNI()
 {
@@ -1277,14 +1280,11 @@ void initJNI()
     // register all native methods // todo 不要一次全注册，需要时再注册
     R(java_lang_Class_registerNatives);
 
-//    R(java_lang_Float_registerNatives);
     java_lang_Float_registerNatives();
-
-//    R(java_lang_Double_registerNatives);
-    java_lang_Double_registerNatives();
-
+    java_lang_Double_registerNatives();    
+    java_lang_Object_registerNatives();
+    
     R(java_lang_System_registerNatives);
-    R(java_lang_Object_registerNatives);
     R(java_lang_String_registerNatives);
     R(java_lang_Package_registerNatives);
     R(java_lang_Throwable_registerNatives);
@@ -1361,4 +1361,23 @@ void *findNativeMethod(const char *class_name, const char *method_name, const ch
             return nullptr; // not find
         }
     }
+}
+
+extern "C" jclass obj_get_class(jobject o)
+{
+    jref r = to_object_ref(o);
+    return to_jclass(r->clazz);
+}
+
+extern "C" jobject obj_clone(jobject o)
+{
+    jref r = to_object_ref(o)->clone();
+    return to_jobject(r);
+}
+
+extern "C" int is_subclass_of(jclass sub, jclass base)
+{
+    Class *s = to_object_ref<Class>(sub);
+    Class *b = to_object_ref<Class>(base);
+    return s->isSubclassOf(b) ? 1 : 0;
 }

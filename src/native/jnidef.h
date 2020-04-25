@@ -27,4 +27,10 @@ static void registerNativesEmptyImplement() { }
  */
 void registerNatives0(const char *class_name, JNINativeMethod *methods, int method_count);
 
+
+jclass obj_get_class(jobject o);
+jobject obj_clone(jobject o);
+
+int is_subclass_of(jclass sub, jclass base);
+
 #endif //KAYO_JNI_DEF_H
