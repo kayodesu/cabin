@@ -1,12 +1,12 @@
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 #include <sstream>
 #include <optional>
 #include <unordered_set>
 #include <unordered_map>
-#include "../../zlib/minizip/unzip.h"
+#include <minizip/unzip.h>
 #include "class_loader.h"
 #include "../symbol.h"
 #include "class.h"
@@ -59,8 +59,12 @@ static optional<pair<u1 *, size_t>> readClass(const char *path,
     } else {
         jvm_abort("never goes here."); // todo
     }
-
-    int k = unzLocateFile(module_file, buf, 1);
+// typedef int (*unzFileNameComparer)(unzFile file, const char *filename1, const char *filename2);
+//    int k = unzLocateFile(module_file, buf, 1);
+    int k  = unzLocateFile(module_file, buf,
+                        [](unzFile file, const char *filename1, const char *filename2) {
+                            return strcmp(filename1, filename2);
+                        });
     if (k != UNZ_OK) {
         // not found
         unzClose(module_file);

@@ -1,5 +1,5 @@
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 #include <iostream>
@@ -49,7 +49,7 @@ static void unpark(Frame *frame)
  */
 static void compareAndSwapInt(Frame *frame)
 {
-    jref o = frame->getLocalAsRef(1); // first argument
+    jref o = frame->getLocalAsRef(1);
     jlong offset = frame->getLocalAsLong(2); // long 占两个Slot
     jint expected = frame->getLocalAsInt(4);
     jint x = frame->getLocalAsInt(5);
@@ -59,7 +59,7 @@ static void compareAndSwapInt(Frame *frame)
         old = (jint *)(((Array *) o)->index(offset));
     } else {
         assert(0 <= offset && offset < o->clazz->instFieldsCount);
-        old = (jint *) o->data + offset;
+        old = (jint *) (o->data + offset);
     }
 
     bool b = __sync_bool_compare_and_swap(old, expected, x);

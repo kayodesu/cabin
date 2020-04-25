@@ -1,10 +1,10 @@
-#include "../../../../../zlib/minizip/unzip.h"
+#include <minizip/unzip.h>
 #include "../../../jni_inner.h"
 #include "../../../../objects/object.h"
 #include "../../../../runtime/frame.h"
 
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 // private static native void initIDs();

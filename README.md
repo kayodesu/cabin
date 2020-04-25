@@ -2,14 +2,16 @@
 An experimental JVM written in C++.
 
 ## Development environment
-* Win10
-* CLion
-* MinGW32
+* Win10 64 bit
+* MinGW64
+* gcc, g++
 
 ## Dependence
 * pthread lib
 * jre8 lib
-* zlib, minizip
+* zlib 1.2.11
+* minizip 1.2.0
+* libffi 3.3
 
 ## Features Support
 * Java arithmetic, flow control, object-oriented programming(virtual method, inherit, etc.)

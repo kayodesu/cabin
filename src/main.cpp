@@ -1,12 +1,11 @@
 /*
- * Author: Kayo
+ * Author: Yo Ka
  */
 
 #include <ctime>
 #include <iostream>
 #include <filesystem>
 #include <fstream>
-#include <typeinfo>
 #include <thread>
 #include "kayo.h"
 #include "debug.h"
@@ -14,7 +13,6 @@
 #include "runtime/thread_info.h"
 #include "objects/class.h"
 #include "objects/method.h"
-#include "objects/prims.h"
 #include "objects/array_object.h"
 #include "interpreter/interpreter.h"
 
