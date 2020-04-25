@@ -1,5 +1,5 @@
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 #include "../../../kayo.h"
@@ -10,42 +10,28 @@
 using namespace utf8;
 
 // private native Class<?> defineClass0(String name, byte[] b, int off, int len, ProtectionDomain pd);
-static void defineClass0(Frame *frame)
+static jclass defineClass0(JNIEnv *env, jref _this, jstrref name, jarrref b, jint off, jint len, jref pd)
 {
-    auto _this = frame->lvars_mgr.getRef(0);
-    auto name = frame->lvars_mgr.getRef(1);
-    auto b = frame->lvars_mgr.getRef<Array>(2);
-    jint off = frame->lvars_mgr.getInt(3);
-    jint len = frame->lvars_mgr.getInt(4);
-    auto pd = frame->lvars_mgr.getRef(5);
-
-    frame->pushr(defineClass(_this, name, b, off, len, pd));
+    return to_jclass(defineClass(_this, name, b, off, len, pd));
 }
 
 // private native Class<?> defineClass1(String name, byte[] b, int off, int len, ProtectionDomain pd, String source);
-static void defineClass1(Frame *frame)
+static jclass defineClass1(JNIEnv *env, jref _this, jstrref name, jarrref b, jint off, jint len, jref pd, jstrref source)
 {
-    auto _this = frame->getLocalAsRef(0);
-    auto name = frame->getLocalAsRef(1);
-    auto b = frame->getLocalAsRef<Array>(2);
-    jint off = frame->getLocalAsInt(3);
-    jint len = frame->getLocalAsInt(4);
-    auto pd = frame->getLocalAsRef(5);
-    auto source = frame->getLocalAsRef(6);
-
-    frame->pushr(defineClass(_this, name, b, off, len, pd, source));
+    return to_jclass(defineClass(_this, name, b, off, len, pd, source));
 }
 
 // private native Class<?> defineClass2(String name,
 //                              java.nio.ByteBuffer b, int off, int len, ProtectionDomain pd, String source);
-static void defineClass2(Frame *frame)
+static jclass defineClass2(JNIEnv *env, jref _this, jstrref name, jref b, jint off, jint len, jref pd, jstrref source)
 {
     // todo
     jvm_abort("defineClass2");
+    return nullptr;
 }
 
 // private native void resolveClass0(Class<?> c);
-static void resolveClass0(Frame *frame)
+static void resolveClass0(JNIEnv *env, jref _this, jclass c)
 {
     // todo
     jvm_abort("resolveClass0");
@@ -53,45 +39,38 @@ static void resolveClass0(Frame *frame)
 
 // load bootstrap class
 // private native Class<?> findBootstrapClass(String name);
-static void findBootstrapClass(Frame *frame)
+static jclass findBootstrapClass(JNIEnv *env, jref _this, jstrref name)
 {
-    auto name = frame->getLocalAsRef(1)->toUtf8();
-    Class *c = loadBootClass(dots2SlashDup(name));
-    frame->pushr((jref)(c));
+    Class *c = loadBootClass(dots2SlashDup(name->toUtf8()));
+    return to_jclass(c);
 }
 
 // private native final Class<?> findLoadedClass0(String name);
-static void findLoadedClass0(Frame *frame)
+static jclass findLoadedClass0(JNIEnv *env, jref _this, jstrref name)
 {
-    auto _this = frame->getLocalAsRef(0);
-    auto name = frame->getLocalAsRef(1)->toUtf8();
-
-    Class *c = findLoadedClass(_this, dots2SlashDup(name));
-    frame->pushr((jref)(c));
+    Class *c = findLoadedClass(_this, dots2SlashDup(name->toUtf8()));
+    return to_jclass(c);
 }
 
 // private static native String findBuiltinLib(String name);
-static void findBuiltinLib(Frame *frame)
+static jstrref findBuiltinLib(JNIEnv *env, jclass clazz, jstrref name)
 {
-    // todo
-    auto name0 = frame->getLocalAsRef(0);
-
-    const char *name = name0->toUtf8();
-    if (strcmp(name, "zip.dll") == 0) {
+    const char *name0 = name->toUtf8();
+    if (strcmp(name0, "zip.dll") == 0) {
         // C:\Program Files\Java\jre1.8.0_162\bin
 //        char buf[1024] = R"(C:\Program Files\Java\jre1.8.0_162\bin\zip.dll)";  // todo
         char buf[1024] = R"(C:\Progles (x86)\Java\jre1.8.0_221\bin\zip.dll)";  // todo
-        frame->pushr(newString(buf));    // todo
-    } else if (strcmp(name, "management.dll") == 0) {
-        frame->pushr(newString("ffffffff"));    // todo
+        return newString(buf); // todo
+    } else if (strcmp(name0, "management.dll") == 0) {
+        return newString("ffffffff"); // todo
     } else {
-        jvm_abort(name); // todo
+        jvm_abort(name0); // todo
     }
 }
 
 // Retrieves the assertion directives from the VM.
 // private static native AssertionStatusDirectives retrieveDirectives();
-static void retrieveDirectives(Frame *frame)
+static void retrieveDirectives(JNIEnv *env, jclass clazz)
 {
     // todo
     jvm_abort("retrieveDirectives");

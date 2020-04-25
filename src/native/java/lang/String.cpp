@@ -1,5 +1,5 @@
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 #include "../../../runtime/frame.h"
@@ -7,10 +7,9 @@
 #include "../../jni_inner.h"
 
 // public native String intern();
-static void intern(Frame *frame)
+static jstrref intern(JNIEnv *env, jref _this)
 {
-    auto _this = frame->getLocalAsRef(0);
-    frame->pushr(_this->clazz->intern(_this));
+    return _this->clazz->intern(_this);
 }
 
 static JNINativeMethod methods[] = {

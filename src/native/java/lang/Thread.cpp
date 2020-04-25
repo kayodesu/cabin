@@ -1,5 +1,5 @@
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 #include "../../jni_inner.h"
@@ -13,24 +13,23 @@
  *
  * public static native Thread currentThread();
  */
-static void currentThread(Frame *frame)
+static jref currentThread(JNIEnv *env, jclass clazz)
 {
-    // push a Object of java/lang/Thread of current thread
-    frame->pushr(getCurrentThread()->tobj);
+    // return a Object of java/lang/Thread of current thread
+    return getCurrentThread()->tobj;
 }
 
 // public static native void yield();
-static void yield(Frame *frame)
+static void yield(JNIEnv *env, jclass clazz)
 {
     jvm_abort("yield"); // todo
 }
 
 // public static native void sleep(long millis) throws InterruptedException;
-static void sleep(Frame *frame)
+static void sleep(JNIEnv *env, jclass clazz, jlong millis)
 {
     jvm_abort("error\n");
 
-    jlong millis = frame->getLocalAsLong(0);
     if (millis < 0) {
         throw IllegalArgumentException("timeout value is negative");
     }
@@ -56,20 +55,15 @@ static void sleep(Frame *frame)
 }
 
 // private native void interrupt0();
-static void interrupt0(Frame *frame)
+static void interrupt0(JNIEnv *env, jobject _this)
 {
-    jvm_abort("error\n");
-
-    jref _this = frame->getLocalAsRef(0);
-    // todo
+    jvm_abort("error\n"); // todo
 }
 
 // private native boolean isInterrupted(boolean ClearInterrupted);
-static void isInterrupted(Frame *frame)
+static jboolean isInterrupted(JNIEnv *env, jobject _this)
 {
-    jref _this = frame->getLocalAsRef(0);
-
-    frame->pushi(0); // todo
+    return JNI_FALSE; // todo
 }
 
 /*
@@ -78,11 +72,9 @@ static void isInterrupted(Frame *frame)
  * 
  * public final native boolean isAlive();
  */
-static void isAlive(Frame *frame)
+static jboolean isAlive(JNIEnv *env, jobject _this)
 {
-    jref _this = frame->getLocalAsRef(0);
-
-    frame->pushi(0); // todo 为什么要设置成0，设置成1就状态错误
+    return JNI_FALSE; // todo 为什么要设置成0，设置成1就状态错误
 }
 
 /**
@@ -110,41 +102,34 @@ static void isAlive(Frame *frame)
  * @see        ThreadGroup#getMaxPriority()
  */
 // private native void setPriority0(int newPriority);
-static void setPriority0(Frame *frame)
+static void setPriority0(JNIEnv *env, jobject _this, jint newPriority)
 {
     // todo
-//    jref this = slot_getr(frame->local_vars);
-//    jint new_priority = slot_geti(frame->local_vars + 1);
-//
 //    struct slot priority = islot(new_priority);
 //    set_instance_field_value_by_nt(this, "priority", "I", &priority);
 }
 
 // private native void start0();
-static void start0(Frame *frame)
+static void start0(JNIEnv *env, jref _this)
 {
-    jref _this = frame->getLocalAsRef(0);
     createCustomerThread(_this);
 }
 
 // public native int countStackFrames();
-static void countStackFrames(Frame *frame)
+static jint countStackFrames(JNIEnv *env, jref _this)
 {
-    jref _this = frame->getLocalAsRef(0);
-    frame->pushi(Thread::from(_this)->countStackFrames());
+    return Thread::from(_this)->countStackFrames();
 }
 
 // public static native boolean holdsLock(Object obj);
-static void holdsLock(Frame *frame)
+static jboolean holdsLock(JNIEnv *env, jclass clazz)
 {
     jvm_abort("holdsLock"); // todo
 }
 
 // private native static StackTraceElement[][] dumpThreads(Thread[] threads);
-static void dumpThreads(Frame *frame)
+static jarrref dumpThreads(JNIEnv *env, jclass clazz, jarrref threads)
 {
-    auto threads = frame->getLocalAsRef<Array>(0);
-
     size_t len = threads->size();
     Array *result = newArray(loadArrayClass("[[java/lang/StackTraceElement"), len);
 
@@ -155,11 +140,11 @@ static void dumpThreads(Frame *frame)
         result->set(i, arr);
     }
 
-    frame->pushr(result);
+    return result;
 }
 
 // private native static Thread[] getThreads();
-static void getThreads(Frame *frame)
+static jarrref getThreads(JNIEnv *env, jobject _this)
 {
     size_t size = g_all_threads.size();
     Array *threads = newArray(loadArrayClass(S(array_java_lang_Thread)), size);
@@ -168,34 +153,30 @@ static void getThreads(Frame *frame)
         threads->set(i, g_all_threads[i]->tobj);
     }
 
-    frame->pushr(threads);
+    return threads;
 }
 
 // private native void stop0(Object o);
-static void stop0(Frame *frame)
+static void stop0(JNIEnv *env, jobject _this)
 {
-    jref _this = frame->getLocalAsRef(0);
     jvm_abort("stop0"); // todo
 }
 
 // private native void suspend0();
-static void suspend0(Frame *frame)
+static void suspend0(JNIEnv *env, jobject _this)
 {
-    jref _this = frame->getLocalAsRef(0);
     jvm_abort("suspend0"); // todo
 }
 
 // private native void resume0();
-static void resume0(Frame *frame)
+static void resume0(JNIEnv *env, jobject _this)
 {
-    jref _this = frame->getLocalAsRef(0);
     jvm_abort("resume0"); // todo
 }
 
 // private native void setNativeName(String name);
-static void setNativeName(Frame *frame)
+static void setNativeName(JNIEnv *env, jobject _this, jstring name)
 {
-    jref _this = frame->getLocalAsRef(0);
     jvm_abort("setNativeName"); // todo
 }
 

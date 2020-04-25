@@ -1388,6 +1388,19 @@ __opc_athrow:
 			        if (strcmp(frame->method->clazz->className, "java/lang/Class") == 0 
                         || strcmp(frame->method->clazz->className, "java/lang/Float") == 0
                         || strcmp(frame->method->clazz->className, "java/lang/Double") == 0
+                        || strcmp(frame->method->clazz->className, "java/lang/Object") == 0
+                        || strcmp(frame->method->clazz->className, "java/lang/ClassLoader$NativeLibrary") == 0
+                        || strcmp(frame->method->clazz->className, "java/lang/ClassLoader") == 0
+                        || strcmp(frame->method->clazz->className, "java/lang/Package") == 0
+                        || strcmp(frame->method->clazz->className, "java/lang/Runtime") == 0
+                        || strcmp(frame->method->clazz->className, "java/lang/String") == 0
+                        || strcmp(frame->method->clazz->className, "java/lang/System") == 0                        
+                        || strcmp(frame->method->clazz->className, "java/lang/Thread") == 0
+
+                        || strcmp(frame->method->clazz->className, "java/lang/Double") == 0
+                        || strcmp(frame->method->clazz->className, "java/lang/Object") == 0
+                        || strcmp(frame->method->clazz->className, "java/lang/Float") == 0
+                        || strcmp(frame->method->clazz->className, "java/lang/Double") == 0
                         || strcmp(frame->method->clazz->className, "java/lang/Object") == 0) {
                         callJNIMethod(frame);
 			        } else {

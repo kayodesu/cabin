@@ -1,5 +1,5 @@
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 #include "../../../kayo.h"
@@ -7,30 +7,27 @@
 #include "../../jni_inner.h"
 
 // native long find(String name);
-static void find(Frame *frame)
+static jlong find(JNIEnv *env, jobject _this, jstring name)
 {
     // todo
 //    jref name = slot_getr(frame->local_vars + 1);
 //    printvm("-------- %s\n", jstrobj_value(name));
-    frame->pushl(1); // todo
+    return 1; // todo
 }
 
 // native void load(String name, boolean isBuiltin);
-static void load(Frame *frame)
+static void load(JNIEnv *env, jobject _this, jstring name, jboolean isBuiltin)
 {
-    // todo
-    jref _this = frame->getLocalAsRef(0);
-    jref name = frame->getLocalAsRef(1);
-//    bool is_builtin = slot_geti(frame->local_vars + 2) == 0 ? false : true;
-
     // todo load
 
     // set boolean loaded is true
-    _this->setBoolField("loaded", "Z", jtrue);
+    jclass c = env->GetObjectClass(_this);
+    jfieldID id = env->GetFieldID(c, "loaded", "Z");
+    env->SetBooleanField(_this, id, jtrue);
 }
 
 // native void unload(String name, boolean isBuiltin);
-static void unload(Frame *frame)
+static void unload(JNIEnv *env, jobject _this, jstring name, jboolean isBuiltin)
 {
     // todo
 }

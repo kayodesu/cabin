@@ -4,26 +4,26 @@
 #include "../../jni_inner.h"
 
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 using namespace std;
 
 // private static native String getSystemPackage0(String name);
-static void getSystemPackage0(Frame *frame)
+static jstrref getSystemPackage0(JNIEnv *env, jclass clazz, jstrref name)
 {
-    auto name = frame->getLocalAsRef(0)->toUtf8();
+    // auto name = frame->getLocalAsRef(0)->toUtf8();
 
-    auto pkg = getBootPackage(name);
+    auto pkg = getBootPackage(name->toUtf8());
     if (pkg == nullptr) {
-        frame->pushr(nullptr);
+        return nullptr;
     } else {
-        frame->pushr(newString(pkg));
+        return newString(pkg);
     }
 }
 
 // private static native String[] getSystemPackages0();
-static void getSystemPackages0(Frame *frame)
+static jarrref getSystemPackages0(JNIEnv *env, jclass clazz)
 {
     utf8_set &packages = getBootPackages();
     auto size = packages.size();
@@ -35,7 +35,7 @@ static void getSystemPackages0(Frame *frame)
         i++;
     }
 
-    frame->pushr(ao);
+    return ao;
 }
 
 static JNINativeMethod methods[] = {

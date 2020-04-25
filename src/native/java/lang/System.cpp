@@ -1,5 +1,5 @@
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 #include <chrono>
@@ -27,9 +27,8 @@ using namespace chrono;
  * @since      1.2
  */
 // public static native String mapLibraryName(String libname);
-static void mapLibraryName(Frame *frame)
+static jstrref mapLibraryName(JNIEnv *env, jclass clazz, jstrref libname)
 {
-    auto libname = frame->getLocalAsRef(0);
     if (libname == nullptr) {
         throw NullPointerException(); // todo
     }
@@ -38,35 +37,26 @@ static void mapLibraryName(Frame *frame)
     char mapping_name[strlen(name) + 5];;
     strcpy(mapping_name, name);
     strcat(mapping_name, ".dll"); // todo ...........................
-    frame->pushr(newString(mapping_name));  // todo
+    return newString(mapping_name);  // todo
 }
 
 // public static native void arraycopy(Object src, int srcPos, Object dest, int destPos, int length)
-static void arraycopy(Frame *frame)
+static void arraycopy(JNIEnv *env, jclass clazz, jref src, jint src_pos, jref dest, jint dest_pos, jint length)
 {
-    jref src = frame->getLocalAsRef(0);
-    jint src_pos = frame->getLocalAsInt(1);
-    jref dest = frame->getLocalAsRef(2);
-    jint dest_pos = frame->getLocalAsInt(3);
-    jint length = frame->getLocalAsInt(4);
-
     assert(dest->isArrayObject());
     assert(src->isArrayObject());
     Array::copy((Array *) dest, dest_pos, (Array *) src, src_pos, length);
 }
 
 // public static native int identityHashCode(Object x);
-static void identityHashCode(Frame *frame)
+static jint identityHashCode(JNIEnv *env, jclass clazz, jobject x)
 {
-    jref x = frame->getLocalAsRef(0);
-    frame->pushi((jint) (intptr_t) x); // todo 实现错误。改成当前的时间如何。
+    return (jint) (intptr_t) x; // todo 实现错误。改成当前的时间如何。
 }
 
 // private static native Properties initProperties(Properties props);
-static void initProperties(Frame *frame)
+static jref initProperties(JNIEnv *env, jclass clazz, jref props)
 {
-    Object *props = frame->getLocalAsRef(0);
-
     // todo init
     Method *setProperty = props->clazz->lookupInstMethod(
             "setProperty", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;");
@@ -76,31 +66,25 @@ static void initProperties(Frame *frame)
         execJavaFunc(setProperty, props, newString(prop.first), newString(prop.second));
     }
 
-    frame->pushr(props);
+    return props;
 }
 
 // private static native void setIn0(InputStream in);
-static void setIn0(Frame *frame)
+static void setIn0(JNIEnv *env, jclsref clazz, jref in)
 {
-    jref in = frame->getLocalAsRef(0);
-    Class *c = frame->method->clazz;
-    c->lookupStaticField("in", "Ljava/io/InputStream;")->staticValue.r = in;
+    clazz->lookupStaticField("in", "Ljava/io/InputStream;")->staticValue.r = in;
 }
 
 // private static native void setOut0(PrintStream out);
-static void setOut0(Frame *frame)
+static void setOut0(JNIEnv *env, jclsref clazz, jref out)
 {
-    jref out = frame->getLocalAsRef(0);
-    Class *c = frame->method->clazz;
-    c->lookupStaticField("out", "Ljava/io/PrintStream;")->staticValue.r = out;
+    clazz->lookupStaticField("out", "Ljava/io/PrintStream;")->staticValue.r = out;
 }
 
 // private static native void setErr0(PrintStream err);
-static void setErr0(Frame *frame)
+static void setErr0(JNIEnv *env, jclsref clazz, jref err)
 {
-    jref err = frame->getLocalAsRef(0);
-    Class *c = frame->method->clazz;
-    c->lookupStaticField("err", "Ljava/io/PrintStream;")->staticValue.r = err;
+    clazz->lookupStaticField("err", "Ljava/io/PrintStream;")->staticValue.r = err;
 }
 
 /*
@@ -112,18 +96,18 @@ static void setErr0(Frame *frame)
  *
  * public static native long nanoTime();
  */
-static void nanoTime(Frame *frame)
+static jlong nanoTime(JNIEnv *env, jclass clazz)
 {
     // todo
-    frame->pushl(duration_cast<nanoseconds>(high_resolution_clock ::now().time_since_epoch()).count());
+    return duration_cast<nanoseconds>(high_resolution_clock ::now().time_since_epoch()).count();
 }
 
 // 毫秒
 // public static native long currentTimeMillis();
-static void currentTimeMillis(Frame *frame)
+static jlong currentTimeMillis(JNIEnv *env, jclass clazz)
 {
     // todo
-    frame->pushl(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
+    return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 }
 
 static JNINativeMethod methods[] = {

@@ -15,7 +15,8 @@ static jint hashCode(JNIEnv *env, jobject _this)
 // protected native Object clone() throws CloneNotSupportedException;
 static jobject clone(JNIEnv *env, jobject _this)
 {
-    if (is_subclass_of(obj_get_class(_this), (*env)->FindClass(env, S(java_lang_Cloneable))) == 0) {
+    jclass c = (*env)->GetObjectClass(env, _this);
+    if (is_subclass_of(c, (*env)->FindClass(env, S(java_lang_Cloneable))) == 0) {
         jclass exception = (*env)->FindClass(env, S(java_lang_CloneNotSupportedException));
         (*env)->ThrowNew(env, exception, NULL);
     }
@@ -25,7 +26,7 @@ static jobject clone(JNIEnv *env, jobject _this)
 // public final native Class<?> getClass();
 static jobject getClass(JNIEnv *env, jobject _this)
 {
-    return obj_get_class(_this); // todo 对不对
+    return (*env)->GetObjectClass(env, _this); // todo 对不对
 }
 
 // public final native void notifyAll();

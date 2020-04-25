@@ -1,5 +1,5 @@
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 #include <windows.h> // todo
@@ -7,53 +7,53 @@
 #include "../../jni_inner.h"
 
 // public native int availableProcessors();
-static void availableProcessors(Frame *frame)
+static jint availableProcessors(JNIEnv *env, jobject _this)
 {
     // todo 这是windows 方式，不利于平台移植
     SYSTEM_INFO sysInfo;
     GetSystemInfo(&sysInfo);
-    frame->pushi((jint) sysInfo.dwNumberOfProcessors);
+    return (jint)sysInfo.dwNumberOfProcessors;
 }
 
 // public native long freeMemory();
-static void freeMemory(Frame *frame)
+static jlong freeMemory(JNIEnv *env, jobject _this)
 {
     jvm_abort("freeMemory");
 }
 
 // public native long totalMemory();
-static void totalMemory(Frame *frame)
+static jlong totalMemory(JNIEnv *env, jobject _this)
 {
     jvm_abort("totalMemory");
 }
 
 // public native long maxMemory();
-static void maxMemory(Frame *frame)
+static jlong maxMemory(JNIEnv *env, jobject _this)
 {
     jvm_abort("maxMemory");
 }
 
 // public native void gc();
-static void gc(Frame *frame)
+static void gc(JNIEnv *env, jobject _this)
 {
     jvm_abort("gc");
 }
 
 /* Wormhole for calling java.lang.ref.Finalizer.runFinalization */
 // private static native void runFinalization0();
-static void runFinalization0(Frame *frame)
+static void runFinalization0(JNIEnv *env, jobject _this)
 {
     jvm_abort("runFinalization0");
 }
 
 // public native void traceInstructions(boolean on)
-static void traceInstructions(Frame *frame)
+static void traceInstructions(JNIEnv *env, jobject _this)
 {
     jvm_abort("traceInstructions");
 }
 
 // public native void traceMethodCalls(boolean on);
-static void traceMethodCalls(Frame *frame)
+static void traceMethodCalls(JNIEnv *env, jobject _this, jboolean on)
 {
     jvm_abort("traceMethodCalls");
 }

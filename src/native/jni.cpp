@@ -1363,11 +1363,11 @@ void *findNativeMethod(const char *class_name, const char *method_name, const ch
     }
 }
 
-extern "C" jclass obj_get_class(jobject o)
-{
-    jref r = to_object_ref(o);
-    return to_jclass(r->clazz);
-}
+// extern "C" jclass obj_get_class(jobject o)
+// {
+//     jref r = to_object_ref(o);
+//     return to_jclass(r->clazz);
+// }
 
 extern "C" jobject obj_clone(jobject o)
 {
