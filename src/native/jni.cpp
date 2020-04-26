@@ -666,15 +666,15 @@ jsize JNICALL JVM_GetArrayLength(JNIEnv *env, jarray array)
     return arr->len;
 }
 
-jobjectArray JNICALL JVM_NewObjectArray(JNIEnv *env, jsize len, jclass clazz, jobject init)
+jobjectArray JNICALL JVM_NewObjectArray(JNIEnv *env, jsize len, jclass elementClass, jobject init)
 {
     // todo
-    assert(env != nullptr && clazz != nullptr);
+    assert(env != nullptr && elementClass != nullptr);
     if (len < 0) {
         // todo java_lang_NegativeArraySizeException
     }
 
-    Array *arr = newArray(to_object_ref<Class>(clazz), len);
+    Array *arr = newArray(to_object_ref<Class>(elementClass)->arrayClass(), len);
     if (init != nullptr) {
         jref o = to_object_ref(init);
         for (int i = 0; i < len; ++i) {
