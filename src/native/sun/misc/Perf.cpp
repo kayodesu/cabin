@@ -1,5 +1,5 @@
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 #include "../../jni_inner.h"
@@ -8,7 +8,7 @@
 #include "../../../interpreter/interpreter.h"
 
 // public native ByteBuffer createLong(String name, int variability, int units, long value);
-static void createLong(Frame *frame)
+static jref createLong(JNIEnv *env, jobject _this, jstring name, jint variability, jint units, jlong value)
 {
     // todo 这函数是干嘛的？？？？？？？？？？？？？？？？？？
 /*
@@ -30,7 +30,7 @@ static void createLong(Frame *frame)
 //    bb->clinit();
 
     Method *allocate = bb->getDeclaredStaticMethod("allocate", "(I)Ljava/nio/ByteBuffer;");
-    frame->pushr(RSLOT(execJavaFunc(allocate, { slot::islot(sizeof(jlong)) })));
+    return RSLOT(execJavaFunc(allocate, { slot::islot(sizeof(jlong)) }));
 }
 
 static JNINativeMethod methods[] = {

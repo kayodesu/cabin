@@ -1,5 +1,5 @@
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 #include <fstream>
@@ -13,22 +13,21 @@ using namespace std;
 using namespace std::filesystem;
 
 // private static native void initIDs();
-static void initIDs(Frame *frame)
+static void initIDs(JNIEnv *env, jclass clazz)
 {
     // todo
 }
 
 // private native String getDriveDirectory(int drive);
-static void getDriveDirectory(Frame *frame)
+static void getDriveDirectory(JNIEnv *env, jobject _this, jint drive)
 {
     // todo
     jvm_abort("getDriveDirectory");
 }
 
 // private native String canonicalize0(String path) throws IOException;
-static void canonicalize0(Frame *frame)
+static jstrref canonicalize0(JNIEnv *env, jobject _this, jstrref path)
 {
-    auto so = frame->getLocalAsRef(1);
     // todo 怎么处理路径？？？
     /*
      * 	vars := frame.LocalVars()
@@ -44,13 +43,12 @@ static void canonicalize0(Frame *frame)
 	stack := frame.OperandStack()
 	stack.PushRef(pathStr)
      */
-    frame->pushr(so);
+    return path;
 }
 
 // public native int getBooleanAttributes(File f);
-static void getBooleanAttributes(Frame *frame)
+static jint getBooleanAttributes(JNIEnv *env, jobject _this, jref f)
 {
-    auto f = frame->getLocalAsRef(1);
     auto __path = f->getRefField("path", "Ljava/lang/String;")->toUtf8();
 
     jint attr = 0;
@@ -64,14 +62,13 @@ static void getBooleanAttributes(Frame *frame)
         }
     }
 
-    frame->pushi(attr);
+    return attr;
 }
 
 // public native long getLastModifiedTime(File f);
-static void getLastModifiedTime(Frame *frame)
+static jlong getLastModifiedTime(JNIEnv *env, jobject _this, jref f)
 {
     // todo
-    auto f = frame->getLocalAsRef(1);
     auto __path = f->getRefField("path", "Ljava/lang/String;")->toUtf8();
 
 //    file_time_type mtime = last_write_time(__path);
@@ -79,18 +76,18 @@ static void getLastModifiedTime(Frame *frame)
     if (stat(__path, &buf) == -1) {
         jvm_abort("stat faild: %s\n", __path);  // todo
     }
-    frame->pushl(buf.st_mtime);
+
+    return buf.st_mtime;
 }
 
 // public native long getLength(File f);
-static void getLength(Frame *frame)
+static jlong getLength(JNIEnv *env, jobject _this, jref f)
 {
     // todo
-    auto f = frame->getLocalAsRef(1);
     auto __path = f->getRefField("path", "Ljava/lang/String;")->toUtf8();
 
     uintmax_t size = file_size(__path);
-    frame->pushl(size);
+    return size;
 }
 
 static JNINativeMethod methods[] = {

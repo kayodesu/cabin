@@ -1,5 +1,5 @@
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 #include "../../jni_inner.h"
@@ -7,7 +7,7 @@
 #include "../../../objects/array_object.h"
 
 // private native void initIDs();
-static void initIDs(Frame *frame)
+static void initIDs(JNIEnv *env, jobject _this)
 {
 //    jvm_abort("error\n");
     // todo
@@ -18,14 +18,14 @@ static void initIDs(Frame *frame)
  *
  * private native void open0(String name) throws FileNotFoundException;
  */
-static void open0(Frame *frame)
+static void open0(JNIEnv *env, jref _this, jstrref name)
 {
-    auto _this = frame->getLocalAsRef(0);
-    auto name = frame->getLocalAsRef(1)->toUtf8();
+    // auto _this = frame->getLocalAsRef(0);
+    // auto name = frame->getLocalAsRef(1)->toUtf8();
 
-    FILE *file = fopen(name, "rb");
+    FILE *file = fopen(name->toUtf8(), "rb");
     if (file == nullptr) {
-        throw FileNotFoundException(name);
+        throw FileNotFoundException(name->toUtf8());
     }
 
     // File Descriptor - handle to the open file
@@ -51,14 +51,12 @@ static inline FILE *getFileHandle(jref _this)
  *
  * private native int read0() throws IOException;
  */
-static void read0(Frame *frame)
+static jint read0(JNIEnv *env, jref _this)
 {
-    auto _this = frame->getLocalAsRef(0);
-
     FILE *file = getFileHandle(_this);
     int c = fgetc(file);
 
-    frame->pushi(c);
+    return c;
 }
 
 
@@ -71,18 +69,13 @@ static void read0(Frame *frame)
  *
  * private native int readBytes(byte b[], int off, int len) throws IOException;
  */
-static void readBytes(Frame *frame)
+static jint readBytes(JNIEnv *env, jref _this, jarrref b, jint off, jint len)
 {
-    auto _this = frame->getLocalAsRef(0);
-    auto b = frame->getLocalAsRef<Array>(1);
-    jint off = frame->getLocalAsInt(2);
-    jint len = frame->getLocalAsInt(3);
-
     FILE *file = getFileHandle(_this);
     jbyte *arr = ((jbyte *) b->data) + off;
     size_t n = fread(arr, sizeof(jbyte), len, file);
 
-    frame->pushi(n);
+    return n;
 }
 
 /**
@@ -111,7 +104,7 @@ static void readBytes(Frame *frame)
  *
  * private native long skip0(long n) throws IOException;
  */
-static void skip0(Frame *frame)
+static jlong skip0(JNIEnv *env, jobject _this, jlong n)
 {
     jvm_abort("\n"); // todo
 }
@@ -135,7 +128,7 @@ static void skip0(Frame *frame)
  *
 private native int available0() throws IOException;
  */
-static void available0(Frame *frame)
+static jint available0(JNIEnv *env, jobject _this)
 {
     jvm_abort("\n"); // todo
 }
@@ -143,10 +136,8 @@ static void available0(Frame *frame)
 /*
  * private native void close0() throws IOException;
  */
-static void close0(Frame *frame)
+static void close0(JNIEnv *env, jref _this)
 {
-    auto _this = frame->getLocalAsRef(0);
-
     FILE *file = getFileHandle(_this);
     if (fclose(file) != 0) {
         throw IOException();

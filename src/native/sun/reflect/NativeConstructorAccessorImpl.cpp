@@ -1,5 +1,5 @@
 /*
- * Author: Jia Yang
+ * Author: Yo Ka
  */
 
 #include <sstream>
@@ -64,22 +64,22 @@ using namespace std;
 //}
 
 /*
- * private static native Object newInstance0(Constructor<?> c, Object[] os)
+ * private static native Object newInstance0(Constructor<?> c, Object[] args)
  * throws InstantiationException, IllegalArgumentException, InvocationTargetException;
  */
-static void newInstance0(Frame *frame)
+static jref newInstance0(JNIEnv *env, jclass clazz, jref c, jarrref args)
 {
-    jref co = frame->getLocalAsRef(0);
     /*
      * args array of objects to be passed as arguments to
      * the constructor call; values of primitive types are wrapped in
-     * a wrapper Object of the appropriate type
+     * a wrapper Object of the appropriate type.
+     * 
+     * may be NULL
      */
-    auto args = frame->getLocalAsRef<Array>(1); // may be NULL
 
     // which class this constructor belongs to.
-    auto ac = co->getRefField<Class>(S(clazz), S(sig_java_lang_Class));
-    initClass(co->clazz);
+    auto ac = c->getRefField<Class>(S(clazz), S(sig_java_lang_Class));
+    initClass(c->clazz);
     Object *obj = newObject(ac);
 
     if (args == nullptr) { // 构造函数没有参数
@@ -88,12 +88,12 @@ static void newInstance0(Frame *frame)
         execJavaFunc(constructor, obj);
     } else {
         // parameter types of this constructor
-        auto parameterTypes = co->getRefField<Array>(S(parameterTypes), S(array_java_lang_Class));
+        auto parameterTypes = c->getRefField<Array>(S(parameterTypes), S(array_java_lang_Class));
         Method *constructor = ac->getConstructor(parameterTypes);
         execConstructor(constructor, obj, args);
     }
 
-    frame->pushr(obj);
+    return obj;
 }
 
 static JNINativeMethod methods[] = {

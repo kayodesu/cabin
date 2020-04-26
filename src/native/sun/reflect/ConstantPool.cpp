@@ -4,41 +4,35 @@
 #include "../../../objects/class.h"
 
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 // private native int getSize0(Object constantPoolOop);
-static void getSize0(Frame *frame)
+static jint getSize0(JNIEnv *env, jobject _this, jref constantPoolOop)
 {
-    auto cp = frame->getLocalAsRef<ConstantPool>(1);
-    frame->pushi(cp->size);
+    ConstantPool *cp = (ConstantPool *) constantPoolOop;
+    return cp->size;
 }
 
 // private native Class getClassAt0(Object constantPoolOop, int i);
-static void getClassAt0(Frame *frame)
+static jclsref getClassAt0(JNIEnv *env, jobject _this, jref constantPoolOop, jint i)
 {
-    auto cp = frame->getLocalAsRef<ConstantPool>(1);
-    jint i = frame->getLocalAsInt(2);
-
-    frame->pushr(cp->resolveClass((u2)i));
+    ConstantPool *cp = (ConstantPool *) constantPoolOop;
+    return cp->resolveClass((u2)i);
 }
 
 // private native long getLongAt0(Object constantPoolOop, int i);
-static void getLongAt0(Frame *frame)
+static jlong getLongAt0(JNIEnv *env, jobject _this, jref constantPoolOop, jint i)
 {
-    auto cp = frame->getLocalAsRef<ConstantPool>(1);
-    jint i = frame->getLocalAsInt(2);
-
-    frame->pushl(cp->_long((u2)i));
+    ConstantPool *cp = (ConstantPool *) constantPoolOop;
+    return cp->_long((u2)i);
 }
 
 // private native String getUTF8At0(Object constantPoolOop, int i);
-static void getUTF8At0(Frame *frame)
+static jstrref getUTF8At0(JNIEnv *env, jobject _this, jref constantPoolOop, jint i)
 {
-    auto cp = frame->getLocalAsRef<ConstantPool>(1);
-    jint i = frame->getLocalAsInt(2);
-
-    frame->pushr(cp->resolveString(i));
+    ConstantPool *cp = (ConstantPool *) constantPoolOop;
+    return cp->resolveString(i);
 }
 
 static JNINativeMethod methods[] = {

@@ -1,5 +1,5 @@
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 #include "../../../kayo.h"
@@ -7,38 +7,38 @@
 #include "../../../runtime/frame.h"
 
 // static native void copyFromShortArray(Object src, long srcPos, long dstAddr, long length);
-static void copyFromShortArray(Frame *frame)
+static void copyFromShortArray(JNIEnv *env, jobject _this, jobject src, jlong srcPos, jlong dstAddr, jlong length)
 {
     jvm_abort("copyFromShortArray"); // todo
 }
 
 // static native void copyToShortArray(long srcAddr, Object dst, long dstPos, long length);
-static void copyToShortArray(Frame *frame)
+static void copyToShortArray(JNIEnv *env, jobject _this, jlong srcAddr, jobject dst, jlong dstPos, jlong length)
 {
     jvm_abort("copyToShortArray"); // todo
 }
 
 // static native void copyFromIntArray(Object src, long srcPos, long dstAddr, long length);
-static void copyFromIntArray(Frame *frame)
+static void copyFromIntArray(JNIEnv *env, jobject _this, jobject src, jlong srcPos, jlong dstAddr, jlong length)
 {
     jvm_abort("copyFromIntArray"); // todo
 }
 
 
 // static native void copyToIntArray(long srcAddr, Object dst, long dstPos, long length);
-static void copyToIntArray(Frame *frame)
+static void copyToIntArray(JNIEnv *env, jobject _this, jlong srcAddr, jobject dst, jlong dstPos, jlong length)
 {
     jvm_abort("copyToIntArray"); // todo
 }
 
 // static native void copyFromLongArray(Object src, long srcPos, long dstAddr, long length);
-static void copyFromLongArray(Frame *frame)
+static void copyFromLongArray(JNIEnv *env, jobject _this, jobject src, jlong srcPos, jlong dstAddr, jlong length)
 {
     jvm_abort("copyFromLongArray"); // todo
 }
 
 // static native void copyToLongArray(long srcAddr, Object dst, long dstPos, long length);
-static void copyToLongArray(Frame *frame)
+static void copyToLongArray(JNIEnv *env, jobject _this, jlong srcAddr, jobject dst, jlong dstPos, jlong length)
 {
     jvm_abort("copyToLongArray"); // todo
 }

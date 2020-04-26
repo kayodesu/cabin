@@ -1385,28 +1385,14 @@ __opc_athrow:
 
 			    assert(frame->method->native_method != nullptr);
 			    try {
-			        if (strcmp(frame->method->clazz->className, "java/lang/Class") == 0 
-                        || strcmp(frame->method->clazz->className, "java/lang/Float") == 0
-                        || strcmp(frame->method->clazz->className, "java/lang/Double") == 0
-                        || strcmp(frame->method->clazz->className, "java/lang/Object") == 0
-                        || strcmp(frame->method->clazz->className, "java/lang/ClassLoader$NativeLibrary") == 0
-                        || strcmp(frame->method->clazz->className, "java/lang/ClassLoader") == 0
-                        || strcmp(frame->method->clazz->className, "java/lang/Package") == 0
-                        || strcmp(frame->method->clazz->className, "java/lang/Runtime") == 0
-                        || strcmp(frame->method->clazz->className, "java/lang/String") == 0
-                        || strcmp(frame->method->clazz->className, "java/lang/System") == 0                        
-                        || strcmp(frame->method->clazz->className, "java/lang/Thread") == 0
-
-                        || strcmp(frame->method->clazz->className, "java/lang/Double") == 0
-                        || strcmp(frame->method->clazz->className, "java/lang/Object") == 0
-                        || strcmp(frame->method->clazz->className, "java/lang/Float") == 0
-                        || strcmp(frame->method->clazz->className, "java/lang/Double") == 0
-                        || strcmp(frame->method->clazz->className, "java/lang/Object") == 0) {
-                        callJNIMethod(frame);
-			        } else {
+			        if (strcmp(frame->method->clazz->className, "java/security/AccessController") == 0 
+                        || strcmp(frame->method->clazz->className, "java/lang/invoke/MethodHandle") == 0
+                        || strcmp(frame->method->clazz->className, "sun/misc/Unsafe") == 0
+                        || strcmp(frame->method->clazz->className, "jdk/internal/misc/Unsafe") == 0) {
                         ((void (*)(Frame *)) frame->method->native_method)(frame);
+			        } else {
+                        callJNIMethod(frame);
                     }
-//                    ((void (*)(Frame *)) frame->method->native_method)(frame);
 			    } catch (Throwable &t) {
 			        TRACE("native method throw a exception\n");
 			        assert(t.getJavaThrowable() != nullptr);
@@ -1529,7 +1515,7 @@ static void callJNIMethod(Frame *frame)
     jint ret = JVM_GetEnv(nullptr, (void **)&jni_env, 0);
     assert(ret == JNI_OK);
 
-    const_cast<JNINativeInterface_ *>(jni_env->functions)->reserved3 = (void *) frame->method->clazz->loader;
+    const_cast<JNINativeInterface_ *>(jni_env->functions)->reserved3 = (void *) frame;
 
     Method *m = frame->method;
     int arg_count_max = 1 /* JNIEnv* */ + m->arg_slot_count + (m->isStatic() ? 1 /* jclsref */ : 0);

@@ -6,7 +6,7 @@
 #include "../../../../objects/array_object.h"
 
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 using namespace utf8;
@@ -14,23 +14,20 @@ using namespace method_type;
 using namespace member_name;
 
 // static native int getConstant(int which);
-static void getConstant(Frame *frame)
+static jint getConstant(JNIEnv *env, jobject _this, jint which)
 {
-    jint which = frame->getLocalAsInt(0);
     // todo 啥意思
     if (which == 4)
-        frame->pushi(1);
+        return 1;
     else
-        frame->pushi(0);
+        return 0;
 }
 
 // static native void init(MemberName self, Object ref);
-static void init(Frame *frame)
+static void init(JNIEnv *env, jobject _this, jref self, jref ref)
 {
     jvm_abort("init");
 
-    jref self = frame->getLocalAsRef(0);
-    jref ref = frame->getLocalAsRef(1);
     /*
 	 * in fact, `ref` will be one of these three:
 	 * 1. java/lang/reflect/Field.
@@ -73,10 +70,10 @@ static void init(Frame *frame)
  *
  * static native MemberName resolve(MemberName self, Class<?> caller) throws LinkageError, ClassNotFoundException;
  */
-static void resolve(Frame *frame)
+static jref resolve(JNIEnv *env, jobject _this, jref self, jref caller)
 {
-    jref mn = frame->getLocalAsRef(0);
-    jref caller = frame->getLocalAsRef(1);
+    // jref mn = frame->getLocalAsRef(0);
+    // jref caller = frame->getLocalAsRef(1);
 
     // todo
     // private Class<?> clazz;       // class in which the method is defined
@@ -84,18 +81,18 @@ static void resolve(Frame *frame)
     // private Object   type;        // may be null if not yet materialized
     // private int      flags;       // modifier bits; see reflect.Modifier
     // private Object   resolution;  // if null, this guy is resolved
-    auto clazz = mn->getRefField<Class>("clazz", "Ljava/lang/Class;");
-    auto name = mn->getRefField("name", "Ljava/lang/String;");
+    auto clazz = self->getRefField<Class>("clazz", "Ljava/lang/Class;");
+    auto name = self->getRefField("name", "Ljava/lang/String;");
     // type maybe a String or an Object[] or a MethodType
     // Object[]: (Class<?>) Object[0] is return type
     //           (Class<?>[]) Object[1] is parameter types
-    auto type = mn->getRefField("type", "Ljava/lang/Object;");
-    jint flags = mn->getIntField("flags", "I");
-    auto resolution = mn->getRefField("resolution", "Ljava/lang/Object;");
+    auto type = self->getRefField("type", "Ljava/lang/Object;");
+    jint flags = self->getIntField("flags", "I");
+    auto resolution = self->getRefField("resolution", "Ljava/lang/Object;");
 
-    auto refKind = getRefKind(mn);
+    auto refKind = getRefKind(self);
 
-    if (isMethod(mn)) {
+    if (isMethod(self)) {
         jstrref descriptor = nullptr;
 
         // TODO "java/lang/invoke/MethodHandle" 及其子类暂时特殊处理，因为取到的type一直是错的，我也不知道为什么？？？？
@@ -139,8 +136,7 @@ static void resolve(Frame *frame)
             jvm_abort("not support!");
         }
 
-        frame->pushr(resolvedMemberName);
-        return;
+        return resolvedMemberName;
     } else {
         jvm_abort("not support!");
     }

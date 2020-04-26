@@ -3,38 +3,38 @@
 #include "../../../../objects/array_object.h"
 
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 // public static native Object get(Object array, int index)
 //              throws IllegalArgumentException, ArrayIndexOutOfBoundsException;
-static void get(Frame *frame)
+static jobject get(JNIEnv *env, jclass clazz, jobject array, jint index)
 {
     jvm_abort("get");
 }
 
 // public static native void set(Object array, int index, Object value)
 //               throws IllegalArgumentException, ArrayIndexOutOfBoundsException;
-static void set(Frame *frame)
+static void set(JNIEnv *env, jclass clazz, jobject array, jint index, jobject value)
 {
     jvm_abort("set");
 }
 
 // public static native int getLength(Object array) throws IllegalArgumentException;
-static void getLength(Frame *frame)
+static jint getLength(JNIEnv *env, jclass clazz, jobject array)
 {
     jvm_abort("getLength");
 }
 
 // private static native Object newArray(Class<?> componentType, int length)
 //                  throws NegativeArraySizeException;
-static void __newArray(Frame *frame)
+static jref __newArray(JNIEnv *env, jclass clazz, jclsref componentType, jint length)
 {
-    auto componentType = frame->getLocalAsRef<Class>(0);
-    auto length = frame->getLocalAsInt(1);
+    // auto componentType = frame->getLocalAsRef<Class>(0);
+    // auto length = frame->getLocalAsInt(1);
 
     auto arr = newArray(componentType->arrayClass(), length);
-    frame->pushr(arr);
+    return arr;
 }
 
 static JNINativeMethod methods[] = {

@@ -2,7 +2,7 @@
 #include "../../../../../runtime/frame.h"
 
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 /*
@@ -11,13 +11,13 @@
  *
  * private static native boolean VMSupportsCS8();
  */
-static void VMSupportsCS8(Frame *frame)
+static jboolean VMSupportsCS8(JNIEnv *env, jclass clazz)
 {
 /*
  * 	stack := frame.OperandStack()
 	stack.PushBoolean(false) // todo sync/atomic
  */
-    frame->pushi(0); // todo
+    return JNI_FALSE; // todo  sync/atomic
 }
 
 static JNINativeMethod methods[] = {

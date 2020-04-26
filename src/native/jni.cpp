@@ -37,7 +37,7 @@ jclass JNICALL JVM_FindClass(JNIEnv *env, const char *name)
 {
     assert(env != nullptr && name != nullptr);
     // todo
-    jref loader = (jref) env->functions->reserved3;
+    jref loader = ((Frame *) env->functions->reserved3)->method->clazz->loader;
     Class *c = loadClass(loader, name);
     return to_jclass(c);
    // jvm_abort("not implement.");

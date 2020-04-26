@@ -14,9 +14,9 @@
 using namespace std;
 
 // private native Throwable fillInStackTrace(int dummy);
-static void fillInStackTrace(Frame *frame)
+static jref fillInStackTrace(JNIEnv *env, jref _this, jint dummy)
 {
-    jref _this = frame->getLocalAsRef(0);
+    Frame *frame = (Frame *) env->functions->reserved3;
 
     int num = getCurrentThread()->countStackFrames();
     /*
@@ -79,28 +79,23 @@ static void fillInStackTrace(Frame *frame)
      */
     _this->setRefField(S(backtrace), S(sig_java_lang_Object), backtrace);
 
-    frame->pushr(_this);
+    return _this;
 }
 
 // native StackTraceElement getStackTraceElement(int index);
-static void getStackTraceElement(Frame *frame)
+static jref getStackTraceElement(JNIEnv *env, jref _this, jint index)
 {
-    jref _this = frame->getLocalAsRef(0);
-    jint index = frame->getLocalAsInt(1);
-
     auto backtrace = (Array *) _this->getRefField(S(backtrace), S(sig_java_lang_Object));
     assert(backtrace != nullptr);
-    frame->pushr(backtrace->get<jref>(index));
+    return backtrace->get<jref>(index);
 }
 
 // native int getStackTraceDepth();
-static void getStackTraceDepth(Frame *frame)
+static jint getStackTraceDepth(JNIEnv *env, jref _this)
 {
-    jref _this = frame->getLocalAsRef(0);
-
     auto backtrace = (Array *) _this->getRefField(S(backtrace), S(sig_java_lang_Object));
     assert(backtrace != nullptr);
-    frame->pushi(backtrace->len);
+    return backtrace->len;
 }
 
 static JNINativeMethod methods[] = {

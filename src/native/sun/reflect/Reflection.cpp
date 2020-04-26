@@ -1,5 +1,5 @@
 /*
- * Author: Jia Yang
+ * Author: Yo Ka
  */
 
 #include "../../jni_inner.h"
@@ -10,17 +10,18 @@
 
 
 // public static native Class<?> getCallerClass(int level)
-static void getCallerClass0(Frame *frame)
+static jclsref getCallerClass0(JNIEnv *env, jclass clazz, jint level)
 {
     jvm_abort("getCallerClass0");
 }
 
 // public static native Class<?> getCallerClass()
-static void getCallerClass(Frame *frame)
+static jref getCallerClass(JNIEnv *env, jclass clazz)
 {
     // top0, current frame is executing getCallerClass()
     // top1, who called getCallerClass, the one who wants to know his caller.
     // top2, the caller of top1, the result.
+    Frame *frame = (Frame *) env->functions->reserved3;
     Frame *top1 = frame->prev;
     assert(top1 != nullptr);
 
@@ -28,14 +29,14 @@ static void getCallerClass(Frame *frame)
     assert(top2 != nullptr);
 
     jref o = top2->method->clazz;
-    frame->pushr(o);
+    return o;
 }
 
 // public static native int getClassAccessFlags(Class<?> type)
-static void getClassAccessFlags(Frame *frame)
+static jint getClassAccessFlags(JNIEnv *env, jclass clazz, jclsref type)
 {
-    Object *type = frame->getLocalAsRef(0);
-    frame->pushi(type->clazz->modifiers);
+    // Object *type = frame->getLocalAsRef(0);
+    return type->clazz->modifiers; // todo
 }
 
 static JNINativeMethod methods[] = {

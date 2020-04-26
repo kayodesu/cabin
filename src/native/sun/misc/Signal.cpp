@@ -2,29 +2,24 @@
 #include "../../../runtime/frame.h"
 
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 // private static native int findSignal(String string);
-static void findSignal(Frame *frame)
+static jint findSignal(JNIEnv *env, jclass clazz, jstring string)
 {
-    jref name = frame->getLocalAsRef(0);
-    frame->pushi(0); // todo
+    return 0; // todo
 }
 
 // private static native long handle0(int i, long l);
-static void handle0(Frame *frame)
+static jlong handle0(JNIEnv *env, jclass clazz, jint i, jlong l)
 {
-//    jint i = slot_geti(frame->local_vars);
-//    jlong l = slot_getl(frame->local_vars + 1);
-
-    frame->pushl(0); // todo
+    return 0; // todo
 }
 
 // private static native void raise0(int i);
-static void raise0(Frame *frame)
+static void raise0(JNIEnv *env, jclass clazz, jint i)
 {
-//    jint i = slot_geti(frame->local_vars);
     // todo
 }
 

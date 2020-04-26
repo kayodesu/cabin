@@ -3,11 +3,11 @@
 #include "../../../runtime/frame.h"
 
 /*
- * Author: Jia Yang
+ * Author: Yo Ka
  */
 
 // private static native Object invoke0(Method method, Object o, Object[] os);
-static void invoke0(Frame *frame)
+static void invoke0(JNIEnv *env, jclass clazz, jmethodID method, jobject o, jobjectArray os)
 {
     jvm_abort("error\n");
 }

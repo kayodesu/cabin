@@ -3,38 +3,38 @@
 #include "../../../objects/object.h"
 
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 // private native static String getVersion0();
-static void getVersion0(Frame *frame)
+static jstrref getVersion0(JNIEnv *env, jclass clazz)
 {
     // Management Version
-    frame->pushr(newString(MANAGEMENT_VERSION));
+    return newString(MANAGEMENT_VERSION);
 }
 
 // private native static void initOptionalSupportFields();
-static void initOptionalSupportFields(Frame *frame)
+static void initOptionalSupportFields(JNIEnv *env, jclass clazz)
 {
     // todo
 }
 
 // public native boolean isThreadContentionMonitoringEnabled();
-static void isThreadContentionMonitoringEnabled(Frame *frame)
+static jboolean isThreadContentionMonitoringEnabled(JNIEnv *env, jobject _this)
 {
-    frame->pushi(1); // todo
+    return JNI_TRUE; // todo
 }
 
 // public native boolean isThreadCpuTimeEnabled();
-static void isThreadCpuTimeEnabled(Frame *frame)
+static jboolean isThreadCpuTimeEnabled(JNIEnv *env, jobject _this)
 {
-    frame->pushi(1); // todo
+    return JNI_TRUE; // todo
 }
 
 // public native boolean isThreadAllocatedMemoryEnabled();
-static void isThreadAllocatedMemoryEnabled(Frame *frame)
+static jboolean isThreadAllocatedMemoryEnabled(JNIEnv *env, jobject _this)
 {
-    frame->pushi(1); // todo
+    return JNI_TRUE; // todo
 }
 
 // public native long getTotalClassCount();

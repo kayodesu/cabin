@@ -2,14 +2,14 @@
 #include "../../../runtime/frame.h"
 
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 // private static native URL[] getLookupCacheURLs(ClassLoader var0);
-static void getLookupCacheURLs(Frame *frame)
+static jref getLookupCacheURLs(JNIEnv *env, jclass clazz)
 {
     // todo
-    frame->pushr(nullptr);
+    return nullptr;
 }
 
 static JNINativeMethod methods[] = {

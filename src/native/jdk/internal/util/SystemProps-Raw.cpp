@@ -1,5 +1,5 @@
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 #include "../../../../runtime/frame.h"
@@ -19,7 +19,7 @@
  * Signature: ()[Ljava/lang/String;
  */
 // private static native String[] vmProperties();
-static void vmProperties(Frame *frame)
+static jref vmProperties(JNIEnv *env, jclass clazz)
 {
     jarrref prop_array = newArray(loadBootClass(S(array_java_lang_String)), g_properties.size()*2);
     int i = 0;
@@ -27,7 +27,7 @@ static void vmProperties(Frame *frame)
         prop_array->set(i++, newString(p.first));
         prop_array->set(i++, newString(p.second));
     }
-    frame->pushr(prop_array);
+    return prop_array;
 }
 
 /*
@@ -43,7 +43,7 @@ static void vmProperties(Frame *frame)
  * Signature: ()[Ljava/lang/String;
  */
 // private static native String[] platformProperties();
-static void platformProperties(Frame *frame)
+static jref platformProperties(JNIEnv *env, jclass clazz)
 {
     // from class jdk/internal/util/SystemProps$Raw
     static const int _display_country_NDX = 0;
@@ -93,7 +93,7 @@ static void platformProperties(Frame *frame)
     for (int i = 0; i < FIXED_LENGTH; i++) {
         prop_array->set(i, jnull);
     }
-    frame->pushr(prop_array);
+    return prop_array;
 }
 
 static JNINativeMethod methods[] = {

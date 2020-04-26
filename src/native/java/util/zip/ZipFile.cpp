@@ -8,45 +8,45 @@
  */
 
 // private static native void initIDs();
-void initIDs(Frame *frame)
+void initIDs(JNIEnv *env, jclass clazz)
 {
     // todo
 }
 
 // private static native long open(String name, int mode, long lastModified, boolean usemmap) throws IOException;
-void __open(Frame *frame)
+jlong __open(JNIEnv *env, jclass clazz, jstrref name, jint mode, jlong lastModified, jboolean usemmap)
 {
-    auto name = frame->getLocalAsRef(0)->toUtf8();
+    auto name0 = name->toUtf8();
+
     // todo 其他几个参数怎么搞？？
-    unzFile jzfile = unzOpen64(name);
+    unzFile jzfile = unzOpen64(name0);
     if (jzfile == nullptr) {
-        throw IOException(name);
+        throw IOException(name0);
     }
-    frame->pushl((jlong) (jzfile));
+
+    return (jlong) (jzfile);
 }
 
 // private static native boolean startsWithLOC(long jzfile);
-void startsWithLOC(Frame *frame)
+jboolean startsWithLOC(JNIEnv *env, jclass clazz, jlong jzfile)
 {
     // todo
-    frame->pushi(1);
+    return JNI_TRUE;
 }
 
 // private static native int getTotal(long jzfile);
-void getTotal(Frame *frame)
+jint getTotal(JNIEnv *env, jclass clazz, jlong jzfile)
 {
-    auto jzfile = (unzFile) frame->getLocalAsLong(0);
-
     unz_global_info64 info;
-    if (unzGetGlobalInfo64(jzfile, &info) != UNZ_OK) {
+    if (unzGetGlobalInfo64((unzFile) jzfile, &info) != UNZ_OK) {
         // todo error
         jvm_abort("unzGetGlobalInfo64 failed\n");
     }
-    frame->pushi(info.number_entry);
+    return info.number_entry;
 }
 
 // private static native long getNextEntry(long jzfile, int i);
-void getNextEntry(Frame *frame)
+jlong getNextEntry(JNIEnv *env, jclass clazz, jlong jzfile, jint i)
 {
 /*
  * 	vars := frame.LocalVars()
@@ -63,13 +63,13 @@ void getNextEntry(Frame *frame)
 }
 
 // // private static native void freeEntry(long jzfile, long jzentry);
-void freeEntry(Frame *frame)
+void freeEntry(JNIEnv *env, jclass clazz, jlong jzfile, jlong jzentry)
 {
     // todo
 }
 
 // private static native long getEntry(long jzfile, byte[] name, boolean addSlash);
-void getEntry(Frame *frame)
+jlong getEntry(JNIEnv *env, jclass clazz, jlong jzfile, jbyteArray name, jboolean addSlash)
 {
     // todo
     /*
@@ -89,7 +89,7 @@ void getEntry(Frame *frame)
 }
 
 // private static native byte[] getEntryBytes(long jzentry, int type);
-void getEntryBytes(Frame *frame)
+jbyteArray getEntryBytes(JNIEnv *env, jclass clazz, jlong jzentry, jint type)
 {
     jvm_abort("getEntryBytes");
 // todo
@@ -124,7 +124,7 @@ void getEntryBytes(Frame *frame)
 }
 
 // private static native int getEntryFlag(long jzentry);
-void getEntryFlag(Frame *frame)
+jint getEntryFlag(JNIEnv *env, jclass clazz, jlong jzentry)
 {
     jvm_abort("getEntryFlag");
 /*
@@ -138,7 +138,7 @@ void getEntryFlag(Frame *frame)
 }
 
 // private static native long getEntryTime(long jzentry);
-void getEntryTime(Frame *frame)
+jlong getEntryTime(JNIEnv *env, jclass clazz, jlong jzentry)
 {
     jvm_abort("getEntryTime");
 /*
@@ -154,7 +154,7 @@ void getEntryTime(Frame *frame)
 }
 
 // private static native long getEntryCrc(long jzentry);
-void getEntryCrc(Frame *frame)
+jlong getEntryCrc(JNIEnv *env, jclass clazz, jlong jzentry)
 {
     jvm_abort("getEntryCrc");
     /*
@@ -168,7 +168,7 @@ void getEntryCrc(Frame *frame)
 }
 
 // private static native long getEntrySize(long jzentry);
-void getEntrySize(Frame *frame)
+jlong getEntrySize(JNIEnv *env, jclass clazz, jlong jzentry)
 {
     jvm_abort("getEntrySize");
 /*
@@ -182,7 +182,7 @@ void getEntrySize(Frame *frame)
 }
 
 // private static native long getEntryCSize(long jzentry);
-void getEntryCSize(Frame *frame)
+jlong getEntryCSize(JNIEnv *env, jclass clazz, jlong jzentry)
 {
     jvm_abort("getEntryCSize");
     /*
@@ -201,7 +201,7 @@ void getEntryCSize(Frame *frame)
 }
 
 // private static native int getEntryMethod(long jzentry);
-void getEntryMethod(Frame *frame)
+jint getEntryMethod(JNIEnv *env, jclass clazz, jlong jzentry)
 {
     jvm_abort("getEntryMethod");
     /*
@@ -226,7 +226,7 @@ void getEntryMethod(Frame *frame)
 }
 
 // private static native int read(long jzfile, long jzentry, long pos, byte[] b, int off, int len);
-void __read(Frame *frame)
+jint __read(JNIEnv *env, jclass clazz, jlong jzfile, jlong jzentry, jlong pos, jbyteArray b, jint off, jint len)
 {
     jvm_abort("read");
 /*

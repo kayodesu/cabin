@@ -3,7 +3,7 @@
 #include "../../../runtime/frame.h"
 
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 /*
@@ -22,61 +22,61 @@
  *
  * private native void open0(String name, int mode) throws FileNotFoundException;
  */
-static void open0(Frame *frame)
+static void open0(JNIEnv *env, jobject _this, jstring name, jint mode)
 {
     jvm_abort("open0");
 }
 
 // private native void close0() throws IOException;
-static void close0(Frame *frame)
+static void close0(JNIEnv *env, jobject _this)
 {
     jvm_abort("close0");
 }
 
 // private native void writeBytes(byte b[], int off, int len) throws IOException;
-static void writeBytes(Frame *frame)
+static void writeBytes(JNIEnv *env, jobject _this, jbyteArray b, jint off, jint len)
 {
     jvm_abort("writeBytes");
 }
 
 // private native void write0(int b) throws IOException;
-static void write0(Frame *frame)
+static void write0(JNIEnv *env, jobject _this, jint b)
 {
     jvm_abort("write0");
 }
 
 // private native int readBytes(byte b[], int off, int len) throws IOException;
-static void readBytes(Frame *frame)
+static void readBytes(JNIEnv *env, jobject _this, jbyteArray b, jint off, jint len)
 {
     jvm_abort("readBytes");
 }
 
 // public native int read() throws IOException;
-static void read(Frame *frame)
+static void read(JNIEnv *env, jobject _this)
 {
     jvm_abort("read");
 }
 
 // private native void seek0(long pos) throws IOException;
-static void seek0(Frame *frame)
+static void seek0(JNIEnv *env, jobject _this, jlong pos)
 {
     jvm_abort("seek0");
 }
 
 // public native long getFilePointer() throws IOException;
-static void getFilePointer(Frame *frame)
+static jlong getFilePointer(JNIEnv *env, jobject _this)
 {
     jvm_abort("getFilePointer");
 }
 
 // public native long length() throws IOException;
-static void length(Frame *frame)
+static jlong length(JNIEnv *env, jobject _this)
 {
     jvm_abort("length");
 }
 
 // public native void setLength(long newLength) throws IOException;
-static void setLength(Frame *frame)
+static void setLength(JNIEnv *env, jobject _this, jlong newLength)
 {
     jvm_abort("setLength");
 }

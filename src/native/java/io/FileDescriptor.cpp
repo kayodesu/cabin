@@ -1,5 +1,5 @@
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 #include "../../jni_inner.h"
@@ -10,7 +10,7 @@
  *
  * private native void initIDs();
  */
-static void initIDs(Frame *frame)
+static void initIDs(JNIEnv *env, jobject _this)
 {
     // todo
 //    jvm_abort("error\n");
@@ -19,10 +19,10 @@ static void initIDs(Frame *frame)
 /*
  * private static native long set(int d);
  */
-static void set(Frame *frame)
+static jlong set(JNIEnv *env, jobject _this, jint d)
 {
     // todo
-    frame->pushl(123);
+    return 123;
 }
 
 /**
@@ -55,7 +55,7 @@ static void set(Frame *frame)
  *
  * public native void sync() throws SyncFailedException;
  */
-static void sync(Frame *frame)
+static void sync(JNIEnv *env, jobject _this)
 {
     jvm_abort("error\n"); // todo
 }

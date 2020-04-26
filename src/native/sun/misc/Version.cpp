@@ -3,27 +3,27 @@
 #include "../../../runtime/frame.h"
 
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 // public static native String getJdkSpecialVersion()
-static void getJdkSpecialVersion(Frame *frame)
+static jstring getJdkSpecialVersion(JNIEnv *env, jclass clazz)
 {
     jvm_abort("getJdkSpecialVersion"); // todo
 }
 
 // public static native String getJvmSpecialVersion()
-static void getJvmSpecialVersion(Frame *frame)
+static jstring getJvmSpecialVersion(JNIEnv *env, jclass clazz)
 {
     jvm_abort("getJvmSpecialVersion"); // todo
 }
 
-static void getJdkVersionInfo(Frame *frame)
+static void getJdkVersionInfo(JNIEnv *env, jclass clazz)
 {
     jvm_abort("getJdkVersionInfo"); // todo
 }
 
-static void getJvmVersionInfo(Frame *frame)
+static jboolean getJvmVersionInfo(JNIEnv *env, jclass clazz)
 {
     jvm_abort("getJvmVersionInfo"); // todo
 }

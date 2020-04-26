@@ -3,17 +3,17 @@
 #include "../../../../kayo.h"
 
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 // private native Parameter[] getParameters0();
-static void getParameters0(Frame *frame)
+static jobjectArray getParameters0(JNIEnv *env, jobject _this)
 {
     jvm_abort("getParameters0"); // todo
 }
 
 // native byte[] getTypeAnnotationBytes0();
-static void getTypeAnnotationBytes0(Frame *frame)
+static jbyteArray getTypeAnnotationBytes0(JNIEnv *env, jobject _this)
 {
     jvm_abort("getTypeAnnotationBytes0"); // todo
 }

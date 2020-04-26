@@ -1,5 +1,5 @@
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 #include "../../jni_inner.h"
@@ -10,7 +10,7 @@
 
 
 // private static native void initIDs();
-static void initIDs(Frame *frame)
+static void initIDs(JNIEnv *env, jobject _this)
 {
 //    jvm_abort("error\n");
     // todo
@@ -21,20 +21,16 @@ static void initIDs(Frame *frame)
  *
  * private native void open0(String name, boolean append) throws FileNotFoundException;
  */
-static void open0(Frame *frame)
+static void open0(JNIEnv *env, jref _this, jstrref name, jboolean append)
 {
-    auto _this = frame->getLocalAsRef(0);
-    auto name = frame->getLocalAsRef(1)->toUtf8();
-    bool append = frame->getLocalAsInt(2) != 0;
-
     FILE *file;
     if (append)
-        file = fopen(name, "ab");
+        file = fopen(name->toUtf8(), "ab");
     else
-        file = fopen(name, "wb");
+        file = fopen(name->toUtf8(), "wb");
 
     if (file == nullptr) {
-        throw FileNotFoundException(name);
+        throw FileNotFoundException(name->toUtf8());
     }
 
     // File Descriptor - handle to the open file
@@ -60,7 +56,7 @@ static inline FILE *getFileHandle(jref _this)
  *
  * private native void write(int b, boolean append) throws IOException;
  */
-static void write(Frame *frame)
+static void write(JNIEnv *env, jobject _this, jint b, jboolean append)
 {
     jvm_abort("error\n"); // todo
 }
@@ -75,14 +71,8 @@ static void write(Frame *frame)
  * @exception IOException If an I/O error has occurred.
  */
 // private native void writeBytes(byte b[], int off, int len, boolean append) throws IOException;
-static void writeBytes(Frame *frame)
+static void writeBytes(JNIEnv *env, jref _this, jarrref b, jint off, jint len, jboolean append)
 {
-    jref _this = frame->getLocalAsRef(0);
-    auto b = frame->getLocalAsRef<Array>(1);
-    jint off = frame->getLocalAsInt(2);
-    jint len = frame->getLocalAsInt(3);
-    bool append = frame->getLocalAsBool(4);
-
     // todo
     auto data = (jbyte *) b->data;
     write_bytes(_this, data + off, len, append);
@@ -108,10 +98,8 @@ static void writeBytes(Frame *frame)
 }
 
 // private native void close0() throws IOException;
-static void close0(Frame *frame)
+static void close0(JNIEnv *env, jref _this)
 {
-    auto _this = frame->getLocalAsRef(0);
-
     FILE *file = getFileHandle(_this);
     if (fclose(file) != 0) {
         throw IOException();

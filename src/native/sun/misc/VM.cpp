@@ -1,5 +1,5 @@
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 #include "../../../interpreter/interpreter.h"
@@ -10,7 +10,7 @@
 #include "../../../runtime/frame.h"
 
 // private static native void initialize();
-static void initialize(Frame *frame)
+static void initialize(JNIEnv *env, jclass clazz)
 {
     // todo
     Class *sys = loadBootClass(S(java_lang_System));
@@ -27,7 +27,7 @@ static void initialize(Frame *frame)
  *
  * public static native ClassLoader latestUserDefinedLoader();
  */
-static void latestUserDefinedLoader(Frame *frame)
+static jref latestUserDefinedLoader(JNIEnv *env, jclass clazz)
 {
     jvm_abort("latestUserDefinedLoader"); // todo
 }

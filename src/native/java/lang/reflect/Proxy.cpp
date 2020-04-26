@@ -3,11 +3,11 @@
 #include "../../../../kayo.h"
 
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 //private static native Class<?> defineClass0(ClassLoader loader, String name, byte[] b, int off, int len);
-static void defineClass0(Frame *frame)
+static jclass defineClass0(JNIEnv *env, jclass clazz, jobject loader, jstring name, jbyteArray b, jint off, jint len)
 {
     jvm_abort("defineClass0");
 }

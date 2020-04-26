@@ -1,5 +1,5 @@
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 #include "../../../runtime/frame.h"
@@ -14,13 +14,9 @@
  *                      long[] ids, boolean lockedMonitors, boolean lockedSynchronizers, int maxDepth);
  *
  */
-static void dumpThreads0(Frame *frame)
+static jarrref dumpThreads0(JNIEnv *env, jclass clazz, 
+            jarrref ids, jboolean lockedMonitors, jboolean lockedSynchronizers, jint maxDepth)
 {
-    auto ids = frame->getLocalAsRef<Array>(0);
-    jbool lockedMonitors = frame->getLocalAsBool(1);
-    jbool lockedSynchronizers = frame->getLocalAsBool(2);
-    jint maxDepth = frame->getLocalAsInt(3);
-
     jarrref threadInfos;
 
     if (ids == jnull) { // dump all threads
@@ -44,7 +40,7 @@ static void dumpThreads0(Frame *frame)
         }
     }
 
-    frame->pushr(threadInfos);
+    return threadInfos;
 }
 
 static JNINativeMethod methods[] = {

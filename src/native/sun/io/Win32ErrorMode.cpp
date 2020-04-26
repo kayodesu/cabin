@@ -2,12 +2,13 @@
 #include "../../../runtime/frame.h"
 
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
-static void setErrorMode(Frame *frame)
+// todo 函数声明，是不是static的.
+static jlong setErrorMode(JNIEnv *env, jclass clazz, jlong l)
 {
-    frame->pushl(0); // todo
+    return 0; // todo
 }
 
 static JNINativeMethod methods[] = {
