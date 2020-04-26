@@ -25,5 +25,5 @@ static JNINativeMethod methods[] = {
 
 void java_lang_Double_registerNatives()
 {
-    registerNatives0("java/lang/Double", methods, ARRAY_LENGTH(methods));
+    registerNatives("java/lang/Double", methods, ARRAY_LENGTH(methods));
 }

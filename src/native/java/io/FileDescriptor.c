@@ -2,8 +2,7 @@
  * Author: Yo Ka
  */
 
-#include "../../jni_inner.h"
-#include "../../../runtime/frame.h"
+#include "../../jnidef.h"
 
 /*
  * This routine initializes JNI field offsets for the class

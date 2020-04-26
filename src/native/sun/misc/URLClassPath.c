@@ -1,15 +1,14 @@
-#include "../../jni_inner.h"
-#include "../../../runtime/frame.h"
+#include "../../jnidef.h"
 
 /*
  * Author: Yo Ka
  */
 
 // private static native URL[] getLookupCacheURLs(ClassLoader var0);
-static jref getLookupCacheURLs(JNIEnv *env, jclass clazz)
+static jobjectArray getLookupCacheURLs(JNIEnv *env, jclass clazz)
 {
     // todo
-    return nullptr;
+    return NULL;
 }
 
 static JNINativeMethod methods[] = {

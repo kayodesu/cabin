@@ -25,5 +25,5 @@ static JNINativeMethod methods[] = {
 
 void java_lang_Float_registerNatives()
 {
-    registerNatives0("java/lang/Float", methods, ARRAY_LENGTH(methods));
+    registerNatives("java/lang/Float", methods, ARRAY_LENGTH(methods));
 }

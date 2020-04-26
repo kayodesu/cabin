@@ -2,9 +2,7 @@
  * Author: Yo Ka
  */
 
-#include "../../../kayo.h"
-#include "../../jni_inner.h"
-#include "../../../runtime/frame.h"
+#include "../../jnidef.h"
 
 // static native void copyFromShortArray(Object src, long srcPos, long dstAddr, long length);
 static void copyFromShortArray(JNIEnv *env, jobject _this, jobject src, jlong srcPos, jlong dstAddr, jlong length)

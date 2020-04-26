@@ -1,6 +1,4 @@
-#include "../../jni_inner.h"
-#include "../../../kayo.h"
-#include "../../../runtime/frame.h"
+#include "../../jnidef.h"
 
 /*
  * Author: Yo Ka

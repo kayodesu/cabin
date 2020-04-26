@@ -2,9 +2,7 @@
  * Author: Yo Ka
  */
 
-#include "../../../kayo.h"
-#include "../../../runtime/frame.h"
-#include "../../jni_inner.h"
+#include "../../jnidef.h"
 
 // native long find(String name);
 static jlong find(JNIEnv *env, jobject _this, jstring name)
@@ -21,9 +19,9 @@ static void load(JNIEnv *env, jobject _this, jstring name, jboolean isBuiltin)
     // todo load
 
     // set boolean loaded is true
-    jclass c = env->GetObjectClass(_this);
-    jfieldID id = env->GetFieldID(c, "loaded", "Z");
-    env->SetBooleanField(_this, id, jtrue);
+    jclass c = (*env)->GetObjectClass(env, _this);
+    jfieldID id = (*env)->GetFieldID(env, c, "loaded", "Z");
+    (*env)->SetBooleanField(env, _this, id, jtrue);
 }
 
 // native void unload(String name, boolean isBuiltin);

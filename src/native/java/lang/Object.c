@@ -4,7 +4,6 @@
 
 #include "../../../symbol.h"
 #include "../../jnidef.h"
-#include "../../../util/convert.h"
 
 // public native int hashCode();
 static jint hashCode(JNIEnv *env, jobject _this)
@@ -59,5 +58,5 @@ static JNINativeMethod methods[] = {
 
 void java_lang_Object_registerNatives()
 {
-    registerNatives0("java/lang/Object", methods, ARRAY_LENGTH(methods));
+    registerNatives("java/lang/Object", methods, ARRAY_LENGTH(methods));
 }

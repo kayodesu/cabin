@@ -311,10 +311,17 @@ ret_type JNICALL JVM_CallStatic##T##MethodA(JNIEnv *env, \
 static void registerNativesEmptyImplement() { }
 #define JNINativeMethod_registerNatives { "registerNatives", "()V", (void *) registerNativesEmptyImplement }
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 /*
  * 要保证每个 class name 只会注册一次，
  * 重复注册后面注册的无效。
  */
 void registerNatives(const char *class_name, JNINativeMethod *methods, int method_count);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //KAYO_JNI_INNER_H

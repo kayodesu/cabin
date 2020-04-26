@@ -1265,6 +1265,22 @@ extern "C" {
     void java_lang_Float_registerNatives();
     void java_lang_Double_registerNatives();
     void java_lang_Object_registerNatives();
+    void java_lang_ClassLoader$NativeLibrary_registerNatives();
+
+    void java_io_FileDescriptor_registerNatives();
+    void java_io_RandomAccessFile_registerNatives();
+
+    void java_lang_reflect_Executable_registerNatives();
+    void java_lang_reflect_Field_registerNatives();
+    void java_lang_reflect_Proxy_registerNatives();
+
+    void java_nio_Bits_registerNatives();
+
+    void sun_misc_Signal_registerNatives();
+    void sun_misc_URLClassPath_registerNatives();
+    void sun_misc_Version_registerNatives();
+
+    void sun_reflect_NativeMethodAccessorImpl_registerNatives();
 }
 
 void initJNI()
@@ -1282,8 +1298,7 @@ void initJNI()
 
     java_lang_Float_registerNatives();
     java_lang_Double_registerNatives();    
-    java_lang_Object_registerNatives();
-    
+    java_lang_Object_registerNatives();    
     R(java_lang_System_registerNatives);
     R(java_lang_String_registerNatives);
     R(java_lang_Package_registerNatives);
@@ -1291,36 +1306,36 @@ void initJNI()
     R(java_lang_Thread_registerNatives);
     R(java_lang_Runtime_registerNatives);
     R(java_lang_ClassLoader_registerNatives);
-    R(java_lang_ClassLoader$NativeLibrary_registerNatives);
+    java_lang_ClassLoader$NativeLibrary_registerNatives();
 
-    R(java_lang_reflect_Field_registerNatives);
-    R(java_lang_reflect_Executable_registerNatives);
+    java_lang_reflect_Field_registerNatives();
+    java_lang_reflect_Executable_registerNatives();
     R(java_lang_reflect_Array_registerNatives);
-    R(java_lang_reflect_Proxy_registerNatives);
+    java_lang_reflect_Proxy_registerNatives();
 
     R(java_lang_invoke_MethodHandle_registerNatives);
     R(java_lang_invoke_MethodHandleNatives_registerNatives);
 
-    R(java_io_FileDescriptor_registerNatives);
+    java_io_FileDescriptor_registerNatives();
     R(java_io_FileInputStream_registerNatives);
     R(java_io_FileOutputStream_registerNatives);
     R(java_io_WinNTFileSystem_registerNatives);
-    R(java_io_RandomAccessFile_registerNatives);
+    java_io_RandomAccessFile_registerNatives();
 
-    R(java_nio_Bits_registerNatives);
+    java_nio_Bits_registerNatives();
 
     R(sun_misc_VM_registerNatives);
     R(sun_misc_Unsafe_registerNatives);
-    R(sun_misc_Signal_registerNatives);
-    R(sun_misc_Version_registerNatives);
-    R(sun_misc_URLClassPath_registerNatives);
+    sun_misc_Signal_registerNatives();
+    sun_misc_Version_registerNatives();
+    sun_misc_URLClassPath_registerNatives();
     R(sun_misc_Perf_registerNatives);
 
     R(sun_io_Win32ErrorMode_registerNatives);
 
     R(sun_reflect_Reflection_registerNatives);
     R(sun_reflect_NativeConstructorAccessorImpl_registerNatives);
-    R(sun_reflect_NativeMethodAccessorImpl_registerNatives);
+    sun_reflect_NativeMethodAccessorImpl_registerNatives();
     R(sun_reflect_ConstantPool_registerNatives);
 
     R(sun_management_VMManagementImpl_registerNatives);
@@ -1336,15 +1351,10 @@ void initJNI()
 
 static vector<tuple<const char * /* class name */, JNINativeMethod *, int /* method count */>> native_methods;
 
-void registerNatives(const char *class_name, JNINativeMethod *methods, int method_count)
+extern "C" void registerNatives(const char *class_name, JNINativeMethod *methods, int method_count)
 {
     assert(class_name != nullptr && methods != nullptr && method_count > 0);
     native_methods.emplace_back(class_name, methods, method_count);
-}
-
-extern "C" void registerNatives0(const char *class_name, JNINativeMethod *methods, int method_count)
-{
-    registerNatives(class_name, methods, method_count);
 }
 
 void *findNativeMethod(const char *class_name, const char *method_name, const char *method_type)

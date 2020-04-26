@@ -10,7 +10,7 @@
 
 
 // public static native Class<?> getCallerClass(int level)
-static jclsref getCallerClass0(JNIEnv *env, jclass clazz, jint level)
+static jclass getCallerClass0(JNIEnv *env, jclass clazz, jint level)
 {
     jvm_abort("getCallerClass0");
 }
