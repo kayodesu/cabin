@@ -49,7 +49,10 @@ static inline slot_t *execJavaFunc(Method *m, jref o1, jref o2, jref o3, jref o4
 static inline slot_t *execJavaFunc(Method *m, jref _this, const jvalue *args)
 {
     // todo
-    jvm_abort("not implement.");
+    slot_t slots[METHOD_PARAMETERS_MAX_COUNT];
+    slots[0] = slot::rslot(_this);
+    parse_method_argv(m->type, args, slots + 1);
+    return execJavaFunc(m, slots);
 }
 
 static inline slot_t *execJavaFunc(Method *m, jref _this, va_list &args)

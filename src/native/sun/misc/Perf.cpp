@@ -26,6 +26,7 @@ static jref createLong(JNIEnv *env, jobject _this, jstring name, jint variabilit
 	frame.Thread().InvokeMethod(allocate)
  */
     Class *bb = loadBootClass("java/nio/ByteBuffer");
+	// jclass bb = (*env)->FindClass(env, "java/nio/ByteBuffer");
     initClass(bb);
 //    bb->clinit();
 

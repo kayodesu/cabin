@@ -13,33 +13,42 @@ static void initIDs(JNIEnv *env, jobject _this)
     // todo
 }
 
+static inline jobject __getFileDescriptor(JNIEnv *env, jobject _this)
+{   
+    jclass c = env->GetObjectClass(_this);
+
+    // File Descriptor - handle to the open file
+    // private final FileDescriptor fd;
+    jfieldID field = env->GetFieldID(c, "fd", "Ljava/io/FileDescriptor;");
+    return env->GetObjectField(_this, field);
+}
+
 /*
  * Opens the specified file for reading.
  *
  * private native void open0(String name) throws FileNotFoundException;
  */
-static void open0(JNIEnv *env, jref _this, jstrref name)
+static void open0(JNIEnv *env, jobject _this, jstrref name)
 {
-    // auto _this = frame->getLocalAsRef(0);
-    // auto name = frame->getLocalAsRef(1)->toUtf8();
-
     FILE *file = fopen(name->toUtf8(), "rb");
     if (file == nullptr) {
         throw FileNotFoundException(name->toUtf8());
     }
 
-    // File Descriptor - handle to the open file
-    // private final FileDescriptor fd;
-    auto fd = _this->getRefField("fd", "Ljava/io/FileDescriptor;");
+    jobject fd = __getFileDescriptor(env, _this);
 
     // private long handle;
-    fd->setLongField("handle", "J",  (jlong) file);
+    jclass c = env->GetObjectClass(fd);
+    env->SetLongField(fd, env->GetFieldID(c, "handle", "J"), (jlong) file);
 }
 
-static inline FILE *getFileHandle(jref _this)
+static inline FILE *getFileHandle(JNIEnv *env, jobject _this)
 {
-    auto fd = _this->getRefField("fd", "Ljava/io/FileDescriptor;");
-    return (FILE *)fd->getLongField("handle", "J");
+    jobject fd = __getFileDescriptor(env, _this);
+
+    // private long handle;
+    jclass c = env->GetObjectClass(fd);
+    return (FILE *)env->GetLongField(fd, env->GetFieldID(c, "handle", "J"));
 }
 
 /*
@@ -51,14 +60,13 @@ static inline FILE *getFileHandle(jref _this)
  *
  * private native int read0() throws IOException;
  */
-static jint read0(JNIEnv *env, jref _this)
+static jint read0(JNIEnv *env, jobject _this)
 {
-    FILE *file = getFileHandle(_this);
+    FILE *file = getFileHandle(env, _this);
     int c = fgetc(file);
 
     return c;
 }
-
 
 /*
  * Reads a subarray as a sequence of bytes.
@@ -69,12 +77,11 @@ static jint read0(JNIEnv *env, jref _this)
  *
  * private native int readBytes(byte b[], int off, int len) throws IOException;
  */
-static jint readBytes(JNIEnv *env, jref _this, jarrref b, jint off, jint len)
+static jint readBytes(JNIEnv *env, jobject _this, jbyteArray b, jint off, jint len)
 {
-    FILE *file = getFileHandle(_this);
-    jbyte *arr = ((jbyte *) b->data) + off;
-    size_t n = fread(arr, sizeof(jbyte), len, file);
-
+    FILE *file = getFileHandle(env, _this);
+    jbyte *data = env->GetByteArrayElements(b, NULL);
+    size_t n = fread(data + off, sizeof(jbyte), len, file);
     return n;
 }
 
@@ -136,9 +143,9 @@ static jint available0(JNIEnv *env, jobject _this)
 /*
  * private native void close0() throws IOException;
  */
-static void close0(JNIEnv *env, jref _this)
+static void close0(JNIEnv *env, jobject _this)
 {
-    FILE *file = getFileHandle(_this);
+    FILE *file = getFileHandle(env, _this);
     if (fclose(file) != 0) {
         throw IOException();
     }

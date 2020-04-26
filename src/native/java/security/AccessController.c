@@ -2,16 +2,12 @@
  * Author: Yo Ka
  */
 
-#include "../../jni_inner.h"
-#include "../../../objects/object.h"
-#include "../../../interpreter/interpreter.h"
+#include "../../jnidef.h"
 #include "../../../symbol.h"
-#include "../../../objects/class.h"
-#include "../../../runtime/frame.h"
 
 // @CallerSensitive
 // public static native <T> T doPrivileged(PrivilegedAction<T> action);
-static jref doPrivileged(JNIEnv *env, jclass clazz, jref action)
+static jobject doPrivileged(JNIEnv *env, jclass clazz, jobject action)
 {
     // todo 这个函数干什么用的。。。。
 
@@ -22,13 +18,15 @@ static jref doPrivileged(JNIEnv *env, jclass clazz, jref action)
      *     T run();
      * }
      */
-    Method *m = action->clazz->getDeclaredMethod(S(run), S(___java_lang_Object));
-    return RSLOT(execJavaFunc(m, action));
+    jclass c = (*env)->GetObjectClass(env, action);
+    jmethodID m = (*env)->GetMethodID(env, c, S(run), S(___java_lang_Object));
+
+    return (*env)->CallObjectMethod(env, action, m);
 }
 
 // @CallerSensitive
 // public static native <T> T doPrivileged(PrivilegedAction<T> action, AccessControlContext context);
-static jref doPrivileged1(JNIEnv *env, jclass clazz, jref action, jobject context)
+static jobject doPrivileged1(JNIEnv *env, jclass clazz, jobject action, jobject context)
 {
     // todo
     return doPrivileged(env, clazz, action);
@@ -36,7 +34,7 @@ static jref doPrivileged1(JNIEnv *env, jclass clazz, jref action, jobject contex
 
 // @CallerSensitive
 // public static native <T> T doPrivileged(PrivilegedExceptionAction<T> action) throws PrivilegedActionException;
-static jref doPrivileged2(JNIEnv *env, jclass clazz, jref action)
+static jobject doPrivileged2(JNIEnv *env, jclass clazz, jobject action)
 {
     // todo
     return doPrivileged(env, clazz, action);
@@ -45,21 +43,21 @@ static jref doPrivileged2(JNIEnv *env, jclass clazz, jref action)
 // @CallerSensitive
 // public static native <T> T doPrivileged(PrivilegedExceptionAction<T> action, AccessControlContext context)
 //      throws PrivilegedActionException;
-static jref doPrivileged3(JNIEnv *env, jclass clazz, jref action, jobject context)
+static jobject doPrivileged3(JNIEnv *env, jclass clazz, jobject action, jobject context)
 {
     // todo
     return doPrivileged(env, clazz, action);
 }
 
 // private static native AccessControlContext getStackAccessControlContext();
-static jref getStackAccessControlContext(JNIEnv *env, jclass clazz)
+static jobject getStackAccessControlContext(JNIEnv *env, jclass clazz)
 {
     // todo
-    return nullptr;
+    return NULL;
 }
 
 // static native AccessControlContext getInheritedAccessControlContext();
-static jref getInheritedAccessControlContext(JNIEnv *env, jclass clazz)
+static jobject getInheritedAccessControlContext(JNIEnv *env, jclass clazz)
 {
     // todo
     jvm_abort("getInheritedAccessControlContext");

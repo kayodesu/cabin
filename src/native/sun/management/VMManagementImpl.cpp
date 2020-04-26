@@ -7,10 +7,11 @@
  */
 
 // private native static String getVersion0();
-static jstrref getVersion0(JNIEnv *env, jclass clazz)
+static jstring getVersion0(JNIEnv *env, jclass clazz)
 {
     // Management Version
-    return newString(MANAGEMENT_VERSION);
+    return env->NewStringUTF(MANAGEMENT_VERSION);
+    // return newString(MANAGEMENT_VERSION);
 }
 
 // private native static void initOptionalSupportFields();

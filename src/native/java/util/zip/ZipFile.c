@@ -1,7 +1,6 @@
 #include <minizip/unzip.h>
-#include "../../../jni_inner.h"
-#include "../../../../objects/object.h"
-#include "../../../../runtime/frame.h"
+#include "../../../jnidef.h"
+#include "../../../../symbol.h"
 
 /*
  * Author: Yo Ka
@@ -14,14 +13,16 @@ void initIDs(JNIEnv *env, jclass clazz)
 }
 
 // private static native long open(String name, int mode, long lastModified, boolean usemmap) throws IOException;
-jlong __open(JNIEnv *env, jclass clazz, jstrref name, jint mode, jlong lastModified, jboolean usemmap)
+jlong __open(JNIEnv *env, jclass clazz, jstring name, jint mode, jlong lastModified, jboolean usemmap)
 {
-    auto name0 = name->toUtf8();
+    const char *utf8 = (*env)->GetStringUTFChars(env, name, NULL);
 
     // todo 其他几个参数怎么搞？？
-    unzFile jzfile = unzOpen64(name0);
-    if (jzfile == nullptr) {
-        throw IOException(name0);
+    unzFile jzfile = unzOpen64(utf8);
+    if (jzfile == NULL) {
+        jclass c = (*env)->FindClass(env, S(java_io_IOException));
+        (*env)->ThrowNew(env, c, utf8);
+        // throw IOException(utf8);
     }
 
     return (jlong) (jzfile);

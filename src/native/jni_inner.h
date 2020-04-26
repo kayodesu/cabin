@@ -69,13 +69,13 @@ struct GlobalRefTable {
     void lock()
     {
         // todo
-        jvm_abort("not implement.");
+   //     jvm_abort("not implement.");
     }
 
     void unlock()
     {
         // todo
-        jvm_abort("not implement.");
+ //       jvm_abort("not implement.");
     }
 };
 
@@ -83,13 +83,13 @@ extern GlobalRefTable global_refs;
 
 static jobject addJNIGlobalRef(Object *ref)
 {
-    // todo
     global_refs.lock();
     global_refs.table.push_back(ref);
     ref->jni_obj_ref_type = JNIGlobalRefType;
     global_refs.unlock();
 
-    jvm_abort("not implement.");
+// todo
+    // jvm_abort("not implement.");
 }
 
 static void deleteJNIGlobalRef(Object *ref)
@@ -101,7 +101,8 @@ static void deleteJNIGlobalRef(Object *ref)
 //    global_refs.table.erase(ref); // todo
     global_refs.unlock();
 
-    jvm_abort("not implement.");
+// todo
+    //jvm_abort("not implement.");
 }
 
 extern GlobalRefTable weak_global_refs;
@@ -174,7 +175,7 @@ static jfieldID getFieldID(JNIEnv *env,
 #define DEFINE_CALL_T_METHOD_BODY \
     jref _this = to_object_ref(obj); \
     Method *m0 = to_method(methodID); \
-    Method *m = _this->clazz->lookupMethod(m0->name, m0->signature); \
+    Method *m = _this->clazz->lookupMethod(m0->name, m0->type); \
     if (m == nullptr) { \
         /* todo error */ \
     } \

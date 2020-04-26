@@ -1271,23 +1271,21 @@ extern "C" {
     void java_lang_Double_registerNatives();
     void java_lang_Object_registerNatives();
     void java_lang_ClassLoader$NativeLibrary_registerNatives();
-
+    void java_util_concurrent_atomic_AtomicLong_registerNatives();
+    void java_util_zip_ZipFile_registerNatives();
     void java_io_FileDescriptor_registerNatives();
     void java_io_RandomAccessFile_registerNatives();
-
     void java_lang_reflect_Executable_registerNatives();
     void java_lang_reflect_Field_registerNatives();
     void java_lang_reflect_Proxy_registerNatives();
-
     void java_nio_Bits_registerNatives();
-
+    void sun_io_Win32ErrorMode_registerNatives();
     void sun_misc_Signal_registerNatives();
     void sun_misc_URLClassPath_registerNatives();
     void sun_misc_Version_registerNatives();
     void sun_misc_VM_registerNatives();
-
     void sun_reflect_NativeMethodAccessorImpl_registerNatives();
-
+    void java_security_AccessController_registerNatives();
     void jdk_internal_misc_VM_registerNatives();
 }
 
@@ -1339,7 +1337,7 @@ void initJNI()
     sun_misc_URLClassPath_registerNatives();
     R(sun_misc_Perf_registerNatives);
 
-    R(sun_io_Win32ErrorMode_registerNatives);
+    sun_io_Win32ErrorMode_registerNatives();
 
     R(sun_reflect_Reflection_registerNatives);
     R(sun_reflect_NativeConstructorAccessorImpl_registerNatives);
@@ -1349,10 +1347,10 @@ void initJNI()
     R(sun_management_VMManagementImpl_registerNatives);
     R(sun_management_ThreadImpl_registerNatives);
 
-    R(java_security_AccessController_registerNatives);
+    java_security_AccessController_registerNatives();
 
-    R(java_util_concurrent_atomic_AtomicLong_registerNatives);
-    R(java_util_zip_ZipFile_registerNatives);
+    java_util_concurrent_atomic_AtomicLong_registerNatives();
+    java_util_zip_ZipFile_registerNatives();
 
     jdk_internal_misc_VM_registerNatives();
 }

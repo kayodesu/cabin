@@ -5,7 +5,6 @@
 #ifndef JVM_JTYPES_H
 #define JVM_JTYPES_H
 
-#include <cstdint>
 #include "native/jtypes.h"
 
 typedef int8_t  s1;  // s: signed
