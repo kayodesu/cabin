@@ -40,14 +40,14 @@ static void resolveClass0(JNIEnv *env, jobject _this, jclass c)
 static jclass findBootstrapClass(JNIEnv *env, jobject _this, jstring name)
 {
     const char *utf8_name = (*env)->GetStringUTFChars(env, name, NULL);
-    return ifn.loadBootClassDot(utf8_name);
+    return ifn.loadBootClass(ifn.dots2SlashDup(utf8_name));
 }
 
 // private native final Class<?> findLoadedClass0(String name);
 static jclass findLoadedClass0(JNIEnv *env, jobject _this, jstring name)
 {
     const char *utf8_name = (*env)->GetStringUTFChars(env, name, NULL);
-    return ifn.findLoadedClassDot(_this, utf8_name);
+    return ifn.findLoadedClass(_this, ifn.dots2SlashDup(utf8_name));
 }
 
 // private static native String findBuiltinLib(String name);

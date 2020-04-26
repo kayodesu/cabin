@@ -66,9 +66,9 @@ static jclsref getPrimitiveClass(JNIEnv *env, jclsref clazz, jstring name)
  *
  * private native String getName0();
  */
-static jstrref getName0(JNIEnv *env, jclsref _this)
+static jstring getName0(JNIEnv *env, jclsref _this)
 {
-    return newString(slash2DotsDup(_this->className));
+    return env->NewStringUTF(slash2DotsDup(_this->className));
 }
 
 /**

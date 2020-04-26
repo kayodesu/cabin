@@ -16,11 +16,17 @@ struct IFN {
     void (*initClass)(jclass clazz);
     jstring (*intern)(jstring s);
 
-    // name 以 '.' 分割
-    jclass (*loadBootClassDot)(const char *name);
+    char *(*dots2SlashDup)(const char *);
+    char *(*slash2DotsDup)(const char *);
 
-    // name 以 '.' 分割
-    jclass (*findLoadedClassDot)(jobject loader, const char *name);
+    // name 以 '/' 分割
+    jclass (*loadBootClass)(const char *name);
+
+    // name 以 '/' 分割
+    jclass (*loadClass)(jobject loader, const char *name);
+
+    // name 以 '/' 分割
+    jclass (*findLoadedClass)(jobject loader, const char *name);
 
     jclass (*defineClass0)(jobject loader, jstring name, jbyteArray b, jint off, jint len, jobject pd);
     jclass (*defineClass1)(jobject loader, jstring name,

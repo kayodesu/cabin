@@ -212,10 +212,17 @@ static void initIFN()
         return (jstring) (stringClass->intern(r));
     };
 
-    ifn.loadBootClassDot = [](const char *name) { return (jclass) loadBootClass(dots2SlashDup(name)); };
+    ifn.dots2SlashDup = [](const char *s) { return dots2SlashDup(s); };
+    ifn.slash2DotsDup = [](const char *s) { return slash2DotsDup(s); };
 
-    ifn.findLoadedClassDot = [](jobject loader, const char *name) {
-        return (jclass) findLoadedClass((jref) loader, dots2SlashDup(name));
+    ifn.loadBootClass = [](const char *name) { return (jclass) loadBootClass(name); };
+
+    ifn.loadClass = [](jobject loader, const char *name) { 
+        return (jclass) loadClass((jref) loader, name); 
+    };
+
+    ifn.findLoadedClass = [](jobject loader, const char *name) {
+        return (jclass) findLoadedClass((jref) loader, name);
     };
 
     ifn.defineClass0 = [](jobject loader, jstring name, jbyteArray b, jint off, jint len, jobject pd) {
