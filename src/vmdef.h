@@ -2,8 +2,8 @@
  * Author: kayo
  */
 
-#ifndef JVM_JTYPES_H
-#define JVM_JTYPES_H
+#ifndef JVM_VMDEF_H
+#define JVM_VMDEF_H
 
 #include "native/jtypes.h"
 
@@ -36,4 +36,4 @@ typedef jchar unicode_t;
 
 
 
-#endif //JVM_JTYPES_H
+#endif //JVM_VMDEF_H
