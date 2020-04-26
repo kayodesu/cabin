@@ -11,7 +11,7 @@ static void initialize(JNIEnv *env, jclass clazz)
 {
     // todo
     jclass sys = (*env)->FindClass(env, S(java_lang_System));
-    ci_initClass(sys);
+    cli_initClass(sys);
     
     // Method *m = sys->lookupStaticMethod("initPhase1", S(___V));
     // assert(m != nullptr);

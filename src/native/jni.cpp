@@ -1287,6 +1287,8 @@ extern "C" {
     void sun_reflect_NativeMethodAccessorImpl_registerNatives();
     void java_security_AccessController_registerNatives();
     void jdk_internal_misc_VM_registerNatives();
+    void java_io_FileInputStream_registerNatives();
+    void java_io_FileOutputStream_registerNatives();
 }
 
 void initJNI()
@@ -1323,8 +1325,8 @@ void initJNI()
     R(java_lang_invoke_MethodHandleNatives_registerNatives);
 
     java_io_FileDescriptor_registerNatives();
-    R(java_io_FileInputStream_registerNatives);
-    R(java_io_FileOutputStream_registerNatives);
+    java_io_FileInputStream_registerNatives();
+    java_io_FileOutputStream_registerNatives();
     R(java_io_WinNTFileSystem_registerNatives);
     java_io_RandomAccessFile_registerNatives();
 
@@ -1398,7 +1400,7 @@ extern "C" int is_subclass_of(jclass sub, jclass base)
     return s->isSubclassOf(b) ? 1 : 0;
 }
 
-extern "C" void ci_initClass(jclass clazz)
+extern "C" void cli_initClass(jclass clazz)
 {
     Class *c = to_object_ref<Class>(clazz);
     initClass(c);

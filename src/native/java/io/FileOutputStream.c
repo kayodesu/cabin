@@ -2,11 +2,9 @@
  * Author: Yo Ka
  */
 
-#include "../../jni_inner.h"
-#include "../../../kayo.h"
-#include "../../../runtime/frame.h"
-#include "../../../output.h"
-#include "../../../objects/array_object.h"
+#include "../../jnidef.h"
+#include "../../../symbol.h"
+#include "helper.h"
 
 
 // private static native void initIDs();
@@ -21,30 +19,12 @@ static void initIDs(JNIEnv *env, jobject _this)
  *
  * private native void open0(String name, boolean append) throws FileNotFoundException;
  */
-static void open0(JNIEnv *env, jref _this, jstrref name, jboolean append)
+static void open0(JNIEnv *env, jobject _this, jstring name, jboolean append)
 {
-    FILE *file;
     if (append)
-        file = fopen(name->toUtf8(), "ab");
+        __openFile(env, _this, name, "ab");
     else
-        file = fopen(name->toUtf8(), "wb");
-
-    if (file == nullptr) {
-        throw FileNotFoundException(name->toUtf8());
-    }
-
-    // File Descriptor - handle to the open file
-    // private final FileDescriptor fd;
-    auto fd = _this->getRefField("fd", "Ljava/io/FileDescriptor;");
-
-    // private long handle;
-    fd->setLongField("handle", "J", (jlong) file);
-}
-
-static inline FILE *getFileHandle(jref _this)
-{
-    auto fd = _this->getRefField("fd", "Ljava/io/FileDescriptor;");
-    return (FILE *)fd->getLongField("handle", "J");
+        __openFile(env, _this, name, "wb");
 }
 
 /**
@@ -71,11 +51,18 @@ static void write(JNIEnv *env, jobject _this, jint b, jboolean append)
  * @exception IOException If an I/O error has occurred.
  */
 // private native void writeBytes(byte b[], int off, int len, boolean append) throws IOException;
-static void writeBytes(JNIEnv *env, jref _this, jarrref b, jint off, jint len, jboolean append)
+static void writeBytes(JNIEnv *env, jobject _this, jbyteArray b, jint off, jint len, jboolean append)
 {
-    // todo
-    auto data = (jbyte *) b->data;
-    write_bytes(_this, data + off, len, append);
+    jbyte *data = (*env)->GetByteArrayElements(env, b, NULL);
+
+    // todo 这里默认输出到了控制台，是不对的
+    // todo 应该根据_this来选择输出位置
+    char *chars = (char *) (data + off);
+    for (jint i = 0; i < len; i++) {
+        printf("%c", chars[i]);
+    }
+    fflush(stdout);  // todo
+
     /*
     fdObj := fosObj.GetFieldValue("fd~Ljava/io/FileDescriptor;").(*heap.Object)
 	if fdObj.Extra() == nil {
@@ -98,12 +85,9 @@ static void writeBytes(JNIEnv *env, jref _this, jarrref b, jint off, jint len, j
 }
 
 // private native void close0() throws IOException;
-static void close0(JNIEnv *env, jref _this)
+static void close0(JNIEnv *env, jobject _this)
 {
-    FILE *file = getFileHandle(_this);
-    if (fclose(file) != 0) {
-        throw IOException();
-    }
+    __closeFile(env, _this);
 }
 
 static JNINativeMethod methods[] = {

@@ -2,9 +2,9 @@
  * Author: Yo Ka
  */
 
-#include "../../jni_inner.h"
-#include "../../../runtime/frame.h"
-#include "../../../objects/array_object.h"
+#include "../../jnidef.h"
+#include "../../../symbol.h"
+#include "helper.h"
 
 // private native void initIDs();
 static void initIDs(JNIEnv *env, jobject _this)
@@ -13,42 +13,14 @@ static void initIDs(JNIEnv *env, jobject _this)
     // todo
 }
 
-static inline jobject __getFileDescriptor(JNIEnv *env, jobject _this)
-{   
-    jclass c = env->GetObjectClass(_this);
-
-    // File Descriptor - handle to the open file
-    // private final FileDescriptor fd;
-    jfieldID field = env->GetFieldID(c, "fd", "Ljava/io/FileDescriptor;");
-    return env->GetObjectField(_this, field);
-}
-
 /*
  * Opens the specified file for reading.
  *
  * private native void open0(String name) throws FileNotFoundException;
  */
-static void open0(JNIEnv *env, jobject _this, jstrref name)
+static void open0(JNIEnv *env, jobject _this, jstring name)
 {
-    FILE *file = fopen(name->toUtf8(), "rb");
-    if (file == nullptr) {
-        throw FileNotFoundException(name->toUtf8());
-    }
-
-    jobject fd = __getFileDescriptor(env, _this);
-
-    // private long handle;
-    jclass c = env->GetObjectClass(fd);
-    env->SetLongField(fd, env->GetFieldID(c, "handle", "J"), (jlong) file);
-}
-
-static inline FILE *getFileHandle(JNIEnv *env, jobject _this)
-{
-    jobject fd = __getFileDescriptor(env, _this);
-
-    // private long handle;
-    jclass c = env->GetObjectClass(fd);
-    return (FILE *)env->GetLongField(fd, env->GetFieldID(c, "handle", "J"));
+    __openFile(env, _this, name, "rb");
 }
 
 /*
@@ -62,7 +34,7 @@ static inline FILE *getFileHandle(JNIEnv *env, jobject _this)
  */
 static jint read0(JNIEnv *env, jobject _this)
 {
-    FILE *file = getFileHandle(env, _this);
+    FILE *file = __getFileHandle(env, _this);
     int c = fgetc(file);
 
     return c;
@@ -79,8 +51,8 @@ static jint read0(JNIEnv *env, jobject _this)
  */
 static jint readBytes(JNIEnv *env, jobject _this, jbyteArray b, jint off, jint len)
 {
-    FILE *file = getFileHandle(env, _this);
-    jbyte *data = env->GetByteArrayElements(b, NULL);
+    FILE *file = __getFileHandle(env, _this);
+    jbyte *data = (*env)->GetByteArrayElements(env, b, NULL);
     size_t n = fread(data + off, sizeof(jbyte), len, file);
     return n;
 }
@@ -145,10 +117,7 @@ static jint available0(JNIEnv *env, jobject _this)
  */
 static void close0(JNIEnv *env, jobject _this)
 {
-    FILE *file = getFileHandle(env, _this);
-    if (fclose(file) != 0) {
-        throw IOException();
-    }
+    __closeFile(env, _this);
 }
 
 static JNINativeMethod methods[] = {

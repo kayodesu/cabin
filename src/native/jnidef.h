@@ -48,8 +48,8 @@ jobject obj_clone(jobject o);
 
 int is_subclass_of(jclass sub, jclass base);
 
-/* C Interfaces */
+/* C Language Interfaces */
 
-void ci_initClass(jclass clazz);
+void cli_initClass(jclass clazz);
 
 #endif //KAYO_JNI_DEF_H
