@@ -25,7 +25,7 @@ static jobject createLong(JNIEnv *env, jobject _this, jstring name, jint variabi
  */
 
     jclass c = (*env)->FindClass(env, "java/nio/ByteBuffer");
-    cli_initClass(c);
+    cli.initClass(c);
 
     jmethodID m = (*env)->GetStaticMethodID(env, c, "allocate", "(I)Ljava/nio/ByteBuffer;");
     return (*env)->CallStaticObjectMethod(env, c, m, sizeof(jlong));

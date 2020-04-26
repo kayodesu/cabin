@@ -1294,6 +1294,7 @@ void java_lang_ClassLoader_registerNatives();
 void java_lang_Runtime_registerNatives();
 void java_lang_Package_registerNatives();
 void sun_misc_Perf_registerNatives();
+void java_lang_reflect_Array_registerNatives();
 }
 
 void initJNI()
@@ -1322,7 +1323,7 @@ void initJNI()
 
     java_lang_reflect_Field_registerNatives();
     java_lang_reflect_Executable_registerNatives();
-    R(java_lang_reflect_Array_registerNatives);
+    java_lang_reflect_Array_registerNatives();
     java_lang_reflect_Proxy_registerNatives();
 
     R(java_lang_invoke_MethodHandle_registerNatives);

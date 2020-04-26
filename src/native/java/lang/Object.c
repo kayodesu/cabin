@@ -16,11 +16,11 @@ static jint hashCode(JNIEnv *env, jobject _this)
 static jobject clone(JNIEnv *env, jobject _this)
 {
     jclass c = (*env)->GetObjectClass(env, _this);
-    if (cli_isSubclassOf(c, (*env)->FindClass(env, S(java_lang_Cloneable))) == 0) {
+    if (cli.isSubclassOf(c, (*env)->FindClass(env, S(java_lang_Cloneable))) == 0) {
         jclass exception = (*env)->FindClass(env, S(java_lang_CloneNotSupportedException));
         (*env)->ThrowNew(env, exception, NULL);
     }
-    return cli_cloneObject(_this);
+    return cli.cloneObject(_this);
 }
 
 // public final native Class<?> getClass();

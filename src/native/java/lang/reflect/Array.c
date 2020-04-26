@@ -1,6 +1,4 @@
-#include "../../../jni_inner.h"
-#include "../../../../runtime/frame.h"
-#include "../../../../objects/array_object.h"
+#include "../../../jnidef.h"
 
 /*
  * Author: Yo Ka
@@ -28,13 +26,12 @@ static jint getLength(JNIEnv *env, jclass clazz, jobject array)
 
 // private static native Object newArray(Class<?> componentType, int length)
 //                  throws NegativeArraySizeException;
-static jref __newArray(JNIEnv *env, jclass clazz, jclsref componentType, jint length)
+static jobject __newArray(JNIEnv *env, jclass clazz, jclass componentType, jint length)
 {
-//    jclass arrCls = cli_arrayClass(componentType);
-//    env->NewObjectArray()
+    return (*env)->NewObjectArray(env, length, componentType, NULL);
 
-    auto arr = newArray(componentType->arrayClass(), length);
-    return arr;
+    // auto arr = newArray(componentType->arrayClass(), length);
+    // return arr;
 }
 
 static JNINativeMethod methods[] = {

@@ -8,7 +8,7 @@
 // public native String intern();
 static jstring intern(JNIEnv *env, jstring _this)
 {
-    return cli_intern(_this);
+    return cli.intern(_this);
 }
 
 static JNINativeMethod methods[] = {

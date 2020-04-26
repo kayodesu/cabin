@@ -5,13 +5,14 @@
 #include <assert.h>
 #include "../../../../symbol.h"
 #include "../../../jnidef.h"
+#include "../../../cli.h"
 
 // private static native void initialize();
 static void initialize(JNIEnv *env, jclass clazz)
 {
     // todo
     jclass sys = (*env)->FindClass(env, S(java_lang_System));
-    cli_initClass(sys);
+    cli.initClass(sys);
     
     // Method *m = sys->lookupStaticMethod("initPhase1", S(___V));
     // assert(m != nullptr);
