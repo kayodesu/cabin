@@ -2,14 +2,13 @@
  * Author: Yo Ka
  */
 
-#include "../../../runtime/frame.h"
-#include "../../../objects/class.h"
-#include "../../jni_inner.h"
+#include "../../jnidef.h"
+#include "../../cli.h"
 
 // public native String intern();
-static jstrref intern(JNIEnv *env, jref _this)
+static jstring intern(JNIEnv *env, jstring _this)
 {
-    return _this->clazz->intern(_this);
+    return cli_intern(_this);
 }
 
 static JNINativeMethod methods[] = {

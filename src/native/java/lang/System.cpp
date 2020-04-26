@@ -70,21 +70,30 @@ static jref initProperties(JNIEnv *env, jclass clazz, jref props)
 }
 
 // private static native void setIn0(InputStream in);
-static void setIn0(JNIEnv *env, jclsref clazz, jref in)
+static void setIn0(JNIEnv *env, jclass clazz, jobject in)
 {
-    clazz->lookupStaticField("in", "Ljava/io/InputStream;")->staticValue.r = in;
+    jfieldID fid = env->GetFieldID(clazz, "in", "Ljava/io/InputStream;");
+    env->SetStaticObjectField(clazz, fid, in);
+    
+    // clazz->lookupStaticField("in", "Ljava/io/InputStream;")->staticValue.r = in;
 }
 
 // private static native void setOut0(PrintStream out);
-static void setOut0(JNIEnv *env, jclsref clazz, jref out)
+static void setOut0(JNIEnv *env, jclass clazz, jobject out)
 {
-    clazz->lookupStaticField("out", "Ljava/io/PrintStream;")->staticValue.r = out;
+    jfieldID fid = env->GetFieldID(clazz, "out", "Ljava/io/PrintStream;");
+    env->SetStaticObjectField(clazz, fid, out);
+
+    // clazz->lookupStaticField("out", "Ljava/io/PrintStream;")->staticValue.r = out;
 }
 
 // private static native void setErr0(PrintStream err);
-static void setErr0(JNIEnv *env, jclsref clazz, jref err)
+static void setErr0(JNIEnv *env, jclass clazz, jobject err)
 {
-    clazz->lookupStaticField("err", "Ljava/io/PrintStream;")->staticValue.r = err;
+    jfieldID fid = env->GetFieldID(clazz, "err", "Ljava/io/PrintStream;");
+    env->SetStaticObjectField(clazz, fid, err);
+
+    // clazz->lookupStaticField("err", "Ljava/io/PrintStream;")->staticValue.r = err;
 }
 
 /*

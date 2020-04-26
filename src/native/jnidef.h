@@ -43,13 +43,4 @@ void registerNatives(const char *class_name, JNINativeMethod *methods, int metho
 #define jvm_abort(...) do { printvm("fatal error! "); printf(__VA_ARGS__); exit(-1); } while(false)
 
 
-// jclass obj_get_class(jobject o);
-jobject obj_clone(jobject o);
-
-int is_subclass_of(jclass sub, jclass base);
-
-/* C Language Interfaces */
-
-void cli_initClass(jclass clazz);
-
 #endif //KAYO_JNI_DEF_H

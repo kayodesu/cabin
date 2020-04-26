@@ -24,6 +24,11 @@ static inline jobject to_jobject(Object *o)
     return (jobject) (void *) o;
 }
 
+static inline jstring to_jstring(Object *o)
+{
+    return (jstring) (void *) o;
+}
+
 static inline jclass to_jclass(Class *c)
 {
     return (jclass) (void *) c;
