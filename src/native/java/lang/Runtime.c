@@ -3,8 +3,7 @@
  */
 
 #include <windows.h> // todo
-#include "../../../runtime/frame.h"
-#include "../../jni_inner.h"
+#include "../../jnidef.h"
 
 // public native int availableProcessors();
 static jint availableProcessors(JNIEnv *env, jobject _this)

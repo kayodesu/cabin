@@ -30,8 +30,8 @@ static jint getLength(JNIEnv *env, jclass clazz, jobject array)
 //                  throws NegativeArraySizeException;
 static jref __newArray(JNIEnv *env, jclass clazz, jclsref componentType, jint length)
 {
-    // auto componentType = frame->getLocalAsRef<Class>(0);
-    // auto length = frame->getLocalAsInt(1);
+//    jclass arrCls = cli_arrayClass(componentType);
+//    env->NewObjectArray()
 
     auto arr = newArray(componentType->arrayClass(), length);
     return arr;

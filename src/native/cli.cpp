@@ -2,6 +2,8 @@
 #include "jni_inner.h"
 #include "../objects/class_loader.h"
 
+using namespace utf8;
+
 extern "C" jobject cli_cloneObject(jobject o)
 {
     jref r = to_object_ref(o)->clone();
@@ -32,19 +34,14 @@ extern "C" jstring cli_intern(jstring s)
     return to_jstring(stringClass->intern(r));
 }
 
-extern "C" char *cli_dots2SlashDup(const char *utf8)
-{
-    return utf8::dots2SlashDup(utf8);
-}
-
 extern "C" jclass cli_loadBootClass(const char *name)
 {
-    return to_jclass(loadBootClass(name));
+    return to_jclass(loadBootClass(dots2SlashDup(name)));
 }
 
 extern "C" jclass cli_findLoadedClass(jobject loader, const char *name)
 {
-    return to_jclass(findLoadedClass(to_object_ref(loader), name));
+    return to_jclass(findLoadedClass(to_object_ref(loader), dots2SlashDup(name)));
 }
 
 extern "C" jclass cli_defineClass0(jobject loader, 
@@ -61,4 +58,10 @@ extern "C" jclass cli_defineClass1(jobject loader, jstring name,
     Class *c = defineClass(to_object_ref(loader), to_object_ref(name),
                     to_object_ref<Array>(b), off, len, to_object_ref(pd), to_object_ref(source));
     return to_jclass(c);
+}
+
+extern "C" jclass cli_arrayClass(jclass componentClass)
+{
+    Class *c = to_object_ref<Class>(componentClass);
+    return to_jclass(c->arrayClass());
 }

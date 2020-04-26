@@ -1267,30 +1267,33 @@ const static struct JNIInvokeInterface_ JVM_JNIInvokeInterface = {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 extern "C" {
-    void java_lang_Float_registerNatives();
-    void java_lang_Double_registerNatives();
-    void java_lang_Object_registerNatives();
-    void java_lang_ClassLoader$NativeLibrary_registerNatives();
-    void java_util_concurrent_atomic_AtomicLong_registerNatives();
-    void java_util_zip_ZipFile_registerNatives();
-    void java_io_FileDescriptor_registerNatives();
-    void java_io_RandomAccessFile_registerNatives();
-    void java_lang_reflect_Executable_registerNatives();
-    void java_lang_reflect_Field_registerNatives();
-    void java_lang_reflect_Proxy_registerNatives();
-    void java_nio_Bits_registerNatives();
-    void sun_io_Win32ErrorMode_registerNatives();
-    void sun_misc_Signal_registerNatives();
-    void sun_misc_URLClassPath_registerNatives();
-    void sun_misc_Version_registerNatives();
-    void sun_misc_VM_registerNatives();
-    void sun_reflect_NativeMethodAccessorImpl_registerNatives();
-    void java_security_AccessController_registerNatives();
-    void jdk_internal_misc_VM_registerNatives();
-    void java_io_FileInputStream_registerNatives();
-    void java_io_FileOutputStream_registerNatives();
-    void java_lang_String_registerNatives();
-    void java_lang_ClassLoader_registerNatives();
+void java_lang_Float_registerNatives();
+void java_lang_Double_registerNatives();
+void java_lang_Object_registerNatives();
+void java_lang_ClassLoader$NativeLibrary_registerNatives();
+void java_util_concurrent_atomic_AtomicLong_registerNatives();
+void java_util_zip_ZipFile_registerNatives();
+void java_io_FileDescriptor_registerNatives();
+void java_io_RandomAccessFile_registerNatives();
+void java_lang_reflect_Executable_registerNatives();
+void java_lang_reflect_Field_registerNatives();
+void java_lang_reflect_Proxy_registerNatives();
+void java_nio_Bits_registerNatives();
+void sun_io_Win32ErrorMode_registerNatives();
+void sun_misc_Signal_registerNatives();
+void sun_misc_URLClassPath_registerNatives();
+void sun_misc_Version_registerNatives();
+void sun_misc_VM_registerNatives();
+void sun_reflect_NativeMethodAccessorImpl_registerNatives();
+void java_security_AccessController_registerNatives();
+void jdk_internal_misc_VM_registerNatives();
+void java_io_FileInputStream_registerNatives();
+void java_io_FileOutputStream_registerNatives();
+void java_lang_String_registerNatives();
+void java_lang_ClassLoader_registerNatives();
+void java_lang_Runtime_registerNatives();
+void java_lang_Package_registerNatives();
+void sun_misc_Perf_registerNatives();
 }
 
 void initJNI()
@@ -1305,16 +1308,15 @@ void initJNI()
 
     // register all native methods // todo 不要一次全注册，需要时再注册
     R(java_lang_Class_registerNatives);
-    
     java_lang_Float_registerNatives();
     java_lang_Double_registerNatives();    
     java_lang_Object_registerNatives();    
     R(java_lang_System_registerNatives);
     java_lang_String_registerNatives();
-    R(java_lang_Package_registerNatives);
+    java_lang_Package_registerNatives();
     R(java_lang_Throwable_registerNatives);
     R(java_lang_Thread_registerNatives);
-    R(java_lang_Runtime_registerNatives);
+    java_lang_Runtime_registerNatives();
     java_lang_ClassLoader_registerNatives();
     java_lang_ClassLoader$NativeLibrary_registerNatives();
 
@@ -1339,7 +1341,7 @@ void initJNI()
     sun_misc_Signal_registerNatives();
     sun_misc_Version_registerNatives();
     sun_misc_URLClassPath_registerNatives();
-    R(sun_misc_Perf_registerNatives);
+    sun_misc_Perf_registerNatives();
 
     sun_io_Win32ErrorMode_registerNatives();
 
