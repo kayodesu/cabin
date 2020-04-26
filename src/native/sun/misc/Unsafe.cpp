@@ -23,13 +23,13 @@ elsewhere.
 */
 
 // public native void park(boolean isAbsolute, long time);
-static void park(Frame *frame)
+static void park(JNIEnv *env, jobject _this, jboolean isAbsolute, jlong time)
 {
     jvm_abort("park");
 }
 
 //  public native void unpark(Object thread);
-static void unpark(Frame *frame)
+static void unpark(JNIEnv *env, jobject _this, jobject thread)
 {
     jvm_abort("unpark");
 }
@@ -47,13 +47,8 @@ static void unpark(Frame *frame)
  *
  * public final native boolean compareAndSwapInt(Object o, long offset, int expected, int x);
  */
-static void compareAndSwapInt(Frame *frame)
+static jboolean compareAndSwapInt(JNIEnv *env, jobject _this, jref o, jlong offset, jint expected, jint x)
 {
-    jref o = frame->getLocalAsRef(1);
-    jlong offset = frame->getLocalAsLong(2); // long 占两个Slot
-    jint expected = frame->getLocalAsInt(4);
-    jint x = frame->getLocalAsInt(5);
-
     jint *old;
     if (o->isArrayObject()) {
         old = (jint *)(((Array *) o)->index(offset));
@@ -63,17 +58,12 @@ static void compareAndSwapInt(Frame *frame)
     }
 
     bool b = __sync_bool_compare_and_swap(old, expected, x);
-    frame->pushi(b ? 1 : 0);
+    return b ? JNI_TRUE : JNI_FALSE;
 }
 
 // public final native boolean compareAndSwapLong(Object o, long offset, long expected, long x);
-static void compareAndSwapLong(Frame *frame)
+static jboolean compareAndSwapLong(JNIEnv *env, jobject _this, jref o, jlong offset, jlong expected, jlong x)
 {
-    jref o = frame->getLocalAsRef(1); // first argument
-    jlong offset = frame->getLocalAsLong(2); // long 占两个Slot
-    jlong expected = frame->getLocalAsLong(4);
-    jlong x = frame->getLocalAsLong(6);
-
     jlong *old;
     if (o->isArrayObject()) {
         Array *ao = dynamic_cast<Array *>(o);  // todo
@@ -84,17 +74,12 @@ static void compareAndSwapLong(Frame *frame)
     }
 
     bool b = __sync_bool_compare_and_swap(old, expected, x);  // todo
-    frame->pushi(b ? 1 : 0);
+    return b ? JNI_TRUE : JNI_FALSE;
 }
 
 // public final native boolean compareAndSwapObject(Object o, long offset, Object expected, Object x)
-static void compareAndSwapObject(Frame *frame)
+static jboolean compareAndSwapObject(JNIEnv *env, jobject _this, jref o, jlong offset, jobject expected, jobject x)
 {
-    jref o = frame->getLocalAsRef(1); // first argument
-    jlong offset = frame->getLocalAsLong(2); // long 占两个Slot
-    jref expected = frame->getLocalAsRef(4);
-    jref x = frame->getLocalAsRef(5);
-
     jref *old;
     if (o->isArrayObject()) {
         Array *ao = dynamic_cast<Array *>(o);  // todo
@@ -106,210 +91,207 @@ static void compareAndSwapObject(Frame *frame)
     }
 
     bool b = __sync_bool_compare_and_swap(old, expected, x);
-    frame->pushi(b ? 1 : 0);
+    return b ? JNI_TRUE : JNI_FALSE;
 }
 
 /*************************************    class    ************************************/
 /** Allocate an instance but do not run any constructor. Initializes the class if it has not yet been. */
 // public native Object allocateInstance(Class<?> type) throws InstantiationException;
-static void allocateInstance(Frame *frame)
+static jobject allocateInstance(JNIEnv *env, jobject _this, jclass type)
 {
     jvm_abort("allocateInstance");
 }
 
 // public native Class defineClass(String name, byte[] b, int off, int len,
 //                                  ClassLoader loader, ProtectionDomain protectionDomain)
-static void __defineClass(Frame *frame)
+static jclass __defineClass(JNIEnv *env, jobject _this, jstring name, 
+                jbyteArray b, jint off, jint len, jobject loader, jobject protectionDomain)
 {
     jvm_abort("defineClass");
 }
 
 // public native void ensureClassInitialized(Class<?> c);
-static void ensureClassInitialized(Frame *frame)
+static void ensureClassInitialized(JNIEnv *env, jobject _this, jclsref c)
 {
-    auto c = frame->getLocalAsRef<Class>(1);
     initClass(c);
 //    c->clinit(); // todo 是不是这样搞？
 }
 
-// public native Object staticFieldBase(Field f);
 // public native long staticFieldOffset(Field f);
-static void staticFieldOffset(Frame *frame)
+static jlong staticFieldOffset(JNIEnv *env, jobject _this, jfieldID f)
 {
     jvm_abort("staticFieldOffset");
 }
 
-static void staticFieldBase(Frame *frame)
+// public native Object staticFieldBase(Field f);
+static jobject staticFieldBase(JNIEnv *env, jobject _this, jfieldID f)
 {
     jvm_abort("staticFieldBase");
 }
 /*************************************    object    ************************************/
 
 // public native int arrayBaseOffset(Class<?> type)
-static void arrayBaseOffset(Frame *frame)
+static jint arrayBaseOffset(JNIEnv *env, jobject _this, jclass type)
 {
-    frame->pushi(0);//frame->operandStack.push((jint)0);  // todo
+    return 0; // todo
 }
 
 // public native int arrayIndexScale(Class<?> type)
-static void arrayIndexScale(Frame *frame)
+static jint arrayIndexScale(JNIEnv *env, jobject _this, jclass type)
 {
-    frame->pushi(1); // todo
+    return 1; // todo
 }
 
 // public native long objectFieldOffset(Field field)
-static void objectFieldOffset(Frame *frame)
+static jlong objectFieldOffset(JNIEnv *env, jobject _this, jref field)
 {
-    jref field = frame->getLocalAsRef(1);
     auto offset = field->getIntField(S(slot), S(I));
-    frame->pushl(offset);
+    return offset;
 }
 
 // private native long objectFieldOffset1(Class<?> c, String name);
-static void objectFieldOffset1(Frame *frame)
+static jlong objectFieldOffset1(JNIEnv *env, jobject _this, jclass c, jstring name)
 {
     // todo
     jvm_abort("objectFieldOffset1");
 }
 
 // public native boolean getBoolean(Object o, long offset);
-static void getBoolean(Frame *frame)
+static jboolean getBoolean(JNIEnv *env, jobject _this, jobject o, jlong offset)
 {
     jvm_abort("getBoolean");
 }
 
 // public native void putBoolean(Object o, long offset, boolean x);
-static void putBoolean(Frame *frame)
+static void putBoolean(JNIEnv *env, jobject _this, jobject o, jlong offset, jboolean x)
 {
     jvm_abort("putBoolean");
 }
 
 // public native byte getByte(Object o, long offset);
-static void obj_getByte(Frame *frame)
+static jbyte obj_getByte(JNIEnv *env, jobject _this, jobject o, jlong offset)
 {
     jvm_abort("obj_getByte");
 }
 
 // public native void putByte(Object o, long offset, byte x);
-static void obj_putByte(Frame *frame)
+static void obj_putByte(JNIEnv *env, jobject _this, jobject o, jlong offset, jbyte x)
 {
     jvm_abort("obj_putByte");
 }
 
 // public native char getChar(Object o, long offset);
-static void obj_getChar(Frame *frame)
+static jchar obj_getChar(JNIEnv *env, jobject _this, jobject o, jlong offset)
 {
     jvm_abort("obj_getChar");
 }
 
 // public native void putChar(Object o, long offset, char x);
-static void obj_putChar(Frame *frame)
+static void obj_putChar(JNIEnv *env, jobject _this, jobject o, jlong offset, jchar x)
 {
     jvm_abort("obj_putChar");
 }
 
 // public native short getShort(Object o, long offset);
-static void obj_getShort(Frame *frame)
+static jshort obj_getShort(JNIEnv *env, jobject _this, jobject o, jlong offset)
 {
     jvm_abort("obj_getShort");
 }
 
 // public native void putShort(Object o, long offset, short x);
-static void obj_putShort(Frame *frame)
+static void obj_putShort(JNIEnv *env, jobject _this, jobject o, jlong offset, jshort x)
 {
     jvm_abort("obj_putShort");
 }
 
 // public native int getInt(Object o, long offset);
-static void obj_getInt(Frame *frame)
+static jint obj_getInt(JNIEnv *env, jobject _this, jobject o, jlong offset)
 {
     jvm_abort("obj_getInt");
 }
 
 // public native void putInt(Object o, long offset, int x);
-static void obj_putInt(Frame *frame)
+static void obj_putInt(JNIEnv *env, jobject _this, jobject o, jlong offset, jint x)
 {
     jvm_abort("obj_putInt");
 }
 
 // public native long getLong(Object o, long offset);
-static void obj_getLong(Frame *frame)
+static jlong obj_getLong(JNIEnv *env, jobject _this, jobject o, jlong offset)
 {
     jvm_abort("obj_getLong");
 }
 
 // public native void putLong(Object o, long offset, long x);
-static void obj_putLong(Frame *frame)
+static void obj_putLong(JNIEnv *env, jobject _this, jobject o, jlong offset, jlong x)
 {
     jvm_abort("obj_putLong");
 }
 
 // public native float getFloat(Object o, long offset);
-static void obj_getFloat(Frame *frame)
+static jfloat obj_getFloat(JNIEnv *env, jobject _this, jobject o, jlong offset)
 {
     jvm_abort("obj_getFloat");
 }
 
 // public native void putFloat(Object o, long offset, float x);
-static void obj_putFloat(Frame *frame)
+static void obj_putFloat(JNIEnv *env, jobject _this, jobject o, jlong offset, jfloat x)
 {
     jvm_abort("obj_putFloat");
 }
 
 // public native double getDouble(Object o, long offset);
-static void obj_getDouble(Frame *frame)
+static jdouble obj_getDouble(JNIEnv *env, jobject _this, jobject o, jlong offset)
 {
     jvm_abort("obj_getDouble");
 }
 
 // public native void putDouble(Object o, long offset, double x);
-static void obj_putDouble(Frame *frame)
+static void obj_putDouble(JNIEnv *env, jobject _this, jobject o, jlong offset, jdouble x)
 {
     jvm_abort("obj_putDouble");
 }
 
 // public native Object getObject(Object o, long offset);
-static void getObject(Frame *frame)
+static jobject getObject(JNIEnv *env, jobject _this, jobject o, jlong offset)
 {
     jvm_abort("getObject");
 }
 
 // public native void putObject(Object o, long offset, Object x);
-static void putObject(Frame *frame)
+static void putObject(JNIEnv *env, jobject _this, jobject o, jlong offset, jobject x)
 {
     jvm_abort("putObject");
 }
 
 // public native boolean getBooleanVolatile(Object o, long offset);
-static void getBooleanVolatile(Frame *frame)
+static jboolean getBooleanVolatile(JNIEnv *env, jobject _this, jobject o, jlong offset)
 {
     jvm_abort("getBooleanVolatile");
 }
 
 // public native byte getByteVolatile(Object o, long offset);
-static void getByteVolatile(Frame *frame)
+static jbyte getByteVolatile(JNIEnv *env, jobject _this, jobject o, jlong offset)
 {
     jvm_abort("getByteVolatile");
 }
 
 // public native char getCharVolatile(Object o, long offset);
-static void getCharVolatile(Frame *frame)
+static jchar getCharVolatile(JNIEnv *env, jobject _this, jobject o, jlong offset)
 {
     jvm_abort("getCharVolatile");
 }
 
 // public native short getShortVolatile(Object o, long offset);
-static void getShortVolatile(Frame *frame)
+static jshort getShortVolatile(JNIEnv *env, jobject _this, jobject o, jlong offset)
 {
     jvm_abort("getShortVolatile");
 }
 
 // public native int getIntVolatile(Object o, long offset);
-static void getIntVolatile(Frame *frame)
+static jint getIntVolatile(JNIEnv *env, jobject _this, jref o, jlong offset)
 {
     // todo Volatile
-    jref o = frame->getLocalAsRef(1); // first argument
-    jlong offset = frame->getLocalAsLong(2);
 
     jint value;
     if (o->isArrayObject()) {
@@ -320,81 +302,79 @@ static void getIntVolatile(Frame *frame)
         assert(0 <= offset && offset < o->clazz->instFieldsCount);
         value = o->data[offset];//o->getInstFieldValue<jint>(offset);  // todo
     }
-    frame->pushi(value);
+    return value;
 }
 
 // public native long getLongVolatile(Object o, long offset);
-static void getLongVolatile(Frame *frame)
+static jlong getLongVolatile(JNIEnv *env, jobject _this, jref o, jlong offset)
 {
     jvm_abort("getLongVolatile");
 }
 
 // public native float getFloatVolatile(Object o, long offset);
-static void getFloatVolatile(Frame *frame)
+static jfloat getFloatVolatile(JNIEnv *env, jobject _this, jref o, jlong offset)
 {
     jvm_abort("getFloatVolatile");
 }
 
 // public native double getDoubleVolatile(Object o, long offset);
-static void getDoubleVolatile(Frame *frame)
+static jdouble getDoubleVolatile(JNIEnv *env, jobject _this, jref o, jlong offset)
 {
     jvm_abort("getDoubleVolatile");
 }
 
 // public native void putIntVolatile(Object o, long offset, int x);
-static void putIntVolatile(Frame *frame)
+static void putIntVolatile(JNIEnv *env, jobject _this, jref o, jlong offset, jint x)
 {
     jvm_abort("putIntVolatile");
 }
 
 // public native void putBooleanVolatile(Object o, long offset, boolean x);
-static void putBooleanVolatile(Frame *frame)
+static void putBooleanVolatile(JNIEnv *env, jobject _this, jref o, jlong offset, jboolean x)
 {
     jvm_abort("putBooleanVolatile");
 }
 
 // public native void putByteVolatile(Object o, long offset, byte x);
-static void putByteVolatile(Frame *frame)
+static void putByteVolatile(JNIEnv *env, jobject _this, jref o, jlong offset, jbyte x)
 {
     jvm_abort("putByteVolatile");
 }
 
 // public native void putShortVolatile(Object o, long offset, short x);
-static void putShortVolatile(Frame *frame)
+static void putShortVolatile(JNIEnv *env, jobject _this, jref o, jlong offset, jshort x)
 {
     jvm_abort("putShortVolatile");
 }
 
 // public native void putCharVolatile(Object o, long offset, char x);
-static void putCharVolatile(Frame *frame)
+static void putCharVolatile(JNIEnv *env, jobject _this, jref o, jlong offset, jchar x)
 {
     jvm_abort("putCharVolatile");
 }
 
 // public native void putLongVolatile(Object o, long offset, long x);
-static void putLongVolatile(Frame *frame)
+static void putLongVolatile(JNIEnv *env, jobject _this, jref o, jlong offset, jlong x)
 {
     jvm_abort("putLongVolatile");
 }
 
 // public native void putFloatVolatile(Object o, long offset, float x);
-static void putFloatVolatile(Frame *frame)
+static void putFloatVolatile(JNIEnv *env, jobject _this, jref o, jlong offset, jfloat x)
 {
     jvm_abort("putFloatVolatile");
 }
 
 // public native void putDoubleVolatile(Object o, long offset, double x);
-static void putDoubleVolatile(Frame *frame)
+static void putDoubleVolatile(JNIEnv *env, jobject _this, jref o, jlong offset, jdouble x)
 {
     jvm_abort("putDoubleVolatile");
 }
 // -------------------------
 // public native Object getObjectVolatile(Object o, long offset);
-static void getObjectVolatile(Frame *frame)
+static jref getObjectVolatile(JNIEnv *env, jobject _this, jref o, jlong offset)
 {
     // todo Volatile
-    jref o = frame->getLocalAsRef(1); // first argument
-    jlong offset = frame->getLocalAsLong(2);
 
     jref value;
     if (o->isArrayObject()) {
@@ -404,17 +384,13 @@ static void getObjectVolatile(Frame *frame)
         assert(0 <= offset && offset < o->clazz->instFieldsCount);
         value = *(jref *)(o->data + offset);//o->getInstFieldValue<jref>(offset);  // todo
     }
-    frame->pushr(value);
+    return value;
 }
 
 // public native void putObjectVolatile(Object o, long offset, Object x);
-static void putObjectVolatile(Frame *frame)
+static void putObjectVolatile(JNIEnv *env, jobject _this, jref o, jlong offset, jref x)
 {
     // todo Volatile
-    jref o = frame->getLocalAsRef(1);
-    jlong offset = frame->getLocalAsLong(2);
-    jref x = frame->getLocalAsRef(4);
-
     if (o->isArrayObject()) {
         auto arr = (Array *) o;
         arr->set(offset, x);
@@ -424,27 +400,27 @@ static void putObjectVolatile(Frame *frame)
 }
 
 // public native Object getOrderedObject(Object o, long offset);
-static void getOrderedObject(Frame *frame)
+static void getOrderedObject(JNIEnv *env, jobject _this, jobject o, jlong offset)
 {
     jvm_abort("getOrderedObject");
 }
 
 // public native void putOrderedObject(Object o, long offset, Object x);
-static void putOrderedObject(Frame *frame)
+static void putOrderedObject(JNIEnv *env, jobject _this, jobject o, jlong offset, jobject x)
 {
     jvm_abort("putOrderedObject");
 }
 
 /** Ordered/Lazy version of {@link #putIntVolatile(Object, long, int)}  */
 // public native void putOrderedInt(Object o, long offset, int x);
-static void putOrderedInt(Frame *frame)
+static void putOrderedInt(JNIEnv *env, jobject _this, jobject o, jlong offset, jint x)
 {
     jvm_abort("putOrderedInt");
 }
 
 /** Ordered/Lazy version of {@link #putLongVolatile(Object, long, long)} */
 // public native void putOrderedLong(Object o, long offset, long x);
-static void putOrderedLong(Frame *frame)
+static void putOrderedLong(JNIEnv *env, jobject _this, jobject o, jlong offset, jlong x)
 {
     jvm_abort("putOrderedLong");
 }
@@ -458,152 +434,127 @@ static void putOrderedLong(Frame *frame)
  * 返回的是一个long类型的地址偏移量。这个偏移量在你的Java程序中每块内存都是唯一的。
  */
 // public native long allocateMemory(long bytes);
-static void allocateMemory(Frame *frame)
+static jlong allocateMemory(JNIEnv *env, jobject _this, jlong bytes)
 {
-    jlong bytes = frame->getLocalAsLong(1);
     auto p = (u1 *) malloc(sizeof(char)*bytes);
     if (p == nullptr) {
         // todo error
     }
-    frame->pushl((jlong) (intptr_t) p);
+    return (jlong) (intptr_t) p;
 }
 
 // public native long reallocateMemory(long address, long bytes);
-static void reallocateMemory(Frame *frame)
+static jlong reallocateMemory(JNIEnv *env, jobject _this, jlong address, jlong bytes)
 {
-    jlong address = frame->getLocalAsLong(1);
-    jlong bytes = frame->getLocalAsLong(3);
-    frame->pushl((jlong) (intptr_t) realloc((void *) (intptr_t) address, (size_t) bytes)); // 有内存泄漏
+    return (jlong) (intptr_t) realloc((void *) (intptr_t) address, (size_t) bytes); // 有内存泄漏
 }
 
 // public native void freeMemory(long address);
-static void freeMemory(Frame *frame)
+static void freeMemory(JNIEnv *env, jobject _this, jlong address)
 {
-    jlong address = frame->getLocalAsLong(1);
     free((void *) (intptr_t) address);
 }
 
 // public native int addressSize();
-static void addressSize(Frame *frame)
+static jint addressSize(JNIEnv *env, jobject _this)
 {
-    frame->pushi(sizeof(jlong)); // todo
+    return sizeof(jlong); // todo
 }
 
 // public native void putByte(long address, byte x);
-static void putByte(Frame *frame)
+static void putByte(JNIEnv *env, jobject _this, jlong address, jbyte x)
 {
-    jlong address = frame->getLocalAsLong(1);
-    jbyte x = (jbyte) frame->getLocalAsInt(3);
     *(jbyte *) (intptr_t) address = changeToBigEndian(x); // todo java按大端存储？？？？？？？
 }
 
 // public native byte getByte(long address);
-static void getByte(Frame *frame)
+static jbyte getByte(JNIEnv *env, jobject _this, jlong address)
 {
-    jlong address = frame->getLocalAsLong(1);
-    frame->pushi(*(jbyte *) (intptr_t) address);
+    return *(jbyte *) (intptr_t) address;
 }
 
 // public native void putChar(long address, char x);
-static void putChar(Frame *frame)
+static void putChar(JNIEnv *env, jobject _this, jlong address, jchar x)
 {
-    jlong address = frame->getLocalAsLong(1);
-    jchar x = (jchar) frame->getLocalAsInt(3);
     *(jchar *) (intptr_t) address = changeToBigEndian(x);
 }
 
 // public native char getChar(long address);
-static void getChar(Frame *frame)
+static jchar getChar(JNIEnv *env, jobject _this, jlong address)
 {
-    jlong address = frame->getLocalAsLong(1);
-    frame->pushi(*(jchar *) (intptr_t) address);
+    return *(jchar *) (intptr_t) address;
 }
 
 // public native void putShort(long address, short x);
-static void putShort(Frame *frame)
+static void putShort(JNIEnv *env, jobject _this, jlong address, jshort x)
 {
-    jlong address = frame->getLocalAsLong(1);
-    jshort x = frame->getLocalAsShort(3);
     *(jshort *) (intptr_t) address = changeToBigEndian(x);
 }
 
 // public native short getShort(long address);
-static void getShort(Frame *frame)
+static jshort getShort(JNIEnv *env, jobject _this, jlong address)
 {
-    jlong address = frame->getLocalAsLong(1);
-    frame->pushi(*(jshort *) (intptr_t) address);
+    return *(jshort *) (intptr_t) address;
 }
 
 // public native void putInt(long address, int x);
-static void putInt(Frame *frame)
+static void putInt(JNIEnv *env, jobject _this, jlong address, jint x)
 {
-    jlong address = frame->getLocalAsLong(1);
-    jint x = frame->getLocalAsInt(3);
     *(jint *) (intptr_t) address = changeToBigEndian(x);
 }
 
 // public native int getInt(long address);
-static void getInt(Frame *frame)
+static jint getInt(JNIEnv *env, jobject _this, jlong address)
 {
-    jlong address = frame->getLocalAsLong(1);
-    frame->pushi(*(jint *) (intptr_t) address);
+    return *(jint *) (intptr_t) address;
 }
 
 // public native void putLong(long address, long x);
-static void putLong(Frame *frame)
+static void putLong(JNIEnv *env, jobject _this, jlong address, jlong x)
 {
-    jlong address = frame->getLocalAsLong(1);
-    jlong x = frame->getLocalAsLong(3);
     *(jlong *) (intptr_t) address = changeToBigEndian(x);
 }
 
 // public native long getLong(long address);
-static void getLong(Frame *frame)
+static jlong getLong(JNIEnv *env, jobject _this, jlong address)
 {
-    jlong address = frame->getLocalAsLong(1);
-    frame->pushl(*(jlong *) (intptr_t) address);
+    return *(jlong *) (intptr_t) address;
 }
 
 // public native void putFloat(long address, float x);
-static void putFloat(Frame *frame)
+static void putFloat(JNIEnv *env, jobject _this, jlong address, jfloat x)
 {
-    jlong address = frame->getLocalAsLong(1);
-    jfloat x = frame->getLocalAsFloat(3);
     *(jfloat *) (intptr_t) address = changeToBigEndian(x);
 }
 
 // public native float getFloat(long address);
-static void getFloat(Frame *frame)
+static jfloat getFloat(JNIEnv *env, jobject _this, jlong address)
 {
-    jlong address = frame->getLocalAsLong(1);
-    frame->pushf(*(jfloat *) (intptr_t) address);
+    return *(jfloat *) (intptr_t) address;
 }
 
 // public native void putDouble(long address, double x);
-static void putDouble(Frame *frame)
+static void putDouble(JNIEnv *env, jobject _this, jlong address, jdouble x)
 {
-    jlong address = frame->getLocalAsLong(1);
-    jdouble x = frame->getLocalAsDouble(3);
     *(jdouble *) (intptr_t) address = changeToBigEndian(x);
 }
 
 // public native double getDouble(long address);
-static void getDouble(Frame *frame)
+static jdouble getDouble(JNIEnv *env, jobject _this, jlong address)
 {
-    jlong address = frame->getLocalAsLong(1);
-    frame->pushd(*(jdouble *) (intptr_t) address);
+    return *(jdouble *) (intptr_t) address;
 }
 
 // public native void putAddress(long address, long x);
-static void putAddress(Frame *frame)
+static void putAddress(JNIEnv *env, jobject _this, jlong address, jlong x)
 {
-    putLong(frame);
+    putLong(env, _this, address, x);
 }
 
 // public native long getAddress(long address);
-static void getAddress(Frame *frame)
+static jlong getAddress(JNIEnv *env, jobject _this, jlong address)
 {
-    getLong(frame);
+    return getLong(env, _this, address);
 }
 
 /**
@@ -624,7 +575,7 @@ static void getAddress(Frame *frame)
   513        * @since 1.7
   514        */
 // public native void setMemory(Object o, long offset, long bytes, byte value);
-static void setMemory(Frame *frame)
+static void setMemory(JNIEnv *env, jobject _this, jobject o, jlong offset, jlong bytes, jbyte value)
 {
     jvm_abort("setMemory"); // todo
 }
@@ -647,7 +598,9 @@ static void setMemory(Frame *frame)
   543        * @since 1.7
   544        */
 // public native void copyMemory(Object srcBase, long srcOffset, Object destBase, long destOffset, long bytes);
-static void copyMemory(Frame *frame)
+static void copyMemory(JNIEnv *env, jobject _this, 
+                    jobject srcBase, jlong srcOffset, 
+                    jobject destBase, jlong destOffset, jlong bytes)
 {
     jvm_abort("copyMemory"); // todo
 }
@@ -668,25 +621,25 @@ static void copyMemory(Frame *frame)
  1000        *         if the load average is unobtainable.
  1001        */
 // public native int getLoadAverage(double[] loadavg, int nelems);
-static void getLoadAverage(Frame *frame)
+static jint getLoadAverage(JNIEnv *env, jobject _this, jdoubleArray loadavg, jint nelems)
 {
     jvm_abort("getLoadAverage"); // todo
 }
 
 // (Ljava/lang/Class;)Z
-static void shouldBeInitialized(Frame *frame)
+static jboolean shouldBeInitialized(JNIEnv *env, jobject _this, jclsref c)
 {
     // todo
-    auto c = frame->getLocalAsRef<Class>(1);
-    frame->pushi(c->state >= Class::INITED ? 1 : 0);
+    return c->state >= Class::INITED ? JNI_TRUE : JNI_FALSE;
 }
 
 /**
-  796        * Report the size in bytes of a native memory page (whatever that is).
-  797        * This value will always be a power of two.
-  798        */
-// public native int pageSize();
-static void pageSize(Frame *frame)
+ * Report the size in bytes of a native memory page (whatever that is).
+ * This value will always be a power of two.
+ * 
+ * public native int pageSize();
+*/
+static jint pageSize(JNIEnv *env, jobject _this)
 {
     jvm_abort("pageSize"); // todo
 }
@@ -708,24 +661,25 @@ static void pageSize(Frame *frame)
   828        * @params cpPatches where non-null entries exist, they replace corresponding CP entries in data
   829        */
 // public native Class defineAnonymousClass(Class hostClass, byte[] data, Object[] cpPatches);
-static void defineAnonymousClass(Frame *frame)
+static jclass defineAnonymousClass(JNIEnv *env, jobject _this, 
+                    jclass hostClass, jbyteArray data, jobjectArray cpPatches)
 {
     jvm_abort("defineAnonymousClass"); // todo
 }
 
 /** Lock the object.  It must get unlocked via {@link #monitorExit}. */
 //  public native void monitorEnter(Object o);
-static void monitorEnter(Frame *frame)
+static void monitorEnter(JNIEnv *env, jobject _this, jobject o)
 {
     jvm_abort("monitorEnter"); // todo
 }
 
 /**
-  842        * Unlock the object.  It must have been locked via {@link
-  843        * #monitorEnter}.
-  844        */
-// public native void monitorExit(Object o);
-static void monitorExit(Frame *frame)
+ * Unlock the object.  It must have been locked via monitorEnter.
+ * 
+ * public native void monitorExit(Object o);
+ */
+static void monitorExit(JNIEnv *env, jobject _this, jobject o)
 {
     jvm_abort("monitorExit"); // todo
 }
@@ -736,29 +690,32 @@ static void monitorExit(Frame *frame)
   850        * unlocked via {@link #monitorExit}.
   851        */
 // public native boolean tryMonitorEnter(Object o);
-static void tryMonitorEnter(Frame *frame)
+static jboolean tryMonitorEnter(JNIEnv *env, jobject _this, jobject o)
 {
     jvm_abort("tryMonitorEnter"); // todo
 }
 
 /** Throw the exception without telling the verifier. */
 // public native void throwException(Throwable ee);
-static void throwException(Frame *frame)
+static void throwException(JNIEnv *env, jobject _this, jthrowable ee)
 {
     jvm_abort("throwException"); // todo
 }
 
-static void loadFence(Frame *frame)
+// "()V"
+static void loadFence(JNIEnv *env, jobject _this)
 {
     jvm_abort("loadFence"); // todo
 }
 
-static void storeFence(Frame *frame)
+// "()V"
+static void storeFence(JNIEnv *env, jobject _this)
 {
     jvm_abort("storeFence"); // todo
 }
 
-static void fullFence(Frame *frame)
+// "()V"
+static void fullFence(JNIEnv *env, jobject _this)
 {
     jvm_abort("fullFence"); // todo
 }
