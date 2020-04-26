@@ -11,10 +11,9 @@
 
 // @CallerSensitive
 // public static native <T> T doPrivileged(PrivilegedAction<T> action);
-static void doPrivileged(Frame *frame)
+static jref doPrivileged(JNIEnv *env, jclass clazz, jref action)
 {
     // todo 这个函数干什么用的。。。。
-    jref _this = frame->getLocalAsRef(0);
 
     /*
      * run 函数返回 T类型 的对象
@@ -23,44 +22,44 @@ static void doPrivileged(Frame *frame)
      *     T run();
      * }
      */
-    Method *m = _this->clazz->getDeclaredMethod(S(run), S(___java_lang_Object));
-    frame->pushr(RSLOT(execJavaFunc(m, _this)));
+    Method *m = action->clazz->getDeclaredMethod(S(run), S(___java_lang_Object));
+    return RSLOT(execJavaFunc(m, action));
 }
 
 // @CallerSensitive
 // public static native <T> T doPrivileged(PrivilegedAction<T> action, AccessControlContext context);
-static void doPrivileged1(Frame *frame)
+static jref doPrivileged1(JNIEnv *env, jclass clazz, jref action, jobject context)
 {
     // todo
-    doPrivileged(frame);
+    return doPrivileged(env, clazz, action);
 }
 
 // @CallerSensitive
 // public static native <T> T doPrivileged(PrivilegedExceptionAction<T> action) throws PrivilegedActionException;
-static void doPrivileged2(Frame *frame)
+static jref doPrivileged2(JNIEnv *env, jclass clazz, jref action)
 {
     // todo
-    doPrivileged(frame);
+    return doPrivileged(env, clazz, action);
 }
 
 // @CallerSensitive
 // public static native <T> T doPrivileged(PrivilegedExceptionAction<T> action, AccessControlContext context)
 //      throws PrivilegedActionException;
-static void doPrivileged3(Frame *frame)
+static jref doPrivileged3(JNIEnv *env, jclass clazz, jref action, jobject context)
 {
     // todo
-    doPrivileged(frame);
+    return doPrivileged(env, clazz, action);
 }
 
 // private static native AccessControlContext getStackAccessControlContext();
-static void getStackAccessControlContext(Frame *frame)
+static jref getStackAccessControlContext(JNIEnv *env, jclass clazz)
 {
     // todo
-    frame->pushr(nullptr);
+    return nullptr;
 }
 
 // static native AccessControlContext getInheritedAccessControlContext();
-static void getInheritedAccessControlContext(Frame *frame)
+static jref getInheritedAccessControlContext(JNIEnv *env, jclass clazz)
 {
     // todo
     jvm_abort("getInheritedAccessControlContext");

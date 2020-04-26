@@ -1385,8 +1385,7 @@ __opc_athrow:
 
 			    assert(frame->method->native_method != nullptr);
 			    try {
-			        if (strcmp(frame->method->clazz->className, "java/security/AccessController") == 0 
-                        || strcmp(frame->method->clazz->className, "java/lang/invoke/MethodHandle") == 0) {
+			        if (strcmp(frame->method->clazz->className, "java/lang/invoke/MethodHandle") == 0) {
                         ((void (*)(Frame *)) frame->method->native_method)(frame);
 			        } else {
                         callJNIMethod(frame);
