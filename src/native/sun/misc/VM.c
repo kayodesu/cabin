@@ -5,14 +5,14 @@
 #include <assert.h>
 #include "../../../symbol.h"
 #include "../../jnidef.h"
-#include "../../cli.h"
+#include "../../ifn.h"
 
 // private static native void initialize();
 static void initialize(JNIEnv *env, jclass clazz)
 {
     // todo
     jclass sys = (*env)->FindClass(env, S(java_lang_System));
-    cli.initClass(sys);
+    ifn.initClass(sys);
 
     jmethodID m = (*env)->GetStaticMethodID(env, sys, "initializeSystemClass", S(___V));
     assert(m != NULL);

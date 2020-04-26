@@ -4,7 +4,7 @@
 
 #include "../../../symbol.h"
 #include "../../jnidef.h"
-#include "../../cli.h"
+#include "../../ifn.h"
 
 // public native int hashCode();
 static jint hashCode(JNIEnv *env, jobject _this)
@@ -16,11 +16,11 @@ static jint hashCode(JNIEnv *env, jobject _this)
 static jobject clone(JNIEnv *env, jobject _this)
 {
     jclass c = (*env)->GetObjectClass(env, _this);
-    if (cli.isSubclassOf(c, (*env)->FindClass(env, S(java_lang_Cloneable))) == 0) {
+    if (ifn.isSubclassOf(c, (*env)->FindClass(env, S(java_lang_Cloneable))) == 0) {
         jclass exception = (*env)->FindClass(env, S(java_lang_CloneNotSupportedException));
         (*env)->ThrowNew(env, exception, NULL);
     }
-    return cli.cloneObject(_this);
+    return ifn.cloneObject(_this);
 }
 
 // public final native Class<?> getClass();

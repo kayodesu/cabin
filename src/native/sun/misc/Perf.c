@@ -3,7 +3,7 @@
  */
 
 #include "../../jnidef.h"
-#include "../../cli.h"
+#include "../../ifn.h"
 
 // public native ByteBuffer createLong(String name, int variability, int units, long value);
 static jobject createLong(JNIEnv *env, jobject _this, jstring name, jint variability, jint units, jlong value)
@@ -25,7 +25,7 @@ static jobject createLong(JNIEnv *env, jobject _this, jstring name, jint variabi
  */
 
     jclass c = (*env)->FindClass(env, "java/nio/ByteBuffer");
-    cli.initClass(c);
+    ifn.initClass(c);
 
     jmethodID m = (*env)->GetStaticMethodID(env, c, "allocate", "(I)Ljava/nio/ByteBuffer;");
     return (*env)->CallStaticObjectMethod(env, c, m, sizeof(jlong));

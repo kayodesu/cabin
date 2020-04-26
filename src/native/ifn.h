@@ -1,16 +1,16 @@
 
-#ifndef KAYO_CLI_H
-#define KAYO_CLI_H
+#ifndef KAYO_IFN_H
+#define KAYO_IFN_H
 
 #include "jni.h"
 
 /*
- * C Language Interfaces. 
- * 封装一些虚拟机功能为C接口，供 native methods 调用
+ * Interfaces For Natives.
+ * 封装一些虚拟机功能，供 native methods 调用
  * 
  * Author: Yo Ka
  */
-struct CLI {
+struct IFN {
     jobject (*cloneObject)(jobject o);
     int (*isSubclassOf)(jclass sub, jclass base);
     void (*initClass)(jclass clazz);
@@ -28,6 +28,6 @@ struct CLI {
     jclass (*arrayClass)(jclass componentClass);
 };
 
-extern struct CLI cli;
+extern struct IFN ifn;
 
-#endif // KAYO_CLI_H
+#endif // KAYO_IFN_H

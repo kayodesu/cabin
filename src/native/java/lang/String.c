@@ -3,12 +3,12 @@
  */
 
 #include "../../jnidef.h"
-#include "../../cli.h"
+#include "../../ifn.h"
 
 // public native String intern();
 static jstring intern(JNIEnv *env, jstring _this)
 {
-    return cli.intern(_this);
+    return ifn.intern(_this);
 }
 
 static JNINativeMethod methods[] = {

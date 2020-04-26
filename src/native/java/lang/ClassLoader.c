@@ -3,20 +3,20 @@
  */
 
 #include "../../jnidef.h"
-#include "../../cli.h"
+#include "../../ifn.h"
 
 // private native Class<?> defineClass0(String name, byte[] b, int off, int len, ProtectionDomain pd);
 static jclass defineClass0(JNIEnv *env, jobject _this, jstring name,
                         jbyteArray b, jint off, jint len, jobject pd)
 {
-    return cli.defineClass0(_this, name, b, off, len, pd);
+    return ifn.defineClass0(_this, name, b, off, len, pd);
 }
 
 // private native Class<?> defineClass1(String name, byte[] b, int off, int len, ProtectionDomain pd, String source);
 static jclass defineClass1(JNIEnv *env, jobject _this, jstring name, 
                         jbyteArray b, jint off, jint len, jobject pd, jstring source)
 {
-    return cli.defineClass1(_this, name, b, off, len, pd, source);
+    return ifn.defineClass1(_this, name, b, off, len, pd, source);
 }
 
 // private native Class<?> defineClass2(String name,
@@ -40,14 +40,14 @@ static void resolveClass0(JNIEnv *env, jobject _this, jclass c)
 static jclass findBootstrapClass(JNIEnv *env, jobject _this, jstring name)
 {
     const char *utf8_name = (*env)->GetStringUTFChars(env, name, NULL);
-    return cli.loadBootClassDot(utf8_name);
+    return ifn.loadBootClassDot(utf8_name);
 }
 
 // private native final Class<?> findLoadedClass0(String name);
 static jclass findLoadedClass0(JNIEnv *env, jobject _this, jstring name)
 {
     const char *utf8_name = (*env)->GetStringUTFChars(env, name, NULL);
-    return cli.findLoadedClassDot(_this, utf8_name);
+    return ifn.findLoadedClassDot(_this, utf8_name);
 }
 
 // private static native String findBuiltinLib(String name);
