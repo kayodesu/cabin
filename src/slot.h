@@ -30,7 +30,8 @@ static_assert(2*sizeof(slot_t) >= sizeof(jdouble));
 #define RSLOT(slot_point) (* (jref *) (slot_point))
 
 namespace slot {
-    // build slot
+    /* build slot */
+
     static inline slot_t rslot(jref v)
     {
         slot_t s;
@@ -44,28 +45,29 @@ namespace slot {
         ISLOT(&s) = v;
         return s;
     }
+
+    static inline slot_t fslot(jfloat v)
+    {
+        slot_t s;
+        FSLOT(&s) = v;
+        return s;
+    }
+
+    static inline slot_t lslot(jlong v)
+    {
+        slot_t s;
+        LSLOT(&s) = v;
+        return s;
+    }
+
+    static inline slot_t dslot(jdouble v)
+    {
+        slot_t s;
+        DSLOT(&s) = v;
+        return s;
+    }
 }
 
-//static inline slot_t to_fslot(jfloat v)
-//{
-//    slot_t s;
-//    FSLOT(&s) = v;
-//    return s;
-//}
-
-//static inline slot_t slot(jlong v)
-//{
-//    slot_t s[2];
-//    LSLOT(s) = v;
-//    return s;
-//}
-//
-//static inline slot_t slot(jdouble v)
-//{
-//    slot_t s[2];
-//    DSLOT(s) = v;
-//    return s;
-//}
 
 class SlotsMgr {
     slot_t *slots = nullptr;

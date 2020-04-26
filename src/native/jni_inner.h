@@ -44,6 +44,11 @@ static inline Method *to_method(jmethodID methodID)
     return (Method *) (void *) methodID;
 }
 
+static inline jmethodID to_jmethodID(Method *m)
+{
+    return (jmethodID) (void *) m;
+}
+
 static jobject addJNILocalRef(Object *ref)
 {
     // todo addJNILocalRef
@@ -140,12 +145,13 @@ static Class *checkClassBeforeAllocObject(Class *c)
     return initClass(c);
 }
 
-static jmethodID getMethodID(JNIEnv *env,
-                        jclass clazz, const char *name, const char *sig, bool is_static)
-{
-    // todo
-    jvm_abort("not implement.");
-}
+// static jmethodID getMethodID(JNIEnv *env,
+//                         jclass clazz, const char *name, const char *sig, bool is_static)
+// {
+//     // todo
+
+//     jvm_abort("not implement.");
+// }
 
 static jfieldID getFieldID(JNIEnv *env,
                              jclass clazz, const char *name, const char *sig, bool is_static)
@@ -221,7 +227,7 @@ ret_type JNICALL JVM_CallNonvirtual##T##Method(JNIEnv *env, jobject obj, jclass 
     va_list args; \
     va_start(args, methodID); \
     slot_t *ret = execJavaFunc( \
-                    to_method(methodID), to_object_ref(obj), to_object_ref<Class>(clazz), args); \
+                    to_method(methodID), to_object_ref(obj), args); \
     va_end(args); \
     return ret_value; \
 }
@@ -231,7 +237,7 @@ ret_type JNICALL JVM_CallNonvirtual##T##MethodV(JNIEnv *env, jobject obj, \
                             jclass clazz, jmethodID methodID, va_list args) \
 { \
     slot_t *ret = execJavaFunc( \
-                    to_method(methodID), to_object_ref(obj), to_object_ref<Class>(clazz), args); \
+                    to_method(methodID), to_object_ref(obj), args); \
     return ret_value; \
 }
 
@@ -240,7 +246,7 @@ ret_type JNICALL JVM_CallNonvirtual##T##MethodA(JNIEnv *env, jobject obj, \
                             jclass clazz, jmethodID methodID, const jvalue *args) \
 { \
     slot_t *ret = execJavaFunc( \
-                    to_method(methodID), to_object_ref(obj), to_object_ref<Class>(clazz), args); \
+                    to_method(methodID), to_object_ref(obj), args); \
     return ret_value; \
 }
 
@@ -265,8 +271,7 @@ ret_type JNICALL JVM_CallStatic##T##Method(JNIEnv *env, jclass clazz, jmethodID 
 { \
     va_list args; \
     va_start(args, methodID); \
-    slot_t *ret = execJavaFunc(to_method(methodID), \
-                        to_object_ref<Class>(clazz), to_object_ref<Class>(clazz), args); \
+    slot_t *ret = execJavaFunc(to_method(methodID), args); \
     va_end(args); \
     return ret_value; \
 }
@@ -275,8 +280,7 @@ ret_type JNICALL JVM_CallStatic##T##Method(JNIEnv *env, jclass clazz, jmethodID 
 ret_type JNICALL JVM_CallStatic##T##MethodV(JNIEnv *env, \
                             jclass clazz, jmethodID methodID, va_list args) \
 { \
-    slot_t *ret = execJavaFunc(to_method(methodID), \
-                        to_object_ref<Class>(clazz), to_object_ref<Class>(clazz), args); \
+    slot_t *ret = execJavaFunc(to_method(methodID), args); \
     return ret_value; \
 }
 
@@ -284,8 +288,7 @@ ret_type JNICALL JVM_CallStatic##T##MethodV(JNIEnv *env, \
 ret_type JNICALL JVM_CallStatic##T##MethodA(JNIEnv *env, \
                             jclass clazz, jmethodID methodID, const jvalue *args) \
 { \
-    slot_t *ret = execJavaFunc(to_method(methodID), \
-                        to_object_ref<Class>(clazz), to_object_ref<Class>(clazz), args); \
+    slot_t *ret = execJavaFunc(to_method(methodID), args); \
     return ret_value; \
 }
 

@@ -238,7 +238,9 @@ jboolean JNICALL JVM_IsInstanceOf(JNIEnv *env, jobject obj, jclass clazz)
 
 jmethodID JNICALL JVM_GetMethodID(JNIEnv *env, jclass clazz, const char *name, const char *sig)
 {
-    return getMethodID(env, clazz, name, sig, false);
+    Class *c = to_object_ref<Class>(clazz);
+    Method *m = c->lookupInstMethod(name, sig);
+    return to_jmethodID(m);
 }
 
 
@@ -437,7 +439,10 @@ void JNICALL JVM_SetDoubleField(JNIEnv *env, jobject obj, jfieldID fieldID, jdou
 jmethodID JNICALL JVM_GetStaticMethodID(JNIEnv *env, jclass clazz, const char *name, const char *sig)
 {
     assert(env != nullptr && clazz != nullptr && name != nullptr && sig != nullptr);
-    return getMethodID(env, clazz, name, sig, true);
+
+    Class *c = to_object_ref<Class>(clazz);
+    Method *m = c->lookupStaticMethod(name, sig);
+    return to_jmethodID(m);
 }
 
 DEFINE_3_CALL_STATIC_T_METHODS(Object, jobject, addJNILocalRef(RSLOT(ret)))
@@ -1279,8 +1284,11 @@ extern "C" {
     void sun_misc_Signal_registerNatives();
     void sun_misc_URLClassPath_registerNatives();
     void sun_misc_Version_registerNatives();
+    void sun_misc_VM_registerNatives();
 
     void sun_reflect_NativeMethodAccessorImpl_registerNatives();
+
+    void jdk_internal_misc_VM_registerNatives();
 }
 
 void initJNI()
@@ -1324,7 +1332,7 @@ void initJNI()
 
     java_nio_Bits_registerNatives();
 
-    R(sun_misc_VM_registerNatives);
+    sun_misc_VM_registerNatives();
     R(sun_misc_Unsafe_registerNatives);
     sun_misc_Signal_registerNatives();
     sun_misc_Version_registerNatives();
@@ -1346,7 +1354,7 @@ void initJNI()
     R(java_util_concurrent_atomic_AtomicLong_registerNatives);
     R(java_util_zip_ZipFile_registerNatives);
 
-    R(jdk_internal_misc_VM_registerNatives);
+    jdk_internal_misc_VM_registerNatives();
 }
 
 static vector<tuple<const char * /* class name */, JNINativeMethod *, int /* method count */>> native_methods;
@@ -1390,4 +1398,10 @@ extern "C" int is_subclass_of(jclass sub, jclass base)
     Class *s = to_object_ref<Class>(sub);
     Class *b = to_object_ref<Class>(base);
     return s->isSubclassOf(b) ? 1 : 0;
+}
+
+extern "C" void ci_initClass(jclass clazz)
+{
+    Class *c = to_object_ref<Class>(clazz);
+    initClass(c);
 }

@@ -55,21 +55,23 @@ static inline slot_t *execJavaFunc(Method *m, jref _this, const jvalue *args)
 static inline slot_t *execJavaFunc(Method *m, jref _this, va_list &args)
 {
     jvalue values[METHOD_PARAMETERS_MAX_COUNT];
-    parse_method_args_va_list(m->signature, args, values);
+    parse_method_args_va_list(m->type, args, values);
     return execJavaFunc(m, _this, values);
 }
 
-static inline slot_t *execJavaFunc(Method *m, jref _this, jclsref c, const jvalue *args)
+static inline slot_t *execJavaFunc(Method *m, const jvalue *args)
 {
     // todo
-    jvm_abort("not implement.");
+    slot_t slots[METHOD_PARAMETERS_MAX_COUNT];
+    parse_method_argv(m->type, args, slots);
+    return execJavaFunc(m, slots);
 }
 
-static inline slot_t *execJavaFunc(Method *m, jref _this, jclsref c, va_list &args)
+static inline slot_t *execJavaFunc(Method *m, va_list &args)
 {
     jvalue values[METHOD_PARAMETERS_MAX_COUNT];
-    parse_method_args_va_list(m->signature, args, values);
-    return execJavaFunc(m, _this, c, values);
+    parse_method_args_va_list(m->type, args, values);
+    return execJavaFunc(m, values);
 }
 
 // Object[] args;
@@ -85,7 +87,7 @@ static inline slot_t *execConstructor(Method *constructor, jref _this, const jva
 static inline slot_t *execConstructor(Method *constructor, jref _this, va_list &args)
 {
     jvalue values[METHOD_PARAMETERS_MAX_COUNT];
-    parse_method_args_va_list(constructor->signature, args, values);
+    parse_method_args_va_list(constructor->type, args, values);
     return execConstructor(constructor, _this, values);
 }
 

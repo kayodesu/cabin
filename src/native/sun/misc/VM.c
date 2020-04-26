@@ -2,20 +2,20 @@
  * Author: Yo Ka
  */
 
-#include "../../../../runtime/frame.h"
-#include "../../../../interpreter/interpreter.h"
-#include "../../../jni_inner.h"
+#include <assert.h>
+#include "../../../symbol.h"
+#include "../../jnidef.h"
 
 // private static native void initialize();
 static void initialize(JNIEnv *env, jclass clazz)
 {
     // todo
-    Class *sys = loadBootClass(S(java_lang_System));
-    initClass(sys);
-//    sys->clinit();
-    Method *m = sys->lookupStaticMethod("initPhase1", S(___V));
-    assert(m != nullptr);
-    execJavaFunc(m);
+    jclass sys = (*env)->FindClass(env, S(java_lang_System));
+    ci_initClass(sys);
+
+    jmethodID m = (*env)->GetStaticMethodID(env, sys, "initializeSystemClass", S(___V));
+    assert(m != NULL);
+    (*env)->CallStaticVoidMethod(env, sys, m);
 }
 
 /*
@@ -24,7 +24,7 @@ static void initialize(JNIEnv *env, jclass clazz)
  *
  * public static native ClassLoader latestUserDefinedLoader();
  */
-static void latestUserDefinedLoader(JNIEnv *env, jclass clazz)
+static jobject latestUserDefinedLoader(JNIEnv *env, jclass clazz)
 {
     jvm_abort("latestUserDefinedLoader"); // todo
 }
@@ -35,7 +35,7 @@ static JNINativeMethod methods[] = {
         { "latestUserDefinedLoader", "()Ljava/lang/ClassLoader;", (void *) latestUserDefinedLoader },
 };
 
-void jdk_internal_misc_VM_registerNatives()
+void sun_misc_VM_registerNatives()
 {
-    registerNatives("jdk/internal/misc/VM", methods, ARRAY_LENGTH(methods));
+    registerNatives("sun/misc/VM", methods, ARRAY_LENGTH(methods));
 }

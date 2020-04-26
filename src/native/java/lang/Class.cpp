@@ -60,13 +60,13 @@ static jclsref forName0(JNIEnv *env, jclsref clazz, jstrref name, jboolean initi
  *
  * static native Class<?> getPrimitiveClass(String name);
  */
-static jclsref getPrimitiveClass(JNIEnv *env, jclsref clazz, jstrref name)
+static jclsref getPrimitiveClass(JNIEnv *env, jclsref clazz, jstring name)
 {
-//    auto so = frame->getLocalAsRef(0);
-    const char *className = name->toUtf8(); // 这里得到的 class name 是诸如 "int, float" 之类的 primitive type
-    Class *c = loadBootClass(className);
+    // // 这里得到的 class name 是诸如 "int, float" 之类的 primitive type
+    const char *class_name = env->GetStringUTFChars(name, NULL); 
+    Class *c = loadBootClass(class_name);
+    env->ReleaseStringUTFChars(name, class_name);
     return c;
-   // frame->pushr(c);
 }
 
 /*
@@ -87,7 +87,6 @@ static jclsref getPrimitiveClass(JNIEnv *env, jclsref clazz, jstrref name)
  */
 static jstrref getName0(JNIEnv *env, jclsref _this)
 {
-   // auto _this = frame->getLocalAsRef<Class>(0);
     return newString(slash2DotsDup(_this->className));
 }
 
@@ -175,12 +174,9 @@ static jboolean desiredAssertionStatus0(JNIEnv *env, jclsref clazz)
  *
  * public native boolean isInstance(Object obj);
  */
-static jboolean isInstance(JNIEnv *env, jclsref _this, jref obj)
+static jboolean isInstance(JNIEnv *env, jclass _this, jobject obj)
 {
-    //auto _this = frame->getLocalAsRef<Class>(0);
-
-  //  jref obj = frame->getLocalAsRef(1);
-    return (obj != nullptr && obj->isInstanceOf(_this)) ? JNI_TRUE : JNI_FALSE;
+    return (obj != nullptr && env->IsInstanceOf(obj, _this)) ? JNI_TRUE : JNI_FALSE;
 }
 
 /**
@@ -342,8 +338,6 @@ static jarrref getInterfaces0(JNIEnv *env, jclsref _this)
  */
 static jclsref getComponentType(JNIEnv *env, jclsref _this)
 {
- //   auto _this = frame->getLocalAsRef<Class>(0);
-
     if (_this->isArrayClass()) {
         return _this->componentClass();
     } else {
@@ -414,8 +408,6 @@ static void setSigners(JNIEnv *env, jclsref _this, jarrref signers)
 // private native Object[] getEnclosingMethod0();
 static jarrref getEnclosingMethod0(JNIEnv *env, jclsref _this)
 {
-  //  auto _this = frame->getLocalAsRef<Class>(0);
-
     if (_this->enclosing.clazz == nullptr) {
         return nullptr;
     }
