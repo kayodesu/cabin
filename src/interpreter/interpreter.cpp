@@ -309,13 +309,7 @@ __ldc:
         thread_throw(new NullPointerException); \
     if (!arr->checkBounds(index)) \
         thread_throw(new ArrayIndexOutOfBoundsException);
-//#define ARRAY_LOAD_CATEGORY_ONE(type, t) \
-//{ \
-//    GET_AND_CHECK_ARRAY \
-//    auto value = arr->get<type>(index); \
-//    frame->push##t(value); \
-//    break; \
-//}
+
             case JVM_OPC_iaload: {
                 GET_AND_CHECK_ARRAY
                 auto value = arr->get<jint>(index);
