@@ -2,8 +2,7 @@
  * Author: Yo Ka
  */
 
-#include "../../jnidef.h"
-#include "../../ifn.h"
+#include "../../jni_inner.h"
 #include "../../../objects/class_loader.h"
 #include "../../../objects/string_object.h"
 

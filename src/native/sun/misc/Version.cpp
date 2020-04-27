@@ -1,4 +1,4 @@
-#include "../../jnidef.h"
+#include "../../jni_inner.h"
 #include "../../../vmdef.h"
 
 /*
@@ -6,13 +6,13 @@
  */
 
 // public static native String getJdkSpecialVersion()
-static jstring getJdkSpecialVersion(jclsref clazz)
+static jstrref getJdkSpecialVersion(jclsref clazz)
 {
     jvm_abort("getJdkSpecialVersion"); // todo
 }
 
 // public static native String getJvmSpecialVersion()
-static jstring getJvmSpecialVersion(jclsref clazz)
+static jstrref getJvmSpecialVersion(jclsref clazz)
 {
     jvm_abort("getJvmSpecialVersion"); // todo
 }

@@ -12,7 +12,6 @@
 #include "../util/encoding.h"
 #include "../kayo.h"
 #include "../slot.h"
-#include "../native/jni.h"
 #include "field.h"
 
 class Field;
@@ -48,8 +47,6 @@ public:
     SlotsMgr slots_mgr;
 
     Class *clazz;
-
-    JNIObjRefType jni_obj_ref_type = JNIInvalidRefType;
 
     static Object *newObject(Class *c);
 

@@ -58,7 +58,7 @@ static jboolean compareAndSwapInt(jref _this, jref o, jlong offset, jint expecte
     }
 
     bool b = __sync_bool_compare_and_swap(old, expected, x);
-    return b ? JNI_TRUE : JNI_FALSE;
+    return b ? jtrue : jfalse;
 }
 
 // public final native boolean compareAndSwapLong(Object o, long offset, long expected, long x);
@@ -74,7 +74,7 @@ static jboolean compareAndSwapLong(jref _this, jref o, jlong offset, jlong expec
     }
 
     bool b = __sync_bool_compare_and_swap(old, expected, x);  // todo
-    return b ? JNI_TRUE : JNI_FALSE;
+    return b ? jtrue : jfalse;
 }
 
 // public final native boolean compareAndSwapObject(Object o, long offset, Object expected, Object x)
@@ -91,7 +91,7 @@ static jboolean compareAndSwapObject(jref _this, jref o, jlong offset, jref expe
     }
 
     bool b = __sync_bool_compare_and_swap(old, expected, x);
-    return b ? JNI_TRUE : JNI_FALSE;
+    return b ? jtrue : jfalse;
 }
 
 /*************************************    class    ************************************/
@@ -621,7 +621,7 @@ static void copyMemory(jref _this,
  1000        *         if the load average is unobtainable.
  1001        */
 // public native int getLoadAverage(double[] loadavg, int nelems);
-static jint getLoadAverage(jref _this, jdoubleArray loadavg, jint nelems)
+static jint getLoadAverage(jref _this, jarrref loadavg, jint nelems)
 {
     jvm_abort("getLoadAverage"); // todo
 }
@@ -630,7 +630,7 @@ static jint getLoadAverage(jref _this, jdoubleArray loadavg, jint nelems)
 static jboolean shouldBeInitialized(jref _this, jclsref c)
 {
     // todo
-    return c->state >= Class::INITED ? JNI_TRUE : JNI_FALSE;
+    return c->state >= Class::INITED ? jtrue : jfalse;
 }
 
 /**
@@ -697,7 +697,7 @@ static jboolean tryMonitorEnter(jref _this, jref o)
 
 /** Throw the exception without telling the verifier. */
 // public native void throwException(Throwable ee);
-static void throwException(jref _this, jthrowable ee)
+static void throwException(jref _this, jref ee)
 {
     jvm_abort("throwException"); // todo
 }

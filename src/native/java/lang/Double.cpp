@@ -2,7 +2,7 @@
  * Author: Yo Ka
  */
 
-#include "../../jnidef.h"
+#include "../../jni_inner.h"
 #include "../../../util/convert.h"
 #include "../../../vmdef.h"
 

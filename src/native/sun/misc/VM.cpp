@@ -4,8 +4,7 @@
 
 #include <assert.h>
 #include "../../../symbol.h"
-#include "../../jnidef.h"
-#include "../../ifn.h"
+#include "../../jni_inner.h"
 #include "../../../vmdef.h"
 #include "../../../objects/method.h"
 #include "../../../objects/class.h"
@@ -30,7 +29,7 @@ static void initialize(jclsref clazz)
  *
  * public static native ClassLoader latestUserDefinedLoader();
  */
-static jobject latestUserDefinedLoader(jclsref clazz)
+static jref latestUserDefinedLoader(jclsref clazz)
 {
     jvm_abort("latestUserDefinedLoader"); // todo
 }

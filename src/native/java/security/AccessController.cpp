@@ -2,7 +2,7 @@
  * Author: Yo Ka
  */
 
-#include "../../jnidef.h"
+#include "../../jni_inner.h"
 #include "../../../symbol.h"
 #include "../../../slot.h"
 #include "../../../objects/method.h"

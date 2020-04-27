@@ -1,4 +1,4 @@
-#include "../../../../jnidef.h"
+#include "../../../../jni_inner.h"
 #include "../../../../../vmdef.h"
 
 /*
@@ -17,7 +17,7 @@ static jboolean VMSupportsCS8(jclsref clazz)
  * 	stack := frame.OperandStack()
 	stack.PushBoolean(false) // todo sync/atomic
  */
-    return JNI_FALSE; // todo  sync/atomic
+    return jfalse; // todo  sync/atomic
 }
 
 static JNINativeMethod methods[] = {

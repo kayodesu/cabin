@@ -9,7 +9,6 @@
 #include <cstdarg>
 #include "../vmdef.h"
 #include "../kayo.h"
-#include "../native/jni.h"
 #include "../objects/signature.h"
 #include "../objects/method.h"
 #include "../slot.h"
@@ -46,52 +45,8 @@ static inline slot_t *execJavaFunc(Method *m, jref o1, jref o2, jref o3, jref o4
     return execJavaFunc(m, { slot::rslot(o1), slot::rslot(o2), slot::rslot(o3), slot::rslot(o4) });
 }
 
-static inline slot_t *execJavaFunc(Method *m, jref _this, const jvalue *args)
-{
-    // todo
-    slot_t slots[METHOD_PARAMETERS_MAX_COUNT];
-    slots[0] = slot::rslot(_this);
-    parse_method_argv(m->type, args, slots + 1);
-    return execJavaFunc(m, slots);
-}
-
-static inline slot_t *execJavaFunc(Method *m, jref _this, va_list &args)
-{
-    jvalue values[METHOD_PARAMETERS_MAX_COUNT];
-    parse_method_args_va_list(m->type, args, values);
-    return execJavaFunc(m, _this, values);
-}
-
-static inline slot_t *execJavaFunc(Method *m, const jvalue *args)
-{
-    // todo
-    slot_t slots[METHOD_PARAMETERS_MAX_COUNT];
-    parse_method_argv(m->type, args, slots);
-    return execJavaFunc(m, slots);
-}
-
-static inline slot_t *execJavaFunc(Method *m, va_list &args)
-{
-    jvalue values[METHOD_PARAMETERS_MAX_COUNT];
-    parse_method_args_va_list(m->type, args, values);
-    return execJavaFunc(m, values);
-}
-
 // Object[] args;
 slot_t *execConstructor(Method *constructor, jref _this, Array *args);
 
-
-static inline slot_t *execConstructor(Method *constructor, jref _this, const jvalue *args)
-{
-    // todo
-    jvm_abort("not implement.");
-}
-
-static inline slot_t *execConstructor(Method *constructor, jref _this, va_list &args)
-{
-    jvalue values[METHOD_PARAMETERS_MAX_COUNT];
-    parse_method_args_va_list(constructor->type, args, values);
-    return execConstructor(constructor, _this, values);
-}
 
 #endif //JVM_INTERPRETER_H

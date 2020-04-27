@@ -2,7 +2,7 @@
  * Author: Yo Ka
  */
 
-#include "../../jnidef.h"
+#include "../../jni_inner.h"
 #include "../../../vmdef.h"
 
 // static native void copyFromShortArray(Object src, long srcPos, long dstAddr, long length);

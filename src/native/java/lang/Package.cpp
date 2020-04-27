@@ -1,4 +1,4 @@
-#include "../../jnidef.h"
+#include "../../jni_inner.h"
 #include "../../../vmdef.h"
 #include "../../../objects/string_object.h"
 #include "../../../objects/class_loader.h"

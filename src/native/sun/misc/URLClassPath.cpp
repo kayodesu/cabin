@@ -1,4 +1,4 @@
-#include "../../jnidef.h"
+#include "../../jni_inner.h"
 #include "../../../vmdef.h"
 
 /*
@@ -6,7 +6,7 @@
  */
 
 // private static native URL[] getLookupCacheURLs(ClassLoader var0);
-static jobjectArray getLookupCacheURLs(jclsref clazz)
+static jarrref getLookupCacheURLs(jclsref clazz)
 {
     // todo
     return nullptr;

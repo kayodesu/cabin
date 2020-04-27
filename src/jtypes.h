@@ -5,12 +5,7 @@
 #ifndef KAYO_JTYPES_H
 #define KAYO_JTYPES_H
 
-#ifdef __cplusplus
 #include <cstdint>
-#else
-#include <stdint.h>
-#include <stdbool.h>
-#endif
 
 /*
  * Java虚拟机中的整型类型的取值范围如下：
@@ -30,7 +25,7 @@ typedef float           jfloat;
 typedef double          jdouble;
 
 typedef jboolean   jbool;
-#define jtrue 1
+#define jtrue  1
 #define jfalse 0
 
 static inline bool is_jfalse(jbool b)
@@ -57,21 +52,14 @@ static inline jbyte jint2jbyte(jint i)
     return (jbyte)(i & 0xff);
 }
 
-//#define JINT_TO_JBYTE(jint_value) ((jbyte)((jint_value) & 0xff))
-
 static inline jchar jint2jchar(jint i)
 {
     return (jchar)(i & 0xffff);
 }
 
-//#define JINT_TO_JCHAR(jint_value) ((jchar)((jint_value) & 0xffff))
-
 static inline jshort jint2jshort(jint i)
 {
     return (jshort)(i & 0xffff);
 }
-
-//#define JINT_TO_JSHORT(jint_value) ((jchar)((jint_value) & 0xffff))
-
 
 #endif //KAYO_JTYPES_H

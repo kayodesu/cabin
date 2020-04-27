@@ -5,7 +5,7 @@
 #ifndef JVM_VMDEF_H
 #define JVM_VMDEF_H
 
-#include "native/jtypes.h"
+#include "jtypes.h"
 
 typedef int8_t  s1;  // s: signed
 typedef int16_t s2;

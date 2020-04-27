@@ -1,11 +1,11 @@
-#include "../../../jnidef.h"
+#include "../../../jni_inner.h"
 #include "../../../../vmdef.h"
 /*
  * Author: Yo Ka
  */
 
 //private static native Class<?> defineClass0(ClassLoader loader, String name, byte[] b, int off, int len);
-static jclsref defineClass0(jclsref clazz, jref loader, jstrref name, jbyteArray b, jint off, jint len)
+static jclsref defineClass0(jclsref clazz, jref loader, jstrref name, jarrref b, jint off, jint len)
 {
     jvm_abort("defineClass0");
 }

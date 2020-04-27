@@ -49,7 +49,7 @@ static void arraycopy(jclsref clazz, jref src, jint src_pos, jref dest, jint des
 }
 
 // public static native int identityHashCode(Object x);
-static jint identityHashCode(jclsref clazz, jobject x)
+static jint identityHashCode(jclsref clazz, jref x)
 {
     return (jint) (intptr_t) x; // todo 实现错误。改成当前的时间如何。
 }
@@ -104,7 +104,7 @@ static jlong nanoTime(jclsref clazz)
 
 // 毫秒
 // public static native long currentTimeMillis();
-static jlong currentTimeMillis(jclass clazz)
+static jlong currentTimeMillis(jclsref clazz)
 {
     // todo
     return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();

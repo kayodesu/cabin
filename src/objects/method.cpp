@@ -1,12 +1,11 @@
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 #include "method.h"
 #include "class.h"
 #include "array_object.h"
 #include "invoke.h"
-#include "../native/jni_interface.h"
 
 using namespace std;
 
@@ -255,6 +254,8 @@ void Method::parseCodeAttr(BytecodeReader &r)
         }
     }
 }
+
+void *findNativeMethod(const char *class_name, const char *method_name, const char *method_type);
 
 Method::Method(Class *c, BytecodeReader &r)
 {

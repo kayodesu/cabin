@@ -19,7 +19,7 @@
  * Signature: ()[Ljava/lang/String;
  */
 // private static native String[] vmProperties();
-static jref vmProperties(JNIEnv *env, jclass clazz)
+static jref vmProperties(jclsref clazz)
 {
     jarrref prop_array = newArray(loadBootClass(S(array_java_lang_String)), g_properties.size()*2);
     int i = 0;
@@ -43,7 +43,7 @@ static jref vmProperties(JNIEnv *env, jclass clazz)
  * Signature: ()[Ljava/lang/String;
  */
 // private static native String[] platformProperties();
-static jref platformProperties(JNIEnv *env, jclass clazz)
+static jref platformProperties(jclsref clazz)
 {
     // from class jdk/internal/util/SystemProps$Raw
     static const int _display_country_NDX = 0;

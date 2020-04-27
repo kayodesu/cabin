@@ -9,13 +9,11 @@
 #include <thread>
 #include "kayo.h"
 #include "debug.h"
-#include "native/jni_interface.h"
 #include "runtime/thread_info.h"
 #include "objects/class.h"
 #include "objects/method.h"
 #include "objects/array_object.h"
 #include "interpreter/interpreter.h"
-#include "native/ifn.h"
 
 using namespace std;
 using namespace std::filesystem;
@@ -36,7 +34,7 @@ vector<string> jreExtJars;
 
 vector<string> g_jdk_modules;
 
-IFN ifn;
+//IFN ifn;
 
 //vector<std::string> userDirs;
 //vector<std::string> userJars;
@@ -190,52 +188,7 @@ static void initProperties()
     g_properties.emplace_back("sun.stderr.encoding", "UTF-8");
 }
 
-static void initIFN()
-{
-    ifn.cloneObject = [](jobject o) { return (jobject) (((jref) o)->clone()); };
-
-    ifn.isSubclassOf = [](jclass sub, jclass base) {
-        Class *s = (Class *) (sub);
-        Class *b = (Class *) (base);
-        return s->isSubclassOf(b) ? 1 : 0;
-    };
-
-    ifn.initClass = [](jclass clazz) { initClass((Class *) clazz); };
-
-    ifn.intern = [](jstring s) {
-        jref r = (jref)(s);
-        if (r->clazz != stringClass) {
-            // todo error
-            jvm_abort("xxxxxxxx");
-        }
-
-        return (jstring) (stringClass->intern(r));
-    };
-
-    ifn.dots2SlashDup = [](const char *s) { return dots2SlashDup(s); };
-    ifn.slash2DotsDup = [](const char *s) { return slash2DotsDup(s); };
-
-    ifn.loadBootClass = [](const char *name) { return (jclass) loadBootClass(name); };
-
-    ifn.loadClass = [](jobject loader, const char *name) { 
-        return (jclass) loadClass((jref) loader, name); 
-    };
-
-    ifn.findLoadedClass = [](jobject loader, const char *name) {
-        return (jclass) findLoadedClass((jref) loader, name);
-    };
-
-    ifn.defineClass0 = [](jobject loader, jstring name, jbyteArray b, jint off, jint len, jobject pd) {
-        return (jclass) defineClass((jref) loader, (jstrref) name, (jarrref) b, off, len, (jref) pd);
-    };
-
-    ifn.defineClass1 = [](jobject loader, jstring name,
-                    jbyteArray b, jint off, jint len, jobject pd, jstring source) {
-        return (jclass) defineClass((jref) loader, (jstrref) name, (jarrref) b, off, len, (jref) pd, (jref) source);
-    };
-
-    ifn.arrayClass = [](jclass componentClass) { return (jclass) (((Class *) componentClass)->arrayClass()); };
-}
+void initJNI();
 
 static void initJVM(int argc, char *argv[])
 {
@@ -361,7 +314,6 @@ static void initJVM(int argc, char *argv[])
     /* order is important */
     initSymbol();
     initProperties();
-    initIFN();
     initJNI();
     initClassLoader();
     initMainThread();

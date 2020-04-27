@@ -3,7 +3,7 @@
  */
 
 #include <windows.h> // todo
-#include "../../jnidef.h"
+#include "../../jni_inner.h"
 #include "../../../vmdef.h"
 
 // public native int availableProcessors();

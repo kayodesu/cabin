@@ -63,7 +63,7 @@ static void interrupt0(jref _this)
 // private native boolean isInterrupted(boolean ClearInterrupted);
 static jboolean isInterrupted(jref _this)
 {
-    return JNI_FALSE; // todo
+    return jfalse; // todo
 }
 
 /*
@@ -74,7 +74,7 @@ static jboolean isInterrupted(jref _this)
  */
 static jboolean isAlive(jref _this)
 {
-    return JNI_FALSE; // todo 为什么要设置成0，设置成1就状态错误
+    return jfalse; // todo 为什么要设置成0，设置成1就状态错误
 }
 
 /**
@@ -175,7 +175,7 @@ static void resume0(jref _this)
 }
 
 // private native void setNativeName(String name);
-static void setNativeName(jref _this, jstring name)
+static void setNativeName(jref _this, jstrref name)
 {
     jvm_abort("setNativeName"); // todo
 }

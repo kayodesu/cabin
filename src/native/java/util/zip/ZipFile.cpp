@@ -1,5 +1,5 @@
 #include <minizip/unzip.h>
-#include "../../../jnidef.h"
+#include "../../../jni_inner.h"
 #include "../../../../symbol.h"
 #include "../../../../vmdef.h"
 #include "../../../../objects/string_object.h"
@@ -32,7 +32,7 @@ jlong __open(jclsref clazz, jstrref name, jint mode, jlong lastModified, jboolea
 jboolean startsWithLOC(jclsref clazz, jlong jzfile)
 {
     // todo
-    return JNI_TRUE;
+    return jtrue;
 }
 
 // private static native int getTotal(long jzfile);
@@ -90,7 +90,7 @@ jlong getEntry(jclsref clazz, jlong jzfile, jarrref name, jboolean addSlash)
 }
 
 // private static native byte[] getEntryBytes(long jzentry, int type);
-jbyteArray getEntryBytes(jclsref clazz, jlong jzentry, jint type)
+jarrref getEntryBytes(jclsref clazz, jlong jzentry, jint type)
 {
     jvm_abort("getEntryBytes");
 // todo
@@ -227,7 +227,7 @@ jint getEntryMethod(jclsref clazz, jlong jzentry)
 }
 
 // private static native int read(long jzfile, long jzentry, long pos, byte[] b, int off, int len);
-jint __read(jclsref clazz, jlong jzfile, jlong jzentry, jlong pos, jbyteArray b, jint off, jint len)
+jint __read(jclsref clazz, jlong jzfile, jlong jzentry, jlong pos, jarrref b, jint off, jint len)
 {
     jvm_abort("read");
 /*
