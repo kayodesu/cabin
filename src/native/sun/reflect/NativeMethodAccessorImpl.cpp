@@ -1,11 +1,12 @@
 #include "../../jnidef.h"
+#include "../../../vmdef.h"
 
 /*
  * Author: Yo Ka
  */
 
 // private static native Object invoke0(Method method, Object o, Object[] os);
-static void invoke0(JNIEnv *env, jclass clazz, jmethodID method, jobject o, jobjectArray os)
+static void invoke0(jclsref clazz, jref method, jref o, jarrref os)
 {
     jvm_abort("error\n");
 }

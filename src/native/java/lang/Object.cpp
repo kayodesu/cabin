@@ -4,45 +4,46 @@
 
 #include "../../../symbol.h"
 #include "../../jnidef.h"
-#include "../../ifn.h"
+#include "../../../vmdef.h"
+#include "../../../objects/class.h"
+#include "../../../objects/object.h"
+#include "../../../objects/class_loader.h"
 
 // public native int hashCode();
-static jint hashCode(JNIEnv *env, jobject _this)
+static jint hashCode(jref _this)
 {
     return (jint)(intptr_t)_this;
 }
 
 // protected native Object clone() throws CloneNotSupportedException;
-static jobject clone(JNIEnv *env, jobject _this)
+static jref clone(jref _this)
 {
-    jclass c = (*env)->GetObjectClass(env, _this);
-    if (ifn.isSubclassOf(c, (*env)->FindClass(env, S(java_lang_Cloneable))) == 0) {
-        jclass exception = (*env)->FindClass(env, S(java_lang_CloneNotSupportedException));
-        (*env)->ThrowNew(env, exception, NULL);
+    if (!_this->clazz->isSubclassOf(loadBootClass(S(java_lang_Cloneable)))) {
+        throw CloneNotSupportedException();
     }
-    return ifn.cloneObject(_this);
+    return _this->clone();
 }
 
 // public final native Class<?> getClass();
-static jobject getClass(JNIEnv *env, jobject _this)
+static jref getClass(jref _this)
 {
-    return (*env)->GetObjectClass(env, _this); // todo 对不对
+    return _this->clazz; // todo 对不对
 }
 
 // public final native void notifyAll();
-static void notifyAll(JNIEnv *env, jobject _this)
+static void notifyAll(jref _this)
 {
     // todo
 }
 
 // public final native void notify();
-static void notify(JNIEnv *env, jobject _this)
+static void notify(jref _this)
 {
     // todo
 }
 
 // public final native void wait(long timeout) throws InterruptedException;
-static void wait(JNIEnv *env, jobject _this, jlong timeout)
+static void wait(jref _this, jlong timeout)
 {
     // todo
 }

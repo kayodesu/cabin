@@ -2,25 +2,25 @@
  * Author: Yo Ka
  */
 
-#include <assert.h>
+#include <cassert>
 #include "../../../../symbol.h"
 #include "../../../jnidef.h"
-#include "../../../ifn.h"
+#include "../../../../vmdef.h"
+#include "../../../../objects/class_loader.h"
+#include "../../../../objects/class.h"
+#include "../../../../objects/method.h"
+#include "../../../../interpreter/interpreter.h"
 
 // private static native void initialize();
-static void initialize(JNIEnv *env, jclass clazz)
+static void initialize(jclsref clazz)
 {
     // todo
-    jclass sys = (*env)->FindClass(env, S(java_lang_System));
-    ifn.initClass(sys);
+    Class *sys = loadBootClass(S(java_lang_System));
+    initClass(sys);
     
-    // Method *m = sys->lookupStaticMethod("initPhase1", S(___V));
-    // assert(m != nullptr);
-    // execJavaFunc(m);
-
-    jmethodID m = (*env)->GetStaticMethodID(env, sys, "initPhase1", S(___V));
-    assert(m != NULL);
-    (*env)->CallStaticVoidMethod(env, sys, m);
+    Method *m = sys->lookupStaticMethod("initPhase1", S(___V));
+    assert(m != nullptr);
+    execJavaFunc(m);
 }
 
 /*
@@ -29,7 +29,7 @@ static void initialize(JNIEnv *env, jclass clazz)
  *
  * public static native ClassLoader latestUserDefinedLoader();
  */
-static jobject latestUserDefinedLoader(JNIEnv *env, jclass clazz)
+static jobject latestUserDefinedLoader(jclsref clazz)
 {
     jvm_abort("latestUserDefinedLoader"); // todo
 }

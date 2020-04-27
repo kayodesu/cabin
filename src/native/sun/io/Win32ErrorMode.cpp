@@ -1,11 +1,12 @@
 #include "../../jnidef.h"
+#include "../../../vmdef.h"
 
 /*
  * Author: Yo Ka
  */
 
 // todo 函数声明，是不是static的.
-static jlong setErrorMode(JNIEnv *env, jclass clazz, jlong l)
+static jlong setErrorMode(jclsref clazz, jlong l)
 {
     return 0; // todo
 }

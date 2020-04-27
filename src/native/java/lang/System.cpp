@@ -27,7 +27,7 @@ using namespace chrono;
  * @since      1.2
  */
 // public static native String mapLibraryName(String libname);
-static jstrref mapLibraryName(JNIEnv *env, jclass clazz, jstrref libname)
+static jstrref mapLibraryName(jclsref clazz, jstrref libname)
 {
     if (libname == nullptr) {
         throw NullPointerException(); // todo
@@ -41,7 +41,7 @@ static jstrref mapLibraryName(JNIEnv *env, jclass clazz, jstrref libname)
 }
 
 // public static native void arraycopy(Object src, int srcPos, Object dest, int destPos, int length)
-static void arraycopy(JNIEnv *env, jclass clazz, jref src, jint src_pos, jref dest, jint dest_pos, jint length)
+static void arraycopy(jclsref clazz, jref src, jint src_pos, jref dest, jint dest_pos, jint length)
 {
     assert(dest->isArrayObject());
     assert(src->isArrayObject());
@@ -49,13 +49,13 @@ static void arraycopy(JNIEnv *env, jclass clazz, jref src, jint src_pos, jref de
 }
 
 // public static native int identityHashCode(Object x);
-static jint identityHashCode(JNIEnv *env, jclass clazz, jobject x)
+static jint identityHashCode(jclsref clazz, jobject x)
 {
     return (jint) (intptr_t) x; // todo 实现错误。改成当前的时间如何。
 }
 
 // private static native Properties initProperties(Properties props);
-static jref initProperties(JNIEnv *env, jclass clazz, jref props)
+static jref initProperties(jclsref clazz, jref props)
 {
     // todo init
     Method *setProperty = props->clazz->lookupInstMethod(
@@ -70,30 +70,21 @@ static jref initProperties(JNIEnv *env, jclass clazz, jref props)
 }
 
 // private static native void setIn0(InputStream in);
-static void setIn0(JNIEnv *env, jclass clazz, jobject in)
+static void setIn0(jclsref clazz, jref in)
 {
-    jfieldID fid = env->GetFieldID(clazz, "in", "Ljava/io/InputStream;");
-    env->SetStaticObjectField(clazz, fid, in);
-    
-    // clazz->lookupStaticField("in", "Ljava/io/InputStream;")->staticValue.r = in;
+    clazz->lookupStaticField("in", "Ljava/io/InputStream;")->staticValue.r = in;
 }
 
 // private static native void setOut0(PrintStream out);
-static void setOut0(JNIEnv *env, jclass clazz, jobject out)
+static void setOut0(jclsref clazz, jref out)
 {
-    jfieldID fid = env->GetFieldID(clazz, "out", "Ljava/io/PrintStream;");
-    env->SetStaticObjectField(clazz, fid, out);
-
-    // clazz->lookupStaticField("out", "Ljava/io/PrintStream;")->staticValue.r = out;
+    clazz->lookupStaticField("out", "Ljava/io/PrintStream;")->staticValue.r = out;
 }
 
 // private static native void setErr0(PrintStream err);
-static void setErr0(JNIEnv *env, jclass clazz, jobject err)
+static void setErr0(jclsref clazz, jref err)
 {
-    jfieldID fid = env->GetFieldID(clazz, "err", "Ljava/io/PrintStream;");
-    env->SetStaticObjectField(clazz, fid, err);
-
-    // clazz->lookupStaticField("err", "Ljava/io/PrintStream;")->staticValue.r = err;
+    clazz->lookupStaticField("err", "Ljava/io/PrintStream;")->staticValue.r = err;
 }
 
 /*
@@ -105,7 +96,7 @@ static void setErr0(JNIEnv *env, jclass clazz, jobject err)
  *
  * public static native long nanoTime();
  */
-static jlong nanoTime(JNIEnv *env, jclass clazz)
+static jlong nanoTime(jclsref clazz)
 {
     // todo
     return duration_cast<nanoseconds>(high_resolution_clock ::now().time_since_epoch()).count();
@@ -113,7 +104,7 @@ static jlong nanoTime(JNIEnv *env, jclass clazz)
 
 // 毫秒
 // public static native long currentTimeMillis();
-static jlong currentTimeMillis(JNIEnv *env, jclass clazz)
+static jlong currentTimeMillis(jclass clazz)
 {
     // todo
     return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();

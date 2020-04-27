@@ -1,17 +1,18 @@
 #include "../../../jnidef.h"
+#include "../../../../vmdef.h"
 
 /*
  * Author: Yo Ka
  */
 
 // private native Parameter[] getParameters0();
-static jobjectArray getParameters0(JNIEnv *env, jobject _this)
+static jarrref getParameters0(jref _this)
 {
     jvm_abort("getParameters0"); // todo
 }
 
 // native byte[] getTypeAnnotationBytes0();
-static jbyteArray getTypeAnnotationBytes0(JNIEnv *env, jobject _this)
+static jarrref getTypeAnnotationBytes0(jref _this)
 {
     jvm_abort("getTypeAnnotationBytes0"); // todo
 }

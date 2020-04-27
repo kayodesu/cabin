@@ -13,20 +13,20 @@
  *
  * public static native Thread currentThread();
  */
-static jref currentThread(JNIEnv *env, jclass clazz)
+static jref currentThread(jclsref clazz)
 {
     // return a Object of java/lang/Thread of current thread
     return getCurrentThread()->tobj;
 }
 
 // public static native void yield();
-static void yield(JNIEnv *env, jclass clazz)
+static void yield(jclsref clazz)
 {
     jvm_abort("yield"); // todo
 }
 
 // public static native void sleep(long millis) throws InterruptedException;
-static void sleep(JNIEnv *env, jclass clazz, jlong millis)
+static void sleep(jclsref clazz, jlong millis)
 {
     jvm_abort("error\n");
 
@@ -55,13 +55,13 @@ static void sleep(JNIEnv *env, jclass clazz, jlong millis)
 }
 
 // private native void interrupt0();
-static void interrupt0(JNIEnv *env, jobject _this)
+static void interrupt0(jref _this)
 {
     jvm_abort("error\n"); // todo
 }
 
 // private native boolean isInterrupted(boolean ClearInterrupted);
-static jboolean isInterrupted(JNIEnv *env, jobject _this)
+static jboolean isInterrupted(jref _this)
 {
     return JNI_FALSE; // todo
 }
@@ -72,7 +72,7 @@ static jboolean isInterrupted(JNIEnv *env, jobject _this)
  * 
  * public final native boolean isAlive();
  */
-static jboolean isAlive(JNIEnv *env, jobject _this)
+static jboolean isAlive(jref _this)
 {
     return JNI_FALSE; // todo 为什么要设置成0，设置成1就状态错误
 }
@@ -102,7 +102,7 @@ static jboolean isAlive(JNIEnv *env, jobject _this)
  * @see        ThreadGroup#getMaxPriority()
  */
 // private native void setPriority0(int newPriority);
-static void setPriority0(JNIEnv *env, jobject _this, jint newPriority)
+static void setPriority0(jref _this, jint newPriority)
 {
     // todo
 //    struct slot priority = islot(new_priority);
@@ -110,25 +110,25 @@ static void setPriority0(JNIEnv *env, jobject _this, jint newPriority)
 }
 
 // private native void start0();
-static void start0(JNIEnv *env, jref _this)
+static void start0(jref _this)
 {
     createCustomerThread(_this);
 }
 
 // public native int countStackFrames();
-static jint countStackFrames(JNIEnv *env, jref _this)
+static jint countStackFrames(jref _this)
 {
     return Thread::from(_this)->countStackFrames();
 }
 
 // public static native boolean holdsLock(Object obj);
-static jboolean holdsLock(JNIEnv *env, jclass clazz)
+static jboolean holdsLock(jclsref clazz)
 {
     jvm_abort("holdsLock"); // todo
 }
 
 // private native static StackTraceElement[][] dumpThreads(Thread[] threads);
-static jarrref dumpThreads(JNIEnv *env, jclass clazz, jarrref threads)
+static jarrref dumpThreads(jclsref clazz, jarrref threads)
 {
     size_t len = threads->size();
     Array *result = newArray(loadArrayClass("[[java/lang/StackTraceElement"), len);
@@ -144,7 +144,7 @@ static jarrref dumpThreads(JNIEnv *env, jclass clazz, jarrref threads)
 }
 
 // private native static Thread[] getThreads();
-static jarrref getThreads(JNIEnv *env, jobject _this)
+static jarrref getThreads(jref _this)
 {
     size_t size = g_all_threads.size();
     Array *threads = newArray(loadArrayClass(S(array_java_lang_Thread)), size);
@@ -157,25 +157,25 @@ static jarrref getThreads(JNIEnv *env, jobject _this)
 }
 
 // private native void stop0(Object o);
-static void stop0(JNIEnv *env, jobject _this)
+static void stop0(jref _this)
 {
     jvm_abort("stop0"); // todo
 }
 
 // private native void suspend0();
-static void suspend0(JNIEnv *env, jobject _this)
+static void suspend0(jref _this)
 {
     jvm_abort("suspend0"); // todo
 }
 
 // private native void resume0();
-static void resume0(JNIEnv *env, jobject _this)
+static void resume0(jref _this)
 {
     jvm_abort("resume0"); // todo
 }
 
 // private native void setNativeName(String name);
-static void setNativeName(JNIEnv *env, jobject _this, jstring name)
+static void setNativeName(jref _this, jstring name)
 {
     jvm_abort("setNativeName"); // todo
 }

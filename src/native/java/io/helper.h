@@ -1,5 +1,7 @@
 #include "../../jnidef.h"
 #include "../../../symbol.h"
+#include "../../../vmdef.h"
+#include "../../../objects/object.h"
 
 /*
  * 一些帮助函数，只用于本目录下的文件。
@@ -7,47 +9,42 @@
  * Author: Yo Ka
  */
 
-static inline jobject __getFileDescriptor(JNIEnv *env, jobject _this)
-{   
-    jclass c = (*env)->GetObjectClass(env, _this);
-
+static inline jref __getFileDescriptor(jref _this)
+{
     // File Descriptor - handle to the open file
     // private final FileDescriptor fd;
-    jfieldID field = (*env)->GetFieldID(env, c, "fd", "Ljava/io/FileDescriptor;");
-    return (*env)->GetObjectField(env, _this, field);
+    return _this->getRefField("fd", "Ljava/io/FileDescriptor;");
 }
 
-static inline void __openFile(JNIEnv *env, jobject _this, jstring name, const char *mode)
+static inline void __openFile(jref _this, jstrref name, const char *mode)
 {
-    const char *utf8_name = (*env)->GetStringUTFChars(env, name, NULL);
+    auto utf8_name = name->toUtf8();
 
     FILE *file = fopen(utf8_name, mode);
-    if (file == NULL) {
-        jclass c = (*env)->FindClass(env, S(java_io_FileNotFoundException));
-        (*env)->ThrowNew(env, c, utf8_name);
+    if (file == nullptr) {
+        throw FileNotFoundException(utf8_name);
     }
 
-    jobject fd = __getFileDescriptor(env, _this);
+    jref fd = __getFileDescriptor(_this);
 
     // private long handle;
-    jclass c = (*env)->GetObjectClass(env, fd);
-    (*env)->SetLongField(env, fd, (*env)->GetFieldID(env, c, "handle", "J"), (jlong) file);
+    fd->setLongField("handle", "J", (jlong) file);
 }
 
-static inline FILE *__getFileHandle(JNIEnv *env, jobject _this)
+static inline FILE *__getFileHandle(jref _this)
 {
-    jobject fd = __getFileDescriptor(env, _this);
+    jref fd = __getFileDescriptor(_this);
 
     // private long handle;
-    jclass c = (*env)->GetObjectClass(env, fd);
-    return (FILE *) (*env)->GetLongField(env, fd, (*env)->GetFieldID(env, c, "handle", "J"));
+//    jclass c = (*env)->GetObjectClass(env, fd);
+//    return (FILE *) (*env)->GetLongField(env, fd, (*env)->GetFieldID(env, c, "handle", "J"));
+    return (FILE *) fd->getLongField("handle", "J");
 }
 
-static void __closeFile(JNIEnv *env, jobject _this)
+static inline void __closeFile(jref _this)
 {
-    FILE *file = __getFileHandle(env, _this);
+    FILE *file = __getFileHandle(_this);
     if (fclose(file) != 0) {
-        jclass c = (*env)->FindClass(env, S(java_io_IOException));
-        (*env)->ThrowNew(env, c, NULL);
+        throw IOException();
     }
 }

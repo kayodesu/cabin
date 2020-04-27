@@ -5,10 +5,11 @@
 #include "../../jnidef.h"
 #include "../../../symbol.h"
 #include "helper.h"
+#include "../../../objects/array_object.h"
 
 
 // private static native void initIDs();
-static void initIDs(JNIEnv *env, jobject _this)
+static void initIDs(jclsref clazz)
 {
 //    jvm_abort("error\n");
     // todo
@@ -19,12 +20,12 @@ static void initIDs(JNIEnv *env, jobject _this)
  *
  * private native void open0(String name, boolean append) throws FileNotFoundException;
  */
-static void open0(JNIEnv *env, jobject _this, jstring name, jboolean append)
+static void open0(jref _this, jstrref name, jboolean append)
 {
     if (append)
-        __openFile(env, _this, name, "ab");
+        __openFile(_this, name, "ab");
     else
-        __openFile(env, _this, name, "wb");
+        __openFile(_this, name, "wb");
 }
 
 /**
@@ -36,7 +37,7 @@ static void open0(JNIEnv *env, jobject _this, jstring name, jboolean append)
  *
  * private native void write(int b, boolean append) throws IOException;
  */
-static void write(JNIEnv *env, jobject _this, jint b, jboolean append)
+static void write(jref _this, jint b, jboolean append)
 {
     jvm_abort("error\n"); // todo
 }
@@ -51,9 +52,9 @@ static void write(JNIEnv *env, jobject _this, jint b, jboolean append)
  * @exception IOException If an I/O error has occurred.
  */
 // private native void writeBytes(byte b[], int off, int len, boolean append) throws IOException;
-static void writeBytes(JNIEnv *env, jobject _this, jbyteArray b, jint off, jint len, jboolean append)
+static void writeBytes(jref _this, jarrref b, jint off, jint len, jboolean append)
 {
-    jbyte *data = (*env)->GetByteArrayElements(env, b, NULL);
+    auto data = (jbyte *) b->data;
 
     // todo 这里默认输出到了控制台，是不对的
     // todo 应该根据_this来选择输出位置
@@ -85,9 +86,9 @@ static void writeBytes(JNIEnv *env, jobject _this, jbyteArray b, jint off, jint 
 }
 
 // private native void close0() throws IOException;
-static void close0(JNIEnv *env, jobject _this)
+static void close0(jref _this)
 {
-    __closeFile(env, _this);
+    __closeFile(_this);
 }
 
 static JNINativeMethod methods[] = {

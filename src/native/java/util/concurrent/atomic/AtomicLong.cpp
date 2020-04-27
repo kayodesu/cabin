@@ -1,4 +1,5 @@
 #include "../../../../jnidef.h"
+#include "../../../../../vmdef.h"
 
 /*
  * Author: Yo Ka
@@ -10,7 +11,7 @@
  *
  * private static native boolean VMSupportsCS8();
  */
-static jboolean VMSupportsCS8(JNIEnv *env, jclass clazz)
+static jboolean VMSupportsCS8(jclsref clazz)
 {
 /*
  * 	stack := frame.OperandStack()

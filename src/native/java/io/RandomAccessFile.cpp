@@ -1,4 +1,5 @@
 #include "../../jnidef.h"
+#include "../../../vmdef.h"
 
 /*
  * Author: Yo Ka
@@ -20,61 +21,61 @@
  *
  * private native void open0(String name, int mode) throws FileNotFoundException;
  */
-static void open0(JNIEnv *env, jobject _this, jstring name, jint mode)
+static void open0(jref _this, jstrref name, jint mode)
 {
     jvm_abort("open0");
 }
 
 // private native void close0() throws IOException;
-static void close0(JNIEnv *env, jobject _this)
+static void close0(jref _this)
 {
     jvm_abort("close0");
 }
 
 // private native void writeBytes(byte b[], int off, int len) throws IOException;
-static void writeBytes(JNIEnv *env, jobject _this, jbyteArray b, jint off, jint len)
+static void writeBytes(jref _this, jarrref b, jint off, jint len)
 {
     jvm_abort("writeBytes");
 }
 
 // private native void write0(int b) throws IOException;
-static void write0(JNIEnv *env, jobject _this, jint b)
+static void write0(jref _this, jint b)
 {
     jvm_abort("write0");
 }
 
 // private native int readBytes(byte b[], int off, int len) throws IOException;
-static void readBytes(JNIEnv *env, jobject _this, jbyteArray b, jint off, jint len)
+static void readBytes(jref _this, jarrref b, jint off, jint len)
 {
     jvm_abort("readBytes");
 }
 
 // public native int read() throws IOException;
-static void read(JNIEnv *env, jobject _this)
+static void read(jref _this)
 {
     jvm_abort("read");
 }
 
 // private native void seek0(long pos) throws IOException;
-static void seek0(JNIEnv *env, jobject _this, jlong pos)
+static void seek0(jref _this, jlong pos)
 {
     jvm_abort("seek0");
 }
 
 // public native long getFilePointer() throws IOException;
-static jlong getFilePointer(JNIEnv *env, jobject _this)
+static jlong getFilePointer(jref _this)
 {
     jvm_abort("getFilePointer");
 }
 
 // public native long length() throws IOException;
-static jlong length(JNIEnv *env, jobject _this)
+static jlong length(jref _this)
 {
     jvm_abort("length");
 }
 
 // public native void setLength(long newLength) throws IOException;
-static void setLength(JNIEnv *env, jobject _this, jlong newLength)
+static void setLength(jref _this, jlong newLength)
 {
     jvm_abort("setLength");
 }

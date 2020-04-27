@@ -13,20 +13,20 @@ using namespace std;
 using namespace std::filesystem;
 
 // private static native void initIDs();
-static void initIDs(JNIEnv *env, jclass clazz)
+static void initIDs(jclsref clazz)
 {
     // todo
 }
 
 // private native String getDriveDirectory(int drive);
-static void getDriveDirectory(JNIEnv *env, jobject _this, jint drive)
+static void getDriveDirectory(jref _this, jint drive)
 {
     // todo
     jvm_abort("getDriveDirectory");
 }
 
 // private native String canonicalize0(String path) throws IOException;
-static jstrref canonicalize0(JNIEnv *env, jobject _this, jstrref path)
+static jstrref canonicalize0(jref _this, jstrref path)
 {
     // todo 怎么处理路径？？？
     /*
@@ -47,7 +47,7 @@ static jstrref canonicalize0(JNIEnv *env, jobject _this, jstrref path)
 }
 
 // public native int getBooleanAttributes(File f);
-static jint getBooleanAttributes(JNIEnv *env, jobject _this, jref f)
+static jint getBooleanAttributes(jref _this, jref f)
 {
     auto __path = f->getRefField("path", "Ljava/lang/String;")->toUtf8();
 
@@ -66,7 +66,7 @@ static jint getBooleanAttributes(JNIEnv *env, jobject _this, jref f)
 }
 
 // public native long getLastModifiedTime(File f);
-static jlong getLastModifiedTime(JNIEnv *env, jobject _this, jref f)
+static jlong getLastModifiedTime(jref _this, jref f)
 {
     // todo
     auto __path = f->getRefField("path", "Ljava/lang/String;")->toUtf8();
@@ -81,7 +81,7 @@ static jlong getLastModifiedTime(JNIEnv *env, jobject _this, jref f)
 }
 
 // public native long getLength(File f);
-static jlong getLength(JNIEnv *env, jobject _this, jref f)
+static jlong getLength(jref _this, jref f)
 {
     // todo
     auto __path = f->getRefField("path", "Ljava/lang/String;")->toUtf8();

@@ -1,27 +1,28 @@
 #include "../../jnidef.h"
+#include "../../../vmdef.h"
 
 /*
  * Author: Yo Ka
  */
 
 // public static native String getJdkSpecialVersion()
-static jstring getJdkSpecialVersion(JNIEnv *env, jclass clazz)
+static jstring getJdkSpecialVersion(jclsref clazz)
 {
     jvm_abort("getJdkSpecialVersion"); // todo
 }
 
 // public static native String getJvmSpecialVersion()
-static jstring getJvmSpecialVersion(JNIEnv *env, jclass clazz)
+static jstring getJvmSpecialVersion(jclsref clazz)
 {
     jvm_abort("getJvmSpecialVersion"); // todo
 }
 
-static void getJdkVersionInfo(JNIEnv *env, jclass clazz)
+static void getJdkVersionInfo(jclsref clazz)
 {
     jvm_abort("getJdkVersionInfo"); // todo
 }
 
-static jboolean getJvmVersionInfo(JNIEnv *env, jclass clazz)
+static jboolean getJvmVersionInfo(jclsref clazz)
 {
     jvm_abort("getJvmVersionInfo"); // todo
 }

@@ -2,6 +2,7 @@
  * Author: Yo Ka
  */
 
+#include <vector>
 #include "../../../objects/object.h"
 #include "../../../objects/class.h"
 #include "../../../objects/field.h"
@@ -11,6 +12,7 @@
 #include "../../../runtime/thread_info.h"
 #include "../../jni_inner.h"
 
+using namespace std;
 using namespace utf8;
 using namespace slot;
 
@@ -20,14 +22,13 @@ using namespace slot;
  * private static native Class<?> forName0
  *  (String name, boolean initialize, ClassLoader loader, Class<?> caller) throws ClassNotFoundException;
  */
-static jclsref forName0(JNIEnv *env, jclsref clazz, jstrref name, jboolean initialize, jref loader, jclsref caller)
+static jclsref forName0(jclsref clazz, jstrref name, jboolean initialize, jref loader, jclsref caller)
 {
     const utf8_t *utf8_name = name->toUtf8(); // 形如 xxx.xx.xx 的形式
 
     Class *c = loadClass(loader, dots2SlashDup(utf8_name));
     if (c == nullptr) {
-        Class *ec = loadClass(loader, S(java_lang_ClassNotFoundException));
-        env->ThrowNew(to_jclass(ec), utf8_name);
+        throw ClassNotFoundException();
     }
     if (initialize) {
         initClass(c);
@@ -41,13 +42,11 @@ static jclsref forName0(JNIEnv *env, jclsref clazz, jstrref name, jboolean initi
  *
  * static native Class<?> getPrimitiveClass(String name);
  */
-static jclsref getPrimitiveClass(JNIEnv *env, jclsref clazz, jstring name)
+static jclsref getPrimitiveClass(jclsref clazz, jstrref name)
 {
     // // 这里得到的 class name 是诸如 "int, float" 之类的 primitive type
-    const char *class_name = env->GetStringUTFChars(name, NULL); 
-    Class *c = loadBootClass(class_name);
-    env->ReleaseStringUTFChars(name, class_name);
-    return c;
+    const char *class_name = name->toUtf8();;
+    return loadBootClass(class_name);
 }
 
 /*
@@ -66,9 +65,9 @@ static jclsref getPrimitiveClass(JNIEnv *env, jclsref clazz, jstring name)
  *
  * private native String getName0();
  */
-static jstring getName0(JNIEnv *env, jclsref _this)
+static jstrref getName0(jclsref _this)
 {
-    return env->NewStringUTF(slash2DotsDup(_this->className));
+    return newString(slash2DotsDup(_this->className));
 }
 
 /**
@@ -117,10 +116,10 @@ static jstring getName0(JNIEnv *env, jclsref _this)
  *
  * private static native boolean desiredAssertionStatus0(Class<?> clazz);
  */
-static jboolean desiredAssertionStatus0(JNIEnv *env, jclsref clazz)
+static jboolean desiredAssertionStatus0(jclsref clazz)
 {
     // todo 本vm不讨论断言。desiredAssertionStatus0（）方法把false推入操作数栈顶
-    return JNI_FALSE;
+    return jfalse;
 }
 
 /**
@@ -155,9 +154,9 @@ static jboolean desiredAssertionStatus0(JNIEnv *env, jclsref clazz)
  *
  * public native boolean isInstance(Object obj);
  */
-static jboolean isInstance(JNIEnv *env, jclass _this, jobject obj)
+static jboolean isInstance(jclsref _this, jref obj)
 {
-    return (obj != nullptr && env->IsInstanceOf(obj, _this)) ? JNI_TRUE : JNI_FALSE;
+    return (obj != nullptr && obj->isInstanceOf(_this)) ? jtrue : jfalse;
 }
 
 /**
@@ -185,7 +184,7 @@ static jboolean isInstance(JNIEnv *env, jclass _this, jobject obj)
  *
  * public native boolean isAssignableFrom(Class<?> cls);
  */
-static jboolean isAssignableFrom(JNIEnv *env, jclsref _this, jclsref cls)
+static jboolean isAssignableFrom(jclsref _this, jclsref cls)
 {
   //  auto _this = frame->getLocalAsRef<Class>(0);
   //  auto cls = frame->getLocalAsRef<Class>(1);
@@ -194,7 +193,7 @@ static jboolean isAssignableFrom(JNIEnv *env, jclsref _this, jclsref cls)
     }
 
     bool b = cls->isSubclassOf(_this);
-    return b ? JNI_TRUE : JNI_FALSE;
+    return b ? jtrue : jfalse;
 }
 
 /*
@@ -202,10 +201,9 @@ static jboolean isAssignableFrom(JNIEnv *env, jclsref _this, jclsref cls)
  *
  * public native boolean isInterface();
  */
-static jboolean isInterface(JNIEnv *env, jclsref _this)
+static jboolean isInterface(jclsref _this)
 {
- //   auto _this = frame->getLocalAsRef<Class>(0);
-    return _this->isInterface() ? JNI_TRUE : JNI_FALSE;
+    return _this->isInterface() ? jtrue : jfalse;
 }
 
 /*
@@ -213,18 +211,16 @@ static jboolean isInterface(JNIEnv *env, jclsref _this)
  *
  * public native boolean isArray();
  */
-static jboolean isArray(JNIEnv *env, jclsref _this)
+static jboolean isArray(jclsref _this)
 {
-  //  auto _this = frame->getLocalAsRef<Class>(0);
-    return _this->isArrayClass() ? JNI_TRUE : JNI_FALSE;  // todo
+    return _this->isArrayClass() ? jtrue : jfalse;  // todo
 }
 
 // public native boolean isPrimitive();
-static jboolean isPrimitive(JNIEnv *env, jclsref _this)
+static jboolean isPrimitive(jclsref _this)
 {
-   // auto _this = frame->getLocalAsRef<Class>(0);
     bool b = _this->isPrimClass();
-    return b ? JNI_TRUE : JNI_FALSE;
+    return b ? jtrue : jfalse;
 }
 
 /**
@@ -240,14 +236,10 @@ static jboolean isPrimitive(JNIEnv *env, jclsref _this)
  *
  * public native Class<? super T> getSuperclass();
  */
-static jclass getSuperclass(JNIEnv *env, jclsref _this)
+static jclsref getSuperclass(jclsref _this)
 {
- //   auto _this = frame->getLocalAsRef<Class>(0);
-
-    //Class *c = loadClass(frame->method->clazz->loader, _this->className);
-    jclass c = env->FindClass(_this->className);
-    return env->GetSuperclass(c);
-  //  return c->superClass;
+    Class *c = loadClass(_this->clazz->loader, _this->className);
+    return c->superClass;
 }
 
 /**
@@ -295,7 +287,7 @@ static jclass getSuperclass(JNIEnv *env, jclsref _this)
  * @return an array of interfaces implemented by this class.
  */
 //private native Class<?>[] getInterfaces0();
-static jarrref getInterfaces0(JNIEnv *env, jclsref _this)
+static jarrref getInterfaces0(jclsref _this)
 {
   //  auto _this = frame->getLocalAsRef<Class>(0);
 
@@ -317,7 +309,7 @@ static jarrref getInterfaces0(JNIEnv *env, jclsref _this)
  *
  * public native Class<?> getComponentType();
  */
-static jclsref getComponentType(JNIEnv *env, jclsref _this)
+static jclsref getComponentType(jclsref _this)
 {
     if (_this->isArrayClass()) {
         return _this->componentClass();
@@ -354,7 +346,7 @@ static jclsref getComponentType(JNIEnv *env, jclsref _this)
  * @since JDK1.1
  */
 //public native int getModifiers();
-static jint getModifiers(JNIEnv *env, jclsref _this)
+static jint getModifiers(jclsref _this)
 {
    // auto _this = frame->getLocalAsRef<Class>(0);
     return _this->modifiers;
@@ -369,7 +361,7 @@ static jint getModifiers(JNIEnv *env, jclsref _this)
  *
  * public native Object[] getSigners();
  */
-static jarrref getSigners(JNIEnv *env, jclsref _this)
+static jarrref getSigners(jclsref _this)
 {
  //   auto _this = frame->getLocalAsRef<Class>(0);
 
@@ -381,13 +373,13 @@ static jarrref getSigners(JNIEnv *env, jclsref _this)
  * Set the signers of this class.
  */
 // native void setSigners(Object[] signers);
-static void setSigners(JNIEnv *env, jclsref _this, jarrref signers)
+static void setSigners(jclsref _this, jarrref signers)
 {
     jvm_abort("setSigners");
 }
 
 // private native Object[] getEnclosingMethod0();
-static jarrref getEnclosingMethod0(JNIEnv *env, jclsref _this)
+static jarrref getEnclosingMethod0(jclsref _this)
 {
     if (_this->enclosing.clazz == nullptr) {
         return nullptr;
@@ -405,33 +397,33 @@ static jarrref getEnclosingMethod0(JNIEnv *env, jclsref _this)
  * Returns the ProtectionDomain of this class.
  */
 //private native java.security.ProtectionDomain getProtectionDomain0();
-static jref getProtectionDomain0(JNIEnv *env, jclsref _this)
+static jref getProtectionDomain0(jclsref _this)
 {
     jvm_abort("getProtectionDomain0");
 }
 
 // Generic signature handling
 //private native String getGenericSignature0();
-static void getGenericSignature0(JNIEnv *env, jclsref _this)
+static void getGenericSignature0(jclsref _this)
 {
     jvm_abort("getGenericSignature0");
 }
 
 // Annotations handling
 //native byte[] getRawAnnotations();
-static jarrref getRawAnnotations(JNIEnv *env, jclsref _this)
+static jarrref getRawAnnotations(jclsref _this)
 {
     jvm_abort("getRawAnnotations");
 }
 
 // native byte[] getRawTypeAnnotations();
-static jarrref getRawTypeAnnotations(JNIEnv *env, jclsref _this)
+static jarrref getRawTypeAnnotations(jclsref _this)
 {
     jvm_abort("getRawTypeAnnotations");
 }
 
 // native ConstantPool getConstantPool();
-static jref getConstantPool(JNIEnv *env, jclsref _this)
+static jref getConstantPool(jclsref _this)
 {
   //  auto _this = frame->getLocalAsRef<Class>(0);
 
@@ -443,13 +435,12 @@ static jref getConstantPool(JNIEnv *env, jclsref _this)
 }
 
 // private native Field[] getDeclaredFields0(boolean publicOnly);
-static jarrref getDeclaredFields0(JNIEnv *env, jclsref _this, jboolean publicOnly)
+static jarrref getDeclaredFields0(jclsref _this, jboolean publicOnly)
 {
  //   auto _this = frame->getLocalAsRef<Class>(0);
  //   bool publicOnly = frame->getLocalAsBool(1);
 
-//    Class *cls = loadClass(frame->method->clazz->loader, _this->className);
-    Class *cls = (Class *) env->FindClass(_this->className);
+    Class *cls = loadClass(_this->clazz->loader, _this->className);
     jint fieldsCount = publicOnly ? cls->publicFieldsCount : cls->fields.size();
 
     Class *fieldClass = loadBootClass(S(java_lang_reflect_Field));
@@ -493,13 +484,12 @@ static jarrref getDeclaredFields0(JNIEnv *env, jclsref _this, jboolean publicOnl
  *
  * private native Method[] getDeclaredMethods0(boolean publicOnly);
  */
-static jarrref getDeclaredMethods0(JNIEnv *env, jclsref _this, jboolean publicOnly)
+static jarrref getDeclaredMethods0(jclsref _this, jboolean publicOnly)
 {
   //  auto _this = frame->getLocalAsRef<Class>(0);
     //bool publicOnly = frame->getLocalAsBool(1);
 
-  //  Class *cls = loadClass(frame->method->clazz->loader, _this->className);
-    Class *cls = (Class *) env->FindClass(_this->className);
+    Class *cls = loadClass(_this->clazz->loader, _this->className);
     jint methodsCount = publicOnly ? cls->publicMethodsCount : cls->methods.size();
 
     Class *methodClass = loadBootClass(S(java_lang_reflect_Method));
@@ -541,13 +531,12 @@ static jarrref getDeclaredMethods0(JNIEnv *env, jclsref _this, jboolean publicOn
 }
 
 // private native Constructor<T>[] getDeclaredConstructors0(boolean publicOnly);
-static jarrref getDeclaredConstructors0(JNIEnv *env, jclsref _this, jboolean publicOnly)
+static jarrref getDeclaredConstructors0(jclsref _this, jboolean publicOnly)
 {
   //  auto _this = frame->getLocalAsRef<Class>(0);
  //   bool publicOnly = frame->getLocalAsBool(1);
 
- //   Class *cls = loadClass(frame->method->clazz->loader, _this->className);
-    Class *cls = (Class *) env->FindClass(_this->className);
+   Class *cls = loadClass(_this->clazz->loader, _this->className);
 
     std::vector<Method *> constructors = cls->getConstructors(publicOnly);
     int constructorsCount = constructors.size();
@@ -592,7 +581,7 @@ static jarrref getDeclaredConstructors0(JNIEnv *env, jclsref _this, jboolean pub
  *
  * private native Class<?>[] getDeclaredClasses0();
  */
-static jarrref getDeclaredClasses0(JNIEnv *env, jclsref _this)
+static jarrref getDeclaredClasses0(jclsref _this)
 {
     jvm_abort("getDeclaredClasses0");
 }
@@ -618,7 +607,7 @@ static jarrref getDeclaredClasses0(JNIEnv *env, jclsref _this)
  *
  * private native Class<?> getDeclaringClass0();
  */
-static jclass getDeclaringClass0(JNIEnv *env, jclsref _this)
+static jclsref getDeclaringClass0(jclsref _this)
 {
   //  Class *_this = (frame->getLocalAsRef<Class>(0));
     if (_this->isArrayClass()) {
@@ -632,8 +621,7 @@ static jclass getDeclaringClass0(JNIEnv *env, jclsref _this)
         return nullptr;
     } else {
         *last_dollar = 0;
-       // return loadClass(frame->method->clazz->loader, buf);
-        return env->FindClass(buf);
+       return loadClass(_this->clazz->loader, buf);
     }
 }
 

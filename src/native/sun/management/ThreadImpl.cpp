@@ -14,7 +14,7 @@
  *                      long[] ids, boolean lockedMonitors, boolean lockedSynchronizers, int maxDepth);
  *
  */
-static jarrref dumpThreads0(JNIEnv *env, jclass clazz, 
+static jarrref dumpThreads0(jclsref clazz, 
             jarrref ids, jboolean lockedMonitors, jboolean lockedSynchronizers, jint maxDepth)
 {
     jarrref threadInfos;

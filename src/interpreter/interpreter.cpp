@@ -1508,23 +1508,23 @@ static void callJNIMethod(Frame *frame)
     assert(frame != nullptr && frame->method != nullptr);
     assert(frame->method->isNative() && frame->method->native_method != nullptr);
 
-    JNIEnv *jni_env;
-    jint ret = JVM_GetEnv(nullptr, (void **)&jni_env, 0);
-    assert(ret == JNI_OK);
+    // JNIEnv *jni_env;
+    // jint ret = JVM_GetEnv(nullptr, (void **)&jni_env, 0);
+    // assert(ret == JNI_OK);
 
-    const_cast<JNINativeInterface_ *>(jni_env->functions)->reserved3 = (void *) frame;
+    // const_cast<JNINativeInterface_ *>(jni_env->functions)->reserved3 = (void *) frame;
 
     Method *m = frame->method;
-    int arg_count_max = 1 /* JNIEnv* */ + m->arg_slot_count + (m->isStatic() ? 1 /* jclsref */ : 0);
+    int arg_count_max = m->arg_slot_count + (m->isStatic() ? 1 /* jclsref */ : 0);
 
     ffi_type *arg_types[arg_count_max];
     void *arg_values[arg_count_max];
 
     // 准备参数
     int argc = 0;
-    arg_types[argc] = &ffi_type_pointer;
-    arg_values[argc] = &jni_env;
-    argc++;
+    // arg_types[argc] = &ffi_type_pointer;
+    // arg_values[argc] = &jni_env;
+    // argc++;
 
     const slot_t *lvars = frame->getLocalVars();
     if (m->isStatic()) {

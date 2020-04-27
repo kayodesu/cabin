@@ -156,7 +156,7 @@ Class *loadBootClass(const utf8_t *name)
  * Just used by native methods.
  * 所以导出为C接口。
  */
-extern "C" const utf8_t *getBootPackage(const utf8_t *name)
+const utf8_t *getBootPackage(const utf8_t *name)
 {
     auto iter = bootPackages.find(name);
     return iter != bootPackages.end() ? *iter : nullptr;
@@ -166,18 +166,9 @@ extern "C" const utf8_t *getBootPackage(const utf8_t *name)
  * Just used by native methods.
  * 所以导出为C接口。
  */
-extern "C" void *getBootPackages()
+utf8_set &getBootPackages()
 {
-    auto size = bootPackages.size();
-
-    auto ao = newArray(loadArrayClass(S(array_java_lang_String)), size);
-    int i = 0;
-    for (auto pkg : bootPackages) {
-        ao->set(i, newString(pkg));
-        i++;
-    }
-
-    return (void *) ao;
+    return bootPackages;
 }
 
 Class *findLoadedClass(Object *classLoader, const utf8_t *name)

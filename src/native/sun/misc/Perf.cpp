@@ -2,11 +2,14 @@
  * Author: Yo Ka
  */
 
-#include "../../jnidef.h"
-#include "../../ifn.h"
+#include "../../jni_inner.h"
+#include "../../../slot.h"
+#include "../../../objects/class.h"
+#include "../../../runtime/frame.h"
+#include "../../../interpreter/interpreter.h"
 
 // public native ByteBuffer createLong(String name, int variability, int units, long value);
-static jobject createLong(JNIEnv *env, jobject _this, jstring name, jint variability, jint units, jlong value)
+static jref createLong(jref _this, jstrref name, jint variability, jint units, jlong value)
 {
     // todo 这函数是干嘛的？？？？？？？？？？？？？？？？？？
 /*
@@ -24,11 +27,11 @@ static jobject createLong(JNIEnv *env, jobject _this, jstring name, jint variabi
 	frame.Thread().InvokeMethod(allocate)
  */
 
-    jclass c = (*env)->FindClass(env, "java/nio/ByteBuffer");
-    ifn.initClass(c);
+    Class *bb = loadBootClass("java/nio/ByteBuffer");
+    initClass(bb);
 
-    jmethodID m = (*env)->GetStaticMethodID(env, c, "allocate", "(I)Ljava/nio/ByteBuffer;");
-    return (*env)->CallStaticObjectMethod(env, c, m, sizeof(jlong));
+    Method *allocate = bb->getDeclaredStaticMethod("allocate", "(I)Ljava/nio/ByteBuffer;");
+    return RSLOT(execJavaFunc(allocate, { slot::islot(sizeof(jlong)) }));
 }
 
 static JNINativeMethod methods[] = {

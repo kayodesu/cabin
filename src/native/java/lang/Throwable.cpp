@@ -14,11 +14,12 @@
 using namespace std;
 
 // private native Throwable fillInStackTrace(int dummy);
-static jref fillInStackTrace(JNIEnv *env, jref _this, jint dummy)
+static jref fillInStackTrace(jref _this, jint dummy)
 {
-    Frame *frame = (Frame *) env->functions->reserved3;
+    Thread *thread = getCurrentThread();
 
-    int num = getCurrentThread()->countStackFrames();
+    Frame *frame = thread->getTopFrame();
+    int num = thread->countStackFrames();
     /*
      * 栈顶两帧正在执行 fillInStackTrace(int) 和 fillInStackTrace() 方法，所以需要跳过这两帧。
      * 这两帧下面的几帧正在执行异常类的构造函数，所以也要跳过。
@@ -83,7 +84,7 @@ static jref fillInStackTrace(JNIEnv *env, jref _this, jint dummy)
 }
 
 // native StackTraceElement getStackTraceElement(int index);
-static jref getStackTraceElement(JNIEnv *env, jref _this, jint index)
+static jref getStackTraceElement(jref _this, jint index)
 {
     auto backtrace = (Array *) _this->getRefField(S(backtrace), S(sig_java_lang_Object));
     assert(backtrace != nullptr);
@@ -91,7 +92,7 @@ static jref getStackTraceElement(JNIEnv *env, jref _this, jint index)
 }
 
 // native int getStackTraceDepth();
-static jint getStackTraceDepth(JNIEnv *env, jref _this)
+static jint getStackTraceDepth(jref _this)
 {
     auto backtrace = (Array *) _this->getRefField(S(backtrace), S(sig_java_lang_Object));
     assert(backtrace != nullptr);

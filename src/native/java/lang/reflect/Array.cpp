@@ -1,4 +1,7 @@
 #include "../../../jnidef.h"
+#include "../../../../vmdef.h"
+#include "../../../../objects/class.h"
+#include "../../../../objects/array_object.h"
 
 /*
  * Author: Yo Ka
@@ -6,32 +9,29 @@
 
 // public static native Object get(Object array, int index)
 //              throws IllegalArgumentException, ArrayIndexOutOfBoundsException;
-static jobject get(JNIEnv *env, jclass clazz, jobject array, jint index)
+static jref get(jclsref clazz, jref array, jint index)
 {
     jvm_abort("get");
 }
 
 // public static native void set(Object array, int index, Object value)
 //               throws IllegalArgumentException, ArrayIndexOutOfBoundsException;
-static void set(JNIEnv *env, jclass clazz, jobject array, jint index, jobject value)
+static void set(jclsref clazz, jref array, jint index, jref value)
 {
     jvm_abort("set");
 }
 
 // public static native int getLength(Object array) throws IllegalArgumentException;
-static jint getLength(JNIEnv *env, jclass clazz, jobject array)
+static jint getLength(jclsref clazz, jref array)
 {
     jvm_abort("getLength");
 }
 
 // private static native Object newArray(Class<?> componentType, int length)
 //                  throws NegativeArraySizeException;
-static jobject __newArray(JNIEnv *env, jclass clazz, jclass componentType, jint length)
+static jref __newArray(jclsref clazz, jclsref componentType, jint length)
 {
-    return (*env)->NewObjectArray(env, length, componentType, NULL);
-
-    // auto arr = newArray(componentType->arrayClass(), length);
-    // return arr;
+    return newArray(componentType->arrayClass(), length);
 }
 
 static JNINativeMethod methods[] = {

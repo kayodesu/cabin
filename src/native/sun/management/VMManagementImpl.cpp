@@ -7,35 +7,34 @@
  */
 
 // private native static String getVersion0();
-static jstring getVersion0(JNIEnv *env, jclass clazz)
+static jstrref getVersion0(jclsref clazz)
 {
     // Management Version
-    return env->NewStringUTF(MANAGEMENT_VERSION);
-    // return newString(MANAGEMENT_VERSION);
+    return newString(MANAGEMENT_VERSION);
 }
 
 // private native static void initOptionalSupportFields();
-static void initOptionalSupportFields(JNIEnv *env, jclass clazz)
+static void initOptionalSupportFields(jclsref clazz)
 {
     // todo
 }
 
 // public native boolean isThreadContentionMonitoringEnabled();
-static jboolean isThreadContentionMonitoringEnabled(JNIEnv *env, jobject _this)
+static jboolean isThreadContentionMonitoringEnabled(jref _this)
 {
-    return JNI_TRUE; // todo
+    return jtrue; // todo
 }
 
 // public native boolean isThreadCpuTimeEnabled();
-static jboolean isThreadCpuTimeEnabled(JNIEnv *env, jobject _this)
+static jboolean isThreadCpuTimeEnabled(jref _this)
 {
-    return JNI_TRUE; // todo
+    return jtrue; // todo
 }
 
 // public native boolean isThreadAllocatedMemoryEnabled();
-static jboolean isThreadAllocatedMemoryEnabled(JNIEnv *env, jobject _this)
+static jboolean isThreadAllocatedMemoryEnabled(jref _this)
 {
-    return JNI_TRUE; // todo
+    return jfalse; // todo
 }
 
 // public native long getTotalClassCount();

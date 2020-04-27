@@ -1,29 +1,39 @@
 #include "../../jnidef.h"
+#include "../../../vmdef.h"
+#include "../../../objects/string_object.h"
+#include "../../../objects/class_loader.h"
+#include "../../../objects/array_object.h"
 
 /*
  * Author: Yo Ka
  */
 
-const char *getBootPackage(const char *name);
-void *getBootPackages();
-
 // private static native String getSystemPackage0(String name);
-static jstring getSystemPackage0(JNIEnv *env, jclass clazz, jstring name)
+static jstrref getSystemPackage0(jstrref name)
 {
-    const char *utf8_name = (*env)->GetStringUTFChars(env, name, NULL);
+    const char *utf8_name = name->toUtf8();
 
     const char *pkg = getBootPackage(utf8_name);
-    if (pkg == NULL) {
-        return NULL;
+    if (pkg == nullptr) {
+        return nullptr;
     } else {
-        return  (*env)->NewStringUTF(env, pkg);
+        return newString(pkg);
     }
 }
 
 // private static native String[] getSystemPackages0();
-static jobjectArray getSystemPackages0(JNIEnv *env, jclass clazz)
+static jarrref getSystemPackages0()
 {
-    return (jobjectArray) getBootPackages();
+    utf8_set &packages = getBootPackages();
+    auto size = packages.size();
+
+    auto ao = newArray(loadArrayClass(S(array_java_lang_String)), size);
+    auto p = (Object **) ao->data;
+    for (auto pkg : packages) {
+        *p++ = newString(pkg);
+    }
+
+    return ao;
 }
 
 static JNINativeMethod methods[] = {

@@ -1,42 +1,42 @@
 #include <minizip/unzip.h>
 #include "../../../jnidef.h"
 #include "../../../../symbol.h"
+#include "../../../../vmdef.h"
+#include "../../../../objects/string_object.h"
 
 /*
  * Author: Yo Ka
  */
 
 // private static native void initIDs();
-void initIDs(JNIEnv *env, jclass clazz)
+void initIDs(jclsref clazz)
 {
     // todo
 }
 
 // private static native long open(String name, int mode, long lastModified, boolean usemmap) throws IOException;
-jlong __open(JNIEnv *env, jclass clazz, jstring name, jint mode, jlong lastModified, jboolean usemmap)
+jlong __open(jclsref clazz, jstrref name, jint mode, jlong lastModified, jboolean usemmap)
 {
-    const char *utf8 = (*env)->GetStringUTFChars(env, name, NULL);
+    const char *utf8 = name->toUtf8();
 
     // todo 其他几个参数怎么搞？？
     unzFile jzfile = unzOpen64(utf8);
     if (jzfile == NULL) {
-        jclass c = (*env)->FindClass(env, S(java_io_IOException));
-        (*env)->ThrowNew(env, c, utf8);
-        // throw IOException(utf8);
+        throw IOException(utf8);
     }
 
     return (jlong) (jzfile);
 }
 
 // private static native boolean startsWithLOC(long jzfile);
-jboolean startsWithLOC(JNIEnv *env, jclass clazz, jlong jzfile)
+jboolean startsWithLOC(jclsref clazz, jlong jzfile)
 {
     // todo
     return JNI_TRUE;
 }
 
 // private static native int getTotal(long jzfile);
-jint getTotal(JNIEnv *env, jclass clazz, jlong jzfile)
+jint getTotal(jclsref clazz, jlong jzfile)
 {
     unz_global_info64 info;
     if (unzGetGlobalInfo64((unzFile) jzfile, &info) != UNZ_OK) {
@@ -47,7 +47,7 @@ jint getTotal(JNIEnv *env, jclass clazz, jlong jzfile)
 }
 
 // private static native long getNextEntry(long jzfile, int i);
-jlong getNextEntry(JNIEnv *env, jclass clazz, jlong jzfile, jint i)
+jlong getNextEntry(jclsref clazz, jlong jzfile, jint i)
 {
 /*
  * 	vars := frame.LocalVars()
@@ -64,13 +64,13 @@ jlong getNextEntry(JNIEnv *env, jclass clazz, jlong jzfile, jint i)
 }
 
 // // private static native void freeEntry(long jzfile, long jzentry);
-void freeEntry(JNIEnv *env, jclass clazz, jlong jzfile, jlong jzentry)
+void freeEntry(jclsref clazz, jlong jzfile, jlong jzentry)
 {
     // todo
 }
 
 // private static native long getEntry(long jzfile, byte[] name, boolean addSlash);
-jlong getEntry(JNIEnv *env, jclass clazz, jlong jzfile, jbyteArray name, jboolean addSlash)
+jlong getEntry(jclsref clazz, jlong jzfile, jarrref name, jboolean addSlash)
 {
     // todo
     /*
@@ -90,7 +90,7 @@ jlong getEntry(JNIEnv *env, jclass clazz, jlong jzfile, jbyteArray name, jboolea
 }
 
 // private static native byte[] getEntryBytes(long jzentry, int type);
-jbyteArray getEntryBytes(JNIEnv *env, jclass clazz, jlong jzentry, jint type)
+jbyteArray getEntryBytes(jclsref clazz, jlong jzentry, jint type)
 {
     jvm_abort("getEntryBytes");
 // todo
@@ -125,7 +125,7 @@ jbyteArray getEntryBytes(JNIEnv *env, jclass clazz, jlong jzentry, jint type)
 }
 
 // private static native int getEntryFlag(long jzentry);
-jint getEntryFlag(JNIEnv *env, jclass clazz, jlong jzentry)
+jint getEntryFlag(jclsref clazz, jlong jzentry)
 {
     jvm_abort("getEntryFlag");
 /*
@@ -139,7 +139,7 @@ jint getEntryFlag(JNIEnv *env, jclass clazz, jlong jzentry)
 }
 
 // private static native long getEntryTime(long jzentry);
-jlong getEntryTime(JNIEnv *env, jclass clazz, jlong jzentry)
+jlong getEntryTime(jclsref clazz, jlong jzentry)
 {
     jvm_abort("getEntryTime");
 /*
@@ -155,7 +155,7 @@ jlong getEntryTime(JNIEnv *env, jclass clazz, jlong jzentry)
 }
 
 // private static native long getEntryCrc(long jzentry);
-jlong getEntryCrc(JNIEnv *env, jclass clazz, jlong jzentry)
+jlong getEntryCrc(jclsref clazz, jlong jzentry)
 {
     jvm_abort("getEntryCrc");
     /*
@@ -169,7 +169,7 @@ jlong getEntryCrc(JNIEnv *env, jclass clazz, jlong jzentry)
 }
 
 // private static native long getEntrySize(long jzentry);
-jlong getEntrySize(JNIEnv *env, jclass clazz, jlong jzentry)
+jlong getEntrySize(jclsref clazz, jlong jzentry)
 {
     jvm_abort("getEntrySize");
 /*
@@ -183,7 +183,7 @@ jlong getEntrySize(JNIEnv *env, jclass clazz, jlong jzentry)
 }
 
 // private static native long getEntryCSize(long jzentry);
-jlong getEntryCSize(JNIEnv *env, jclass clazz, jlong jzentry)
+jlong getEntryCSize(jclsref clazz, jlong jzentry)
 {
     jvm_abort("getEntryCSize");
     /*
@@ -202,7 +202,7 @@ jlong getEntryCSize(JNIEnv *env, jclass clazz, jlong jzentry)
 }
 
 // private static native int getEntryMethod(long jzentry);
-jint getEntryMethod(JNIEnv *env, jclass clazz, jlong jzentry)
+jint getEntryMethod(jclsref clazz, jlong jzentry)
 {
     jvm_abort("getEntryMethod");
     /*
@@ -227,7 +227,7 @@ jint getEntryMethod(JNIEnv *env, jclass clazz, jlong jzentry)
 }
 
 // private static native int read(long jzfile, long jzentry, long pos, byte[] b, int off, int len);
-jint __read(JNIEnv *env, jclass clazz, jlong jzfile, jlong jzentry, jlong pos, jbyteArray b, jint off, jint len)
+jint __read(jclsref clazz, jlong jzfile, jlong jzentry, jlong pos, jbyteArray b, jint off, jint len)
 {
     jvm_abort("read");
 /*

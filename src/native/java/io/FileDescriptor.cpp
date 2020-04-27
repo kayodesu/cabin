@@ -3,22 +3,23 @@
  */
 
 #include "../../jnidef.h"
+#include "../../../vmdef.h"
 
 /*
  * This routine initializes JNI field offsets for the class
  *
- * private native void initIDs();
+ * private static native void initIDs();
  */
-static void initIDs(JNIEnv *env, jobject _this)
+static void initIDs(jclsref clazz)
 {
     // todo
 //    jvm_abort("error\n");
 }
 
 /*
- * private static native long set(int d);
+ * private native long set(int d);
  */
-static jlong set(JNIEnv *env, jobject _this, jint d)
+static jlong set(jref _this, jint d)
 {
     // todo
     return 123;
@@ -54,7 +55,7 @@ static jlong set(JNIEnv *env, jobject _this, jint d)
  *
  * public native void sync() throws SyncFailedException;
  */
-static void sync(JNIEnv *env, jobject _this)
+static void sync(jref _this)
 {
     jvm_abort("error\n"); // todo
 }

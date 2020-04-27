@@ -14,7 +14,7 @@ using namespace method_type;
 using namespace member_name;
 
 // static native int getConstant(int which);
-static jint getConstant(JNIEnv *env, jobject _this, jint which)
+static jint getConstant(jref _this, jint which)
 {
     // todo 啥意思
     if (which == 4)
@@ -24,7 +24,7 @@ static jint getConstant(JNIEnv *env, jobject _this, jint which)
 }
 
 // static native void init(MemberName self, Object ref);
-static void init(JNIEnv *env, jobject _this, jref self, jref ref)
+static void init(jref _this, jref self, jref ref)
 {
     jvm_abort("init");
 
@@ -70,7 +70,7 @@ static void init(JNIEnv *env, jobject _this, jref self, jref ref)
  *
  * static native MemberName resolve(MemberName self, Class<?> caller) throws LinkageError, ClassNotFoundException;
  */
-static jref resolve(JNIEnv *env, jobject _this, jref self, jref caller)
+static jref resolve(jref _this, jref self, jref caller)
 {
     // jref mn = frame->getLocalAsRef(0);
     // jref caller = frame->getLocalAsRef(1);

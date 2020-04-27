@@ -8,28 +8,28 @@
  */
 
 // private native int getSize0(Object constantPoolOop);
-static jint getSize0(JNIEnv *env, jobject _this, jref constantPoolOop)
+static jint getSize0(jref _this, jref constantPoolOop)
 {
     ConstantPool *cp = (ConstantPool *) constantPoolOop;
     return cp->size;
 }
 
 // private native Class getClassAt0(Object constantPoolOop, int i);
-static jclsref getClassAt0(JNIEnv *env, jobject _this, jref constantPoolOop, jint i)
+static jclsref getClassAt0(jref _this, jref constantPoolOop, jint i)
 {
     ConstantPool *cp = (ConstantPool *) constantPoolOop;
     return cp->resolveClass((u2)i);
 }
 
 // private native long getLongAt0(Object constantPoolOop, int i);
-static jlong getLongAt0(JNIEnv *env, jobject _this, jref constantPoolOop, jint i)
+static jlong getLongAt0(jref _this, jref constantPoolOop, jint i)
 {
     ConstantPool *cp = (ConstantPool *) constantPoolOop;
     return cp->_long((u2)i);
 }
 
 // private native String getUTF8At0(Object constantPoolOop, int i);
-static jstrref getUTF8At0(JNIEnv *env, jobject _this, jref constantPoolOop, jint i)
+static jstrref getUTF8At0(jref _this, jref constantPoolOop, jint i)
 {
     ConstantPool *cp = (ConstantPool *) constantPoolOop;
     return cp->resolveString(i);

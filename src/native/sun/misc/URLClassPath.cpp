@@ -1,14 +1,15 @@
 #include "../../jnidef.h"
+#include "../../../vmdef.h"
 
 /*
  * Author: Yo Ka
  */
 
 // private static native URL[] getLookupCacheURLs(ClassLoader var0);
-static jobjectArray getLookupCacheURLs(JNIEnv *env, jclass clazz)
+static jobjectArray getLookupCacheURLs(jclsref clazz)
 {
     // todo
-    return NULL;
+    return nullptr;
 }
 
 static JNINativeMethod methods[] = {

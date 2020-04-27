@@ -36,6 +36,9 @@ static inline Class *loadArrayClass(const utf8_t *arrClassName)
 
 using utf8_set = std::unordered_set<const utf8_t *, utf8::Hash, utf8::Comparator>;
 
+const utf8_t *getBootPackage(const utf8_t *name);
+utf8_set &getBootPackages();
+
 /*
  * @name: 全限定类名，不带 .class 后缀
  *

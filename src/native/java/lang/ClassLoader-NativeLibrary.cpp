@@ -3,9 +3,11 @@
  */
 
 #include "../../jnidef.h"
+#include "../../../vmdef.h"
+#include "../../../objects/object.h"
 
 // native long find(String name);
-static jlong find(JNIEnv *env, jobject _this, jstring name)
+static jlong find(jref _this, jstrref name)
 {
     // todo
 //    jref name = slot_getr(frame->local_vars + 1);
@@ -14,18 +16,20 @@ static jlong find(JNIEnv *env, jobject _this, jstring name)
 }
 
 // native void load(String name, boolean isBuiltin);
-static void load(JNIEnv *env, jobject _this, jstring name, jboolean isBuiltin)
+static void load(jref _this, jstrref name, jboolean isBuiltin)
 {
     // todo load
 
     // set boolean loaded is true
-    jclass c = (*env)->GetObjectClass(env, _this);
-    jfieldID id = (*env)->GetFieldID(env, c, "loaded", "Z");
-    (*env)->SetBooleanField(env, _this, id, jtrue);
+    _this->setBoolField("loaded", "Z", jtrue);
+
+//    jclass c = (*env)->GetObjectClass(env, _this);
+//    jfieldID id = (*env)->GetFieldID(env, c, "loaded", "Z");
+//    (*env)->SetBooleanField(env, _this, id, jtrue);
 }
 
 // native void unload(String name, boolean isBuiltin);
-static void unload(JNIEnv *env, jobject _this, jstring name, jboolean isBuiltin)
+static void unload(jref _this, jstrref name, jboolean isBuiltin)
 {
     // todo
 }

@@ -5,9 +5,11 @@
 #include "../../jnidef.h"
 #include "../../../symbol.h"
 #include "helper.h"
+#include "../../../vmdef.h"
+#include "../../../objects/array_object.h"
 
-// private native void initIDs();
-static void initIDs(JNIEnv *env, jobject _this)
+// private static native void initIDs();
+static void initIDs(jclsref clazz)
 {
 //    jvm_abort("error\n");
     // todo
@@ -18,9 +20,9 @@ static void initIDs(JNIEnv *env, jobject _this)
  *
  * private native void open0(String name) throws FileNotFoundException;
  */
-static void open0(JNIEnv *env, jobject _this, jstring name)
+static void open0(jref _this, jstrref name)
 {
-    __openFile(env, _this, name, "rb");
+    __openFile(_this, name, "rb");
 }
 
 /*
@@ -32,9 +34,9 @@ static void open0(JNIEnv *env, jobject _this, jstring name)
  *
  * private native int read0() throws IOException;
  */
-static jint read0(JNIEnv *env, jobject _this)
+static jint read0(jref _this)
 {
-    FILE *file = __getFileHandle(env, _this);
+    FILE *file = __getFileHandle(_this);
     int c = fgetc(file);
 
     return c;
@@ -49,10 +51,10 @@ static jint read0(JNIEnv *env, jobject _this)
  *
  * private native int readBytes(byte b[], int off, int len) throws IOException;
  */
-static jint readBytes(JNIEnv *env, jobject _this, jbyteArray b, jint off, jint len)
+static jint readBytes(jref _this, jarrref b, jint off, jint len)
 {
-    FILE *file = __getFileHandle(env, _this);
-    jbyte *data = (*env)->GetByteArrayElements(env, b, NULL);
+    FILE *file = __getFileHandle(_this);
+    auto data = (jbyte *) b->data;
     size_t n = fread(data + off, sizeof(jbyte), len, file);
     return n;
 }
@@ -83,7 +85,7 @@ static jint readBytes(JNIEnv *env, jobject _this, jbyteArray b, jint off, jint l
  *
  * private native long skip0(long n) throws IOException;
  */
-static jlong skip0(JNIEnv *env, jobject _this, jlong n)
+static jlong skip0(jref _this, jlong n)
 {
     jvm_abort("\n"); // todo
 }
@@ -107,7 +109,7 @@ static jlong skip0(JNIEnv *env, jobject _this, jlong n)
  *
 private native int available0() throws IOException;
  */
-static jint available0(JNIEnv *env, jobject _this)
+static jint available0(jref _this)
 {
     jvm_abort("\n"); // todo
 }
@@ -115,9 +117,9 @@ static jint available0(JNIEnv *env, jobject _this)
 /*
  * private native void close0() throws IOException;
  */
-static void close0(JNIEnv *env, jobject _this)
+static void close0(jref _this)
 {
-    __closeFile(env, _this);
+    __closeFile(_this);
 }
 
 static JNINativeMethod methods[] = {

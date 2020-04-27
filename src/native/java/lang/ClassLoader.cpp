@@ -4,32 +4,35 @@
 
 #include "../../jnidef.h"
 #include "../../ifn.h"
+#include "../../../objects/class_loader.h"
+#include "../../../objects/string_object.h"
+
+using namespace utf8;
 
 // private native Class<?> defineClass0(String name, byte[] b, int off, int len, ProtectionDomain pd);
-static jclass defineClass0(JNIEnv *env, jobject _this, jstring name,
-                        jbyteArray b, jint off, jint len, jobject pd)
+static jclsref defineClass0(jref _this, jstrref name, jarrref b, jint off, jint len, jref pd)
 {
-    return ifn.defineClass0(_this, name, b, off, len, pd);
+    return defineClass(_this, name, b, off, len, pd);
 }
 
 // private native Class<?> defineClass1(String name, byte[] b, int off, int len, ProtectionDomain pd, String source);
-static jclass defineClass1(JNIEnv *env, jobject _this, jstring name, 
-                        jbyteArray b, jint off, jint len, jobject pd, jstring source)
+static jclsref defineClass1(jref _this, jstrref name,
+                        jarrref b, jint off, jint len, jref pd, jstrref source)
 {
-    return ifn.defineClass1(_this, name, b, off, len, pd, source);
+    return defineClass(_this, name, b, off, len, pd, source);
 }
 
 // private native Class<?> defineClass2(String name,
 //                              java.nio.ByteBuffer b, int off, int len, ProtectionDomain pd, String source);
-static jclass defineClass2(JNIEnv *env, jobject _this, 
-                jstring name, jobject b, jint off, jint len, jobject pd, jstring source)
+static jclsref defineClass2(jref _this, 
+                jstrref name, jref b, jint off, jint len, jref pd, jstrref source)
 {
     // todo
     jvm_abort("defineClass2");
 }
 
 // private native void resolveClass0(Class<?> c);
-static void resolveClass0(JNIEnv *env, jobject _this, jclass c)
+static void resolveClass0(jref _this, jclsref c)
 {
     // todo
     jvm_abort("resolveClass0");
@@ -37,30 +40,28 @@ static void resolveClass0(JNIEnv *env, jobject _this, jclass c)
 
 // load bootstrap class
 // private native Class<?> findBootstrapClass(String name);
-static jclass findBootstrapClass(JNIEnv *env, jobject _this, jstring name)
+static jclsref findBootstrapClass(jref _this, jstrref name)
 {
-    const char *utf8_name = (*env)->GetStringUTFChars(env, name, NULL);
-    return ifn.loadBootClass(ifn.dots2SlashDup(utf8_name));
+    return loadBootClass(dots2SlashDup(name->toUtf8()));
 }
 
 // private native final Class<?> findLoadedClass0(String name);
-static jclass findLoadedClass0(JNIEnv *env, jobject _this, jstring name)
+static jclsref findLoadedClass0(jref _this, jstrref name)
 {
-    const char *utf8_name = (*env)->GetStringUTFChars(env, name, NULL);
-    return ifn.findLoadedClass(_this, ifn.dots2SlashDup(utf8_name));
+    return findLoadedClass(_this, dots2SlashDup(name->toUtf8()));
 }
 
 // private static native String findBuiltinLib(String name);
-static jstring findBuiltinLib(JNIEnv *env, jclass clazz, jstring name)
+static jstrref findBuiltinLib(jclsref clazz, jstrref name)
 {
-    const char *utf8_name = (*env)->GetStringUTFChars(env, name, NULL);
-    if (strcmp(utf8_name, "zip.dll") == 0) {
+    const char *utf8_name = name->toUtf8();
+    if (equals(utf8_name, "zip.dll")) {
         // C:\Program Files\Java\jre1.8.0_162\bin
 //        char buf[1024] = R"(C:\Program Files\Java\jre1.8.0_162\bin\zip.dll)";  // todo
         char buf[1024] = "(C:\\Progles (x86)\\Java\\jre1.8.0_221\\bin\\zip.dll)";  // todo
-        return (*env)->NewStringUTF(env, buf); // todo
-    } else if (strcmp(utf8_name, "management.dll") == 0) {
-        return  (*env)->NewStringUTF(env, "ffffffff"); // todo
+        return newString(buf); // todo
+    } else if (equals(utf8_name, "management.dll")) {
+        return  newString("ffffffff"); // todo
     } else {
         jvm_abort(utf8_name); // todo
     }
@@ -68,7 +69,7 @@ static jstring findBuiltinLib(JNIEnv *env, jclass clazz, jstring name)
 
 // Retrieves the assertion directives from the VM.
 // private static native AssertionStatusDirectives retrieveDirectives();
-static void retrieveDirectives(JNIEnv *env, jclass clazz)
+static void retrieveDirectives(jclsref clazz)
 {
     // todo
     jvm_abort("retrieveDirectives");
