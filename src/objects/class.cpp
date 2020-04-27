@@ -460,10 +460,8 @@ void Class::clinit()
         return;
     }
 
-//    scoped_lock lock(clinit_mutex);
-    pthread_mutex_lock(&clinitLock);
+    scoped_lock lock(clinit_mutex);
     if (inited) { // 需要再次判断 inited，有可能被其他线程置为 true
-        pthread_mutex_unlock(&clinitLock);
         return;
     }
 
@@ -484,7 +482,6 @@ void Class::clinit()
 
     inited = true;
     state = INITED;
-    pthread_mutex_unlock(&clinitLock);
 }
 
 Field *Class::lookupField(const utf8_t *name, const utf8_t *descriptor)

@@ -2,7 +2,7 @@
  * Author: kayo
  */
 
-//#include <thread>
+#include <thread>
 #include "thread_info.h"
 #include "../kayo.h"
 #include "../debug.h"
@@ -63,7 +63,6 @@ Thread *initMainThread()
     mainThread = new Thread();
 
     initClass(threadClass);
-//    threadClass->clinit();
 
     Class *threadGroupClass = loadBootClass(S(java_lang_ThreadGroup));
     sysThreadGroup = newObject(threadGroupClass);
@@ -73,7 +72,6 @@ Thread *initMainThread()
     // Creates an empty Thread group that is not in any Thread group.
     // This method is used to create the system Thread group.
     initClass(threadGroupClass);
-//    threadGroupClass->clinit();
     execJavaFunc(threadGroupClass->getConstructor(S(___V)), sysThreadGroup);
 
     mainThread->setThreadGroupAndName(sysThreadGroup, MAIN_THREAD_NAME);
@@ -112,42 +110,28 @@ void createCustomerThread(Object *jThread)
 {
     assert(jThread != nullptr);
 
-    static auto start = [](void *args0) {
-        auto __jThread = (jref) args0;
-        auto newThread = new Thread(__jThread);
-        return (void *) execJavaFunc(runMethod, __jThread);
+    static auto __start = [](Object *jThread) {
+        auto new_thread = new Thread(jThread);
+        return (void *) execJavaFunc(runMethod, jThread);
     };
 
-    pthread_t tid;
-    int ret = pthread_create(&tid, nullptr, start, jThread);
-    if (ret != 0) {
-        thread_throw(new InternalError("create Thread failed"));
-    }
-
-//    static auto __start = [](Object *jThread) {
-//        auto new_thread = new Thread(jThread);
-//        return (void *) execJavaFunc(runMethod, jThread);
-//    };
-//
-//    std::thread t(__start, jThread);
-//    t.detach();
+    std::thread t(__start, jThread);
+    t.detach();
 }
 
-static pthread_mutex_t newThreadMutex = PTHREAD_MUTEX_INITIALIZER;
-//static mutex new_thread_mutex;
+static mutex new_thread_mutex;
 
 Thread::Thread(Object *tobj0, jint priority): tobj(tobj0)
 {
     assert(THREAD_MIN_PRIORITY <= priority && priority <= THREAD_MAX_PRIORITY);
 
-//    scoped_lock lock(new_thread_mutex);
-    pthread_mutex_lock(&newThreadMutex);
+    scoped_lock lock(new_thread_mutex);
 
     saveCurrentThread(this);
     g_all_threads.push_back(this);
 
-    tid = pthread_self();
-//    tid = this_thread::get_id();
+    // tid = pthread_self();
+    tid = this_thread::get_id();
 
     if (tobj == nullptr)
         tobj = newObject(threadClass);
@@ -156,8 +140,6 @@ Thread::Thread(Object *tobj0, jint priority): tobj(tobj0)
     tobj->setIntField(S(priority), S(I), priority);
 //    if (vmEnv.sysThreadGroup != nullptr)   todo
 //        setThreadGroupAndName(vmEnv.sysThreadGroup, nullptr);
-
-    pthread_mutex_unlock(&newThreadMutex);
 }
 
 Thread *Thread::from(Object *tobj0)
@@ -171,6 +153,7 @@ Thread *Thread::from(Object *tobj0)
 Thread *Thread::from(jlong threadId)
 {
     jvm_abort("ffffffffffffffffffffffff"); // todo
+
     for (Thread *t : g_all_threads) {
         // private long tid; // Thread ID
         auto tid = t->tobj->getLongField("tid", "J");
@@ -275,7 +258,6 @@ jref Thread::to_java_lang_management_ThreadInfo(jbool lockedMonitors, jbool lock
     threadInfo->setLongField("threadId", "J", tid);
 
     return threadInfo;
-
 }
 
 Array *Thread::dump(int maxDepth)

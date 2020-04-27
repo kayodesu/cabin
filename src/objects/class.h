@@ -136,8 +136,7 @@ private:
 
     u1 *bytecode = nullptr;
 
-//    std::mutex clinit_mutex;
-    pthread_mutex_t clinitLock = PTHREAD_MUTEX_INITIALIZER;
+    std::mutex clinit_mutex;
 
     Class(Object *loader, u1 *bytecode, size_t len);
 

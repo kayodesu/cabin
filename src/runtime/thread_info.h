@@ -7,7 +7,6 @@
 
 #include <vector>
 #include <thread>
-#include <pthread.h>
 #include "../config.h"
 #include "../vmdef.h"
 #include "../objects/throwables.h"
@@ -97,10 +96,7 @@ class Thread {
 
 public:
     Object *tobj = nullptr; // 所关联的 Object of java.lang.Thread
-//    std::thread::id tid; // 所关联的 local thread 对应的id
-
-    // 所关联的 POSIX thread 对应的id
-    pthread_t tid;
+    std::thread::id tid; // 所关联的 local thread 对应的id
 
     void setThreadGroupAndName(Object *threadGroup, const char *threadName);
 
