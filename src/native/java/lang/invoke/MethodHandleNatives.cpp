@@ -119,7 +119,7 @@ static jref resolve(jref _this, jref self, jref caller)
             auto ptypes = arr->get<jarrref>(1);
             descriptor = toMethodDescriptor(methodType(rtype, ptypes));
         } else {
-            NEVER_GO_HERE_ERROR("");
+            jvm_abort("never go here.");
         }
         assert(descriptor != nullptr);
 

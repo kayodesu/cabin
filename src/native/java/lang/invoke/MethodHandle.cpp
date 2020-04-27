@@ -26,7 +26,7 @@
 // public final native @PolymorphicSignature Object invokeExact(Object... args) throws Throwable;
 static void invokeExact(Frame *frame)
 {
-    jref _this = frame->getLocalAsRef(0);
+    // jref _this = frame->getLocalAsRef(0);
     // _this 可能是 MethodHandle 的各种子类。
     // if (_this->clazz->className cmp "java/lang/invoke/DirectMethodHandle")  // todo
     // DirectMethodHandle 里面有 final MemberName member;

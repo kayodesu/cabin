@@ -170,7 +170,7 @@ Thread *Thread::from(Object *tobj0)
 
 Thread *Thread::from(jlong threadId)
 {
-    jvm_abort("ffffffffffffffffffffffff");
+    jvm_abort("ffffffffffffffffffffffff"); // todo
     for (Thread *t : g_all_threads) {
         // private long tid; // Thread ID
         auto tid = t->tobj->getLongField("tid", "J");
@@ -205,7 +205,7 @@ jint Thread::getStatus()
 bool Thread::isAlive()
 {
     assert(tobj != nullptr);
-    auto status = tobj->getIntField("threadStatus", "I");
+    // auto status = tobj->getIntField("threadStatus", "I");
     // todo
     return false;
 }
@@ -251,7 +251,7 @@ vector<Frame *> Thread::getStackFrames()
         vec.push_back(frame);
     }
     vec.reserve(vec.size());
-    assert(vec.size() == countStackFrames());
+    assert((int) vec.size() == countStackFrames());
     return vec;
 }
 
@@ -282,7 +282,7 @@ Array *Thread::dump(int maxDepth)
 {
     vector<Frame *> vec = getStackFrames();
     size_t size = vec.size();
-    if (maxDepth >= 0 && size > maxDepth) {
+    if (maxDepth >= 0 && size > (size_t) maxDepth) {
         size = (size_t) maxDepth;
     }
 

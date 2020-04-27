@@ -154,7 +154,7 @@ Object *ConstantPool::resolveMethodHandle(u2 i)
         case JVM_REF_invokeVirtual :{
             // public MethodHandle findVirtual(Class<?> refc, String name, MethodType type)
             //                      throws NoSuchMethodException, IllegalAccessException;
-            jvm_abort("");
+            jvm_abort("not implement.");
         }
         case JVM_REF_invokeStatic: {
             Method *m = resolveMethod(index);
@@ -168,7 +168,7 @@ Object *ConstantPool::resolveMethodHandle(u2 i)
         case JVM_REF_invokeSpecial: {
             // public MethodHandle findSpecial(Class<?> refc, String name, MethodType type, Class<?> specialCaller)
             //                      throws NoSuchMethodException, IllegalAccessException;
-            jvm_abort("");
+            jvm_abort("not implement.");
         }
         case JVM_REF_newInvokeSpecial: {
             // public MethodHandle findConstructor(Class<?> refc, MethodType type)
@@ -176,17 +176,17 @@ Object *ConstantPool::resolveMethodHandle(u2 i)
 
             // public MethodHandle findSpecial(Class<?> refc, String name, MethodType type, Class<?> specialCaller)
             //                      throws NoSuchMethodException, IllegalAccessException;
-            jvm_abort("");
+           jvm_abort("not implement.");
         }
         case JVM_REF_invokeInterface: {
             // public MethodHandle findVirtual(Class<?> refc, String name, MethodType type)
             //                      throws NoSuchMethodException, IllegalAccessException;
-            jvm_abort("");
+            jvm_abort("not implement.");
         }
         default:
-            NEVER_GO_HERE_ERROR("wrong reference kind: %d.\n", kind);
+            jvm_abort("wrong reference kind: %d.\n", kind);
     }
 
     // todo
-    jvm_abort("");
+    jvm_abort("xxx");
 }

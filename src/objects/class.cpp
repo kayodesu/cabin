@@ -277,7 +277,7 @@ Class::Class(Object *loader, u1 *bytecode, size_t len)
         thread_throw(new ClassFormatError("bad magic"));
     }
 
-    auto minor_version = r.readu2();
+    r.readu2(); // minor_version
     auto major_version = r.readu2();
     /*
      * Class版本号和Java版本对应关系

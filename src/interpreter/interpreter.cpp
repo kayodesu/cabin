@@ -412,13 +412,6 @@ __ldc:
                 lvars[4] = *--frame->ostack;
                 lvars[3] = *--frame->ostack;
                 break;
-//#define ARRAY_STORE_CATEGORY_ONE(type, t) \
-//{ \
-//    auto value = frame->pop##t(); \
-//    GET_AND_CHECK_ARRAY \
-//    arr->set(index, value); \
-//    break; \
-//}
             case JVM_OPC_iastore: {
                 auto value = frame->popi();
                 GET_AND_CHECK_ARRAY
@@ -979,7 +972,7 @@ __method_return:
                     resolved_method = m;
                 } else {
                     assert(m->vtableIndex >= 0);
-                    assert(m->vtableIndex < obj->clazz->vtable.size());
+                    assert(m->vtableIndex < (int) obj->clazz->vtable.size());
                     resolved_method = obj->clazz->vtable[m->vtableIndex];
                 }
 
