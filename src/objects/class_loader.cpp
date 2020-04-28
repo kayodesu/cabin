@@ -213,7 +213,7 @@ Class *loadClass(Object *classLoader, const utf8_t *name)
     assert(m != nullptr);
 
     auto dotName = slash2DotsDup(name);
-    slot_t *slot = execJavaFunc(m, classLoader, newString(dotName));
+    slot_t *slot = execJavaFunc(m, { classLoader, newString(dotName) });
     assert(slot != nullptr);
     c = (Class *) RSLOT(slot);
     addClassToClassLoader(classLoader, c);

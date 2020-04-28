@@ -72,7 +72,7 @@ Thread *initMainThread()
     // Creates an empty Thread group that is not in any Thread group.
     // This method is used to create the system Thread group.
     initClass(threadGroupClass);
-    execJavaFunc(threadGroupClass->getConstructor(S(___V)), sysThreadGroup);
+    execJavaFunc(threadGroupClass->getConstructor(S(___V)), {sysThreadGroup});
 
     mainThread->setThreadGroupAndName(sysThreadGroup, MAIN_THREAD_NAME);
     saveCurrentThread(mainThread);
@@ -110,12 +110,12 @@ void createCustomerThread(Object *jThread)
 {
     assert(jThread != nullptr);
 
-    static auto __start = [](Object *jThread) {
-        auto new_thread = new Thread(jThread);
-        return (void *) execJavaFunc(runMethod, jThread);
+    static auto _start = [](Object *jThread) {
+        new Thread(jThread);
+        return (void *) execJavaFunc(runMethod, {jThread});
     };
 
-    std::thread t(__start, jThread);
+    std::thread t(_start, jThread);
     t.detach();
 }
 
@@ -172,7 +172,7 @@ void Thread::setThreadGroupAndName(Object *threadGroup, const char *threadName)
 
     // 调用 java/lang/Thread 的构造函数
     Method *constructor = tobj->clazz->getConstructor("(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");
-    execJavaFunc(constructor, tobj, threadGroup, newString(threadName));
+    execJavaFunc(constructor, { tobj, threadGroup, newString(threadName) });
 }
 
 void Thread::setStatus(jint status)
@@ -296,7 +296,7 @@ Array *Thread::dump(int maxDepth)
     thread->clearVMStack();
     Method *pst = exception->clazz->lookupInstMethod(S(printStackTrace), S(___V));
     assert(pst != nullptr);
-    execJavaFunc(pst, exception);
+    execJavaFunc(pst, {exception});
 
     // 结束 this thread todo
     jvm_abort("thread_uncaught_exception\n");

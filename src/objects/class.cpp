@@ -617,11 +617,11 @@ Method *Class::getConstructor(Array *parameterTypes)
     // public static MethodType methodType(Class<?> rtype, Class<?>[] ptypes);
     Method *m = c->getDeclaredStaticMethod(
             "methodType", "(Ljava/lang/Class;[Ljava/lang/Class;)Ljava/lang/invoke/MethodType;");
-    auto mt = RSLOT(execJavaFunc(m, loadBootClass(S(void)), parameterTypes));
+    auto mt = RSLOT(execJavaFunc(m, { loadBootClass(S(void)), parameterTypes } ));
 
     // public String toMethodDescriptorString();
     m = c->getDeclaredInstMethod("toMethodDescriptorString", "()Ljava/lang/String;");
-    auto s = execJavaFunc(m, mt);
+    auto s = execJavaFunc(m, {mt});
     return getConstructor(((jstrref) *s)->toUtf8());
 }
 

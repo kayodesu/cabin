@@ -50,7 +50,7 @@ void invokedynamic(BytecodeReader &reader, Class &clazz, slot_t *&ostack)
 
             // public abstract MethodHandle dynamicInvoker()
             auto dynInvoker = callSet->clazz->lookupInstMethod("dynamicInvoker", "()Ljava/lang/invoke/MethodHandle;");
-            auto exactMethodHandle = RSLOT(execJavaFunc(dynInvoker, callSet));
+            auto exactMethodHandle = RSLOT(execJavaFunc(dynInvoker, {callSet}));
 
             // public final Object invokeExact(Object... args) throws Throwable
             Method *invokeExact = exactMethodHandle->clazz->lookupInstMethod(

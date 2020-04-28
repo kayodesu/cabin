@@ -1,5 +1,5 @@
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 #ifndef JVM_STACK_FRAME_H
@@ -29,48 +29,12 @@ public:
     slot_t *ostack;   // operand stack
 
     Frame(Method *m, bool vm_invoke, slot_t *_lvars, slot_t *_ostack, Frame *prev)
-            : method(m), reader(m->code, m->codeLen), vm_invoke(vm_invoke), 
-                lvars(_lvars), prev(prev), ostack(_ostack)
+            : method(m), reader(m->code, m->codeLen), vm_invoke(vm_invoke),
+              prev(prev), lvars(_lvars), ostack(_ostack)
     {
         assert(m != nullptr);
         assert(_lvars != nullptr);
         assert(_ostack != nullptr);
-    }
-
-    jint getLocalAsInt(int index)
-    {
-        return ISLOT(lvars + index);
-    }
-
-    jshort getLocalAsShort(int index)
-    {
-        return jint2jshort(getLocalAsInt(index));
-    }
-
-    jbool getLocalAsBool(int index)
-    {
-        return jint2jbool(getLocalAsInt(index));
-    }
-
-    jfloat getLocalAsFloat(int index)
-    {
-        return FSLOT(lvars + index);
-    }
-
-    jlong getLocalAsLong(int index)
-    {
-        return LSLOT(lvars + index);
-    }
-
-    jdouble getLocalAsDouble(int index)
-    {
-        return DSLOT(lvars + index);
-    }
-
-    template <typename T = Object>
-    T *getLocalAsRef(int index)
-    {
-        return (T *) RSLOT(lvars + index);
     }
 
     // push to ostack.
@@ -89,7 +53,7 @@ public:
     jref    popr() { ostack--;    return RSLOT(ostack); }
 
     // the end address of this frame
-    intptr_t end()
+    [[nodiscard]] intptr_t end() const
     {
         return (intptr_t)(ostack + method->maxStack);
     }
@@ -99,10 +63,7 @@ public:
         ostack = (slot_t *)(this + 1);
     }
 
-//    static size_t size(const Method *m);
-//    size_t size() const;
-
-    virtual std::string toString() const;
+    [[nodiscard]] virtual std::string toString() const;
 };
 
 #endif //JVM_STACK_FRAME_H

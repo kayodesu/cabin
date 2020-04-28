@@ -70,7 +70,7 @@ using namespace std;
 static jref newInstance0(jref c, jarrref args)
 {
     /*
-     * args array of objects to be passed as arguments to
+     * @args array of objects to be passed as arguments to
      * the constructor call; values of primitive types are wrapped in
      * a wrapper Object of the appropriate type.
      * 
@@ -78,18 +78,19 @@ static jref newInstance0(jref c, jarrref args)
      */
 
     // which class this constructor belongs to.
-    auto ac = c->getRefField<Class>(S(clazz), S(sig_java_lang_Class));
+    auto clazz = c->getRefField<Class>(S(clazz), S(sig_java_lang_Class));
     initClass(c->clazz);
-    Object *obj = newObject(ac);
+    Object *obj = newObject(clazz);
 
     if (args == nullptr) { // 构造函数没有参数
-        Method *constructor = ac->getConstructor("()V");
+        Method *constructor = clazz->getConstructor("()V");
         assert(constructor->arg_slot_count == 1); // this
-        execJavaFunc(constructor, obj);
+        execJavaFunc(constructor, {obj});
     } else {
         // parameter types of this constructor
+        // private Class<?>[] parameterTypes;
         auto parameterTypes = c->getRefField<Array>(S(parameterTypes), S(array_java_lang_Class));
-        Method *constructor = ac->getConstructor(parameterTypes);
+        Method *constructor = clazz->getConstructor(parameterTypes);
         execConstructor(constructor, obj, args);
     }
 

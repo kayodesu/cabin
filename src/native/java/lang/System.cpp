@@ -63,7 +63,7 @@ static jref initProperties(jref props)
 
     for (auto &prop : g_properties) {
         assert(prop.first != nullptr && prop.second != nullptr);
-        execJavaFunc(setProperty, props, newString(prop.first), newString(prop.second));
+        execJavaFunc(setProperty, { props, newString(prop.first), newString(prop.second) });
     }
 
     return props;

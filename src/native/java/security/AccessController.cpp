@@ -24,7 +24,7 @@ static jref doPrivileged(jref action)
      */
     Method *m = action->clazz->getDeclaredMethod(S(run), S(___java_lang_Object));
 
-    return RSLOT(execJavaFunc(m, action));
+    return RSLOT(execJavaFunc(m, {action}));
 }
 
 // @CallerSensitive

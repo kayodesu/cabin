@@ -22,7 +22,7 @@ jref method_type::fromMethodDescriptor(const utf8_t *descriptor, jref loader)
     Method *m = mt->getDeclaredStaticMethod(
             "fromMethodDescriptorString",
             "(Ljava/lang/String;Ljava/lang/ClassLoader;)Ljava/lang/invoke/MethodType;");
-    return RSLOT(execJavaFunc(m, newString(descriptor), loader));
+    return RSLOT(execJavaFunc(m, { newString(descriptor), loader }));
 }
 
 jref method_type::methodType(Method *m)
@@ -40,7 +40,7 @@ jref method_type::methodType(jclsref rtype, jarrref ptypes)
     // public static MethodType methodType(Class<?> rtype, Class<?>[] ptypes);
     Method *m = mt->getDeclaredStaticMethod(
             "methodType", "(Ljava/lang/Class;[Ljava/lang/Class;)Ljava/lang/invoke/MethodType;");
-    return RSLOT(execJavaFunc(m, rtype, ptypes));
+    return RSLOT(execJavaFunc(m, { rtype, ptypes }));
 }
 
 jstrref method_type::toMethodDescriptor(jref methodType)
@@ -50,7 +50,7 @@ jstrref method_type::toMethodDescriptor(jref methodType)
     Class *mt = loadBootClass("java/lang/invoke/MethodType");
     // public String toMethodDescriptorString();
     Method *m = mt->getDeclaredInstMethod("toMethodDescriptorString", "()Ljava/lang/String;");
-    return (jstrref) RSLOT(execJavaFunc(m, methodType));
+    return (jstrref) RSLOT(execJavaFunc(m, {methodType}));
 }
 
 /* ----------------------------------------------------------------------------------------- */
@@ -75,7 +75,7 @@ jbyte member_name::getRefKind(jref memberName)
     Class *mn = loadBootClass("java/lang/invoke/MemberName");
     // public byte getReferenceKind();
     auto m = mn->getDeclaredInstMethod("getReferenceKind", "()B");
-    return (jbyte) ISLOT(execJavaFunc(m, memberName));
+    return (jbyte) ISLOT(execJavaFunc(m, {memberName}));
 }
 
 bool member_name::isMethod(jref memberName)
@@ -85,7 +85,7 @@ bool member_name::isMethod(jref memberName)
     Class *mn = loadBootClass("java/lang/invoke/MemberName");
     // public boolean isMethod();
     auto m = mn->getDeclaredInstMethod("isMethod", "()Z");
-    return ISLOT(execJavaFunc(m, memberName)) != 0;
+    return ISLOT(execJavaFunc(m, {memberName})) != 0;
 }
 
 bool member_name::isConstructor(jref memberName)
@@ -95,7 +95,7 @@ bool member_name::isConstructor(jref memberName)
     Class *mn = loadBootClass("java/lang/invoke/MemberName");
     // public boolean isConstructor();
     auto m = mn->getDeclaredInstMethod("isConstructor", "()Z");
-    return ISLOT(execJavaFunc(m, memberName)) != 0;
+    return ISLOT(execJavaFunc(m, {memberName})) != 0;
 }
 
 bool member_name::isField(jref memberName)
@@ -105,7 +105,7 @@ bool member_name::isField(jref memberName)
     Class *mn = loadBootClass("java/lang/invoke/MemberName");
     // public boolean isField();
     auto m = mn->getDeclaredInstMethod("isField", "()Z");
-    return ISLOT(execJavaFunc(m, memberName)) != 0;
+    return ISLOT(execJavaFunc(m, {memberName})) != 0;
 }
 
 bool member_name::isType(jref memberName)
@@ -115,7 +115,7 @@ bool member_name::isType(jref memberName)
     Class *mn = loadBootClass("java/lang/invoke/MemberName");
     // public boolean isType();
     auto m = mn->getDeclaredInstMethod("isType", "()Z");
-    return ISLOT(execJavaFunc(m, memberName)) != 0;
+    return ISLOT(execJavaFunc(m, {memberName})) != 0;
 }
 
 bool member_name::isStatic(jref memberName)
@@ -125,7 +125,7 @@ bool member_name::isStatic(jref memberName)
     Class *mn = loadBootClass("java/lang/invoke/MemberName");
     // public boolean isStatic();
     auto m = mn->getDeclaredInstMethod("isStatic", "()Z");
-    return ISLOT(execJavaFunc(m, memberName)) != 0;
+    return ISLOT(execJavaFunc(m, {memberName})) != 0;
 }
 /* ----------------------------------------------------------------------------------------- */
 

@@ -16,9 +16,9 @@ Throwable::Throwable(Class *ec, const utf8_t *msg)
 
     javaThrowable = newObject(ec);
     if (msg == nullptr) {
-        execJavaFunc(ec->getConstructor("()V"), javaThrowable);
+        execJavaFunc(ec->getConstructor("()V"), {javaThrowable});
     } else {
-        execJavaFunc(ec->getConstructor("(Ljava/lang/String;)V"), javaThrowable, newString(msg));
+        execJavaFunc(ec->getConstructor("(Ljava/lang/String;)V"), {javaThrowable, newString(msg)});
     }
 }
 
@@ -35,9 +35,9 @@ Throwable::Throwable(const utf8_t *exceptionName, const utf8_t *msg)
     initClass(ec);
     javaThrowable = newObject(ec);
     if (msg == nullptr) {
-        execJavaFunc(ec->getConstructor("()V"), javaThrowable);
+        execJavaFunc(ec->getConstructor("()V"), {javaThrowable});
     } else {
-        execJavaFunc(ec->getConstructor("(Ljava/lang/String;)V"), javaThrowable, newString(msg));
+        execJavaFunc(ec->getConstructor("(Ljava/lang/String;)V"), { javaThrowable, newString(msg) });
     }
 }
 
@@ -46,6 +46,6 @@ void Throwable::printStackTrace()
     assert(javaThrowable != nullptr);
 
     Method *printStackTrace = javaThrowable->clazz->lookupInstMethod(S(printStackTrace), S(___V));
-    execJavaFunc(printStackTrace, javaThrowable);
+    execJavaFunc(printStackTrace, {javaThrowable});
 }
 

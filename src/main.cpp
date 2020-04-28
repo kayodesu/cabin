@@ -386,7 +386,7 @@ int main(int argc, char* argv[])
         args->set(i, newString(main_func_args[i]));
     }
     // Call the main method
-    execJavaFunc(main_method, args);
+    execJavaFunc(main_method, {args});
 
     // todo 如果有其他的非后台线程在执行，则main线程需要在此wait
 
