@@ -7,7 +7,7 @@
 
 #include <typeinfo>
 #include "vmdef.h"
-#include "kayo.h"
+#include "jvmstd.h"
 
 // 一个slot_t类型必须可以容纳 jbool, jbyte, jchar, jshort，jint，jfloat, jref 称为类型一
 // jlong, jdouble 称为类型二，占两个slot

@@ -2,7 +2,7 @@
 #include "prims.h"
 #include "../symbol.h"
 #include "../util/encoding.h"
-#include "../kayo.h"
+#include "../jvmstd.h"
 #include "field.h"
 #include "object.h"
 #include "class.h"

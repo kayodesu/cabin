@@ -4,7 +4,7 @@
 
 #include <vector>
 #include "gc.h"
-#include "../kayo.h"
+#include "../jvmstd.h"
 #include "../runtime/thread_info.h"
 #include "../runtime/frame.h"
 #include "../objects/object.h"

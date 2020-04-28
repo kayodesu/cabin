@@ -6,7 +6,7 @@
 #include <cstring>
 #include <sstream>
 #include "MemMgr.h"
-#include "../kayo.h"
+#include "../jvmstd.h"
 
 using namespace std;
 

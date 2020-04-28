@@ -4,7 +4,7 @@
 
 #include "../../jni_inner.h"
 #include "../../../objects/object.h"
-#include "../../../kayo.h"
+#include "../../../jvmstd.h"
 #include "../../../runtime/frame.h"
 #include "../../../runtime/thread_info.h"
 #include "../../../objects/class.h"

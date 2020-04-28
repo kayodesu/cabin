@@ -6,7 +6,7 @@
 #include <cmath>
 #include <ffi.h>
 #include "interpreter.h"
-#include "../kayo.h"
+#include "../jvmstd.h"
 #include "../debug.h"
 #include "../runtime/thread_info.h"
 #include "../runtime/frame.h"

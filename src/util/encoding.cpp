@@ -7,7 +7,7 @@
 #include <unordered_set>
 #include <pthread.h>
 #include "encoding.h"
-#include "../kayo.h"
+#include "../jvmstd.h"
 
 using namespace std;
 

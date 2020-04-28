@@ -4,7 +4,7 @@
 
 #include <thread>
 #include "thread_info.h"
-#include "../kayo.h"
+#include "../jvmstd.h"
 #include "../debug.h"
 #include "../objects/class_loader.h"
 #include "../objects/object.h"

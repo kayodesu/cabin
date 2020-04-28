@@ -10,7 +10,7 @@
 #include <unordered_map>
 #include "../classfile/constants.h"
 #include "../util/encoding.h"
-#include "../kayo.h"
+#include "../jvmstd.h"
 #include "../slot.h"
 #include "field.h"
 

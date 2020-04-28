@@ -8,7 +8,7 @@
 #include <cassert>
 #include <cstring>
 #include "../vmdef.h"
-#include "../kayo.h"
+#include "../jvmstd.h"
 #include "convert.h"
 
 class BytecodeReader {
