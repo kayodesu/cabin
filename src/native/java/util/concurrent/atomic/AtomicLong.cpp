@@ -11,7 +11,7 @@
  *
  * private static native boolean VMSupportsCS8();
  */
-static jboolean VMSupportsCS8(jclsref clazz)
+static jboolean VMSupportsCS8()
 {
 /*
  * 	stack := frame.OperandStack()

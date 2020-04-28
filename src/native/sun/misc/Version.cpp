@@ -6,23 +6,23 @@
  */
 
 // public static native String getJdkSpecialVersion()
-static jstrref getJdkSpecialVersion(jclsref clazz)
+static jstrref getJdkSpecialVersion()
 {
     jvm_abort("getJdkSpecialVersion"); // todo
 }
 
 // public static native String getJvmSpecialVersion()
-static jstrref getJvmSpecialVersion(jclsref clazz)
+static jstrref getJvmSpecialVersion()
 {
     jvm_abort("getJvmSpecialVersion"); // todo
 }
 
-static void getJdkVersionInfo(jclsref clazz)
+static void getJdkVersionInfo()
 {
     jvm_abort("getJdkVersionInfo"); // todo
 }
 
-static jboolean getJvmVersionInfo(jclsref clazz)
+static jboolean getJvmVersionInfo()
 {
     jvm_abort("getJvmVersionInfo"); // todo
 }

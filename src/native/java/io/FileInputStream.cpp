@@ -9,7 +9,7 @@
 #include "../../../objects/array_object.h"
 
 // private static native void initIDs();
-static void initIDs(jclsref clazz)
+static void initIDs()
 {
 //    jvm_abort("error\n");
     // todo

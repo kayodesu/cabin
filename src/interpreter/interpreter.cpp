@@ -1503,15 +1503,12 @@ static void callJNIMethod(Frame *frame)
     // 准备参数
     int argc = 0;
     const slot_t *lvars = frame->getLocalVars();
-    if (m->isStatic()) {
-        arg_types[argc] = &ffi_type_pointer;
-        arg_values[argc] = &(m->clazz);
-    } else {
+    if (!m->isStatic()) {
         arg_types[argc] = &ffi_type_pointer;
         arg_values[argc] = (void *) lvars; // this
         lvars++;
+        argc++;
     }
-    argc++;
 
     const char *p = m->type;
     assert(*p == '(');

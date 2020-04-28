@@ -7,14 +7,14 @@
  */
 
 // private native static String getVersion0();
-static jstrref getVersion0(jclsref clazz)
+static jstrref getVersion0()
 {
     // Management Version
     return newString(MANAGEMENT_VERSION);
 }
 
 // private native static void initOptionalSupportFields();
-static void initOptionalSupportFields(jclsref clazz)
+static void initOptionalSupportFields()
 {
     // todo
 }

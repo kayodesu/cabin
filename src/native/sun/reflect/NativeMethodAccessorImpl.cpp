@@ -6,7 +6,7 @@
  */
 
 // private static native Object invoke0(Method method, Object o, Object[] os);
-static void invoke0(jclsref clazz, jref method, jref o, jarrref os)
+static void invoke0(jref method, jref o, jarrref os)
 {
     jvm_abort("error\n");
 }

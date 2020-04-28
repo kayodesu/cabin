@@ -14,7 +14,7 @@ using namespace method_type;
 using namespace member_name;
 
 // static native int getConstant(int which);
-static jint getConstant(jclsref clazz, jint which)
+static jint getConstant(jint which)
 {
     // todo 啥意思
     if (which == 4)
@@ -24,7 +24,7 @@ static jint getConstant(jclsref clazz, jint which)
 }
 
 // static native void init(MemberName self, Object ref);
-static void init(jclsref clazz0, jref self, jref ref)
+static void init(jref self, jref ref)
 {
     jvm_abort("init");
 
@@ -132,7 +132,7 @@ func getMethod(cls *heap.Class, name, descriptor string) *heap.Method {
 	return nil
 }
  #endif
-static jref resolve(jclsref clazz0, jref self, jref caller)
+static jref resolve(jref self, jref caller)
 {
     jvm_abort("resolve");
 

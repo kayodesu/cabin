@@ -13,20 +13,20 @@
  *
  * public static native Thread currentThread();
  */
-static jref currentThread(jclsref clazz)
+static jref currentThread()
 {
     // return a Object of java/lang/Thread of current thread
     return getCurrentThread()->tobj;
 }
 
 // public static native void yield();
-static void yield(jclsref clazz)
+static void yield()
 {
     jvm_abort("yield"); // todo
 }
 
 // public static native void sleep(long millis) throws InterruptedException;
-static void sleep(jclsref clazz, jlong millis)
+static void sleep(jlong millis)
 {
     jvm_abort("error\n");
 
@@ -122,13 +122,13 @@ static jint countStackFrames(jref _this)
 }
 
 // public static native boolean holdsLock(Object obj);
-static jboolean holdsLock(jclsref clazz)
+static jboolean holdsLock(jref obj)
 {
     jvm_abort("holdsLock"); // todo
 }
 
 // private native static StackTraceElement[][] dumpThreads(Thread[] threads);
-static jarrref dumpThreads(jclsref clazz, jarrref threads)
+static jarrref dumpThreads(jarrref threads)
 {
     size_t len = threads->size();
     Array *result = newArray(loadArrayClass("[[java/lang/StackTraceElement"), len);
@@ -144,7 +144,7 @@ static jarrref dumpThreads(jclsref clazz, jarrref threads)
 }
 
 // private native static Thread[] getThreads();
-static jarrref getThreads(jref _this)
+static jarrref getThreads()
 {
     size_t size = g_all_threads.size();
     Array *threads = newArray(loadArrayClass(S(array_java_lang_Thread)), size);
@@ -157,7 +157,7 @@ static jarrref getThreads(jref _this)
 }
 
 // private native void stop0(Object o);
-static void stop0(jref _this)
+static void stop0(jref _this, jref o)
 {
     jvm_abort("stop0"); // todo
 }

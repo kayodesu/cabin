@@ -67,7 +67,7 @@ using namespace std;
  * private static native Object newInstance0(Constructor<?> c, Object[] args)
  * throws InstantiationException, IllegalArgumentException, InvocationTargetException;
  */
-static jref newInstance0(jclsref clazz, jref c, jarrref args)
+static jref newInstance0(jref c, jarrref args)
 {
     /*
      * args array of objects to be passed as arguments to

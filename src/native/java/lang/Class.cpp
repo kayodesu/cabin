@@ -22,7 +22,7 @@ using namespace slot;
  * private static native Class<?> forName0
  *  (String name, boolean initialize, ClassLoader loader, Class<?> caller) throws ClassNotFoundException;
  */
-static jclsref forName0(jclsref clazz, jstrref name, jboolean initialize, jref loader, jclsref caller)
+static jclsref forName0(jstrref name, jboolean initialize, jref loader, jclsref caller)
 {
     const utf8_t *utf8_name = name->toUtf8(); // 形如 xxx.xx.xx 的形式
 
@@ -42,7 +42,7 @@ static jclsref forName0(jclsref clazz, jstrref name, jboolean initialize, jref l
  *
  * static native Class<?> getPrimitiveClass(String name);
  */
-static jclsref getPrimitiveClass(jclsref clazz, jstrref name)
+static jclsref getPrimitiveClass(jstrref name)
 {
     // // 这里得到的 class name 是诸如 "int, float" 之类的 primitive type
     const char *class_name = name->toUtf8();;
@@ -116,7 +116,7 @@ static jstrref getName0(jclsref _this)
  *
  * private static native boolean desiredAssertionStatus0(Class<?> clazz);
  */
-static jboolean desiredAssertionStatus0(jclsref clazz)
+static jboolean desiredAssertionStatus0()
 {
     // todo 本vm不讨论断言。desiredAssertionStatus0（）方法把false推入操作数栈顶
     return jfalse;
@@ -363,8 +363,6 @@ static jint getModifiers(jclsref _this)
  */
 static jarrref getSigners(jclsref _this)
 {
- //   auto _this = frame->getLocalAsRef<Class>(0);
-
     jvm_abort("getSigners");
 }
 

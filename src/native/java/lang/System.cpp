@@ -27,7 +27,7 @@ using namespace chrono;
  * @since      1.2
  */
 // public static native String mapLibraryName(String libname);
-static jstrref mapLibraryName(jclsref clazz, jstrref libname)
+static jstrref mapLibraryName(jstrref libname)
 {
     if (libname == nullptr) {
         throw NullPointerException(); // todo
@@ -41,7 +41,7 @@ static jstrref mapLibraryName(jclsref clazz, jstrref libname)
 }
 
 // public static native void arraycopy(Object src, int srcPos, Object dest, int destPos, int length)
-static void arraycopy(jclsref clazz, jref src, jint src_pos, jref dest, jint dest_pos, jint length)
+static void arraycopy(jref src, jint src_pos, jref dest, jint dest_pos, jint length)
 {
     assert(dest->isArrayObject());
     assert(src->isArrayObject());
@@ -49,13 +49,13 @@ static void arraycopy(jclsref clazz, jref src, jint src_pos, jref dest, jint des
 }
 
 // public static native int identityHashCode(Object x);
-static jint identityHashCode(jclsref clazz, jref x)
+static jint identityHashCode(jref x)
 {
     return (jint) (intptr_t) x; // todo 实现错误。改成当前的时间如何。
 }
 
 // private static native Properties initProperties(Properties props);
-static jref initProperties(jclsref clazz, jref props)
+static jref initProperties(jref props)
 {
     // todo init
     Method *setProperty = props->clazz->lookupInstMethod(
@@ -70,20 +70,23 @@ static jref initProperties(jclsref clazz, jref props)
 }
 
 // private static native void setIn0(InputStream in);
-static void setIn0(jclsref clazz, jref in)
+static void setIn0(jref in)
 {
+    Class *clazz = getCurrentThread()->getTopFrame()->method->clazz;
     clazz->lookupStaticField("in", "Ljava/io/InputStream;")->staticValue.r = in;
 }
 
 // private static native void setOut0(PrintStream out);
-static void setOut0(jclsref clazz, jref out)
+static void setOut0(jref out)
 {
+    Class *clazz = getCurrentThread()->getTopFrame()->method->clazz;
     clazz->lookupStaticField("out", "Ljava/io/PrintStream;")->staticValue.r = out;
 }
 
 // private static native void setErr0(PrintStream err);
-static void setErr0(jclsref clazz, jref err)
+static void setErr0(jref err)
 {
+    Class *clazz = getCurrentThread()->getTopFrame()->method->clazz;
     clazz->lookupStaticField("err", "Ljava/io/PrintStream;")->staticValue.r = err;
 }
 
@@ -96,7 +99,7 @@ static void setErr0(jclsref clazz, jref err)
  *
  * public static native long nanoTime();
  */
-static jlong nanoTime(jclsref clazz)
+static jlong nanoTime()
 {
     // todo
     return duration_cast<nanoseconds>(high_resolution_clock ::now().time_since_epoch()).count();
@@ -104,7 +107,7 @@ static jlong nanoTime(jclsref clazz)
 
 // 毫秒
 // public static native long currentTimeMillis();
-static jlong currentTimeMillis(jclsref clazz)
+static jlong currentTimeMillis()
 {
     // todo
     return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();

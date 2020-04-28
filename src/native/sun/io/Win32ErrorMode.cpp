@@ -1,12 +1,14 @@
 #include "../../jni_inner.h"
 #include "../../../vmdef.h"
+#include "../../../runtime/thread_info.h"
+#include "../../../runtime/frame.h"
 
 /*
  * Author: Yo Ka
  */
 
-// todo 函数声明，是不是static的.
-static jlong setErrorMode(jclsref clazz, jlong l)
+// static
+static jlong setErrorMode(jlong l)
 {
     return 0; // todo
 }

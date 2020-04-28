@@ -4,13 +4,15 @@
 
 #include "../../jni_inner.h"
 #include "../../../vmdef.h"
+#include "../../../runtime/thread_info.h"
+#include "../../../runtime/frame.h"
 
 /*
  * This routine initializes JNI field offsets for the class
  *
  * private static native void initIDs();
  */
-static void initIDs(jclsref clazz)
+static void initIDs()
 {
     // todo
 //    jvm_abort("error\n");

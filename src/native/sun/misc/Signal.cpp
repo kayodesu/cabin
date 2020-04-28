@@ -6,19 +6,19 @@
  */
 
 // private static native int findSignal(String string);
-static jint findSignal(jclsref clazz, jstrref string)
+static jint findSignal(jstrref string)
 {
     return 0; // todo
 }
 
 // private static native long handle0(int i, long l);
-static jlong handle0(jclsref clazz, jint i, jlong l)
+static jlong handle0(jint i, jlong l)
 {
     return 0; // todo
 }
 
 // private static native void raise0(int i);
-static void raise0(jclsref clazz, jint i)
+static void raise0(jint i)
 {
     // todo
 }

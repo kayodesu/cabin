@@ -12,7 +12,7 @@
 #include "../../../interpreter/interpreter.h"
 
 // private static native void initialize();
-static void initialize(jclsref clazz)
+static void initialize()
 {
     // todo
     Class *sys = loadBootClass(S(java_lang_System));
@@ -29,7 +29,7 @@ static void initialize(jclsref clazz)
  *
  * public static native ClassLoader latestUserDefinedLoader();
  */
-static jref latestUserDefinedLoader(jclsref clazz)
+static jref latestUserDefinedLoader()
 {
     jvm_abort("latestUserDefinedLoader"); // todo
 }

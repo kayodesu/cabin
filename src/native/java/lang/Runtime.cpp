@@ -47,7 +47,7 @@ static void runFinalization0(jref _this)
 }
 
 // public native void traceInstructions(boolean on)
-static void traceInstructions(jref _this)
+static void traceInstructions(jref _this, jboolean on)
 {
     jvm_abort("traceInstructions");
 }

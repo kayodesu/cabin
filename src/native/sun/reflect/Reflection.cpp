@@ -11,13 +11,13 @@
 
 
 // public static native Class<?> getCallerClass(int level)
-static jclsref getCallerClass0(jclsref clazz, jint level)
+static jclsref getCallerClass0(jint level)
 {
     jvm_abort("getCallerClass0");
 }
 
 // public static native Class<?> getCallerClass()
-static jref getCallerClass(jclsref clazz)
+static jref getCallerClass()
 {
     // top0, current frame is executing getCallerClass()
     // top1, who called getCallerClass, the one who wants to know his caller.
@@ -34,9 +34,8 @@ static jref getCallerClass(jclsref clazz)
 }
 
 // public static native int getClassAccessFlags(Class<?> type)
-static jint getClassAccessFlags(jclsref clazz, jclsref type)
+static jint getClassAccessFlags(jclsref type)
 {
-    // Object *type = frame->getLocalAsRef(0);
     return type->clazz->modifiers; // todo
 }
 

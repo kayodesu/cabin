@@ -13,7 +13,7 @@ using namespace std;
 using namespace std::filesystem;
 
 // private static native void initIDs();
-static void initIDs(jclsref clazz)
+static void initIDs()
 {
     // todo
 }

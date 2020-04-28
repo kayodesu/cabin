@@ -51,7 +51,7 @@ static jclsref findLoadedClass0(jref _this, jstrref name)
 }
 
 // private static native String findBuiltinLib(String name);
-static jstrref findBuiltinLib(jclsref clazz, jstrref name)
+static jstrref findBuiltinLib(jstrref name)
 {
     const char *utf8_name = name->toUtf8();
     if (equals(utf8_name, "zip.dll")) {
@@ -68,7 +68,7 @@ static jstrref findBuiltinLib(jclsref clazz, jstrref name)
 
 // Retrieves the assertion directives from the VM.
 // private static native AssertionStatusDirectives retrieveDirectives();
-static void retrieveDirectives(jclsref clazz)
+static void retrieveDirectives()
 {
     // todo
     jvm_abort("retrieveDirectives");

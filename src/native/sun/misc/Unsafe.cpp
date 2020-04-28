@@ -28,7 +28,7 @@ static void park(jref _this, jboolean isAbsolute, jlong time)
     jvm_abort("park");
 }
 
-//  public native void unpark(Object thread);
+// public native void unpark(Object thread);
 static void unpark(jref _this, jref thread)
 {
     jvm_abort("unpark");

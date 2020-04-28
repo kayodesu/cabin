@@ -9,13 +9,13 @@
  */
 
 // private static native void initIDs();
-void initIDs(jclsref clazz)
+void initIDs()
 {
     // todo
 }
 
 // private static native long open(String name, int mode, long lastModified, boolean usemmap) throws IOException;
-jlong __open(jclsref clazz, jstrref name, jint mode, jlong lastModified, jboolean usemmap)
+jlong __open(jstrref name, jint mode, jlong lastModified, jboolean usemmap)
 {
     const char *utf8 = name->toUtf8();
 
@@ -29,14 +29,14 @@ jlong __open(jclsref clazz, jstrref name, jint mode, jlong lastModified, jboolea
 }
 
 // private static native boolean startsWithLOC(long jzfile);
-jboolean startsWithLOC(jclsref clazz, jlong jzfile)
+jboolean startsWithLOC(jlong jzfile)
 {
     // todo
     return jtrue;
 }
 
 // private static native int getTotal(long jzfile);
-jint getTotal(jclsref clazz, jlong jzfile)
+jint getTotal(jlong jzfile)
 {
     unz_global_info64 info;
     if (unzGetGlobalInfo64((unzFile) jzfile, &info) != UNZ_OK) {
@@ -47,7 +47,7 @@ jint getTotal(jclsref clazz, jlong jzfile)
 }
 
 // private static native long getNextEntry(long jzfile, int i);
-jlong getNextEntry(jclsref clazz, jlong jzfile, jint i)
+jlong getNextEntry(jlong jzfile, jint i)
 {
 /*
  * 	vars := frame.LocalVars()
@@ -64,13 +64,13 @@ jlong getNextEntry(jclsref clazz, jlong jzfile, jint i)
 }
 
 // // private static native void freeEntry(long jzfile, long jzentry);
-void freeEntry(jclsref clazz, jlong jzfile, jlong jzentry)
+void freeEntry(jlong jzfile, jlong jzentry)
 {
     // todo
 }
 
 // private static native long getEntry(long jzfile, byte[] name, boolean addSlash);
-jlong getEntry(jclsref clazz, jlong jzfile, jarrref name, jboolean addSlash)
+jlong getEntry(jlong jzfile, jarrref name, jboolean addSlash)
 {
     // todo
     /*
@@ -90,7 +90,7 @@ jlong getEntry(jclsref clazz, jlong jzfile, jarrref name, jboolean addSlash)
 }
 
 // private static native byte[] getEntryBytes(long jzentry, int type);
-jarrref getEntryBytes(jclsref clazz, jlong jzentry, jint type)
+jarrref getEntryBytes(jlong jzentry, jint type)
 {
     jvm_abort("getEntryBytes");
 // todo
@@ -125,7 +125,7 @@ jarrref getEntryBytes(jclsref clazz, jlong jzentry, jint type)
 }
 
 // private static native int getEntryFlag(long jzentry);
-jint getEntryFlag(jclsref clazz, jlong jzentry)
+jint getEntryFlag(jlong jzentry)
 {
     jvm_abort("getEntryFlag");
 /*
@@ -139,7 +139,7 @@ jint getEntryFlag(jclsref clazz, jlong jzentry)
 }
 
 // private static native long getEntryTime(long jzentry);
-jlong getEntryTime(jclsref clazz, jlong jzentry)
+jlong getEntryTime(jlong jzentry)
 {
     jvm_abort("getEntryTime");
 /*
@@ -155,7 +155,7 @@ jlong getEntryTime(jclsref clazz, jlong jzentry)
 }
 
 // private static native long getEntryCrc(long jzentry);
-jlong getEntryCrc(jclsref clazz, jlong jzentry)
+jlong getEntryCrc(jlong jzentry)
 {
     jvm_abort("getEntryCrc");
     /*
@@ -169,7 +169,7 @@ jlong getEntryCrc(jclsref clazz, jlong jzentry)
 }
 
 // private static native long getEntrySize(long jzentry);
-jlong getEntrySize(jclsref clazz, jlong jzentry)
+jlong getEntrySize(jlong jzentry)
 {
     jvm_abort("getEntrySize");
 /*
@@ -183,7 +183,7 @@ jlong getEntrySize(jclsref clazz, jlong jzentry)
 }
 
 // private static native long getEntryCSize(long jzentry);
-jlong getEntryCSize(jclsref clazz, jlong jzentry)
+jlong getEntryCSize(jlong jzentry)
 {
     jvm_abort("getEntryCSize");
     /*
@@ -202,7 +202,7 @@ jlong getEntryCSize(jclsref clazz, jlong jzentry)
 }
 
 // private static native int getEntryMethod(long jzentry);
-jint getEntryMethod(jclsref clazz, jlong jzentry)
+jint getEntryMethod(jlong jzentry)
 {
     jvm_abort("getEntryMethod");
     /*
@@ -227,7 +227,7 @@ jint getEntryMethod(jclsref clazz, jlong jzentry)
 }
 
 // private static native int read(long jzfile, long jzentry, long pos, byte[] b, int off, int len);
-jint __read(jclsref clazz, jlong jzfile, jlong jzentry, jlong pos, jarrref b, jint off, jint len)
+jint __read(jlong jzfile, jlong jzentry, jlong pos, jarrref b, jint off, jint len)
 {
     jvm_abort("read");
 /*
