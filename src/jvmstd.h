@@ -153,7 +153,6 @@ extern std::vector<std::pair<const utf8_t *, const utf8_t *>> g_properties;
  */
 #define METHOD_PARAMETERS_MAX_COUNT 255
 
-
 #define MAIN_THREAD_NAME "main" // name of main thread
 #define GC_THREAD_NAME "gc"
 
@@ -161,11 +160,8 @@ extern std::vector<std::pair<const utf8_t *, const utf8_t *>> g_properties;
 #define NEW_MSG(...) ({ auto buf = new char[MSG_MAX_LEN]; snprintf(buf, MSG_MAX_LEN, __VA_ARGS__); buf; })
 
 #define printvm(...) do { printf("%s: %d: ", __FILE__, __LINE__); printf(__VA_ARGS__); } while(false)
-#define println(...) do { printvm(__VA_ARGS__); printf("\n"); } while(false)
 
 // 出现异常，退出jvm
 #define jvm_abort(...) do { printvm("fatal error! "); printf(__VA_ARGS__); exit(-1); } while(false)
-
-#define NEVER_GO_HERE_ERROR(...) do { printvm("never go here! "); jvm_abort(__VA_ARGS__); } while(false)
 
 #endif //JVM_JVM_H

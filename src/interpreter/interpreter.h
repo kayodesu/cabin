@@ -8,7 +8,6 @@
 #include <initializer_list>
 #include <cstdarg>
 #include "../jvmstd.h"
-#include "../objects/signature.h"
 #include "../objects/method.h"
 #include "../slot.h"
 
