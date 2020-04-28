@@ -15,11 +15,11 @@
 
 using namespace std;
 using namespace utf8;
+using namespace slot;
 
 Object::Object(Class *c): clazz(c)
 {
     data = (slot_t *) (this + 1);
-    slots_mgr.init(data);
 }
 
 Object *Object::newObject(Class *c)
@@ -38,65 +38,6 @@ Object *Object::clone() const
 {
     size_t s = size();
     return (Object *) memcpy(g_heap->allocObject(s), this, s);
-}
-
-void Object::setByteField(Field *f, jbyte v)
-{
-    assert(f != nullptr);
-    slots_mgr.setByte(f->id, v);
-}
-
-void Object::setBoolField(Field *f, jbool v)
-{
-    assert(f != nullptr);
-    slots_mgr.setBool(f->id, v);
-}
-
-void Object::setCharField(Field *f, jchar v)
-{
-    assert(f != nullptr);
-    slots_mgr.setChar(f->id, v);
-}
-
-void Object::setShortField(Field *f, jshort v)
-{
-    assert(f != nullptr);
-    slots_mgr.setShort(f->id, v);
-}
-
-void Object::setIntField(Field *f, jint v)
-{
-    assert(f != nullptr);
-    slots_mgr.setInt(f->id, v);
-//    ISLOT(data + f->id) = v;
-}
-
-void Object::setFloatField(Field *f, jfloat v)
-{
-    assert(f != nullptr);
-    slots_mgr.setFloat(f->id, v);
-//    FSLOT(data + f->id) = v;
-}
-
-void Object::setLongField(Field *f, jlong v)
-{
-    assert(f != nullptr);
-    slots_mgr.setLong(f->id, v);
-//    LSLOT(data + f->id) = v;
-}
-
-void Object::setDoubleField(Field *f, jdouble v)
-{
-    assert(f != nullptr);
-    slots_mgr.setDouble(f->id, v);
-//    DSLOT(data + f->id) = v;
-}
-
-void Object::setRefField(Field *f, jref v)
-{
-    assert(f != nullptr);
-    slots_mgr.setRef(f->id, v);
-//    RSLOT(data + f->id) = v;
 }
 
 //void Object::setFieldValue(Field *f, slot_t v)
@@ -138,54 +79,6 @@ void Object::setFieldValue(int id, jref value)
         setRefField(f, jnull);
 //        RSLOT(data + id) = jnull;
     }
-}
-
-jbyte Object::getByteField(Field *f)
-{
-    assert(f != nullptr);
-    return slots_mgr.getByte(f->id);
-}
-
-jbool Object::getBoolField(Field *f)
-{
-    assert(f != nullptr);
-    return slots_mgr.getBool(f->id);
-}
-
-jchar Object::getCharField(Field *f)
-{
-    assert(f != nullptr);
-    return slots_mgr.getChar(f->id);
-}
-
-jshort Object::getShortField(Field *f)
-{
-    assert(f != nullptr);
-    return slots_mgr.getShort(f->id);
-}
-
-jint Object::getIntField(Field *f)
-{
-    assert(f != nullptr);
-    return slots_mgr.getInt(f->id);
-}
-
-jfloat Object::getFloatField(Field *f)
-{
-    assert(f != nullptr);
-    return slots_mgr.getFloat(f->id);
-}
-
-jlong Object::getLongField(Field *f)
-{
-    assert(f != nullptr);
-    return slots_mgr.getLong(f->id);
-}
-
-jdouble Object::getDoubleField(Field *f)
-{
-    assert(f != nullptr);
-    return slots_mgr.getDouble(f->id);
 }
 
 bool Object::isInstanceOf(Class *c) const

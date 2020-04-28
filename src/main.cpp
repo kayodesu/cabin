@@ -463,21 +463,12 @@ static void showUsage(const char *name)
 
 static void showVersionAndCopyright()
 {
-    // todo 完善 License
     printf("Java version \"%s\"\n", JAVA_COMPAT_VERSION);
     printf("kayo version %s\n", VM_VERSION);
 #if defined(__GNUC__) && defined(__VERSION__)
     printf("Compiled with: g++ %s\n", __VERSION__);
 #endif
-    printf("Copyright (C) 2020 kayo <kayodesu@outlook.com>\n\n");
-    printf("This program is free software; you can redistribute it and/or\n");
-    printf("modify it under the terms of the GNU General Public License\n");
-    printf("as published by the Free Software Foundation; either version 2,\n");
-    printf("or (at your option) any later version.\n\n");
-    printf("This program is distributed in the hope that it will be useful,\n");
-    printf("but WITHOUT ANY WARRANTY; without even the implied warranty of\n");
-    printf("MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n");
-    printf("GNU General Public License for more details.\n");
+    printf("Copyright (C) 2020 Yo Ka <kayodesu@outlook.com>\n\n");
 //    printf("\nBuild information:\n\nExecution Engine: %s\n", getExecutionEngineName());  // todo
     //   printf("\nBoot Library Path: %s\n", classlibDefaultBootDllPath());  // todo
     //   printf("Boot Class Path: %s\n", classlibDefaultBootClassPath());  // todo

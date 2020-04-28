@@ -37,7 +37,7 @@ add_executable(kayo
         src/objects/method.cpp src/objects/field.cpp src/objects/constant_pool.cpp src/native/jni.cpp
         src/objects/array_object.cpp src/objects/string_object.cpp src/objects/throwables.cpp
         src/objects/class_loader.cpp src/objects/prims.cpp src/objects/invoke.cpp
-        src/objects/object.cpp src/objects/class.cpp)
+        src/objects/object.cpp src/objects/class.cpp src/interpreter/instructions/invokedynamic.cpp)
 
 target_link_libraries (kayo libz)
 target_link_libraries (kayo libminizip)

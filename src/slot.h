@@ -66,76 +66,75 @@ namespace slot {
         DSLOT(&s) = v;
         return s;
     }
-}
-
-
-class SlotsMgr {
-    slot_t *slots = nullptr;
-    int last = 0;
-
-public:
-    SlotsMgr() = default;
-
-    explicit SlotsMgr(slot_t *_slots): slots(_slots)
-    {
-        assert(_slots != nullptr);
-    }
-
-    void init(slot_t *_slots)
-    {
-        assert(_slots != nullptr);
-        slots = _slots;
-    }
-
-    void reset(slot_t *_slots)
-    {
-        assert(_slots != nullptr);
-        slots = _slots;
-    }
 
     /* setter */
 
-    void setInt(int index, jint v)       { ISLOT(slots + index) = v; }
-    void setByte(int index, jbyte v)     { setInt (index, v); }
-    void setBool(int index, jbool v)     { setInt (index, v); }
-    void setChar(int index, jchar v)     { setInt (index, v); }
-    void setShort(int index, jshort v)   { setInt (index, v); }
-    void setFloat(int index, jfloat v)   { FSLOT(slots + index) = v; }
-    void setLong(int index, jlong v)     { LSLOT(slots + index) = v; }
-    void setDouble(int index, jdouble v) { DSLOT(slots + index) = v; }
-    void setRef(int index, jref v)       { RSLOT(slots + index) = v; }
+    static inline void setInt(slot_t *slots, jint v)
+    {
+        assert(slots != nullptr);
+        ISLOT(slots) = v;
+    }
+
+    static inline void setByte(slot_t *slots, jbyte v)
+    {
+        assert(slots != nullptr);
+        setInt(slots, v);
+    }
+
+    static inline void setBool(slot_t *slots, jbool v)
+    {
+        assert(slots != nullptr);
+        setInt(slots, v);
+    }
+
+    static inline void setChar(slot_t *slots, jchar v)
+    {
+        assert(slots != nullptr);
+        setInt(slots, v);
+    }
+
+    static inline void setShort(slot_t *slots, jshort v)
+    {
+        assert(slots != nullptr);
+        setInt(slots, v);
+    }
+
+    static inline void setFloat(slot_t *slots, jfloat v)
+    {
+        assert(slots != nullptr);
+        FSLOT(slots) = v;
+    }
+
+    static inline void setLong(slot_t *slots, jlong v)
+    {
+        assert(slots != nullptr);
+        LSLOT(slots) = v;
+    }
+
+    static inline void setDouble(slot_t *slots, jdouble v)
+    {
+        assert(slots != nullptr);
+        DSLOT(slots) = v;
+    }
+
+    static inline void setRef(slot_t *slots, jref v)
+    {
+        assert(slots != nullptr);
+        RSLOT(slots) = v;
+    }
 
     /* getter */
 
-    jint getInt(int index)       { return ISLOT(slots + index); }
-    jbyte getByte(int index)     { return jint2jbyte(getInt(index)); }
-    jbool getBool(int index)     { return jint2jbool(getInt(index)); }
-    jchar getChar(int index)     { return jint2jchar(getInt(index)); }
-    jshort getShort(int index)   { return jint2jshort(getInt(index)); }
-    jfloat getFloat(int index)   { return FSLOT(slots + index); }
-    jlong getLong(int index)     { return LSLOT(slots + index); }
-    jdouble getDouble(int index) { return DSLOT(slots + index); }
+    static inline jint getInt(slot_t *slots)       { assert(slots != nullptr); return ISLOT(slots); }
+    static inline jbyte getByte(slot_t *slots)     { assert(slots != nullptr); return jint2jbyte(getInt(slots)); }
+    static inline jbool getBool(slot_t *slots)     { assert(slots != nullptr); return jint2jbool(getInt(slots)); }
+    static inline jchar getChar(slot_t *slots)     { assert(slots != nullptr); return jint2jchar(getInt(slots)); }
+    static inline jshort getShort(slot_t *slots)   { assert(slots != nullptr); return jint2jshort(getInt(slots)); }
+    static inline jfloat getFloat(slot_t *slots)   { assert(slots != nullptr); return FSLOT(slots); }
+    static inline jlong getLong(slot_t *slots)     { assert(slots != nullptr); return LSLOT(slots); }
+    static inline jdouble getDouble(slot_t *slots) { assert(slots != nullptr); return DSLOT(slots); }
     template <typename T = Object>
-    T *getRef(int index)         { return (T *) RSLOT(slots + index); }
-
-    /* pusher */
-
-//    void push(slot_t v)   { *ostack++ = v; }
-//    void pushByte(jbyte v)    { pushi(v);  }
-//    void pushChar(jchar v)    { pushi(v);   }
-//    void pushShort(jshotr v)    { pushi(v);   }
-//    void pushInt(jint v)    { ISLOT(ostack) = v; ostack++;   }
-//    void pushFloat(jfloat v)  { FSLOT(ostack) = v; ostack++; }
-//    void pushLong(jlong v)   { LSLOT(ostack) = v; ostack += 2; }
-//    void pushDouble(jdouble v) { DSLOT(ostack) = v; ostack += 2; }
-//    void pushRef(jref v)    { RSLOT(ostack) = v; ostack++; }
-
-    //     jint    popi() { ostack--;    return ISLOT(ostack); }
-    // jfloat  popf() { ostack--;    return FSLOT(ostack); }
-    // jlong   popl() { ostack -= 2; return LSLOT(ostack); }
-    // jdouble popd() { ostack -= 2; return DSLOT(ostack); }
-    // jref    popr() { ostack--;    return RSLOT(ostack); }
-
-};
+    static inline T *getRef(slot_t *slots)         { assert(slots != nullptr); return (T *) RSLOT(slots); }
+}
 
 #endif //KAYO_SLOT_H
