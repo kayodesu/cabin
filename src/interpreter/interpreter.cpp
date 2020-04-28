@@ -1072,6 +1072,8 @@ __method_return:
                 goto __invoke_method;
             }           
             case JVM_OPC_invokedynamic: {
+                jvm_abort("invokedynamic");
+
 			    u2 index = reader->readu2(); // point to JVM_CONSTANT_InvokeDynamic_info
 			    reader->readu1(); // this byte must always be zero.
 			    reader->readu1(); // this byte must always be zero.
@@ -1124,7 +1126,7 @@ __method_return:
                         break;
                     }
                     case JVM_REF_newInvokeSpecial:
-                        jvm_abort(" "); // todo
+                        jvm_abort("JVM_REF_newInvokeSpecial"); // todo
                         break;
                     default:
                         jvm_abort("never goes here"); // todo never goes here

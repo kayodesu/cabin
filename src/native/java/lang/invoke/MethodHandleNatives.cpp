@@ -14,7 +14,7 @@ using namespace method_type;
 using namespace member_name;
 
 // static native int getConstant(int which);
-static jint getConstant(jref _this, jint which)
+static jint getConstant(jclsref clazz, jint which)
 {
     // todo 啥意思
     if (which == 4)
@@ -24,7 +24,7 @@ static jint getConstant(jref _this, jint which)
 }
 
 // static native void init(MemberName self, Object ref);
-static void init(jref _this, jref self, jref ref)
+static void init(jclsref clazz0, jref self, jref ref)
 {
     jvm_abort("init");
 
@@ -44,11 +44,32 @@ static void init(jref _this, jref self, jref ref)
     } else if (equals(ref->clazz->className, "java/lang/reflect/Constructor")) {
 
     } else if (equals(ref->clazz->className, "java/lang/reflect/Method")) {
+        /*
+        classObj := ref.GetFieldValue("clazz", "Ljava/lang/Class;").Ref
+                class := classObj.GetGoClass()
+                slot := ref.GetFieldValue("slot", "I").IntValue()
+                method := class.Methods[slot]
 
+                mn.SetFieldValue("clazz", "Ljava/lang/Class;", heap.NewRefSlot(classObj))
+                mn.SetFieldValue("flags", "I", heap.NewIntSlot(getMNFlags(method)))
+        */
     } else {
         jvm_abort("never get here.");
     }
 }
+/*
+func getMNFlags(method *heap.Method) int32 {
+	flags := int32(method.AccessFlags)
+	if method.IsStatic() {
+		flags |= MN_IS_METHOD | (references.RefInvokeStatic << MN_REFERENCE_KIND_SHIFT)
+	} else if method.IsConstructor() {
+		flags |= MN_IS_CONSTRUCTOR | (references.RefInvokeSpecial << MN_REFERENCE_KIND_SHIFT)
+	} else {
+		flags |= MN_IS_METHOD | (references.RefInvokeSpecial << MN_REFERENCE_KIND_SHIFT)
+	}
+	return flags
+}
+*/
 
 /*
  * todo 说明这函数是干嘛的。。。。。。。。。
@@ -70,8 +91,51 @@ static void init(jref _this, jref self, jref ref)
  *
  * static native MemberName resolve(MemberName self, Class<?> caller) throws LinkageError, ClassNotFoundException;
  */
-static jref resolve(jref _this, jref self, jref caller)
+ #if 0
+ func resolve(frame *rtda.Frame) {
+	mnSlot := frame.GetLocalVar(0)
+	mnObj := mnSlot.Ref
+	// caller := frame.GetRefVar(1)
+	// panic("TODO: resolve!")
+	frame.PushRef(mnObj)
+
+	clsObj := mnObj.GetFieldValue("clazz", "Ljava/lang/Class;").Ref
+	nameObj := mnObj.GetFieldValue("name", "Ljava/lang/String;").Ref
+	flags := mnObj.GetFieldValue("flags", "I").IntValue()
+	getSig := mnObj.Class.GetInstanceMethod("getSignature", "()Ljava/lang/String;")
+
+	cls := clsObj.GetGoClass()
+	nameStr := nameObj.JSToGoStr()
+
+	frame.Thread.InvokeMethodWithShim(getSig, []heap.Slot{mnSlot})
+	frame.Thread.CurrentFrame().AppendOnPopAction(func(shim *rtda.Frame) {
+		sigObj := shim.TopRef(0)
+		sigStr := sigObj.JSToGoStr()
+		if sigStr[0] == '(' {
+			if m := getMethod(cls, nameStr, sigStr); m != nil {
+				flags |= int32(m.AccessFlags)
+				mnObj.SetFieldValue("flags", "I", heap.NewIntSlot(flags))
+			}
+		} else {
+			panic("TODO")
+		}
+	})
+}
+// TODO
+func getMethod(cls *heap.Class, name, descriptor string) *heap.Method {
+	if m := cls.GetStaticMethod(name, descriptor); m != nil {
+		return m
+	}
+	if m := cls.GetInstanceMethod(name, descriptor); m != nil {
+		return m
+	}
+	return nil
+}
+ #endif
+static jref resolve(jclsref clazz0, jref self, jref caller)
 {
+    jvm_abort("resolve");
+
     // jref mn = frame->getLocalAsRef(0);
     // jref caller = frame->getLocalAsRef(1);
 
