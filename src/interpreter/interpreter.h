@@ -7,7 +7,6 @@
 
 #include <initializer_list>
 #include <cstdarg>
-#include "../vmdef.h"
 #include "../jvmstd.h"
 #include "../objects/signature.h"
 #include "../objects/method.h"

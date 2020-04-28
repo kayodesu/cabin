@@ -25,7 +25,7 @@ Object::Object(Class *c): clazz(c)
 Object *Object::newObject(Class *c)
 {
     size_t size = sizeof(Object) + c->instFieldsCount * sizeof(slot_t);
-    return new(g_heap.allocObject(size)) Object(c);
+    return new(g_heap->allocObject(size)) Object(c);
 }
 
 Field *Object::lookupField(const char *name, const char *descriptor)
@@ -37,7 +37,7 @@ Field *Object::lookupField(const char *name, const char *descriptor)
 Object *Object::clone() const
 {
     size_t s = size();
-    return (Object *) memcpy(g_heap.allocObject(s), this, s);
+    return (Object *) memcpy(g_heap->allocObject(s), this, s);
 }
 
 void Object::setByteField(Field *f, jbyte v)

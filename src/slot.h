@@ -5,8 +5,8 @@
 #ifndef KAYO_SLOT_H
 #define KAYO_SLOT_H
 
+#include <cassert>
 #include <typeinfo>
-#include "vmdef.h"
 #include "jvmstd.h"
 
 // 一个slot_t类型必须可以容纳 jbool, jbyte, jchar, jshort，jint，jfloat, jref 称为类型一

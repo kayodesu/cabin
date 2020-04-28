@@ -3,9 +3,7 @@
  */
 
 #include "../../jni_inner.h"
-#include "../../../symbol.h"
 #include "helper.h"
-#include "../../../vmdef.h"
 #include "../../../objects/array_object.h"
 
 // private static native void initIDs();

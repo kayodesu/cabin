@@ -10,7 +10,7 @@
 #include <sstream>
 #include <vector>
 #include <cassert>
-#include "../vmdef.h"
+#include "../jvmstd.h"
 #include "MemMgr.h"
 
 class Class;

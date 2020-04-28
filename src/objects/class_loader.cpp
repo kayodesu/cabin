@@ -81,7 +81,7 @@ static optional<pair<u1 *, size_t>> readClass(const char *path,
     unzGetCurrentFileInfo64(module_file, &file_info, buf, sizeof(buf),
             nullptr, 0, nullptr, 0);
 
-    auto bytecode = (u1 *) g_heap.allocBytecode(file_info.uncompressed_size); //new u1[file_info.uncompressed_size];
+    auto bytecode = (u1 *) g_heap->allocBytecode(file_info.uncompressed_size); //new u1[file_info.uncompressed_size];
     int size = unzReadCurrentFile(module_file, bytecode, (unsigned int) (file_info.uncompressed_size));
     unzCloseCurrentFile(module_file);
     unzClose(module_file);

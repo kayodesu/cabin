@@ -6,7 +6,7 @@
 #define JVM_ATTRIBUTE_H
 
 #include <vector>
-#include "../vmdef.h"
+#include "../jvmstd.h"
 #include "../slot.h"
 #include "../util/bytecode_reader.h"
 

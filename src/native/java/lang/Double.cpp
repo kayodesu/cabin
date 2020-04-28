@@ -3,8 +3,6 @@
  */
 
 #include "../../jni_inner.h"
-#include "../../../util/convert.h"
-#include "../../../vmdef.h"
 
 // public static native long doubleToRawLongBits(double value);
 static jlong doubleToRawLongBits(jdouble value)

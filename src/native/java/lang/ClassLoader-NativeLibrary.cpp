@@ -3,8 +3,6 @@
  */
 
 #include "../../jni_inner.h"
-#include "../../../vmdef.h"
-#include "../../../objects/object.h"
 
 // native long find(String name);
 static jlong find(jref _this, jstrref name)

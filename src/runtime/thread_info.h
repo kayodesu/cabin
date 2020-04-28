@@ -8,7 +8,7 @@
 #include <vector>
 #include <thread>
 #include "../config.h"
-#include "../vmdef.h"
+#include "../jvmstd.h"
 #include "../objects/throwables.h"
 #include "../util/encoding.h"
 

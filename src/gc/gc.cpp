@@ -61,7 +61,7 @@ static bool accessible(jref obj)
 
 void gc()
 {
-    MemMgr *oa = g_heap.objectArea;
+    MemMgr *oa = g_heap->objectArea;
 
     assert(oa != nullptr);
     oa->lock();

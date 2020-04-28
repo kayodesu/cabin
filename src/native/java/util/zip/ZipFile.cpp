@@ -1,8 +1,9 @@
 #include <minizip/unzip.h>
 #include "../../../jni_inner.h"
 #include "../../../../symbol.h"
-#include "../../../../vmdef.h"
+#include "../../../../jvmstd.h"
 #include "../../../../objects/string_object.h"
+#include "../../../../objects/throwables.h"
 
 /*
  * Author: Yo Ka
@@ -21,7 +22,7 @@ jlong __open(jstrref name, jint mode, jlong lastModified, jboolean usemmap)
 
     // todo 其他几个参数怎么搞？？
     unzFile jzfile = unzOpen64(utf8);
-    if (jzfile == NULL) {
+    if (jzfile == nullptr) {
         throw IOException(utf8);
     }
 

@@ -14,7 +14,7 @@ Array *Array::newArray(Class *ac, jint arrLen)
     assert(ac != nullptr);
     assert(ac->isArrayClass());
     size_t size = sizeof(Array) + ac->getEleSize()*arrLen;
-    return new(g_heap.allocObject(size)) Array(ac, arrLen);
+    return new(g_heap->allocObject(size)) Array(ac, arrLen);
 }
 
 Array *Array::newMultiArray(Class *ac, jint dim, const jint lens[])
@@ -24,7 +24,7 @@ Array *Array::newMultiArray(Class *ac, jint dim, const jint lens[])
     assert(ac->isArrayClass());
 
     size_t size = sizeof(Array) + ac->getEleSize()*lens[0];
-    return new(g_heap.allocObject(size)) Array(ac, dim, lens);
+    return new(g_heap->allocObject(size)) Array(ac, dim, lens);
 }
 
 Array::Array(Class *ac, jint arrLen): Object(ac), len(arrLen)

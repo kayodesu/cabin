@@ -1,7 +1,8 @@
 #include "../../jni_inner.h"
 #include "../../../symbol.h"
-#include "../../../vmdef.h"
+#include "../../../jvmstd.h"
 #include "../../../objects/object.h"
+#include "../../../objects/throwables.h"
 
 /*
  * 一些帮助函数，只用于本目录下的文件。

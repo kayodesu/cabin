@@ -5,7 +5,7 @@
 #ifndef JVM_PRIM_H
 #define JVM_PRIM_H
 
-#include "../vmdef.h"
+#include "../jvmstd.h"
 #include "../slot.h"
 
 bool isPrimClassName(const utf8_t *class_name);

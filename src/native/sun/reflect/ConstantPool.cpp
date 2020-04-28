@@ -1,7 +1,4 @@
 #include "../../jni_inner.h"
-#include "../../../vmdef.h"
-#include "../../../runtime/frame.h"
-#include "../../../objects/class.h"
 
 /*
  * Author: Yo Ka

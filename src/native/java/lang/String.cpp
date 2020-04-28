@@ -3,9 +3,6 @@
  */
 
 #include "../../jni_inner.h"
-#include "../../../vmdef.h"
-#include "../../../objects/class.h"
-#include "../../../objects/string_object.h"
 
 // public native String intern();
 static jstrref intern(jstrref _this)

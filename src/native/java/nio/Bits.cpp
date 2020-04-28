@@ -3,7 +3,6 @@
  */
 
 #include "../../jni_inner.h"
-#include "../../../vmdef.h"
 
 // static native void copyFromShortArray(Object src, long srcPos, long dstAddr, long length);
 static void copyFromShortArray(jref _this, jref src, jlong srcPos, jlong dstAddr, jlong length)

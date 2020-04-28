@@ -391,7 +391,7 @@ Class::Class(Object *loader, u1 *bytecode, size_t len)
         fields.resize(fieldsCount);
         auto lastField = fieldsCount - 1;
         for (u2 i = 0; i < fieldsCount; i++) {
-            auto f = new(g_heap.allocField()) Field(this, r);
+            auto f = new(g_heap->allocField()) Field(this, r);
             // 保证所有的 public fields 放在前面
             if (f->isPublic())
                 fields[publicFieldsCount++] = f;
@@ -408,7 +408,7 @@ Class::Class(Object *loader, u1 *bytecode, size_t len)
         methods.resize(methodsCount);
         auto lastMethod = methodsCount - 1;
         for (u2 i = 0; i < methodsCount; i++) {
-            auto m = new(g_heap.allocMethod()) Method(this, r);
+            auto m = new(g_heap->allocMethod()) Method(this, r);
             // 保证所有的 public methods 放在前面
             if (m->isPublic())
                 methods[publicMethodsCount++] = m;

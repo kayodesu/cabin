@@ -1,5 +1,4 @@
 #include "../../../jni_inner.h"
-#include "../../../../vmdef.h"
 
 /*
  * Author: Yo Ka

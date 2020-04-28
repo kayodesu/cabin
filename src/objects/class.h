@@ -12,7 +12,7 @@
 #include <unordered_set>
 #include <mutex>
 #include <pthread.h>
-#include "../vmdef.h"
+#include "../jvmstd.h"
 #include "constant_pool.h"
 #include "class_loader.h"
 #include "Modifier.h"
@@ -22,6 +22,7 @@
 #include "../util/bytecode_reader.h"
 #include "../classfile/attributes.h"
 #include "../classfile/constants.h"
+#include "../memory/Heap.h"
 
 class Method;
 class Field;
@@ -145,7 +146,7 @@ private:
 
     static Class *newClass(Object *loader, u1 *bytecode, size_t len)
     {
-        void *mem = g_heap.allocClass();
+        void *mem = g_heap->allocClass();
         auto c = new(mem) Class(loader, bytecode, len);
         c->state = LOADED;
         return c;
@@ -153,7 +154,7 @@ private:
 
     static Class *newClass(const char *className)
     {
-        void *mem = g_heap.allocClass();
+        void *mem = g_heap->allocClass();
         auto c = new(mem) Class(className);
         c->state = LOADED;
         return c;

@@ -14,6 +14,7 @@
 #include "objects/method.h"
 #include "objects/array_object.h"
 #include "interpreter/interpreter.h"
+#include "memory/Heap.h"
 
 using namespace std;
 using namespace std::filesystem;
@@ -25,7 +26,7 @@ using namespace utf8;
 #define TRACE(...)
 #endif
 
-Heap g_heap;
+Heap *g_heap;
 
 bool g_jdk_version_9_and_upper;
 
@@ -188,6 +189,14 @@ static void initProperties()
     g_properties.emplace_back("sun.stderr.encoding", "UTF-8");
 }
 
+static void initHeap()
+{
+    g_heap = new Heap;
+    if (g_heap == nullptr) {
+        jvm_abort("init Heap failed"); // todo
+    }
+}
+
 void initJNI();
 
 static void initJVM(int argc, char *argv[])
@@ -313,6 +322,7 @@ static void initJVM(int argc, char *argv[])
 
     /* order is important */
     initSymbol();
+    initHeap();
     initProperties();
     initJNI();
     initClassLoader();

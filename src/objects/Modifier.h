@@ -5,7 +5,7 @@
 #ifndef KAYOVM_MODIFIER_H
 #define KAYOVM_MODIFIER_H
 
-#include "../vmdef.h"
+#include "../jvmstd.h"
 
 class Modifier {
 private:

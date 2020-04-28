@@ -6,7 +6,7 @@
 #define KAYO_CONSTANT_POOL_H
 
 #include <cassert>
-#include "../vmdef.h"
+#include "../jvmstd.h"
 #include "../classfile/constants.h"
 #include "../slot.h"
 

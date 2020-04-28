@@ -5,11 +5,6 @@
 #include <cassert>
 #include "../../../../symbol.h"
 #include "../../../jni_inner.h"
-#include "../../../../vmdef.h"
-#include "../../../../objects/class_loader.h"
-#include "../../../../objects/class.h"
-#include "../../../../objects/method.h"
-#include "../../../../interpreter/interpreter.h"
 
 // private static native void initialize();
 static void initialize()

@@ -3,9 +3,7 @@
  */
 
 #include "../../jni_inner.h"
-#include "../../../vmdef.h"
 #include "../../../runtime/thread_info.h"
-#include "../../../runtime/frame.h"
 
 /*
  * This routine initializes JNI field offsets for the class

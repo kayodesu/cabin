@@ -4,10 +4,11 @@
 
 #include "../../../symbol.h"
 #include "../../jni_inner.h"
-#include "../../../vmdef.h"
+#include "../../../jvmstd.h"
 #include "../../../objects/class.h"
 #include "../../../objects/object.h"
 #include "../../../objects/class_loader.h"
+#include "../../../objects/throwables.h"
 
 // public native int hashCode();
 static jint hashCode(jref _this)

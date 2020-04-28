@@ -4,7 +4,7 @@
 
 #include <windows.h> // todo
 #include "../../jni_inner.h"
-#include "../../../vmdef.h"
+#include "../../../jvmstd.h"
 
 // public native int availableProcessors();
 static jint availableProcessors(jref _this)

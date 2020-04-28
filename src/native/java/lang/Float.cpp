@@ -3,8 +3,6 @@
  */
 
 #include "../../jni_inner.h"
-#include "../../../util/convert.h"
-#include "../../../vmdef.h"
 
 // public static native int floatToRawIntBits(float value);
 static jint floatToRawIntBits(jfloat value)
