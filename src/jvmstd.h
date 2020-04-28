@@ -2,8 +2,8 @@
  * Author: kayo
  */
 
-#ifndef JVM_JVM_H
-#define JVM_JVM_H
+#ifndef JVM_JVMSTD_H
+#define JVM_JVMSTD_H
 
 #include <cstdio>
 #include <cstdlib>
@@ -164,4 +164,4 @@ extern std::vector<std::pair<const utf8_t *, const utf8_t *>> g_properties;
 // 出现异常，退出jvm
 #define jvm_abort(...) do { printvm("fatal error! "); printf(__VA_ARGS__); exit(-1); } while(false)
 
-#endif //JVM_JVM_H
+#endif //JVM_JVMSTD_H
