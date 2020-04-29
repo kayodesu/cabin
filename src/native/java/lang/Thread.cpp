@@ -3,10 +3,13 @@
  */
 
 #include "../../jni_inner.h"
+#include "../../../symbol.h"
 #include "../../../objects/object.h"
 #include "../../../objects/array_object.h"
 #include "../../../runtime/thread_info.h"
 #include "../../../runtime/frame.h"
+
+using namespace std;
 
 /*
  * Returns a reference to the currently executing thread Object.
@@ -22,48 +25,45 @@ static jref currentThread()
 // public static native void yield();
 static void yield()
 {
-    jvm_abort("yield"); // todo
+    std::this_thread::yield();
 }
 
 // public static native void sleep(long millis) throws InterruptedException;
 static void sleep(jlong millis)
 {
-    jvm_abort("error\n");
-
-    if (millis < 0) {
-        throw IllegalArgumentException("timeout value is negative");
+    if (millis <= 0) {
+        throw new IllegalArgumentException;
     }
+    if (millis == 0)
+        return;
 
-    // todo
+    this_thread::sleep_for(chrono::microseconds(millis));
 
-//    vars := frame.LocalVars()
-//    millis := vars.GetLong(0)
-//
-//    thread := frame.Thread()
-//    if millis < 0 {
-//        thread.ThrowIllegalArgumentException("timeout value is negative")
-//        return
-//    }
-//
-//    m := millis * int64(time.Millisecond)
-//    d := time.Duration(m)
-//    interrupted := thread.Sleep(d)
-//
-//    if interrupted {
-//                thread.ThrowInterruptedException("sleep interrupted")
-//        }
+    // todo 怎么处理 InterruptedException 
 }
 
+// inform VM of interrupt
 // private native void interrupt0();
 static void interrupt0(jref _this)
 {
-    jvm_abort("error\n"); // todo
+    Thread *t = Thread::from(_this);
+    t->interrupted = jtrue;
 }
 
-// private native boolean isInterrupted(boolean ClearInterrupted);
-static jboolean isInterrupted(jref _this)
+/*
+ * Tests if some Thread has been interrupted.  The interrupted state
+ * is reset or not based on the value of ClearInterrupted that is passed.
+ * 
+ * private native boolean isInterrupted(boolean ClearInterrupted);
+ */
+static jboolean isInterrupted(jref _this, jboolean clearInterrupted)
 {
-    return jfalse; // todo
+    Thread *t = Thread::from(_this);
+    jbool b = t->interrupted;
+    if (b && clearInterrupted) {
+        t->interrupted = jfalse;
+    }
+    return b; 
 }
 
 /*
@@ -112,7 +112,17 @@ static void setPriority0(jref _this, jint newPriority)
 // private native void start0();
 static void start0(jref _this)
 {
-    createCustomerThread(_this);
+    // createCustomerThread(_this);
+    static Method *runMethod 
+                = loadBootClass(S(java_lang_Thread))->lookupInstMethod(S(run), S(___V));
+
+    static auto _start = [](Object *_this) {
+        new Thread(_this);
+        return (void *) execJavaFunc(runMethod, {_this});
+    };
+
+    std::thread t(_start, _this);
+    t.detach();
 }
 
 // public native int countStackFrames();
@@ -174,6 +184,12 @@ static void resume0(jref _this)
     jvm_abort("resume0"); // todo
 }
 
+// private static native void clearInterruptEvent();
+static void clearInterruptEvent()
+{
+    jvm_abort("clearInterruptEvent"); // todo
+}
+
 // private native void setNativeName(String name);
 static void setNativeName(jref _this, jstrref name)
 {
@@ -197,6 +213,7 @@ static JNINativeMethod methods[] = {
         { "stop0", "(Ljava/lang/Object;)V", (void *) stop0 },
         { "suspend0", "()V", (void *) suspend0 },
         { "resume0", "()V", (void *) resume0 },
+        { "clearInterruptEvent", "()V", (void *) clearInterruptEvent },
         { "setNativeName", "(Ljava/lang/String;)V", (void *) setNativeName },
 };
 

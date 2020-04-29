@@ -27,7 +27,7 @@ Throwable::Throwable(const utf8_t *exceptionName, const utf8_t *msg)
     assert(exceptionName != nullptr);
 
     Class *ec = loadBootClass(exceptionName);
-    assert(ec != nullptr);
+    assert(ec != nullptr); // todo
 
 //    new(this) Throwable(ec, msg);  // todo
 //    return;

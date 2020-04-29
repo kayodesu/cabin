@@ -23,27 +23,22 @@
 using namespace std;
 using namespace slot;
 
-// Thread specific key holding a Thread
-static pthread_key_t thread_key;
-
-//thread_local Thread *curr_thread;
+thread_local Thread *curr_thread;
 
 Thread *getCurrentThread()
 {
-    return (Thread *) pthread_getspecific(thread_key);
-//    return curr_thread;
+    return curr_thread;
 }
 
 static inline void saveCurrentThread(Thread *thread)
 {
-    pthread_setspecific(thread_key, thread);
-//    curr_thread = thread;
+    curr_thread = thread;
 }
 
 // Various field and method into java.lang.Thread cached at startup and used in thread creation
 static Field *eetopField;
 static Field *threadStatusField;
-static Method *runMethod;
+// static Method *runMethod;
 
 // Cached java.lang.Thread class
 static Class *threadClass;
@@ -52,13 +47,10 @@ Thread *mainThread;
 
 Thread *initMainThread()
 {
-    pthread_key_create(&thread_key, nullptr);
-
     threadClass = loadBootClass(S(java_lang_Thread));
 
     eetopField = threadClass->lookupInstField("eetop", S(J));
     threadStatusField = threadClass->lookupInstField("threadStatus", S(I));
-    runMethod = threadClass->lookupInstMethod(S(run), S(___V));
 
     mainThread = new Thread();
 
@@ -104,19 +96,6 @@ void createVMThread(void *(*start)(void *), const utf8_t *thread_name)
 //
 //    std::thread t(__start, start, thread_name);
 //    t.detach();
-}
-
-void createCustomerThread(Object *jThread)
-{
-    assert(jThread != nullptr);
-
-    static auto _start = [](Object *jThread) {
-        new Thread(jThread);
-        return (void *) execJavaFunc(runMethod, {jThread});
-    };
-
-    std::thread t(_start, jThread);
-    t.detach();
 }
 
 static mutex new_thread_mutex;

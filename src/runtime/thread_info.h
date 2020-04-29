@@ -88,15 +88,16 @@ class Thread {
     u1 vmStack[VM_STACK_SIZE]; // 虚拟机栈，一个线程只有一个虚拟机栈
     Frame *topFrame = nullptr;
 
-    explicit Thread(Object *jThread = nullptr, jint priority = THREAD_NORM_PRIORITY);
-
     friend Thread *initMainThread();
     friend void createVMThread(void *(*start)(void *), const utf8_t *thread_name);
-    friend void createCustomerThread(Object *jThread);
 
 public:
     Object *tobj = nullptr; // 所关联的 Object of java.lang.Thread
     std::thread::id tid; // 所关联的 local thread 对应的id
+
+    explicit Thread(Object *jThread = nullptr, jint priority = THREAD_NORM_PRIORITY);
+
+    jbool interrupted = jfalse;
 
     void setThreadGroupAndName(Object *threadGroup, const char *threadName);
 
