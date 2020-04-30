@@ -9,12 +9,13 @@
 #include "invoke.h"
 #include "../interpreter/interpreter.h"
 
+using namespace std;
 using namespace method_type;
 using namespace method_handles;
 
 Class *ConstantPool::resolveClass(u2 i)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    lock_guard<recursive_mutex> lock(mutex);
     assert(0 < i && i < size);
     assert(_type[i] == JVM_CONSTANT_Class or _type[i] == JVM_CONSTANT_ResolvedClass);
 
@@ -31,7 +32,7 @@ Class *ConstantPool::resolveClass(u2 i)
 
 Method *ConstantPool::resolveMethod(u2 i)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    lock_guard<recursive_mutex> lock(mutex);
     assert(0 < i && i < size);
     assert(_type[i] == JVM_CONSTANT_Methodref or _type[i] == JVM_CONSTANT_ResolvedMethod);
 
@@ -50,7 +51,7 @@ Method *ConstantPool::resolveMethod(u2 i)
 
 Method* ConstantPool::resolveInterfaceMethod(u2 i)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    lock_guard<recursive_mutex> lock(mutex);
     assert(0 < i && i < size);
     assert(_type[i] == JVM_CONSTANT_InterfaceMethodref
         || _type[i] == JVM_CONSTANT_ResolvedInterfaceMethod);
@@ -70,7 +71,7 @@ Method* ConstantPool::resolveInterfaceMethod(u2 i)
 
 Field *ConstantPool::resolveField(u2 i)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    lock_guard<recursive_mutex> lock(mutex);
     assert(0 < i && i < size);
     assert(_type[i] == JVM_CONSTANT_Fieldref or _type[i] == JVM_CONSTANT_ResolvedField);
 
@@ -89,7 +90,7 @@ Field *ConstantPool::resolveField(u2 i)
 
 Object *ConstantPool::resolveString(u2 i)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    lock_guard<recursive_mutex> lock(mutex);
     assert(0 < i && i < size);
     assert(_type[i] == JVM_CONSTANT_String or _type[i] == JVM_CONSTANT_ResolvedString);
 
@@ -107,7 +108,7 @@ Object *ConstantPool::resolveString(u2 i)
 
 Object *ConstantPool::resolveMethodType(u2 i)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    lock_guard<recursive_mutex> lock(mutex);
     assert(0 < i && i < size);
     assert(_type[i] == JVM_CONSTANT_MethodType);
     return fromMethodDescriptor(methodTypeDescriptor(i), clazz->loader);
@@ -115,7 +116,7 @@ Object *ConstantPool::resolveMethodType(u2 i)
 
 Object *ConstantPool::resolveMethodHandle(u2 i)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex);
+    lock_guard<recursive_mutex> lock(mutex);
     assert(0 < i && i < size);
     assert(_type[i] == JVM_CONSTANT_MethodHandle);
 
