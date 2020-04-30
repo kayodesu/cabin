@@ -7,15 +7,13 @@
 #include "object.h"
 #include "class.h"
 
-/*
- * Author: kayo
- */
-
 using namespace std;
 using namespace utf8;
 
 /*
  * 基本类型的名称，描述符，等等
+ *
+ * Author: Yo Ka
  */
 static const struct {
     const utf8_t *class_name;

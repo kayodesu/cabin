@@ -1,5 +1,5 @@
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 #ifndef KAYO_CONSTANT_POOL_H
@@ -21,7 +21,7 @@ class ConstantPool {
     slot_t *_info = nullptr;
 
 public:
-    Class *clazz;
+    Class *clazz = nullptr;
     u2 size = 0;
 
     ConstantPool() = default;

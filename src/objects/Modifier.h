@@ -1,5 +1,5 @@
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 #ifndef KAYOVM_MODIFIER_H

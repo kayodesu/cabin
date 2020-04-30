@@ -1,5 +1,5 @@
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 #ifndef JVM_BYTECODE_READER_H

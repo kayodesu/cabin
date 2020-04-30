@@ -1,5 +1,5 @@
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 #ifndef KAYO_ARRAY_OBJECT_H

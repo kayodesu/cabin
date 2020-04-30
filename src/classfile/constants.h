@@ -4,6 +4,10 @@
 
 #include <cstdint>
 
+/*
+ * Author: Yo Ka
+ */
+
 /* Flags */
 
 enum {

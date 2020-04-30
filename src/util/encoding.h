@@ -16,7 +16,7 @@
  *
  * todo java.lang.String 内部是用utf16表示的，和Unicode有什么区别？？
  *
- * Author: kayo
+ * Author: Yo Ka
  */
 
 namespace utf8 {

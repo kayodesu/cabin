@@ -1,5 +1,5 @@
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 #include "constant_pool.h"
@@ -17,7 +17,7 @@ Class *ConstantPool::resolveClass(u2 i)
     assert(0 < i && i < size);
     assert(_type[i] == JVM_CONSTANT_Class or _type[i] == JVM_CONSTANT_ResolvedClass);
 
-    if (_type[i] == JVM_CONSTANT_ResolvedClass)
+    if (type(i) == JVM_CONSTANT_ResolvedClass)
         return (Class *) _info[i];
 
     Class *c = loadClass(clazz->loader, className(i));

@@ -1458,58 +1458,58 @@ static void callJNIMethod(Frame *frame)
     }
 
     const char *p = m->type;
-    assert(*p == '(');
+    assert(*p == JVM_SIGNATURE_FUNC);
     p++; // skip start (
 
-    for (; *p != ')'; lvars++, p++, argc++) {
+    for (; *p != JVM_SIGNATURE_ENDFUNC; lvars++, p++, argc++) {
         switch (*p) {
-            case 'Z':
-            case 'B': {
+            case JVM_SIGNATURE_BOOLEAN:
+            case JVM_SIGNATURE_BYTE: {
                 jbyte b = jint2jbyte(ISLOT(lvars));
                 *(jbyte *)lvars = b;
                 arg_types[argc] = &ffi_type_sint8;
                 arg_values[argc] = (void *) lvars;
                 break;
             }
-            case 'C': {
+            case JVM_SIGNATURE_CHAR: {
                 jchar c = jint2jchar(ISLOT(lvars));
                 *(jchar *)lvars = c;
                 arg_types[argc] = &ffi_type_uint16;
                 arg_values[argc] = (void *) lvars;
                 break;
             }
-            case 'S': {
+            case JVM_SIGNATURE_SHORT: {
                 jshort s = jint2jshort(ISLOT(lvars));
                 *(jshort *)lvars = s;
                 arg_types[argc] = &ffi_type_sint16;
                 arg_values[argc] = (void *) lvars;
                 break;
             }
-            case 'I':
+            case JVM_SIGNATURE_INT:
                 arg_types[argc] = &ffi_type_sint32;
                 arg_values[argc] = (void *) lvars;
                 break;
-            case 'F':
+            case JVM_SIGNATURE_FLOAT:
                 arg_types[argc] = &ffi_type_float;
                 arg_values[argc] = (void *) lvars;
                 break;
-            case 'J':
+            case JVM_SIGNATURE_LONG:
                 arg_types[argc] = &ffi_type_sint64;
                 arg_values[argc] = (void *) lvars;
                 lvars++;
                 break;
-            case 'D':
+            case JVM_SIGNATURE_DOUBLE:
                 arg_types[argc] = &ffi_type_double;
                 arg_values[argc] = (void *) lvars;
                 lvars++;
                 break;
-            case '[':
-                while (*++p == '[');
-                if (*p != 'L') { // 基本类型的数组
+            case JVM_SIGNATURE_ARRAY:
+                while (*++p == JVM_SIGNATURE_ARRAY);
+                if (*p != JVM_SIGNATURE_CLASS) { // 基本类型的数组
                     goto __ref;
                 }
-            case 'L':
-                while(*++p != ';');
+            case JVM_SIGNATURE_CLASS:
+                while(*++p != JVM_SIGNATURE_ENDCLASS);
             __ref:
                 arg_types[argc] = &ffi_type_pointer;
                 arg_values[argc] = (void *) lvars;

@@ -1,5 +1,5 @@
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 #include <cassert>
@@ -20,8 +20,6 @@ MemMgr::MemMgr(address mem, size_t size)
     pthread_mutexattr_t attr;
     pthread_mutexattr_init(&attr);
     pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE); // 同一线程可重入的锁
-
-    pthread_mutex_init(&mutex, &attr);
 }
 
 MemMgr::~MemMgr()

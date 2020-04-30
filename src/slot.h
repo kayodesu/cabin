@@ -67,74 +67,33 @@ namespace slot {
         return s;
     }
 
+#undef A
+#define A assert(slots != nullptr)
     /* setter */
 
-    static inline void setInt(slot_t *slots, jint v)
-    {
-        assert(slots != nullptr);
-        ISLOT(slots) = v;
-    }
-
-    static inline void setByte(slot_t *slots, jbyte v)
-    {
-        assert(slots != nullptr);
-        setInt(slots, v);
-    }
-
-    static inline void setBool(slot_t *slots, jbool v)
-    {
-        assert(slots != nullptr);
-        setInt(slots, v);
-    }
-
-    static inline void setChar(slot_t *slots, jchar v)
-    {
-        assert(slots != nullptr);
-        setInt(slots, v);
-    }
-
-    static inline void setShort(slot_t *slots, jshort v)
-    {
-        assert(slots != nullptr);
-        setInt(slots, v);
-    }
-
-    static inline void setFloat(slot_t *slots, jfloat v)
-    {
-        assert(slots != nullptr);
-        FSLOT(slots) = v;
-    }
-
-    static inline void setLong(slot_t *slots, jlong v)
-    {
-        assert(slots != nullptr);
-        LSLOT(slots) = v;
-    }
-
-    static inline void setDouble(slot_t *slots, jdouble v)
-    {
-        assert(slots != nullptr);
-        DSLOT(slots) = v;
-    }
-
-    static inline void setRef(slot_t *slots, jref v)
-    {
-        assert(slots != nullptr);
-        RSLOT(slots) = v;
-    }
+    static inline void setInt(slot_t *slots, jint v)       { A; ISLOT(slots) = v; }
+    static inline void setByte(slot_t *slots, jbyte v)     { A; setInt(slots, v); }
+    static inline void setBool(slot_t *slots, jbool v)     { A; setInt(slots, v); }
+    static inline void setChar(slot_t *slots, jchar v)     { A; setInt(slots, v); }
+    static inline void setShort(slot_t *slots, jshort v)   { A; setInt(slots, v); }
+    static inline void setFloat(slot_t *slots, jfloat v)   { A; FSLOT(slots) = v; }
+    static inline void setLong(slot_t *slots, jlong v)     { A; LSLOT(slots) = v; }
+    static inline void setDouble(slot_t *slots, jdouble v) { A; DSLOT(slots) = v; }
+    static inline void setRef(slot_t *slots, jref v)       { A; RSLOT(slots) = v; }
 
     /* getter */
 
-    static inline jint getInt(slot_t *slots)       { assert(slots != nullptr); return ISLOT(slots); }
-    static inline jbyte getByte(slot_t *slots)     { assert(slots != nullptr); return jint2jbyte(getInt(slots)); }
-    static inline jbool getBool(slot_t *slots)     { assert(slots != nullptr); return jint2jbool(getInt(slots)); }
-    static inline jchar getChar(slot_t *slots)     { assert(slots != nullptr); return jint2jchar(getInt(slots)); }
-    static inline jshort getShort(slot_t *slots)   { assert(slots != nullptr); return jint2jshort(getInt(slots)); }
-    static inline jfloat getFloat(slot_t *slots)   { assert(slots != nullptr); return FSLOT(slots); }
-    static inline jlong getLong(slot_t *slots)     { assert(slots != nullptr); return LSLOT(slots); }
-    static inline jdouble getDouble(slot_t *slots) { assert(slots != nullptr); return DSLOT(slots); }
+    static inline jint getInt(slot_t *slots)       { A; return ISLOT(slots); }
+    static inline jbyte getByte(slot_t *slots)     { A; return jint2jbyte(getInt(slots)); }
+    static inline jbool getBool(slot_t *slots)     { A; return jint2jbool(getInt(slots)); }
+    static inline jchar getChar(slot_t *slots)     { A; return jint2jchar(getInt(slots)); }
+    static inline jshort getShort(slot_t *slots)   { A; return jint2jshort(getInt(slots)); }
+    static inline jfloat getFloat(slot_t *slots)   { A; return FSLOT(slots); }
+    static inline jlong getLong(slot_t *slots)     { A; return LSLOT(slots); }
+    static inline jdouble getDouble(slot_t *slots) { A; return DSLOT(slots); }
     template <typename T = Object>
-    static inline T *getRef(slot_t *slots)         { assert(slots != nullptr); return (T *) RSLOT(slots); }
+    static inline T *getRef(slot_t *slots)         { A; return (T *) RSLOT(slots); }
+#undef A
 }
 
 #endif //KAYO_SLOT_H

@@ -6,7 +6,7 @@
 #include "../config.h"
 
 /*
- * Author: kayo
+ * Author: Yo Ka
  */
 
 using namespace std;

@@ -6,7 +6,7 @@
 /*
  * java/lang/invoke 包下类的便利操作函数
  *
- * Author: kayo
+ * Author: Yo Ka
  */
 
 class Method;
