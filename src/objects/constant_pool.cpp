@@ -14,11 +14,13 @@ using namespace method_handles;
 
 Class *ConstantPool::resolveClass(u2 i)
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     assert(0 < i && i < size);
     assert(_type[i] == JVM_CONSTANT_Class or _type[i] == JVM_CONSTANT_ResolvedClass);
 
-    if (type(i) == JVM_CONSTANT_ResolvedClass)
+    if (_type[i] == JVM_CONSTANT_ResolvedClass) {
         return (Class *) _info[i];
+    }
 
     Class *c = loadClass(clazz->loader, className(i));
     type(i, JVM_CONSTANT_ResolvedClass);
@@ -29,11 +31,13 @@ Class *ConstantPool::resolveClass(u2 i)
 
 Method *ConstantPool::resolveMethod(u2 i)
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     assert(0 < i && i < size);
     assert(_type[i] == JVM_CONSTANT_Methodref or _type[i] == JVM_CONSTANT_ResolvedMethod);
 
-    if (type(i) == JVM_CONSTANT_ResolvedMethod)
+    if (_type[i] == JVM_CONSTANT_ResolvedMethod) {
         return (Method *) _info[i];
+    }
 
     Class *c = resolveClass(methodClassIndex(i));
     Method *m = c->lookupMethod(methodName(i), methodType(i));
@@ -46,11 +50,14 @@ Method *ConstantPool::resolveMethod(u2 i)
 
 Method* ConstantPool::resolveInterfaceMethod(u2 i)
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     assert(0 < i && i < size);
-    assert(_type[i] == JVM_CONSTANT_InterfaceMethodref or _type[i] == JVM_CONSTANT_ResolvedInterfaceMethod);
+    assert(_type[i] == JVM_CONSTANT_InterfaceMethodref
+        || _type[i] == JVM_CONSTANT_ResolvedInterfaceMethod);
 
-    if (type(i) == JVM_CONSTANT_ResolvedInterfaceMethod)
+    if (_type[i] == JVM_CONSTANT_ResolvedInterfaceMethod) {
         return (Method *) _info[i];
+    }
 
     Class *c = resolveClass(interfaceMethodClassIndex(i));
     Method *m = c->lookupMethod(interfaceMethodName(i), interfaceMethodType(i));
@@ -63,11 +70,13 @@ Method* ConstantPool::resolveInterfaceMethod(u2 i)
 
 Field *ConstantPool::resolveField(u2 i)
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     assert(0 < i && i < size);
     assert(_type[i] == JVM_CONSTANT_Fieldref or _type[i] == JVM_CONSTANT_ResolvedField);
 
-    if (type(i) == JVM_CONSTANT_ResolvedField)
+    if (_type[i] == JVM_CONSTANT_ResolvedField) {
         return (Field *) _info[i];
+    }
 
     Class *c = resolveClass(fieldClassIndex(i));
     Field *f = c->lookupField(fieldName(i), fieldType(i));
@@ -80,11 +89,13 @@ Field *ConstantPool::resolveField(u2 i)
 
 Object *ConstantPool::resolveString(u2 i)
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     assert(0 < i && i < size);
     assert(_type[i] == JVM_CONSTANT_String or _type[i] == JVM_CONSTANT_ResolvedString);
 
-    if (type(i) == JVM_CONSTANT_ResolvedString)
+    if (_type[i] == JVM_CONSTANT_ResolvedString) {
         return (Object *) _info[i];
+    }
 
     const utf8_t *str = string(i);
     Object *so = stringClass->intern(str);
@@ -96,6 +107,7 @@ Object *ConstantPool::resolveString(u2 i)
 
 Object *ConstantPool::resolveMethodType(u2 i)
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     assert(0 < i && i < size);
     assert(_type[i] == JVM_CONSTANT_MethodType);
     return fromMethodDescriptor(methodTypeDescriptor(i), clazz->loader);
@@ -103,6 +115,7 @@ Object *ConstantPool::resolveMethodType(u2 i)
 
 Object *ConstantPool::resolveMethodHandle(u2 i)
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex);
     assert(0 < i && i < size);
     assert(_type[i] == JVM_CONSTANT_MethodHandle);
 
