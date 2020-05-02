@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.9)
-project(kayo)
+project(jvm)
 
 set(CMAKE_CXX_FLAGS "-std=c++17 -m64 -Wall -lz -lminizip -llibffi") # lz: link zlip
 
-add_executable(kayo
+add_executable(jvm
         src/main.cpp
         src/interpreter/interpreter.cpp
         src/util/encoding.cpp src/util/convert.cpp src/classfile/attributes.cpp
@@ -39,6 +39,6 @@ add_executable(kayo
         src/objects/class_loader.cpp src/objects/prims.cpp src/objects/invoke.cpp
         src/objects/object.cpp src/objects/class.cpp src/interpreter/instructions/invokedynamic.cpp)
 
-target_link_libraries (kayo libz)
-target_link_libraries (kayo libminizip)
-target_link_libraries (kayo libffi)
+target_link_libraries (jvm libz)
+target_link_libraries (jvm libminizip)
+target_link_libraries (jvm libffi)

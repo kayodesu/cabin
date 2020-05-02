@@ -1,13 +1,12 @@
-# Kayo JVM
+# JVM
 An experimental JVM written in C++.
 
 ## Development environment
 * Win10 64 bit
 * MinGW64
-* gcc, g++
+* g++
 
 ## Dependence
-* pthread lib
 * jre8 lib
 * zlib 1.2.11
 * minizip 1.2.0
@@ -27,11 +26,11 @@ Ensure your Java version is Java8, and already set `JAVA_HOME` environment varia
 One command-line option:
 * -cp path: set class path.
 ```
-C:\>kayo HelloWorld -cp D:\code\kayo\testclasses
+C:\>jvm HelloWorld -cp D:\code\kayo\testclasses
 ```
 or, using CLASS_PATH environment variable.
 ```
-C:\>kayo HelloWorld
+C:\>jvm HelloWorld
 ```
 
 ## Quiz
@@ -45,7 +44,7 @@ public class HelloWorld {
 ```
 
 ```
-C:\>kayo HelloWorld -cp D:\code\kayo\testclasses
+C:\>jvm HelloWorld -cp D:\code\kayo\testclasses
 Hello, world!
 
 C:\>
@@ -78,7 +77,7 @@ public class BubbleSort {
 ```
 
 ```
-C:\>kayo array.BubbleSort
+C:\>jvm array.BubbleSort
 [9, 10, 11, 22, 24, 36, 36, 56, 65, 77, 78, 84, 92, 95, 97]
 
 C:\>
@@ -103,7 +102,7 @@ public class StackTraceTest {
 }
 ```
 ```
-C:\>kayo exception.StackTraceTest
+C:\>jvm exception.StackTraceTest
 java.lang.RuntimeException: BAD!
         at exception/StackTraceTest.bad(StackTraceTest.java:15)
         at exception/StackTraceTest.bar(StackTraceTest.java:14)
