@@ -26,24 +26,48 @@ static jint getConstant(jint which)
 // static native void init(MemberName self, Object ref);
 static void init(jref self, jref ref)
 {
-    jvm_abort("init");
-
     /*
 	 * in fact, `ref` will be one of these three:
 	 * 1. java/lang/reflect/Field.
 	 * 2. java/lang/reflect/Constructor.
 	 * 3. java/lang/reflect/Method.
 	 */
+
     // private Class<?> clazz;
     auto clazz = ref->getRefField<Class>(S(clazz), S(sig_java_lang_Class));
+
+    // private int slot;
+    auto slot = ref->getIntField("slot", "I");
+
+    // private String name;
+    auto name = ref->getRefField("name", S(sig_java_lang_String));
+
+    // private transient String signature;
+    auto signature = ref->getRefField("signature", S(sig_java_lang_String));
+
+    //private Class<?> returnType;
+    auto rtype = ref->getRefField<Class>("returnType", S(sig_java_lang_Class));
+    //private Class<?>[] parameterTypes;
+    auto ptypes = ref->getRefField<Array>("parameterTypes", S(array_java_lang_Class));
+
+    // private Object   type;        // may be null if not yet materialized
+    auto type = self->getRefField("type", S(sig_java_lang_Object));
+    //private Object   resolution;  // if null, this guy is resolved
+    auto resolution = self->getRefField("resolution", S(sig_java_lang_Object));
+    printvm("type: %p, resolution: %p\n", type, resolution); ///////////////////////////////////////////
+
     // private int modifiers;
     auto modifiers = ref->getIntField("modifiers", "I");
 
     if (equals(ref->clazz->className, "java/lang/reflect/Field")) {
-
+        jvm_abort("not support!");
     } else if (equals(ref->clazz->className, "java/lang/reflect/Constructor")) {
-
+        jvm_abort("not support!");
     } else if (equals(ref->clazz->className, "java/lang/reflect/Method")) {
+        auto descriptor = toMethodDescriptor(methodType(rtype, ptypes))->toUtf8();
+        Method *m = clazz->lookupMethod(name->toUtf8(), descriptor);
+        self->setRefField("clazz", "Ljava/lang/Class;", clazz);
+        self->setIntField("flags", "I", m->modifiers);
         /*
         classObj := ref.GetFieldValue("clazz", "Ljava/lang/Class;").Ref
                 class := classObj.GetGoClass()
@@ -134,7 +158,7 @@ func getMethod(cls *heap.Class, name, descriptor string) *heap.Method {
  #endif
 static jref resolve(jref self, jref caller)
 {
-    jvm_abort("resolve");
+//    jvm_abort("resolve");
 
     // jref mn = frame->getLocalAsRef(0);
     // jref caller = frame->getLocalAsRef(1);
@@ -153,6 +177,9 @@ static jref resolve(jref self, jref caller)
     auto type = self->getRefField("type", "Ljava/lang/Object;");
     jint flags = self->getIntField("flags", "I");
     auto resolution = self->getRefField("resolution", "Ljava/lang/Object;");
+
+    Method *m = self->clazz->lookupInstMethod("getSignature", "()Ljava/lang/String;");
+    jref sig = RSLOT(execJavaFunc(m, {self}));
 
     auto refKind = getRefKind(self);
 
@@ -187,20 +214,23 @@ static jref resolve(jref self, jref caller)
         }
         assert(descriptor != nullptr);
 
-        jref resolvedMemberName = nullptr;
+        auto xxx = name->toUtf8();
+        auto yyy = sig->toUtf8();
+        auto zzz = descriptor->toUtf8();
+//        jref resolvedMemberName = nullptr;
         if (refKind == JVM_REF_invokeStatic) {
 //            assert(isStatic(mn));
-            Method *m = clazz->getDeclaredStaticMethod(name->toUtf8(), descriptor->toUtf8());
-            assert(m->isStatic());
-            resolvedMemberName = memberName(m, refKind);
-            jint newFlags = flags | Modifier::MOD_STATIC; // todo
-            resolvedMemberName->setIntField("flags", "I", newFlags); // todo
-            assert(isStatic(resolvedMemberName));
+            m = clazz->getDeclaredStaticMethod(name->toUtf8(), descriptor->toUtf8());
+//            resolvedMemberName = memberName(m, refKind);
+//            jint newFlags = flags | Modifier::MOD_STATIC; // todo
+            jint newFlags = flags | m->modifiers;
+            self->setIntField("flags", "I", newFlags); // todo
+//            assert(isStatic(resolvedMemberName));
         } else {
             jvm_abort("not support!");
         }
 
-        return resolvedMemberName;
+        return self;
     } else {
         jvm_abort("not support!");
     }
