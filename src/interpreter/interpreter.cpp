@@ -1089,6 +1089,10 @@ __invoke_method: {
                     thread_throw(new InstantiationException());
                 }
 
+                // jref o = newObject(c);
+                // if (strcmp(o->clazz->className, "java/lang/invoke/MemberName") == 0)
+                //     printvm("%s\n", o->toString().c_str()); /////////////////////////////////////////////////////////////
+                // frame->pushr(o);
                 frame->pushr(newObject(c));
                 break;
             }
@@ -1202,6 +1206,7 @@ __opc_athrow:
                     Class *c = cp->resolveClass(index);
                     if (!obj->isInstanceOf(c)) {
             //            thread_throw(new ClassCastException(obj->clazz->className, c->className));
+            // printvm("%p\n", obj); ///////////////////////////////////////////////////
                         thread_throw(new ClassCastException());
                     }
                 }
@@ -1305,11 +1310,12 @@ __opc_athrow:
 
                 assert(frame->method->native_method != nullptr);
                 try {
-                    if (strcmp(frame->method->clazz->className, "java/lang/invoke/MethodHandle") == 0) {
-                        ((void (*)(Frame *)) frame->method->native_method)(frame);
-                    } else {
-                        callJNIMethod(frame);
-                    }
+                    // if (strcmp(frame->method->clazz->className, "java/lang/invoke/MethodHandle") == 0) {
+                    //     ((void (*)(Frame *)) frame->method->native_method)(frame);
+                    // } else {
+                    //     callJNIMethod(frame);
+                    // }
+                    callJNIMethod(frame);
                 } catch (Throwable &t) {
                     TRACE("native method throw a exception\n");
                     assert(t.getJavaThrowable() != nullptr);

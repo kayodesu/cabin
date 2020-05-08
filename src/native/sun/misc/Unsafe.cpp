@@ -662,9 +662,63 @@ static jint pageSize(jref _this)
   829        */
 // public native Class defineAnonymousClass(Class hostClass, byte[] data, Object[] cpPatches);
 static jclsref defineAnonymousClass(jref _this, 
-                    jclsref hostClass, jarrref data, jarrref cpPatches)
+                    jclsref host_class, jarrref data, jarrref cp_patches)
 {
-    jvm_abort("defineAnonymousClass"); // todo
+    Class *c = defineClass(host_class->loader, (u1 *) data->data, data->len);
+    if (c == nullptr)
+        return c; // todo
+
+    int cp_patches_len = cp_patches == nullptr ? 0 : cp_patches->len;    
+    for (int i = 0; i < cp_patches_len; i++) {
+        jref o = cp_patches->get<jref>(i);
+        if (o != nullptr) {
+            u1 type = c->cp.type(i);
+            if (type == JVM_CONSTANT_String) {
+                c->cp.info(i, (slot_t) o);
+                c->cp.type(i, JVM_CONSTANT_ResolvedString);
+            } else {
+                jvm_abort("defineAnonymousClass: unimplemented patch type"); // todo
+            }
+        }
+    }
+
+    c->nest_host = host_class;
+    linkClass(c);
+
+    return c;
+#if 0
+        if(class != NULL) {
+        int cp_patches_len = cp_patches == NULL ? 0 : ARRAY_LEN(cp_patches);
+        ClassBlock *cb = CLASS_CB(class);
+        ConstantPool *cp = &(cb->constant_pool);
+        int i;
+
+        for(i = 0; i < cp_patches_len; i++) {
+            Object *obj = ARRAY_DATA(cp_patches, Object*)[i];
+            if(obj != NULL) {
+                int type = CP_TYPE(cp, i);
+            
+                switch(type) {
+                    case CONSTANT_String:
+                        CP_INFO(cp, i) = (uintptr_t)obj;
+                        CP_TYPE(cp, i) = CONSTANT_ResolvedString;
+                        break;
+
+                    default:
+                        signalException(java_lang_InternalError,
+                                        "defineAnonymousClass: "
+                                        "unimplemented patch type");
+                        goto out;
+                }
+            }
+        }
+
+        cb->protection_domain = host_cb->protection_domain;
+        cb->host_class = host_class;
+
+        linkClass(class);
+    }
+    #endif
 }
 
 /** Lock the object.  It must get unlocked via {@link #monitorExit}. */

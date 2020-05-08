@@ -394,14 +394,15 @@ static jarrref getEnclosingMethod0(jclsref _this)
 /*
  * Returns the ProtectionDomain of this class.
  */
-//private native java.security.ProtectionDomain getProtectionDomain0();
+// private native java.security.ProtectionDomain getProtectionDomain0();
 static jref getProtectionDomain0(jclsref _this)
 {
+    // return nullptr;
     jvm_abort("getProtectionDomain0");
 }
 
 // Generic signature handling
-//private native String getGenericSignature0();
+// private native String getGenericSignature0();
 static void getGenericSignature0(jclsref _this)
 {
     jvm_abort("getGenericSignature0");
@@ -423,8 +424,6 @@ static jarrref getRawTypeAnnotations(jclsref _this)
 // native ConstantPool getConstantPool();
 static jref getConstantPool(jclsref _this)
 {
-  //  auto _this = frame->getLocalAsRef<Class>(0);
-
     Class *cpClass = loadBootClass("sun/reflect/ConstantPool");
     jref cp = newObject(cpClass);
     cp->setRefField("constantPoolOop", "Ljava/lang/Object;", (jref) &_this->cp); // todo 应该传递一个正在的 Object *
@@ -435,9 +434,6 @@ static jref getConstantPool(jclsref _this)
 // private native Field[] getDeclaredFields0(boolean publicOnly);
 static jarrref getDeclaredFields0(jclsref _this, jboolean publicOnly)
 {
- //   auto _this = frame->getLocalAsRef<Class>(0);
- //   bool publicOnly = frame->getLocalAsBool(1);
-
     Class *cls = loadClass(_this->clazz->loader, _this->className);
     jint fieldsCount = publicOnly ? cls->publicFieldsCount : cls->fields.size();
 
@@ -484,9 +480,6 @@ static jarrref getDeclaredFields0(jclsref _this, jboolean publicOnly)
  */
 static jarrref getDeclaredMethods0(jclsref _this, jboolean publicOnly)
 {
-  //  auto _this = frame->getLocalAsRef<Class>(0);
-    //bool publicOnly = frame->getLocalAsBool(1);
-
     Class *cls = loadClass(_this->clazz->loader, _this->className);
     jint methodsCount = publicOnly ? cls->publicMethodsCount : cls->methods.size();
 
@@ -531,9 +524,6 @@ static jarrref getDeclaredMethods0(jclsref _this, jboolean publicOnly)
 // private native Constructor<T>[] getDeclaredConstructors0(boolean publicOnly);
 static jarrref getDeclaredConstructors0(jclsref _this, jboolean publicOnly)
 {
-  //  auto _this = frame->getLocalAsRef<Class>(0);
- //   bool publicOnly = frame->getLocalAsBool(1);
-
    Class *cls = loadClass(_this->clazz->loader, _this->className);
 
     std::vector<Method *> constructors = cls->getConstructors(publicOnly);

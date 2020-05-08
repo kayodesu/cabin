@@ -15,8 +15,11 @@
 
 #define OBJ "Ljava/lang/Object;"
 #define _OBJ_ "(Ljava/lang/Object;)"
+#define _OBJ "(Ljava/lang/Object;"
+#define OBJ_ "Ljava/lang/Object;)"
 
 #define CLS "Ljava/lang/Class;"
+#define _CLS "(Ljava/lang/Class;"
 #define _CLS_ "(Ljava/lang/Class;)"
 
 #define STR "Ljava/lang/String;"
