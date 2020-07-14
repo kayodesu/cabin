@@ -42,7 +42,7 @@ if __name__ == '__main__':
         for f in e[2]:
             cases_count += 1
             collection += collect_one_file(e[0], f)            
-        collection += '\n'            
+        collection += '<br/>'            
             
     # 将结果写回 README.md 中
     
