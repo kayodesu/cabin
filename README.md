@@ -17,7 +17,7 @@ An experimental JVM written in C++.
 :heavy_check_mark: String  
 :heavy_check_mark: Array  
 :heavy_check_mark: Exception  
-:x: Lambda
+:x: Lambda  
 :x: Multi-thread  
 :x: Garbage collection  
 ## Run
@@ -51,30 +51,30 @@ C:\>
 ```
 
 ## Test Cases [36/99(36.36%) Passed]
-[<font color=#00FF00>Pass</font>] HelloWorld.java<br/>[<font color=#00FF00>Pass</font>] JumpMultiLoop.java<br/>[<font color=#FF0000>Fail</font>] PrimeNumber.java<br/>[<font color=#00FF00>Pass</font>] PrintArgs.java<br/>[<font color=#FF0000>Fail</font>] RuntimeTest.java<br/>[<font color=#FF0000>Fail</font>] SysPropsTest.java<br/>
-[<font color=#00FF00>Pass</font>] array.ArrayTest.java<br/>[<font color=#FF0000>Fail</font>] array.BigArrayTest.java<br/>[<font color=#00FF00>Pass</font>] array.BubbleSort.java<br/>[<font color=#00FF00>Pass</font>] array.ZeroLenArrayTest.java<br/>
-[<font color=#FF0000>Fail</font>] atomic.AtomicIntegerTest.java<br/>
-[<font color=#FF0000>Fail</font>] classloader.ClassLoaderTest.java<br/>
-[<font color=#FF0000>Fail</font>] datetime.TimeZoneTest.java<br/>
-[<font color=#00FF00>Pass</font>] exception.CatchTest.java<br/>[<font color=#FF0000>Fail</font>] exception.ClassLibExTest.java<br/>[<font color=#00FF00>Pass</font>] exception.FinallyReturnTest.java<br/>[<font color=#00FF00>Pass</font>] exception.FinallyTest.java<br/>[<font color=#FF0000>Fail</font>] exception.InstructionExTest.java<br/>[<font color=#FF0000>Fail</font>] exception.InstructionNpeTest.java<br/>[<font color=#00FF00>Pass</font>] exception.StackTraceTest.java<br/>[<font color=#FF0000>Fail</font>] exception.UncaughtTest.java<br/>
-[<font color=#FF0000>Fail</font>] field.ConstantStaticFieldsTest.java<br/>[<font color=#FF0000>Fail</font>] field.FieldAccessTest.java<br/>[<font color=#00FF00>Pass</font>] field.FieldsTest.java<br/>
-[<font color=#00FF00>Pass</font>] file.FileDescriptorTest.java<br/>[<font color=#FF0000>Fail</font>] file.FileNotFoundTest.java<br/>[<font color=#FF0000>Fail</font>] file.FileTest.java<br/>[<font color=#FF0000>Fail</font>] file.RandomAccessFileTest.java<br/>
-[<font color=#00FF00>Pass</font>] initialization.Init1.java<br/>[<font color=#00FF00>Pass</font>] initialization.Init2.java<br/>[<font color=#FF0000>Fail</font>] initialization.InitInterface.java<br/>[<font color=#00FF00>Pass</font>] initialization.InitStaticField.java<br/>[<font color=#00FF00>Pass</font>] initialization.ObjectInitTest.java<br/>
-[<font color=#00FF00>Pass</font>] instructions.AThrow.java<br/>[<font color=#FF0000>Fail</font>] instructions.CheckCast.java<br/>[<font color=#FF0000>Fail</font>] instructions.InvokeTest.java<br/>[<font color=#FF0000>Fail</font>] instructions.LookupSwitch.java<br/>[<font color=#00FF00>Pass</font>] instructions.NewArray.java<br/>[<font color=#FF0000>Fail</font>] instructions.NewMultiArrayTest.java<br/>[<font color=#00FF00>Pass</font>] instructions.TableSwitch.java<br/>
-[<font color=#FF0000>Fail</font>] interface0.InterfaceDefaultMethodTest.java<br/>[<font color=#FF0000>Fail</font>] interface0.InterfaceMethodTest.java<br/>[<font color=#FF0000>Fail</font>] interface0.InterfaceTest.java<br/>
-[<font color=#00FF00>Pass</font>] invoke.InvokeFuncTest.java<br/>[<font color=#00FF00>Pass</font>] invoke.InvokeFuncTest1.java<br/>[<font color=#FF0000>Fail</font>] invoke.MethodHandleNativesTest.java<br/>[<font color=#FF0000>Fail</font>] invoke.MethodHandleTest.java<br/>[<font color=#FF0000>Fail</font>] invoke.MethodHandleTest1.java<br/>[<font color=#FF0000>Fail</font>] invoke.MethodHandleTest2.java<br/>[<font color=#00FF00>Pass</font>] invoke.MethodTypeTest.java<br/>
-[<font color=#FF0000>Fail</font>] jetty.FileServer.java<br/>
-[<font color=#FF0000>Fail</font>] lambda.LambdaTest.java<br/>
-[<font color=#FF0000>Fail</font>] method.ArgsPassTest.java<br/>
-[<font color=#FF0000>Fail</font>] network.InetAddressTest.java<br/>[<font color=#FF0000>Fail</font>] network.SocketConnectTest.java<br/>[<font color=#FF0000>Fail</font>] network.SocketListenTest.java<br/>[<font color=#FF0000>Fail</font>] network.UrlTest.java<br/>
-[<font color=#FF0000>Fail</font>] nio.ByteBufferTest.java<br/>
-[<font color=#00FF00>Pass</font>] object.InheritanceTest.java<br/>[<font color=#00FF00>Pass</font>] object.ObjectTest.java<br/>
-[<font color=#FF0000>Fail</font>] primary.DoubleTest.java<br/>[<font color=#FF0000>Fail</font>] primary.LongTest.java<br/>
-[<font color=#00FF00>Pass</font>] reflect.ArrayClassTest.java<br/>[<font color=#FF0000>Fail</font>] reflect.ArrayGetTest.java<br/>[<font color=#FF0000>Fail</font>] reflect.ArraySetTest.java<br/>[<font color=#FF0000>Fail</font>] reflect.CallerClassTest.java<br/>[<font color=#FF0000>Fail</font>] reflect.ClassInitTest.java<br/>[<font color=#FF0000>Fail</font>] reflect.ClassTest.java<br/>[<font color=#00FF00>Pass</font>] reflect.ClassTest1.java<br/>[<font color=#00FF00>Pass</font>] reflect.ClassTest2.java<br/>[<font color=#00FF00>Pass</font>] reflect.ClassTest3.java<br/>[<font color=#00FF00>Pass</font>] reflect.DeclaringClassTest.java<br/>[<font color=#FF0000>Fail</font>] reflect.FieldTest.java<br/>[<font color=#FF0000>Fail</font>] reflect.GenericTest.java<br/>[<font color=#00FF00>Pass</font>] reflect.MethodTest.java<br/>[<font color=#FF0000>Fail</font>] reflect.NestTest.java<br/>[<font color=#00FF00>Pass</font>] reflect.PrimitiveClassTest.java<br/>
-[<font color=#FF0000>Fail</font>] stream.StreamTest.java<br/>
-[<font color=#00FF00>Pass</font>] string.InternTest.java<br/>[<font color=#00FF00>Pass</font>] string.StringTest.java<br/>
-[<font color=#FF0000>Fail</font>] sunmisc.UnsafeGetter.java<br/>[<font color=#FF0000>Fail</font>] sunmisc.UnsafeMemoryTest.java<br/>[<font color=#FF0000>Fail</font>] sunmisc.UnsafeObjectTest.java<br/>[<font color=#FF0000>Fail</font>] sunmisc.UnsafeParkTest.java<br/>[<font color=#FF0000>Fail</font>] sunmisc.UnsafeTest.java<br/>
-[<font color=#FF0000>Fail</font>] thread.AliveTest.java<br/>[<font color=#00FF00>Pass</font>] thread.DaemonTest.java<br/>[<font color=#FF0000>Fail</font>] thread.DumpAllThreads.java<br/>[<font color=#FF0000>Fail</font>] thread.InterruptFlagTest.java<br/>[<font color=#FF0000>Fail</font>] thread.InterruptionTest.java<br/>[<font color=#FF0000>Fail</font>] thread.MainThreadTest.java<br/>[<font color=#FF0000>Fail</font>] thread.RunnableTest.java<br/>[<font color=#FF0000>Fail</font>] thread.SleepTest.java<br/>[<font color=#FF0000>Fail</font>] thread.SynchronizedTest.java<br/>[<font color=#FF0000>Fail</font>] thread.ThreadSubClassTest.java<br/>[<font color=#FF0000>Fail</font>] thread.WaitTest.java<br/>
-[<font color=#00FF00>Pass</font>] wrapper.DoubleTest.java<br/>[<font color=#00FF00>Pass</font>] wrapper.FloatTest.java<br/>[<font color=#FF0000>Fail</font>] wrapper.IntegerCacheTest.java<br/>
+:heavy_check_mark: HelloWorld.java<br/>:heavy_check_mark: JumpMultiLoop.java<br/>:x: PrimeNumber.java<br/>:heavy_check_mark: PrintArgs.java<br/>:x: RuntimeTest.java<br/>:x: SysPropsTest.java<br/>
+:heavy_check_mark: array.ArrayTest.java<br/>:x: array.BigArrayTest.java<br/>:heavy_check_mark: array.BubbleSort.java<br/>:heavy_check_mark: array.ZeroLenArrayTest.java<br/>
+:x: atomic.AtomicIntegerTest.java<br/>
+:x: classloader.ClassLoaderTest.java<br/>
+:x: datetime.TimeZoneTest.java<br/>
+:heavy_check_mark: exception.CatchTest.java<br/>:x: exception.ClassLibExTest.java<br/>:heavy_check_mark: exception.FinallyReturnTest.java<br/>:heavy_check_mark: exception.FinallyTest.java<br/>:x: exception.InstructionExTest.java<br/>:x: exception.InstructionNpeTest.java<br/>:heavy_check_mark: exception.StackTraceTest.java<br/>:x: exception.UncaughtTest.java<br/>
+:x: field.ConstantStaticFieldsTest.java<br/>:x: field.FieldAccessTest.java<br/>:heavy_check_mark: field.FieldsTest.java<br/>
+:heavy_check_mark: file.FileDescriptorTest.java<br/>:x: file.FileNotFoundTest.java<br/>:x: file.FileTest.java<br/>:x: file.RandomAccessFileTest.java<br/>
+:heavy_check_mark: initialization.Init1.java<br/>:heavy_check_mark: initialization.Init2.java<br/>:x: initialization.InitInterface.java<br/>:heavy_check_mark: initialization.InitStaticField.java<br/>:heavy_check_mark: initialization.ObjectInitTest.java<br/>
+:heavy_check_mark: instructions.AThrow.java<br/>:x: instructions.CheckCast.java<br/>:x: instructions.InvokeTest.java<br/>:x: instructions.LookupSwitch.java<br/>:heavy_check_mark: instructions.NewArray.java<br/>:x: instructions.NewMultiArrayTest.java<br/>:heavy_check_mark: instructions.TableSwitch.java<br/>
+:x: interface0.InterfaceDefaultMethodTest.java<br/>:x: interface0.InterfaceMethodTest.java<br/>:x: interface0.InterfaceTest.java<br/>
+:heavy_check_mark: invoke.InvokeFuncTest.java<br/>:heavy_check_mark: invoke.InvokeFuncTest1.java<br/>:x: invoke.MethodHandleNativesTest.java<br/>:x: invoke.MethodHandleTest.java<br/>:x: invoke.MethodHandleTest1.java<br/>:x: invoke.MethodHandleTest2.java<br/>:heavy_check_mark: invoke.MethodTypeTest.java<br/>
+:x: jetty.FileServer.java<br/>
+:x: lambda.LambdaTest.java<br/>
+:x: method.ArgsPassTest.java<br/>
+:x: network.InetAddressTest.java<br/>:x: network.SocketConnectTest.java<br/>:x: network.SocketListenTest.java<br/>:x: network.UrlTest.java<br/>
+:x: nio.ByteBufferTest.java<br/>
+:heavy_check_mark: object.InheritanceTest.java<br/>:heavy_check_mark: object.ObjectTest.java<br/>
+:x: primary.DoubleTest.java<br/>:x: primary.LongTest.java<br/>
+:heavy_check_mark: reflect.ArrayClassTest.java<br/>:x: reflect.ArrayGetTest.java<br/>:x: reflect.ArraySetTest.java<br/>:x: reflect.CallerClassTest.java<br/>:x: reflect.ClassInitTest.java<br/>:x: reflect.ClassTest.java<br/>:heavy_check_mark: reflect.ClassTest1.java<br/>:heavy_check_mark: reflect.ClassTest2.java<br/>:heavy_check_mark: reflect.ClassTest3.java<br/>:heavy_check_mark: reflect.DeclaringClassTest.java<br/>:x: reflect.FieldTest.java<br/>:x: reflect.GenericTest.java<br/>:heavy_check_mark: reflect.MethodTest.java<br/>:x: reflect.NestTest.java<br/>:heavy_check_mark: reflect.PrimitiveClassTest.java<br/>
+:x: stream.StreamTest.java<br/>
+:heavy_check_mark: string.InternTest.java<br/>:heavy_check_mark: string.StringTest.java<br/>
+:x: sunmisc.UnsafeGetter.java<br/>:x: sunmisc.UnsafeMemoryTest.java<br/>:x: sunmisc.UnsafeObjectTest.java<br/>:x: sunmisc.UnsafeParkTest.java<br/>:x: sunmisc.UnsafeTest.java<br/>
+:x: thread.AliveTest.java<br/>:heavy_check_mark: thread.DaemonTest.java<br/>:x: thread.DumpAllThreads.java<br/>:x: thread.InterruptFlagTest.java<br/>:x: thread.InterruptionTest.java<br/>:x: thread.MainThreadTest.java<br/>:x: thread.RunnableTest.java<br/>:x: thread.SleepTest.java<br/>:x: thread.SynchronizedTest.java<br/>:x: thread.ThreadSubClassTest.java<br/>:x: thread.WaitTest.java<br/>
+:heavy_check_mark: wrapper.DoubleTest.java<br/>:heavy_check_mark: wrapper.FloatTest.java<br/>:x: wrapper.IntegerCacheTest.java<br/>
 ## Reference
 * jvms8.pdf

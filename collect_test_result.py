@@ -22,9 +22,9 @@ def collect_one_file(path_name, file_name):
     path_name = path_name.replace('\\', '.')
     i = path_name.find('src.')
     if result == 'Pass':
-        result = '[<font color=#00FF00>' + result + '</font>] '
+        result = ':heavy_check_mark: '
     else:     
-        result = '[<font color=#FF0000>' + result + '</font>] '
+        result = ':x: '
     if i == -1: # 根目录
         return result + file_name + '<br/>'
     else:
