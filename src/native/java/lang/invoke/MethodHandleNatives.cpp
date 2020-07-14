@@ -6,6 +6,7 @@
 #include "../../../../objects/method.h"
 #include "../../../../objects/invoke.h"
 #include "../../../../objects/array_object.h"
+#include "../../../../interpreter/interpreter.h"
 
 /*
  * Author: Yo Ka
@@ -57,16 +58,16 @@ static int __method_flags(Method *m)
 {
     assert(m != nullptr);
 
-    int flags = m->modifiers;  //m->access_flags;
+    int flags = m->accsee_flags; 
 
-    if(m->modifiers & MB_CALLER_SENSITIVE)
+    if(m->accsee_flags & MB_CALLER_SENSITIVE)
         flags |= CALLER_SENSITIVE;
 
     return flags;
 }
 
 // static native void init(MemberName self, Object ref);
-static void init(jref self, jref ref)
+static void init(jobject self, jobject ref)
 {
     /*
 	 * in fact, `ref` will be one of these three:
@@ -76,7 +77,7 @@ static void init(jref self, jref ref)
 	 */
 
     // private Class<?> clazz;
-    auto clazz = ref->getRefField<Class>(S(clazz), S(sig_java_lang_Class));
+    auto clazz = ref->getRefField<ClassObject>(S(clazz), S(sig_java_lang_Class))->jvm_mirror;
 
     // private int slot;
     auto slot = ref->getIntField("slot", "I");
@@ -88,7 +89,7 @@ static void init(jref self, jref ref)
     auto signature = ref->getRefField("signature", S(sig_java_lang_String));
 
     //private Class<?> returnType;
-    auto rtype = ref->getRefField<Class>("returnType", S(sig_java_lang_Class));
+    auto rtype = ref->getRefField<ClassObject>("returnType", S(sig_java_lang_Class));
     //private Class<?>[] parameterTypes;
     auto ptypes = ref->getRefField<Array>("parameterTypes", S(array_java_lang_Class));
 
@@ -101,11 +102,11 @@ static void init(jref self, jref ref)
     // private int modifiers;
     auto modifiers = ref->getIntField("modifiers", "I");
 
-    if (equals(ref->clazz->className, "java/lang/reflect/Field")) {
+    if (equals(ref->clazz->class_name, "java/lang/reflect/Field")) {
         jvm_abort("not support!");
-    } else if (equals(ref->clazz->className, "java/lang/reflect/Constructor")) {
+    } else if (equals(ref->clazz->class_name, "java/lang/reflect/Constructor")) {
         jvm_abort("not support!");
-    } else if (equals(ref->clazz->className, "java/lang/reflect/Method")) {
+    } else if (equals(ref->clazz->class_name, "java/lang/reflect/Method")) {
         
 #if 0
     if(target->class == method_reflect_class) {
@@ -150,7 +151,7 @@ static void init(jref self, jref ref)
 
         flags |= ref_kind << REFERENCE_KIND_SHIFT;
 
-        self->setRefField("clazz", "Ljava/lang/Class;", clazz);
+        self->setRefField("clazz", "Ljava/lang/Class;", clazz->java_mirror);
         self->setIntField("flags", "I", flags);
         /*
         classObj := ref.GetFieldValue("clazz", "Ljava/lang/Class;").Ref
@@ -180,7 +181,7 @@ func getMNFlags(method *heap.Method) int32 {
 */
 
 // static native void expand(MemberName self);
-static void expand(jref self)
+static void expand(jobject self)
 {
     jvm_abort("expand");
 }
@@ -246,12 +247,12 @@ func getMethod(cls *heap.Class, name, descriptor string) *heap.Method {
 	return nil
 }
  #endif
-static jref resolve(jref self, jclsref caller)
+static jobject resolve(jobject self, jclass caller)
 {
 //    jvm_abort("resolve");
 
-    // jref mn = frame->getLocalAsRef(0);
-    // jref caller = frame->getLocalAsRef(1);
+    // jobject mn = frame->getLocalAsRef(0);
+    // jobject caller = frame->getLocalAsRef(1);
 
     // todo
     // private Class<?> clazz;       // class in which the method is defined
@@ -259,7 +260,7 @@ static jref resolve(jref self, jclsref caller)
     // private Object   type;        // may be null if not yet materialized
     // private int      flags;       // modifier bits; see reflect.Modifier
     // private Object   resolution;  // if null, this guy is resolved
-    auto clazz = self->getRefField<Class>("clazz", "Ljava/lang/Class;");
+    auto clazz = self->getRefField<ClassObject>("clazz", "Ljava/lang/Class;")->jvm_mirror;
     auto name = self->getRefField("name", "Ljava/lang/String;");
     // type maybe a String or an Object[] or a MethodType
     // Object[]: (Class<?>) Object[0] is return type
@@ -269,15 +270,15 @@ static jref resolve(jref self, jclsref caller)
     auto resolution = self->getRefField("resolution", "Ljava/lang/Object;");
 
     Method *m = self->clazz->lookupInstMethod("getSignature", "()Ljava/lang/String;");
-    jref sig = RSLOT(execJavaFunc(m, {self}));
+    jobject sig = RSLOT(execJavaFunc(m, {self}));
 
     auto refKind = getRefKind(self);
     switch (flags & ALL_KINDS) {
         case IS_METHOD: {
-            jstrref descriptor = nullptr;
+            Object *descriptor = nullptr;
 
             // TODO "java/lang/invoke/MethodHandle" 及其子类暂时特殊处理，因为取到的type一直是错的，我也不知道为什么？？？？
-            if (equals(clazz->className, "java/lang/invoke/MethodHandle") &&
+            if (equals(clazz->class_name, "java/lang/invoke/MethodHandle") &&
                     (equals(name->toUtf8(), "invoke")
                     || equals(name->toUtf8(), "invokeBasic")
                     || equals(name->toUtf8(), "invokeExact")
@@ -287,17 +288,17 @@ static jref resolve(jref self, jclsref caller)
                     || equals(name->toUtf8(), "linkToVirtual")
                     || equals(name->toUtf8(), "linkToInterface"))) {
                 descriptor = newString("([Ljava/lang/Object;)Ljava/lang/Object;");
-            } else if (equals(clazz->className, "java/lang/invoke/BoundMethodHandle$Species_L") && equals(name->toUtf8(), "make")) {
+            } else if (equals(clazz->class_name, "java/lang/invoke/BoundMethodHandle$Species_L") && equals(name->toUtf8(), "make")) {
                 descriptor = newString("(Ljava/lang/invoke/MethodType;Ljava/lang/invoke/LambdaForm;Ljava/lang/Object;)Ljava/lang/invoke/BoundMethodHandle;");
-            } else if (equals(type->clazz->className, S(java_lang_String))) {
+            } else if (equals(type->clazz->class_name, S(java_lang_String))) {
                 descriptor = type;
-            } else if (equals(type->clazz->className, "java/lang/invoke/MethodType")) {
+            } else if (equals(type->clazz->class_name, "java/lang/invoke/MethodType")) {
                 descriptor = toMethodDescriptor(type);
             } else if (type->isArrayObject()) {
-                auto arr = (jarrref) (type);
+                auto arr = (Array *) (type);
 
-                auto rtype = arr->get<jclsref>(0);
-                auto ptypes = arr->get<jarrref>(1);
+                auto rtype = arr->get<ClassObject *>(0);
+                auto ptypes = arr->get<Array *>(1);
                 descriptor = toMethodDescriptor(methodType(rtype, ptypes));
             } else {
                 jvm_abort("never go here.");
@@ -337,7 +338,7 @@ static jref resolve(jref self, jclsref caller)
             break;
             #endif
             Field *f = clazz->lookupField(name->toUtf8(), sig->toUtf8());
-            flags |= f->modifiers;
+            flags |= f->accsee_flags;
             self->setIntField("flags", "I", flags); 
             return self;
         }  
@@ -350,13 +351,13 @@ static jref resolve(jref self, jclsref caller)
 
 // static native int getMembers(Class<?> defc, String matchName, String matchSig,
 //                              int matchFlags, Class<?> caller, int skip, MemberName[] results);
-static jint getMembers(jclsref defc, jstrref match_name, jstrref match_sig, 
-                        jint match_flags, jclsref caller, jint skip, jarrref results)
+static jint getMembers(jclass defc, jstring match_name, jstring match_sig, 
+                        jint match_flags, jclass caller, jint skip, jobjectArray results)
 {
     int search_super = (match_flags & SEARCH_SUPERCLASSES) != 0;
     int search_intf = (match_flags & SEARCH_INTERFACES) != 0;
     int local = !(search_super || search_intf);
-    char *name_sym = NULL, *sig_sym = NULL;
+    char *name_sym = nullptr, *sig_sym = nullptr;
 
     if (match_name != nullptr) {
         auto x = match_name->toUtf8();
@@ -377,7 +378,7 @@ static jint getMembers(jclsref defc, jstrref match_name, jstrref match_sig,
     if(match_flags & (IS_METHOD | IS_CONSTRUCTOR)) {
         int count = 0;
 
-        for (Method *m : defc->methods) {
+        for (Method *m : defc->jvm_mirror->methods) {
             if(m->name == SYMBOL(class_init))
                 continue;
             if(m->name == SYMBOL(object_init))
@@ -386,16 +387,16 @@ static jint getMembers(jclsref defc, jstrref match_name, jstrref match_sig,
                 continue;
 
             if(count < results->len) {
-                Object *member_name = results->get<jref>(count);
+                Object *member_name = results->get<jobject>(count);
                 count++;
                 int flags = __method_flags(m) | IS_METHOD;
 
                 flags |= (m->isStatic() ? JVM_REF_invokeStatic : JVM_REF_invokeVirtual) << REFERENCE_KIND_SHIFT;
 
                 member_name->setIntField("flags", "I", flags);
-                member_name->setRefField("clazz", "Ljava/lang/Class;", m->clazz);
-                member_name->setRefField("name", "Ljava/lang/String;", stringClass->intern(m->name));
-                member_name->setRefField("type", "Ljava/lang/Object;", newString(m->type));
+                member_name->setRefField("clazz", "Ljava/lang/Class;", m->clazz->java_mirror);
+                member_name->setRefField("name", "Ljava/lang/String;", g_string_class->intern(m->name));
+                member_name->setRefField("type", "Ljava/lang/Object;", newString(m->descriptor));
                 // INST_DATA(mname, int, mem_name_flags_offset) = flags;
                 // INST_DATA(mname, Class*, mem_name_clazz_offset) = mb->class;
                 // INST_DATA(mname, Object*, mem_name_name_offset) =
@@ -414,12 +415,12 @@ static jint getMembers(jclsref defc, jstrref match_name, jstrref match_sig,
 }
 
 // static native long objectFieldOffset(MemberName self);  // e.g., returns vmindex
-static jlong objectFieldOffset(jref self)
+static jlong objectFieldOffset(jobject self)
 {
     // private Class<?> clazz;       // class in which the method is defined
     // private String   name;        // may be null if not yet materialized
     // private Object   type;        // may be null if not yet materialized
-    auto clazz = self->getRefField<Class>("clazz", "Ljava/lang/Class;");
+    auto clazz = self->getRefField<ClassObject>("clazz", "Ljava/lang/Class;")->jvm_mirror;
     auto name = self->getRefField("name", "Ljava/lang/String;");
     // type maybe a String or an Object[] or a MethodType
     // Object[]: (Class<?>) Object[0] is return type
@@ -427,38 +428,38 @@ static jlong objectFieldOffset(jref self)
     auto type = self->getRefField("type", "Ljava/lang/Object;");
 
     Method *m = self->clazz->lookupInstMethod("getSignature", "()Ljava/lang/String;");
-    jref sig = RSLOT(execJavaFunc(m, {self}));
+    jobject sig = RSLOT(execJavaFunc(m, {self}));
 
     Field *f = clazz->lookupField(name->toUtf8(), sig->toUtf8());
     return f->id;
 }
 
 // static native long staticFieldOffset(MemberName self);  // e.g., returns vmindex
-static jlong staticFieldOffset(jref self)
+static jlong staticFieldOffset(jobject self)
 {
     jvm_abort("staticFieldOffset");
 }
 
 // static native Object staticFieldBase(MemberName self);  // e.g., returns clazz
-static jref staticFieldBase(jref self)
+static jobject staticFieldBase(jobject self)
 {
     jvm_abort("staticFieldBase");
 }
 
 // static native Object getMemberVMInfo(MemberName self);  // returns {vmindex,vmtarget}
-static jref getMemberVMInfo(jref self)
+static jobject getMemberVMInfo(jobject self)
 {
     jvm_abort("getMemberVMInfo");
 }
 
 // static native void setCallSiteTargetNormal(CallSite site, MethodHandle target);
-static void setCallSiteTargetNormal(jref site, jref target)
+static void setCallSiteTargetNormal(jobject site, jobject target)
 {
     jvm_abort("setCallSiteTargetNormal");
 }
 
 // static native void setCallSiteTargetVolatile(CallSite site, MethodHandle target);
-static void setCallSiteTargetVolatile(jref site, jref target)
+static void setCallSiteTargetVolatile(jobject site, jobject target)
 {
     jvm_abort("setCallSiteTargetVolatile");
 }

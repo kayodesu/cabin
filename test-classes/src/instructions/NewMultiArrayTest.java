@@ -1,6 +1,6 @@
 package instructions;
 
-public class MultiANewArrayTest {
+public class NewMultiArrayTest {
     
     public static void main(String[] args) {
         int[][][] x = new int[2][3][5];

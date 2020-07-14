@@ -1,4 +1,8 @@
+package object;
 
+/**
+ * Status: Pass
+ */
 public class InheritanceTest {
     
     public static void main(String[] args) {
@@ -14,9 +18,9 @@ public class InheritanceTest {
         double b = sub.b;
         
         Super sup = sub;
-        long z = sup.x + sup.y;
+        long j = sup.x + sup.y;
         
-        System.out.println("OK!");
+        System.out.println((x == 1 && y == 2 && a == 3.14f && b == 2.71828 && j == 3L) ? "Pass":"Fail");
     }
     
 }

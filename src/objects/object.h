@@ -25,7 +25,7 @@ public:
         struct {
             unsigned int marked: 2;
         };
-        uintptr_t allFlags; // 以指针的大小对齐 todo 这样对齐有什么用
+        uintptr_t all_flags; // 以指针的大小对齐 todo 这样对齐有什么用
     };
 
 private:
@@ -53,7 +53,7 @@ public:
     virtual size_t size() const;
 
     virtual bool isArrayObject() const;
-    Object *clone() const; // todo ClassObject 是否支持clone??????
+    virtual Object *clone() const; // todo ClassObject 是否支持clone??????
 
     
 #define setTField(T, t) \
@@ -108,7 +108,6 @@ public:
     getTField(Float, jfloat)
     getTField(Long, jlong)
     getTField(Double, jdouble)
-    // getTField(Ref, jref)
 #undef getTField
 
     template <typename T = Object> T *getRefField(const Field *f)
@@ -126,8 +125,9 @@ public:
 public:
     bool isInstanceOf(Class *c) const;
 
-    const slot_t *unbox() const; // present only if primitive Object
+    const slot_t *unbox() const; // present only if primitive box Object
     utf8_t *toUtf8() const;      // present only if Object of java/lang/String
+    
     // present only if object of java/lang/ClassLoader
     // save the all loaded classes by this ClassLoader
     std::unordered_map<const utf8_t *, Class *, utf8::Hash, utf8::Comparator> *classes = nullptr;

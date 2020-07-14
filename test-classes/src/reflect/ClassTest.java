@@ -1,46 +1,47 @@
-package reflection;
+package reflect;
 
+import java.lang.reflect.Method;
+import java.util.Arrays;
+
+/**
+ * Status: Fail
+ */
 public class ClassTest implements Runnable {
+    private int a;
+    public double b;
+    static boolean z;
 
-//    private int a;
-//    public double b;
-//    static boolean z;
-//
-//    public static void main(String[] args) throws Exception {
-//        UnitTestRunner.run(ClassTest.class);
-//    }
-//
-    @Override
-    public void run() throws RuntimeException {
-        //System.out.println("run!");
+    public static void main(String[] args) throws Exception {
+   //     _package();
+    //    _class();
+        method();
     }
-//
-//    @Test
-//    public void _package() {
-//        assertEquals("reflection", getClass().getPackage().getName());
-//    }
-//
-//    @Test
-//    public void _class() {
-//        Class<?> c = ClassTest.class;
-//        assertEquals("reflection.ClassTest", c.getName());
-//        assertEquals(Object.class, c.getSuperclass());
-//        assertArrayEquals(new Class<?>[]{Runnable.class}, c.getInterfaces());
-//        assertEquals(1, c.getFields().length);
-//        assertEquals(3, c.getDeclaredFields().length);
-//        assertEquals(14, c.getMethods().length);
-//        assertEquals(5, c.getDeclaredMethods().length);
-//    }
-//
-//    @Test
-//    public void method() throws Exception {
-//        Method main = ClassTest.class.getMethod("main", String[].class);
-//        assertArrayEquals(new Class<?>[]{Exception.class}, main.getExceptionTypes());
-//        assertArrayEquals(new Class<?>[]{String[].class}, main.getParameterTypes());
-//        assertEquals(0, main.getDeclaredAnnotations().length);
-//
-//        Method run = ClassTest.class.getMethod("run");
-//        assertEquals(1, run.getDeclaredAnnotations().length);
-//    }
-//
+
+    public static void _package() {
+        System.out.println("reflect".equals(ClassTest.class.getPackage().getName()));
+    }
+
+    public static void _class() {
+        Class<?> c = ClassTest.class;
+        System.out.println("reflect.ClassTest".equals(c.getName()));
+        System.out.println(Object.class == c.getSuperclass());
+        System.out.println(Arrays.deepEquals(new Class<?>[]{Runnable.class}, c.getInterfaces()));
+        System.out.println(1 == c.getFields().length);
+        System.out.println(3 == c.getDeclaredFields().length);
+        System.out.println(14 == c.getMethods().length);
+        System.out.println(5 == c.getDeclaredMethods().length);
+    }
+
+    public static void method() throws Exception {
+        Method main = ClassTest.class.getMethod("main", String[].class);
+        System.out.println(Arrays.deepEquals(new Class<?>[]{Exception.class}, main.getExceptionTypes()));
+        System.out.println(Arrays.deepEquals(new Class<?>[]{String[].class}, main.getParameterTypes()));
+        System.out.println(0 == main.getDeclaredAnnotations().length);
+
+        Method run = ClassTest.class.getMethod("run");
+        System.out.println(0 == run.getDeclaredAnnotations().length);
+    }
+
+    @Override
+    public void run() { }
 }

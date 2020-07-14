@@ -11,6 +11,7 @@
 #include "../symbol.h"
 #include "class.h"
 #include "array_object.h"
+#include "class_object.h"
 #include "../interpreter/interpreter.h"
 #include "../runtime/thread_info.h"
 #include "prims.h"
@@ -25,8 +26,8 @@ using namespace utf8;
 #define TRACE(...)
 #endif
 
-static utf8_set bootPackages;
-static unordered_map<const utf8_t *, Class *, utf8::Hash, utf8::Comparator> bootClasses;
+static utf8_set boot_packages;
+static unordered_map<const utf8_t *, Class *, utf8::Hash, utf8::Comparator> boot_classes;
 
 
 enum ClassLocation {
@@ -42,12 +43,16 @@ static optional<pair<u1 *, size_t>> readClass(const char *path,
 {
     unzFile module_file = unzOpen64(path);
     if (module_file == nullptr) {
-        thread_throw(new IOException(NEW_MSG("unzOpen64 failed: %s\n", path)));
+        signalException(S(java_io_IOException), MSG("unzOpen64 failed: %s\n", path));
+        printStackTrace();
+        JVM_EXIT
     }
 
     if (unzGoToFirstFile(module_file) != UNZ_OK) {
         unzClose(module_file);
-        thread_throw(new IOException(NEW_MSG("unzGoToFirstFile failed: %s\n", path)));
+        signalException(S(java_io_IOException), MSG("unzGoToFirstFile failed: %s\n", path));
+        printStackTrace();
+        JVM_EXIT
     }
 
     char buf[strlen(class_name) + 32]; // big enough
@@ -74,35 +79,38 @@ static optional<pair<u1 *, size_t>> readClass(const char *path,
     // find out!
     if (unzOpenCurrentFile(module_file) != UNZ_OK) {
         unzClose(module_file);
-        thread_throw(new IOException(NEW_MSG("unzOpenCurrentFile failed: %s\n", path)));
+        signalException(S(java_io_IOException), MSG("unzOpenCurrentFile failed: %s\n", path));
+        printStackTrace();
+        JVM_EXIT
     }
 
     unz_file_info64 file_info{ };
-    unzGetCurrentFileInfo64(module_file, &file_info, buf, sizeof(buf),
-            nullptr, 0, nullptr, 0);
+    unzGetCurrentFileInfo64(module_file, &file_info, buf, sizeof(buf), nullptr, 0, nullptr, 0);
 
-    auto bytecode = (u1 *) g_heap->allocBytecode(file_info.uncompressed_size); //new u1[file_info.uncompressed_size];
+    auto bytecode = new u1[file_info.uncompressed_size];//(u1 *) g_heap->allocBytecode(file_info.uncompressed_size); 
     int size = unzReadCurrentFile(module_file, bytecode, (unsigned int) (file_info.uncompressed_size));
     unzCloseCurrentFile(module_file);
     unzClose(module_file);
     if (size != (int) file_info.uncompressed_size) {
-        thread_throw(new IOException(NEW_MSG("unzReadCurrentFile failed: %s.\n", path)));
+        signalException(S(java_io_IOException), MSG("unzReadCurrentFile failed: %s\n", path));
+        printStackTrace();
+        JVM_EXIT
     }
     return make_pair(bytecode, file_info.uncompressed_size);
 }
 
-static void addClassToClassLoader(Object *classLoader, Class *c)
+static void addClassToClassLoader(Object *class_loader, Class *c)
 {
     assert(c != nullptr);
-    if (classLoader == bootClassLoader) {
-        bootClasses.insert(make_pair(c->className, c));
+    if (class_loader == BOOT_CLASS_LOADER) {
+        boot_classes.insert(make_pair(c->class_name, c));
         return;
     }
 
-    if (classLoader->classes == nullptr) {
-        classLoader->classes = new unordered_map<const utf8_t *, Class *, utf8::Hash, utf8::Comparator>;
+    if (class_loader->classes == nullptr) {
+        class_loader->classes = new unordered_map<const utf8_t *, Class *, utf8::Hash, utf8::Comparator>;
     }
-    classLoader->classes->insert(make_pair(c->className, c));
+    class_loader->classes->insert(make_pair(c->class_name, c));
 
     // Invoked by the VM to record every loaded class with this loader.
     // void addClass(Class<?> c);
@@ -114,11 +122,11 @@ static void addClassToClassLoader(Object *classLoader, Class *c)
 Class *loadBootClass(const utf8_t *name)
 {
     assert(name != nullptr);
-    //assert(isSlashName(name));
+    assert(isSlashName(name));
 
-    auto iter = bootClasses.find(name);
-    if (iter != bootClasses.end()) {
-        TRACE("find loaded class (%s) from pool.", className);
+    auto iter = boot_classes.find(name);
+    if (iter != boot_classes.end()) {
+        TRACE("find loaded class (%s) from pool.", name);
         return iter->second;
     }
 
@@ -130,15 +138,15 @@ Class *loadBootClass(const utf8_t *name)
             for (auto &mod : g_jdk_modules) {
                 auto content = readClass(mod.c_str(), name, IN_MODULE);
                 if (content.has_value()) { // find out
-                    c = defineClass(bootClassLoader, content->first,
+                    c = defineClass(BOOT_CLASS_LOADER, content->first,
                                     content->second); //content.value().first
                 }
             }
         } else {
-            for (auto &jar : jreLibJars) {
+            for (auto &jar : g_jre_lib_jars) {
                 auto content = readClass(jar.c_str(), name, IN_JAR);
                 if (content.has_value()) { // find out
-                    c = defineClass(bootClassLoader, content->first,
+                    c = defineClass(BOOT_CLASS_LOADER, content->first,
                                     content->second); //content.value().first
                 }
             }
@@ -146,8 +154,8 @@ Class *loadBootClass(const utf8_t *name)
     }
 
     if (c != nullptr) {
-        bootPackages.insert(c->pkgName);
-        addClassToClassLoader(bootClassLoader, c);
+        boot_packages.insert(c->pkg_name);
+        addClassToClassLoader(BOOT_CLASS_LOADER, c);
     }
     return c;
 }
@@ -158,8 +166,8 @@ Class *loadBootClass(const utf8_t *name)
  */
 const utf8_t *getBootPackage(const utf8_t *name)
 {
-    auto iter = bootPackages.find(name);
-    return iter != bootPackages.end() ? *iter : nullptr;
+    auto iter = boot_packages.find(name);
+    return iter != boot_packages.end() ? *iter : nullptr;
 }
 
 /*
@@ -168,68 +176,70 @@ const utf8_t *getBootPackage(const utf8_t *name)
  */
 utf8_set &getBootPackages()
 {
-    return bootPackages;
+    return boot_packages;
 }
 
-Class *findLoadedClass(Object *classLoader, const utf8_t *name)
+Class *findLoadedClass(Object *class_loader, const utf8_t *name)
 {
     assert(name != nullptr);
-    //assert(isSlashName(name));
+    assert(isSlashName(name));
 
-    if (classLoader == nullptr) {
-        auto iter = bootClasses.find(name);
-        return iter != bootClasses.end() ? iter->second : nullptr;
+    if (class_loader == nullptr) {
+        auto iter = boot_classes.find(name);
+        return iter != boot_classes.end() ? iter->second : nullptr;
     }
 
     // is not boot classLoader
-    if (classLoader->classes != nullptr) {
-        auto iter = classLoader->classes->find(name);
-        return iter != classLoader->classes->end() ? iter->second : nullptr;
+    if (class_loader->classes != nullptr) {
+        auto iter = class_loader->classes->find(name);
+        return iter != class_loader->classes->end() ? iter->second : nullptr;
     }
 
     // not find
     return nullptr;
 }
 
-Class *loadClass(Object *classLoader, const utf8_t *name)
+Class *loadClass(Object *class_loader, const utf8_t *name)
 {
     assert(name != nullptr);
-    //assert(isSlashName(name));
+    assert(isSlashName(name));
 
-    auto slashName = dots2SlashDup(name);
-    Class *c = findLoadedClass(classLoader, slashName);
+    auto slash_name = dot2SlashDup(name);
+    Class *c = findLoadedClass(class_loader, slash_name);
     if (c != nullptr)
         return c;
 
     // 先尝试用boot class loader load the class
-    c = loadBootClass(slashName);
-    if (c != nullptr || classLoader == nullptr)
+    c = loadBootClass(slash_name);
+    if (c != nullptr || class_loader == nullptr)
         return c;
 
     // todo 再尝试用扩展classLoader load the class
 
     // public Class<?> loadClass(String name) throws ClassNotFoundException
-    Method *m = classLoader->clazz->lookupInstMethod("loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+    Method *m = class_loader->clazz->lookupInstMethod("loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
     assert(m != nullptr);
 
-    auto dotName = slash2DotsDup(name);
-    slot_t *slot = execJavaFunc(m, { classLoader, newString(dotName) });
+    auto dot_name = slash2DotDup(name);
+    slot_t *slot = execJavaFunc(m, { class_loader, newString(dot_name) });
     assert(slot != nullptr);
-    c = (Class *) RSLOT(slot);
-    addClassToClassLoader(classLoader, c);
+    auto co = (ClassObject *) RSLOT(slot);
+    assert(co != nullptr && co->jvm_mirror != nullptr);
+    c = co->jvm_mirror;
+    addClassToClassLoader(class_loader, c);
     return c;
 }
 
-Class *defineClass(jref classLoader, u1 *bytecode, size_t len)
+Class *defineClass(jref class_loader, u1 *bytecode, size_t len)
 {
-    return Class::newClass(classLoader, bytecode, len);
+    return Class::newClass(class_loader, bytecode, len);
 }
 
-Class *defineClass(jref classLoader, jstrref name,
-                   jarrref bytecode, jint off, jint len, jref protectionDomain, jstrref source)
+Class *defineClass(jref class_loader, jref name,
+                   Array *bytecode, jint off, jint len, jref protection_domain, jref source)
 {
     auto data = (u1 *) bytecode->data;
-    return defineClass(classLoader, data + off, len);
+    return defineClass(class_loader, data + off, len);
 }
 
 Class *initClass(Class *c)
@@ -263,62 +273,52 @@ Object *getSystemClassLoader()
     return RSLOT(execJavaFunc(get));
 }
 
-Class *objectClass;
-Class *classClass = nullptr;
-Class *stringClass;
+Class *g_object_class;
+Class *g_class_class = nullptr;
+Class *g_string_class;
 
 void initClassLoader()
 {
-    objectClass = loadBootClass(S(java_lang_Object));
-    classClass = loadBootClass(S(java_lang_Class));
+    g_object_class = loadBootClass(S(java_lang_Object));
+    g_class_class = loadBootClass(S(java_lang_Class));
 
-    if (classClass->instFieldsCount > CLASS_CLASS_INST_FIELDS_COUNT) {
-        jvm_abort("What the fuck! [%d]", classClass->instFieldsCount); // todo
+    // g_class_class 至此创建完成。
+    // 在 g_class_class 创建完成之前创建的 Class 都没有设置 java_mirror 字段，现在设置下。
+    for (auto iter: boot_classes) {
+        Class *c = iter.second;
+        c->java_mirror = generteClassObject(c);
     }
 
-    objectClass->clazz = classClass->clazz = classClass;
+    // if (g_class_class->inst_field_count > CLASS_CLASS_INST_FIELDS_COUNT) {
+    //     jvm_abort("What the fuck! [%d]", g_class_class->inst_field_count); // todo
+    // }
 
-    stringClass = loadBootClass(S(java_lang_String));
-    stringClass->buildStrPool();
+    // // g_object_class->clazz = g_class_class->clazz = g_class_class;
+    // g_object_class->java_mirror = generteClassObject(g_object_class);
+    // g_class_class->java_mirror = generteClassObject(g_class_class);
+
+    g_string_class = loadBootClass(S(java_lang_String));
+    g_string_class->buildStrPool();
 }
 
 void printBootClassLoader()
 {
     printvm("boot class loader.\n");
-    for (auto iter : bootClasses) {
+    for (auto iter : boot_classes) {
         printvm("%s\n", iter.first);
     }
     printvm("\n");
 }
 
-//void printClassLoader(Object *classLoader)
-//{
-//    if (classLoader == nullptr) {
-//        printBootClassLoader();
-//        return;
-//    }
-//
-//    for (auto iter : classes) {
-//        if (iter.first == classLoader) {
-//            printvm("class loader %p.\n", classLoader);
-//            for (auto k : iter.second) {
-//                printvm("%s\n", k.first);
-//            }
-//            printvm("\n");
-//        }
-//    }
-//}
-//
-//void printAllClassLoaders()
-//{
-//    printBootClassLoader();
-//
-//    for (auto iter : classes) {
-//        printvm("class loader %p.\n", iter.first);
-//        for (auto k : iter.second) {
-//            printvm("%s\n", k.first);
-//        }
-//        printvm("\n");
-//    }
-//}
-
+void printClassLoader(Object *class_loader)
+{
+   if (class_loader == BOOT_CLASS_LOADER) {
+       printBootClassLoader();
+       return;
+   }
+   
+   for (auto iter : *(class_loader->classes)) {
+       printvm("%s\n", iter.first);
+   }
+   printvm("\n");
+}

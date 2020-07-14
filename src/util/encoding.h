@@ -34,11 +34,11 @@ namespace utf8 {
 
     utf8_t *dup(const utf8_t *utf8);
 
-    utf8_t *dots2Slash(utf8_t *utf8);
-    utf8_t *dots2SlashDup(const utf8_t *utf8);
+    utf8_t *dot2Slash(utf8_t *utf8);
+    utf8_t *dot2SlashDup(const utf8_t *utf8);
 
-    utf8_t *slash2Dots(utf8_t *utf8);
-    utf8_t *slash2DotsDup(const utf8_t *utf8);
+    utf8_t *slash2Dot(utf8_t *utf8);
+    utf8_t *slash2DotDup(const utf8_t *utf8);
 
     // 不会在buf后面添加字符串结束符'\u0000'
     unicode_t *toUnicode(const utf8_t *utf8, unicode_t *buf = nullptr);

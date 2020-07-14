@@ -1,12 +1,11 @@
 package initialization;
 
 /**
- * Example 12.4.1-2.
  * Only The Class That Declares Static Field Is Initialized
  *
- * Status: Fail
+ * Status: Pass
  */
-public class Eg12_4_1_2 {
+public class InitStaticField {
     
     private static class Super {
         static int taxi = 1729;
@@ -26,6 +25,6 @@ public class Eg12_4_1_2 {
     }
     
     public static void main(String[] args) {
-        new Eg12_4_1_2().test();
+        new InitStaticField().test();
     }
 }

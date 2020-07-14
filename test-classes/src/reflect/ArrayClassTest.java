@@ -1,10 +1,10 @@
-package reflection;
+package reflect;
 
 import java.io.Serializable;
 import java.util.Arrays;
 
 /**
- * Status: Fail
+ * Status: Pass
  */
 public class ArrayClassTest {
     
@@ -29,9 +29,17 @@ public class ArrayClassTest {
         boolean b3 = Arrays.deepEquals(new Class<?>[]{ Cloneable.class, Serializable.class }, c.getInterfaces());
         boolean b4 = 0 == c.getFields().length;
         boolean b5 = 0 == c.getDeclaredFields().length;
+        // public final void java.lang.Object.wait() throws java.lang.InterruptedException,
+        // public final void java.lang.Object.wait(long,int) throws java.lang.InterruptedException,
+        // public final native void java.lang.Object.wait(long) throws java.lang.InterruptedException,
+        // public boolean java.lang.Object.equals(java.lang.Object),
+        // public java.lang.String java.lang.Object.toString(),
+        // public native int java.lang.Object.hashCode(),
+        // public final native java.lang.Class java.lang.Object.getClass(),
+        // public final native void java.lang.Object.notify(),
+        // public final native void java.lang.Object.notifyAll()
         boolean b6 = 9 == c.getMethods().length;
         boolean b7 = 0 == c.getDeclaredMethods().length;
-//        System.out.println((b1 && b2 && b3 && b4 && b5 && b6 && b7) ? "Pass" : "Fail");
         return b1 && b2 && b3 && b4 && b5 && b6 && b7;
     }
     

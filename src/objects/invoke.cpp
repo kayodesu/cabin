@@ -7,6 +7,7 @@
 #include "class.h"
 #include "method.h"
 #include "array_object.h"
+#include "class_object.h"
 #include "../interpreter/interpreter.h"
 
 using namespace method_type;
@@ -31,7 +32,7 @@ jref method_type::methodType(Method *m)
     return m->getType();
 }
 
-jref method_type::methodType(jclsref rtype, jarrref ptypes)
+jref method_type::methodType(ClassObject *rtype, Array *ptypes)
 {
     assert(rtype != nullptr);
     assert(ptypes != nullptr);
@@ -63,7 +64,7 @@ jref member_name::memberName(Method *m, jbyte refKind)
     // public MemberName(Class<?> defClass, String name, MethodType type, byte refKind);
     auto cons = mn->getConstructor("(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/invoke/MethodType;B)V");
     jref o = newObject(mn);
-    execJavaFunc(cons, { rslot(o), rslot(m->clazz), rslot(newString(m->name)),
+    execJavaFunc(cons, { rslot(o), rslot(m->clazz->java_mirror), rslot(newString(m->name)),
                          rslot(methodType(m)), islot(refKind) });
     return o;
 }

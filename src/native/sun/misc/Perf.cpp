@@ -9,7 +9,7 @@
 #include "../../../interpreter/interpreter.h"
 
 // public native ByteBuffer createLong(String name, int variability, int units, long value);
-static jref createLong(jref _this, jstrref name, jint variability, jint units, jlong value)
+static jobject createLong(jobject _this, jstring name, jint variability, jint units, jlong value)
 {
     // todo 这函数是干嘛的？？？？？？？？？？？？？？？？？？
 /*

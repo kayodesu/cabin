@@ -1,43 +1,65 @@
 package exception;
 
+/**
+ * Status: Fail
+ */
 public class InstructionNpeTest {
     
-//    private int i;
-//
-//    public static void main(String[] args) {
-//        UnitTestRunner.run(InstructionNpeTest.class);
-//    }
-//
-//    @Test(expected = NullPointerException.class)
-//    public void arraylength() {
-//        int[] x = (int[]) nullObj();
-//        int y = x.length;
-//    }
-//
-//    @Test(expected = NullPointerException.class)
-//    public void athrow() throws Exception {
-//        Exception x = (Exception) nullObj();
-//        throw x;
-//    }
-//
-//    @Test(expected = NullPointerException.class)
-//    public void getfield() {
-//        InstructionNpeTest x = (InstructionNpeTest) nullObj();
-//        int y = x.i;
-//    }
-//
-//    @Test(expected = NullPointerException.class)
-//    public void monitorenter() {
-//        Object x = nullObj();
-//        synchronized(x) {
-//            System.out.println("BAD!");
-//        }
-//    }
-//
-//    @Test(expected = NullPointerException.class)
-//    public void invokevirtual() {
-//        Object x = nullObj();
-//        x.toString();
-//    }
+    private int i;
+
+    public static void main(String[] args) throws Exception {
+        arraylength();
+        athrow();
+        getfield();
+        monitorenter();
+        invokevirtual();
+    }
+
+    public static void arraylength() {
+        try {
+            int[] x = null;
+            int y = x.length;
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void athrow() throws Exception {
+        try {
+            Exception x = null;
+            throw x;
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void getfield() {
+        try {
+            InstructionNpeTest x = null;
+            int y = x.i;
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void monitorenter() {
+        try {
+            Object x = null;
+            synchronized(x) {
+                System.out.println("BAD!");
+            }
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void invokevirtual() {
+        try {
+            Object x = null;
+            x.toString();
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        }
+    }
     
 }

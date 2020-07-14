@@ -20,7 +20,7 @@ static void initIDs()
  *
  * private native void open0(String name, boolean append) throws FileNotFoundException;
  */
-static void open0(jref _this, jstrref name, jboolean append)
+static void open0(jobject _this, jstring name, jboolean append)
 {
     if (append)
         __openFile(_this, name, "ab");
@@ -37,7 +37,7 @@ static void open0(jref _this, jstrref name, jboolean append)
  *
  * private native void write(int b, boolean append) throws IOException;
  */
-static void write(jref _this, jint b, jboolean append)
+static void write(jobject _this, jint b, jboolean append)
 {
     jvm_abort("error\n"); // todo
 }
@@ -52,7 +52,7 @@ static void write(jref _this, jint b, jboolean append)
  * @exception IOException If an I/O error has occurred.
  */
 // private native void writeBytes(byte b[], int off, int len, boolean append) throws IOException;
-static void writeBytes(jref _this, jarrref b, jint off, jint len, jboolean append)
+static void writeBytes(jobject _this, jbyteArray b, jint off, jint len, jboolean append)
 {
     auto data = (jbyte *) b->data;
 
@@ -86,7 +86,7 @@ static void writeBytes(jref _this, jarrref b, jint off, jint len, jboolean appen
 }
 
 // private native void close0() throws IOException;
-static void close0(jref _this)
+static void close0(jobject _this)
 {
     __closeFile(_this);
 }

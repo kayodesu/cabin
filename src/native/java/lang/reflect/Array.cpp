@@ -1,5 +1,6 @@
 #include "../../../jni_inner.h"
 #include "../../../../objects/array_object.h"
+#include "../../../../objects/class.h"
 
 /*
  * Author: Yo Ka
@@ -7,29 +8,29 @@
 
 // public static native Object get(Object array, int index)
 //              throws IllegalArgumentException, ArrayIndexOutOfBoundsException;
-static jref get(jref array, jint index)
+static jobject get(jobject array, jint index)
 {
     jvm_abort("get");
 }
 
 // public static native void set(Object array, int index, Object value)
 //               throws IllegalArgumentException, ArrayIndexOutOfBoundsException;
-static void set(jref array, jint index, jref value)
+static void set(jobject array, jint index, jobject value)
 {
     jvm_abort("set");
 }
 
 // public static native int getLength(Object array) throws IllegalArgumentException;
-static jint getLength(jref array)
+static jint getLength(jobject array)
 {
     jvm_abort("getLength");
 }
 
 // private static native Object newArray(Class<?> componentType, int length)
 //                  throws NegativeArraySizeException;
-static jref __newArray(jclsref componentType, jint length)
+static jobject __newArray(jclass componentType, jint length)
 {
-    return newArray(componentType->arrayClass(), length);
+    return newArray(componentType->jvm_mirror->arrayClass(), length);
 }
 
 static JNINativeMethod methods[] = {

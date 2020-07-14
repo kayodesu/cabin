@@ -3,6 +3,9 @@ package invoke;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
+/**
+ * Status: Fail
+ */
 public class MethodHandleNativesTest {
     
     public static void main(String[] args) {
@@ -19,13 +22,12 @@ public class MethodHandleNativesTest {
         for (int i = 0; i < 100; i++) {
             Object x =  ReflectionHelper.call(mhnClass, "getConstant", i);
             if (i == 4) {
-//                assertEquals(1, x);
+                System.out.println(1 == (Integer) x ? "Pass" : "Fail");
             } else {
-//                assertEquals(0, x);
+                System.out.println(0 == (Integer) x ? "Pass" : "Fail");
             }
         }
     }
-
 
     static class ReflectionHelper {
 
@@ -53,9 +55,7 @@ public class MethodHandleNativesTest {
         // call static method
         public static Object call(Class<?> c, String methodName, Object... args) throws ReflectiveOperationException {
             for (Method m : c.getDeclaredMethods()) {
-                if (m.getName().equals(methodName)
-                        && m.getParameterCount() == args.length) {
-
+                if (m.getName().equals(methodName) && m.getParameterCount() == args.length) {
                     m.setAccessible(true);
                     return m.invoke(m, args);
                 }

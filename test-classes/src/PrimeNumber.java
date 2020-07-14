@@ -8,8 +8,10 @@ import java.util.ArrayList;
  * 5800139
  * 7368791
  * 8960467
+ *
+ * Status: Fail
  */
-public class Prime {
+public class PrimeNumber {
 
     public static void main(String[] args) {
         ArrayList<Integer> res = new ArrayList<>();

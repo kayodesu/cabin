@@ -4,6 +4,9 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 
+/**
+ * Status: Fail
+ */
 public class MethodHandleTest {
     
     public static void main(String[] args) throws Throwable {
@@ -13,7 +16,7 @@ public class MethodHandleTest {
     }
     
     public static void test() {
-        System.out.println("test");
+        System.out.println("Pass");
     }
     
 }

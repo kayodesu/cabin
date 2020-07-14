@@ -14,32 +14,32 @@
  *                      long[] ids, boolean lockedMonitors, boolean lockedSynchronizers, int maxDepth);
  *
  */
-static jarrref dumpThreads0(jarrref ids, jboolean lockedMonitors, jboolean lockedSynchronizers, jint maxDepth)
+static jobjectArray dumpThreads0(jlongArray ids, jboolean lockedMonitors, jboolean lockedSynchronizers, jint maxDepth)
 {
-    jarrref threadInfos;
+    jobjectArray thread_infos;
 
     if (ids == jnull) { // dump all threads
         int len = g_all_threads.size();
-        threadInfos = newArray(loadBootClass("[Ljava/lang/management/ThreadInfo;"), len);
+        thread_infos = newArray(loadBootClass("[Ljava/lang/management/ThreadInfo;"), len);
 
         for (int i = 0; i < len; i++) {
             Thread *t = g_all_threads[i];
-            jref threadInfo = t->to_java_lang_management_ThreadInfo(lockedMonitors, lockedSynchronizers, maxDepth);
-            threadInfos->set(i, threadInfo);
+            Object *thread_info = t->to_java_lang_management_ThreadInfo(lockedMonitors, lockedSynchronizers, maxDepth);
+            thread_infos->setRef(i, thread_info);
         }
     } else {
-        threadInfos = newArray(loadBootClass("[Ljava/lang/management/ThreadInfo;"), ids->len);
+        thread_infos = newArray(loadBootClass("[Ljava/lang/management/ThreadInfo;"), ids->len);
 
         for (int i = 0; i < ids->len; i++) {
             auto id = ids->get<jlong>(i);
             Thread *t = Thread::from(id);
             assert(t != nullptr);
-            jref threadInfo = t->to_java_lang_management_ThreadInfo(lockedMonitors, lockedSynchronizers, maxDepth);
-            threadInfos->set(i, threadInfo);
+            Object *thread_info = t->to_java_lang_management_ThreadInfo(lockedMonitors, lockedSynchronizers, maxDepth);
+            thread_infos->setRef(i, thread_info);
         }
     }
 
-    return threadInfos;
+    return thread_infos;
 }
 
 static JNINativeMethod methods[] = {

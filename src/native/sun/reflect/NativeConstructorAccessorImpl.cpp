@@ -9,7 +9,7 @@
 
 using namespace std;
 
-//static slot_t* convert_args(jref this_obj, Method *m, Array *args)
+//static slot_t* convert_args(jobject this_obj, Method *m, Array *args)
 //{
 //    Array *types = m->getParameterTypes();
 //    int types_len = types->len;
@@ -25,7 +25,7 @@ using namespace std;
 //    for (int i = 0; i < types_len; i++) {
 //        auto clsobj = types->get<Class *>(i);
 //        assert(clsobj != nullptr);
-//        auto o = args->get<jref>(i);
+//        auto o = args->get<jobject>(i);
 //
 //        if (clsobj->isPrimClass()) {
 //            const slot_t *unbox = o->unbox();
@@ -67,7 +67,7 @@ using namespace std;
  * private static native Object newInstance0(Constructor<?> c, Object[] args)
  * throws InstantiationException, IllegalArgumentException, InvocationTargetException;
  */
-static jref newInstance0(jref c, jarrref args)
+static jobject newInstance0(jobject c, jobjectArray args)
 {
     /*
      * @args array of objects to be passed as arguments to
@@ -78,8 +78,9 @@ static jref newInstance0(jref c, jarrref args)
      */
 
     // which class this constructor belongs to.
-    auto clazz = c->getRefField<Class>(S(clazz), S(sig_java_lang_Class));
-    initClass(c->clazz);
+    auto co = c->getRefField<ClassObject>(S(clazz), S(sig_java_lang_Class));
+    Class *clazz = co->jvm_mirror;
+    initClass(clazz);
     Object *obj = newObject(clazz);
 
     if (args == nullptr) { // 构造函数没有参数
@@ -91,7 +92,7 @@ static jref newInstance0(jref c, jarrref args)
         // private Class<?>[] parameterTypes;
         auto parameterTypes = c->getRefField<Array>(S(parameterTypes), S(array_java_lang_Class));
         Method *constructor = clazz->getConstructor(parameterTypes);
-        execConstructor(constructor, obj, args);
+        execJavaFunc(constructor, obj, args);
     }
 
     return obj;

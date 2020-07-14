@@ -1,5 +1,8 @@
-package reflection;
+package reflect;
 
+/**
+ * Status: Fail
+ */
 public class ClassInitTest {
     
     static class A {
@@ -14,6 +17,7 @@ public class ClassInitTest {
     public void getStatic() {
         try {
             Integer a = (Integer) A.class.getField("a").get(null);
+            System.out.println(a == 100 ? "Pass":"Fail");
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         } catch (NoSuchFieldException e) {

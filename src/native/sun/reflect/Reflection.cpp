@@ -11,13 +11,13 @@
 
 
 // public static native Class<?> getCallerClass(int level)
-static jclsref getCallerClass0(jint level)
+static jclass getCallerClass0(jint level)
 {
     jvm_abort("getCallerClass0");
 }
 
 // public static native Class<?> getCallerClass()
-static jref getCallerClass()
+static jclass getCallerClass()
 {
     // top0, current frame is executing getCallerClass()
     // top1, who called getCallerClass, the one who wants to know his caller.
@@ -29,14 +29,14 @@ static jref getCallerClass()
     Frame *top2 = top1->prev;
     assert(top2 != nullptr);
 
-    jref o = top2->method->clazz;
+    jclass o = top2->method->clazz->java_mirror;
     return o;
 }
 
 // public static native int getClassAccessFlags(Class<?> type)
-static jint getClassAccessFlags(jclsref type)
+static jint getClassAccessFlags(jclass type)
 {
-    return type->clazz->modifiers; // todo
+    return type->clazz->accsee_flags; // todo
 }
 
 static JNINativeMethod methods[] = {

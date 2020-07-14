@@ -20,61 +20,61 @@
  *
  * private native void open0(String name, int mode) throws FileNotFoundException;
  */
-static void open0(jref _this, jstrref name, jint mode)
+static void open0(jobject _this, jstring name, jint mode)
 {
     jvm_abort("open0");
 }
 
 // private native void close0() throws IOException;
-static void close0(jref _this)
+static void close0(jobject _this)
 {
     jvm_abort("close0");
 }
 
 // private native void writeBytes(byte b[], int off, int len) throws IOException;
-static void writeBytes(jref _this, jarrref b, jint off, jint len)
+static void writeBytes(jobject _this, jbyteArray b, jint off, jint len)
 {
     jvm_abort("writeBytes");
 }
 
 // private native void write0(int b) throws IOException;
-static void write0(jref _this, jint b)
+static void write0(jobject _this, jint b)
 {
     jvm_abort("write0");
 }
 
 // private native int readBytes(byte b[], int off, int len) throws IOException;
-static void readBytes(jref _this, jarrref b, jint off, jint len)
+static void readBytes(jobject _this, jbyteArray b, jint off, jint len)
 {
     jvm_abort("readBytes");
 }
 
 // public native int read() throws IOException;
-static void read(jref _this)
+static void read(jobject _this)
 {
     jvm_abort("read");
 }
 
 // private native void seek0(long pos) throws IOException;
-static void seek0(jref _this, jlong pos)
+static void seek0(jobject _this, jlong pos)
 {
     jvm_abort("seek0");
 }
 
 // public native long getFilePointer() throws IOException;
-static jlong getFilePointer(jref _this)
+static jlong getFilePointer(jobject _this)
 {
     jvm_abort("getFilePointer");
 }
 
 // public native long length() throws IOException;
-static jlong length(jref _this)
+static jlong length(jobject _this)
 {
     jvm_abort("length");
 }
 
 // public native void setLength(long newLength) throws IOException;
-static void setLength(jref _this, jlong newLength)
+static void setLength(jobject _this, jlong newLength)
 {
     jvm_abort("setLength");
 }

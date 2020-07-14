@@ -5,12 +5,7 @@ import java.io.Writer;
 import java.net.Socket;
 
 /**
- * Created with IntelliJ IDEA.
- * User: beyond
- * Email: beyondblog@outlook.com
- * Date: 15/3/24
- * Time: 上午9:35
- * Description:
+ * Status: Fail
  */
 public class SocketConnectTest {
     public static void main(String[] args) throws Exception {

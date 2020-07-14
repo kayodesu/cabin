@@ -1,5 +1,8 @@
-package reflection;
+package reflect;
 
+/**
+ * Status: Pass
+ */
 public class PrimitiveClassTest {
     
     public static void main(String[] args) {
@@ -20,12 +23,13 @@ public class PrimitiveClassTest {
     }
     
     private void testPrimitiveClass(Class<?> c, String name) {
-//        assertEquals(name, c.getName());
-//        assertEquals(null, c.getSuperclass());
-//        assertEquals(0, c.getFields().length);
-//        assertEquals(0, c.getDeclaredFields().length);
-//        assertEquals(0, c.getMethods().length);
-//        assertEquals(0, c.getDeclaredMethods().length);
+        boolean b1 = (name == c.getName());
+        boolean b2 = (null == c.getSuperclass());
+        boolean b3 = (0 == c.getFields().length);
+        boolean b4 = (0 == c.getDeclaredFields().length);
+        boolean b5 = (0 == c.getMethods().length);
+        boolean b6 = (0 == c.getDeclaredMethods().length);
+        System.out.println((b1 && b2 && b3 && b4 && b5 && b6) ? "Pass" : "Fail");
     }
     
 }

@@ -11,7 +11,7 @@
 
 // @CallerSensitive
 // public static native <T> T doPrivileged(PrivilegedAction<T> action);
-static jref doPrivileged(jref action)
+static jobject doPrivileged(jobject action)
 {
     // todo 这个函数干什么用的。。。。
 
@@ -29,7 +29,7 @@ static jref doPrivileged(jref action)
 
 // @CallerSensitive
 // public static native <T> T doPrivileged(PrivilegedAction<T> action, AccessControlContext context);
-static jref doPrivileged1(jref action, jref context)
+static jobject doPrivileged1(jobject action, jobject context)
 {
     // todo
     return doPrivileged(action);
@@ -37,7 +37,7 @@ static jref doPrivileged1(jref action, jref context)
 
 // @CallerSensitive
 // public static native <T> T doPrivileged(PrivilegedExceptionAction<T> action) throws PrivilegedActionException;
-static jref doPrivileged2(jref action)
+static jobject doPrivileged2(jobject action)
 {
     // todo
     return doPrivileged(action);
@@ -46,21 +46,21 @@ static jref doPrivileged2(jref action)
 // @CallerSensitive
 // public static native <T> T doPrivileged(PrivilegedExceptionAction<T> action, AccessControlContext context)
 //      throws PrivilegedActionException;
-static jref doPrivileged3(jref action, jref context)
+static jobject doPrivileged3(jobject action, jobject context)
 {
     // todo
     return doPrivileged(action);
 }
 
 // private static native AccessControlContext getStackAccessControlContext();
-static jref getStackAccessControlContext()
+static jobject getStackAccessControlContext()
 {
     // todo
     return nullptr;
 }
 
 // static native AccessControlContext getInheritedAccessControlContext();
-static jref getInheritedAccessControlContext()
+static jobject getInheritedAccessControlContext()
 {
     // todo
     jvm_abort("getInheritedAccessControlContext");

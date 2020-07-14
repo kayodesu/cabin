@@ -5,7 +5,7 @@
  */
 
 // private static native int findSignal(String string);
-static jint findSignal(jstrref string)
+static jint findSignal(jstring string)
 {
     return 0; // todo
 }

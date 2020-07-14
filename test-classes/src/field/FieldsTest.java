@@ -1,5 +1,8 @@
 package field;
 
+/**
+ * Status: Pass
+ */
 public class FieldsTest {
     
     static class Sup {
@@ -17,7 +20,7 @@ public class FieldsTest {
         z += 100;
         Sub.y = z;
         Sub.x = z;
-        System.out.println(Sub.x == 100 && Sub.y == 100);
+        System.out.println((Sub.x == 100 && Sub.y == 100) ? "Pass" : "Fail");
     }
 
     public void instanceFields() {
@@ -26,7 +29,7 @@ public class FieldsTest {
         c += 100;
         sub.a = c;
         sub.b = c;
-        System.out.println(sub.a == 100 && sub.b == 100);
+        System.out.println((sub.a == 100 && sub.b == 100) ? "Pass" : "Fail");
     }
     
     public static void main(String[] args) {

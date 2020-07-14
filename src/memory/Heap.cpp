@@ -1,5 +1,5 @@
 #include <vector>
-#include "Heap.h"
+#include "heap.h"
 #include "../objects/class.h"
 #include "../objects/method.h"
 #include "../objects/field.h"
@@ -14,98 +14,156 @@ using namespace std;
 
 Heap::Heap() noexcept
 {
-    size_t size = VM_HEAP_SIZE;
+    size = VM_HEAP_SIZE;
+    assert(size > 0);
 
-    const size_t classAreaSize = size / 20;          // 5% todo
-    const size_t bytecodeAreaSize = (size / 10) * 3; // 30% todo
-    const size_t methodAreaSize = size / 20;         // 5% todo
-    const size_t fieldAreaSize = size / 20;          // 5% todo
+    auto mem = (address) malloc(size);
+    assert(mem != 0);    
 
-    raw = malloc(size);
-    assert(raw != nullptr);
-    auto mem = (address) raw;
-
-    assert(size > classAreaSize);
-    classArea = new MemMgr(mem, classAreaSize);
-    mem += classAreaSize;
-    size -= classAreaSize;
-
-    assert(size > bytecodeAreaSize);
-    bytecodeArea = new MemMgr(mem, bytecodeAreaSize);
-    mem += bytecodeAreaSize;
-    size -= bytecodeAreaSize;
-
-    assert(size > methodAreaSize);
-    methodArea = new MemMgr(mem, methodAreaSize);
-    mem += methodAreaSize;
-    size -= methodAreaSize;
-
-    assert(size > fieldAreaSize);
-    fieldArea = new MemMgr(mem, fieldAreaSize);
-    mem += fieldAreaSize;
-    size -= fieldAreaSize;
-
-    objectArea = new MemMgr(mem, size);
+    freelist = new Node(mem, size, nullptr);
 }
 
 Heap::~Heap()
-{
-    free(raw);
-}
-
-void *Heap::allocClass()
-{
-    return classArea->get(Class::getSize());
-}
-
-void *Heap::allocMethods(u2 methodsCount)
-{
-    assert(methodsCount > 0);
-    return methodArea->get(methodsCount * sizeof(Method));
-}
-
-void *Heap::allocFields(u2 fieldsCount)
-{
-    assert(fieldsCount > 0);
-    return fieldArea->get(fieldsCount * sizeof(Field));
-}
-
-vector<Class *> Heap::getClasses()
-{
-    classArea->lock();
-
-    vector<Class *> classes;
-
-    address mem = classArea->getMem();
-    const address end = mem + classArea->getSize();
-
-    while ((mem = classArea->jumpFreelist(mem)) < end) {
-        classes.push_back((Class *) mem);
-        mem += Class::getSize();
+{    
+    for (auto p = freelist; p != nullptr;) {
+        auto t = p->next;
+        delete p;
+        p = t;
     }
 
-    classArea->unlock();
-    return classes;
+    free((void *) mem);
+}
+
+
+address Heap::jumpFreelist(address p)
+{
+    assert(in(p));
+
+    Node *curr = freelist;
+    for (; curr != nullptr; curr = curr->next) {
+        if (p < curr->head)
+            return p; // p is not in freelist
+        auto offset = p - curr->head;
+        if (0 <= offset and offset <= curr->len) {
+            // p is in freelist, jump
+            return p + curr->len;
+        }
+    }
+
+    return p; // p is not in freelist
+}
+
+void *Heap::alloc(size_t len)
+{
+    assert(len > 0);
+    lock();
+
+    void *p = nullptr;
+    Node *prev = nullptr;
+    Node *curr = freelist;
+    for (; curr != nullptr; prev = curr, curr = curr->next) {
+        if (curr->len == len) {
+            if (prev != nullptr) {
+                prev->next = curr->next;
+            } else {
+                assert(curr == freelist);
+                freelist = curr->next;
+            }
+            p = (void *) curr->head;
+            delete curr;
+
+            goto over;
+        }
+
+        if (curr->len > len) {
+            p = (void *) (curr->head);
+            curr->head += len;
+            curr->len -= len;
+
+            goto over;
+        }
+    }
+
+over:
+    unlock();
+
+    if (p != nullptr) {
+        memset(p, 0, len);
+        return p;
+    }
+
+    jvm_abort("java_lang_OutOfMemoryError"); // todo 堆可以扩张
+}
+
+void Heap::back(address p, size_t len)
+{
+    assert(in(p));
+    assert(len > 0);
+
+    lock();
+
+    Node *prev = nullptr;
+    Node *curr = freelist;
+    for (; curr != nullptr; prev = curr, curr = curr->next) {
+        if (p > curr->head)
+            continue;
+
+        assert(p + len <= curr->head);
+        if (prev == nullptr) {
+            assert(curr == freelist);
+            if (p + len == curr->head) { // 空间右连续
+                curr->head = p;
+                curr->len += len;
+                goto over;
+            } else { // 右不连续
+                freelist = new Node(p, len, curr);
+                goto over;
+            }
+        }
+
+        assert(prev != nullptr);
+        assert(prev->head + prev->len <= p);
+        if (prev->head + prev->len == p) {
+            if (p + len == curr->head) {
+                // 左右都连续
+                prev->len += (len + curr->len);
+                prev->next = curr->next;
+                delete curr;
+                goto over;
+            } else {
+                // 左连续，右不连续
+                prev->len += len;
+                goto over;
+            }
+        } else {
+            if (p + len == curr->head) {
+                // 左不连续，右连续
+                curr->len += len;
+                curr->head = p;
+                goto over;
+            } else {
+                // 左右都不连续
+                prev->next = new Node(p, len, curr);
+                goto over;
+            }
+        }
+    }
+
+over:
+    unlock();
 }
 
 string Heap::toString()
 {
+    lock();
     stringstream ss;
 
-    ss << "class" << endl;
-    ss << classArea->toString() << endl;
+    ss << "freelist: " << endl << '|';
+    for (auto node = freelist; node != nullptr; node = node->next) {
+        ss << (void *) node->head << ',';
+        ss << node->len << "(0x" << hex << node->len << ")|";
+    }
 
-//    ss << "bytecodeArea" << endl;
-//    ss << bytecodeArea->toString() << endl;
-
-//    ss << "methodArea" << endl;
-//    ss << methodArea->toString() << endl;
-//
-//    ss << "fieldArea" << endl;
-//    ss << fieldArea->toString() << endl;
-
-    ss << "objectArea" << endl;
-    ss << objectArea->toString() << endl;
-
+    unlock();
     return ss.str();
 }

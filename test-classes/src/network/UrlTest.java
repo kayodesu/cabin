@@ -2,6 +2,9 @@ package network;
 
 import java.net.URL;
 
+/**
+ * Status: Fail
+ */
 public class UrlTest {
     
     public static void main(String[] args) throws Exception {

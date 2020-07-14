@@ -14,7 +14,7 @@
 using namespace std;
 
 // private native Throwable fillInStackTrace(int dummy);
-static jref fillInStackTrace(jref _this, jint dummy)
+static jobject fillInStackTrace(jobject _this, jint dummy)
 {
     Thread *thread = getCurrentThread();
 
@@ -42,10 +42,10 @@ static jref fillInStackTrace(jref _this, jint dummy)
     Frame *f = frame->prev->prev;
     num -= 2;
 
-    for (Class *c = _this->clazz; c != nullptr; c = c->superClass) {
+    for (Class *c = _this->clazz; c != nullptr; c = c->super_class) {
         f = f->prev; // jump 执行异常类的构造函数的frame
         num--;
-        if (utf8::equals(c->className, S(java_lang_Throwable))) {
+        if (utf8::equals(c->class_name, S(java_lang_Throwable))) {
             break; // 可以了，遍历到 Throwable 就行了，因为现在在执行 Throwable 的 fillInStackTrace 方法。
         }
     }
@@ -62,8 +62,8 @@ static jref fillInStackTrace(jref _this, jint dummy)
         // public StackTraceElement(String declaringClass, String methodName, String fileName, int lineNumber)
         // may be should call <init>, but 直接赋值 is also ok. todo
 
-        auto fileName = newString(f->method->clazz->sourceFileName);
-        auto className = newString(f->method->clazz->className);
+        auto fileName = newString(f->method->clazz->source_file_name);
+        auto className = newString(f->method->clazz->class_name);
         auto methodName = newString(f->method->name);
         auto lineNumber = f->method->getLineNumber(f->reader.pc - 1); // todo why 减1？ 减去opcode的长度
 
@@ -84,15 +84,15 @@ static jref fillInStackTrace(jref _this, jint dummy)
 }
 
 // native StackTraceElement getStackTraceElement(int index);
-static jref getStackTraceElement(jref _this, jint index)
+static jobject getStackTraceElement(jobject _this, jint index)
 {
     auto backtrace = (Array *) _this->getRefField(S(backtrace), S(sig_java_lang_Object));
     assert(backtrace != nullptr);
-    return backtrace->get<jref>(index);
+    return backtrace->get<jobject>(index);
 }
 
 // native int getStackTraceDepth();
-static jint getStackTraceDepth(jref _this)
+static jint getStackTraceDepth(jobject _this)
 {
     auto backtrace = (Array *) _this->getRefField(S(backtrace), S(sig_java_lang_Object));
     assert(backtrace != nullptr);

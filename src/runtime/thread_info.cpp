@@ -2,6 +2,7 @@
  * Author: Yo Ka
  */
 
+#include <cassert>
 #include <thread>
 #include "thread_info.h"
 #include "../jvmstd.h"
@@ -36,39 +37,39 @@ static inline void saveCurrentThread(Thread *thread)
 }
 
 // Various field and method into java.lang.Thread cached at startup and used in thread creation
-static Field *eetopField;
-static Field *threadStatusField;
+static Field *eetop_field;
+static Field *thread_status_field;
 // static Method *runMethod;
 
 // Cached java.lang.Thread class
-static Class *threadClass;
+static Class *thread_class;
 
-Thread *mainThread;
+Thread *g_main_thread;
 
 Thread *initMainThread()
 {
-    threadClass = loadBootClass(S(java_lang_Thread));
+    thread_class = loadBootClass(S(java_lang_Thread));
 
-    eetopField = threadClass->lookupInstField("eetop", S(J));
-    threadStatusField = threadClass->lookupInstField("threadStatus", S(I));
+    eetop_field = thread_class->lookupInstField("eetop", S(J));
+    thread_status_field = thread_class->lookupInstField("threadStatus", S(I));
 
-    mainThread = new Thread();
+    g_main_thread = new Thread();
 
-    initClass(threadClass);
+    initClass(thread_class);
 
-    Class *threadGroupClass = loadBootClass(S(java_lang_ThreadGroup));
-    sysThreadGroup = newObject(threadGroupClass);
+    Class *thread_group_class = loadBootClass(S(java_lang_ThreadGroup));
+    g_sys_thread_group = newObject(thread_group_class);
 
     // 初始化 system_thread_group
     // java/lang/ThreadGroup 的无参数构造函数主要用来：
     // Creates an empty Thread group that is not in any Thread group.
     // This method is used to create the system Thread group.
-    initClass(threadGroupClass);
-    execJavaFunc(threadGroupClass->getConstructor(S(___V)), {sysThreadGroup});
+    initClass(thread_group_class);
+    execJavaFunc(thread_group_class->getConstructor(S(___V)), {g_sys_thread_group});
 
-    mainThread->setThreadGroupAndName(sysThreadGroup, MAIN_THREAD_NAME);
-    saveCurrentThread(mainThread);
-    return mainThread;
+    g_main_thread->setThreadGroupAndName(g_sys_thread_group, MAIN_THREAD_NAME);
+    saveCurrentThread(g_main_thread);
+    return g_main_thread;
 }
 
 void createVMThread(void *(*start)(void *), const utf8_t *thread_name)
@@ -113,9 +114,9 @@ Thread::Thread(Object *tobj0, jint priority): tobj(tobj0)
     tid = this_thread::get_id();
 
     if (tobj == nullptr)
-        tobj = newObject(threadClass);
+        tobj = newObject(thread_class);
 
-    tobj->setLongField(eetopField, (jlong) this);
+    tobj->setLongField(eetop_field, (jlong) this);
     tobj->setIntField(S(priority), S(I), priority);
 //    if (vmEnv.sysThreadGroup != nullptr)   todo
 //        setThreadGroupAndName(vmEnv.sysThreadGroup, nullptr);
@@ -124,8 +125,8 @@ Thread::Thread(Object *tobj0, jint priority): tobj(tobj0)
 Thread *Thread::from(Object *tobj0)
 {
     assert(tobj0 != nullptr);
-    assert(0 <= eetopField->id && eetopField->id < tobj0->clazz->instFieldsCount);
-    jlong eetop = tobj0->getLongField(eetopField);
+    assert(0 <= eetop_field->id && eetop_field->id < tobj0->clazz->inst_field_count);
+    jlong eetop = tobj0->getLongField(eetop_field);
     return reinterpret_cast<Thread *>(eetop);
 }
 
@@ -144,24 +145,24 @@ Thread *Thread::from(jlong threadId)
     return nullptr;
 }
 
-void Thread::setThreadGroupAndName(Object *threadGroup, const char *threadName)
+void Thread::setThreadGroupAndName(Object *thread_group, const char *thread_name)
 {
-    assert(threadGroup != nullptr);
-    assert(threadName != nullptr);
+    assert(thread_group != nullptr);
+    assert(thread_name != nullptr);
 
     // 调用 java/lang/Thread 的构造函数
     Method *constructor = tobj->clazz->getConstructor("(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");
-    execJavaFunc(constructor, { tobj, threadGroup, newString(threadName) });
+    execJavaFunc(constructor, { tobj, thread_group, newString(thread_name) });
 }
 
 void Thread::setStatus(jint status)
 {
-    tobj->setIntField(threadStatusField, status);
+    tobj->setIntField(thread_status_field, status);
 }
 
 jint Thread::getStatus()
 {
-    return tobj->getIntField(threadStatusField);
+    return tobj->getIntField(thread_status_field);
 }
 
 bool Thread::isAlive()
@@ -176,31 +177,31 @@ Frame *Thread::allocFrame(Method *m, bool vm_invoke)
 {
     assert(m != nullptr);
 
-    intptr_t mem = topFrame == nullptr ? (intptr_t) vmStack : topFrame->end();
-    auto size = sizeof(Frame) + (m->maxLocals + m->maxStack) * sizeof(slot_t);
-    if (mem + size - (intptr_t) vmStack > VM_STACK_SIZE) {
+    intptr_t mem = top_frame == nullptr ? (intptr_t) vm_stack : top_frame->end();
+    auto size = sizeof(Frame) + (m->max_locals + m->max_stack) * sizeof(slot_t);
+    if (mem + size - (intptr_t) vm_stack > VM_STACK_SIZE) {
 //        thread_throw(new StackOverflowError);
         // todo 栈已经溢出无法执行程序了。不要抛异常了，无法执行了。
         jvm_abort("StackOverflowError");
     }
 
     auto lvars = (slot_t *)(mem);
-    auto newFrame = (Frame *)(lvars + m->maxLocals);
-    auto ostack = (slot_t *)(newFrame + 1);
-    topFrame = new(newFrame) Frame(m, vm_invoke, lvars, ostack, topFrame);
-    return topFrame;
+    auto new_frame = (Frame *)(lvars + m->max_locals);
+    auto ostack = (slot_t *)(new_frame + 1);
+    top_frame = new (new_frame) Frame(m, vm_invoke, lvars, ostack, top_frame);
+    return top_frame;
 }
 
 void Thread::popFrame()
 {
-    assert(topFrame != nullptr);
-    topFrame = topFrame->prev;
+    assert(top_frame != nullptr);
+    top_frame = top_frame->prev;
 }
 
 int Thread::countStackFrames()
 {
     int count = 0;
-    for (Frame *frame = topFrame; frame != nullptr; frame = frame->prev) {
+    for (Frame *frame = top_frame; frame != nullptr; frame = frame->prev) {
         count++;
     }
     return count;
@@ -209,7 +210,7 @@ int Thread::countStackFrames()
 vector<Frame *> Thread::getStackFrames()
 {
     vector<Frame *> vec;
-    for (auto frame = topFrame; frame != nullptr; frame = frame->prev) {
+    for (auto frame = top_frame; frame != nullptr; frame = frame->prev) {
         vec.push_back(frame);
     }
     vec.reserve(vec.size());
@@ -217,7 +218,7 @@ vector<Frame *> Thread::getStackFrames()
     return vec;
 }
 
-jref Thread::to_java_lang_management_ThreadInfo(jbool lockedMonitors, jbool lockedSynchronizers, jint maxDepth)
+jref Thread::to_java_lang_management_ThreadInfo(jbool locked_monitors, jbool locked_synchronizers, jint max_depth)
 {
     // todo
 //    jvm_abort("to_java_lang_management_ThreadInfo\n");
@@ -230,21 +231,21 @@ jref Thread::to_java_lang_management_ThreadInfo(jbool lockedMonitors, jbool lock
 
     Class *c = loadBootClass("java/lang/management/ThreadInfo");
     c->clinit();
-    jref threadInfo = newObject(c);
+    jref thread_info = newObject(c);
     // private String threadName;
-    threadInfo->setRefField("threadName", "Ljava/lang/String;", name);
+    thread_info->setRefField("threadName", "Ljava/lang/String;", name);
     // private long threadId;
-    threadInfo->setLongField("threadId", "J", tid);
+    thread_info->setLongField("threadId", "J", tid);
 
-    return threadInfo;
+    return thread_info;
 }
 
-Array *Thread::dump(int maxDepth)
+Array *Thread::dump(int max_depth)
 {
     vector<Frame *> vec = getStackFrames();
     size_t size = vec.size();
-    if (maxDepth >= 0 && size > (size_t) maxDepth) {
-        size = (size_t) maxDepth;
+    if (max_depth >= 0 && size > (size_t) max_depth) {
+        size = (size_t) max_depth;
     }
 
     auto c = loadBootClass(S(java_lang_StackTraceElement));
@@ -256,33 +257,162 @@ Array *Thread::dump(int maxDepth)
         Frame *f = vec[i];
         jref o = newObject(c);
         execJavaFunc(constructor, { rslot(o),
-                                    rslot(newString(f->method->clazz->className)),
+                                    rslot(newString(f->method->clazz->class_name)),
                                     rslot(newString(f->method->name)),
-                                    rslot(newString(f->method->clazz->sourceFileName)),
+                                    rslot(newString(f->method->clazz->source_file_name)),
                                     islot(f->method->getLineNumber(f->reader.pc)) }
         );
-        arr->set(i, o);
+        arr->setRef(i, o);
     }
 
     return arr;
 }
 
-[[noreturn]] void thread_uncaught_exception(Object *exception)
+// [[noreturn]] void thread_uncaught_exception(Object *exception)
+// {
+//     assert(exception != nullptr);
+
+//     Thread *thread = getCurrentThread();
+//     thread->clearVMStack();
+//     Method *pst = exception->clazz->lookupInstMethod(S(printStackTrace), S(___V));
+//     assert(pst != nullptr);
+//     execJavaFunc(pst, {exception});
+
+//     // 结束 this thread todo
+//     jvm_abort("thread_uncaught_exception\n");
+// }
+
+// [[noreturn]] void thread_throw(Throwable *t)
+// {
+//     assert(t != nullptr);
+//     thread_uncaught_exception(t->getJavaThrowable());
+// }
+
+Object *exceptionOccured() 
 {
-    assert(exception != nullptr);
-
-    Thread *thread = getCurrentThread();
-    thread->clearVMStack();
-    Method *pst = exception->clazz->lookupInstMethod(S(printStackTrace), S(___V));
-    assert(pst != nullptr);
-    execJavaFunc(pst, {exception});
-
-    // 结束 this thread todo
-    jvm_abort("thread_uncaught_exception\n");
+   return getCurrentThread()->exception; 
 }
 
-[[noreturn]] void thread_throw(Throwable *t)
+void setException(Object *exp) 
 {
-    assert(t != nullptr);
-    thread_uncaught_exception(t->getJavaThrowable());
+    getCurrentThread()->exception = exp;
+}
+
+void clearException() 
+{
+    getCurrentThread()->exception = nullptr;
+}
+
+void signalException(const char *excep_name, const char *message) 
+{
+    // if(VM_initing) {
+    //     fprintf(stderr, "Exception occurred while VM initialising.\n");
+    //     if(message)
+    //         fprintf(stderr, "%s: %s\n", excep_name, message);
+    //     else
+    //         fprintf(stderr, "%s\n", excep_name);
+    //     exit(1);
+    // }
+
+    assert(excep_name != nullptr);
+
+    Class *ec = loadBootClass(excep_name);
+    assert(ec != nullptr); // todo
+
+    initClass(ec);
+    jref exp = newObject(ec);
+    if (message == nullptr) {
+        execJavaFunc(ec->getConstructor("()V"), {exp});
+    } else {
+        execJavaFunc(ec->getConstructor("(Ljava/lang/String;)V"), { exp, newString(message) });
+    }
+
+    assert(getCurrentThread()->exception == nullptr); // todo
+
+    getCurrentThread()->exception = exp;
+}
+
+void printStackTrace() 
+{
+    Thread *thread = getCurrentThread();
+    jref e = thread->exception;
+    if (e == nullptr)
+        return;
+
+    // thread->clearVMStack();
+    // Method *pst = e->clazz->lookupInstMethod(S(printStackTrace), S(___V));
+    // assert(pst != nullptr);
+    // execJavaFunc(pst, {e});
+
+    // private String detailMessage;
+    jstrref msg = e->getRefField("detailMessage", S(sig_java_lang_String));
+    printf("%s: %s\n", e->clazz->class_name, msg->toUtf8());
+
+    // [Ljava/lang/Object;
+    auto backtrace = e->getRefField<Array>("backtrace", "Ljava/lang/Object;");
+    for (int i = 0; i < backtrace->len; i++) {
+        jref element = backtrace->get<jref>(i); // java.lang.StackTraceElement
+
+        // private String declaringClass;
+        // private String methodName;
+        // private String fileName;
+        // private int    lineNumber;
+
+        // Method *toString = element->clazz->getDeclaredInstMethod("toString", "()Ljava/lang/String;");
+        // assert(toString != nullptr);
+        // jstrref s = RSLOT(execJavaFunc(toString, {element}));
+        // printf("%s\n", s->toUtf8());
+        
+        jstrref declaring_class = element->getRefField("declaringClass", S(sig_java_lang_String));
+        jstrref method_name = element->getRefField("declaringClass", S(sig_java_lang_String));
+        jstrref file_name = element->getRefField("fileName", S(sig_java_lang_String));
+        jint line_number = element->getIntField("lineNumber", S(I));
+
+        printf("%s\n", declaring_class->toUtf8());
+        printf("%s\n", method_name->toUtf8());
+        printf("%s\n", file_name ? file_name->toUtf8() : "(Unknown Source)");
+        printf("%d\n", line_number);
+    }
+
+#if 0
+    Class *throw_class = findSystemClass("java/lang/Throwable");
+    FieldBlock *field = findField(throw_class, "backtrace", "Ljava/lang/Object;");
+    MethodBlock *print = lookupMethod(writer->class, "println", "([C)V");
+    Object *array = (Object *)INST_DATA(excep)[field->offset];
+    char buff[256];
+    int *data, depth;
+    int i = 0;
+
+    if(array == NULL)
+        return;
+
+    data = &(INST_DATA(array)[1]);
+    depth = *INST_DATA(array);
+    for(; i < depth; ) {
+        MethodBlock *mb = (MethodBlock*)data[i++];
+        unsigned char *pc = (unsigned char *)data[i++];
+        ClassBlock *cb = CLASS_CB(mb->class);
+        unsigned char *dot_name = slash2dots(cb->name);
+            char *spntr = buff;
+            short *dpntr;
+            int len;
+
+        if(mb->access_flags & ACC_NATIVE)
+            len = sprintf(buff, "\tat %s.%s(Native method)", dot_name, mb->name);
+	    else if(cb->source_file_name == 0)
+		    len = sprintf(buff, "\tat %s.%s(Unknown source)", dot_name, mb->name);
+	    else
+		    len = sprintf(buff, "\tat %s.%s(%s:%d)", dot_name, mb->name, cb->source_file_name, mapPC2LineNo(mb, pc));
+
+        free(dot_name);
+        if((array = allocTypeArray(T_CHAR, len)) == NULL)
+            return;
+
+        dpntr = (short*)INST_DATA(array)+2;
+        for(; len > 0; len--)
+            *dpntr++ = *spntr++;
+
+        executeMethod(writer, print, array);
+    }
+#endif
 }

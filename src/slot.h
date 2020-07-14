@@ -53,20 +53,6 @@ namespace slot {
         return s;
     }
 
-    static inline slot_t lslot(jlong v)
-    {
-        slot_t s;
-        LSLOT(&s) = v;
-        return s;
-    }
-
-    static inline slot_t dslot(jdouble v)
-    {
-        slot_t s;
-        DSLOT(&s) = v;
-        return s;
-    }
-
 #undef A
 #define A assert(slots != nullptr)
     /* setter */

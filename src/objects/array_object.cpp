@@ -14,7 +14,7 @@ Array *Array::newArray(Class *ac, jint arrLen)
     assert(ac != nullptr);
     assert(ac->isArrayClass());
     size_t size = sizeof(Array) + ac->getEleSize()*arrLen;
-    return new(g_heap->allocObject(size)) Array(ac, arrLen);
+    return new (g_heap->alloc(size)) Array(ac, arrLen);
 }
 
 Array *Array::newMultiArray(Class *ac, jint dim, const jint lens[])
@@ -24,7 +24,7 @@ Array *Array::newMultiArray(Class *ac, jint dim, const jint lens[])
     assert(ac->isArrayClass());
 
     size_t size = sizeof(Array) + ac->getEleSize()*lens[0];
-    return new(g_heap->allocObject(size)) Array(ac, dim, lens);
+    return new (g_heap->alloc(size)) Array(ac, dim, lens);
 }
 
 Array::Array(Class *ac, jint arrLen): Object(ac), len(arrLen)
@@ -49,14 +49,14 @@ Array::Array(Class *ac, jint dim, const jint lens[]): Object(ac), len(lens[0])
 
     for (int d = 1; d < dim; d++) {
         for (int i = 0; i < len; i++) {
-            set(i, newMultiArray(ac->componentClass(), dim - 1, lens + 1));
+            setRef(i, newMultiArray(ac->componentClass(), dim - 1, lens + 1));
         }
     }
 }
 
 bool Array::isPrimArray() const
 {
-    return isPrimDescriptor(clazz->className[1]);
+    return isPrimDescriptor(clazz->class_name[1]);
 }
 
 void *Array::index(jint index0) const
@@ -65,17 +65,18 @@ void *Array::index(jint index0) const
     return ((u1 *) (data)) + clazz->getEleSize()*index0;
 }
 
-void Array::set(int index0, jref value)
+void Array::setRef(int i, jref value)
 {
-    assert(0 <= index0 && index0 < len);
+    assert(0 <= i && i < len);
+    assert(clazz->isRefArrayClass());
 
-    auto data = (slot_t *) index(index0);
+    auto data = (slot_t *) index(i);
     if (value == jnull) {
         *data = (slot_t) jnull;
     } else if (isPrimArray()) {
         const slot_t *unbox = value->unbox();
         *data = *unbox;
-        if (clazz->eleSize > sizeof(slot_t))
+        if (clazz->ele_size > sizeof(slot_t))
             *++data = *++unbox;
     } else {
         *data = (slot_t) value;
@@ -100,7 +101,8 @@ void Array::copy(Array *dst, jint dst_pos, const Array *src, jint src_pos, jint 
      * 如果两者都是引用数组，则可以拷贝，否则两者必须是相同类型的基本类型数组
      */
     if (src->clazz->getEleSize() != dst->clazz->getEleSize()) {
-        thread_throw(new ArrayStoreException);
+        signalException(S(java_lang_ArrayStoreException));
+        return;
     }
 
     if (src_pos < 0
@@ -108,7 +110,8 @@ void Array::copy(Array *dst, jint dst_pos, const Array *src, jint src_pos, jint 
         || len < 0
         || src_pos + len > src->len
         || dst_pos + len > dst->len) {
-        thread_throw(new IndexOutOfBoundsException);
+        signalException(S(java_lang_ArrayIndexOutOfBoundsException));
+        return;
     }
 
     memcpy(dst->index(dst_pos), src->index(src_pos), src->clazz->getEleSize() * len);
@@ -139,7 +142,8 @@ Array *newTypeArray(ArrayType type, jint arr_len)
         case JVM_AT_INT:     arr_class_name = S(array_I); break;
         case JVM_AT_LONG:    arr_class_name = S(array_J); break;
         default:
-            thread_throw(new UnknownError(NEW_MSG("error. Invalid array type: %d\n", type)));
+            signalException(S(java_lang_UnknownError), NEW_MSG("Invalid array type: %d\n", type));
+            return nullptr;
     }
 
     return newArray(loadArrayClass(arr_class_name), arr_len);

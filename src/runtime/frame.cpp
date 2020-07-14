@@ -13,7 +13,7 @@ string Frame::toString() const
     oss << "(" << this << ")";
     if (method->isNative())
         oss << "(native)";
-    oss << method->clazz->className << "~" << method->name << "~" << method->type;
+    oss << method->clazz->class_name << "~" << method->name << "~" << method->descriptor;
     oss << ", pc = " << reader.pc;
     return oss.str();
 }

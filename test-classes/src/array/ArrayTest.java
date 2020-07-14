@@ -1,5 +1,8 @@
 package array;
 
+/**
+ * Status: Pass
+ */
 public class ArrayTest {
     public static void main(String[] args) {
         int[] a1 = new int[10]; // newarray
@@ -13,11 +16,11 @@ public class ArrayTest {
         int y = a1[0]; // iaload
         a2[0] = "abc"; // aastore
         String s = a2[0]; // aaload
-        
-        System.out.println(y);
-        System.out.println(a3[5][7]);
-        System.out.println(a4[4][2][1]);
-        System.out.println(x);
-        System.out.println(s);
+
+        System.out.println(y); // 100
+        System.out.println(a3[5][7]); // 6
+        System.out.println(a4[4][2][1]); // 4
+        System.out.println(x); // 10
+        System.out.println(s); // abc
     }
 }

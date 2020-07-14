@@ -1,8 +1,11 @@
+package initialization;
+
 /**
- * Example 12.4.1-1. 
  * Superclasses Are Initialized Before Subclasses
+ *
+ * Status: Pass
  */
-public class Eg12_4_1_1 {    
+public class Init2 {
     private static class Super {
         static { System.out.print("Super "); }
     }
@@ -20,7 +23,7 @@ public class Eg12_4_1_1 {
     }
     
     public static void main(String[] args) {
-        new Eg12_4_1_1().test(); // print: One Super Two false
+        new Init2().test(); // print: One Super Two false
     }
     
 }

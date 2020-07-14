@@ -1,5 +1,8 @@
 package exception;
 
+/**
+ * Status: Pass
+ */
 public class FinallyTest {
     
     public static void main(String[] args) {
@@ -14,7 +17,7 @@ public class FinallyTest {
         }
         
         if (x == (1 + 2) * 3) {
-            System.out.println("OK!");
+            System.out.println("Pass");
         }
     }
     

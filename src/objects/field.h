@@ -6,19 +6,19 @@
 #define KAYO_FIELD_H
 
 #include <vector>
-#include "Modifier.h"
 #include "../classfile/attributes.h"
+#include "../classfile/constants.h"
 
 class Class;
+class ClassObject;
 
 class Field {
-public:
-    // 定义此 Field 的类
-    Class *clazz;
+public:    
+    Class *clazz = nullptr; // 定义此 Field 的类
     const utf8_t *name = nullptr;
     const utf8_t *descriptor = nullptr;
 
-    jint modifiers;
+    int accsee_flags;
 
     bool deprecated = false;
     const char *signature = nullptr;
@@ -26,7 +26,7 @@ public:
 private:
     // the declared type(class Object) of this field
     // like, int k; the type of k is int.class
-    Class *type = nullptr;
+    ClassObject *type = nullptr;
 public:
     bool category_two;
 
@@ -42,34 +42,34 @@ public:
             jfloat f;
             jdouble d;
             jref r;
-            slot_t data[2] = { 0, 0 };
-        } staticValue;
+            slot_t data[2];
+        } static_value = {};
 
-        int id = 0;
+        int id;
     };
 
-    std::vector<Annotation> rtVisiAnnos;   // runtime visible annotations
-    std::vector<Annotation> rtInvisiAnnos; // runtime invisible annotations
+    std::vector<Annotation> rt_visi_annos;   // runtime visible annotations
+    std::vector<Annotation> rt_invisi_annos; // runtime invisible annotations
 
 public:
     Field(Class *c, BytecodeReader &r);
 
-    Class *getType();
+    ClassObject *getType();
 
     bool isPrim() const;
 
     std::string toString() const;
     friend std::ostream &operator <<(std::ostream &os, const Field &field);
 
-    bool isPublic() const    { return Modifier::isPublic(modifiers); }
-    bool isProtected() const { return Modifier::isProtected(modifiers); }
-    bool isPrivate() const   { return Modifier::isPrivate(modifiers); }
-    bool isStatic() const    { return Modifier::isStatic(modifiers); }
-    bool isFinal() const     { return Modifier::isFinal(modifiers); }
-    bool isTransient() const { return Modifier::isTransient(modifiers); }
-    bool isVolatile() const  { return Modifier::isVolatile(modifiers); }
+    bool isPublic() const    { return accIsPublic(accsee_flags); }
+    bool isProtected() const { return accIsProtected(accsee_flags); }
+    bool isPrivate() const   { return accIsPrivate(accsee_flags); }
+    bool isStatic() const    { return accIsStatic(accsee_flags); }
+    bool isFinal() const     { return accIsFinal(accsee_flags); }
+    bool isTransient() const { return accIsTransient(accsee_flags); }
+    bool isVolatile() const  { return accIsVolatile(accsee_flags); }
 
-    void setSynthetic() { Modifier::setSynthetic(modifiers); }
+    void setSynthetic() { accSetSynthetic(accsee_flags); }
 };
 
 

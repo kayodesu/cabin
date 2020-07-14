@@ -1,5 +1,8 @@
 package invoke;
 
+/**
+ * Status: Pass
+ */
 public class InvokeFuncTest implements Runnable {
     public static void main(String[] args) {
         new InvokeFuncTest().test();
@@ -15,15 +18,15 @@ public class InvokeFuncTest implements Runnable {
     }
 
     public static void staticMethod() {
-        System.out.println("staticMethod\n");
+        System.out.println("staticMethod");
     }
 
     private void instanceMethod() {
-        System.out.println("instanceMethod\n");
+        System.out.println("instanceMethod");
     }
 
     @Override
     public void run() {
-        System.out.println("run\n");
+        System.out.println("run");
     }
 }

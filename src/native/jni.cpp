@@ -14,6 +14,7 @@ void initJNI()
 #ifdef R
 #undef R
 #endif
+
 #define R(method_name) void method_name(); /* declare */ method_name() /* invoke */
 
     // register all native methods // todo 不要一次全注册，需要时再注册
@@ -23,10 +24,12 @@ void initJNI()
     R(java_lang_Double_registerNatives);
     R(java_lang_Object_registerNatives);
     R(java_lang_String_registerNatives);
+    R(java_lang_StringUTF16_registerNatives);
     R(java_lang_Package_registerNatives);
     R(java_lang_Throwable_registerNatives);
     R(java_lang_Thread_registerNatives);
     R(java_lang_Runtime_registerNatives);
+    R(java_lang_Module_registerNatives);
     R(java_lang_ClassLoader_registerNatives);
     R(java_lang_ClassLoader$NativeLibrary_registerNatives);
 
@@ -45,6 +48,15 @@ void initJNI()
     R(java_io_RandomAccessFile_registerNatives);
 
     R(java_nio_Bits_registerNatives);
+
+    R(java_net_InetAddress_registerNatives);
+    R(java_net_Inet4Address_registerNatives);
+    R(java_net_Inet6Address_registerNatives);
+    R(java_net_AbstractPlainSocketImpl_registerNatives);
+    R(java_net_AbstractPlainDatagramSocketImpl_registerNatives);
+    R(java_net_NetworkInterface_registerNatives);
+    R(java_net_PlainSocketImpl_registerNatives);
+    R(java_net_InetAddressImplFactory_registerNatives);
 
     R(sun_misc_VM_registerNatives);
     R(sun_misc_Unsafe_registerNatives);
@@ -65,10 +77,12 @@ void initJNI()
 
     R(java_security_AccessController_registerNatives);
 
+    R(java_util_TimeZone_registerNatives);
     R(java_util_concurrent_atomic_AtomicLong_registerNatives);
     R(java_util_zip_ZipFile_registerNatives);
 
     R(jdk_internal_misc_VM_registerNatives);
+#undef R    
 }
 
 static vector<tuple<const char * /* class name */, JNINativeMethod *, int /* method count */>> native_methods;
@@ -79,14 +93,14 @@ void registerNatives(const char *class_name, JNINativeMethod *methods, int metho
     native_methods.emplace_back(class_name, methods, method_count);
 }
 
-void *findNativeMethod(const char *class_name, const char *method_name, const char *method_type)
+void *findNativeMethod(const char *class_name, const char *method_name, const char *method_descriptor)
 {
-    assert(class_name != nullptr && method_name != nullptr && method_type != nullptr);
+    assert(class_name != nullptr && method_name != nullptr && method_descriptor != nullptr);
     for (auto &t: native_methods) {
         if (equals(get<0>(t), class_name)) {
             JNINativeMethod *methods = get<1>(t);
             for (int i = 0; i < get<2>(t); i++) {
-                if (equals(methods[i].name, method_name) && equals(methods[i].signature, method_type)) {
+                if (equals(methods[i].name, method_name) && equals(methods[i].descriptor, method_descriptor)) {
                     return methods[i].func;
                 }
             }

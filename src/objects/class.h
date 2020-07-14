@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #ifndef JVM_JCLASS_H
 #define JVM_JCLASS_H
 
@@ -11,14 +7,13 @@
 #include <cstring>
 #include <unordered_set>
 #include <mutex>
-#include <pthread.h>
 #include "../jvmstd.h"
 #include "constant_pool.h"
 #include "class_loader.h"
-#include "Modifier.h"
 #include "class.h"
 #include "object.h"
 #include "string_object.h"
+#include "class_object.h"
 #include "../util/bytecode_reader.h"
 #include "../classfile/attributes.h"
 #include "../classfile/constants.h"
@@ -26,9 +21,15 @@
 
 class Method;
 class Field;
+class ClassObject;
 
-// Object of java/lang/Class
-class Class: public Object {
+/*
+ * The metadata of a class.
+ * 
+ * Author: Yo Ka
+ */
+
+class Class {
 public:
     enum State {
         EMPTY,
@@ -40,20 +41,22 @@ public:
 
     ConstantPool cp;
 
-    const utf8_t *pkgName; // 包名之间以 '.' 分隔。
+    const utf8_t *pkg_name; // 包名之间以 '.' 分隔。
 
     // 必须是全限定类名，包名之间以 '/' 分隔。
-    const utf8_t *className;
+    const utf8_t *class_name;
 
-    jint modifiers;
+    int accsee_flags;
 
     bool inited = false; // 此类是否被初始化过了（是否调用了<clinit>方法）。
+
+    ClassObject *java_mirror = nullptr;
 
     // the class loader who loaded this class
     // 可能为null，表示 bootstrap class loader.
     Object *loader;
 
-    Class *superClass = nullptr;
+    Class *super_class = nullptr;
 
     /*
      * 本类明确实现的interfaces，父类实现的不包括在内。
@@ -69,7 +72,7 @@ public:
      * 所有的 public functions 都放在了最前面
      */
     std::vector<Method *> methods;
-    u2 publicMethodsCount = 0;
+    u2 public_method_count = 0;
 
     /*
      * 本类中所定义的变量（不包括继承而来的）
@@ -81,16 +84,13 @@ public:
      *
      * todo 接口中的变量怎么处理
      */
-    std::vector<Field *> fields;
-    u2 publicFieldsCount = 0;
-
-//    Field *fields;
-//    u2 fields_count;
-//    u2 public_fields_count;
+    Field *fields = nullptr;
+    u2 field_count = 0;        // declared field count
+    u2 public_field_count = 0; // declared public field count
 
     // instFieldsCount 有可能大于 fieldsCount，因为 instFieldsCount 包含了继承过来的 field.
     // 类型二统计为两个数量
-    int instFieldsCount = 0;
+    int inst_field_count = 0;
 
     // vtable 只保存虚方法。
     // 该类所有函数自有函数（除了private, static, final, abstract）和 父类的函数虚拟表。
@@ -103,9 +103,11 @@ public:
         ITable() = default;
         ITable(const ITable &itable);
         ITable& operator=(const ITable &itable);
+        void add(const ITable &itable);
     };
 
-    ITable itable;
+    ITable itable;    
+    Method *findFromITable(Class *interface_class, int index);
 
     struct {
         Class *clazz = nullptr;       // the immediately enclosing class
@@ -117,7 +119,7 @@ public:
 
     bool deprecated = false;
     const char *signature = nullptr;
-    const char *sourceFileName = "Unknown source file";
+    const char *source_file_name = "Unknown source file";
 
     std::vector<BootstrapMethod> bootstrap_methods;
 
@@ -131,7 +133,7 @@ private:
 
     // 根据类名生成包名
     void genPkgName();
-
+    
     void createVtable();
     void createItable();
 
@@ -142,22 +144,20 @@ private:
     Class(Object *loader, u1 *bytecode, size_t len);
 
     // 创建数组或 primitive class，这两种类型的类由虚拟机直接生成。
-    explicit Class(const char *className);
+    explicit Class(const char *class_name);
 
     static Class *newClass(Object *loader, u1 *bytecode, size_t len)
     {
-        void *mem = g_heap->allocClass();
-        auto c = new(mem) Class(loader, bytecode, len);
-        c->state = LOADED;
-        return c;
+        // 因为 class object 无需清理，就不在堆上分配了，
+        // 在本地内存创建即可。
+        return new (calloc(1, sizeof(Class))) Class(loader, bytecode, len);
     }
 
-    static Class *newClass(const char *className)
+    static Class *newClass(const char *class_name)
     {
-        void *mem = g_heap->allocClass();
-        auto c = new(mem) Class(className);
-        c->state = LOADED;
-        return c;
+        // 因为 class object 无需清理，就不在堆上分配了，
+        // 在本地内存创建即可。
+        return new (calloc(1, sizeof(Class))) Class(class_name);
     }
 public:
     ~Class();
@@ -177,15 +177,15 @@ public:
      */
     void clinit();
 
-    static size_t getSize()
-    {
-        return sizeof(Class) + sizeof(slot_t)*CLASS_CLASS_INST_FIELDS_COUNT;
-    }
+    // static size_t getSize()
+    // {
+    //     return sizeof(Class) + sizeof(slot_t)*CLASS_CLASS_INST_FIELDS_COUNT;
+    // }
 
-    size_t size() const override
-    {
-        return getSize();
-    }
+    // size_t size() const override
+    // {
+    //     return getSize();
+    // }
 
     /*
      * 比较两个类是否相等
@@ -193,7 +193,7 @@ public:
     bool equals(Class *c) const
     {
         return this == c
-               or (c != nullptr and loader == c->loader and utf8::equals(className, c->className));
+               or (c != nullptr and loader == c->loader and utf8::equals(class_name, c->class_name));
     }
 
     Field *lookupField(const char *name, const char *descriptor);
@@ -205,6 +205,9 @@ public:
     Method *lookupMethod(const char *name, const char *descriptor);
     Method *lookupStaticMethod(const char *name, const char *descriptor);
     Method *lookupInstMethod(const char *name, const char *descriptor);
+
+    // @method: Object of java.lang.reflect.Method
+    Method *lookupMethod(Object *mo);
 
     /*
      * get在本类中定义的类，不包括继承的。
@@ -231,8 +234,10 @@ public:
      */
     int inheritedDepth() const;
 
-    bool isArrayClass() const;
     bool isPrimClass() const;
+    // void.class
+    bool isVoidClass() const;
+    bool isArrayClass() const;
 
     /*
       * 是否是基本类型的数组（当然是一维的）。
@@ -243,37 +248,48 @@ public:
       */
     bool isPrimArrayClass() const;
 
-    bool isArrayObject() const override { return false; }
+    bool isBooleanArrayClass() const  { return strcmp(class_name, "[Z") == 0; }
+    bool isByteArrayClass() const     { return strcmp(class_name, "[B") == 0; }
+    bool isCharArrayClass() const     { return strcmp(class_name, "[C") == 0; }
+    bool isShortArrayClass() const    { return strcmp(class_name, "[S") == 0; }
+    bool isIntArrayClass() const      { return strcmp(class_name, "[I") == 0; }
+    bool isFloatArrayClass() const    { return strcmp(class_name, "[F") == 0; }
+    bool isLongArrayClass() const     { return strcmp(class_name, "[J") == 0; }
+    bool isDoubleArrayClass() const   { return strcmp(class_name, "[D") == 0; }
+
+    bool isRefArrayClass() const { return !isPrimArrayClass(); }
+
+    // bool isArrayObject() const override { return false; }
 
     Class *arrayClass() const;
 
     std::string toString() const;
 
-    bool isInterface() const { return Modifier::isInterface(modifiers); }
-    bool isPublic() const    { return Modifier::isPublic(modifiers); }
-    bool isProtected() const { return Modifier::isProtected(modifiers); }
-    bool isPrivate() const   { return Modifier::isPrivate(modifiers); }
-    bool isAbstract() const  { return Modifier::isAbstract(modifiers); }
-    bool isStatic() const    { return Modifier::isStatic(modifiers); }
-    bool isFinal() const     { return Modifier::isFinal(modifiers); }
-    bool isStrict() const    { return Modifier::isStrict(modifiers); }
-    bool isSuper() const     { return Modifier::isSuper(modifiers); }
-    bool isModule() const    { return Modifier::isModule(modifiers); }
+    bool isInterface() const { return accIsInterface(accsee_flags); }
+    bool isPublic() const    { return accIsPublic(accsee_flags); }
+    bool isProtected() const { return accIsProtected(accsee_flags); }
+    bool isPrivate() const   { return accIsPrivate(accsee_flags); }
+    bool isAbstract() const  { return accIsAbstract(accsee_flags); }
+    bool isStatic() const    { return accIsStatic(accsee_flags); }
+    bool isFinal() const     { return accIsFinal(accsee_flags); }
+    bool isStrict() const    { return accIsStrict(accsee_flags); }
+    bool isSuper() const     { return accIsSuper(accsee_flags); }
+    bool isModule() const    { return accIsModule(accsee_flags); }
 
-    void setSynthetic() { Modifier::setSynthetic(modifiers); }
+    void setSynthetic() { accSetSynthetic(accsee_flags); }
 
     /*---------------------- for module-info.class ----------------------*/
 private:
     Module *module = nullptr;
-    std::vector<const utf8_t *> modulePackages;
-    const utf8_t *moduleMainClass = nullptr;
+    std::vector<const utf8_t *> module_packages;
+    const utf8_t *module_main_class = nullptr;
 
     /*---------------------- for array class ----------------------*/
 private:
-    Class *compClass = nullptr; // component class
-    Class *eleClass = nullptr;  // element class
+    Class *comp_class = nullptr; // component class
+    Class *ele_class = nullptr;  // element class
 public:
-    size_t eleSize = 0;
+    size_t ele_size = 0;
 
     /*
      * 返回数组类的维度，非数组return 0
@@ -305,23 +321,23 @@ public:
     /*---------------------- for java.lang.String class ----------------------*/
 private:
     // A pool of strings, initially empty, is maintained privately by the String class.
-    std::unordered_set<Object *, StrObjHash, StrObjEquals> *strpool;
-    pthread_mutex_t strpoolMutex;
+    std::unordered_set<Object *, StrObjHash, StrObjEquals> *str_pool;
+    std::mutex str_pool_mutex;
 public:
     void buildStrPool();
-    Object *intern(const utf8_t *str);
-    Object *intern(Object *so);
+    jstrref intern(const utf8_t *str);
+    jstrref intern(jstrref so);
+
+    /*---------------------- for java.lang.Class class ----------------------*/
+    // set by VM
+    // private transient Module module;
+    jref modulexxxxxxx;// set by VM  todo  
 
     /* 将 ClassLoader 模块的函数定为友元，Class的构造函数只允许 ClassLoader 模块访问 */
 
     friend void initClassLoader();
     friend Class *loadBootClass(const utf8_t *name);
-    friend Class *defineClass(jref classLoader, u1 *bytecode, size_t len);
-
-    /*---------------------- for java.lang.Class class ----------------------*/
-    // set by VM
-   // private transient Module module;
-   jref modulexxxxxxx;// set by VM  todo
+    friend Class *defineClass(jref loader, u1 *bytecode, size_t len);
 };
 
 #endif //JVM_JCLASS_H

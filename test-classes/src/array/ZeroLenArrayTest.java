@@ -3,7 +3,7 @@ package array;
 /**
  * Status: Pass
  */
-public class ZeroLenArray {
+public class ZeroLenArrayTest {
 
     public static void main(String[] args) {
         int[] arr = new int[0];

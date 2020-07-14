@@ -1,7 +1,9 @@
 package instructions;
 
-public class ANewArray {
-    
+/**
+ * Status: Pass
+ */
+public class NewArray {
     public static void main(String[] args) {
         test1();
         test2();
@@ -41,11 +43,10 @@ public class ANewArray {
             }
         };
         
-        System.out.println(y.length);      // 1
-        System.out.println(y[0].length);   // 3
-        System.out.println(y[0][0].length);// 1
-        System.out.println(y[0][1].length);// 2
-        System.out.println(y[0][2].length);// 3
+        System.out.println(y.length);       // 1
+        System.out.println(y[0].length);    // 3
+        System.out.println(y[0][0].length); // 1
+        System.out.println(y[0][1].length); // 2
+        System.out.println(y[0][2].length); // 3
     }
-    
 }

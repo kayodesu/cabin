@@ -1,8 +1,9 @@
+package exception;
 
 /**
  * Status: Pass
  */
-public class TryCatchFinallyTest {
+public class FinallyReturnTest {
 
     int func1() {
         int i = 1;
@@ -32,7 +33,7 @@ public class TryCatchFinallyTest {
     }
 
     public static void main(String[] args) {
-        TryCatchFinallyTest o = new TryCatchFinallyTest();
+        FinallyReturnTest o = new FinallyReturnTest();
         o.test1();
         o.test2();
     }

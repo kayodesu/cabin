@@ -1,5 +1,8 @@
 package exception;
 
+/**
+ * Status: Pass
+ */
 public class CatchTest {
     
     public static void main(String[] args) {
@@ -15,7 +18,7 @@ public class CatchTest {
         if (f3() != 3) {
             System.out.println("f3() failed!");
         }
-        System.out.println("OK!");
+        System.out.println("Pass");
     }
     
     private static int f0() {

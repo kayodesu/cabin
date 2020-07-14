@@ -9,6 +9,7 @@
 #include "attributes.h"
 #include "../runtime/thread_info.h"
 #include "../objects/class.h"
+#include "../objects/class_object.h"
 #include "constants.h"
 
 using namespace std;
@@ -18,7 +19,7 @@ void Annotation::read(BytecodeReader &r)
     type_index = r.readu2();
     u2 num = r.readu2();
     for (u2 i = 0; i < num; i++) {
-        elementValuePairs.emplace_back(ElementValuePair(r));
+        element_value_pairs.emplace_back(ElementValuePair(r));
     }
 }
 
@@ -50,14 +51,12 @@ void ElementValue::read(BytecodeReader &r)
         case '[':
             num = r.readu2();
             for (u2 i = 0; i < num; i++) {
-//                arrayValue.push_back(new ElementValue(r));
-                arrayValue.emplace_back(ElementValue(r));
+                array_value.emplace_back(ElementValue(r));
             }
             break;
         default:
-            jvm_abort(NEW_MSG("unknown tag: %d\n", tag)); // todo
-
-            thread_throw(new UnknownError()); // todo
+            jvm_abort(MSG("unknown tag: %d\n", tag)); // todo
+            signalException(S(java_lang_UnknownError), MSG("unknown tag: %d\n", tag)); 
     }
 }
 
@@ -77,24 +76,24 @@ InnerClass::InnerClass(BytecodeReader &r)
 
 BootstrapMethod::BootstrapMethod(BytecodeReader &r)
 {
-    bootstrapMethodRef = r.readu2();
+    bootstrap_method_ref = r.readu2();
     u2 num = r.readu2();
     for (u2 i = 0; i < num; i++) {
-        bootstrapArguments.push_back(r.readu2());
+        bootstrap_arguments.push_back(r.readu2());
     }
 }
 
 slot_t *BootstrapMethod::resolveArgs(ConstantPool *cp, slot_t *result)
 {
     assert(result != nullptr);
-    for (u2 i : bootstrapArguments) {
+    for (u2 i : bootstrap_arguments) {
         switch (cp->type(i)) {
             case JVM_CONSTANT_String:
                 RSLOT(result) = cp->resolveString(i);
                 result++;
                 break;
             case JVM_CONSTANT_Class:
-                RSLOT(result) = cp->resolveClass(i);
+                RSLOT(result) = cp->resolveClass(i)->java_mirror;
                 result++;
                 break;
             case JVM_CONSTANT_Integer:
@@ -148,7 +147,7 @@ MethodParameter::MethodParameter(ConstantPool &cp, BytecodeReader &r)
     if (name_index > 0) {
         name = cp.utf8(name_index);
     }
-    accessFlags = r.readu2();
+    access_flags = r.readu2();
 }
 
 LocalVariableTable::LocalVariableTable(BytecodeReader &r)
@@ -171,10 +170,10 @@ LocalVariableTypeTable::LocalVariableTypeTable(BytecodeReader &r)
 
 Module::Module(ConstantPool &cp, BytecodeReader &r)
 {
-    moduleName = cp.moduleName(r.readu2());
-    moduleFlags = r.readu2();
+    module_name = cp.moduleName(r.readu2());
+    module_flags = r.readu2();
     u2 v = r.readu2();
-    moduleVersion = v == 0 ? nullptr : cp.utf8(v);
+    module_version = v == 0 ? nullptr : cp.utf8(v);
 
     u2 requires_count = r.readu2();
     for (u2 j = 0; j < requires_count; j++) {
@@ -204,7 +203,7 @@ Module::Module(ConstantPool &cp, BytecodeReader &r)
 
 Module::Require::Require(ConstantPool &cp, BytecodeReader &r)
 {
-    requireModuleName = cp.moduleName(r.readu2());
+    require_module_name = cp.moduleName(r.readu2());
     flags = r.readu2();
     u2 v = r.readu2();
     version = v == 0 ? nullptr : cp.utf8(v);
@@ -212,7 +211,7 @@ Module::Require::Require(ConstantPool &cp, BytecodeReader &r)
 
 Module::Export::Export(ConstantPool &cp, BytecodeReader &r)
 {
-    exportPackageName = cp.packageName(r.readu2());
+    export_package_name = cp.packageName(r.readu2());
     flags = r.readu2();
     u2 exports_to_count = r.readu2();
     for (u2 i = 0; i < exports_to_count; i++) {
@@ -222,7 +221,7 @@ Module::Export::Export(ConstantPool &cp, BytecodeReader &r)
 
 Module::Open::Open(ConstantPool &cp, BytecodeReader &r)
 {
-    openPackageName = cp.packageName(r.readu2());
+    open_package_name = cp.packageName(r.readu2());
     flags = r.readu2();
     u2 exports_to_count = r.readu2();
     for (u2 i = 0; i < exports_to_count; i++) {
@@ -232,7 +231,7 @@ Module::Open::Open(ConstantPool &cp, BytecodeReader &r)
 
 Module::Provide::Provide(ConstantPool &cp, BytecodeReader &r)
 {
-    className = cp.className(r.readu2());
+    class_name = cp.className(r.readu2());
     u2 provides_with_count = r.readu2();
     for (u2 i = 0; i < provides_with_count; i++) {
         provides_with.push_back(cp.className(r.readu2()));

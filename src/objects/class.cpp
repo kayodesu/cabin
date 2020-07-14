@@ -6,13 +6,13 @@
 #include <algorithm>
 #include <sstream>
 #include <cassert>
-#include <pthread.h>
 #include <iostream>
 #include "../runtime/thread_info.h"
 #include "class.h"
 #include "method.h"
 #include "field.h"
 #include "array_object.h"
+#include "class_object.h"
 #include "../interpreter/interpreter.h"
 #include "prims.h"
 #include "invoke.h"
@@ -26,20 +26,21 @@ using namespace method_handles;
 
 void Class::calcFieldsId()
 {
-    int insId = 0;
-    if (superClass != nullptr) {
-        insId = superClass->instFieldsCount; // todo 父类的私有变量是不是也算在了里面，不过问题不大，浪费点空间吧了
+    int ins_id = 0;
+    if (super_class != nullptr) {
+        ins_id = super_class->inst_field_count; // todo 父类的私有变量是不是也算在了里面，不过问题不大，浪费点空间吧了
     }
 
-    for(auto f : fields) {
+    for (u2 i = 0; i < field_count; i++) {
+        Field *f = fields + i;
         if (!f->isStatic()) {
-            f->id = insId++;
+            f->id = ins_id++;
             if (f->category_two)
-                insId++;
+                ins_id++;
         }
     }
 
-    instFieldsCount = insId;
+    inst_field_count = ins_id;
 }
 
 void Class::parseAttribute(BytecodeReader &r)
@@ -59,13 +60,13 @@ void Class::parseAttribute(BytecodeReader &r)
         } else if (S(SourceFile) == attr_name) {
             u2 source_file_index = r.readu2();
             if (source_file_index > 0) {
-                sourceFileName = cp.utf8(source_file_index);
+                source_file_name = cp.utf8(source_file_index);
             } else {
                 /*
                  * 并不是每个class文件中都有源文件信息，这个因编译时的编译器选项而异。
                  * todo 什么编译选项
                  */
-                sourceFileName = "Unknown source file";
+                source_file_name = "Unknown source file";
             }
         } else if (S(EnclosingMethod) == attr_name) {
             u2 classIndex = r.readu2();
@@ -105,10 +106,10 @@ void Class::parseAttribute(BytecodeReader &r)
             u2 num = r.readu2();
             for (int j = 0; j < num; j++) {
                 u2 index = r.readu2();
-                modulePackages.push_back(cp.packageName(index));
+                module_packages.push_back(cp.packageName(index));
             }
         } else if (S(ModuleMainClass) == attr_name) {
-            moduleMainClass = cp.className(r.readu2());
+            module_main_class = cp.className(r.readu2());
         } else if (S(NestHost) == attr_name) {
 //            utf8_t *name = cp.className(r.readu2());
             nest_host = cp.resolveClass(r.reads2());//loadClass(loader, name);
@@ -116,6 +117,7 @@ void Class::parseAttribute(BytecodeReader &r)
             u2 num = r.readu2();
             for (u2 j = 0; j < num; j++) {
                 utf8_t *name = cp.className(r.readu2());
+                printvm("%s\n", name);
                 // todo 不要在这里 loadClass，有死循环的问题。
                 // 比如java.lang.invoke.TypeDescriptor和其NestMember：java.lang.invoke.TypeDescriptor$OfField
 //                nest_members.push_back(loadClass(loader, name));
@@ -138,32 +140,32 @@ void Class::createVtable()
 {
     assert(vtable.empty());
 
-    if (superClass == nullptr) {
+    if (super_class == nullptr) {
         int i = 0;
         for (auto &m : methods) {
             if (m->isVirtual()) {
                 vtable.push_back(m);
-                m->vtableIndex = i++;
+                m->vtable_index = i++;
             }
         }
         return;
     }
 
     // 将父类的vtable复制过来
-    vtable.assign(superClass->vtable.begin(), superClass->vtable.end());
+    vtable.assign(super_class->vtable.begin(), super_class->vtable.end());
 
     for (auto m : methods) {
         if (m->isVirtual()) {
             auto iter = find_if(vtable.begin(), vtable.end(), [=](Method *m0){
-                return utf8::equals(m->name, m0->name) && utf8::equals(m->type, m0->type); });
+                return utf8::equals(m->name, m0->name) && utf8::equals(m->descriptor, m0->descriptor); });
             if (iter != vtable.end()) {
                 // 重写了父类的方法，更新
-                m->vtableIndex = (*iter)->vtableIndex;
+                m->vtable_index = (*iter)->vtable_index;
                 *iter = m;
             } else {
                 // 子类定义了要给新方法，加到 vtable 后面
                 vtable.push_back(m);
-                m->vtableIndex = vtable.size() - 1;
+                m->vtable_index = vtable.size() - 1;
             }
         }
     }
@@ -182,8 +184,32 @@ Class::ITable& Class::ITable::operator=(const Class::ITable &itable)
     return *this;
 }
 
+void Class::ITable::add(const ITable &itable)
+{
+    for (auto ifc: itable.interfaces) {
+        interfaces.emplace_back(ifc.first, methods.size());  
+        for (auto m: itable.methods) 
+            methods.push_back(m);
+    }
+}
+
+Method *Class::findFromITable(Class *interface_class, int itable_index)
+{
+    assert(interface_class != nullptr && interface_class->isInterface());
+
+    for (auto interface: itable.interfaces) {
+        if (interface.first->equals(interface_class)) {
+            size_t offset = interface.second;
+            assert(offset + itable_index < itable.methods.size());
+            return itable.methods[offset + itable_index];
+        }
+    }
+
+    return nullptr;
+}
+
 /*
- * todo 为什么需要itable,而不是用vtable解决所有问题？
+ * 为什么需要itable,而不是用vtable解决所有问题？
  * 一个类可以实现多个接口，而每个接口的函数编号是个自己相关的，
  * vtable 无法解决多个对应接口的函数编号问题。
  * 而对继承一个类只能继承一个父亲，子类只要包含父类vtable，
@@ -192,48 +218,45 @@ Class::ITable& Class::ITable::operator=(const Class::ITable &itable)
 void Class::createItable()
 {
     if (isInterface()) {
-        int index = 0;
-        if (superClass != nullptr) {
-            itable = superClass->itable;
-            index = itable.methods.size();
+        // 接口间的继承虽然用 extends 关键字（可以同时继承多个接口），但被继承的接口不是子接口的 super_class，
+        // 而是在子接口的 interfaces 里面。所以接口的 super_class 就是 java/lang/Object 
+
+        for (Class *super_interface: interfaces) {
+            itable.add(super_interface->itable);
         }
+
+        itable.interfaces.emplace_back(this, itable.methods.size());
+        int index = 0;
         for (Method *m : methods) {
             // todo default 方法怎么处理？进不进 itable？
             // todo 调用 default 方法 生成什么调用指令？
-            m->itableIndex = index++;
+            m->itable_index = index++;
             itable.methods.push_back(m);
         }
+        
         return;
     }
 
     /* parse non interface class */
 
-    if (superClass != nullptr) {
-        itable  = superClass->itable;
-    }
-
-    // 遍历 itable.methods，检查有没有接口函数在本类中被重写了。
-    for (auto m : itable.methods) {
-        for (auto m0 : methods) {
-            if (utf8::equals(m->name, m0->name) && utf8::equals(m->type, m0->type)) {
-                m = m0; // 重写了接口方法，更新
-                break;
-            }
-        }
+    if (super_class != nullptr) {
+        itable = super_class->itable;
     }
 
     for (auto ifc : interfaces) {
         for (auto tmp : itable.interfaces) {
-            if (utf8::equals(tmp.first->className, ifc->className)) {
+            if (ifc->equals(tmp.first)) {
                 // 此接口已经在 itable.interfaces 中了
                 goto next;
             }
         }
 
+        // 发现一个新实现的接口
         itable.interfaces.emplace_back(ifc, itable.methods.size());
-        for (auto m : ifc->methods) {
-            for (auto m0 : methods) {
-                if (utf8::equals(m->name, m0->name) && utf8::equals(m->type, m0->type)) {
+        // 检查新实现接口的方法是不是已经被重写了
+        for (auto m: ifc->methods) {
+            for (auto m0: itable.methods) {
+                if (utf8::equals(m->name, m0->name) && utf8::equals(m->descriptor, m0->descriptor)) {
                     m = m0; // 重写了接口方法，更新
                     break;
                 }
@@ -242,31 +265,42 @@ void Class::createItable()
         }
 next:;
     }
-}
-
-void Class::genPkgName()
-{
-    char *pkg = dup(className);
-    char *p = strrchr(pkg, '/');
-    if (p == nullptr) {
-        free(pkg);
-        pkgName = ""; // 包名可以为空
-    } else {
-        *p = 0; // 得到包名
-        slash2Dots(pkg);
-        auto hashed = find(pkg);
-        if (hashed != nullptr) {
-            free(pkg);
-            pkgName = hashed;
-        } else {
-            pkgName = pkg;
-            save(pkgName);
+    
+    // 遍历 itable.methods，检查有没有接口函数在本类中被重写了。
+    for (size_t i = 0; i < itable.methods.size(); i++) {
+        auto m = itable.methods[i];
+        for (auto m0 : methods) {
+            if (utf8::equals(m->name, m0->name) && utf8::equals(m->descriptor, m0->descriptor)) {
+                //m0->itable_index = m->itable_index;
+                itable.methods[i] = m0; // 重写了接口方法，更新
+                break;
+            }
         }
     }
 }
 
-Class::Class(Object *loader, u1 *bytecode, size_t len)
-        : Object(classClass), loader(loader), bytecode(bytecode)
+void Class::genPkgName()
+{
+    char *pkg = dup(class_name);
+    char *p = strrchr(pkg, '/');
+    if (p == nullptr) {
+        free(pkg);
+        pkg_name = ""; // 包名可以为空
+    } else {
+        *p = 0; // 得到包名
+        slash2Dot(pkg);
+        auto hashed = find(pkg);
+        if (hashed != nullptr) {
+            free(pkg);
+            pkg_name = hashed;
+        } else {
+            pkg_name = pkg;
+            save(pkg_name);
+        }
+    }
+}
+
+Class::Class(Object *loader, u1 *bytecode, size_t len): loader(loader), bytecode(bytecode)
 {
     assert(bytecode != nullptr);
 
@@ -274,7 +308,8 @@ Class::Class(Object *loader, u1 *bytecode, size_t len)
 
     auto magic = r.readu4();
     if (magic != 0xcafebabe) {
-        thread_throw(new ClassFormatError("bad magic"));
+        signalException(S(java_lang_ClassFormatError), "bad magic");
+        return;
     }
 
     r.readu2(); // minor_version
@@ -365,55 +400,59 @@ Class::Class(Object *loader, u1 *bytecode, size_t len)
                 break;
             }
             default:
-                thread_throw(new ClassFormatError(NEW_MSG("bad constant tag: %d\n", tag)));
+                signalException(S(java_lang_ClassFormatError), MSG("bad constant tag: %d\n", tag));
+                return;
         }
     }
 
-    modifiers = r.readu2();
-    className = cp.className(r.readu2());
+    accsee_flags = r.readu2();
+    class_name = cp.className(r.readu2());
     genPkgName();
 
     u2 super_class = r.readu2();
     if (super_class == 0) { // invalid constant pool reference
-        this->superClass = nullptr;
+        this->super_class = nullptr;
     } else {
-        this->superClass = cp.resolveClass(super_class);
+        if (utf8::equals(class_name, S(java_lang_Object))) {
+            signalException(S(java_lang_ClassFormatError), "Object has super");
+            return;
+        }
+        this->super_class = cp.resolveClass(super_class);
     }
 
     // parse interfaces
-    u2 interfacesCount = r.readu2();
-    for (u2 i = 0; i < interfacesCount; i++)
+    u2 interface_count = r.readu2();
+    for (u2 i = 0; i < interface_count; i++)
         interfaces.push_back(cp.resolveClass(r.readu2()));
 
     // parse fields
-    u2 fieldsCount = r.readu2();
-    if (fieldsCount > 0) {
-        fields.resize(fieldsCount);
-        auto lastField = fieldsCount - 1;
-        for (u2 i = 0; i < fieldsCount; i++) {
-            auto f = new(g_heap->allocField()) Field(this, r);
-            // 保证所有的 public fields 放在前面
-            if (f->isPublic())
-                fields[publicFieldsCount++] = f;
-            else
-                fields[lastField--] = f;
+    field_count = r.readu2();
+    if (field_count > 0) {
+        fields = (Field *) malloc(sizeof(Field) * field_count);
+        auto last_field = field_count - 1;
+        for (u2 i = 0; i < field_count; i++) {
+            // 保证所有的 public fields 放在前面             
+             if (accIsPublic(r.peeku2()))
+                 new (fields + public_field_count++) Field(this, r);
+             else
+                 new (fields + last_field--) Field(this, r);
         }
     }
 
     calcFieldsId();
 
     // parse methods
-    u2 methodsCount = r.readu2();
-    if (methodsCount > 0) {
-        methods.resize(methodsCount);
-        auto lastMethod = methodsCount - 1;
-        for (u2 i = 0; i < methodsCount; i++) {
-            auto m = new(g_heap->allocMethod()) Method(this, r);
+    u2 method_count = r.readu2();
+    if (method_count > 0) {
+        methods.resize(method_count);
+        auto last_method = method_count - 1;
+        for (u2 i = 0; i < method_count; i++) {
+            auto m = new Method(this, r);
             // 保证所有的 public methods 放在前面
             if (m->isPublic())
-                methods[publicMethodsCount++] = m;
+                methods[public_method_count++] = m;
             else
-                methods[lastMethod--] = m;
+                methods[last_method--] = m;
         }
     }
 
@@ -422,19 +461,23 @@ Class::Class(Object *loader, u1 *bytecode, size_t len)
     createVtable(); // todo 接口有没有必要创建 vtable
     createItable();
 
-    data = (slot_t *)(this + 1);
+    //data = (slot_t *)(this + 1);
+    if (g_class_class != nullptr) {
+        java_mirror = generteClassObject(this);
+    }
+
     state = LOADED;
 }
 
 Class::Class(const char *className)
-        : Object(classClass), className(dup(className)), /* 形参className可能非持久，复制一份 */
-          modifiers(Modifier::MOD_PUBLIC), inited(true),
-          loader(nullptr), superClass(objectClass)
+        : class_name(dup(className)), /* 形参className可能非持久，复制一份 */
+          accsee_flags(JVM_ACC_PUBLIC), inited(true),
+          loader(nullptr), super_class(g_object_class)
 {
     assert(className != nullptr);
     assert(className[0] == '[' || isPrimClassName(className));
 
-    pkgName = "";
+    pkg_name = "";
 
     if (className[0] == '[') {
         interfaces.push_back(loadBootClass(S(java_lang_Cloneable)));
@@ -442,15 +485,22 @@ Class::Class(const char *className)
     }
 
     createVtable();
+    createItable();
 
-    data = (slot_t *)(this + 1);
+    //data = (slot_t *)(this + 1);
+    if (g_class_class != nullptr) {
+        java_mirror = generteClassObject(this);
+    }
+
     state = LOADED;
 }
 
 Class::~Class()
 {
-    // todo something else
+    free(fields);
+    delete[] bytecode;
 
+    // todo something else
 }
 
 void Class::clinit()
@@ -466,8 +516,8 @@ void Class::clinit()
 
     state = INITING;
 
-    if (superClass != nullptr) {
-        superClass->clinit();
+    if (super_class != nullptr) {
+        super_class->clinit();
     }
 
     // 在这里先行 set inited true, 如不这样，后面执行<clinit>时，
@@ -485,15 +535,16 @@ void Class::clinit()
 
 Field *Class::lookupField(const utf8_t *name, const utf8_t *descriptor)
 {
-    for (auto f : fields) {
+    for (u2 i = 0; i < field_count; i++) {
+        Field *f = fields + i;
         if (utf8::equals(f->name, name) && utf8::equals(f->descriptor, descriptor))
             return f;
     }
 
     // todo 在父类中查找
     Field *field;
-    if (superClass != nullptr) {
-        if ((field = superClass->lookupField(name, descriptor)) != nullptr)
+    if (super_class != nullptr) {
+        if ((field = super_class->lookupField(name, descriptor)) != nullptr)
             return field;
     }
 
@@ -503,15 +554,16 @@ Field *Class::lookupField(const utf8_t *name, const utf8_t *descriptor)
             return field;
     }
 
-    thread_throw(new NoSuchFieldError(NEW_MSG("%s~%s~%s\n", className, name, descriptor)));
+    signalException(S(java_lang_NoSuchFieldError), NEW_MSG("%s~%s~%s\n", class_name, name, descriptor));
+    return nullptr;
 }
 
 Field *Class::lookupStaticField(const utf8_t *name, const utf8_t *descriptor)
 {
     Field *field = lookupField(name, descriptor);
-    // todo Field == nullptr
-    if (!field->isStatic()) {
-        thread_throw(new IncompatibleClassChangeError());
+    if (field != nullptr && !field->isStatic()) {
+        signalException(S(java_lang_IncompatibleClassChangeError));
+        return nullptr;
     }
     return field;
 }
@@ -519,23 +571,24 @@ Field *Class::lookupStaticField(const utf8_t *name, const utf8_t *descriptor)
 Field *Class::lookupInstField(const utf8_t *name, const utf8_t *descriptor)
 {
     Field* field = lookupField(name, descriptor);
-    // todo Field == nullptr
-    if (field->isStatic()) {
-        thread_throw(new IncompatibleClassChangeError);
+    if (field != nullptr && field->isStatic()) {
+        signalException(S(java_lang_IncompatibleClassChangeError));
+        return nullptr;
     }
     return field;
 }
 
 Field *Class::getDeclaredInstField(int id, bool ensureExist)
 {
-    for (auto f : fields) {
+    for (u2 i = 0; i < field_count; i++) {
+        Field *f = fields + i;
         if (!f->isStatic() && f->id == id)
             return f;
     }
 
     if (ensureExist) {
         // not find, but ensure exist, so...
-        thread_throw(new NoSuchFieldError(NEW_MSG("%s, id = %d.", className, id)));
+        signalException(S(java_lang_NoSuchFieldError), NEW_MSG("%s, id = %d.", class_name, id));
     }
 
     // not find
@@ -545,13 +598,13 @@ Field *Class::getDeclaredInstField(int id, bool ensureExist)
 Method *Class::getDeclaredMethod(const utf8_t *name, const utf8_t *descriptor, bool ensureExist)
 {
     for (auto m : methods) {
-        if (utf8::equals(m->name, name) && utf8::equals(m->type, descriptor))
+        if (utf8::equals(m->name, name) && utf8::equals(m->descriptor, descriptor))
             return m;
     }
 
     if (ensureExist) {
         // not find, but ensure exist, so...
-        thread_throw(new NoSuchMethodError(NEW_MSG("%s~%s~%s\n", className, name, descriptor)));
+        signalException(S(java_lang_NoSuchMethodError), NEW_MSG("%s~%s~%s\n", class_name, name, descriptor));
     }
 
     // not find
@@ -561,13 +614,13 @@ Method *Class::getDeclaredMethod(const utf8_t *name, const utf8_t *descriptor, b
 Method *Class::getDeclaredStaticMethod(const utf8_t *name, const utf8_t *descriptor, bool ensureExist)
 {
     for (auto m : methods) {
-        if (m->isStatic() && utf8::equals(m->name, name) && utf8::equals(m->type, descriptor))
+        if (m->isStatic() && utf8::equals(m->name, name) && utf8::equals(m->descriptor, descriptor))
             return m;
     }
 
     if (ensureExist) {
-        // I don't find it, but you ensure exist, so...
-        thread_throw(new NoSuchMethodError(NEW_MSG("%s~%s~%s\n", className, name, descriptor)));
+        // not find, but ensure exist, so...
+        signalException(S(java_lang_NoSuchMethodError), NEW_MSG("%s~%s~%s\n", class_name, name, descriptor));
     }
 
     // not find
@@ -577,13 +630,13 @@ Method *Class::getDeclaredStaticMethod(const utf8_t *name, const utf8_t *descrip
 Method *Class::getDeclaredInstMethod(const utf8_t *name, const utf8_t *descriptor, bool ensureExist)
 {
     for (auto m : methods) {
-        if (!m->isStatic() && utf8::equals(m->name, name) && utf8::equals(m->type, descriptor))
+        if (!m->isStatic() && utf8::equals(m->name, name) && utf8::equals(m->descriptor, descriptor))
             return m;
     }
 
     if (ensureExist) {
         // not find, but ensure exist, so...
-        thread_throw(new NoSuchMethodError(NEW_MSG("%s~%s~%s\n", className, name, descriptor)));
+        signalException(S(java_lang_NoSuchMethodError), NEW_MSG("%s~%s~%s\n", class_name, name, descriptor));
     }
 
     // not find
@@ -617,12 +670,12 @@ Method *Class::getConstructor(Array *parameterTypes)
     // public static MethodType methodType(Class<?> rtype, Class<?>[] ptypes);
     Method *m = c->getDeclaredStaticMethod(
             "methodType", "(Ljava/lang/Class;[Ljava/lang/Class;)Ljava/lang/invoke/MethodType;");
-    auto mt = RSLOT(execJavaFunc(m, { loadBootClass(S(void)), parameterTypes } ));
+    auto mt = RSLOT(execJavaFunc(m, { loadBootClass(S(void))->java_mirror, parameterTypes } ));
 
     // public String toMethodDescriptorString();
     m = c->getDeclaredInstMethod("toMethodDescriptorString", "()Ljava/lang/String;");
     auto s = execJavaFunc(m, {mt});
-    return getConstructor(((jstrref) *s)->toUtf8());
+    return getConstructor((RSLOT(s))->toUtf8());
 }
 
 vector<Method *> Class::getConstructors(bool public_only)
@@ -638,8 +691,8 @@ Method *Class::lookupMethod(const char *name, const char *descriptor)
     }
 
     // todo 在父类中查找
-    if (superClass != nullptr) {
-        if ((method = superClass->lookupMethod(name, descriptor)) != nullptr)
+    if (super_class != nullptr) {
+        if ((method = super_class->lookupMethod(name, descriptor)) != nullptr)
             return method;
     }
 
@@ -655,8 +708,9 @@ Method *Class::lookupMethod(const char *name, const char *descriptor)
 Method *Class::lookupStaticMethod(const char *name, const char *descriptor)
 {
     Method *m = lookupMethod(name, descriptor);
-    if (m != nullptr and !m->isStatic()) {
-        thread_throw(new IncompatibleClassChangeError);
+    if (m != nullptr && !m->isStatic()) {
+        signalException(S(java_lang_IncompatibleClassChangeError));
+        return nullptr;
     }
     return m;
 }
@@ -665,10 +719,26 @@ Method *Class::lookupInstMethod(const char *name, const char *descriptor)
 {
     Method *m = lookupMethod(name, descriptor);
     // todo m == nullptr
-    if (m->isStatic()) {
-        thread_throw(new IncompatibleClassChangeError);
+    if (m != nullptr && m->isStatic()) {
+        signalException(S(java_lang_IncompatibleClassChangeError));
+        return nullptr;
     }
     return m;
+}
+
+Method *Class::lookupMethod(Object *mo)
+{
+    assert(mo != nullptr);
+
+    // private String              name;
+    // private Class<?>            returnType;
+    // private Class<?>[]          parameterTypes;
+    jstrref name = mo->getRefField("name", S(sig_java_lang_String));
+    ClassObject *rtype = mo->getRefField<ClassObject>("returnType", S(sig_java_lang_Class));
+    Array *ptypes = mo->getRefField<Array>("parameterTypes", S(array_java_lang_Class));
+
+    jstrref descriptor = toMethodDescriptor(methodType(rtype, ptypes));
+    return lookupMethod(name->toUtf8(), descriptor->toUtf8());
 }
 
 bool Class::isSubclassOf(Class *father)
@@ -678,7 +748,7 @@ bool Class::isSubclassOf(Class *father)
     if (this == father)
         return true;
 
-    if (superClass != nullptr && superClass->isSubclassOf(father))
+    if (super_class != nullptr && super_class->isSubclassOf(father))
         return true;
 
     for (auto c : interfaces) {
@@ -697,8 +767,8 @@ bool Class::isSubclassOf(Class *father)
 int Class::inheritedDepth() const
 {
     int depth = 0;
-    const Class *c = this->superClass;
-    for (; c != nullptr; c = c->superClass) {
+    const Class *c = this->super_class;
+    for (; c != nullptr; c = c->super_class) {
         depth++;
     }
     return depth;
@@ -706,53 +776,58 @@ int Class::inheritedDepth() const
 
 bool Class::isArrayClass() const
 {
-    return className[0] == '[';
+    return class_name[0] == '[';
 }
 
 bool Class::isPrimClass() const
 {
-    return isPrimClassName(className);
+    return isPrimClassName(class_name);
+}
+
+bool Class::isVoidClass() const
+{
+    return strcmp(class_name, "void") == 0;
 }
 
 bool Class::isPrimArrayClass() const
 {
-    if (strlen(className) != 2 || className[0] != '[')
+    if (strlen(class_name) != 2 || class_name[0] != '[')
         return false;
 
-    return strchr("ZBCSIFJD", className[1]) != nullptr;
+    return strchr("ZBCSIFJD", class_name[1]) != nullptr;
 }
 
 Class *Class::arrayClass() const
 {
-    char buf[strlen(className) + 8]; // big enough
+    char buf[strlen(class_name) + 8]; // big enough
 
     // 数组
-    if (className[0] == '[') {
-        sprintf(buf, "[%s", className);
+    if (class_name[0] == '[') {
+        sprintf(buf, "[%s", class_name);
         return loadArrayClass(buf);
     }
 
     // 基本类型
-    const char *tmp = getPrimArrayClassName(className);
+    const char *tmp = getPrimArrayClassName(class_name);
     if (tmp != nullptr)
         return loadArrayClass(tmp);
 
     // 类引用
-    sprintf(buf, "[L%s;", className);
+    sprintf(buf, "[L%s;", class_name);
     return loadArrayClass(buf);
 }
 
 string Class::toString() const
 {
     string s = "class: ";
-    s += className;
+    s += class_name;
     return s;
 }
 
 int Class::dim() const
 {
     int d = 0;
-    while (className[d] == '[') d++;
+    while (class_name[d] == '[') d++;
     return d;
 }
 
@@ -760,77 +835,78 @@ size_t Class::getEleSize()
 {
     assert(isArrayClass());
 
-    if (eleSize == 0) {
+    if (ele_size == 0) {
         // 判断数组单个元素的大小
         // 除了基本类型的数组外，其他都是引用类型的数组
         // 多维数组是数组的数组，也是引用类型的数组
-        char t = className[1]; // jump '['
+        char t = class_name[1]; // jump '['
         if (t == 'Z') {
-            eleSize = sizeof(jbool);
+            ele_size = sizeof(jbool);
         } else if (t == 'B') {
-            eleSize = sizeof(jbyte);
+            ele_size = sizeof(jbyte);
         } else if (t == 'C') {
-            eleSize = sizeof(jchar);
+            ele_size = sizeof(jchar);
         } else if (t == 'S') {
-            eleSize = sizeof(jshort);
+            ele_size = sizeof(jshort);
         } else if (t == 'I') {
-            eleSize = sizeof(jint);
+            ele_size = sizeof(jint);
         } else if (t == 'F') {
-            eleSize = sizeof(jfloat);
+            ele_size = sizeof(jfloat);
         } else if (t == 'J') {
-            eleSize = sizeof(jlong);
+            ele_size = sizeof(jlong);
         } else if (t == 'D') {
-            eleSize = sizeof(jdouble);
+            ele_size = sizeof(jdouble);
         } else {
-            eleSize = sizeof(jref);
+            ele_size = sizeof(jref);
         }
     }
 
-    return eleSize;
+    return ele_size;
 }
 
 Class *Class::componentClass()
 {
-    if (compClass != nullptr)
-        return compClass;
+    if (comp_class != nullptr)
+        return comp_class;
 
-    const char *compName = className;
-    if (*compName != '[')
+    const char *comp_name = class_name;
+    if (*comp_name != '[')
         return nullptr; // not a array
 
-    compName++; // jump a '['
+    comp_name++; // jump a '['
 
     // 判断 component's type
-    if (*compName == '[') {
-        compClass = loadArrayClass(compName);
-        return compClass;
+    if (*comp_name == '[') {
+        comp_class = loadArrayClass(comp_name);
+        return comp_class;
     }
 
-    auto primClassName = getPrimClassName(*compName);
-    if (primClassName != nullptr) {  // primitive type
-        compClass = loadBootClass(primClassName);
-        return compClass;
+    auto prim_class_name = getPrimClassName(*comp_name);
+    if (prim_class_name != nullptr) {  // primitive type
+        comp_class = loadBootClass(prim_class_name);
+        return comp_class;
     }
 
     // 普通类: Lxx/xx/xx; 型
-    compName++; // jump 'L'
-    int last = strlen(compName) - 1;
+    comp_name++; // jump 'L'
+    int last = strlen(comp_name) - 1;
     assert(last > 0);
-    if (compName[last] != ';') {
-        thread_throw(new UnknownError());
+    if (comp_name[last] != ';') {
+        signalException(S(java_lang_UnknownError));
+        return nullptr;
     } else {
         char buf[last + 1];
-        strncpy(buf, compName, (size_t) last);
+        strncpy(buf, comp_name, (size_t) last);
         buf[last] = 0;
-        compClass = loadClass(loader, buf); // todo bug! ! 对于 ArrayClass 这个loader是bootClassLoader, 无法loader用户类
-        return compClass;
+        comp_class = loadClass(loader, buf); // todo bug! ! 对于 ArrayClass 这个loader是bootClassLoader, 无法loader用户类
+        return comp_class;
     }
 }
 
 Class *Class::elementClass()
 {
-    if (eleClass != nullptr)
-        return eleClass;
+    if (ele_class != nullptr)
+        return ele_class;
 
     if (!isArrayClass())
         return nullptr;
@@ -840,8 +916,8 @@ Class *Class::elementClass()
         auto cc = curr->componentClass();
         assert(cc != nullptr);
         if (!cc->isArrayClass()) {
-            eleClass = cc;
-            return eleClass;
+            ele_class = cc;
+            return ele_class;
         }
         curr = cc;
     }
@@ -849,28 +925,27 @@ Class *Class::elementClass()
 
 void Class::buildStrPool()
 {
-    assert(this == stringClass);
-    strpool = new unordered_set<Object *, StrObjHash, StrObjEquals>;
-    pthread_mutex_init(&strpoolMutex, nullptr);
+    assert(this == g_string_class);
+    str_pool = new unordered_set<Object *, StrObjHash, StrObjEquals>;
 }
 
-Object *Class::intern(const utf8_t *str)
+jstrref Class::intern(const utf8_t *str)
 {
     assert(str != nullptr);
-    assert(this == stringClass);
+    assert(this == g_string_class);
     return intern(newString(str));
 }
 
-Object *Class::intern(Object *so)
+jstrref Class::intern(jstrref so) 
 {
     assert(so != nullptr);
-    assert(this == stringClass);
-    assert(so->clazz == stringClass);
+    assert(this == g_string_class);
+    assert(so->clazz == g_string_class);
 
-    pthread_mutex_lock(&strpoolMutex);
+    scoped_lock lock(str_pool_mutex);
+
     // return either the newly inserted element
     // or the equivalent element already in the set
-    Object *interned = *(strpool->insert(so).first);
-    pthread_mutex_unlock(&strpoolMutex);
+    Object *interned = *(str_pool->insert(so).first);
     return interned;
 }

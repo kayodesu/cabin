@@ -1,7 +1,9 @@
 package interface0;
 
+/**
+ * Status: Fail
+ */
 public class InterfaceMethodTest {
-    
     public interface If1 {
         static int x() {
             return 1;
@@ -36,13 +38,12 @@ public class InterfaceMethodTest {
     }
 
     public void staticMethod() {
-//        assertEquals(1, If1.x());
+        System.out.println(1 == If1.x() ? "Pass" : "Fail");
     }
 
     public void defaultMethod() {
-//        assertEquals(2, new Impl1().y());
-//        assertEquals(12, new Impl2().y());
-//        assertEquals(102, new Impl3().y());
+        System.out.println(2 == new Impl1().y() ? "Pass" : "Fail");
+        System.out.println(12 == new Impl2().y() ? "Pass" : "Fail");
+        System.out.println(102 == new Impl3().y() ? "Pass" : "Fail");
     }
-    
 }

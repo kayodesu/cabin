@@ -3,9 +3,10 @@
  */
 
 #include "../../jni_inner.h"
+#include "../../../objects/class.h"
 
 // public native String intern();
-static jstrref intern(jstrref _this)
+static jstring intern(jstring _this)
 {
     return _this->clazz->intern(_this);
 }

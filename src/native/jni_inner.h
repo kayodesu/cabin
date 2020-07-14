@@ -5,12 +5,24 @@
 #ifndef KAYO_JNI_INNER_H
 #define KAYO_JNI_INNER_H
 
-#include <vector>
-#include "../objects/class.h"
-#include "../objects/field.h"
-#include "../objects/method.h"
-#include "../objects/class_loader.h"
-#include "../interpreter/interpreter.h"
+#include "../jvmstd.h"
+
+class ClassObject;
+
+typedef Object*      jobject;
+typedef ClassObject* jclass;
+typedef jobject      jthrowable;
+typedef jobject      jstring;
+typedef Array*       jarray;
+typedef jarray       jbooleanArray;
+typedef jarray       jbyteArray;
+typedef jarray       jcharArray;
+typedef jarray       jshortArray;
+typedef jarray       jintArray;
+typedef jarray       jlongArray;
+typedef jarray       jfloatArray;
+typedef jarray       jdoubleArray;
+typedef jarray       jobjectArray;
 
 
 #define OBJ "Ljava/lang/Object;"
@@ -27,12 +39,11 @@
 
 #define ARRAY_LENGTH(arr) (sizeof(arr)/sizeof(*arr))
 
-static void registerNativesEmptyImplement() { }
-#define JNINativeMethod_registerNatives { "registerNatives", "()V", (void *) registerNativesEmptyImplement }
+#define JNINativeMethod_registerNatives { "registerNatives", "()V", (void *) (void(*)()) [](){} }
 
 struct JNINativeMethod {
     const char *name;
-    const char *signature;
+    const char *descriptor;
     void *func;
 };
 

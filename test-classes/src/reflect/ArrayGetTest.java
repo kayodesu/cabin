@@ -1,7 +1,10 @@
-package reflection;
+package reflect;
 
 import java.lang.reflect.Array;
 
+/**
+ * Status: Fail
+ */
 public class ArrayGetTest {
 
     public static void main(String[] args) {

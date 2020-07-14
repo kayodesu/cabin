@@ -10,6 +10,7 @@
  */
 
 class Method;
+class ClassObject;
 
 // java/lang/invoke/MethodType 类的便利操作函数
 namespace method_type {
@@ -26,7 +27,7 @@ namespace method_type {
     /*
      * new MethodType
      */
-    jref methodType(jclsref rtype, jarrref ptypes);
+    jref methodType(ClassObject *rtype, Array *ptypes);
 
     jstrref toMethodDescriptor(jref methodType);
 }

@@ -9,7 +9,6 @@
 #include <thread>
 #include "../config.h"
 #include "../jvmstd.h"
-#include "../objects/throwables.h"
 #include "../util/encoding.h"
 
 class Object;
@@ -85,15 +84,23 @@ class Thread {
      * |lvars|Frame|ostack|, |lvars|Frame|ostack|, |lvars|Frame|ostack| ...
      * ------------------------------------------------------------------
      */
-    u1 vmStack[VM_STACK_SIZE]; // 虚拟机栈，一个线程只有一个虚拟机栈
-    Frame *topFrame = nullptr;
+    u1 vm_stack[VM_STACK_SIZE]; // 虚拟机栈，一个线程只有一个虚拟机栈
+    Frame *top_frame = nullptr;
+
+    jref exception = nullptr;
 
     friend Thread *initMainThread();
     friend void createVMThread(void *(*start)(void *), const utf8_t *thread_name);
 
+    friend Object *exceptionOccured();
+    friend void signalException(const char *excep_name, const char *message);
+    friend void setException(Object *exp);
+    friend void clearException();
+    friend void printStackTrace();
+
 public:
     Object *tobj = nullptr; // 所关联的 Object of java.lang.Thread
-    std::thread::id tid; // 所关联的 local thread 对应的id
+    std::thread::id tid;    // 所关联的 local thread 对应的id
 
     explicit Thread(Object *jThread = nullptr, jint priority = THREAD_NORM_PRIORITY);
 
@@ -111,12 +118,12 @@ public:
 
     void clearVMStack()
     {
-        topFrame = nullptr;
+        top_frame = nullptr;
     }
 
     Frame *getTopFrame()
     {
-        return topFrame;
+        return top_frame;
     }
 
     Frame *allocFrame(Method *m, bool vm_invoke);
@@ -140,20 +147,9 @@ public:
     //friend Monitor;
 };
 
-extern Thread *mainThread;
+extern Thread *g_main_thread;
 
 Thread *initMainThread();
-
-//struct VMThreadInitInfo {
-//    void *(*start)(void *);
-//    const utf8_t *threadName;
-//
-//    VMThreadInitInfo(void *(*start0)(void *), const utf8_t *threadName0): start(start0), threadName(threadName0)
-//    {
-//        assert(start != nullptr);
-//        assert(threadName != nullptr and utf8::length(threadName) > 0);
-//    }
-//};
 
 void createVMThread(void *(*start)(void *), const utf8_t *thread_name);
 
@@ -161,8 +157,14 @@ void createCustomerThread(Object *jThread);
 
 Thread *getCurrentThread();
 
-[[noreturn]] void thread_uncaught_exception(Object *exception);
+// [[noreturn]] void thread_uncaught_exception(Object *exception);
 
-[[noreturn]] void thread_throw(Throwable *t);
+// [[noreturn]] void thread_throw(Throwable *t);
+
+Object *exceptionOccured();
+void signalException(const char *excep_name, const char *message = nullptr);
+void setException(Object *exp);
+void clearException();
+void printStackTrace();
 
 #endif //JVM_JTHREAD_H

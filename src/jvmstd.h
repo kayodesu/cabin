@@ -13,7 +13,11 @@
 #include "symbol.h"
 
 #ifndef PATH_MAX
-#define PATH_MAX 1024 // todo
+    #ifdef MAX_PATH
+        #define PATH_MAX MAX_PATH
+    #else
+        #define PATH_MAX 1024
+    #endif
 #endif
 
 #define VM_VERSION "1.0" // version of this jvm, a string.
@@ -90,14 +94,10 @@ class Object;
 class Array;
 class Class;
 
-typedef Object*         jref;     // JVM中的引用类型。
-typedef Object*         jprimref; // JVM中基本类型的包装类的引用。
-typedef Object*         jstrref;  // java.lang.String 的引用。
-typedef Array*          jarrref;  // JVM中 Array 的引用
-typedef Class*          jclsref;  // java.lang.Class 的引用
+typedef Object* jref;     // JVM 中的引用类型。
+typedef jref    jstrref;  // java.lang.String 的引用。
 
-
-#define jnull       ((jref) 0)
+#define jnull ((jref) 0)
 
 typedef char utf8_t;
 typedef jchar unicode_t;
@@ -106,17 +106,16 @@ class Heap;
 extern Heap *g_heap;
 
 class ClassLoader;
-//class StrPool;
 struct Thread;
 
 extern bool g_jdk_version_9_and_upper;
 
 
 // 启动类路径（bootstrap classpath）默认对应 jre/lib 目录，Java标准库（大部分在rt.jar里）位于该路径
-extern std::vector<std::string> jreLibJars;
+extern std::vector<std::string> g_jre_lib_jars;
 
 // 扩展类路径（extension classpath）默认对应 jre/lib/ext 目录，使用Java扩展机制的类位于这个路径。
-extern std::vector<std::string> jreExtJars;
+extern std::vector<std::string> g_jre_ext_jars;
 
 extern std::vector<std::string> g_jdk_modules;
 
@@ -138,10 +137,8 @@ extern char classpath[];
 extern u2 g_classfile_major_version;
 extern u2 g_classfile_manor_version;
 
-//extern StrPool *g_str_pool;
-
 // The system Thread group.
-extern Object *sysThreadGroup;
+extern Object *g_sys_thread_group;
 
 // todo 所有线程
 extern std::vector<Thread *> g_all_threads;
@@ -154,14 +151,18 @@ extern std::vector<std::pair<const utf8_t *, const utf8_t *>> g_properties;
 #define METHOD_PARAMETERS_MAX_COUNT 255
 
 #define MAIN_THREAD_NAME "main" // name of main thread
-#define GC_THREAD_NAME "gc"
+#define GC_THREAD_NAME "gc"     // name of gc thread
 
 #define MSG_MAX_LEN 1024 // message max length
 #define NEW_MSG(...) ({ auto buf = new char[MSG_MAX_LEN]; snprintf(buf, MSG_MAX_LEN, __VA_ARGS__); buf; })
+#define MSG NEW_MSG
 
 #define printvm(...) do { printf("%s: %d: ", __FILE__, __LINE__); printf(__VA_ARGS__); } while(false)
 
 // 出现异常，退出jvm
 #define jvm_abort(...) do { printvm("fatal error! "); printf(__VA_ARGS__); exit(-1); } while(false)
+
+// 退出jvm
+#define JVM_EXIT exit(0);
 
 #endif //JVM_JVMSTD_H

@@ -9,12 +9,12 @@ import java.util.List;
 /**
  * Status: Fail
  */
-public class Test8 {
+public class MethodHandleTest1 {
 	public static void main(String[] args) throws Throwable {  
 		MethodHandles.Lookup lookup = MethodHandles.lookup();  
-		MethodHandle mh = lookup.findStatic(Test8.class, "doubleVal", MethodType.methodType(int.class, int.class));  
+		MethodHandle mh = lookup.findStatic(MethodHandleTest1.class, "doubleVal", MethodType.methodType(int.class, int.class));
 		List<Integer> dataList = Arrays.asList(1, 2, 3, 4, 5);  
-		Test8.transform(dataList, mh); // 方法做为参数
+		MethodHandleTest1.transform(dataList, mh); // 方法做为参数
 		for (Integer data : dataList) {  
 			System.out.println(data); //2,4,6,8,10
 		}  

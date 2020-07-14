@@ -5,6 +5,7 @@
 #include "field.h"
 #include "class.h"
 #include "prims.h"
+#include "class_object.h"
 
 using namespace std;
 using namespace utf8;
@@ -15,11 +16,11 @@ Field::Field(Class *c, BytecodeReader &r)
     clazz = c;
     ConstantPool &cp = c->cp;
 
-    modifiers = r.readu2();
+    accsee_flags = r.readu2();
     name = cp.utf8(r.readu2());
     descriptor = cp.utf8(r.readu2());
 
-    category_two = descriptor[0] == 'J' || descriptor[0]== 'D';
+    category_two = (descriptor[0] == 'J' || descriptor[0]== 'D');
 
     // parse field's attributes
     u2 attr_count = r.readu2();
@@ -40,37 +41,37 @@ Field::Field(Class *c, BytecodeReader &r)
             if (isStatic()) {
                 utf8_t d = *descriptor;
                 if (d == 'Z') {
-                    staticValue.z = jint2jbool(cp._int(index));
+                    static_value.z = jint2jbool(cp._int(index));
                 } else if (d == 'B') {
-                    staticValue.b = jint2jbyte(cp._int(index));
+                    static_value.b = jint2jbyte(cp._int(index));
                 } else if (d == 'C') {
-                    staticValue.c = jint2jchar(cp._int(index));
+                    static_value.c = jint2jchar(cp._int(index));
                 } else if (d == 'S') {
-                    staticValue.s = jint2jshort(cp._int(index));
+                    static_value.s = jint2jshort(cp._int(index));
                 } else if (d == 'I') {
-                    staticValue.i = cp._int(index);
+                    static_value.i = cp._int(index);
                 } else if (d == 'J') {
-                    staticValue.j = cp._long(index);
+                    static_value.j = cp._long(index);
                 } else if (d == 'F') {
-                    staticValue.f = cp._float(index);
+                    static_value.f = cp._float(index);
                 } else if (d == 'D') {
-                    staticValue.d = cp._double(index);
+                    static_value.d = cp._double(index);
                 } else if(equals(descriptor, S(sig_java_lang_String))) {
-                    staticValue.r = cp.resolveString(index);
+                    static_value.r = cp.resolveString(index);
                 }
             }
         } else if (S(Synthetic) == attr_name) {
             setSynthetic();
         } else if (S(Signature) == attr_name) {
-            c->signature = cp.utf8(r.readu2());
+            signature = cp.utf8(r.readu2());
         } else if (S(RuntimeVisibleAnnotations) == attr_name) {
             u2 num = r.readu2();
             for (int j = 0; j < num; j++)
-                rtVisiAnnos.emplace_back(r);
+                rt_visi_annos.emplace_back(r);
         } else if (S(RuntimeInvisibleAnnotations) == attr_name) {
             u2 num = r.readu2();
             for (int j = 0; j < num; j++)
-                rtInvisiAnnos.emplace_back(r);
+                rt_invisi_annos.emplace_back(r);
         } else {
             // unknown attribute
             r.skip(attr_len);
@@ -78,20 +79,20 @@ Field::Field(Class *c, BytecodeReader &r)
     }
 }
 
-Class *Field::getType()
+ClassObject *Field::getType()
 {
     if (type == nullptr) {
         if (*descriptor == '[') { // array
-            type = loadClass(clazz->loader, descriptor);
+            type = loadClass(clazz->loader, descriptor)->java_mirror;
         } else if (*descriptor == 'L') { // non array Object
             utf8_t buf[strlen(descriptor)];
             buf[strlen(strcpy(buf, descriptor + 1)) - 1] = 0; // don't include the first 'L' and the last ';'
-            type = loadClass(clazz->loader, buf);
+            type = loadClass(clazz->loader, buf)->java_mirror;
         } else { // primitive
             assert(strlen(descriptor) == 1);
             auto name = getPrimClassName(*descriptor);
             assert(name != nullptr);
-            type = loadBootClass(name);
+            type = loadBootClass(name)->java_mirror;
         }
     }
 
@@ -106,7 +107,7 @@ bool Field::isPrim() const
 string Field::toString() const
 {
     ostringstream oss;
-    oss << clazz->className << "~" << name << "~" << descriptor << "~" << id;
+    oss << clazz->class_name << "~" << name << "~" << descriptor << "~" << id;
     return oss.str();
 }
 

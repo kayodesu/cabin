@@ -6,6 +6,7 @@
 #define KAYO_ARRAY_OBJECT_H
 
 #include "object.h"
+#include "class.h"
 
 // Object of array
 class Array: public Object {
@@ -28,20 +29,48 @@ public:
 
     void *index(jint index0) const;
 
-    template <typename T>
-    void set(jint index0, T data)
-    {
-        *(T *) index(index0) = data;
-    }
+    // set prim type value
+    // template <typename T>
+    // void set(jint index0, T data)
+    // {
+    //     if(!((typeid(T) == typeid(jbyte)) 
+    //             || (typeid(T) == typeid(jbool)) 
+    //             || (typeid(T) == typeid(jchar)) 
+    //             || (typeid(T) == typeid(jshort)) 
+    //             || (typeid(T) == typeid(jint)) 
+    //             || (typeid(T) == typeid(jlong)) 
+    //             || (typeid(T) == typeid(jfloat))
+    //             || (typeid(T) == typeid(jdouble)))) {
+    //         printf("--- %s\n", typeid(T).name());
+    //             }
+    //     *(T *) index(index0) = data;
+    // }
 
-    void set(int index0, jref value);
+#define setT(jtype, Type)                      \
+    void set##Type(jint i, jtype v)            \
+    {                                          \
+        assert(clazz->is##Type##ArrayClass()); \
+        assert(0 <= i && i < len);             \
+        *(jtype *) index(i) = v;               \
+    }  
+
+    setT(jbyte, Byte)
+    setT(jboolean, Boolean)
+    setT(jchar, Char)
+    setT(jshort, Short)
+    setT(jint, Int)
+    setT(jlong, Long)
+    setT(jfloat, Float)
+    setT(jdouble, Double)
+#undef setT
+
+    void setRef(int i, jref value);
 
     template <typename T>
     T get(jint index0) const
     {
         return *(T *) index(index0);
     }
-
 
     static void copy(Array *dst, jint dst_pos, const Array *src, jint src_pos, jint len);
     size_t size() const override;

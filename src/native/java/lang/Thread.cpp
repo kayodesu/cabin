@@ -8,6 +8,7 @@
 #include "../../../objects/array_object.h"
 #include "../../../runtime/thread_info.h"
 #include "../../../runtime/frame.h"
+#include "../../../interpreter/interpreter.h"
 
 using namespace std;
 
@@ -16,7 +17,7 @@ using namespace std;
  *
  * public static native Thread currentThread();
  */
-static jref currentThread()
+static jobject currentThread()
 {
     // return a Object of java/lang/Thread of current thread
     return getCurrentThread()->tobj;
@@ -32,7 +33,8 @@ static void yield()
 static void sleep(jlong millis)
 {
     if (millis <= 0) {
-        throw new IllegalArgumentException;
+        signalException(S(java_lang_IllegalArgumentException));
+        return;
     }
     if (millis == 0)
         return;
@@ -44,7 +46,7 @@ static void sleep(jlong millis)
 
 // inform VM of interrupt
 // private native void interrupt0();
-static void interrupt0(jref _this)
+static void interrupt0(jobject _this)
 {
     Thread *t = Thread::from(_this);
     t->interrupted = jtrue;
@@ -56,7 +58,7 @@ static void interrupt0(jref _this)
  * 
  * private native boolean isInterrupted(boolean ClearInterrupted);
  */
-static jboolean isInterrupted(jref _this, jboolean clearInterrupted)
+static jboolean isInterrupted(jobject _this, jboolean clearInterrupted)
 {
     Thread *t = Thread::from(_this);
     jbool b = t->interrupted;
@@ -72,7 +74,7 @@ static jboolean isInterrupted(jref _this, jboolean clearInterrupted)
  * 
  * public final native boolean isAlive();
  */
-static jboolean isAlive(jref _this)
+static jboolean isAlive(jobject _this)
 {
     return jfalse; // todo 为什么要设置成0，设置成1就状态错误
 }
@@ -102,7 +104,7 @@ static jboolean isAlive(jref _this)
  * @see        ThreadGroup#getMaxPriority()
  */
 // private native void setPriority0(int newPriority);
-static void setPriority0(jref _this, jint newPriority)
+static void setPriority0(jobject _this, jint newPriority)
 {
     // todo
 //    struct slot priority = islot(new_priority);
@@ -110,7 +112,7 @@ static void setPriority0(jref _this, jint newPriority)
 }
 
 // private native void start0();
-static void start0(jref _this)
+static void start0(jobject _this)
 {
     // createCustomerThread(_this);
     static Method *runMethod 
@@ -126,60 +128,60 @@ static void start0(jref _this)
 }
 
 // public native int countStackFrames();
-static jint countStackFrames(jref _this)
+static jint countStackFrames(jobject _this)
 {
     return Thread::from(_this)->countStackFrames();
 }
 
 // public static native boolean holdsLock(Object obj);
-static jboolean holdsLock(jref obj)
+static jboolean holdsLock(jobject obj)
 {
     jvm_abort("holdsLock"); // todo
 }
 
 // private native static StackTraceElement[][] dumpThreads(Thread[] threads);
-static jarrref dumpThreads(jarrref threads)
+static jobjectArray dumpThreads(jobjectArray threads)
 {
     size_t len = threads->size();
     Array *result = newArray(loadArrayClass("[[java/lang/StackTraceElement"), len);
 
     for (size_t i = 0; i < len; i++) {
-        auto jThread = threads->get<jref>(i);
+        auto jThread = threads->get<jobject>(i);
         Thread *thread = Thread::from(jThread);
         Array *arr = thread->dump(-1);
-        result->set(i, arr);
+        result->setRef(i, arr);
     }
 
     return result;
 }
 
 // private native static Thread[] getThreads();
-static jarrref getThreads()
+static jobjectArray getThreads()
 {
     size_t size = g_all_threads.size();
     Array *threads = newArray(loadArrayClass(S(array_java_lang_Thread)), size);
 
     for (size_t i = 0; i < size; i++) {
-        threads->set(i, g_all_threads[i]->tobj);
+        threads->setRef(i, g_all_threads[i]->tobj);
     }
 
     return threads;
 }
 
 // private native void stop0(Object o);
-static void stop0(jref _this, jref o)
+static void stop0(jobject _this, jobject o)
 {
     jvm_abort("stop0"); // todo
 }
 
 // private native void suspend0();
-static void suspend0(jref _this)
+static void suspend0(jobject _this)
 {
     jvm_abort("suspend0"); // todo
 }
 
 // private native void resume0();
-static void resume0(jref _this)
+static void resume0(jobject _this)
 {
     jvm_abort("resume0"); // todo
 }
@@ -191,7 +193,7 @@ static void clearInterruptEvent()
 }
 
 // private native void setNativeName(String name);
-static void setNativeName(jref _this, jstrref name)
+static void setNativeName(jobject _this, jstring name)
 {
     jvm_abort("setNativeName"); // todo
 }

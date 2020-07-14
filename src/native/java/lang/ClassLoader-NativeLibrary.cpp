@@ -3,18 +3,17 @@
  */
 
 #include "../../jni_inner.h"
+#include "../../../objects/object.h"
 
 // native long find(String name);
-static jlong find(jref _this, jstrref name)
+static jlong find(jobject _this, jstring name)
 {
-    // todo
-//    jref name = slot_getr(frame->local_vars + 1);
 //    printvm("-------- %s\n", jstrobj_value(name));
     return 1; // todo
 }
 
 // native void load(String name, boolean isBuiltin);
-static void load(jref _this, jstrref name, jboolean isBuiltin)
+static void load(jobject _this, jstring name, jboolean isBuiltin)
 {
     // todo load
 
@@ -27,7 +26,7 @@ static void load(jref _this, jstrref name, jboolean isBuiltin)
 }
 
 // native void unload(String name, boolean isBuiltin);
-static void unload(jref _this, jstrref name, jboolean isBuiltin)
+static void unload(jobject _this, jstring name, jboolean isBuiltin)
 {
     // todo
 }

@@ -1,32 +1,34 @@
 #include "../../jni_inner.h"
+#include "../../../objects/constant_pool.h"
+#include "../../../objects/class.h"
 
 /*
  * Author: Yo Ka
  */
 
 // private native int getSize0(Object constantPoolOop);
-static jint getSize0(jref _this, jref constantPoolOop)
+static jint getSize0(jobject _this, jobject constantPoolOop)
 {
     ConstantPool *cp = (ConstantPool *) constantPoolOop;
     return cp->size;
 }
 
 // private native Class getClassAt0(Object constantPoolOop, int i);
-static jclsref getClassAt0(jref _this, jref constantPoolOop, jint i)
+static jclass getClassAt0(jobject _this, jobject constantPoolOop, jint i)
 {
     ConstantPool *cp = (ConstantPool *) constantPoolOop;
-    return cp->resolveClass((u2)i);
+    return cp->resolveClass((u2)i)->java_mirror;
 }
 
 // private native long getLongAt0(Object constantPoolOop, int i);
-static jlong getLongAt0(jref _this, jref constantPoolOop, jint i)
+static jlong getLongAt0(jobject _this, jobject constantPoolOop, jint i)
 {
     ConstantPool *cp = (ConstantPool *) constantPoolOop;
     return cp->_long((u2)i);
 }
 
 // private native String getUTF8At0(Object constantPoolOop, int i);
-static jstrref getUTF8At0(jref _this, jref constantPoolOop, jint i)
+static jstring getUTF8At0(jobject _this, jobject constantPoolOop, jint i)
 {
     ConstantPool *cp = (ConstantPool *) constantPoolOop;
     return cp->resolveString(i);

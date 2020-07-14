@@ -15,7 +15,7 @@ class CC {
 	}
 }
 
-public class Test13 {
+public class InterfaceTest {
 	public static void main(String[] args) {
 		JJ<Integer> iii = (new CC())::impl;
 		System.out.println(iii);

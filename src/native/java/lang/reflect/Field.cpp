@@ -5,7 +5,7 @@
  */
 
 // private native byte[] getTypeAnnotationBytes0();
-static jarrref getTypeAnnotationBytes0(jref _this)
+static jbyteArray getTypeAnnotationBytes0(jobject _this)
 {
     jvm_abort("getTypeAnnotationBytes0"); // todo
 }

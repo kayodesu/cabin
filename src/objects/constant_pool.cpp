@@ -99,7 +99,7 @@ Object *ConstantPool::resolveString(u2 i)
     }
 
     const utf8_t *str = string(i);
-    Object *so = stringClass->intern(str);
+    Object *so = g_string_class->intern(str);
 
     type(i, JVM_CONSTANT_ResolvedString);
     info(i, (slot_t) so);
@@ -139,7 +139,7 @@ Object *ConstantPool::resolveMethodHandle(u2 i)
             // public MethodHandle findGetter(Class<?> refc, String name, Class<?> type)
             //                      throws NoSuchFieldException, IllegalAccessException;
             Method *m = caller->clazz->getDeclaredInstMethod("findGetter", d1);
-            return RSLOT(execJavaFunc(m, { caller, f->clazz, newString(f->name), f->getType() }));
+            return RSLOT(execJavaFunc(m, { caller, f->clazz->java_mirror, newString(f->name), f->getType() }));
         }
         case JVM_REF_getStatic: {
             Field *f = resolveField(index);
@@ -147,7 +147,7 @@ Object *ConstantPool::resolveMethodHandle(u2 i)
             // public MethodHandle findStaticGetter(Class<?> refc, String name, Class<?> type)
             //                      throws NoSuchFieldException, IllegalAccessException;
             Method *m = caller->clazz->getDeclaredInstMethod("findStaticGetter", d1);
-            return RSLOT(execJavaFunc(m, { caller, f->clazz, newString(f->name), f->getType() }));
+            return RSLOT(execJavaFunc(m, { caller, f->clazz->java_mirror, newString(f->name), f->getType() }));
         }
         case JVM_REF_putField: {
             Field *f = resolveField(index);
@@ -155,7 +155,7 @@ Object *ConstantPool::resolveMethodHandle(u2 i)
             // public MethodHandle findSetter(Class<?> refc, String name, Class<?> type)
             //                      throws NoSuchFieldException, IllegalAccessException;
             Method *m = caller->clazz->getDeclaredInstMethod("findSetter", d1);
-            return RSLOT(execJavaFunc(m, { caller, f->clazz, newString(f->name), f->getType() }));
+            return RSLOT(execJavaFunc(m, { caller, f->clazz->java_mirror, newString(f->name), f->getType() }));
         }
         case JVM_REF_putStatic: {
             Field *f = resolveField(index);
@@ -163,7 +163,7 @@ Object *ConstantPool::resolveMethodHandle(u2 i)
             // public MethodHandle findStaticSetter(Class<?> refc, String name, Class<?> type)
             //                      throws NoSuchFieldException, IllegalAccessException;
             Method *m = caller->clazz->getDeclaredInstMethod("findStaticSetter", d1);
-            return RSLOT(execJavaFunc(m, { caller, f->clazz, newString(f->name), f->getType() }));
+            return RSLOT(execJavaFunc(m, { caller, f->clazz->java_mirror, newString(f->name), f->getType() }));
         }
         case JVM_REF_invokeVirtual :{
             // public MethodHandle findVirtual(Class<?> refc, String name, MethodType type)
@@ -177,7 +177,7 @@ Object *ConstantPool::resolveMethodHandle(u2 i)
             // public MethodHandle findStatic(Class<?> refc, String name, MethodType type)
             //                      throws NoSuchMethodException, IllegalAccessException;
             return RSLOT(execJavaFunc(caller->clazz->getDeclaredInstMethod("findStatic", d2),
-                         { caller, m->clazz, newString(m->name), m->getType() }));
+                         { caller, m->clazz->java_mirror, newString(m->name), m->getType() }));
         }
         case JVM_REF_invokeSpecial: {
             // public MethodHandle findSpecial(Class<?> refc, String name, MethodType type, Class<?> specialCaller)

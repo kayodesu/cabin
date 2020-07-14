@@ -3,10 +3,10 @@ package primary;
 /**
  * Status: Fail
  */
-public class TestLong {
+public class LongTest {
     private long value;
     
-    public TestLong(long value) {
+    public LongTest(long value) {
         this.value = value;
     }
     
@@ -15,7 +15,7 @@ public class TestLong {
     }
     
     public static void main(String[] args) {
-        TestLong tl = new TestLong(8682522807148012L);
+        LongTest tl = new LongTest(8682522807148012L);
         System.out.println(tl.get());
     }
 }

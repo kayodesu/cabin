@@ -19,13 +19,13 @@
  * Signature: ()[Ljava/lang/String;
  */
 // private static native String[] vmProperties();
-static jref vmProperties()
+static jobjectArray vmProperties()
 {
-    jarrref prop_array = newArray(loadBootClass(S(array_java_lang_String)), g_properties.size()*2);
+    jobjectArray prop_array = newArray(loadBootClass(S(array_java_lang_String)), g_properties.size()*2);
     int i = 0;
     for (auto p: g_properties) {
-        prop_array->set(i++, newString(p.first));
-        prop_array->set(i++, newString(p.second));
+        prop_array->setRef(i++, newString(p.first));
+        prop_array->setRef(i++, newString(p.second));
     }
     return prop_array;
 }
@@ -43,7 +43,7 @@ static jref vmProperties()
  * Signature: ()[Ljava/lang/String;
  */
 // private static native String[] platformProperties();
-static jref platformProperties()
+static jobjectArray platformProperties()
 {
     // from class jdk/internal/util/SystemProps$Raw
     static const int _display_country_NDX = 0;
@@ -87,11 +87,11 @@ static jref platformProperties()
     static const int _user_name_NDX = 1 + _user_home_NDX;
     static const int FIXED_LENGTH = 1 + _user_name_NDX;
 
-    jarrref prop_array = newArray(loadBootClass(S(array_java_lang_String)), FIXED_LENGTH);
+    jobjectArray prop_array = newArray(loadBootClass(S(array_java_lang_String)), FIXED_LENGTH);
     // todo 具体赋值
 
     for (int i = 0; i < FIXED_LENGTH; i++) {
-        prop_array->set(i, jnull);
+        prop_array->setRef(i, jnull);
     }
     return prop_array;
 }

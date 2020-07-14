@@ -98,13 +98,13 @@ utf8_t *utf8::dup(const utf8_t *utf8)
 {
     assert(utf8 != nullptr);
     // 因为jvm改进的utf8中除结束符外不包含'\0'，所以用strcpy即可。
-//    char *p = (char *) malloc((strlen(utf8) + 1)*sizeof(char));
-//    strcpy(p, utf8);
-//    return p;
+    // char *p = (char *) malloc((strlen(utf8) + 1)*sizeof(char));
+    // strcpy(p, utf8);
+    // return p;
     return strdup(utf8);
 }
 
-utf8_t *utf8::dots2Slash(utf8_t *utf8)
+utf8_t *utf8::dot2Slash(utf8_t *utf8)
 {
     assert(utf8 != nullptr);
 
@@ -116,17 +116,17 @@ utf8_t *utf8::dots2Slash(utf8_t *utf8)
     return utf8;
 }
 
-utf8_t *utf8::dots2SlashDup(const utf8_t *utf8)
+utf8_t *utf8::dot2SlashDup(const utf8_t *utf8)
 {
     assert(utf8 != nullptr);
-    return dots2Slash(dup(utf8));
+    return dot2Slash(dup(utf8));
 }
 
-utf8_t *utf8::slash2Dots(utf8_t *utf8)
+utf8_t *utf8::slash2Dot(utf8_t *utf8)
 {
     assert(utf8 != nullptr);
 
-    for(utf8_t * tmp = utf8; *tmp; tmp++) {
+    for(utf8_t *tmp = utf8; *tmp; tmp++) {
         if (*tmp == '/')
             *tmp = '.';
     }
@@ -134,10 +134,10 @@ utf8_t *utf8::slash2Dots(utf8_t *utf8)
     return utf8;
 }
 
-utf8_t *utf8::slash2DotsDup(const utf8_t *utf8)
+utf8_t *utf8::slash2DotDup(const utf8_t *utf8)
 {
     assert(utf8 != nullptr);
-    return slash2Dots(dup(utf8));
+    return slash2Dot(dup(utf8));
 }
 
 unicode_t *utf8::toUnicode(const utf8_t *utf8, unicode_t *buf)

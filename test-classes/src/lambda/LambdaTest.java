@@ -1,5 +1,8 @@
 package lambda;
 
+/**
+ * Status: Fail
+ */
 public class LambdaTest {
     public static void main(String[] args) {
         Runnable r = () -> {

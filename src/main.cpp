@@ -15,6 +15,7 @@
 #include "objects/array_object.h"
 #include "interpreter/interpreter.h"
 #include "memory/Heap.h"
+#include "sysinfo.h"
 
 using namespace std;
 using namespace std::filesystem;
@@ -30,21 +31,14 @@ Heap *g_heap;
 
 bool g_jdk_version_9_and_upper;
 
-vector<string> jreLibJars;
-vector<string> jreExtJars;
+vector<string> g_jre_lib_jars;
+vector<string> g_jre_ext_jars;
 
 vector<string> g_jdk_modules;
 
-//IFN ifn;
-
-//vector<std::string> userDirs;
-//vector<std::string> userJars;
-
-//StrPool *g_str_pool;
-
 vector<pair<const utf8_t *, const utf8_t *>> g_properties;
 
-Object *sysThreadGroup;
+Object *g_sys_thread_group;
 
 vector<Thread *> g_all_threads;
 
@@ -101,7 +95,7 @@ static void showVersionAndCopyright();
 static void parseCommandLine(int argc, char *argv[])
 {
     // 可执行程序的名字为 argv[0]
-    const char *vmName = argv[0];
+    const char *vm_name = argv[0];
 
     for (int i = 1; i < argc; i++) {
         if (argv[i][0] == '-') {
@@ -117,14 +111,14 @@ static void parseCommandLine(int argc, char *argv[])
                 }
                 strcpy(classpath, argv[i]);
             } else if (strcmp(name, "-help") == 0 or strcmp(name, "-?") == 0) {
-                showUsage(vmName);
+                showUsage(vm_name);
                 exit(0);
             } else if (strcmp(name, "-version") == 0) {
                 showVersionAndCopyright();
                 exit(0);
             } else {
                 printf("Unrecognised command line option: %s\n", argv[i]);
-                showUsage(vmName);
+                showUsage(vm_name);
                 exit(-1);
             }
         } else {
@@ -276,15 +270,15 @@ static void initJVM(int argc, char *argv[])
             strcat(bootstrap_classpath, "/jre/lib");
         }
 
-        findFilesBySuffix(bootstrap_classpath, "jar", jreLibJars);
+        findFilesBySuffix(bootstrap_classpath, "jar", g_jre_lib_jars);
 
         // 第0个位置放rt.jar，因为rt.jar常用，所以放第0个位置首先搜索。
-        for (auto iter = jreLibJars.begin(); iter != jreLibJars.end(); iter++) {
+        for (auto iter = g_jre_lib_jars.begin(); iter != g_jre_lib_jars.end(); iter++) {
             auto i = iter->rfind('\\');
             auto j = iter->rfind('/');
             if ((i != iter->npos && iter->compare(i + 1, 6, "rt.jar") == 0)
                 || (j != iter->npos && iter->compare(j + 1, 6, "rt.jar") == 0)) {
-                std::swap(*(jreLibJars.begin()), *iter);
+                std::swap(*(g_jre_lib_jars.begin()), *iter);
                 break;
             }
         }
@@ -292,10 +286,10 @@ static void initJVM(int argc, char *argv[])
         // parse extension classpath
         if (extension_classpath[0] == 0) {  // empty
             strcpy(extension_classpath, bootstrap_classpath);
-            strcat(extension_classpath, "/ext");  // todo JDK9+ 的目录结构有变动！！！！！！！
+            strcat(extension_classpath, "/ext");   
         }
 
-        findFilesBySuffix(extension_classpath, "jar", jreExtJars);
+        findFilesBySuffix(extension_classpath, "jar", g_jre_ext_jars);
     }
 
     if (classpath[0] == 0) {  // empty
@@ -357,9 +351,9 @@ int main(int argc, char* argv[])
     assert(scl != nullptr);
 
     // Main Thread Set ContextClassLoader
-    mainThread->tobj->setRefField(S(contextClassLoader), S(sig_java_lang_ClassLoader), scl);
+    g_main_thread->tobj->setRefField(S(contextClassLoader), S(sig_java_lang_ClassLoader), scl);
 
-    Class *main_class = loadClass(scl, dots2Slash(main_class_name));
+    Class *main_class = loadClass(scl, dot2Slash(main_class_name));
     assert(main_class != nullptr);
 
     Method *main_method = main_class->lookupStaticMethod(S(main), S(_array_java_lang_String__V));
@@ -381,9 +375,9 @@ int main(int argc, char* argv[])
     TRACE("begin to execute main function.\n");
 
     // Create the String array holding the command line args
-    jarrref args = newArray(loadArrayClass(S(array_java_lang_String)), main_func_args_count);
+    Array *args = newArray(loadArrayClass(S(array_java_lang_String)), main_func_args_count);
     for (int i = 0; i < main_func_args_count; i++) {
-        args->set(i, newString(main_func_args[i]));
+        args->setRef(i, newString(main_func_args[i]));
     }
     // Call the main method
     execJavaFunc(main_method, {args});

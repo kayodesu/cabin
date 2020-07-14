@@ -17,31 +17,31 @@ bool StrObjEquals::operator()(Object *x, Object *y) const
 {
     assert(x != nullptr);
     assert(y != nullptr);
-    assert(x->clazz == stringClass);
-    assert(y->clazz == stringClass);
+    assert(x->clazz == g_string_class);
+    assert(y->clazz == g_string_class);
 
     // public boolean equals(Object anObject);
-    Method *equals = stringClass->getDeclaredInstMethod("equals", "(Ljava/lang/Object;)Z");
+    Method *equals = g_string_class->getDeclaredInstMethod("equals", "(Ljava/lang/Object;)Z");
     return ISLOT(execJavaFunc(equals, { x, y })) != 0;
 }
 
 size_t StrObjHash::operator()(Object *x) const
 {
     assert(x != nullptr);
-    assert(x->clazz == stringClass);
+    assert(x->clazz == g_string_class);
 
     // public int hashCode();
-    Method *hashCode = stringClass->getDeclaredInstMethod("hashCode", "()I");
+    Method *hashCode = g_string_class->getDeclaredInstMethod("hashCode", "()I");
     return (size_t) ISLOT(execJavaFunc(hashCode, {x}));
 
 }
 
 static Object *newString_jdk_8_and_under(const utf8_t *str)
 {
-    assert(stringClass != nullptr && str != nullptr);
+    assert(g_string_class != nullptr && str != nullptr);
 
-    initClass(stringClass);
-    auto strobj =  newObject(stringClass);
+    initClass(g_string_class);
+    auto strobj =  newObject(g_string_class);
     auto len = length(str);
 
     // set java/lang/String 的 value 变量赋值
@@ -54,12 +54,12 @@ static Object *newString_jdk_8_and_under(const utf8_t *str)
 
 static Object *newString_jdk_9_and_upper(const utf8_t *str)
 {
-    assert(stringClass != nullptr && str != nullptr);
+    assert(g_string_class != nullptr && str != nullptr);
 
-    initClass(stringClass);
-    assert(is_jtrue(stringClass->lookupField("COMPACT_STRINGS", "Z")->staticValue.z));
+    initClass(g_string_class);
+    assert(is_jtrue(g_string_class->lookupField("COMPACT_STRINGS", "Z")->static_value.z));
 
-    auto strobj =  newObject(stringClass);
+    auto strobj =  newObject(g_string_class);
     auto len = length(str);
 
     // set java/lang/String 的 value 变量赋值
@@ -95,8 +95,8 @@ jstrref newString(const unicode_t *str, jsize len)
 utf8_t *strObjToUtf8(jstrref so)
 {
     assert(so != nullptr);
-    assert(stringClass != nullptr);
-    assert(so->clazz == stringClass);
+    assert(g_string_class != nullptr);
+    assert(so->clazz == g_string_class);
 
     if (g_jdk_version_9_and_upper) {
         // byte[] value;

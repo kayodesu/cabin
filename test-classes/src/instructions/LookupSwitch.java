@@ -1,9 +1,11 @@
 package instructions;
 
+/**
+ * Status: Fail
+ */
 public class LookupSwitch {
-    
-    public static void main(String[] args) {
-        switch (args.length) {
+    private static void test(int i) {
+        switch (i) {
             case -100: System.out.println("-100"); break;
             case 0: System.out.println("0"); break;
             case 3: System.out.println("3"); break;
@@ -12,4 +14,10 @@ public class LookupSwitch {
         }
     }
     
+    public static void main(String[] args) {
+        test(-100);
+
+        for (int i = 1; i < 7; i++)
+            test(i);
+    }
 }

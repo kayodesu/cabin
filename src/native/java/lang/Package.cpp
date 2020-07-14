@@ -1,12 +1,14 @@
 #include "../../jni_inner.h"
 #include "../../../objects/array_object.h"
+#include "../../../objects/class_loader.h"
+#include "../../../objects/string_object.h"
 
 /*
  * Author: Yo Ka
  */
 
 // private static native String getSystemPackage0(String name);
-static jstrref getSystemPackage0(jstrref name)
+static jstring getSystemPackage0(jstring name)
 {
     const char *utf8_name = name->toUtf8();
 
@@ -19,7 +21,7 @@ static jstrref getSystemPackage0(jstrref name)
 }
 
 // private static native String[] getSystemPackages0();
-static jarrref getSystemPackages0()
+static jobjectArray getSystemPackages0()
 {
     utf8_set &packages = getBootPackages();
     auto size = packages.size();

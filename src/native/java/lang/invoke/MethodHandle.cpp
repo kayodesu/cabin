@@ -24,7 +24,7 @@
  * @throws Throwable anything thrown by the underlying method propagates unchanged through the method handle call
  */
 // public final native @PolymorphicSignature Object invokeExact(Object... args) throws Throwable;
-static void invokeExact(jarrref args)
+static void invokeExact(jobjectArray args)
 {
     // jref _this = frame->getLocalAsRef(0);
     // _this 可能是 MethodHandle 的各种子类。
@@ -70,7 +70,7 @@ static void invokeExact(jarrref args)
  * @throws Throwable anything thrown by the underlying method propagates unchanged through the method handle call
  */
 // public final native @PolymorphicSignature Object invoke(Object... args) throws Throwable;
-static void invoke(jarrref args)
+static void invoke(jobjectArray args)
 {
     jvm_abort("invoke");
 }
@@ -93,7 +93,7 @@ static void invoke(jarrref args)
  * @return the signature-polymorphic result, statically represented using {@code Object}
  */
 // final native @PolymorphicSignature Object invokeBasic(Object... args) throws Throwable;
-static void invokeBasic(jarrref args)
+static void invokeBasic(jobjectArray args)
 {
     jvm_abort("invokeBasic");
 }
@@ -106,7 +106,7 @@ static void invokeBasic(jarrref args)
  * @return the signature-polymorphic result, statically represented using {@code Object}
  */
 // static native @PolymorphicSignature Object linkToVirtual(Object... args) throws Throwable;
-static void linkToVirtual(jarrref args)
+static void linkToVirtual(jobjectArray args)
 {
     jvm_abort("linkToVirtual");
 }
@@ -119,7 +119,7 @@ static void linkToVirtual(jarrref args)
  * @return the signature-polymorphic result, statically represented using {@code Object}
  */
 // static native @PolymorphicSignature Object linkToStatic(Object... args) throws Throwable;
-static void linkToStatic(jarrref args)
+static void linkToStatic(jobjectArray args)
 {
     jvm_abort("linkToStatic");
 }
@@ -132,7 +132,7 @@ static void linkToStatic(jarrref args)
  * @return the signature-polymorphic result, statically represented using {@code Object}
  */
 // static native @PolymorphicSignature Object linkToSpecial(Object... args) throws Throwable;
-static void linkToSpecial(jarrref args)
+static void linkToSpecial(jobjectArray args)
 {
     jvm_abort("linkToSpecial");
 }
@@ -145,7 +145,7 @@ static void linkToSpecial(jarrref args)
  * @return the signature-polymorphic result, statically represented using {@code Object}
  */
 // static native @PolymorphicSignature Object linkToInterface(Object... args) throws Throwable;
-static void linkToInterface(jarrref args)
+static void linkToInterface(jobjectArray args)
 {
     jvm_abort("linkToInterface");
 }
@@ -163,6 +163,7 @@ static JNINativeMethod methods[] = {
         { "linkToSpecial",   T, (void *) linkToSpecial },
         { "linkToInterface", T, (void *) linkToInterface },
 };
+#undef T
 
 void java_lang_invoke_MethodHandle_registerNatives()
 {

@@ -5,13 +5,13 @@
  */
 
 // public static native String getJdkSpecialVersion()
-static jstrref getJdkSpecialVersion()
+static jstring getJdkSpecialVersion()
 {
     jvm_abort("getJdkSpecialVersion"); // todo
 }
 
 // public static native String getJvmSpecialVersion()
-static jstrref getJvmSpecialVersion()
+static jstring getJvmSpecialVersion()
 {
     jvm_abort("getJvmSpecialVersion"); // todo
 }

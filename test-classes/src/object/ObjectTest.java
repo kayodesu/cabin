@@ -1,4 +1,8 @@
+package object;
 
+/**
+ * Status: Pass
+ */
 public class ObjectTest {
 	public static int staticVar;
 	public int instanceVar;
@@ -13,6 +17,10 @@ public class ObjectTest {
 		Object tmp = obj;
 		if (tmp instanceof ObjectTest) { // instanceof
 			obj = (ObjectTest) tmp; // checkcast
+			System.out.println(obj.instanceVar == 32768 ? "Pass":"Fail");
+			System.out.println(staticVar == 32768 ? "Pass":"Fail");
+		} else {
+			System.out.println("Fail");
 		}
 	}
 }

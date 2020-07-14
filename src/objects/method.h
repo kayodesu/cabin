@@ -6,47 +6,43 @@
 #define KAYO_METHOD_H
 
 #include <vector>
-#include "Modifier.h"
 #include "../classfile/attributes.h"
 #include "../util/encoding.h"
+#include "../classfile/constants.h"
 
 class Object;
 class Array;
 class Class;
+class ClassObject;
 
 class Method {
-//    Array *parameterTypes = nullptr; // [Ljava/lang/Class;
-//    Class *returnType = nullptr;     // Ljava/lang/Class;
-    Object *type_obj = nullptr;          // Ljava/lang/invoke/MethodType;
-    Array *exceptionTypes = nullptr; // [Ljava/lang/Class;
+    Object *type_obj = nullptr;       // Ljava/lang/invoke/MethodType;
+    Array *exception_types = nullptr; // [Ljava/lang/Class;
 
 public:
     enum RetType {
         RET_INVALID, RET_VOID, RET_BYTE, RET_BOOL, RET_CHAR,
         RET_SHORT, RET_INT, RET_FLOAT, RET_LONG, RET_DOUBLE, RET_REFERENCE
     };
-
-    // 定义此 Method 的类
-    Class *clazz;
+    
+    Class *clazz = nullptr; // 定义此 Method 的类
     const utf8_t *name = nullptr;
-    const utf8_t *type = nullptr;
+    const utf8_t *descriptor = nullptr;
 
-    jint modifiers;
+    int accsee_flags;
 
     bool deprecated = false;
     const char *signature = nullptr;
 
-    int vtableIndex = -1;
-    int itableIndex = -1;
+    int vtable_index = -1;
+    int itable_index = -1;
 
-    u2 maxStack = 0;
-    u2 maxLocals = 0;
+    u2 max_stack = 0;
+    u2 max_locals = 0;
     u2 arg_slot_count = 0;
 
     u1 *code = nullptr;
-    size_t codeLen = 0;
-
-//    native_method_t nativeMethod = nullptr; // present only if native
+    size_t code_len = 0;
 
     void *native_method = nullptr; // present only if native
     RetType ret_type = RET_INVALID;
@@ -60,15 +56,15 @@ public:
      * method is declared to throw.
      */
     // checked exceptions the method may throw.
-    std::vector<u2> checkedExceptions;
+    std::vector<u2> checked_exceptions;
 
-    std::vector<std::vector<Annotation>> rtVisiParaAnnos;   // runtime visible parameter annotations
-    std::vector<std::vector<Annotation>> rtInvisiParaAnnos; // runtime invisible parameter annotations
+    std::vector<std::vector<Annotation>> rt_visi_para_annos;   // runtime visible parameter annotations
+    std::vector<std::vector<Annotation>> rt_invisi_para_annos; // runtime invisible parameter annotations
 
-    std::vector<Annotation> rtVisiAnnos;   // runtime visible annotations
-    std::vector<Annotation> rtInvisiAnnos; // runtime invisible annotations
+    std::vector<Annotation> rt_visi_annos;   // runtime visible annotations
+    std::vector<Annotation> rt_invisi_annos; // runtime invisible annotations
 
-    ElementValue annotationDefault;
+    ElementValue annotation_default;
 private:
     std::vector<LineNumberTable> line_number_tables;
     std::vector<LocalVariableTable> local_variable_tables;
@@ -92,10 +88,22 @@ public:
         return !isPrivate() && !isStatic() && !utf8::equals(name, S(object_init));
     }
 
+    // is <clinit>?
+    bool isClassInit() const 
+    {
+        return strcmp(name, "<clinit>") == 0;
+    }
+
+    // is <init>?
+    bool isObjectInit() const 
+    {
+        return strcmp(name, "<init>") == 0;
+    }
+
     static u2 calArgsSlotsCount(const utf8_t *descriptor, bool isStatic);
 
     Array *getParameterTypes();
-    Class *getReturnType();
+    ClassObject *getReturnType();
 
     /*
      * return the type of the method,
@@ -113,18 +121,19 @@ public:
 
     [[nodiscard]] std::string toString() const;
 
-    [[nodiscard]] bool isPublic() const       { return Modifier::isPublic(modifiers); }
-    [[nodiscard]] bool isProtected() const    { return Modifier::isProtected(modifiers); }
-    [[nodiscard]] bool isPrivate() const      { return Modifier::isPrivate(modifiers); }
-    [[nodiscard]] bool isAbstract() const     { return Modifier::isAbstract(modifiers); }
-    [[nodiscard]] bool isStatic() const       { return Modifier::isStatic(modifiers); }
-    [[nodiscard]] bool isFinal() const        { return Modifier::isFinal(modifiers); }
-    [[nodiscard]] bool isSynchronized() const { return Modifier::isSynchronized(modifiers); }
-    [[nodiscard]] bool isNative() const       { return Modifier::isNative(modifiers); }
-    [[nodiscard]] bool isStrict() const       { return Modifier::isStrict(modifiers); }
-    [[nodiscard]] bool isVarargs() const      { return Modifier::isVarargs(modifiers); }
+    [[nodiscard]] bool isPublic() const       { return accIsPublic(accsee_flags); }
+    [[nodiscard]] bool isProtected() const    { return accIsProtected(accsee_flags); }
+    [[nodiscard]] bool isPrivate() const      { return accIsPrivate(accsee_flags); }
+    [[nodiscard]] bool isAbstract() const     { return accIsAbstract(accsee_flags); }
+    [[nodiscard]] bool isStatic() const       { return accIsStatic(accsee_flags); }
+    [[nodiscard]] bool isFinal() const        { return accIsFinal(accsee_flags); }
+    [[nodiscard]] bool isSynchronized() const { return accIsSynchronized(accsee_flags); }
+    [[nodiscard]] bool isNative() const       { return accIsNative(accsee_flags); }
+    [[nodiscard]] bool isStrict() const       { return accIsStrict(accsee_flags); }
+    [[nodiscard]] bool isVarargs() const      { return accIsVarargs(accsee_flags); }
+    [[nodiscard]] bool isSynthetic() const    { return accIsSynthetic(accsee_flags); }
 
-    void setSynthetic() { Modifier::setSynthetic(modifiers); }
+    void setSynthetic() { accSetSynthetic(accsee_flags); }
 
 private:
     /*
@@ -133,22 +142,22 @@ private:
      * 如果 catch_type 是 NULL（在class文件中是0），表示可以处理所有异常，这是用来实现finally子句的。
      */
     struct ExceptionTable {
-        u2 startPc;
-        u2 endPc;
-        u2 handlerPc;
+        u2 start_pc;
+        u2 end_pc;
+        u2 handler_pc;
 
         struct CatchType {
             bool resolved;
             union {
                 Class *clazz; // if resolved
-                const char *className; // if not resolved
+                const char *class_name; // if not resolved
             } u;
-        } *catchType = nullptr;
+        } *catch_type = nullptr;
 
         ExceptionTable(Class *clazz, BytecodeReader &r);
     };
 
-    std::vector<ExceptionTable> exceptionTables;
+    std::vector<ExceptionTable> exception_tables;
 
 public:
     ~Method()
@@ -156,8 +165,8 @@ public:
         if (isNative()) {
             delete[] code;
         }
-        for (auto &t : exceptionTables) {
-            delete t.catchType;
+        for (auto &t : exception_tables) {
+            delete t.catch_type;
         }
     }
 };

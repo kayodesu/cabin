@@ -24,7 +24,7 @@ slot_t *execJavaFunc(Method *m, std::initializer_list<slot_t> args);
 slot_t *execJavaFunc(Method *m, std::initializer_list<jref> args);
 
 // Object[] args;
-slot_t *execConstructor(Method *constructor, jref _this, Array *args);
+slot_t *execJavaFunc(Method *m, jref _this, Array *args);
 
 
 #endif //JVM_INTERPRETER_H

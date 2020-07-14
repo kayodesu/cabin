@@ -2,11 +2,11 @@ package initialization;
 
 /**
  * Dynamic Dispatch During Instance Creation
- * expect output: "0\n3\n"
+ * Expect output: "0\n3\n"
  *
  * Status: Pass
  */
-public class Eg12_5_2 {    
+public class Init1 {
     private static class Super {
         Super() { printThree(); }
         void printThree() { System.out.println("three"); }
@@ -22,7 +22,7 @@ public class Eg12_5_2 {
     }
     
     public static void main(String[] args) {
-        new Eg12_5_2().test();
+        new Init1().test();
     }
     
 }

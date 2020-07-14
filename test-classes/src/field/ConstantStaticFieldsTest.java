@@ -1,7 +1,11 @@
 package field;
 
-// A constant variable is a final variable of primitive type or type String
-// that is initialized with a constant expression (§15.28).
+/**
+ * A constant variable is a final variable of primitive type or type String
+ * that is initialized with a constant expression (§15.28).
+ *
+ * Status: Fail
+ */
 public class ConstantStaticFieldsTest {
     
     public static final boolean z = true;
@@ -17,28 +21,28 @@ public class ConstantStaticFieldsTest {
     public static final String str2 = str1 + " world!";
 
     public void test() {
-//        assertEquals(true, ConstantStaticFieldsTest.z);
-//        assertEquals(true, getFieldValue("z"));
-//        assertEquals((byte)125, ConstantStaticFieldsTest.b);
-//        assertEquals((byte)125, getFieldValue("b"));
-//        assertEquals('c', ConstantStaticFieldsTest.c);
-//        assertEquals('c', getFieldValue("c"));
-//        assertEquals((short)300, ConstantStaticFieldsTest.s);
-//        assertEquals((short)300, getFieldValue("s"));
-//        assertEquals(100, ConstantStaticFieldsTest.x);
-//        assertEquals(100, getFieldValue("x"));
-//        assertEquals(118, ConstantStaticFieldsTest.y);
-//        assertEquals(118, getFieldValue("y"));
-//        assertEquals(1L, ConstantStaticFieldsTest.j);
-//        assertEquals(1L, getFieldValue("j"));
-//        assertEquals(3.14f, ConstantStaticFieldsTest.f, 0.1);
-//        assertEquals(3.14f, getFieldValue("f"));
-//        assertEquals(2.71828, ConstantStaticFieldsTest.d, 0.1);
-//        assertEquals(2.71828, getFieldValue("d"));
-//        assertEquals("hello", ConstantStaticFieldsTest.str1);
-//        assertEquals("hello", getFieldValue("str1"));
-//        assertEquals("hello world!", ConstantStaticFieldsTest.str2);
-//        assertEquals("hello world!", getFieldValue("str2"));
+        System.out.println(true == ConstantStaticFieldsTest.z);
+        System.out.println(true == (Boolean) getFieldValue("z"));
+        System.out.println((byte)125 == (Byte) ConstantStaticFieldsTest.b);
+        System.out.println((byte)125 == (Byte) getFieldValue("b"));
+        System.out.println('c' == ConstantStaticFieldsTest.c);
+        System.out.println('c' == (Character) getFieldValue("c"));
+        System.out.println((short)300 == (Short) ConstantStaticFieldsTest.s);
+        System.out.println((short)300 == (Short) getFieldValue("s"));
+        System.out.println(100 == ConstantStaticFieldsTest.x);
+        System.out.println(100 == (Integer) getFieldValue("x"));
+        System.out.println(118 == ConstantStaticFieldsTest.y);
+        System.out.println(118 == (Integer) getFieldValue("y"));
+        System.out.println(1L == ConstantStaticFieldsTest.j);
+        System.out.println(1L == (Long) getFieldValue("j"));
+        System.out.println(3.14f == (Float) ConstantStaticFieldsTest.f);
+        System.out.println(3.14f == (Float) getFieldValue("f"));
+        System.out.println(2.71828 == (Double) ConstantStaticFieldsTest.d);
+        System.out.println(2.71828 == (Double) getFieldValue("d"));
+        System.out.println("hello".equals(ConstantStaticFieldsTest.str1));
+        System.out.println("hello".equals(getFieldValue("str1")));
+        System.out.println("hello world!".equals(ConstantStaticFieldsTest.str2));
+        System.out.println("hello world!".equals(getFieldValue("str2")));
     }
     
     private static Object getFieldValue(String name) {
@@ -49,7 +53,7 @@ public class ConstantStaticFieldsTest {
         }
     }
     
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         new ConstantStaticFieldsTest().test();
     }
     

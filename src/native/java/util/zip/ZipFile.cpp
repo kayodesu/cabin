@@ -3,7 +3,7 @@
 #include "../../../../symbol.h"
 #include "../../../../jvmstd.h"
 #include "../../../../objects/string_object.h"
-#include "../../../../objects/throwables.h"
+#include "../../../../runtime/thread_info.h"
 
 /*
  * Author: Yo Ka
@@ -16,14 +16,15 @@ void initIDs()
 }
 
 // private static native long open(String name, int mode, long lastModified, boolean usemmap) throws IOException;
-jlong __open(jstrref name, jint mode, jlong lastModified, jboolean usemmap)
+jlong __open(jstring name, jint mode, jlong lastModified, jboolean usemmap)
 {
     const char *utf8 = name->toUtf8();
 
     // todo 其他几个参数怎么搞？？
     unzFile jzfile = unzOpen64(utf8);
     if (jzfile == nullptr) {
-        throw IOException(utf8);
+        signalException(S(java_io_IOException), utf8);
+        return 0;
     }
 
     return (jlong) (jzfile);
@@ -71,7 +72,7 @@ void freeEntry(jlong jzfile, jlong jzentry)
 }
 
 // private static native long getEntry(long jzfile, byte[] name, boolean addSlash);
-jlong getEntry(jlong jzfile, jarrref name, jboolean addSlash)
+jlong getEntry(jlong jzfile, jbyteArray name, jboolean addSlash)
 {
     // todo
     /*
@@ -91,7 +92,7 @@ jlong getEntry(jlong jzfile, jarrref name, jboolean addSlash)
 }
 
 // private static native byte[] getEntryBytes(long jzentry, int type);
-jarrref getEntryBytes(jlong jzentry, jint type)
+jbyteArray getEntryBytes(jlong jzentry, jint type)
 {
     jvm_abort("getEntryBytes");
 // todo
@@ -228,7 +229,7 @@ jint getEntryMethod(jlong jzentry)
 }
 
 // private static native int read(long jzfile, long jzentry, long pos, byte[] b, int off, int len);
-jint __read(jlong jzfile, jlong jzentry, jlong pos, jarrref b, jint off, jint len)
+jint __read(jlong jzfile, jlong jzentry, jlong pos, jbyteArray b, jint off, jint len)
 {
     jvm_abort("read");
 /*

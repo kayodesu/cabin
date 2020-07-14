@@ -19,14 +19,14 @@ static void initIDs()
 }
 
 // private native String getDriveDirectory(int drive);
-static void getDriveDirectory(jref _this, jint drive)
+static void getDriveDirectory(jobject _this, jint drive)
 {
     // todo
     jvm_abort("getDriveDirectory");
 }
 
 // private native String canonicalize0(String path) throws IOException;
-static jstrref canonicalize0(jref _this, jstrref path)
+static jstring canonicalize0(jobject _this, jstring path)
 {
     // todo 怎么处理路径？？？
     /*
@@ -47,12 +47,12 @@ static jstrref canonicalize0(jref _this, jstrref path)
 }
 
 // public native int getBooleanAttributes(File f);
-static jint getBooleanAttributes(jref _this, jref f)
+static jint getBooleanAttributes(jobject _this, jobject f)
 {
-    auto __path = f->getRefField("path", "Ljava/lang/String;")->toUtf8();
+    auto _path = f->getRefField("path", "Ljava/lang/String;")->toUtf8();
 
     jint attr = 0;
-    path p(__path);
+    path p(_path);
     if (exists(p)) {
         attr |= 0x01;
 
@@ -66,27 +66,27 @@ static jint getBooleanAttributes(jref _this, jref f)
 }
 
 // public native long getLastModifiedTime(File f);
-static jlong getLastModifiedTime(jref _this, jref f)
+static jlong getLastModifiedTime(jobject _this, jobject f)
 {
     // todo
-    auto __path = f->getRefField("path", "Ljava/lang/String;")->toUtf8();
+    auto _path = f->getRefField("path", "Ljava/lang/String;")->toUtf8();
 
 //    file_time_type mtime = last_write_time(__path);
     struct stat buf; // todo 平台相关代码
-    if (stat(__path, &buf) == -1) {
-        jvm_abort("stat faild: %s\n", __path);  // todo
+    if (stat(_path, &buf) == -1) {
+        jvm_abort("stat faild: %s\n", _path);  // todo
     }
 
     return buf.st_mtime;
 }
 
 // public native long getLength(File f);
-static jlong getLength(jref _this, jref f)
+static jlong getLength(jobject _this, jobject f)
 {
     // todo
-    auto __path = f->getRefField("path", "Ljava/lang/String;")->toUtf8();
+    auto _path = f->getRefField("path", "Ljava/lang/String;")->toUtf8();
 
-    uintmax_t size = file_size(__path);
+    uintmax_t size = file_size(_path);
     return size;
 }
 

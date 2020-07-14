@@ -19,7 +19,7 @@ struct Annotation {
     // The constant_pool entry at that index must be a CONSTANT_Utf8_info structure representing a Field type.
     // The Field type denotes the type of the annotation represented  by this annotation structure.
     u2 type_index = 0;
-    std::vector<ElementValuePair> elementValuePairs;
+    std::vector<ElementValuePair> element_value_pairs;
 
     Annotation() = default;
 
@@ -62,7 +62,7 @@ struct ElementValue {
 
         Annotation annotation_value;
 
-        std::vector<ElementValue> arrayValue;
+        std::vector<ElementValue> array_value;
     //};
 
     ElementValue() = default;;
@@ -89,7 +89,7 @@ struct InnerClass {
     u2 outer_class_info_index;
     u2 inner_name_index;
     u2 inner_class_access_flags;
-    InnerClass( BytecodeReader &r);
+    InnerClass(BytecodeReader &r);
 };
 
 struct BootstrapMethod {
@@ -99,7 +99,7 @@ struct BootstrapMethod {
      * 注意：此CONSTANT_MethodHandle_info结构的reference_kind项应为值6（REF_invokeStatic）或8（REF_newInvokeSpecial），
      * 否则在invokedynamic指令解析调用点限定符时，引导方法会执行失败。
      */
-    u2 bootstrapMethodRef;
+    u2 bootstrap_method_ref;
 
     /*
      * bootstrap_arguments 数组的每个成员必须是一个对常量池的有效索引。
@@ -107,7 +107,7 @@ struct BootstrapMethod {
      * CONSTANT_String_info, CONSTANT_Class_info, CONSTANT_Integer_info, CONSTANT_Long_info,
      * CONSTANT_Float_info, CONSTANT_Double_info, CONSTANT_MethodHandle_info, CONSTANT_MethodType_info。
      */
-    std::vector<u2> bootstrapArguments;
+    std::vector<u2> bootstrap_arguments;
 
     explicit BootstrapMethod(BytecodeReader &r);
     slot_t *resolveArgs(ConstantPool *cp, slot_t *result);
@@ -128,7 +128,7 @@ struct LineNumberTable {
 
 struct MethodParameter {
     const utf8_t *name = nullptr;
-    u2 accessFlags;
+    u2 access_flags;
 
     explicit MethodParameter(ConstantPool &cp, BytecodeReader &r);
 };
@@ -154,12 +154,12 @@ struct LocalVariableTypeTable {
 };
 
 struct Module {
-    const utf8_t *moduleName;
-    u2 moduleFlags;
-    const utf8_t *moduleVersion;
+    const utf8_t *module_name;
+    u2 module_flags;
+    const utf8_t *module_version;
 
     struct Require {
-        const utf8_t *requireModuleName;
+        const utf8_t *require_module_name;
         u2 flags;
         // If requires_version is NULL, then no version information about the current module is present.
         const utf8_t *version;
@@ -169,7 +169,7 @@ struct Module {
     std::vector<Require> requires;
 
     struct Export {
-        const utf8_t *exportPackageName;
+        const utf8_t *export_package_name;
         u2 flags;
         std::vector<const utf8_t *> exports_to;
 
@@ -178,7 +178,7 @@ struct Module {
     std::vector<Export> exports;
 
     struct Open {
-        const utf8_t *openPackageName;
+        const utf8_t *open_package_name;
         u2 flags;
         std::vector<const utf8_t *> opens_to;
 
@@ -189,7 +189,7 @@ struct Module {
     std::vector<const utf8_t *> uses;
 
     struct Provide {
-        const utf8_t *className;
+        const utf8_t *class_name;
         std::vector<const utf8_t *> provides_with;
 
         explicit Provide(ConstantPool &cp, BytecodeReader &r);

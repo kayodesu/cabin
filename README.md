@@ -44,74 +44,136 @@ public class HelloWorld {
 ```
 
 ```
-C:\>jvm HelloWorld -cp D:\code\kayo\testclasses
+C:\>jvm HelloWorld -cp D:\code\jvm\testclasses
 Hello, world!
 
 C:\>
 ```
-### Bubble Sort
-```java
-package array;
 
-import java.util.Arrays;
+## Test Cases(36/99[36.36%] Passed)
+[Pass] HelloWorld.java
+[Pass] JumpMultiLoop.java
+[Fail] PrimeNumber.java
+[Pass] PrintArgs.java
+[Fail] RuntimeTest.java
+[Fail] SysPropsTest.java
 
-public class BubbleSort {
-    public static void main(String[] args) {
-        int[] arr = { 22, 84, 77, 11, 95, 9, 78, 56, 36, 97, 65, 36, 10, 24, 92 };
-        bubbleSort(arr);
-        System.out.println(Arrays.toString(arr));
-    }
+[Pass] array.ArrayTest.java
+[Fail] array.BigArrayTest.java
+[Pass] array.BubbleSort.java
+[Pass] array.ZeroLenArrayTest.java
 
-    private static void bubbleSort(int[] arr) {
-        for (int i = 0; i < arr.length - 1; i++){
-            for (int j = 0; j < arr.length - 1 - i; j++){
-                if(arr[j] > arr[j + 1]){
-                    int temp = arr[j];
-                    arr[j] = arr[j + 1];
-                    arr[j + 1] = temp;
-                }
-            }
-        }
-    }
-}
-```
+[Fail] atomic.AtomicIntegerTest.java
 
-```
-C:\>jvm array.BubbleSort
-[9, 10, 11, 22, 24, 36, 36, 56, 65, 77, 78, 84, 92, 95, 97]
+[Fail] classloader.ClassLoaderTest.java
 
-C:\>
-```
-### Stack Trace
-```java
-package exception;
+[Fail] datetime.TimeZoneTest.java
 
-public class StackTraceTest {
+[Pass] exception.CatchTest.java
+[Fail] exception.ClassLibExTest.java
+[Pass] exception.FinallyReturnTest.java
+[Pass] exception.FinallyTest.java
+[Fail] exception.InstructionExTest.java
+[Fail] exception.InstructionNpeTest.java
+[Pass] exception.StackTraceTest.java
+[Fail] exception.UncaughtTest.java
 
-    public static void main(String[] args) {
-        try {
-            foo();
-        } catch (Exception e) {
-            e.printStackTrace(System.err);
-        }
-    }
+[Fail] field.ConstantStaticFieldsTest.java
+[Fail] field.FieldAccessTest.java
+[Pass] field.FieldsTest.java
 
-    private static void foo() { bar(); }
-    private static void bar() { bad(); }
-    private static void bad() { throw new RuntimeException("BAD!"); }
-}
-```
-```
-C:\>jvm exception.StackTraceTest
-java.lang.RuntimeException: BAD!
-        at exception/StackTraceTest.bad(StackTraceTest.java:15)
-        at exception/StackTraceTest.bar(StackTraceTest.java:14)
-        at exception/StackTraceTest.foo(StackTraceTest.java:13)
-        at exception/StackTraceTest.main(StackTraceTest.java:7)
+[Pass] file.FileDescriptorTest.java
+[Fail] file.FileNotFoundTest.java
+[Fail] file.FileTest.java
+[Fail] file.RandomAccessFileTest.java
 
-C:\>
-```
+[Pass] initialization.Init1.java
+[Pass] initialization.Init2.java
+[Fail] initialization.InitInterface.java
+[Pass] initialization.InitStaticField.java
+[Pass] initialization.ObjectInitTest.java
+
+[Pass] instructions.AThrow.java
+[Fail] instructions.CheckCast.java
+[Fail] instructions.InvokeTest.java
+[Fail] instructions.LookupSwitch.java
+[Pass] instructions.NewArray.java
+[Fail] instructions.NewMultiArrayTest.java
+[Pass] instructions.TableSwitch.java
+
+[Fail] interface0.InterfaceDefaultMethodTest.java
+[Fail] interface0.InterfaceMethodTest.java
+[Fail] interface0.InterfaceTest.java
+
+[Pass] invoke.InvokeFuncTest.java
+[Pass] invoke.InvokeFuncTest1.java
+[Fail] invoke.MethodHandleNativesTest.java
+[Fail] invoke.MethodHandleTest.java
+[Fail] invoke.MethodHandleTest1.java
+[Fail] invoke.MethodHandleTest2.java
+[Pass] invoke.MethodTypeTest.java
+
+[Fail] jetty.FileServer.java
+
+[Fail] lambda.LambdaTest.java
+
+[Fail] method.ArgsPassTest.java
+
+[Fail] network.InetAddressTest.java
+[Fail] network.SocketConnectTest.java
+[Fail] network.SocketListenTest.java
+[Fail] network.UrlTest.java
+
+[Fail] nio.ByteBufferTest.java
+
+[Pass] object.InheritanceTest.java
+[Pass] object.ObjectTest.java
+
+[Fail] primary.DoubleTest.java
+[Fail] primary.LongTest.java
+
+[Pass] reflect.ArrayClassTest.java
+[Fail] reflect.ArrayGetTest.java
+[Fail] reflect.ArraySetTest.java
+[Fail] reflect.CallerClassTest.java
+[Fail] reflect.ClassInitTest.java
+[Fail] reflect.ClassTest.java
+[Pass] reflect.ClassTest1.java
+[Pass] reflect.ClassTest2.java
+[Pass] reflect.ClassTest3.java
+[Pass] reflect.DeclaringClassTest.java
+[Fail] reflect.FieldTest.java
+[Fail] reflect.GenericTest.java
+[Pass] reflect.MethodTest.java
+[Fail] reflect.NestTest.java
+[Pass] reflect.PrimitiveClassTest.java
+
+[Fail] stream.StreamTest.java
+
+[Pass] string.InternTest.java
+[Pass] string.StringTest.java
+
+[Fail] sunmisc.UnsafeGetter.java
+[Fail] sunmisc.UnsafeMemoryTest.java
+[Fail] sunmisc.UnsafeObjectTest.java
+[Fail] sunmisc.UnsafeParkTest.java
+[Fail] sunmisc.UnsafeTest.java
+
+[Fail] thread.AliveTest.java
+[Pass] thread.DaemonTest.java
+[Fail] thread.DumpAllThreads.java
+[Fail] thread.InterruptFlagTest.java
+[Fail] thread.InterruptionTest.java
+[Fail] thread.MainThreadTest.java
+[Fail] thread.RunnableTest.java
+[Fail] thread.SleepTest.java
+[Fail] thread.SynchronizedTest.java
+[Fail] thread.ThreadSubClassTest.java
+[Fail] thread.WaitTest.java
+
+[Pass] wrapper.DoubleTest.java
+[Pass] wrapper.FloatTest.java
+[Fail] wrapper.IntegerCacheTest.java
+
 ## Reference
 * jvms8.pdf
-* 张秀宏，自己动手写Java虚拟机。
-* 周志明，深入理解Java虚拟机——JVM高级特性与最佳实践(第2版)。

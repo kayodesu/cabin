@@ -23,13 +23,13 @@ elsewhere.
 */
 
 // public native void park(boolean isAbsolute, long time);
-static void park(jref _this, jboolean isAbsolute, jlong time)
+static void park(jobject _this, jboolean isAbsolute, jlong time)
 {
     jvm_abort("park");
 }
 
 // public native void unpark(Object thread);
-static void unpark(jref _this, jref thread)
+static void unpark(jobject _this, jobject thread)
 {
     jvm_abort("unpark");
 }
@@ -47,13 +47,13 @@ static void unpark(jref _this, jref thread)
  *
  * public final native boolean compareAndSwapInt(Object o, long offset, int expected, int x);
  */
-static jboolean compareAndSwapInt(jref _this, jref o, jlong offset, jint expected, jint x)
+static jboolean compareAndSwapInt(jobject _this, jobject o, jlong offset, jint expected, jint x)
 {
     jint *old;
     if (o->isArrayObject()) {
         old = (jint *)(((Array *) o)->index(offset));
     } else {
-        assert(0 <= offset && offset < o->clazz->instFieldsCount);
+        assert(0 <= offset && offset < o->clazz->inst_field_count);
         old = (jint *) (o->data + offset);
     }
 
@@ -62,14 +62,14 @@ static jboolean compareAndSwapInt(jref _this, jref o, jlong offset, jint expecte
 }
 
 // public final native boolean compareAndSwapLong(Object o, long offset, long expected, long x);
-static jboolean compareAndSwapLong(jref _this, jref o, jlong offset, jlong expected, jlong x)
+static jboolean compareAndSwapLong(jobject _this, jobject o, jlong offset, jlong expected, jlong x)
 {
     jlong *old;
     if (o->isArrayObject()) {
         Array *ao = dynamic_cast<Array *>(o);  // todo
         old = (jlong *)(ao->index(offset));
     } else {
-        assert(0 <= offset && offset < o->clazz->instFieldsCount);
+        assert(0 <= offset && offset < o->clazz->inst_field_count);
         old = (jlong *)(o->data + offset);
     }
 
@@ -78,16 +78,16 @@ static jboolean compareAndSwapLong(jref _this, jref o, jlong offset, jlong expec
 }
 
 // public final native boolean compareAndSwapObject(Object o, long offset, Object expected, Object x)
-static jboolean compareAndSwapObject(jref _this, jref o, jlong offset, jref expected, jref x)
+static jboolean compareAndSwapObject(jobject _this, jobject o, jlong offset, jobject expected, jobject x)
 {
-    jref *old;
+    jobject *old;
     if (o->isArrayObject()) {
         Array *ao = dynamic_cast<Array *>(o);  // todo
-        old = (jref *)(ao->index(offset));
-//        old = arrobj_get(jref, o, offset);
+        old = (jobject *)(ao->index(offset));
+//        old = arrobj_get(jobject, o, offset);
     } else {
-        assert(0 <= offset && offset < o->clazz->instFieldsCount);
-        old = (jref *)(o->data + offset);
+        assert(0 <= offset && offset < o->clazz->inst_field_count);
+        old = (jobject *)(o->data + offset);
     }
 
     bool b = __sync_bool_compare_and_swap(old, expected, x);
@@ -97,199 +97,199 @@ static jboolean compareAndSwapObject(jref _this, jref o, jlong offset, jref expe
 /*************************************    class    ************************************/
 /** Allocate an instance but do not run any constructor. Initializes the class if it has not yet been. */
 // public native Object allocateInstance(Class<?> type) throws InstantiationException;
-static jref allocateInstance(jref _this, jclsref type)
+static jobject allocateInstance(jobject _this, jclass type)
 {
     jvm_abort("allocateInstance");
 }
 
 // public native Class defineClass(String name, byte[] b, int off, int len,
 //                                  ClassLoader loader, ProtectionDomain protectionDomain)
-static jclsref __defineClass(jref _this, jstrref name, 
-                jarrref b, jint off, jint len, jref loader, jref protectionDomain)
+static jclass __defineClass(jobject _this, jstring name, 
+                jbyteArray b, jint off, jint len, jobject loader, jobject protectionDomain)
 {
     jvm_abort("defineClass");
 }
 
 // public native void ensureClassInitialized(Class<?> c);
-static void ensureClassInitialized(jref _this, jclsref c)
+static void ensureClassInitialized(jobject _this, jclass c)
 {
-    initClass(c);
+    initClass(c->jvm_mirror);
 //    c->clinit(); // todo 是不是这样搞？
 }
 
 // public native long staticFieldOffset(Field f);
-static jlong staticFieldOffset(jref _this, jref f)
+static jlong staticFieldOffset(jobject _this, jobject f)
 {
     jvm_abort("staticFieldOffset");
 }
 
 // public native Object staticFieldBase(Field f);
-static jref staticFieldBase(jref _this, jref f)
+static jobject staticFieldBase(jobject _this, jobject f)
 {
     jvm_abort("staticFieldBase");
 }
+
 /*************************************    object    ************************************/
 
 // public native int arrayBaseOffset(Class<?> type)
-static jint arrayBaseOffset(jref _this, jclsref type)
+static jint arrayBaseOffset(jobject _this, jclass type)
 {
     return 0; // todo
 }
 
 // public native int arrayIndexScale(Class<?> type)
-static jint arrayIndexScale(jref _this, jclsref type)
+static jint arrayIndexScale(jobject _this, jclass type)
 {
     return 1; // todo
 }
 
 // public native long objectFieldOffset(Field field)
-static jlong objectFieldOffset(jref _this, jref field)
+static jlong objectFieldOffset(jobject _this, jobject field)
 {
     auto offset = field->getIntField(S(slot), S(I));
     return offset;
 }
 
 // private native long objectFieldOffset1(Class<?> c, String name);
-static jlong objectFieldOffset1(jref _this, jclsref c, jstrref name)
+static jlong objectFieldOffset1(jobject _this, jclass c, jstring name)
 {
-    // todo
     jvm_abort("objectFieldOffset1");
 }
 
 // public native boolean getBoolean(Object o, long offset);
-static jboolean getBoolean(jref _this, jref o, jlong offset)
+static jboolean getBoolean(jobject _this, jobject o, jlong offset)
 {
     jvm_abort("getBoolean");
 }
 
 // public native void putBoolean(Object o, long offset, boolean x);
-static void putBoolean(jref _this, jref o, jlong offset, jboolean x)
+static void putBoolean(jobject _this, jobject o, jlong offset, jboolean x)
 {
     jvm_abort("putBoolean");
 }
 
 // public native byte getByte(Object o, long offset);
-static jbyte obj_getByte(jref _this, jref o, jlong offset)
+static jbyte obj_getByte(jobject _this, jobject o, jlong offset)
 {
     jvm_abort("obj_getByte");
 }
 
 // public native void putByte(Object o, long offset, byte x);
-static void obj_putByte(jref _this, jref o, jlong offset, jbyte x)
+static void obj_putByte(jobject _this, jobject o, jlong offset, jbyte x)
 {
     jvm_abort("obj_putByte");
 }
 
 // public native char getChar(Object o, long offset);
-static jchar obj_getChar(jref _this, jref o, jlong offset)
+static jchar obj_getChar(jobject _this, jobject o, jlong offset)
 {
     jvm_abort("obj_getChar");
 }
 
 // public native void putChar(Object o, long offset, char x);
-static void obj_putChar(jref _this, jref o, jlong offset, jchar x)
+static void obj_putChar(jobject _this, jobject o, jlong offset, jchar x)
 {
     jvm_abort("obj_putChar");
 }
 
 // public native short getShort(Object o, long offset);
-static jshort obj_getShort(jref _this, jref o, jlong offset)
+static jshort obj_getShort(jobject _this, jobject o, jlong offset)
 {
     jvm_abort("obj_getShort");
 }
 
 // public native void putShort(Object o, long offset, short x);
-static void obj_putShort(jref _this, jref o, jlong offset, jshort x)
+static void obj_putShort(jobject _this, jobject o, jlong offset, jshort x)
 {
     jvm_abort("obj_putShort");
 }
 
 // public native int getInt(Object o, long offset);
-static jint obj_getInt(jref _this, jref o, jlong offset)
+static jint obj_getInt(jobject _this, jobject o, jlong offset)
 {
     jvm_abort("obj_getInt");
 }
 
 // public native void putInt(Object o, long offset, int x);
-static void obj_putInt(jref _this, jref o, jlong offset, jint x)
+static void obj_putInt(jobject _this, jobject o, jlong offset, jint x)
 {
     jvm_abort("obj_putInt");
 }
 
 // public native long getLong(Object o, long offset);
-static jlong obj_getLong(jref _this, jref o, jlong offset)
+static jlong obj_getLong(jobject _this, jobject o, jlong offset)
 {
     jvm_abort("obj_getLong");
 }
 
 // public native void putLong(Object o, long offset, long x);
-static void obj_putLong(jref _this, jref o, jlong offset, jlong x)
+static void obj_putLong(jobject _this, jobject o, jlong offset, jlong x)
 {
     jvm_abort("obj_putLong");
 }
 
 // public native float getFloat(Object o, long offset);
-static jfloat obj_getFloat(jref _this, jref o, jlong offset)
+static jfloat obj_getFloat(jobject _this, jobject o, jlong offset)
 {
     jvm_abort("obj_getFloat");
 }
 
 // public native void putFloat(Object o, long offset, float x);
-static void obj_putFloat(jref _this, jref o, jlong offset, jfloat x)
+static void obj_putFloat(jobject _this, jobject o, jlong offset, jfloat x)
 {
     jvm_abort("obj_putFloat");
 }
 
 // public native double getDouble(Object o, long offset);
-static jdouble obj_getDouble(jref _this, jref o, jlong offset)
+static jdouble obj_getDouble(jobject _this, jobject o, jlong offset)
 {
     jvm_abort("obj_getDouble");
 }
 
 // public native void putDouble(Object o, long offset, double x);
-static void obj_putDouble(jref _this, jref o, jlong offset, jdouble x)
+static void obj_putDouble(jobject _this, jobject o, jlong offset, jdouble x)
 {
     jvm_abort("obj_putDouble");
 }
 
 // public native Object getObject(Object o, long offset);
-static jref getObject(jref _this, jref o, jlong offset)
+static jobject getObject(jobject _this, jobject o, jlong offset)
 {
     jvm_abort("getObject");
 }
 
 // public native void putObject(Object o, long offset, Object x);
-static void putObject(jref _this, jref o, jlong offset, jref x)
+static void putObject(jobject _this, jobject o, jlong offset, jobject x)
 {
     jvm_abort("putObject");
 }
 
 // public native boolean getBooleanVolatile(Object o, long offset);
-static jboolean getBooleanVolatile(jref _this, jref o, jlong offset)
+static jboolean getBooleanVolatile(jobject _this, jobject o, jlong offset)
 {
     jvm_abort("getBooleanVolatile");
 }
 
 // public native byte getByteVolatile(Object o, long offset);
-static jbyte getByteVolatile(jref _this, jref o, jlong offset)
+static jbyte getByteVolatile(jobject _this, jobject o, jlong offset)
 {
     jvm_abort("getByteVolatile");
 }
 
 // public native char getCharVolatile(Object o, long offset);
-static jchar getCharVolatile(jref _this, jref o, jlong offset)
+static jchar getCharVolatile(jobject _this, jobject o, jlong offset)
 {
     jvm_abort("getCharVolatile");
 }
 
 // public native short getShortVolatile(Object o, long offset);
-static jshort getShortVolatile(jref _this, jref o, jlong offset)
+static jshort getShortVolatile(jobject _this, jobject o, jlong offset)
 {
     jvm_abort("getShortVolatile");
 }
 
 // public native int getIntVolatile(Object o, long offset);
-static jint getIntVolatile(jref _this, jref o, jlong offset)
+static jint getIntVolatile(jobject _this, jobject o, jlong offset)
 {
     // todo Volatile
 
@@ -299,128 +299,128 @@ static jint getIntVolatile(jref _this, jref o, jlong offset)
         value = ao->get<jint>(offset);
 //        value = arrobj_get(jint, o, offset);  // todo
     } else {
-        assert(0 <= offset && offset < o->clazz->instFieldsCount);
+        assert(0 <= offset && offset < o->clazz->inst_field_count);
         value = o->data[offset];//o->getInstFieldValue<jint>(offset);  // todo
     }
     return value;
 }
 
 // public native long getLongVolatile(Object o, long offset);
-static jlong getLongVolatile(jref _this, jref o, jlong offset)
+static jlong getLongVolatile(jobject _this, jobject o, jlong offset)
 {
     jvm_abort("getLongVolatile");
 }
 
 // public native float getFloatVolatile(Object o, long offset);
-static jfloat getFloatVolatile(jref _this, jref o, jlong offset)
+static jfloat getFloatVolatile(jobject _this, jobject o, jlong offset)
 {
     jvm_abort("getFloatVolatile");
 }
 
 // public native double getDoubleVolatile(Object o, long offset);
-static jdouble getDoubleVolatile(jref _this, jref o, jlong offset)
+static jdouble getDoubleVolatile(jobject _this, jobject o, jlong offset)
 {
     jvm_abort("getDoubleVolatile");
 }
 
 // public native void putIntVolatile(Object o, long offset, int x);
-static void putIntVolatile(jref _this, jref o, jlong offset, jint x)
+static void putIntVolatile(jobject _this, jobject o, jlong offset, jint x)
 {
     jvm_abort("putIntVolatile");
 }
 
 // public native void putBooleanVolatile(Object o, long offset, boolean x);
-static void putBooleanVolatile(jref _this, jref o, jlong offset, jboolean x)
+static void putBooleanVolatile(jobject _this, jobject o, jlong offset, jboolean x)
 {
     jvm_abort("putBooleanVolatile");
 }
 
 // public native void putByteVolatile(Object o, long offset, byte x);
-static void putByteVolatile(jref _this, jref o, jlong offset, jbyte x)
+static void putByteVolatile(jobject _this, jobject o, jlong offset, jbyte x)
 {
     jvm_abort("putByteVolatile");
 }
 
 // public native void putShortVolatile(Object o, long offset, short x);
-static void putShortVolatile(jref _this, jref o, jlong offset, jshort x)
+static void putShortVolatile(jobject _this, jobject o, jlong offset, jshort x)
 {
     jvm_abort("putShortVolatile");
 }
 
 // public native void putCharVolatile(Object o, long offset, char x);
-static void putCharVolatile(jref _this, jref o, jlong offset, jchar x)
+static void putCharVolatile(jobject _this, jobject o, jlong offset, jchar x)
 {
     jvm_abort("putCharVolatile");
 }
 
 // public native void putLongVolatile(Object o, long offset, long x);
-static void putLongVolatile(jref _this, jref o, jlong offset, jlong x)
+static void putLongVolatile(jobject _this, jobject o, jlong offset, jlong x)
 {
     jvm_abort("putLongVolatile");
 }
 
 // public native void putFloatVolatile(Object o, long offset, float x);
-static void putFloatVolatile(jref _this, jref o, jlong offset, jfloat x)
+static void putFloatVolatile(jobject _this, jobject o, jlong offset, jfloat x)
 {
     jvm_abort("putFloatVolatile");
 }
 
 // public native void putDoubleVolatile(Object o, long offset, double x);
-static void putDoubleVolatile(jref _this, jref o, jlong offset, jdouble x)
+static void putDoubleVolatile(jobject _this, jobject o, jlong offset, jdouble x)
 {
     jvm_abort("putDoubleVolatile");
 }
 // -------------------------
 // public native Object getObjectVolatile(Object o, long offset);
-static jref getObjectVolatile(jref _this, jref o, jlong offset)
+static jobject getObjectVolatile(jobject _this, jobject o, jlong offset)
 {
     // todo Volatile
 
-    jref value;
+    jobject value;
     if (o->isArrayObject()) {
         Array *ao = dynamic_cast<Array *>(o);  // todo
-        value = ao->get<jref>(offset);
+        value = ao->get<jobject>(offset);
     } else {
-        assert(0 <= offset && offset < o->clazz->instFieldsCount);
-        value = *(jref *)(o->data + offset);//o->getInstFieldValue<jref>(offset);  // todo
+        assert(0 <= offset && offset < o->clazz->inst_field_count);
+        value = *(jobject *)(o->data + offset);//o->getInstFieldValue<jobject>(offset);  // todo
     }
     return value;
 }
 
 // public native void putObjectVolatile(Object o, long offset, Object x);
-static void putObjectVolatile(jref _this, jref o, jlong offset, jref x)
+static void putObjectVolatile(jobject _this, jobject o, jlong offset, jobject x)
 {
     // todo Volatile
     if (o->isArrayObject()) {
         auto arr = (Array *) o;
-        arr->set(offset, x);
+        arr->setRef(offset, x);
     } else {
         o->setFieldValue(offset, x);
     }
 }
 
 // public native Object getOrderedObject(Object o, long offset);
-static void getOrderedObject(jref _this, jref o, jlong offset)
+static void getOrderedObject(jobject _this, jobject o, jlong offset)
 {
     jvm_abort("getOrderedObject");
 }
 
 // public native void putOrderedObject(Object o, long offset, Object x);
-static void putOrderedObject(jref _this, jref o, jlong offset, jref x)
+static void putOrderedObject(jobject _this, jobject o, jlong offset, jobject x)
 {
     jvm_abort("putOrderedObject");
 }
 
 /** Ordered/Lazy version of {@link #putIntVolatile(Object, long, int)}  */
 // public native void putOrderedInt(Object o, long offset, int x);
-static void putOrderedInt(jref _this, jref o, jlong offset, jint x)
+static void putOrderedInt(jobject _this, jobject o, jlong offset, jint x)
 {
     jvm_abort("putOrderedInt");
 }
 
 /** Ordered/Lazy version of {@link #putLongVolatile(Object, long, long)} */
 // public native void putOrderedLong(Object o, long offset, long x);
-static void putOrderedLong(jref _this, jref o, jlong offset, jlong x)
+static void putOrderedLong(jobject _this, jobject o, jlong offset, jlong x)
 {
     jvm_abort("putOrderedLong");
 }
@@ -434,7 +434,7 @@ static void putOrderedLong(jref _this, jref o, jlong offset, jlong x)
  * 返回的是一个long类型的地址偏移量。这个偏移量在你的Java程序中每块内存都是唯一的。
  */
 // public native long allocateMemory(long bytes);
-static jlong allocateMemory(jref _this, jlong bytes)
+static jlong allocateMemory(jobject _this, jlong bytes)
 {
     auto p = (u1 *) malloc(sizeof(char)*bytes);
     if (p == nullptr) {
@@ -444,115 +444,115 @@ static jlong allocateMemory(jref _this, jlong bytes)
 }
 
 // public native long reallocateMemory(long address, long bytes);
-static jlong reallocateMemory(jref _this, jlong address, jlong bytes)
+static jlong reallocateMemory(jobject _this, jlong address, jlong bytes)
 {
     return (jlong) (intptr_t) realloc((void *) (intptr_t) address, (size_t) bytes); // 有内存泄漏
 }
 
 // public native void freeMemory(long address);
-static void freeMemory(jref _this, jlong address)
+static void freeMemory(jobject _this, jlong address)
 {
     free((void *) (intptr_t) address);
 }
 
 // public native int addressSize();
-static jint addressSize(jref _this)
+static jint addressSize(jobject _this)
 {
     return sizeof(jlong); // todo
 }
 
 // public native void putByte(long address, byte x);
-static void putByte(jref _this, jlong address, jbyte x)
+static void putByte(jobject _this, jlong address, jbyte x)
 {
     *(jbyte *) (intptr_t) address = changeToBigEndian(x); // todo java按大端存储？？？？？？？
 }
 
 // public native byte getByte(long address);
-static jbyte getByte(jref _this, jlong address)
+static jbyte getByte(jobject _this, jlong address)
 {
     return *(jbyte *) (intptr_t) address;
 }
 
 // public native void putChar(long address, char x);
-static void putChar(jref _this, jlong address, jchar x)
+static void putChar(jobject _this, jlong address, jchar x)
 {
     *(jchar *) (intptr_t) address = changeToBigEndian(x);
 }
 
 // public native char getChar(long address);
-static jchar getChar(jref _this, jlong address)
+static jchar getChar(jobject _this, jlong address)
 {
     return *(jchar *) (intptr_t) address;
 }
 
 // public native void putShort(long address, short x);
-static void putShort(jref _this, jlong address, jshort x)
+static void putShort(jobject _this, jlong address, jshort x)
 {
     *(jshort *) (intptr_t) address = changeToBigEndian(x);
 }
 
 // public native short getShort(long address);
-static jshort getShort(jref _this, jlong address)
+static jshort getShort(jobject _this, jlong address)
 {
     return *(jshort *) (intptr_t) address;
 }
 
 // public native void putInt(long address, int x);
-static void putInt(jref _this, jlong address, jint x)
+static void putInt(jobject _this, jlong address, jint x)
 {
     *(jint *) (intptr_t) address = changeToBigEndian(x);
 }
 
 // public native int getInt(long address);
-static jint getInt(jref _this, jlong address)
+static jint getInt(jobject _this, jlong address)
 {
     return *(jint *) (intptr_t) address;
 }
 
 // public native void putLong(long address, long x);
-static void putLong(jref _this, jlong address, jlong x)
+static void putLong(jobject _this, jlong address, jlong x)
 {
     *(jlong *) (intptr_t) address = changeToBigEndian(x);
 }
 
 // public native long getLong(long address);
-static jlong getLong(jref _this, jlong address)
+static jlong getLong(jobject _this, jlong address)
 {
     return *(jlong *) (intptr_t) address;
 }
 
 // public native void putFloat(long address, float x);
-static void putFloat(jref _this, jlong address, jfloat x)
+static void putFloat(jobject _this, jlong address, jfloat x)
 {
     *(jfloat *) (intptr_t) address = changeToBigEndian(x);
 }
 
 // public native float getFloat(long address);
-static jfloat getFloat(jref _this, jlong address)
+static jfloat getFloat(jobject _this, jlong address)
 {
     return *(jfloat *) (intptr_t) address;
 }
 
 // public native void putDouble(long address, double x);
-static void putDouble(jref _this, jlong address, jdouble x)
+static void putDouble(jobject _this, jlong address, jdouble x)
 {
     *(jdouble *) (intptr_t) address = changeToBigEndian(x);
 }
 
 // public native double getDouble(long address);
-static jdouble getDouble(jref _this, jlong address)
+static jdouble getDouble(jobject _this, jlong address)
 {
     return *(jdouble *) (intptr_t) address;
 }
 
 // public native void putAddress(long address, long x);
-static void putAddress(jref _this, jlong address, jlong x)
+static void putAddress(jobject _this, jlong address, jlong x)
 {
     putLong(_this, address, x);
 }
 
 // public native long getAddress(long address);
-static jlong getAddress(jref _this, jlong address)
+static jlong getAddress(jobject _this, jlong address)
 {
     return getLong(_this, address);
 }
@@ -575,7 +575,7 @@ static jlong getAddress(jref _this, jlong address)
   513        * @since 1.7
   514        */
 // public native void setMemory(Object o, long offset, long bytes, byte value);
-static void setMemory(jref _this, jref o, jlong offset, jlong bytes, jbyte value)
+static void setMemory(jobject _this, jobject o, jlong offset, jlong bytes, jbyte value)
 {
     jvm_abort("setMemory"); // todo
 }
@@ -598,9 +598,9 @@ static void setMemory(jref _this, jref o, jlong offset, jlong bytes, jbyte value
   543        * @since 1.7
   544        */
 // public native void copyMemory(Object srcBase, long srcOffset, Object destBase, long destOffset, long bytes);
-static void copyMemory(jref _this, 
-                    jref srcBase, jlong srcOffset, 
-                    jref destBase, jlong destOffset, jlong bytes)
+static void copyMemory(jobject _this, 
+                    jobject srcBase, jlong srcOffset, 
+                    jobject destBase, jlong destOffset, jlong bytes)
 {
     jvm_abort("copyMemory"); // todo
 }
@@ -621,16 +621,16 @@ static void copyMemory(jref _this,
  1000        *         if the load average is unobtainable.
  1001        */
 // public native int getLoadAverage(double[] loadavg, int nelems);
-static jint getLoadAverage(jref _this, jarrref loadavg, jint nelems)
+static jint getLoadAverage(jobject _this, jdoubleArray loadavg, jint nelems)
 {
     jvm_abort("getLoadAverage"); // todo
 }
 
 // (Ljava/lang/Class;)Z
-static jboolean shouldBeInitialized(jref _this, jclsref c)
+static jboolean shouldBeInitialized(jobject _this, jclass c)
 {
     // todo
-    return c->state >= Class::INITED ? jtrue : jfalse;
+    return c->jvm_mirror->state >= Class::INITED ? jtrue : jfalse;
 }
 
 /**
@@ -639,7 +639,7 @@ static jboolean shouldBeInitialized(jref _this, jclsref c)
  * 
  * public native int pageSize();
 */
-static jint pageSize(jref _this)
+static jint pageSize(jobject _this)
 {
     jvm_abort("pageSize"); // todo
 }
@@ -661,69 +661,38 @@ static jint pageSize(jref _this)
   828        * @params cpPatches where non-null entries exist, they replace corresponding CP entries in data
   829        */
 // public native Class defineAnonymousClass(Class hostClass, byte[] data, Object[] cpPatches);
-static jclsref defineAnonymousClass(jref _this, 
-                    jclsref host_class, jarrref data, jarrref cp_patches)
+static jclass defineAnonymousClass(jobject _this, 
+                    jclass host_class, jbyteArray data, jobjectArray cp_patches)
 {
-    Class *c = defineClass(host_class->loader, (u1 *) data->data, data->len);
-    if (c == nullptr)
-        return c; // todo
+    jvm_abort("defineAnonymousClass");
 
-    int cp_patches_len = cp_patches == nullptr ? 0 : cp_patches->len;    
-    for (int i = 0; i < cp_patches_len; i++) {
-        jref o = cp_patches->get<jref>(i);
-        if (o != nullptr) {
-            u1 type = c->cp.type(i);
-            if (type == JVM_CONSTANT_String) {
-                c->cp.info(i, (slot_t) o);
-                c->cp.type(i, JVM_CONSTANT_ResolvedString);
-            } else {
-                jvm_abort("defineAnonymousClass: unimplemented patch type"); // todo
-            }
-        }
-    }
+    // Class *c = defineClass(host_class->jvm_mirror->loader, (u1 *) data->data, data->len);
+    // if (c == nullptr)
+    //     return nullptr; // todo
 
-    c->nest_host = host_class;
-    linkClass(c);
+    // int cp_patches_len = cp_patches == nullptr ? 0 : cp_patches->len;    
+    // for (int i = 0; i < cp_patches_len; i++) {
+    //     jobject o = cp_patches->get<jobject>(i);
+    //     if (o != nullptr) {
+    //         u1 type = c->cp.type(i);
+    //         if (type == JVM_CONSTANT_String) {
+    //             c->cp.info(i, (slot_t) o);
+    //             c->cp.type(i, JVM_CONSTANT_ResolvedString);
+    //         } else {
+    //             jvm_abort("defineAnonymousClass: unimplemented patch type"); // todo
+    //         }
+    //     }
+    // }
 
-    return c;
-#if 0
-        if(class != NULL) {
-        int cp_patches_len = cp_patches == NULL ? 0 : ARRAY_LEN(cp_patches);
-        ClassBlock *cb = CLASS_CB(class);
-        ConstantPool *cp = &(cb->constant_pool);
-        int i;
+    // c->nest_host = host_class->jvm_mirror;
+    // linkClass(c);
 
-        for(i = 0; i < cp_patches_len; i++) {
-            Object *obj = ARRAY_DATA(cp_patches, Object*)[i];
-            if(obj != NULL) {
-                int type = CP_TYPE(cp, i);
-            
-                switch(type) {
-                    case CONSTANT_String:
-                        CP_INFO(cp, i) = (uintptr_t)obj;
-                        CP_TYPE(cp, i) = CONSTANT_ResolvedString;
-                        break;
-
-                    default:
-                        signalException(java_lang_InternalError,
-                                        "defineAnonymousClass: "
-                                        "unimplemented patch type");
-                        goto out;
-                }
-            }
-        }
-
-        cb->protection_domain = host_cb->protection_domain;
-        cb->host_class = host_class;
-
-        linkClass(class);
-    }
-    #endif
+    // return c->java_mirror;
 }
 
 /** Lock the object.  It must get unlocked via {@link #monitorExit}. */
 //  public native void monitorEnter(Object o);
-static void monitorEnter(jref _this, jref o)
+static void monitorEnter(jobject _this, jobject o)
 {
     jvm_abort("monitorEnter"); // todo
 }
@@ -733,7 +702,7 @@ static void monitorEnter(jref _this, jref o)
  * 
  * public native void monitorExit(Object o);
  */
-static void monitorExit(jref _this, jref o)
+static void monitorExit(jobject _this, jobject o)
 {
     jvm_abort("monitorExit"); // todo
 }
@@ -744,32 +713,32 @@ static void monitorExit(jref _this, jref o)
   850        * unlocked via {@link #monitorExit}.
   851        */
 // public native boolean tryMonitorEnter(Object o);
-static jboolean tryMonitorEnter(jref _this, jref o)
+static jboolean tryMonitorEnter(jobject _this, jobject o)
 {
     jvm_abort("tryMonitorEnter"); // todo
 }
 
 /** Throw the exception without telling the verifier. */
 // public native void throwException(Throwable ee);
-static void throwException(jref _this, jref ee)
+static void throwException(jobject _this, jobject ee)
 {
     jvm_abort("throwException"); // todo
 }
 
 // "()V"
-static void loadFence(jref _this)
+static void loadFence(jobject _this)
 {
     jvm_abort("loadFence"); // todo
 }
 
 // "()V"
-static void storeFence(jref _this)
+static void storeFence(jobject _this)
 {
     jvm_abort("storeFence"); // todo
 }
 
 // "()V"
-static void fullFence(jref _this)
+static void fullFence(jobject _this)
 {
     jvm_abort("fullFence"); // todo
 }

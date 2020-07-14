@@ -6,52 +6,50 @@
 #define JVM_HEAP_H
 
 #include <cstddef>
+#include <cstdint>
 #include <string>
 #include <sstream>
 #include <vector>
 #include <cassert>
+#include <mutex>
 #include "../jvmstd.h"
-#include "MemMgr.h"
 
-class Class;
+using address = uintptr_t;
 
 class Heap {
-    void *raw;
+    address mem;
+    size_t size;
 
-    /* so called method area */
-    MemMgr *classArea;
-    MemMgr *bytecodeArea;
-    MemMgr *methodArea;
-    MemMgr *fieldArea;
+    struct Node {
+        address head;
+        size_t len;
+        Node *next;
+        Node(address head, size_t len, Node *next): head(head), len(len), next(next) { }
+    } *freelist;
 
-    /* real heap saves objects */
-    MemMgr *objectArea;
+    std::recursive_mutex mutex;
+
+    bool in(address p)
+    {
+        return mem <= p and p < mem + size;
+    }
+
+    void lock() { mutex.lock(); }
+    void unlock() { mutex.unlock(); }
+
+    void back(address p, size_t len);
+
+    /*
+     * 如果不在 freelist 里面，返回 p，
+     * 负责跳过此 freelist's Node.
+     */
+    address jumpFreelist(address p);
 
 public:
     Heap() noexcept;
     ~Heap();
-
-    void *allocClass();
-
-    void *allocBytecode(size_t size)
-    {
-        assert(size > 0);
-        return bytecodeArea->get(size);
-    }
-
-    void *allocMethods(u2 methodsCount);
-    void *allocMethod() { return allocMethods(1); }
-
-    void *allocFields(u2 fieldsCount);
-    void *allocField() { return allocFields(1); }
-
-    void *allocObject(size_t size)
-    {
-        assert(size > 0);
-        return objectArea->get(size);
-    }
-
-    std::vector<Class *> getClasses();
+    
+    void *alloc(size_t len);
     
     std::string toString();
 

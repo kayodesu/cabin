@@ -19,7 +19,7 @@ static void initIDs()
 /*
  * private native long set(int d);
  */
-static jlong set(jref _this, jint d)
+static jlong set(jobject _this, jint d)
 {
     // todo
     return 123;
@@ -55,7 +55,7 @@ static jlong set(jref _this, jint d)
  *
  * public native void sync() throws SyncFailedException;
  */
-static void sync(jref _this)
+static void sync(jobject _this)
 {
     jvm_abort("error\n"); // todo
 }

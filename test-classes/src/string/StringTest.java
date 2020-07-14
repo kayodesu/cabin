@@ -1,5 +1,8 @@
 package string;
 
+/**
+ * Status: Pass
+ */
 public class StringTest {
     
     public static void main(String[] args) {
@@ -16,7 +19,7 @@ public class StringTest {
             System.out.println("false");
         }
 
-        s3.intern();
+        s3 = s3.intern();
         String s4 = "abc1";
         if (s3 == s4) {
             System.out.println("true");

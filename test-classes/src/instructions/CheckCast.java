@@ -16,9 +16,7 @@ public class CheckCast {
     }
 
     static class Sub extends Sup implements Serializable {
-        
         private static final long serialVersionUID = 1L;
-
     }
     
     public static void main(String[] args) {

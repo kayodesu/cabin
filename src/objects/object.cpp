@@ -24,8 +24,8 @@ Object::Object(Class *c): clazz(c)
 
 Object *Object::newObject(Class *c)
 {
-    size_t size = sizeof(Object) + c->instFieldsCount * sizeof(slot_t);
-    return new(g_heap->allocObject(size)) Object(c);
+    size_t size = sizeof(Object) + c->inst_field_count * sizeof(slot_t);
+    return new (g_heap->alloc(size)) Object(c);
 }
 
 Field *Object::lookupField(const char *name, const char *descriptor)
@@ -37,7 +37,7 @@ Field *Object::lookupField(const char *name, const char *descriptor)
 Object *Object::clone() const
 {
     size_t s = size();
-    return (Object *) memcpy(g_heap->allocObject(s), this, s);
+    return (Object *) memcpy(g_heap->alloc(s), this, s);
 }
 
 //void Object::setFieldValue(Field *f, slot_t v)
@@ -90,18 +90,19 @@ bool Object::isInstanceOf(Class *c) const
 
 const slot_t *Object::unbox() const
 {
-    return primObjUnbox((jprimref) this);
+    assert(clazz->isPrimClass());
+    return primObjUnbox(this);
 }
 
 size_t Object::size() const
 {
     assert(clazz != nullptr);
-    return sizeof(*this) + clazz->instFieldsCount * sizeof(slot_t);
+    return sizeof(*this) + clazz->inst_field_count * sizeof(slot_t);
 }
 
 bool Object::isArrayObject() const
 {
-    return clazz->className[0] == '[';
+    return clazz->class_name[0] == '[';
 }
 
 utf8_t *Object::toUtf8() const
@@ -112,6 +113,6 @@ utf8_t *Object::toUtf8() const
 string Object::toString() const
 {
     ostringstream os;
-    os << "Object(" << this << "), " << clazz->className;
+    os << "Object(" << this << "), " << clazz->class_name;
     return os.str();
 }

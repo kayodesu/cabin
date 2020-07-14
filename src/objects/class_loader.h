@@ -14,24 +14,24 @@ class Object;
 class Class;
 
 // Cache 常用的类
-extern Class *objectClass;
-extern Class *classClass;
-extern Class *stringClass;
+extern Class *g_object_class;
+extern Class *g_class_class;
+extern Class *g_string_class;
 
 // java.lang.Class 类中实例变量的 slots count todo
-const static int CLASS_CLASS_INST_FIELDS_COUNT = 32; // big enough?
+// const static int CLASS_CLASS_INST_FIELDS_COUNT = 32; // big enough?
 
 void initClassLoader();
 
-#define bootClassLoader ((jref) nullptr)
+#define BOOT_CLASS_LOADER ((jref) nullptr)
 
 Class *loadBootClass(const utf8_t *name);
 
-static inline Class *loadArrayClass(const utf8_t *arrClassName)
+static inline Class *loadArrayClass(const utf8_t *arr_class_name)
 {
-    assert(arrClassName != nullptr);
-    assert(arrClassName[0] == '['); // must be array class name
-    return loadBootClass(arrClassName);
+    assert(arr_class_name != nullptr);
+    assert(arr_class_name[0] == '['); // must be array class name
+    return loadBootClass(arr_class_name);
 };
 
 using utf8_set = std::unordered_set<const utf8_t *, utf8::Hash, utf8::Comparator>;
@@ -48,13 +48,13 @@ utf8_set &getBootPackages();
  *    - non-array classes: java/lang/Object ...
  *    - array classes: [Ljava/lang/Object; ...
  */
-Class *loadClass(Object *classLoader, const utf8_t *name);
-Class *findLoadedClass(Object *classLoader, const utf8_t *name);
+Class *loadClass(Object *class_loader, const utf8_t *name);
+Class *findLoadedClass(Object *class_loader, const utf8_t *name);
 
-Class *defineClass(jref classLoader, u1 *bytecode, size_t len);
+Class *defineClass(jref class_loader, u1 *bytecode, size_t len);
 
-Class *defineClass(jref classLoader, jstrref name,
-                   jarrref bytecode, jint off, jint len, jref protectionDomain, jstrref source = nullptr);
+Class *defineClass(jref class_loader, jref name,
+                   Array *bytecode, jint off, jint len, jref protection_domain, jref source = nullptr);
 
 Class *initClass(Class *c);
 
@@ -74,18 +74,17 @@ Object *getSystemClassLoader();
 
 /* some methods for testing */
 
-static inline bool isSlashName(const utf8_t *className)
+static inline bool isSlashName(const utf8_t *class_name)
 {
-    return strchr(className, '.') == nullptr;
+    return strchr(class_name, '.') == nullptr;
 }
 
-static inline bool isDotName(const utf8_t *className)
+static inline bool isDotName(const utf8_t *class_name)
 {
-    return strchr(className, '/') == nullptr;
+    return strchr(class_name, '/') == nullptr;
 }
 
 void printBootClassLoader();
-//void printClassLoader(Object *classLoader);
-//void printAllClassLoaders();
+void printClassLoader(Object *class_loader);
 
 #endif //KAYOVM_CLASS_LOADER_H

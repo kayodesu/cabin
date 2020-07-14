@@ -25,11 +25,11 @@ public:
 
     Frame *prev;
 
-    slot_t *lvars;    // local variables
-    slot_t *ostack;   // operand stack
+    slot_t *lvars;   // local variables
+    slot_t *ostack;  // operand stack
 
     Frame(Method *m, bool vm_invoke, slot_t *_lvars, slot_t *_ostack, Frame *prev)
-            : method(m), reader(m->code, m->codeLen), vm_invoke(vm_invoke),
+            : method(m), reader(m->code, m->code_len), vm_invoke(vm_invoke),
               prev(prev), lvars(_lvars), ostack(_ostack)
     {
         assert(m != nullptr);
@@ -55,7 +55,7 @@ public:
     // the end address of this frame
     [[nodiscard]] intptr_t end() const
     {
-        return (intptr_t)(ostack + method->maxStack);
+        return (intptr_t)(ostack + method->max_stack);
     }
 
     void clearStack()

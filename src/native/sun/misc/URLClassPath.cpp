@@ -5,7 +5,7 @@
  */
 
 // private static native URL[] getLookupCacheURLs(ClassLoader var0);
-static jarrref getLookupCacheURLs(jref var0)
+static jobjectArray getLookupCacheURLs(jobject var0)
 {
     // todo
     return nullptr;

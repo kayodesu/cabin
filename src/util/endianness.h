@@ -1,13 +1,11 @@
-/*
- * Author: Yo Ka
- */
-
 #ifndef JVM_ENDIANNESS_H
 #define JVM_ENDIANNESS_H
 
 /*
  * 大端(big endian):低地址存放高字节
  * 小端(little endian):低字节存放低字节
+ * 
+ * Author: Yo Ka
  */
 
 static const union { char c[4]; unsigned long l; } endian_test = { { 'l', '?', '?', 'b' } };
@@ -88,6 +86,11 @@ static inline jdouble swapEndian(jdouble x)
     t2.c[7] = t1.c[0];
 
     return t2.d;
+}
+
+static inline bool isBigEndian()
+{
+    return ENDIANNESS == 'b';
 }
 
 template <typename T>

@@ -5,6 +5,11 @@
 #include <cassert>
 #include "../../../../symbol.h"
 #include "../../../jni_inner.h"
+#include "../../../../objects/class_loader.h"
+#include "../../../../objects/class.h"
+#include "../../../../objects/method.h"
+#include "../../../../objects/object.h"
+#include "../../../../interpreter/interpreter.h"
 
 // private static native void initialize();
 static void initialize()
@@ -24,7 +29,7 @@ static void initialize()
  *
  * public static native ClassLoader latestUserDefinedLoader();
  */
-static jref latestUserDefinedLoader()
+static jobject latestUserDefinedLoader()
 {
     jvm_abort("latestUserDefinedLoader"); // todo
 }

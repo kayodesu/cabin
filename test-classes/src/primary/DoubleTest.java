@@ -3,10 +3,10 @@ package primary;
 /**
  * Status: Fail
  */
-public class TestDouble {
+public class DoubleTest {
     private double value;
 
-    public TestDouble(double value) {
+    public DoubleTest(double value) {
         this.value = value;
     }
     
@@ -15,7 +15,7 @@ public class TestDouble {
     }
     
     public static void main(String[] args) {
-        TestDouble tl = new TestDouble(4349790087343.9483948938493);
+        DoubleTest tl = new DoubleTest(4349790087343.9483948938493);
         System.out.println(tl.get());
     }
 }

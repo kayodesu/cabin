@@ -11,26 +11,26 @@ using namespace std;
 
 Method::ExceptionTable::ExceptionTable(Class *clazz, BytecodeReader &r)
 {
-    startPc = r.readu2();
-    endPc = r.readu2();
-    handlerPc = r.readu2();
+    start_pc = r.readu2();
+    end_pc = r.readu2();
+    handler_pc = r.readu2();
     u2 index = r.readu2();
     if (index == 0) {
         // 异常处理项的 catch_type 有可能是 0。
         // 0 是无效的常量池索引，但是在这里 0 并非表示 catch-none，而是表示 catch-all。
-        catchType = nullptr;
+        catch_type = nullptr;
     } else {
-        catchType = new CatchType;
+        catch_type = new CatchType;
         if (clazz->cp.type(index) == JVM_CONSTANT_ResolvedClass) {
-            catchType->resolved = true;
-            catchType->u.clazz = clazz->cp.resolveClass(index); // (Class *) CP_INFO(clazz->cp, index);
+            catch_type->resolved = true;
+            catch_type->u.clazz = clazz->cp.resolveClass(index);
         } else {
             // Note:
             // 不能在这里load class，有形成死循环的可能。
             // 比如当前方法是 Throwable 中的方法，而此方法又抛出了 Throwable 子类的Exception（记为A），
             // 而此时 Throwable 还没有构造完成，所以无法构造其子类 A。
-            catchType->resolved = false;
-            catchType->u.className = clazz->cp.className(index); //CP_CLASS_NAME(clazz->cp, index);
+            catch_type->resolved = false;
+            catch_type->u.class_name = clazz->cp.className(index);
         }
     }
 }
@@ -105,63 +105,48 @@ Array *Method::getParameterTypes()
 //    return parameterTypes;
 }
 
-Class *Method::getReturnType()
+ClassObject *Method::getReturnType()
 {
     Object *type = getType();
 
     // private final Class<?> rtype;
-    auto rtype = type->getRefField<Class>("rtype", "Ljava/lang/Class;");
+    auto rtype = type->getRefField<ClassObject>("rtype", "Ljava/lang/Class;");
     assert(rtype != nullptr);
     return rtype;
-//    if (returnType == nullptr) {
-//        const char *e = strchr(type, ')');
-//        if (e == nullptr) {
-//            thread_throw(new UnknownError(NEW_MSG("type error. %s\n", type)));
-//        }
-//        returnType = loadClass(clazz->loader, descriptorToClassName(++e).c_str());
-//    }
-//    return returnType;
 }
 
 Object *Method::getType()
 {
     if (type_obj == nullptr) {
-        // public static MethodType fromMethodDescriptorString(String type, ClassLoader loader)
-        //                      throws IllegalArgumentException, TypeNotPresentException
-//        Method *m = loadBootClass("java/lang/invoke/MethodType")->getDeclaredStaticMethod(
-//                "fromMethodDescriptorString", "(Ljava/lang/String;Ljava/lang/ClassLoader;)Ljava/lang/invoke/MethodType;");
-//        slot_t *r = execJavaFunc(m, { (slot_t) newString(type), (slot_t) clazz->loader });
-//        assert(r != nullptr);
-//        type = (Object *) *r;
-        type_obj = method_type::fromMethodDescriptor(type, clazz->loader);
+        type_obj = method_type::fromMethodDescriptor(descriptor, clazz->loader);
     }
     return type_obj;
 }
 
 Array *Method::getExceptionTypes()
 {
-    if (exceptionTypes == nullptr) {
+    if (exception_types == nullptr) {
         int count = 0;
-        Class *types[exceptionTables.size()];
-        for (auto t : exceptionTables) {
-            if (t.catchType == nullptr)
+        Class *types[exception_tables.size()];
+        for (auto t : exception_tables) {
+            if (t.catch_type == nullptr)
                 continue;
 
-            if (!t.catchType->resolved) {
-                t.catchType->u.clazz = loadClass(clazz->loader, t.catchType->u.className);
-                t.catchType->resolved = true;
+            if (!t.catch_type->resolved) {
+                t.catch_type->u.clazz = loadClass(clazz->loader, t.catch_type->u.class_name);
+                t.catch_type->resolved = true;
             }
-            types[count++] = t.catchType->u.clazz;
+            types[count++] = t.catch_type->u.clazz;
         }
 
         auto ac = loadClass(clazz->loader, S(array_java_lang_Class));
-        exceptionTypes = newArray(ac, count);
+        exception_types = newArray(ac, count);
         for (int i = 0; i < count; i++)
-            exceptionTypes->set(i, types[i]);
+            exception_types->setRef(i, types[i]->java_mirror);
     }
 
-    assert(exceptionTypes != nullptr);
-    return exceptionTypes;
+    assert(exception_types != nullptr);
+    return exception_types;
 }
 
 u2 Method::calArgsSlotsCount(const utf8_t *descriptor, bool isStatic)
@@ -208,7 +193,7 @@ u2 Method::calArgsSlotsCount(const utf8_t *descriptor, bool isStatic)
 void Method::calArgsSlotsCount()
 {
     // note: 构造函数（<init>方法）是非static的，也会传递this reference  todo
-    arg_slot_count = calArgsSlotsCount(type, isStatic());
+    arg_slot_count = calArgsSlotsCount(descriptor, isStatic());
 }
 
 /*
@@ -216,16 +201,16 @@ void Method::calArgsSlotsCount()
  */
 void Method::parseCodeAttr(BytecodeReader &r)
 {
-    maxStack = r.readu2();
-    maxLocals = r.readu2();
-    codeLen = r.readu4();
+    max_stack = r.readu2();
+    max_locals = r.readu2();
+    code_len = r.readu4();
     code = r.currPos();
-    r.skip(codeLen);
+    r.skip(code_len);
 
     // parse exception tables
     int exception_tables_count = r.readu2();
     for (int i = 0; i < exception_tables_count; i++) {
-        exceptionTables.emplace_back(clazz, r);
+        exception_tables.emplace_back(clazz, r);
     }
 
     // parse attributes of code's attribute
@@ -239,7 +224,7 @@ void Method::parseCodeAttr(BytecodeReader &r)
             for (int i = 0; i < num; i++)
                 line_number_tables.emplace_back(r);
         } else if (S(StackMapTable) == attr_name) {
-            r.skip(attr_len); // todo ...........................................................
+            r.skip(attr_len); // todo ....
         } else if (S(LocalVariableTable) == attr_name) {
             u2 num = r.readu2();
             for (int i = 0; i < num; i++)
@@ -263,9 +248,9 @@ Method::Method(Class *c, BytecodeReader &r)
     clazz = c;
     ConstantPool &cp = c->cp;
 
-    modifiers = r.readu2();
+    accsee_flags = r.readu2();
     name = cp.utf8(r.readu2());
-    type = cp.utf8(r.readu2());
+    descriptor = cp.utf8(r.readu2());
     u2 attr_count = r.readu2();
 
     calArgsSlotsCount();
@@ -290,40 +275,40 @@ Method::Method(Class *c, BytecodeReader &r)
         } else if (S(Exceptions) == attr_name) {
             u2 num = r.readu2();
             for (u2 j = 0; j < num; j++)
-                checkedExceptions.push_back(r.readu2());
+                checked_exceptions.push_back(r.readu2());
         } else if (S(RuntimeVisibleParameterAnnotations) == attr_name) {
             u2 num = r.readu2();
-            rtVisiParaAnnos.resize(num);
+            rt_visi_para_annos.resize(num);
             for (u2 j = 0; j < num; j++) {
                 u2 numAnnos = r.readu2();
                 for (u2 k = 0; k < numAnnos; k++)
-                    rtVisiParaAnnos[j].emplace_back(r);
+                    rt_visi_para_annos[j].emplace_back(r);
             }
         } else if (S(RuntimeInvisibleParameterAnnotations) == attr_name) {
             u2 num = r.readu2();
-            rtInvisiParaAnnos.resize(num);
+            rt_invisi_para_annos.resize(num);
             for (u2 j = 0; j < num; j++) {
                 u2 numAnnos = r.readu2();
                 for (u2 k = 0; k < numAnnos; k++)
-                    rtInvisiParaAnnos[j].emplace_back(r);
+                    rt_invisi_para_annos[j].emplace_back(r);
             }
         } else if (S(RuntimeVisibleAnnotations) == attr_name) {
             u2 num = r.readu2();
             for (u2 j = 0; j < num; j++)
-                rtVisiAnnos.emplace_back(r);
+                rt_visi_annos.emplace_back(r);
         } else if (S(RuntimeInvisibleAnnotations) == attr_name) {
             u2 num = r.readu2();
             for (u2 j = 0; j < num; j++)
-                rtInvisiAnnos.emplace_back(r);
+                rt_invisi_annos.emplace_back(r);
         } else if (S(AnnotationDefault) == attr_name) {
-            annotationDefault.read(r);
+            annotation_default.read(r);
         } else {
             // unknown attribute
             r.skip(attr_len);
         }
     }
 
-    const char *t = strchr(type, ')'); // find return
+    const char *t = strchr(descriptor, ')'); // find return
     assert(t != nullptr);
 
     t++;
@@ -354,13 +339,13 @@ Method::Method(Class *c, BytecodeReader &r)
     if (isNative()) {
         // 本地方法帧的操作数栈至少要能容纳返回值，
         // 4 slots are big enough.
-        maxStack = 4;
+        max_stack = 4;
         // 因为本地方法帧的局部变量表只用来存放参数值，
-        // 所以把arg_slot_count赋给maxLocals字段刚好。
-        maxLocals = arg_slot_count;
+        // 所以把arg_slot_count赋给max_locals字段刚好。
+        max_locals = arg_slot_count;
 
-        codeLen = 2;
-        code = new u1[codeLen];
+        code_len = 2;
+        code = new u1[code_len];
         code[0] = JVM_OPC_invokenative;
 
         if (ret_type == RET_VOID) {
@@ -377,7 +362,7 @@ Method::Method(Class *c, BytecodeReader &r)
             code[1] = JVM_OPC_ireturn;
         }
 
-        native_method = findNativeMethod(clazz->className, name, type);
+        native_method = findNativeMethod(clazz->class_name, name, descriptor);
     }
 }
 
@@ -403,17 +388,17 @@ jint Method::getLineNumber(int pc) const
 
 int Method::findExceptionHandler(Class *exceptionType, size_t pc)
 {
-    for (auto t : exceptionTables) {
+    for (auto t : exception_tables) {
         // jvms: The start pc is inclusive and end pc is exclusive
-        if (t.startPc <= pc && pc < t.endPc) {
-            if (t.catchType == nullptr)  // catch all
-                return t.handlerPc;
-            if (!t.catchType->resolved) {
-                t.catchType->u.clazz = loadClass(clazz->loader, t.catchType->u.className);
-                t.catchType->resolved = true;
+        if (t.start_pc <= pc && pc < t.end_pc) {
+            if (t.catch_type == nullptr)  // catch all
+                return t.handler_pc;
+            if (!t.catch_type->resolved) {
+                t.catch_type->u.clazz = loadClass(clazz->loader, t.catch_type->u.class_name);
+                t.catch_type->resolved = true;
             }
-            if (exceptionType->isSubclassOf(t.catchType->u.clazz))
-                return t.handlerPc;
+            if (exceptionType->isSubclassOf(t.catch_type->u.clazz))
+                return t.handler_pc;
         }
     }
 
@@ -426,6 +411,6 @@ string Method::toString() const
     oss << "method";
     if (isNative())
         oss << "(native)";
-    oss << ": " << clazz->className << "~" << name << "~" << type;
+    oss << ": " << clazz->class_name << "~" << name << "~" << descriptor;
     return oss.str();
 }

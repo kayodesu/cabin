@@ -13,6 +13,16 @@ bool isPrimDescriptor(utf8_t descriptor);
 const utf8_t *getPrimArrayClassName(const utf8_t *class_name);
 const utf8_t *getPrimClassName(utf8_t descriptor);
 
-const slot_t *primObjUnbox(jprimref po);
+const slot_t *primObjUnbox(const Object *box);
+
+jref voidBox();
+jref byteBox(jbyte x);
+jref boolBox(jbool x);
+jref charBox(jchar x);
+jref shortBox(jshort x);
+jref intBox(jint x);
+jref floatBox(jfloat x);
+jref longBox(jlong x);
+jref doubleBox(jdouble x);
 
 #endif // JVM_PRIM_H

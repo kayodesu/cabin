@@ -8,43 +8,44 @@
 #include "../../../objects/class.h"
 #include "../../../objects/object.h"
 #include "../../../objects/class_loader.h"
-#include "../../../objects/throwables.h"
+#include "../../../runtime/thread_info.h"
 
 // public native int hashCode();
-static jint hashCode(jref _this)
+static jint hashCode(jobject _this)
 {
     return (jint)(intptr_t)_this;
 }
 
 // protected native Object clone() throws CloneNotSupportedException;
-static jref clone(jref _this)
+static jobject clone(jobject _this)
 {
     if (!_this->clazz->isSubclassOf(loadBootClass(S(java_lang_Cloneable)))) {
-        throw CloneNotSupportedException();
+        signalException(S(java_lang_CloneNotSupportedException));
+        return jnull;
     }
     return _this->clone();
 }
 
 // public final native Class<?> getClass();
-static jref getClass(jref _this)
+static jobject getClass(jobject _this)
 {
-    return _this->clazz; // todo 对不对
+    return _this->clazz->java_mirror; // todo 对不对
 }
 
 // public final native void notifyAll();
-static void notifyAll(jref _this)
+static void notifyAll(jobject _this)
 {
     // todo
 }
 
 // public final native void notify();
-static void notify(jref _this)
+static void notify(jobject _this)
 {
     // todo
 }
 
 // public final native void wait(long timeout) throws InterruptedException;
-static void wait(jref _this, jlong timeout)
+static void wait(jobject _this, jlong timeout)
 {
     // todo
 }

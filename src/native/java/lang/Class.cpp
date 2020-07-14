@@ -7,6 +7,7 @@
 #include "../../../objects/class.h"
 #include "../../../objects/field.h"
 #include "../../../objects/array_object.h"
+#include "../../../objects/class_object.h"
 #include "../../../interpreter/interpreter.h"
 #include "../../../runtime/frame.h"
 #include "../../../runtime/thread_info.h"
@@ -22,19 +23,20 @@ using namespace slot;
  * private static native Class<?> forName0
  *  (String name, boolean initialize, ClassLoader loader, Class<?> caller) throws ClassNotFoundException;
  */
-static jclsref forName0(jstrref name, jboolean initialize, jref loader, jclsref caller)
+static jclass forName0(jstring name, jboolean initialize, jobject loader, jclass caller)
 {
     const utf8_t *utf8_name = name->toUtf8(); // 形如 xxx.xx.xx 的形式
 
-    Class *c = loadClass(loader, dots2SlashDup(utf8_name));
+    Class *c = loadClass(loader, dot2SlashDup(utf8_name));
     if (c == nullptr) {
-        throw ClassNotFoundException();
+        signalException(S(java_lang_ClassNotFoundException));
+        return nullptr;
     }
     if (initialize) {
         initClass(c);
     }
 
-    return c;
+    return c->java_mirror;
 }
 
 /*
@@ -42,11 +44,11 @@ static jclsref forName0(jstrref name, jboolean initialize, jref loader, jclsref 
  *
  * static native Class<?> getPrimitiveClass(String name);
  */
-static jclsref getPrimitiveClass(jstrref name)
+static jclass getPrimitiveClass(jstring name)
 {
-    // // 这里得到的 class name 是诸如 "int, float" 之类的 primitive type
+    // 这里得到的 class name 是诸如 "int, float" 之类的 primitive type
     const char *class_name = name->toUtf8();;
-    return loadBootClass(class_name);
+    return loadBootClass(class_name)->java_mirror;
 }
 
 /*
@@ -65,9 +67,37 @@ static jclsref getPrimitiveClass(jstrref name)
  *
  * private native String getName0();
  */
-static jstrref getName0(jclsref _this)
+static jstring getName0(jclass _this)
 {
-    return newString(slash2DotsDup(_this->className));
+    jstrref name = newString(slash2DotDup(_this->jvm_mirror->class_name));
+    assert(g_string_class != nullptr);
+    return g_string_class->intern(name);
+}
+
+/*
+ * Cache the name to reduce the number of calls into the VM.
+ * This field would be set by VM itself during initClassName call.
+ * 
+ * private transient String name;
+ * private native String initClassName();
+ */ 
+static jstring initClassName(jclass _this)
+{
+    jstring class_name = getName0(_this);
+    _this->setRefField("name", "Ljava/lang/String;", class_name);
+    return class_name;
+}
+
+/*
+ * Returns the "simple binary name" of the underlying class, i.e.,
+ * the binary name without the leading enclosing class name.
+ * Returns null if the underlying class is a top level class.
+ * 
+ * private native String getSimpleBinaryName0();
+ */
+static jstring getSimpleBinaryName0(jclass _this)
+{
+    jvm_abort("not implement");
 }
 
 /**
@@ -154,9 +184,9 @@ static jboolean desiredAssertionStatus0()
  *
  * public native boolean isInstance(Object obj);
  */
-static jboolean isInstance(jclsref _this, jref obj)
+static jboolean isInstance(jclass _this, jobject obj)
 {
-    return (obj != nullptr && obj->isInstanceOf(_this)) ? jtrue : jfalse;
+    return (obj != nullptr && obj->isInstanceOf(_this->jvm_mirror)) ? jtrue : jfalse;
 }
 
 /**
@@ -184,15 +214,14 @@ static jboolean isInstance(jclsref _this, jref obj)
  *
  * public native boolean isAssignableFrom(Class<?> cls);
  */
-static jboolean isAssignableFrom(jclsref _this, jclsref cls)
+static jboolean isAssignableFrom(jclass _this, jclass cls)
 {
-  //  auto _this = frame->getLocalAsRef<Class>(0);
-  //  auto cls = frame->getLocalAsRef<Class>(1);
     if (cls == nullptr) {
-        thread_throw(new NullPointerException);
+        signalException(S(java_lang_NullPointerException));
+        return false;
     }
 
-    bool b = cls->isSubclassOf(_this);
+    bool b = cls->jvm_mirror->isSubclassOf(_this->jvm_mirror);
     return b ? jtrue : jfalse;
 }
 
@@ -201,9 +230,9 @@ static jboolean isAssignableFrom(jclsref _this, jclsref cls)
  *
  * public native boolean isInterface();
  */
-static jboolean isInterface(jclsref _this)
+static jboolean isInterface(jclass _this)
 {
-    return _this->isInterface() ? jtrue : jfalse;
+    return _this->jvm_mirror->isInterface() ? jtrue : jfalse;
 }
 
 /*
@@ -211,35 +240,38 @@ static jboolean isInterface(jclsref _this)
  *
  * public native boolean isArray();
  */
-static jboolean isArray(jclsref _this)
+static jboolean isArray(jclass _this)
 {
-    return _this->isArrayClass() ? jtrue : jfalse;  // todo
+    return _this->jvm_mirror->isArrayClass() ? jtrue : jfalse;  // todo
 }
 
 // public native boolean isPrimitive();
-static jboolean isPrimitive(jclsref _this)
+static jboolean isPrimitive(jclass _this)
 {
-    bool b = _this->isPrimClass();
+    bool b = _this->jvm_mirror->isPrimClass();
     return b ? jtrue : jfalse;
 }
 
 /**
- * Returns the {@code Class} representing the superclass of the entity
+ * Returns the Class representing the superclass of the entity
  * (class, interface, primitive type or void) represented by this
- * {@code Class}.  If this {@code Class} represents either the
- * {@code Object} class, an interface, a primitive type, or void, then  todo  interface 和 primitive type 的父类是不是 Object
- * null is returned.  If this object represents an array class then the
- * {@code Class} object representing the {@code Object} class is
- * returned.
+ * Class.  If this Class represents either the Object class, 
+ * an interface, a primitive type, or void, then null is returned.  
+ * If this object represents an array class then the
+ * Class object representing the Object class is returned.
  *
  * @return the superclass of the class represented by this object.
  *
  * public native Class<? super T> getSuperclass();
  */
-static jclsref getSuperclass(jclsref _this)
+static jclass getSuperclass(jclass _this)
 {
-    Class *c = loadClass(_this->clazz->loader, _this->className);
-    return c->superClass;
+    Class *c = _this->jvm_mirror;
+    if (c->isInterface() || c->isPrimClass() || c->isVoidClass())
+        return nullptr;
+    if (c->super_class == nullptr)
+        return nullptr;
+    return c->super_class->java_mirror;
 }
 
 /**
@@ -287,14 +319,13 @@ static jclsref getSuperclass(jclsref _this)
  * @return an array of interfaces implemented by this class.
  */
 //private native Class<?>[] getInterfaces0();
-static jarrref getInterfaces0(jclsref _this)
+static jobjectArray getInterfaces0(jclass _this)
 {
-  //  auto _this = frame->getLocalAsRef<Class>(0);
-
-    auto interfaces = newArray(loadBootClass(S(array_java_lang_Class)), _this->interfaces.size());
-    for (size_t i = 0; i < _this->interfaces.size(); i++) {
-        assert(_this->interfaces[i] != nullptr);
-        interfaces->set(i, _this->interfaces[i]);
+    Class *c = _this->jvm_mirror;
+    auto interfaces = newArray(loadBootClass(S(array_java_lang_Class)), c->interfaces.size());
+    for (size_t i = 0; i < c->interfaces.size(); i++) {
+        assert(c->interfaces[i] != nullptr);
+        interfaces->setRef(i, c->interfaces[i]->java_mirror);
     }
 
     return interfaces;
@@ -309,10 +340,11 @@ static jarrref getInterfaces0(jclsref _this)
  *
  * public native Class<?> getComponentType();
  */
-static jclsref getComponentType(jclsref _this)
+static jclass getComponentType(jclass _this)
 {
-    if (_this->isArrayClass()) {
-        return _this->componentClass();
+    Class *c = _this->jvm_mirror;
+    if (c->isArrayClass()) {
+        return c->componentClass()->java_mirror;
     } else {
         return nullptr;
     }
@@ -346,10 +378,9 @@ static jclsref getComponentType(jclsref _this)
  * @since JDK1.1
  */
 //public native int getModifiers();
-static jint getModifiers(jclsref _this)
+static jint getModifiers(jclass _this)
 {
-   // auto _this = frame->getLocalAsRef<Class>(0);
-    return _this->modifiers;
+    return _this->jvm_mirror->accsee_flags;
 }
 
 /*
@@ -361,32 +392,34 @@ static jint getModifiers(jclsref _this)
  *
  * public native Object[] getSigners();
  */
-static jarrref getSigners(jclsref _this)
+static jobjectArray getSigners(jclass _this)
 {
-    jvm_abort("getSigners");
+    jvm_abort("getSigners"); // todo
 }
 
 
 /**
  * Set the signers of this class.
+ * 
+ * native void setSigners(Object[] signers);
  */
-// native void setSigners(Object[] signers);
-static void setSigners(jclsref _this, jarrref signers)
+static void setSigners(jclass _this, jobjectArray signers)
 {
-    jvm_abort("setSigners");
+    jvm_abort("setSigners"); // todo
 }
 
 // private native Object[] getEnclosingMethod0();
-static jarrref getEnclosingMethod0(jclsref _this)
+static jobjectArray getEnclosingMethod0(jclass _this)
 {
-    if (_this->enclosing.clazz == nullptr) {
+    Class *c = _this->jvm_mirror;
+    if (c->enclosing.clazz == nullptr) {
         return nullptr;
     }
 
     auto result = newArray(loadBootClass(S(array_java_lang_Object)), 3);
-    result->set(0, _this->enclosing.clazz);
-    result->set(1, _this->enclosing.name);
-    result->set(2, _this->enclosing.descriptor);
+    result->setRef(0, c->enclosing.clazz->java_mirror);
+    result->setRef(1, c->enclosing.name);
+    result->setRef(2, c->enclosing.descriptor);
 
     return result;
 }
@@ -395,78 +428,80 @@ static jarrref getEnclosingMethod0(jclsref _this)
  * Returns the ProtectionDomain of this class.
  */
 // private native java.security.ProtectionDomain getProtectionDomain0();
-static jref getProtectionDomain0(jclsref _this)
+static jobject getProtectionDomain0(jclass _this)
 {
-    // return nullptr;
+    return nullptr;
     jvm_abort("getProtectionDomain0");
 }
 
 // Generic signature handling
 // private native String getGenericSignature0();
-static void getGenericSignature0(jclsref _this)
+static jstring getGenericSignature0(jclass _this)
 {
-    jvm_abort("getGenericSignature0");
+    Class *c = _this->jvm_mirror;
+    if (c->signature != nullptr)
+        return newString(c->signature);
+    return nullptr;
 }
 
 // Annotations handling
 //native byte[] getRawAnnotations();
-static jarrref getRawAnnotations(jclsref _this)
+static jbyteArray getRawAnnotations(jclass _this)
 {
     jvm_abort("getRawAnnotations");
 }
 
 // native byte[] getRawTypeAnnotations();
-static jarrref getRawTypeAnnotations(jclsref _this)
+static jbyteArray getRawTypeAnnotations(jclass _this)
 {
     jvm_abort("getRawTypeAnnotations");
 }
 
 // native ConstantPool getConstantPool();
-static jref getConstantPool(jclsref _this)
+static jobject getConstantPool(jclass _this)
 {
-    Class *cpClass = loadBootClass("sun/reflect/ConstantPool");
-    jref cp = newObject(cpClass);
-    cp->setRefField("constantPoolOop", "Ljava/lang/Object;", (jref) &_this->cp); // todo 应该传递一个正在的 Object *
-
+    Class *cp_class = loadBootClass("sun/reflect/ConstantPool");
+    jobject cp = newObject(cp_class);
+    cp->setRefField("constantPoolOop", "Ljava/lang/Object;", (jobject) &_this->jvm_mirror->cp); // todo 应该传递一个正在的 Object *
     return cp;
 }
 
 // private native Field[] getDeclaredFields0(boolean publicOnly);
-static jarrref getDeclaredFields0(jclsref _this, jboolean publicOnly)
+static jobjectArray getDeclaredFields0(jclass _this, jboolean public_only)
 {
-    Class *cls = loadClass(_this->clazz->loader, _this->className);
-    jint fieldsCount = publicOnly ? cls->publicFieldsCount : cls->fields.size();
+    Class *cls = _this->jvm_mirror;
+    jint field_count = public_only ? cls->public_field_count : cls->field_count;
 
-    Class *fieldClass = loadBootClass(S(java_lang_reflect_Field));
-    auto fieldArr = newArray(fieldClass->arrayClass(), fieldsCount);
+    Class *field_class = loadBootClass(S(java_lang_reflect_Field));
+    auto field_array = newArray(field_class->arrayClass(), field_count);
 
     /*
      * Field(Class<?> declaringClass, String name, Class<?> type,
      *      int modifiers, int slot, String signature, byte[] annotations)
      */
-    Method *constructor = fieldClass->getConstructor(
+    Method *constructor = field_class->getConstructor(
             "(Ljava/lang/Class;" "Ljava/lang/String;" "Ljava/lang/Class;" "II" "Ljava/lang/String;" "[B)V");
 
     // invoke constructor of class java/lang/reflect/Field
-    for (int i = 0; i < fieldsCount; i++) {
-        Object *o = newObject(fieldClass);
-        fieldArr->set(i, o);
+    for (int i = 0; i < field_count; i++) {
+        Object *o = newObject(field_class);
+        field_array->setRef(i, o);
 
         execJavaFunc(constructor, {
                 rslot(o), // this
                 rslot(_this), // declaring class
                 // name must be interned.
                 // 参见 java/lang/reflect/Field 的说明
-                rslot(stringClass->intern(cls->fields[i]->name)), // name
-                rslot(cls->fields[i]->getType()), // type
-                islot(cls->fields[i]->modifiers), /* modifiers */
-                islot(cls->fields[i]->id), /* slot   todo */
+                rslot(g_string_class->intern(cls->fields[i].name)), // name
+                rslot(cls->fields[i].getType()), // type
+                islot(cls->fields[i].accsee_flags), /* modifiers todo */
+                islot(cls->fields[i].id), /* slot   todo */
                 rslot(jnull), /* signature  todo */
                 rslot(jnull), /* annotations  todo */
         });
     }
     
-    return fieldArr;
+    return field_array;
 }
 
 /*
@@ -475,41 +510,45 @@ static jarrref getDeclaredFields0(jclsref _this, jboolean publicOnly)
  * getMethods(),该方法是获取本类以及父类或者父接口中所有的公共方法(public修饰符修饰的)
  *
  * getDeclaredMethods 强调的是本类中定义的方法，不包括继承而来的。
+ * 不包括 class initialization method(<clinit>)和构造函数(<init>)
  *
  * private native Method[] getDeclaredMethods0(boolean publicOnly);
  */
-static jarrref getDeclaredMethods0(jclsref _this, jboolean publicOnly)
+static jobjectArray getDeclaredMethods0(jclass _this, jboolean public_only)
 {
-    Class *cls = loadClass(_this->clazz->loader, _this->className);
-    jint methodsCount = publicOnly ? cls->publicMethodsCount : cls->methods.size();
+    Class *cls = _this->jvm_mirror;
+    jint method_count = public_only ? cls->public_method_count : cls->methods.size();
 
-    Class *methodClass = loadBootClass(S(java_lang_reflect_Method));
-    Array *methodArr = newArray(methodClass->arrayClass(), methodsCount);
+    Class *method_class = loadBootClass(S(java_lang_reflect_Method));
 
     /*
      * Method(Class<?> declaringClass, String name, Class<?>[] parameterTypes, Class<?> returnType,
      *      Class<?>[] checkedExceptions, int modifiers, int slot, String signature,
      *      byte[] annotations, byte[] parameterAnnotations, byte[] annotationDefault)
      */
-    Method *constructor = methodClass->getConstructor(
+    Method *constructor = method_class->getConstructor(
                 "(Ljava/lang/Class;" "Ljava/lang/String;" "[Ljava/lang/Class;" "Ljava/lang/Class;"
                 "[Ljava/lang/Class;" "II" "Ljava/lang/String;" "[B[B[B)V");
 
-    for (int i = 0; i < methodsCount; i++) {
+    vector<jref> methods;
+    for (int i = 0; i < method_count; i++) {
         Method *method = cls->methods[i];
-        Object *o = newObject(methodClass);
-        methodArr->set(i, o);
+        if (method->isClassInit() || method->isObjectInit()) {
+            continue;
+        }
+        Object *o = newObject(method_class);
+        methods.push_back(o);
 
         execJavaFunc(constructor, {
                 rslot(o),        /* this  */
                 rslot(_this), /* declaring class */
                 // name must be interned.
                 // 参见 java/lang/reflect/Method 的说明
-                rslot(stringClass->intern(method->name)), /* name */
+                rslot(g_string_class->intern(method->name)), /* name */
                 rslot(method->getParameterTypes()), /* parameter types */
                 rslot(method->getReturnType()),     /* return type */
                 rslot(method->getExceptionTypes()), /* checked exceptions */
-                islot(method->modifiers), /* modifiers*/
+                islot(method->accsee_flags), /* modifiers todo */
                 islot(0), /* slot   todo */
                 rslot(jnull), /* signature  todo */
                 rslot(jnull), /* annotations  todo */
@@ -517,41 +556,45 @@ static jarrref getDeclaredMethods0(jclsref _this, jboolean publicOnly)
                 rslot(jnull), /* annotation default  todo */
         });
     }
-    
-    return methodArr;
+        
+    Array *method_array = newArray(method_class->arrayClass(), methods.size());
+    for (size_t i = 0; i < methods.size(); i++) {
+        method_array->setRef(i, methods[i]);
+    }
+    return method_array;
 }
 
 // private native Constructor<T>[] getDeclaredConstructors0(boolean publicOnly);
-static jarrref getDeclaredConstructors0(jclsref _this, jboolean publicOnly)
+static jobjectArray getDeclaredConstructors0(jclass _this, jboolean public_only)
 {
-   Class *cls = loadClass(_this->clazz->loader, _this->className);
+   Class *cls = _this->jvm_mirror;
 
-    std::vector<Method *> constructors = cls->getConstructors(publicOnly);
-    int constructorsCount = constructors.size();
+    std::vector<Method *> constructors = cls->getConstructors(public_only);
+    int constructor_count = constructors.size();
 
-    Class *constructorClass = loadBootClass("java/lang/reflect/Constructor");
-    auto constructorArr = newArray(constructorClass->arrayClass(), constructorsCount);
+    Class *constructor_class = loadBootClass("java/lang/reflect/Constructor");
+    auto constructor_array = newArray(constructor_class->arrayClass(), constructor_count);
 
     /*
      * Constructor(Class<T> declaringClass, Class<?>[] parameterTypes,
      *      Class<?>[] checkedExceptions, int modifiers, int slot,
      *      String signature, byte[] annotations, byte[] parameterAnnotations)
      */
-    Method *constructor_constructor = constructorClass->getConstructor(
+    Method *constructor_constructor = constructor_class->getConstructor(
                 "(Ljava/lang/Class;" "[Ljava/lang/Class;" "[Ljava/lang/Class;" "II" "Ljava/lang/String;" "[B[B)V");
 
     // invoke constructor of class java/lang/reflect/Constructor
-    for (int i = 0; i < constructorsCount; i++) {
+    for (int i = 0; i < constructor_count; i++) {
         auto constructor = constructors[i];
-        Object *o = newObject(constructorClass);
-        constructorArr->set(i, o);
+        Object *o = newObject(constructor_class);
+        constructor_array->setRef(i, o);
 
         execJavaFunc(constructor_constructor, {
                 rslot(o), // this
                 rslot(_this), // declaring class
                 rslot(constructor->getParameterTypes()),  // parameter types
                 rslot(constructor->getExceptionTypes()),  // checked exceptions
-                islot(constructor->modifiers), // modifiers
+                islot(constructor->accsee_flags), // modifiers todo
                 islot(0), // slot   todo
                 rslot(jnull), // signature  todo
                 rslot(jnull), // annotations  todo
@@ -559,7 +602,7 @@ static jarrref getDeclaredConstructors0(jclsref _this, jboolean publicOnly)
         });
     }
     
-    return constructorArr;
+    return constructor_array;
 }
 
 /*
@@ -569,7 +612,7 @@ static jarrref getDeclaredConstructors0(jclsref _this, jboolean publicOnly)
  *
  * private native Class<?>[] getDeclaredClasses0();
  */
-static jarrref getDeclaredClasses0(jclsref _this)
+static jobjectArray getDeclaredClasses0(jclass _this)
 {
     jvm_abort("getDeclaredClasses0");
 }
@@ -595,28 +638,56 @@ static jarrref getDeclaredClasses0(jclsref _this)
  *
  * private native Class<?> getDeclaringClass0();
  */
-static jclsref getDeclaringClass0(jclsref _this)
+static jclass getDeclaringClass0(jclass _this)
 {
-  //  Class *_this = (frame->getLocalAsRef<Class>(0));
-    if (_this->isArrayClass()) {
+    Class *c = _this->jvm_mirror;
+    if (c->isArrayClass()) {
         return nullptr;
     }
 
-    char buf[strlen(_this->className) + 1];
-    strcpy(buf, _this->className);
+    char buf[strlen(c->class_name) + 1];
+    strcpy(buf, c->class_name);
     char *last_dollar = strrchr(buf, '$'); // 内部类标识：out_class_name$inner_class_name
     if (last_dollar == nullptr) {
         return nullptr;
-    } else {
-        *last_dollar = 0;
-       return loadClass(_this->clazz->loader, buf);
-    }
+    } 
+    
+    *last_dollar = 0;
+    c = loadClass(c->loader, buf);
+    assert(c != nullptr);
+    return c->java_mirror;
+}
+
+// private native RecordComponent[] getRecordComponents0();
+static jobjectArray getRecordComponents0(jclass _this)
+{
+    jvm_abort("getRecordComponents0");
+}
+
+// private native boolean isRecord0();
+static jbool isRecord0(jclass _this)
+{
+    jvm_abort("isRecord0");
+}
+
+// private native Class<?> getNestHost0();
+static jclass getNestHost0(jclass _this)
+{
+    jvm_abort("getNestHost0");
+}
+
+// private native Class<?>[] getNestMembers0();
+static jobjectArray getNestMembers0(jclass _this)
+{
+    jvm_abort("getNestMembers0");
 }
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
         { "getPrimitiveClass", "(Ljava/lang/String;)Ljava/lang/Class;", (void *) getPrimitiveClass },
-        { "getName0", "()Ljava/lang/String;", (void *) getName0 },
+        { "getName0", "()Ljava/lang/String;", (void *) getName0 },  
+        { "initClassName", "()Ljava/lang/String;", (void *) initClassName },  
+        { "getSimpleBinaryName0", "()Ljava/lang/String;", (void *) getSimpleBinaryName0 },  
         { "forName0",
         "(Ljava/lang/String;ZLjava/lang/ClassLoader;Ljava/lang/Class;)Ljava/lang/Class;",
           (void *) forName0 },
@@ -648,6 +719,11 @@ static JNINativeMethod methods[] = {
         { "getDeclaredMethods0", "(Z)[Ljava/lang/reflect/Method;", (void *) getDeclaredMethods0 },
         { "getDeclaredConstructors0", "(Z)[Ljava/lang/reflect/Constructor;", (void *) getDeclaredConstructors0 },
         { "getDeclaredClasses0", "()[Ljava/lang/Class;", (void *) getDeclaredClasses0 },
+
+        { "getRecordComponents0", "()[Ljava/lang/reflect/RecordComponent;", (void *) getRecordComponents0 },
+        { "isRecord0", "()Z", (void *) isRecord0 },
+        { "getNestHost0", "()Ljava/lang/Class;", (void *) getNestHost0 },
+        { "getNestMembers0", "()[Ljava/lang/Class;", (void *) getNestMembers0 },
 };
 
 void java_lang_Class_registerNatives()

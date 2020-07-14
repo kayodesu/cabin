@@ -1,5 +1,8 @@
 package field;
 
+/**
+ * Status: Fail
+ */
 public class FieldAccessTest {
     
     private static interface I {
@@ -23,11 +26,12 @@ public class FieldAccessTest {
     }
 
     public void test() {
-//        assertEquals(1, B.i);
-//        assertEquals(2, B.j);
-//        assertEquals(3, B.k);
-//        assertEquals(4, B.a);
-//        assertEquals(5, B.b);
+        boolean b1 = (1 == B.i);
+        boolean b2 = (2 == B.j);
+        boolean b3 = (3 == B.k);
+        boolean b4 = (4 == B.a);
+        boolean b5 = (5 == B.b);
+        System.out.println((b1 && b2 && b3 && b4 && b5) ? "Pass":"Fail");
     }
     
     public static void main(String[] args) {

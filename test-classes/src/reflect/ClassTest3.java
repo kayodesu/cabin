@@ -3,9 +3,9 @@ package reflect;
 import java.util.Arrays;
 
 /**
- * @author Yo Ka
+ * Status: Pass
  */
-public class IntClassTest {
+public class ClassTest3 {
     public static void main(String[] args) {
         System.out.println(Object.class); // class java.lang.Object
         System.out.println(Object.class.getInterfaces().length); // 0
@@ -33,10 +33,8 @@ public class IntClassTest {
 
         System.out.println();
 
-        System.out.println(I.class); // interface reflect.IntClassTest$I
-        System.out.println(I.class.getInterfaces().length); // 0
-        System.out.println(I.class.getSuperclass()); // null
+        System.out.println(java.io.Serializable.class); // interface java.io.Serializable
+        System.out.println(java.io.Serializable.class.getInterfaces().length); // 0
+        System.out.println(java.io.Serializable.class.getSuperclass()); // null
     }
-
-    static interface I {}
 }

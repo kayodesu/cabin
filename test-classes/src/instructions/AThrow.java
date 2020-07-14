@@ -1,12 +1,16 @@
 package instructions;
 
+/**
+ * Expect output: "foo!\nmain!\nbar!"
+ *
+ * Status: Pass
+ */
 public class AThrow {
-
     public static void main(String[] args) {
         try {
             foo();
         } catch (RuntimeException e) {
-            System.out.println("main!!");
+            System.out.println("main!");
             System.out.println(e.getMessage());
         }
     }
@@ -19,5 +23,4 @@ public class AThrow {
             throw new RuntimeException("bar!");
         }
     }
-    
 }

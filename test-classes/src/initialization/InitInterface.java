@@ -5,7 +5,7 @@ package initialization;
  *
  * Status: Fail
  */
-public class InterfaceInitialization {
+public class InitInterface {
     private static interface I {
         int i = 1, ii = out("ii", 2);
     }
@@ -27,7 +27,7 @@ public class InterfaceInitialization {
     }
     
     public static void main(String[] args) {
-        new InterfaceInitialization().test();
+        new InitInterface().test();
     }
     
 }

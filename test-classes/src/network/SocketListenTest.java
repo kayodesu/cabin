@@ -4,13 +4,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 /**
- * Created with IntelliJ IDEA.
- * User: beyond
- * Email: beyondblog@outlook.com
- * Date: 15/3/21
- * Time: 下午9:24
- * Description:
- * Socket
+ * Status: Fail
  */
 public class SocketListenTest {
 

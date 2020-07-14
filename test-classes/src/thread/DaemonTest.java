@@ -1,15 +1,18 @@
 package thread;
 
+/**
+ * Status: Pass
+ */
 public class DaemonTest {
     
     public static void main(String[] args) {
         Thread mainThread = Thread.currentThread();
-     //   assertFalse(mainThread.isDaemon());
+        System.out.println(!mainThread.isDaemon() ? "Pass":"Fail");
 
         Thread newThread = new Thread();
-    //    assertFalse(newThread.isDaemon());
+        System.out.println(!newThread.isDaemon() ? "Pass":"Fail");
 
         newThread.setDaemon(true);
-     //   assertTrue(newThread.isDaemon());
+        System.out.println(newThread.isDaemon() ? "Pass":"Fail");
     }
 }
