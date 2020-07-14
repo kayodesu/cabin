@@ -53,7 +53,7 @@ if __name__ == '__main__':
     if i == -1 or j == -1 or i >= j:
         print('error'); # todo
     title = "## Test Cases [%d/%d(%.2f%%) Passed]\n" % (passed_cases_count, cases_count, (passed_cases_count/cases_count)*100)   
-    buf = buf[:i] + title + collection + buf[j:]
+    buf = buf[:i] + title + collection + '\n' + buf[j:]
     readme.close()
     
     readme = open('./README.md', 'w')
