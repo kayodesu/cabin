@@ -12,7 +12,7 @@ An experimental JVM written in C++.
 * minizip 1.2.0
 * libffi 3.3
 
-## Features Support
+## Features  
 :heavy_check_mark: Java arithmetic, flow control, object-oriented programming(virtual method, inherit, etc.)  
 :heavy_check_mark: String  
 :heavy_check_mark: Array  
