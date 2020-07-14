@@ -50,7 +50,8 @@ Hello, world!
 C:\>
 ```
 
-## Test Cases [36/99(36.36%) Passed][<font color=#00FF00>Pass</font>] HelloWorld.java<br/>[<font color=#00FF00>Pass</font>] JumpMultiLoop.java<br/>[<font color=#FF0000>Fail</font>] PrimeNumber.java<br/>[<font color=#00FF00>Pass</font>] PrintArgs.java<br/>[<font color=#FF0000>Fail</font>] RuntimeTest.java<br/>[<font color=#FF0000>Fail</font>] SysPropsTest.java<br/>
+## Test Cases [36/99(36.36%) Passed]
+[<font color=#00FF00>Pass</font>] HelloWorld.java<br/>[<font color=#00FF00>Pass</font>] JumpMultiLoop.java<br/>[<font color=#FF0000>Fail</font>] PrimeNumber.java<br/>[<font color=#00FF00>Pass</font>] PrintArgs.java<br/>[<font color=#FF0000>Fail</font>] RuntimeTest.java<br/>[<font color=#FF0000>Fail</font>] SysPropsTest.java<br/>
 [<font color=#00FF00>Pass</font>] array.ArrayTest.java<br/>[<font color=#FF0000>Fail</font>] array.BigArrayTest.java<br/>[<font color=#00FF00>Pass</font>] array.BubbleSort.java<br/>[<font color=#00FF00>Pass</font>] array.ZeroLenArrayTest.java<br/>
 [<font color=#FF0000>Fail</font>] atomic.AtomicIntegerTest.java<br/>
 [<font color=#FF0000>Fail</font>] classloader.ClassLoaderTest.java<br/>

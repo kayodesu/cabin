@@ -52,7 +52,7 @@ if __name__ == '__main__':
     j = buf.find('## Reference')
     if i == -1 or j == -1 or i >= j:
         print('error'); # todo
-    title = "## Test Cases [%d/%d(%.2f%%) Passed]" % (passed_cases_count, cases_count, (passed_cases_count/cases_count)*100)   
+    title = "## Test Cases [%d/%d(%.2f%%) Passed]\n" % (passed_cases_count, cases_count, (passed_cases_count/cases_count)*100)   
     buf = buf[:i] + title + collection + buf[j:]
     readme.close()
     
