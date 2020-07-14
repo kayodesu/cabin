@@ -21,11 +21,15 @@ def collect_one_file(path_name, file_name):
     path_name = path_name.replace('/', '.')
     path_name = path_name.replace('\\', '.')
     i = path_name.find('src.')
+    if result == 'Pass':
+        result = '[<font color=#00FF00>' + result + '</font>] '
+    else:     
+        result = '[<font color=#FF0000>' + result + '</font>] '
     if i == -1: # 根目录
-        return '[' + result + '] ' + file_name + '\n'
+        return result + file_name + '  '
     else:
         path_name = path_name[i+4:] # jump 'src.'
-        return '[' + result + '] ' + path_name + "." + file_name + '\n'
+        return result + path_name + "." + file_name + '  '
 
 if __name__ == '__main__':
     collection = ''
@@ -48,7 +52,7 @@ if __name__ == '__main__':
     j = buf.find('## Reference')
     if i == -1 or j == -1 or i >= j:
         print('error'); # todo
-    title = "## Test Cases(%d/%d[%.2f%%] Passed)\n" % (passed_cases_count, cases_count, (passed_cases_count/cases_count)*100)   
+    title = "## Test Cases [%d/%d(%.2f%%) Passed]\n" % (passed_cases_count, cases_count, (passed_cases_count/cases_count)*100)   
     buf = buf[:i] + title + collection + buf[j:]
     readme.close()
     

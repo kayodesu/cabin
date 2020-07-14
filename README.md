@@ -50,130 +50,31 @@ Hello, world!
 C:\>
 ```
 
-## Test Cases(36/99[36.36%] Passed)
-[Pass] HelloWorld.java
-[Pass] JumpMultiLoop.java
-[Fail] PrimeNumber.java
-[Pass] PrintArgs.java
-[Fail] RuntimeTest.java
-[Fail] SysPropsTest.java
-
-[Pass] array.ArrayTest.java
-[Fail] array.BigArrayTest.java
-[Pass] array.BubbleSort.java
-[Pass] array.ZeroLenArrayTest.java
-
-[Fail] atomic.AtomicIntegerTest.java
-
-[Fail] classloader.ClassLoaderTest.java
-
-[Fail] datetime.TimeZoneTest.java
-
-[Pass] exception.CatchTest.java
-[Fail] exception.ClassLibExTest.java
-[Pass] exception.FinallyReturnTest.java
-[Pass] exception.FinallyTest.java
-[Fail] exception.InstructionExTest.java
-[Fail] exception.InstructionNpeTest.java
-[Pass] exception.StackTraceTest.java
-[Fail] exception.UncaughtTest.java
-
-[Fail] field.ConstantStaticFieldsTest.java
-[Fail] field.FieldAccessTest.java
-[Pass] field.FieldsTest.java
-
-[Pass] file.FileDescriptorTest.java
-[Fail] file.FileNotFoundTest.java
-[Fail] file.FileTest.java
-[Fail] file.RandomAccessFileTest.java
-
-[Pass] initialization.Init1.java
-[Pass] initialization.Init2.java
-[Fail] initialization.InitInterface.java
-[Pass] initialization.InitStaticField.java
-[Pass] initialization.ObjectInitTest.java
-
-[Pass] instructions.AThrow.java
-[Fail] instructions.CheckCast.java
-[Fail] instructions.InvokeTest.java
-[Fail] instructions.LookupSwitch.java
-[Pass] instructions.NewArray.java
-[Fail] instructions.NewMultiArrayTest.java
-[Pass] instructions.TableSwitch.java
-
-[Fail] interface0.InterfaceDefaultMethodTest.java
-[Fail] interface0.InterfaceMethodTest.java
-[Fail] interface0.InterfaceTest.java
-
-[Pass] invoke.InvokeFuncTest.java
-[Pass] invoke.InvokeFuncTest1.java
-[Fail] invoke.MethodHandleNativesTest.java
-[Fail] invoke.MethodHandleTest.java
-[Fail] invoke.MethodHandleTest1.java
-[Fail] invoke.MethodHandleTest2.java
-[Pass] invoke.MethodTypeTest.java
-
-[Fail] jetty.FileServer.java
-
-[Fail] lambda.LambdaTest.java
-
-[Fail] method.ArgsPassTest.java
-
-[Fail] network.InetAddressTest.java
-[Fail] network.SocketConnectTest.java
-[Fail] network.SocketListenTest.java
-[Fail] network.UrlTest.java
-
-[Fail] nio.ByteBufferTest.java
-
-[Pass] object.InheritanceTest.java
-[Pass] object.ObjectTest.java
-
-[Fail] primary.DoubleTest.java
-[Fail] primary.LongTest.java
-
-[Pass] reflect.ArrayClassTest.java
-[Fail] reflect.ArrayGetTest.java
-[Fail] reflect.ArraySetTest.java
-[Fail] reflect.CallerClassTest.java
-[Fail] reflect.ClassInitTest.java
-[Fail] reflect.ClassTest.java
-[Pass] reflect.ClassTest1.java
-[Pass] reflect.ClassTest2.java
-[Pass] reflect.ClassTest3.java
-[Pass] reflect.DeclaringClassTest.java
-[Fail] reflect.FieldTest.java
-[Fail] reflect.GenericTest.java
-[Pass] reflect.MethodTest.java
-[Fail] reflect.NestTest.java
-[Pass] reflect.PrimitiveClassTest.java
-
-[Fail] stream.StreamTest.java
-
-[Pass] string.InternTest.java
-[Pass] string.StringTest.java
-
-[Fail] sunmisc.UnsafeGetter.java
-[Fail] sunmisc.UnsafeMemoryTest.java
-[Fail] sunmisc.UnsafeObjectTest.java
-[Fail] sunmisc.UnsafeParkTest.java
-[Fail] sunmisc.UnsafeTest.java
-
-[Fail] thread.AliveTest.java
-[Pass] thread.DaemonTest.java
-[Fail] thread.DumpAllThreads.java
-[Fail] thread.InterruptFlagTest.java
-[Fail] thread.InterruptionTest.java
-[Fail] thread.MainThreadTest.java
-[Fail] thread.RunnableTest.java
-[Fail] thread.SleepTest.java
-[Fail] thread.SynchronizedTest.java
-[Fail] thread.ThreadSubClassTest.java
-[Fail] thread.WaitTest.java
-
-[Pass] wrapper.DoubleTest.java
-[Pass] wrapper.FloatTest.java
-[Fail] wrapper.IntegerCacheTest.java
-
+## Test Cases [36/99(36.36%) Passed]
+[<font color=#00FF00>Pass</font>] HelloWorld.java  [<font color=#00FF00>Pass</font>] JumpMultiLoop.java  [<font color=#FF0000>Fail</font>] PrimeNumber.java  [<font color=#00FF00>Pass</font>] PrintArgs.java  [<font color=#FF0000>Fail</font>] RuntimeTest.java  [<font color=#FF0000>Fail</font>] SysPropsTest.java  
+[<font color=#00FF00>Pass</font>] array.ArrayTest.java  [<font color=#FF0000>Fail</font>] array.BigArrayTest.java  [<font color=#00FF00>Pass</font>] array.BubbleSort.java  [<font color=#00FF00>Pass</font>] array.ZeroLenArrayTest.java  
+[<font color=#FF0000>Fail</font>] atomic.AtomicIntegerTest.java  
+[<font color=#FF0000>Fail</font>] classloader.ClassLoaderTest.java  
+[<font color=#FF0000>Fail</font>] datetime.TimeZoneTest.java  
+[<font color=#00FF00>Pass</font>] exception.CatchTest.java  [<font color=#FF0000>Fail</font>] exception.ClassLibExTest.java  [<font color=#00FF00>Pass</font>] exception.FinallyReturnTest.java  [<font color=#00FF00>Pass</font>] exception.FinallyTest.java  [<font color=#FF0000>Fail</font>] exception.InstructionExTest.java  [<font color=#FF0000>Fail</font>] exception.InstructionNpeTest.java  [<font color=#00FF00>Pass</font>] exception.StackTraceTest.java  [<font color=#FF0000>Fail</font>] exception.UncaughtTest.java  
+[<font color=#FF0000>Fail</font>] field.ConstantStaticFieldsTest.java  [<font color=#FF0000>Fail</font>] field.FieldAccessTest.java  [<font color=#00FF00>Pass</font>] field.FieldsTest.java  
+[<font color=#00FF00>Pass</font>] file.FileDescriptorTest.java  [<font color=#FF0000>Fail</font>] file.FileNotFoundTest.java  [<font color=#FF0000>Fail</font>] file.FileTest.java  [<font color=#FF0000>Fail</font>] file.RandomAccessFileTest.java  
+[<font color=#00FF00>Pass</font>] initialization.Init1.java  [<font color=#00FF00>Pass</font>] initialization.Init2.java  [<font color=#FF0000>Fail</font>] initialization.InitInterface.java  [<font color=#00FF00>Pass</font>] initialization.InitStaticField.java  [<font color=#00FF00>Pass</font>] initialization.ObjectInitTest.java  
+[<font color=#00FF00>Pass</font>] instructions.AThrow.java  [<font color=#FF0000>Fail</font>] instructions.CheckCast.java  [<font color=#FF0000>Fail</font>] instructions.InvokeTest.java  [<font color=#FF0000>Fail</font>] instructions.LookupSwitch.java  [<font color=#00FF00>Pass</font>] instructions.NewArray.java  [<font color=#FF0000>Fail</font>] instructions.NewMultiArrayTest.java  [<font color=#00FF00>Pass</font>] instructions.TableSwitch.java  
+[<font color=#FF0000>Fail</font>] interface0.InterfaceDefaultMethodTest.java  [<font color=#FF0000>Fail</font>] interface0.InterfaceMethodTest.java  [<font color=#FF0000>Fail</font>] interface0.InterfaceTest.java  
+[<font color=#00FF00>Pass</font>] invoke.InvokeFuncTest.java  [<font color=#00FF00>Pass</font>] invoke.InvokeFuncTest1.java  [<font color=#FF0000>Fail</font>] invoke.MethodHandleNativesTest.java  [<font color=#FF0000>Fail</font>] invoke.MethodHandleTest.java  [<font color=#FF0000>Fail</font>] invoke.MethodHandleTest1.java  [<font color=#FF0000>Fail</font>] invoke.MethodHandleTest2.java  [<font color=#00FF00>Pass</font>] invoke.MethodTypeTest.java  
+[<font color=#FF0000>Fail</font>] jetty.FileServer.java  
+[<font color=#FF0000>Fail</font>] lambda.LambdaTest.java  
+[<font color=#FF0000>Fail</font>] method.ArgsPassTest.java  
+[<font color=#FF0000>Fail</font>] network.InetAddressTest.java  [<font color=#FF0000>Fail</font>] network.SocketConnectTest.java  [<font color=#FF0000>Fail</font>] network.SocketListenTest.java  [<font color=#FF0000>Fail</font>] network.UrlTest.java  
+[<font color=#FF0000>Fail</font>] nio.ByteBufferTest.java  
+[<font color=#00FF00>Pass</font>] object.InheritanceTest.java  [<font color=#00FF00>Pass</font>] object.ObjectTest.java  
+[<font color=#FF0000>Fail</font>] primary.DoubleTest.java  [<font color=#FF0000>Fail</font>] primary.LongTest.java  
+[<font color=#00FF00>Pass</font>] reflect.ArrayClassTest.java  [<font color=#FF0000>Fail</font>] reflect.ArrayGetTest.java  [<font color=#FF0000>Fail</font>] reflect.ArraySetTest.java  [<font color=#FF0000>Fail</font>] reflect.CallerClassTest.java  [<font color=#FF0000>Fail</font>] reflect.ClassInitTest.java  [<font color=#FF0000>Fail</font>] reflect.ClassTest.java  [<font color=#00FF00>Pass</font>] reflect.ClassTest1.java  [<font color=#00FF00>Pass</font>] reflect.ClassTest2.java  [<font color=#00FF00>Pass</font>] reflect.ClassTest3.java  [<font color=#00FF00>Pass</font>] reflect.DeclaringClassTest.java  [<font color=#FF0000>Fail</font>] reflect.FieldTest.java  [<font color=#FF0000>Fail</font>] reflect.GenericTest.java  [<font color=#00FF00>Pass</font>] reflect.MethodTest.java  [<font color=#FF0000>Fail</font>] reflect.NestTest.java  [<font color=#00FF00>Pass</font>] reflect.PrimitiveClassTest.java  
+[<font color=#FF0000>Fail</font>] stream.StreamTest.java  
+[<font color=#00FF00>Pass</font>] string.InternTest.java  [<font color=#00FF00>Pass</font>] string.StringTest.java  
+[<font color=#FF0000>Fail</font>] sunmisc.UnsafeGetter.java  [<font color=#FF0000>Fail</font>] sunmisc.UnsafeMemoryTest.java  [<font color=#FF0000>Fail</font>] sunmisc.UnsafeObjectTest.java  [<font color=#FF0000>Fail</font>] sunmisc.UnsafeParkTest.java  [<font color=#FF0000>Fail</font>] sunmisc.UnsafeTest.java  
+[<font color=#FF0000>Fail</font>] thread.AliveTest.java  [<font color=#00FF00>Pass</font>] thread.DaemonTest.java  [<font color=#FF0000>Fail</font>] thread.DumpAllThreads.java  [<font color=#FF0000>Fail</font>] thread.InterruptFlagTest.java  [<font color=#FF0000>Fail</font>] thread.InterruptionTest.java  [<font color=#FF0000>Fail</font>] thread.MainThreadTest.java  [<font color=#FF0000>Fail</font>] thread.RunnableTest.java  [<font color=#FF0000>Fail</font>] thread.SleepTest.java  [<font color=#FF0000>Fail</font>] thread.SynchronizedTest.java  [<font color=#FF0000>Fail</font>] thread.ThreadSubClassTest.java  [<font color=#FF0000>Fail</font>] thread.WaitTest.java  
+[<font color=#00FF00>Pass</font>] wrapper.DoubleTest.java  [<font color=#00FF00>Pass</font>] wrapper.FloatTest.java  [<font color=#FF0000>Fail</font>] wrapper.IntegerCacheTest.java  
 ## Reference
 * jvms8.pdf
