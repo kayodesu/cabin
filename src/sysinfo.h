@@ -14,9 +14,9 @@ long totalMemoryCount();
 long maxMemoryCount();
 
 // 返回操作系统的名称。e.g. window 10
-char *osName();
+const char *osName();
 
 // 返回操作系统的架构。e.g. amd64
-char *osArch();
+const char *osArch();
 
 #endif

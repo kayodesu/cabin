@@ -4,7 +4,7 @@ project(jvm)
 set(CMAKE_CXX_FLAGS "-std=c++17 -m64 -Wall -lz -lminizip -llibffi") # lz: link zlip
 
 add_executable(jvm
-        src/main.cpp src/sysinfo.cpp
+        src/main.cpp src/sysinfo_win.cpp
         src/interpreter/interpreter.cpp
         src/util/encoding.cpp src/util/convert.cpp src/classfile/attributes.cpp
         src/runtime/frame.cpp  src/runtime/thread_info.cpp src/runtime/Monitor.cpp
