@@ -118,6 +118,8 @@ static const char *instruction_names[] = {
 static void callJNIMethod(Frame *frame);
 static void invokedynamic(BytecodeReader &reader, Class &clazz, slot_t *&ostack);
 
+static bool checkcast(Class *s, Class *t);
+
 /*
  * 执行当前线程栈顶的frame
  */
@@ -1332,6 +1334,7 @@ opc_athrow: {
     }
     DISPATCH
 }
+    
 opc_checkcast: {
     jref obj = RSLOT(frame->ostack - 1); // 不改变操作数栈
     index = reader->readu2();
@@ -1339,7 +1342,7 @@ opc_checkcast: {
     // 如果引用是null，则指令执行结束。也就是说，null 引用可以转换成任何类型
     if (obj != jnull) {
         Class *c = cp->resolveClass(index);
-        if (!obj->isInstanceOf(c)) {
+        if (!checkcast(obj->clazz, c)) {
             auto err_msg = MSG("class %s cann't cast to %s", obj->clazz->class_name, c->class_name);
             THROW_EXCEPTION(S(java_lang_ClassCastException), err_msg);
         }
@@ -1354,7 +1357,7 @@ opc_instanceof: {
     if (obj == jnull) {
         frame->pushi(0);
     } else {
-        frame->pushi(obj->isInstanceOf(c) ? 1 : 0);
+        frame->pushi(checkcast(obj->clazz, c) ? 1 : 0);
     }
     DISPATCH
 }
@@ -1448,6 +1451,32 @@ opc_impdep2:
 opc_unused:
     jvm_abort("This instruction isn't used. %d(0x%x)\n", opcode, opcode); // todo    
     DISPATCH    
+}
+
+// check can s cast to t?
+static bool checkcast(Class *s, Class *t)
+{
+    assert(s != nullptr && t != nullptr);
+    if (!s->isArrayClass()) {
+        if (t->isArrayClass()) 
+            return false;
+        return s->isSubclassOf(t);
+    } else { // s is array type
+        if (t->isInterface()) {
+            // 数组实现了两个接口，看看t是不是其中之一。
+            return s->isSubclassOf(t);
+        } else if (t->isArrayClass()) { // s and t are both array type
+            Class *sc = s->componentClass();
+            Class *tc = t->componentClass();
+            if (sc->isPrimClass() || tc->isPrimClass()) {
+                // s and t are same prim type array.
+                return sc == tc;
+            }
+            return checkcast(sc, tc);
+        } else { // t is not interface and array type,
+            return equals(t->class_name, S(java_lang_Object));
+        }
+    }
 }
 
 static void invokedynamic(BytecodeReader &reader, Class &clazz, slot_t *&ostack)

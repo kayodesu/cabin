@@ -259,8 +259,6 @@ public:
 
     bool isRefArrayClass() const { return !isPrimArrayClass(); }
 
-    // bool isArrayObject() const override { return false; }
-
     Class *arrayClass() const;
 
     std::string toString() const;

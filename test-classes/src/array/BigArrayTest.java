@@ -3,7 +3,7 @@ package array;
 import java.util.Arrays;
 
 /**
- * Status: Fail
+ * Status: Pass
  */
 public class BigArrayTest {
     public static void main(String[] args) {
