@@ -3,7 +3,7 @@
  */
 
 #include "../../../runtime/frame.h"
-#include "../../../runtime/thread_info.h"
+#include "../../../runtime/vm_thread.h"
 #include "../../../objects/array_object.h"
 #include "../../jni_inner.h"
 

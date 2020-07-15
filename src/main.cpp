@@ -9,9 +9,9 @@
 #include <thread>
 #include "jvmstd.h"
 #include "debug.h"
-#include "runtime/thread_info.h"
-#include "objects/class.h"
-#include "objects/method.h"
+#include "runtime/vm_thread.h"
+#include "metadata/class.h"
+#include "metadata/method.h"
 #include "objects/array_object.h"
 #include "interpreter/interpreter.h"
 #include "memory/Heap.h"

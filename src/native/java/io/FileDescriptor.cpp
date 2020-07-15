@@ -3,7 +3,7 @@
  */
 
 #include "../../jni_inner.h"
-#include "../../../runtime/thread_info.h"
+#include "../../../runtime/vm_thread.h"
 
 /*
  * This routine initializes JNI field offsets for the class

@@ -1,5 +1,5 @@
 #include <cassert>
-#include "class.h"
+#include "../metadata/class.h"
 #include "class_object.h"
 #include "class_loader.h"
 

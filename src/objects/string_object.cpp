@@ -4,9 +4,9 @@
 
 #include "string_object.h"
 #include "class_loader.h"
-#include "field.h"
-#include "method.h"
-#include "class.h"
+#include "../metadata/field.h"
+#include "../metadata/method.h"
+#include "../metadata/class.h"
 #include "array_object.h"
 #include "../interpreter/interpreter.h"
 

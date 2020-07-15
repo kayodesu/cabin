@@ -5,8 +5,8 @@
 #include "../../jni_inner.h"
 #include "../../../symbol.h"
 #include "../../../slot.h"
-#include "../../../objects/method.h"
-#include "../../../objects/class.h"
+#include "../../../metadata/method.h"
+#include "../../../metadata/class.h"
 #include "../../../interpreter/interpreter.h"
 
 // @CallerSensitive

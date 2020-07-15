@@ -6,10 +6,10 @@
 #include "gc.h"
 #include "../jvmstd.h"
 #include "heap.h"
-#include "../runtime/thread_info.h"
+#include "../runtime/vm_thread.h"
 #include "../runtime/frame.h"
 #include "../objects/object.h"
-#include "../objects/class.h"
+#include "../metadata/class.h"
 
 using namespace std;
 

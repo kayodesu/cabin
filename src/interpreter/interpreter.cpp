@@ -9,10 +9,10 @@
 #include "interpreter.h"
 #include "../objects/invoke.h"
 #include "../objects/object.h"
-#include "../objects/class.h"
-#include "../objects/method.h"
+#include "../metadata/class.h"
+#include "../metadata/method.h"
 #include "../debug.h"
-#include "../runtime/thread_info.h"
+#include "../runtime/vm_thread.h"
 #include "../runtime/frame.h"
 #include "../objects/array_object.h"
 

@@ -3,9 +3,9 @@
 #include "../symbol.h"
 #include "../util/encoding.h"
 #include "../jvmstd.h"
-#include "field.h"
+#include "../metadata/field.h"
 #include "object.h"
-#include "class.h"
+#include "../metadata/class.h"
 #include "../interpreter/interpreter.h"
 #include "../slot.h"
 

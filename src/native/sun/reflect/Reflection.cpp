@@ -6,8 +6,8 @@
 #include "../../../objects/object.h"
 #include "../../../jvmstd.h"
 #include "../../../runtime/frame.h"
-#include "../../../runtime/thread_info.h"
-#include "../../../objects/class.h"
+#include "../../../runtime/vm_thread.h"
+#include "../../../metadata/class.h"
 
 
 // public static native Class<?> getCallerClass(int level)

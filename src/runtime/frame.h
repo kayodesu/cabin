@@ -5,8 +5,8 @@
 #ifndef JVM_STACK_FRAME_H
 #define JVM_STACK_FRAME_H
 
-#include "../objects/class.h"
-#include "../objects/method.h"
+#include "../metadata/class.h"
+#include "../metadata/method.h"
 #include "../util/bytecode_reader.h"
 
 class Method;

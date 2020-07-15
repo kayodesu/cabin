@@ -9,11 +9,11 @@
 #include <minizip/unzip.h>
 #include "class_loader.h"
 #include "../symbol.h"
-#include "class.h"
+#include "../metadata/class.h"
 #include "array_object.h"
 #include "class_object.h"
 #include "../interpreter/interpreter.h"
-#include "../runtime/thread_info.h"
+#include "../runtime/vm_thread.h"
 #include "prims.h"
 
 using namespace std;

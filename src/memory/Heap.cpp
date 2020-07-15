@@ -1,8 +1,8 @@
 #include <vector>
 #include "heap.h"
-#include "../objects/class.h"
-#include "../objects/method.h"
-#include "../objects/field.h"
+#include "../metadata/class.h"
+#include "../metadata/method.h"
+#include "../metadata/field.h"
 #include "../config.h"
 
 /*

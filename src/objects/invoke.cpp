@@ -4,8 +4,8 @@
 
 #include "../slot.h"
 #include "invoke.h"
-#include "class.h"
-#include "method.h"
+#include "../metadata/class.h"
+#include "../metadata/method.h"
 #include "array_object.h"
 #include "class_object.h"
 #include "../interpreter/interpreter.h"

@@ -4,7 +4,7 @@
 #include <initializer_list>
 #include <cstdarg>
 #include "../jvmstd.h"
-#include "../objects/method.h"
+#include "../metadata/method.h"
 #include "../slot.h"
 
 class Method;

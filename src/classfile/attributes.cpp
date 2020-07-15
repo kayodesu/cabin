@@ -7,8 +7,8 @@
 #include "../jvmstd.h"
 #include "../slot.h"
 #include "attributes.h"
-#include "../runtime/thread_info.h"
-#include "../objects/class.h"
+#include "../runtime/vm_thread.h"
+#include "../metadata/class.h"
 #include "../objects/class_object.h"
 #include "constants.h"
 

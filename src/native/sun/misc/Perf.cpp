@@ -4,7 +4,7 @@
 
 #include "../../jni_inner.h"
 #include "../../../slot.h"
-#include "../../../objects/class.h"
+#include "../../../metadata/class.h"
 #include "../../../runtime/frame.h"
 #include "../../../interpreter/interpreter.h"
 

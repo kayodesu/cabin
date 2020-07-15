@@ -4,13 +4,13 @@
 
 #include <cassert>
 #include <thread>
-#include "thread_info.h"
+#include "vm_thread.h"
 #include "../jvmstd.h"
 #include "../debug.h"
 #include "../objects/class_loader.h"
 #include "../objects/object.h"
-#include "../objects/class.h"
-#include "../objects/field.h"
+#include "../metadata/class.h"
+#include "../metadata/field.h"
 #include "../objects/array_object.h"
 #include "../interpreter/interpreter.h"
 #include "frame.h"

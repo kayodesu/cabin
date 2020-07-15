@@ -3,7 +3,7 @@
  */
 
 #include "Monitor.h"
-#include "thread_info.h"
+#include "vm_thread.h"
 
 #if 0
 Monitor::Monitor()

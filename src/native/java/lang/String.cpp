@@ -3,7 +3,7 @@
  */
 
 #include "../../jni_inner.h"
-#include "../../../objects/class.h"
+#include "../../../metadata/class.h"
 
 // public native String intern();
 static jstring intern(jstring _this)

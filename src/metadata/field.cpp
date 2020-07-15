@@ -4,8 +4,8 @@
 
 #include "field.h"
 #include "class.h"
-#include "prims.h"
-#include "class_object.h"
+#include "../objects/prims.h"
+#include "../objects/class_object.h"
 
 using namespace std;
 using namespace utf8;

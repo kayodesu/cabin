@@ -7,7 +7,7 @@ add_executable(jvm
         src/main.cpp src/sysinfo_win.cpp
         src/interpreter/interpreter.cpp
         src/util/encoding.cpp src/util/convert.cpp src/classfile/attributes.cpp
-        src/runtime/frame.cpp  src/runtime/thread_info.cpp src/runtime/Monitor.cpp
+        src/runtime/frame.cpp src/runtime/vm_thread.cpp src/runtime/Monitor.cpp
         src/memory/heap.cpp src/memory/gc.cpp
         src/native/java/io/FileDescriptor.cpp src/native/java/io/FileInputStream.cpp
         src/native/java/io/FileOutputStream.cpp src/native/java/lang/Class.cpp
@@ -39,10 +39,10 @@ add_executable(jvm
         src/native/sun/management/VMManagementImpl.cpp src/native/sun/management/ThreadImpl.cpp
         src/native/jdk/internal/misc/VM.cpp
         src/native/jdk/internal/misc/Unsafe.cpp src/native/jdk/internal/util/SystemProps-Raw.cpp
-        src/objects/method.cpp src/objects/field.cpp src/objects/constant_pool.cpp src/native/jni.cpp
+        src/metadata/method.cpp src/metadata/field.cpp src/metadata/constant_pool.cpp src/native/jni.cpp
         src/objects/array_object.cpp src/objects/string_object.cpp 
         src/objects/class_loader.cpp src/objects/prims.cpp src/objects/invoke.cpp
-        src/objects/object.cpp src/objects/class.cpp src/objects/class_object.cpp)
+        src/objects/object.cpp src/metadata/class.cpp src/objects/class_object.cpp)
 
 target_link_libraries (jvm libz)
 target_link_libraries (jvm libminizip)

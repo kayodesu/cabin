@@ -2,7 +2,7 @@
 #include "../../jni_inner.h"
 #include "../../../jvmstd.h"
 #include "../../../objects/object.h"
-#include "../../../objects/class.h"
+#include "../../../metadata/class.h"
 #include "../../../objects/prims.h"
 #include "../../../interpreter/interpreter.h"
 

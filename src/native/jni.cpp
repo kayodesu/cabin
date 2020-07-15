@@ -4,7 +4,7 @@
 
 #include <vector>
 #include "jni_inner.h"
-#include "../runtime/thread_info.h"
+#include "../runtime/vm_thread.h"
 
 using namespace std;
 using namespace utf8;

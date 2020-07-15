@@ -4,13 +4,13 @@
 
 #include <vector>
 #include "../../../objects/object.h"
-#include "../../../objects/class.h"
-#include "../../../objects/field.h"
+#include "../../../metadata/class.h"
+#include "../../../metadata/field.h"
 #include "../../../objects/array_object.h"
 #include "../../../objects/class_object.h"
 #include "../../../interpreter/interpreter.h"
 #include "../../../runtime/frame.h"
-#include "../../../runtime/thread_info.h"
+#include "../../../runtime/vm_thread.h"
 #include "../../jni_inner.h"
 
 using namespace std;

@@ -6,7 +6,7 @@
 #include "class.h"
 #include "method.h"
 #include "field.h"
-#include "invoke.h"
+#include "../objects/invoke.h"
 #include "../interpreter/interpreter.h"
 
 using namespace std;

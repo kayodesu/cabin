@@ -13,7 +13,7 @@
 #include "../util/encoding.h"
 #include "../jvmstd.h"
 #include "../slot.h"
-#include "field.h"
+#include "../metadata/field.h"
 
 class Field;
 class Class;

@@ -6,8 +6,8 @@
 #include "../../../symbol.h"
 #include "../../jni_inner.h"
 #include "../../../objects/class_loader.h"
-#include "../../../objects/method.h"
-#include "../../../objects/class.h"
+#include "../../../metadata/method.h"
+#include "../../../metadata/class.h"
 #include "../../../interpreter/interpreter.h"
 
 // private static native void initialize();

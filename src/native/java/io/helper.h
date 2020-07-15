@@ -2,7 +2,7 @@
 #include "../../../symbol.h"
 #include "../../../jvmstd.h"
 #include "../../../objects/object.h"
-#include "../../../runtime/thread_info.h"
+#include "../../../runtime/vm_thread.h"
 
 /*
  * 一些帮助函数，只用于本目录下的文件。

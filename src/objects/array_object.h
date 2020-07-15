@@ -5,8 +5,9 @@
 #ifndef KAYO_ARRAY_OBJECT_H
 #define KAYO_ARRAY_OBJECT_H
 
+#include <string>
 #include "object.h"
-#include "class.h"
+#include "../metadata/class.h"
 
 // Object of array
 class Array: public Object {
@@ -90,5 +91,11 @@ static inline Array *newMultiArray(Class *ac, jint dim, const jint lens[])
 {
     return Array::newMultiArray(ac, dim, lens);
 }
+
+/*
+ * [[[I -> int
+ * [Ljava/lang/Object; -> java/lang/Object
+ */
+std::string arrClassName2EleClassName(const utf8_t *arr_class_name);
 
 #endif //KAYO_ARRAY_OBJECT_H

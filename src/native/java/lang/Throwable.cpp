@@ -5,10 +5,10 @@
 #include "../../jni_inner.h"
 #include "../../../objects/object.h"
 #include "../../../objects/array_object.h"
-#include "../../../runtime/thread_info.h"
+#include "../../../runtime/vm_thread.h"
 #include "../../../symbol.h"
 #include "../../../runtime/frame.h"
-#include "../../../objects/class.h"
+#include "../../../metadata/class.h"
 #include "../../../objects/class_loader.h"
 
 using namespace std;

@@ -4,7 +4,7 @@
 
 #include "../../jni_inner.h"
 #include "../../../objects/class_loader.h"
-#include "../../../objects/class.h"
+#include "../../../metadata/class.h"
 #include "../../../objects/class_object.h"
 #include "../../../objects/string_object.h"
 

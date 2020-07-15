@@ -7,11 +7,11 @@
 #include "class_loader.h"
 #include "object.h"
 #include "array_object.h"
-#include "class.h"
-#include "field.h"
+#include "../metadata/class.h"
+#include "../metadata/field.h"
 #include "../interpreter/interpreter.h"
 #include "prims.h"
-#include "../runtime/thread_info.h"
+#include "../runtime/vm_thread.h"
 
 using namespace std;
 using namespace utf8;

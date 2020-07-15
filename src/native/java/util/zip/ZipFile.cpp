@@ -3,7 +3,7 @@
 #include "../../../../symbol.h"
 #include "../../../../jvmstd.h"
 #include "../../../../objects/string_object.h"
-#include "../../../../runtime/thread_info.h"
+#include "../../../../runtime/vm_thread.h"
 
 /*
  * Author: Yo Ka

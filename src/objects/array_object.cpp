@@ -3,9 +3,9 @@
  */
 
 #include "array_object.h"
-#include "class.h"
+#include "../metadata/class.h"
 #include "prims.h"
-#include "../runtime/thread_info.h"
+#include "../runtime/vm_thread.h"
 
 using namespace std;
 
@@ -154,4 +154,31 @@ string Array::toString() const
     // todo
     string s;
     return s;
+}
+
+string arrClassName2EleClassName(const utf8_t *arr_class_name)
+{
+    assert(arr_class_name != nullptr);
+    assert(arr_class_name[0] == '['); // must be array class name
+
+    auto ele_name = arr_class_name;
+    while (*++ele_name == '[');
+
+    auto prim_class_name = getPrimClassName(*ele_name);
+    if (prim_class_name != nullptr) {  // primitive type
+        return prim_class_name;
+    }
+
+    // 普通类: Lxx/xx/xx; 型
+    assert(*ele_name == 'L');
+    ele_name++; // jump 'L'
+
+    int last = strlen(ele_name) - 1;
+    assert(last > 0);
+    assert(ele_name[last] == ';');
+
+    char buf[last + 1];
+    strncpy(buf, ele_name, (size_t) last);
+    buf[last] = 0;
+    return buf;
 }

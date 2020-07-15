@@ -1,6 +1,6 @@
 #include "../../jni_inner.h"
-#include "../../../objects/constant_pool.h"
-#include "../../../objects/class.h"
+#include "../../../metadata/constant_pool.h"
+#include "../../../metadata/class.h"
 
 /*
  * Author: Yo Ka

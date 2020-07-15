@@ -7,15 +7,15 @@
 #include <sstream>
 #include <cassert>
 #include <iostream>
-#include "../runtime/thread_info.h"
+#include "../runtime/vm_thread.h"
 #include "class.h"
 #include "method.h"
 #include "field.h"
-#include "array_object.h"
-#include "class_object.h"
+#include "../objects/array_object.h"
+#include "../objects/class_object.h"
 #include "../interpreter/interpreter.h"
-#include "prims.h"
-#include "invoke.h"
+#include "../objects/prims.h"
+#include "../objects/invoke.h"
 #include "../classfile/constants.h"
 
 using namespace std;
@@ -409,15 +409,15 @@ Class::Class(Object *loader, u1 *bytecode, size_t len): loader(loader), bytecode
     class_name = cp.className(r.readu2());
     genPkgName();
 
-    u2 super_class = r.readu2();
-    if (super_class == 0) { // invalid constant pool reference
+    u2 _super_class = r.readu2();
+    if (_super_class == 0) { // invalid constant pool reference
         this->super_class = nullptr;
     } else {
         if (utf8::equals(class_name, S(java_lang_Object))) {
             signalException(S(java_lang_ClassFormatError), "Object has super");
             return;
         }
-        this->super_class = cp.resolveClass(super_class);
+        this->super_class = cp.resolveClass(_super_class);
     }
 
     // parse interfaces
@@ -461,7 +461,6 @@ Class::Class(Object *loader, u1 *bytecode, size_t len): loader(loader), bytecode
     createVtable(); // todo 接口有没有必要创建 vtable
     createItable();
 
-    //data = (slot_t *)(this + 1);
     if (g_class_class != nullptr) {
         java_mirror = generteClassObject(this);
     }
@@ -487,7 +486,6 @@ Class::Class(const char *className)
     createVtable();
     createItable();
 
-    //data = (slot_t *)(this + 1);
     if (g_class_class != nullptr) {
         java_mirror = generteClassObject(this);
     }

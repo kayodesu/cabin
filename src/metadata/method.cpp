@@ -4,8 +4,8 @@
 
 #include "method.h"
 #include "class.h"
-#include "array_object.h"
-#include "invoke.h"
+#include "../objects/array_object.h"
+#include "../objects/invoke.h"
 
 using namespace std;
 
