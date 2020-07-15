@@ -12,7 +12,7 @@ public class ArrayCastTest {
             int[][][] arr1 = new int[2][3][4];
             Object[] o1 = (Object[]) arr1; // OK
             Object[][] o2 = (Object[][]) arr1; // OK
-        } catch (Exception e) {
+        } catch (ClassCastException e) {
             System.out.println("Fail");
             return;
         }

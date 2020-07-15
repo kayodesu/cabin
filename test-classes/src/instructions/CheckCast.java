@@ -7,12 +7,10 @@ import java.io.Serializable;
 public class CheckCast {
 
     static class Sup implements Closeable {
-
         @Override
         public void close() throws IOException {
             System.out.println("close!");
         }
-
     }
 
     static class Sub extends Sup implements Serializable {
@@ -20,25 +18,29 @@ public class CheckCast {
     }
     
     public static void main(String[] args) {
-        System.out.println("testing checkcast..");
-        sClass();
-        sInterface();
-        sArray();
-        sArray_tArray();
-        System.out.println("OK!");
+        try {
+//            sClass();
+//            sInterface();
+//            sArray();
+            sArray_tArray();
+        } catch (ClassCastException e) {
+            System.out.println("Fail");
+            return;
+        }
+        System.out.println("Pass");
     }
     
     private static void sClass() {
         Object s = new Sub();
         Sub t1 = (Sub) s;
         Sup t2 = (Sup) s;
-        Serializable t3 = (Serializable) s;
-        Closeable t4 = (Closeable) s;
-        AutoCloseable t5 = (AutoCloseable) s;
     }
     
     private static void sInterface() {
-        // todo
+        Object s = new Sub();
+        Serializable t3 = (Serializable) s;
+        Closeable t4 = (Closeable) s;
+        AutoCloseable t5 = (AutoCloseable) s;
     }
     
     private static void sArray() {
@@ -50,13 +52,13 @@ public class CheckCast {
     private static void sArray_tArray() {
         Object s = new Sub[0];
         Sup[] t1 = (Sup[]) s;
-        Object[] t2 = (Object[]) s;
-        Serializable[] t3 = (Serializable[]) s;
-        Closeable[] t4 = (Closeable[]) s;
-        AutoCloseable[] t5 = (AutoCloseable[]) s;
+//        Object[] t2 = (Object[]) s;
+//        Serializable[] t3 = (Serializable[]) s;
+//        Closeable[] t4 = (Closeable[]) s;
+//        AutoCloseable[] t5 = (AutoCloseable[]) s;
         
-        Object s1 = new int[0];
-        int[] t6 = (int[]) s1;
+//        Object s1 = new int[0];
+//        int[] t6 = (int[]) s1;
     }
     
 }
