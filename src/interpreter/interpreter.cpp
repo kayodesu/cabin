@@ -559,7 +559,13 @@ opc_aastore: {
 opc_bastore: {
     auto value = frame->popi();
     GET_AND_CHECK_ARRAY
-    arr->setByte(index, (jbyte) value);
+    if (arr->clazz->isByteArrayClass()) {
+        arr->setByte(index, (jbyte) value);
+    } else if (arr->clazz->isBooleanArrayClass()) {  
+        arr->setBoolean(index, value != 0 ? jtrue : jfalse);
+    } else {
+        jvm_abort("never go here"); // todo
+    }
     DISPATCH
 }
 opc_castore: {

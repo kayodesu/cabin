@@ -2,17 +2,35 @@ package reflect;
 
 import java.lang.reflect.Array;
 
-public class NewArrayTest {
+/**
+ * Status: Pass
+ */
+public class ArrayLengthTest {
     public static void main(String[] args) {
-        newNullArray();
+        nullArrayLength();
+        nonArrayLength();
+        arrayLength();
     }
 
-    public static void newNullArray() {
+    public static void nullArrayLength() {
         try {
             Object x = null;
-            Array.newArray(x, 3);
+            Array.getLength(x);
         } catch (NullPointerException e) {
-            System.out.println(e.getMessage() == null);
+            System.out.println("Pass");
         }
+    }
+
+    public static void nonArrayLength() {
+        try {
+            Array.getLength("A");
+        } catch (IllegalArgumentException e) {
+            System.out.println("Pass");
+        }
+    }
+
+    public static void arrayLength() {
+        System.out.println(Array.getLength(new int[0]) == 0);
+        System.out.println(Array.getLength(new int[3]) == 3);
     }
 }

@@ -3,7 +3,7 @@ package reflect;
 import java.lang.reflect.Array;
 
 /**
- * Status: Fail
+ * Status: Pass
  */
 public class ArrayGetTest {
 

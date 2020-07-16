@@ -1,5 +1,8 @@
 package instructions;
 
+/**
+ * Status: Pass
+ */
 public class NewMultiArrayTest {
     
     public static void main(String[] args) {

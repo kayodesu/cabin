@@ -801,6 +801,11 @@ bool Class::isPrimClass() const
     return isPrimClassName(class_name);
 }
 
+bool Class::isPrimWrapperClass() const
+{
+    return isPrimWrapperClassName(class_name);
+}
+
 bool Class::isVoidClass() const
 {
     return strcmp(class_name, "void") == 0;
@@ -915,7 +920,7 @@ Class *Class::componentClass()
         char buf[last + 1];
         strncpy(buf, comp_name, (size_t) last);
         buf[last] = 0;
-        comp_class = loadClass(loader, buf); // todo bug! ! 对于 ArrayClass 这个loader是bootClassLoader, 无法loader用户类
+        comp_class = loadClass(loader, buf); 
         return comp_class;
     }
 }

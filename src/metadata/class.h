@@ -245,6 +245,8 @@ public:
     int inheritedDepth() const;
 
     bool isPrimClass() const;
+    bool isPrimWrapperClass() const;
+
     // void.class
     bool isVoidClass() const;
     bool isArrayClass() const;

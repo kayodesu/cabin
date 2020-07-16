@@ -48,6 +48,13 @@ bool isPrimDescriptor(utf8_t descriptor)
                    [=](auto &prim){ return prim.descriptor == descriptor; }) != end(prims);
 }
 
+bool isPrimWrapperClassName(const utf8_t *class_name)
+{
+    assert(class_name != nullptr);
+    return find_if(begin(prims), end(prims),
+                   [=](auto &prim){ return equals(prim.wrapper_class_name, class_name); }) != end(prims);
+}
+
 const utf8_t *getPrimArrayClassName(const utf8_t *class_name)
 {
     assert(class_name != nullptr);
@@ -67,17 +74,26 @@ const utf8_t *getPrimClassName(utf8_t descriptor)
     return nullptr;
 }
 
+const utf8_t *getPrimDescriptor(const utf8_t *wrapper_class_name)
+{
+    for (auto &t : prims) {
+        if (equals(t.wrapper_class_name, wrapper_class_name))
+            return &(t.descriptor);
+    }
+    return nullptr;
+}
+
 const slot_t *primObjUnbox(const Object *box)
 {
     assert(box != nullptr);
 
     Class *c = box->clazz;
-    if (!c->isPrimClass()) {
+    if (!c->isPrimWrapperClass()) {
         jvm_abort("error"); // todo
     }
 
     // value 的描述符就是基本类型的类名。比如，private final boolean value;
-    Field *f = c->lookupField(S(value), c->class_name);
+    Field *f = c->lookupField(S(value), getPrimDescriptor(c->class_name));
     if (f == nullptr) {
         jvm_abort("error, %s, %s\n", S(value), c->class_name); // todo
     }

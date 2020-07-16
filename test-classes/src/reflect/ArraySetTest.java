@@ -3,7 +3,7 @@ package reflect;
 import java.lang.reflect.Array;
 
 /**
- * Status: Fail
+ * Status: Pass
  */
 public class ArraySetTest {
     public static void main(String[] args) {
@@ -11,7 +11,10 @@ public class ArraySetTest {
         setNonArray();
         setArrayTypeMismatch();
         setArrayBadIndex();
+        setObjectArray();
         setPrimitiveArray();
+        setNullValue();
+        setWrongTypeValue();
     }
 
     public static void setNullArray() {
@@ -46,7 +49,7 @@ public class ArraySetTest {
             int[] arr = {1, 2, 3};
             Array.set(arr, -1, 4);
         } catch (ArrayIndexOutOfBoundsException e) {
-            System.out.println(null == e.getMessage());
+            System.out.println("Pass");
         }
     }
 
@@ -69,5 +72,26 @@ public class ArraySetTest {
         int[] arr = {5, 4, 5, 7};
         Array.set(arr, 0, 0);
         System.out.println(0 == (Integer) Array.get(arr, 0));
+    }
+
+    public static void setNullValue() {
+        try {
+            int[] arr = {1, 2, 3};
+            Array.set(arr, 0, null);
+        } catch (IllegalArgumentException e) {
+            System.out.println("Pass");
+        }
+
+        Object[] arr = {1, 2, 3};
+        Array.set(arr, 0, null); // OK
+    }
+
+    public static void setWrongTypeValue() {
+        try {
+            char[] aaa = { 'c' };
+            Array.set(aaa, 0, new Integer(3));
+        } catch (IllegalArgumentException e) {
+            System.out.println("Pass");
+        }
     }
 }

@@ -90,7 +90,7 @@ bool Object::isInstanceOf(Class *c) const
 
 const slot_t *Object::unbox() const
 {
-    assert(clazz->isPrimClass());
+    assert(clazz->isPrimWrapperClass());
     return primObjUnbox(this);
 }
 
