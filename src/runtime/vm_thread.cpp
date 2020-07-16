@@ -339,14 +339,9 @@ void printStackTrace()
     if (e == nullptr)
         return;
 
-    // thread->clearVMStack();
-    // Method *pst = e->clazz->lookupInstMethod(S(printStackTrace), S(___V));
-    // assert(pst != nullptr);
-    // execJavaFunc(pst, {e});
-
     // private String detailMessage;
     jstrref msg = e->getRefField("detailMessage", S(sig_java_lang_String));
-    printf("%s: %s\n", e->clazz->class_name, msg->toUtf8());
+    printf("%s: %s\n", e->clazz->class_name, msg != nullptr ? msg->toUtf8() : "null");
 
     // [Ljava/lang/Object;
     auto backtrace = e->getRefField<Array>("backtrace", "Ljava/lang/Object;");
@@ -357,62 +352,55 @@ void printStackTrace()
         // private String methodName;
         // private String fileName;
         // private int    lineNumber;
-
-        // Method *toString = element->clazz->getDeclaredInstMethod("toString", "()Ljava/lang/String;");
-        // assert(toString != nullptr);
-        // jstrref s = RSLOT(execJavaFunc(toString, {element}));
-        // printf("%s\n", s->toUtf8());
-        
         jstrref declaring_class = element->getRefField("declaringClass", S(sig_java_lang_String));
-        jstrref method_name = element->getRefField("declaringClass", S(sig_java_lang_String));
+        jstrref method_name = element->getRefField("methodName", S(sig_java_lang_String));
         jstrref file_name = element->getRefField("fileName", S(sig_java_lang_String));
         jint line_number = element->getIntField("lineNumber", S(I));
 
-        printf("%s\n", declaring_class->toUtf8());
-        printf("%s\n", method_name->toUtf8());
-        printf("%s\n", file_name ? file_name->toUtf8() : "(Unknown Source)");
-        printf("%d\n", line_number);
+        printf("\tat %s.%s(%s:%d)\n",
+               declaring_class->toUtf8(),
+               method_name->toUtf8(),
+               file_name ? file_name->toUtf8() : "(Unknown Source)",
+               line_number);
     }
 
-#if 0
-    Class *throw_class = findSystemClass("java/lang/Throwable");
-    FieldBlock *field = findField(throw_class, "backtrace", "Ljava/lang/Object;");
-    MethodBlock *print = lookupMethod(writer->class, "println", "([C)V");
-    Object *array = (Object *)INST_DATA(excep)[field->offset];
-    char buff[256];
-    int *data, depth;
-    int i = 0;
-
-    if(array == NULL)
-        return;
-
-    data = &(INST_DATA(array)[1]);
-    depth = *INST_DATA(array);
-    for(; i < depth; ) {
-        MethodBlock *mb = (MethodBlock*)data[i++];
-        unsigned char *pc = (unsigned char *)data[i++];
-        ClassBlock *cb = CLASS_CB(mb->class);
-        unsigned char *dot_name = slash2dots(cb->name);
-            char *spntr = buff;
-            short *dpntr;
-            int len;
-
-        if(mb->access_flags & ACC_NATIVE)
-            len = sprintf(buff, "\tat %s.%s(Native method)", dot_name, mb->name);
-	    else if(cb->source_file_name == 0)
-		    len = sprintf(buff, "\tat %s.%s(Unknown source)", dot_name, mb->name);
-	    else
-		    len = sprintf(buff, "\tat %s.%s(%s:%d)", dot_name, mb->name, cb->source_file_name, mapPC2LineNo(mb, pc));
-
-        free(dot_name);
-        if((array = allocTypeArray(T_CHAR, len)) == NULL)
-            return;
-
-        dpntr = (short*)INST_DATA(array)+2;
-        for(; len > 0; len--)
-            *dpntr++ = *spntr++;
-
-        executeMethod(writer, print, array);
-    }
-#endif
+//    Class *throw_class = findSystemClass("java/lang/Throwable");
+//    FieldBlock *field = findField(throw_class, "backtrace", "Ljava/lang/Object;");
+//    MethodBlock *print = lookupMethod(writer->class, "println", "([C)V");
+//    Object *array = (Object *)INST_DATA(excep)[field->offset];
+//    char buff[256];
+//    int *data, depth;
+//    int i = 0;
+//
+//    if(array == NULL)
+//        return;
+//
+//    data = &(INST_DATA(array)[1]);
+//    depth = *INST_DATA(array);
+//    for(; i < depth; ) {
+//        MethodBlock *mb = (MethodBlock*)data[i++];
+//        unsigned char *pc = (unsigned char *)data[i++];
+//        ClassBlock *cb = CLASS_CB(mb->class);
+//        unsigned char *dot_name = slash2dots(cb->name);
+//            char *spntr = buff;
+//            short *dpntr;
+//            int len;
+//
+//        if(mb->access_flags & ACC_NATIVE)
+//            len = sprintf(buff, "\tat %s.%s(Native method)", dot_name, mb->name);
+//	    else if(cb->source_file_name == 0)
+//		    len = sprintf(buff, "\tat %s.%s(Unknown source)", dot_name, mb->name);
+//	    else
+//		    len = sprintf(buff, "\tat %s.%s(%s:%d)", dot_name, mb->name, cb->source_file_name, mapPC2LineNo(mb, pc));
+//
+//        free(dot_name);
+//        if((array = allocTypeArray(T_CHAR, len)) == NULL)
+//            return;
+//
+//        dpntr = (short*)INST_DATA(array)+2;
+//        for(; len > 0; len--)
+//            *dpntr++ = *spntr++;
+//
+//        executeMethod(writer, print, array);
+//    }
 }
