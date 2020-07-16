@@ -13,13 +13,13 @@ An experimental JVM written in C++.
 * libffi 3.3
 
 ## Features  
-:heavy_check_mark: Java arithmetic, flow control, object-oriented programming(virtual method, inherit, etc.)  
-:heavy_check_mark: String  
-:heavy_check_mark: Array  
-:heavy_check_mark: Exception  
-:x: Lambda  
-:x: Multi-thread  
-:x: Garbage collection  
+- [x] Java arithmetic, flow control, object-oriented programming(virtual method, inherit, etc.)  
+- [x] String  
+- [x] Array  
+- [x] Exception  
+- [ ] Lambda  
+- [ ] Multi-thread  
+- [ ] Garbage collection  
 ## Run
 Ensure your Java version is Java8, and already set `JAVA_HOME` environment variable.
 
