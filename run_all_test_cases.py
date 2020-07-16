@@ -3,7 +3,7 @@
 
 import os
 
-yovm = '.\\build\\jvm.exe -cp "d:/code/jvm/test-classes/out/production/test-classes" '
+yovm = 'd:/code/jvm/build/jvm.exe -cp "d:/code/jvm/test-classes/out/production/test-classes" '
 
 if __name__ == '__main__':
     for e in os.walk('./test-classes/src'):
@@ -23,4 +23,5 @@ if __name__ == '__main__':
             i = class_name.rfind('.java')
             if i != -1:
                 class_name = class_name[:i]
-                os.startfile(yovm, class_name)
+                print("---Test: " + class_name)
+                os.system(yovm + class_name)
