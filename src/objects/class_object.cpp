@@ -23,5 +23,8 @@ ClassObject *generteClassObject(Class *c)
 
     assert(g_class_class != nullptr);
     size_t size = sizeof(ClassObject) + g_class_class->inst_field_count * sizeof(slot_t);
-    return new (calloc(1, size)) ClassObject(c);
+    ClassObject *co = new (calloc(1, size)) ClassObject(c);
+    // private final ClassLoader classLoader;
+    co->setRefField("classLoader", S(sig_java_lang_ClassLoader), c->loader);
+    return co;
 }

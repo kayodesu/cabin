@@ -1343,7 +1343,7 @@ opc_checkcast: {
     if (obj != jnull) {
         Class *c = cp->resolveClass(index);
         if (!checkcast(obj->clazz, c)) {
-            auto err_msg = MSG("class %s cann't cast to %s", obj->clazz->class_name, c->class_name);
+            auto err_msg = MSG("class %s cannot be cast to %s", obj->clazz->class_name, c->class_name);
             THROW_EXCEPTION(S(java_lang_ClassCastException), err_msg);
         }
     }

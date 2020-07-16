@@ -3,7 +3,7 @@ package exception;
 /**
  * Expect Output:
  * java.lang.ClassCastException: java.lang.String cannot be cast to java.lang.Integer
- *    	at exception.InstructionExTest.checkcast(InstructionExTest.java:44)
+ *     at exception.InstructionExTest.checkcast(InstructionExTest.java:44)
  * 	   at exception.InstructionExTest.main(InstructionExTest.java:32)
  * java.lang.NegativeArraySizeException
  *    	at exception.InstructionExTest.newarray(InstructionExTest.java:52)
@@ -24,7 +24,7 @@ package exception;
  * 	   at exception.InstructionExTest.irem(InstructionExTest.java:97)
  *     at exception.InstructionExTest.main(InstructionExTest.java:38)
  *
- * Status: Fail
+ * Status: Pass
  */
 public class InstructionExTest {
     

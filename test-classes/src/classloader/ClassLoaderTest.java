@@ -6,12 +6,12 @@ import java.net.URL;
 import java.net.URLClassLoader;
 
 /**
- * Status: Fail
+ * Status: Pass
  */
 public class ClassLoaderTest {
 
     private static void printLoaderChain(ClassLoader loader) {
-        System.out.println("--------------------------------");
+        System.out.println("------");
         while (true) {
             System.out.println(loader);
             if (loader != null)
@@ -23,9 +23,7 @@ public class ClassLoaderTest {
 
     public static void main(String[] args) throws MalformedURLException {
         printLoaderChain(Object.class.getClassLoader());
-
         printLoaderChain(new URLClassLoader(new URL[]{ new File("d:/").toURI().toURL() }));
-
         printLoaderChain(ClassLoaderTest.class.getClassLoader());
     }
 }
