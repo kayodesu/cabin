@@ -123,6 +123,7 @@ Class *loadBootClass(const utf8_t *name)
 {
     assert(name != nullptr);
     assert(isSlashName(name));
+    assert(name[0] != '['); // don't load array class
 
     auto iter = boot_classes.find(name);
     if (iter != boot_classes.end()) {
@@ -131,7 +132,7 @@ Class *loadBootClass(const utf8_t *name)
     }
 
     Class *c = nullptr;
-    if (name[0] == '[' or isPrimClassName(name)) {
+    if (isPrimClassName(name)) {
         c = Class::newClass(name);
     } else {
         if (g_jdk_version_9_and_upper) {
@@ -156,6 +157,24 @@ Class *loadBootClass(const utf8_t *name)
     if (c != nullptr) {
         boot_packages.insert(c->pkg_name);
         addClassToClassLoader(BOOT_CLASS_LOADER, c);
+    }
+    return c;
+}
+
+Class *loadArrayClass(Object *loader, const utf8_t *arr_class_name)
+{
+    assert(arr_class_name != nullptr);
+    assert(arr_class_name[0] == '['); // must be array class name
+
+    string ele_class_name = arrClassName2EleClassName(arr_class_name);
+    Class *c = loadClass(loader, ele_class_name.c_str());
+    if (c != nullptr) {
+        // Array Class 用它的元素的类加载器加载。
+        c = Class::newArrayClass(c->loader, arr_class_name);
+        assert(c != nullptr);
+        if (c->loader == BOOT_CLASS_LOADER)
+            boot_packages.insert(c->pkg_name); // todo array class 的pkg_name是啥
+        addClassToClassLoader(c->loader, c);
     }
     return c;
 }
@@ -202,12 +221,15 @@ Class *findLoadedClass(Object *class_loader, const utf8_t *name)
 Class *loadClass(Object *class_loader, const utf8_t *name)
 {
     assert(name != nullptr);
-    assert(isSlashName(name));
+//    assert(isSlashName(name));
 
     auto slash_name = dot2SlashDup(name);
     Class *c = findLoadedClass(class_loader, slash_name);
     if (c != nullptr)
         return c;
+
+    if (slash_name[0] == '[')
+        return loadArrayClass(class_loader, slash_name);
 
     // 先尝试用boot class loader load the class
     c = loadBootClass(slash_name);

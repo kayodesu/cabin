@@ -474,14 +474,9 @@ Class::Class(const char *className)
           loader(nullptr), super_class(g_object_class)
 {
     assert(className != nullptr);
-    assert(className[0] == '[' || isPrimClassName(className));
+    assert(isPrimClassName(className));
 
     pkg_name = "";
-
-    if (className[0] == '[') {
-        interfaces.push_back(loadBootClass(S(java_lang_Cloneable)));
-        interfaces.push_back(loadBootClass(S(java_io_Serializable)));
-    }
 
     createVtable();
     createItable();
@@ -492,6 +487,30 @@ Class::Class(const char *className)
 
     state = LOADED;
 }
+
+Class::Class(Object *loader, const char *className)
+        : class_name(dup(className)), /* 形参className可能非持久，复制一份 */
+          accsee_flags(JVM_ACC_PUBLIC), inited(true),
+          loader(loader), super_class(g_object_class)
+{
+    assert(className != nullptr);
+    assert(className[0] == '[');
+
+    pkg_name = "";
+
+    interfaces.push_back(loadBootClass(S(java_lang_Cloneable)));
+    interfaces.push_back(loadBootClass(S(java_io_Serializable)));
+
+    createVtable();
+    createItable();
+
+    if (g_class_class != nullptr) {
+        java_mirror = generteClassObject(this);
+    }
+
+    state = LOADED;
+}
+
 
 Class::~Class()
 {

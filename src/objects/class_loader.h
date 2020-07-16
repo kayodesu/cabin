@@ -25,13 +25,18 @@ void initClassLoader();
 
 #define BOOT_CLASS_LOADER ((jref) nullptr)
 
+/*
+ * 加载 JDK 类库中的类，不包括Array Class.
+ */
 Class *loadBootClass(const utf8_t *name);
+
+Class *loadArrayClass(Object *loader, const utf8_t *arr_class_name);
 
 static inline Class *loadArrayClass(const utf8_t *arr_class_name)
 {
     assert(arr_class_name != nullptr);
     assert(arr_class_name[0] == '['); // must be array class name
-    return loadBootClass(arr_class_name);
+    return loadArrayClass(g_system_class_loader, arr_class_name);
 };
 
 using utf8_set = std::unordered_set<const utf8_t *, utf8::Hash, utf8::Comparator>;

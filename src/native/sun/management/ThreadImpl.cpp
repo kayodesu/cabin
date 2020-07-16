@@ -20,7 +20,7 @@ static jobjectArray dumpThreads0(jlongArray ids, jboolean lockedMonitors, jboole
 
     if (ids == jnull) { // dump all threads
         int len = g_all_threads.size();
-        thread_infos = newArray(loadBootClass("[Ljava/lang/management/ThreadInfo;"), len);
+        thread_infos = newArray(loadArrayClass("[Ljava/lang/management/ThreadInfo;"), len);
 
         for (int i = 0; i < len; i++) {
             Thread *t = g_all_threads[i];
@@ -28,7 +28,7 @@ static jobjectArray dumpThreads0(jlongArray ids, jboolean lockedMonitors, jboole
             thread_infos->setRef(i, thread_info);
         }
     } else {
-        thread_infos = newArray(loadBootClass("[Ljava/lang/management/ThreadInfo;"), ids->len);
+        thread_infos = newArray(loadArrayClass("[Ljava/lang/management/ThreadInfo;"), ids->len);
 
         for (int i = 0; i < ids->len; i++) {
             auto id = ids->get<jlong>(i);

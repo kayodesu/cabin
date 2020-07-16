@@ -4,6 +4,9 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.Serializable;
 
+/**
+ * Status: Pass
+ */
 public class CheckCast {
 
     static class Sup implements Closeable {
@@ -19,9 +22,9 @@ public class CheckCast {
     
     public static void main(String[] args) {
         try {
-//            sClass();
-//            sInterface();
-//            sArray();
+            sClass();
+            sInterface();
+            sArray();
             sArray_tArray();
         } catch (ClassCastException e) {
             System.out.println("Fail");
@@ -52,13 +55,13 @@ public class CheckCast {
     private static void sArray_tArray() {
         Object s = new Sub[0];
         Sup[] t1 = (Sup[]) s;
-//        Object[] t2 = (Object[]) s;
-//        Serializable[] t3 = (Serializable[]) s;
-//        Closeable[] t4 = (Closeable[]) s;
-//        AutoCloseable[] t5 = (AutoCloseable[]) s;
+        Object[] t2 = (Object[]) s;
+        Serializable[] t3 = (Serializable[]) s;
+        Closeable[] t4 = (Closeable[]) s;
+        AutoCloseable[] t5 = (AutoCloseable[]) s;
         
-//        Object s1 = new int[0];
-//        int[] t6 = (int[]) s1;
+        Object s1 = new int[0];
+        int[] t6 = (int[]) s1;
     }
     
 }

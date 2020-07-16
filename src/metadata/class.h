@@ -146,6 +146,9 @@ private:
     // 创建数组或 primitive class，这两种类型的类由虚拟机直接生成。
     explicit Class(const char *class_name);
 
+    // 创建 array class，由虚拟机直接生成。
+    Class(Object *loader, const char *className);
+
     static Class *newClass(Object *loader, u1 *bytecode, size_t len)
     {
         // 因为 class object 无需清理，就不在堆上分配了，
@@ -158,6 +161,13 @@ private:
         // 因为 class object 无需清理，就不在堆上分配了，
         // 在本地内存创建即可。
         return new (calloc(1, sizeof(Class))) Class(class_name);
+    }
+
+    static Class *newArrayClass(Object *loader, const char *class_name)
+    {
+        // 因为 class object 无需清理，就不在堆上分配了，
+        // 在本地内存创建即可。
+        return new (calloc(1, sizeof(Class))) Class(loader, class_name);
     }
 public:
     ~Class();
@@ -336,6 +346,7 @@ public:
     friend void initClassLoader();
     friend Class *loadBootClass(const utf8_t *name);
     friend Class *defineClass(jref loader, u1 *bytecode, size_t len);
+    friend Class *loadArrayClass(Object *loader, const utf8_t *arr_class_name);
 };
 
 #endif //JVM_JCLASS_H

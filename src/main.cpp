@@ -337,6 +337,8 @@ static void initJVM(int argc, char *argv[])
     initClass(vm);
 }
 
+Object *g_system_class_loader;
+
 int main(int argc, char* argv[])
 {
     time_t time1;
@@ -347,7 +349,7 @@ int main(int argc, char* argv[])
     initJVM(argc, argv);
     TRACE("init jvm is over.\n");
 
-    Object *scl = getSystemClassLoader();
+    Object *scl = g_system_class_loader = getSystemClassLoader();
     assert(scl != nullptr);
 
     // Main Thread Set ContextClassLoader

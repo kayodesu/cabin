@@ -143,6 +143,8 @@ extern Object *g_sys_thread_group;
 // todo 所有线程
 extern std::vector<Thread *> g_all_threads;
 
+extern Object *g_system_class_loader;
+
 extern std::vector<std::pair<const utf8_t *, const utf8_t *>> g_properties;
 
 /*

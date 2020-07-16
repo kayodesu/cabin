@@ -45,7 +45,7 @@ static Object *newString_jdk_8_and_under(const utf8_t *str)
     auto len = length(str);
 
     // set java/lang/String 的 value 变量赋值
-    Array *value = newArray(loadBootClass(S(array_C) /* [C */ ), len);
+    Array *value = newArray(loadArrayClass(S(array_C) /* [C */ ), len);
     toUnicode(str, (unicode_t *) (value->data));
     strobj->setRefField(S(value), S(array_C), value);
 
@@ -64,7 +64,7 @@ static Object *newString_jdk_9_and_upper(const utf8_t *str)
 
     // set java/lang/String 的 value 变量赋值
     // private final byte[] value;
-    Array *value = newArray(loadBootClass(S(array_B) /* [B */ ), len);
+    Array *value = newArray(loadArrayClass(S(array_B) /* [B */ ), len);
     memcpy(value->data, str, len);
     strobj->setRefField(S(value), S(array_B), value);
 

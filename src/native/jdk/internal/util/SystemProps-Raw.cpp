@@ -21,7 +21,7 @@
 // private static native String[] vmProperties();
 static jobjectArray vmProperties()
 {
-    jobjectArray prop_array = newArray(loadBootClass(S(array_java_lang_String)), g_properties.size()*2);
+    jobjectArray prop_array = newArray(loadArrayClass(S(array_java_lang_String)), g_properties.size()*2);
     int i = 0;
     for (auto p: g_properties) {
         prop_array->setRef(i++, newString(p.first));
@@ -87,7 +87,7 @@ static jobjectArray platformProperties()
     static const int _user_name_NDX = 1 + _user_home_NDX;
     static const int FIXED_LENGTH = 1 + _user_name_NDX;
 
-    jobjectArray prop_array = newArray(loadBootClass(S(array_java_lang_String)), FIXED_LENGTH);
+    jobjectArray prop_array = newArray(loadArrayClass(S(array_java_lang_String)), FIXED_LENGTH);
     // todo 具体赋值
 
     for (int i = 0; i < FIXED_LENGTH; i++) {

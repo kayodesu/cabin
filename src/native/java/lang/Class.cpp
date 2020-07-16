@@ -322,7 +322,7 @@ static jclass getSuperclass(jclass _this)
 static jobjectArray getInterfaces0(jclass _this)
 {
     Class *c = _this->jvm_mirror;
-    auto interfaces = newArray(loadBootClass(S(array_java_lang_Class)), c->interfaces.size());
+    auto interfaces = newArray(loadArrayClass(S(array_java_lang_Class)), c->interfaces.size());
     for (size_t i = 0; i < c->interfaces.size(); i++) {
         assert(c->interfaces[i] != nullptr);
         interfaces->setRef(i, c->interfaces[i]->java_mirror);
@@ -416,7 +416,7 @@ static jobjectArray getEnclosingMethod0(jclass _this)
         return nullptr;
     }
 
-    auto result = newArray(loadBootClass(S(array_java_lang_Object)), 3);
+    auto result = newArray(loadArrayClass(S(array_java_lang_Object)), 3);
     result->setRef(0, c->enclosing.clazz->java_mirror);
     result->setRef(1, c->enclosing.name);
     result->setRef(2, c->enclosing.descriptor);
