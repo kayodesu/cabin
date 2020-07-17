@@ -318,10 +318,10 @@ opc_dconst_1:
     frame->pushd(1);
     DISPATCH
 opc_bipush: // Byte Integer push
-    frame->pushi(reader->readu1());
+    frame->pushi(reader->reads1());
     DISPATCH
 opc_sipush: // Short Integer push
-    frame->pushi(reader->readu2());
+    frame->pushi(reader->reads2());
     DISPATCH
 opc_ldc:
     index = reader->readu1();
@@ -953,7 +953,6 @@ opc_tableswitch: {
     // must be the address of an opcode of an instruction within the method
     // that contains this tableswitch instruction.
     reader->pc = saved_pc + offset;
-
     DISPATCH
 }
 opc_lookupswitch: {

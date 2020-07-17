@@ -9,7 +9,7 @@ public class ArgsPassTest {
     
     public static void main(String[] args) {
         String[] strArray = { "abc", "def", "xyz" };
-        f(123, 98765432101234L, 3.14f, 5452.71828, strArray);
+        f(-100, 98765432101234L, 3.14f, 5452.71828, strArray);
         new ArgsPassTest().g(123, 98765432101234L, 3.14f, 5452.71828, strArray);
     }
     
