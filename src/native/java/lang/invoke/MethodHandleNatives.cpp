@@ -138,6 +138,9 @@ static void init(jobject self, jobject ref)
         auto type = self->getRefField("type", S(sig_java_lang_Object));
         // printf("init: self(%p), slot: %d, type(%p), %s, %s\n", self, slot, type, name->toUtf8(), descriptor); /////////////////////////////////////////
 
+        if(m == nullptr) {
+            int xxxxxx = 3;
+        }
         int flags = __method_flags(m) | IS_METHOD;
 
         int ref_kind;
@@ -308,6 +311,9 @@ static jobject resolve(jobject self, jclass caller)
             // printf("resolve: self(%p), %s, %s, %s\n", self, name->toUtf8(), descriptor->toUtf8(), sig->toUtf8()); /////////////////////////////////
 
             m = clazz->lookupMethod(name->toUtf8(), descriptor->toUtf8());
+            if (m == nullptr) {
+                int xxxx = 2;
+            }
             flags |= __method_flags(m);
             self->setIntField("flags", "I", flags); 
             // if (refKind == JVM_REF_invokeStatic) {

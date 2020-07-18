@@ -1203,7 +1203,73 @@ opc_invokeinterface: {
     goto _invoke_method;
 }           
 opc_invokedynamic: {
-    invokedynamic(*reader, *clazz, frame->ostack);
+    printvm("invokedynamic\n"); /////////////////////////////////////////////////////////////////////////////////
+
+    ConstantPool &cp = clazz->cp;
+
+    u2 index = reader->readu2(); // point to JVM_CONSTANT_InvokeDynamic_info
+    reader->readu1(); // this byte must always be zero.
+    reader->readu1(); // this byte must always be zero.
+
+    const utf8_t *invoked_name = cp.invokeDynamicMethodName(index); // "run"
+    const utf8_t *invoked_descriptor = cp.invokeDynamicMethodType(index); // "()Ljava/lang/Runnable;"
+
+    jref invoked_type = fromMethodDescriptor(invoked_descriptor, clazz->loader); // "java/lang/invoke/MethodType"
+    jref caller = getCaller(); // "java/lang/invoke/MethodHandles$Lookup"
+
+    BootstrapMethod &bm = clazz->bootstrap_methods.at(cp.invokeDynamicBootstrapMethodIndex(index));
+    u2 ref_kind = cp.methodHandleReferenceKind(bm.bootstrap_method_ref); // 6
+    u2 ref_index = cp.methodHandleReferenceIndex(bm.bootstrap_method_ref); // 40
+
+    switch (ref_kind) {
+        case JVM_REF_invokeStatic: {
+            const utf8_t *class_name = cp.methodClassName(ref_index); // "java/lang/invoke/LambdaMetafactory"
+            Class *bootstrap_class = loadClass(clazz->loader, class_name);
+
+            // bootstrap method is static,  todo 对不对
+            // 前三个参数固定为 MethodHandles.Lookup caller, String invokedName, MethodType invokedType todo 对不对
+            // 后续的参数由 ref->argc and ref->args 决定
+            Method *bootstrap_method = bootstrap_class->getDeclaredStaticMethod(
+                                    cp.methodName(ref_index), cp.methodType(ref_index));
+            // name: "metafactory"
+            // type: "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallS"...
+            
+            // args's length is big enough,多余的长度无所谓，bootstrap_method 会按需读取的。
+            slot_t args[3 + bm.bootstrap_arguments.size() * 2];
+            RSLOT(args) = caller;
+            RSLOT(args + 1) = newString(invoked_name);
+            RSLOT(args + 2) = invoked_type;
+            bm.resolveArgs(&cp, args + 3);
+            auto call_set = RSLOT(execJavaFunc(bootstrap_method, args));
+
+            // public abstract MethodHandle dynamicInvoker()
+            auto dyn_invoker = call_set->clazz->lookupInstMethod("dynamicInvoker", "()Ljava/lang/invoke/MethodHandle;");
+            auto exact_method_handle = RSLOT(execJavaFunc(dyn_invoker, {call_set}));
+
+            // public final Object invokeExact(Object... args) throws Throwable
+            Method *invokeExact = exact_method_handle->clazz->lookupInstMethod(
+                                        "invokeExact", "([Ljava/lang/Object;)Ljava/lang/Object;");
+            assert(invokeExact->isVarargs());
+            u2 slot_count = Method::calArgsSlotsCount(invoked_descriptor, true);
+            slot_t __args[slot_count];
+            RSLOT(__args) = exact_method_handle;
+            slot_count--; // 减去"this"
+            frame->ostack -= slot_count; // pop all args
+            memcpy(__args + 1, frame->ostack, slot_count * sizeof(slot_t));
+            // invoke exact method, invokedynamic completely execute over.
+            execJavaFunc(invokeExact, __args);
+
+            break;
+        }
+        case JVM_REF_newInvokeSpecial:
+            jvm_abort("JVM_REF_newInvokeSpecial"); // todo
+            break;
+        default:
+            jvm_abort("never goes here"); // todo
+            break;
+    }
+    jvm_abort("never goes here"); // todo
+
     DISPATCH
 }
 _invoke_method: {
@@ -1482,71 +1548,6 @@ static bool checkcast(Class *s, Class *t)
             return equals(t->class_name, S(java_lang_Object));
         }
     }
-}
-
-static void invokedynamic(BytecodeReader &reader, Class &clazz, slot_t *&ostack)
-{
-    ConstantPool &cp = clazz.cp;
-
-    u2 index = reader.readu2(); // point to JVM_CONSTANT_InvokeDynamic_info
-    reader.readu1(); // this byte must always be zero.
-    reader.readu1(); // this byte must always be zero.
-
-    const utf8_t *invoked_name = cp.invokeDynamicMethodName(index);
-    const utf8_t *invoked_descriptor = cp.invokeDynamicMethodType(index);
-
-    jref invoked_type = fromMethodDescriptor(invoked_descriptor, clazz.loader);
-    jref caller = getCaller();
-
-    BootstrapMethod &bm = clazz.bootstrap_methods.at(cp.invokeDynamicBootstrapMethodIndex(index));
-    u2 ref_kind = cp.methodHandleReferenceKind(bm.bootstrap_method_ref);
-    u2 ref_index = cp.methodHandleReferenceIndex(bm.bootstrap_method_ref);
-
-    switch (ref_kind) {
-        case JVM_REF_invokeStatic: {
-            const utf8_t *class_name = cp.methodClassName(ref_index);
-            Class *bootstrap_class = loadClass(clazz.loader, class_name);
-
-            // bootstrap method is static,  todo 对不对
-            // 前三个参数固定为 MethodHandles.Lookup caller, String invokedName, MethodType invokedType todo 对不对
-            // 后续的参数由 ref->argc and ref->args 决定
-            Method *bootstrap_method = bootstrap_class->getDeclaredStaticMethod(
-                                    cp.methodName(ref_index), cp.methodType(ref_index));
-            // args's length is big enough,多余的长度无所谓，bootstrap_method 会按需读取的。
-            slot_t args[3 + bm.bootstrap_arguments.size() * 2];
-            RSLOT(args) = caller;
-            RSLOT(args + 1) = newString(invoked_name);
-            RSLOT(args + 2) = invoked_type;
-            bm.resolveArgs(&cp, args + 3);
-            auto call_set = RSLOT(execJavaFunc(bootstrap_method, args));
-
-            // public abstract MethodHandle dynamicInvoker()
-            auto dyn_invoker = call_set->clazz->lookupInstMethod("dynamicInvoker", "()Ljava/lang/invoke/MethodHandle;");
-            auto exact_method_handle = RSLOT(execJavaFunc(dyn_invoker, {call_set}));
-
-            // public final Object invokeExact(Object... args) throws Throwable
-            Method *invokeExact = exact_method_handle->clazz->lookupInstMethod(
-                                        "invokeExact", "([Ljava/lang/Object;)Ljava/lang/Object;");
-            assert(invokeExact->isVarargs());
-            u2 slot_count = Method::calArgsSlotsCount(invoked_descriptor, true);
-            slot_t __args[slot_count];
-            RSLOT(__args) = exact_method_handle;
-            slot_count--; // 减去"this"
-            ostack -= slot_count; // pop all args
-            memcpy(__args + 1, ostack, slot_count * sizeof(slot_t));
-            // invoke exact method, invokedynamic completely execute over.
-            execJavaFunc(invokeExact, __args);
-
-            break;
-        }
-        case JVM_REF_newInvokeSpecial:
-            jvm_abort("JVM_REF_newInvokeSpecial"); // todo
-            break;
-        default:
-            jvm_abort("never goes here"); // todo
-            break;
-    }
-    jvm_abort("never goes here"); // todo
 }
 
 slot_t *execJavaFunc(Method *method, const slot_t *args)

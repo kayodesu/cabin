@@ -2,7 +2,7 @@ package sunmisc;
 
 import sun.misc.Unsafe;
 
-public class UnsafeTest {
+public class UnsafeTest1 {
     
     public int x;
     public long y;
@@ -27,8 +27,8 @@ public class UnsafeTest {
             System.out.println("casInt(arr) failed!");
         }
         
-        UnsafeTest obj = new UnsafeTest();
-        long xOffset = unsafe.objectFieldOffset(UnsafeTest.class.getField("x"));
+        UnsafeTest1 obj = new UnsafeTest1();
+        long xOffset = unsafe.objectFieldOffset(UnsafeTest1.class.getField("x"));
         unsafe.compareAndSwapInt(obj, xOffset, 0, 7);
         if (obj.x != 7) {
             System.out.println("casInt(obj) failed!");
@@ -44,8 +44,8 @@ public class UnsafeTest {
             System.out.println("casLong(arr) failed!");
         }
         
-        UnsafeTest obj = new UnsafeTest();
-        long yOffset = unsafe.objectFieldOffset(UnsafeTest.class.getField("y"));
+        UnsafeTest1 obj = new UnsafeTest1();
+        long yOffset = unsafe.objectFieldOffset(UnsafeTest1.class.getField("y"));
         unsafe.compareAndSwapLong(obj, yOffset, 0, 7);
         if (obj.y != 7) {
             System.out.println("casLong(obj) failed!");
@@ -64,8 +64,8 @@ public class UnsafeTest {
             System.out.println("casObj(arr) failed!");
         }
         
-        UnsafeTest obj = new UnsafeTest();
-        long zOffset = unsafe.objectFieldOffset(UnsafeTest.class.getField("z"));
+        UnsafeTest1 obj = new UnsafeTest1();
+        long zOffset = unsafe.objectFieldOffset(UnsafeTest1.class.getField("z"));
         unsafe.compareAndSwapObject(obj, zOffset, null, "two");
         if (obj.z != "two") {
             System.out.println("casObj(obj) failed!" + obj.z);

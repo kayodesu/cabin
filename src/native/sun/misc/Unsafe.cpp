@@ -3,11 +3,15 @@
  */
 
 #include <iostream>
+#include "../../../slot.h"
 #include "../../../objects/object.h"
 #include "../../../objects/array_object.h"
 #include "../../../util/endianness.h"
 #include "../../../runtime/frame.h"
 #include "../../jni_inner.h"
+
+using namespace std;
+using namespace utf8;
 
 /* todo
 http://www.docjar.com/docs/api/sun/misc/Unsafe.html#park%28boolean,%20long%29
@@ -120,13 +124,27 @@ static void ensureClassInitialized(jobject _this, jclass c)
 // public native long staticFieldOffset(Field f);
 static jlong staticFieldOffset(jobject _this, jobject f)
 {
-    jvm_abort("staticFieldOffset");
+    // private String name;
+    auto name = f->getRefField<ClassObject>("name", "Ljava/lang/String;")->toUtf8();
+
+    // private Class<?> clazz;
+    Class *c = f->getRefField<ClassObject>("clazz", "Ljava/lang/Class;")->jvm_mirror;    
+    for (int i = 0; i < c->field_count; i++) {
+        Field *field = c->fields + i;
+        if (equals(field->name, name))
+            return i;
+    }
+
+    jvm_abort("never go here"); // todo
+    return -1; 
 }
 
 // public native Object staticFieldBase(Field f);
 static jobject staticFieldBase(jobject _this, jobject f)
 {
-    jvm_abort("staticFieldBase");
+    // private Class<?> clazz;
+    ClassObject *co = f->getRefField<ClassObject>("clazz", "Ljava/lang/Class;");
+    return co;
 }
 
 /*************************************    object    ************************************/
@@ -156,113 +174,156 @@ static jlong objectFieldOffset1(jobject _this, jclass c, jstring name)
     jvm_abort("objectFieldOffset1");
 }
 
+#define OBJECT_PUT(o, offset, x, arrSetFunc, t, slotSetFunc)            \
+    do {                                                                \
+        Array *ao = dynamic_cast<Array *>(o);                           \
+        ClassObject *co = dynamic_cast<ClassObject *>(o);               \
+                                                                        \
+        if (ao != nullptr) { /* set value to array */                   \
+            assert(0 <= offset && offset < ao->len);                    \
+            ao->arrSetFunc(offset, x);                                  \
+        } else if (co != nullptr) { /* set static filed value */        \
+            Class *c = co->jvm_mirror;                                  \
+            initClass(c);                                               \
+            assert(0 <= offset && offset < c->field_count);             \
+            Field *f = c->fields + offset;                              \
+            f->static_value.t = x;                                      \
+        } else {                                                        \
+            assert(0 <= offset && offset < o->clazz->inst_field_count); \
+            slotSetFunc(o->data + offset, x);                           \
+        }                                                               \
+    } while (false)
+
+#define OBJECT_GET(o, offset, jtype, t, slotGetFunc)                    \
+    do {                                                                \
+        Array *ao = dynamic_cast<Array *>(o);                           \
+        ClassObject *co = dynamic_cast<ClassObject *>(o);               \
+                                                                        \
+        if (ao != nullptr) { /* get value from array */                 \
+            assert(0 <= offset && offset < ao->len);                    \
+            return ao->get<jtype>(offset);                              \
+        } else if (co != nullptr) { /* get static filed value*/         \
+            Class *c = co->jvm_mirror;                                  \
+            initClass(c);                                               \
+            assert(0 <= offset && offset < c->field_count);             \
+            Field *f = c->fields + offset;                              \
+            return f->static_value.t;                                   \
+        } else {                                                        \
+            assert(0 <= offset && offset < o->clazz->inst_field_count); \
+            return slotGetFunc(o->data + offset);                       \
+        }                                                               \
+    } while (false)
+
 // public native boolean getBoolean(Object o, long offset);
-static jboolean getBoolean(jobject _this, jobject o, jlong offset)
+static jboolean obj_getBoolean(jobject _this, jobject o, jlong offset)
 {
-    jvm_abort("getBoolean");
+    OBJECT_GET(o, offset, jbool, z, slot::getBool);
 }
 
 // public native void putBoolean(Object o, long offset, boolean x);
-static void putBoolean(jobject _this, jobject o, jlong offset, jboolean x)
+static void obj_putBoolean(jobject _this, jobject o, jlong offset, jboolean x)
 {
-    jvm_abort("putBoolean");
+    OBJECT_PUT(o, offset, x, setBoolean, z, slot::setBool);
 }
 
 // public native byte getByte(Object o, long offset);
 static jbyte obj_getByte(jobject _this, jobject o, jlong offset)
 {
-    jvm_abort("obj_getByte");
+    OBJECT_GET(o, offset, jbyte, b, slot::getByte);
 }
 
 // public native void putByte(Object o, long offset, byte x);
 static void obj_putByte(jobject _this, jobject o, jlong offset, jbyte x)
 {
-    jvm_abort("obj_putByte");
+    OBJECT_PUT(o, offset, x, setByte, b, slot::setByte);
 }
 
 // public native char getChar(Object o, long offset);
 static jchar obj_getChar(jobject _this, jobject o, jlong offset)
 {
-    jvm_abort("obj_getChar");
+    OBJECT_GET(o, offset, jchar, c, slot::getChar);
 }
 
 // public native void putChar(Object o, long offset, char x);
 static void obj_putChar(jobject _this, jobject o, jlong offset, jchar x)
 {
-    jvm_abort("obj_putChar");
+    OBJECT_PUT(o, offset, x, setChar, c, slot::setChar);
 }
 
 // public native short getShort(Object o, long offset);
 static jshort obj_getShort(jobject _this, jobject o, jlong offset)
 {
-    jvm_abort("obj_getShort");
+    OBJECT_GET(o, offset, jshort, s, slot::getShort);
 }
 
 // public native void putShort(Object o, long offset, short x);
 static void obj_putShort(jobject _this, jobject o, jlong offset, jshort x)
 {
-    jvm_abort("obj_putShort");
+    OBJECT_PUT(o, offset, x, setShort, s, slot::setShort);
 }
 
 // public native int getInt(Object o, long offset);
 static jint obj_getInt(jobject _this, jobject o, jlong offset)
 {
-    jvm_abort("obj_getInt");
+    OBJECT_GET(o, offset, jint, i, slot::getInt);
 }
 
 // public native void putInt(Object o, long offset, int x);
 static void obj_putInt(jobject _this, jobject o, jlong offset, jint x)
 {
-    jvm_abort("obj_putInt");
+    OBJECT_PUT(o, offset, x, setInt, i, slot::setInt);
 }
 
 // public native long getLong(Object o, long offset);
 static jlong obj_getLong(jobject _this, jobject o, jlong offset)
 {
-    jvm_abort("obj_getLong");
+    OBJECT_GET(o, offset, jlong, j, slot::getLong);
 }
 
 // public native void putLong(Object o, long offset, long x);
 static void obj_putLong(jobject _this, jobject o, jlong offset, jlong x)
 {
-    jvm_abort("obj_putLong");
+    OBJECT_PUT(o, offset, x, setLong, j, slot::setLong);
 }
 
 // public native float getFloat(Object o, long offset);
 static jfloat obj_getFloat(jobject _this, jobject o, jlong offset)
 {
-    jvm_abort("obj_getFloat");
+    OBJECT_GET(o, offset, jfloat, f, slot::getFloat);
 }
 
 // public native void putFloat(Object o, long offset, float x);
 static void obj_putFloat(jobject _this, jobject o, jlong offset, jfloat x)
 {
-    jvm_abort("obj_putFloat");
+    OBJECT_PUT(o, offset, x, setFloat, f, slot::setFloat);
 }
 
 // public native double getDouble(Object o, long offset);
 static jdouble obj_getDouble(jobject _this, jobject o, jlong offset)
 {
-    jvm_abort("obj_getDouble");
+    OBJECT_GET(o, offset, jdouble, d, slot::getDouble);
 }
 
 // public native void putDouble(Object o, long offset, double x);
 static void obj_putDouble(jobject _this, jobject o, jlong offset, jdouble x)
 {
-    jvm_abort("obj_putDouble");
+    OBJECT_PUT(o, offset, x, setDouble, d, slot::setDouble);
 }
 
 // public native Object getObject(Object o, long offset);
-static jobject getObject(jobject _this, jobject o, jlong offset)
+static jobject obj_getObject(jobject _this, jobject o, jlong offset)
 {
-    jvm_abort("getObject");
+    OBJECT_GET(o, offset, jref, r, slot::getRef);
 }
 
 // public native void putObject(Object o, long offset, Object x);
-static void putObject(jobject _this, jobject o, jlong offset, jobject x)
+static void obj_putObject(jobject _this, jobject o, jlong offset, jobject x)
 {
-    jvm_abort("putObject");
+    OBJECT_PUT(o, offset, x, setRef, r, slot::setRef);
 }
+
+#undef OBJECT_GET
+#undef OBJECT_PUT
 
 // public native boolean getBooleanVolatile(Object o, long offset);
 static jboolean getBooleanVolatile(jobject _this, jobject o, jlong offset)
@@ -376,15 +437,20 @@ static jobject getObjectVolatile(jobject _this, jobject o, jlong offset)
 {
     // todo Volatile
 
-    jobject value;
-    if (o->isArrayObject()) {
-        Array *ao = dynamic_cast<Array *>(o);  // todo
-        value = ao->get<jobject>(offset);
+    ClassObject *co = dynamic_cast<ClassObject *>(o);
+    Array *ao = dynamic_cast<Array *>(o);
+    if (ao != nullptr) {
+        Array *ao = dynamic_cast<Array *>(o);  
+        return ao->get<jobject>(offset);
+    } else if (co != nullptr) {
+        Class *c = co->jvm_mirror;
+        assert(0 <= offset && offset < c->field_count);
+        Field *f = c->fields + offset;
+        return f->static_value.r;
     } else {
         assert(0 <= offset && offset < o->clazz->inst_field_count);
-        value = *(jobject *)(o->data + offset);//o->getInstFieldValue<jobject>(offset);  // todo
+        return *(jobject *)(o->data + offset);//o->getInstFieldValue<jobject>(offset);  // todo
     }
-    return value;
 }
 
 // public native void putObjectVolatile(Object o, long offset, Object x);
@@ -464,7 +530,7 @@ static jint addressSize(jobject _this)
 // public native void putByte(long address, byte x);
 static void putByte(jobject _this, jlong address, jbyte x)
 {
-    *(jbyte *) (intptr_t) address = changeToBigEndian(x); // todo java按大端存储？？？？？？？
+    *(jbyte *) (intptr_t) address = x; 
 }
 
 // public native byte getByte(long address);
@@ -476,7 +542,7 @@ static jbyte getByte(jobject _this, jlong address)
 // public native void putChar(long address, char x);
 static void putChar(jobject _this, jlong address, jchar x)
 {
-    *(jchar *) (intptr_t) address = changeToBigEndian(x);
+    *(jchar *) (intptr_t) address = x;
 }
 
 // public native char getChar(long address);
@@ -488,7 +554,7 @@ static jchar getChar(jobject _this, jlong address)
 // public native void putShort(long address, short x);
 static void putShort(jobject _this, jlong address, jshort x)
 {
-    *(jshort *) (intptr_t) address = changeToBigEndian(x);
+    *(jshort *) (intptr_t) address = x;
 }
 
 // public native short getShort(long address);
@@ -500,7 +566,7 @@ static jshort getShort(jobject _this, jlong address)
 // public native void putInt(long address, int x);
 static void putInt(jobject _this, jlong address, jint x)
 {
-    *(jint *) (intptr_t) address = changeToBigEndian(x);
+    *(jint *) (intptr_t) address = x;
 }
 
 // public native int getInt(long address);
@@ -512,7 +578,7 @@ static jint getInt(jobject _this, jlong address)
 // public native void putLong(long address, long x);
 static void putLong(jobject _this, jlong address, jlong x)
 {
-    *(jlong *) (intptr_t) address = changeToBigEndian(x);
+    *(jlong *) (intptr_t) address = x;
 }
 
 // public native long getLong(long address);
@@ -524,7 +590,7 @@ static jlong getLong(jobject _this, jlong address)
 // public native void putFloat(long address, float x);
 static void putFloat(jobject _this, jlong address, jfloat x)
 {
-    *(jfloat *) (intptr_t) address = changeToBigEndian(x);
+    *(jfloat *) (intptr_t) address = x;
 }
 
 // public native float getFloat(long address);
@@ -536,7 +602,7 @@ static jfloat getFloat(jobject _this, jlong address)
 // public native void putDouble(long address, double x);
 static void putDouble(jobject _this, jlong address, jdouble x)
 {
-    *(jdouble *) (intptr_t) address = changeToBigEndian(x);
+    *(jdouble *) (intptr_t) address = x;
 }
 
 // public native double getDouble(long address);
@@ -645,49 +711,47 @@ static jint pageSize(jobject _this)
 }
 
 /**
-  815        * Define a class but do not make it known to the class loader or system dictionary.
-  816        * <p>
-  817        * For each CP entry, the corresponding CP patch must either be null or have
-  818        * the a format that matches its tag:
-  819        * <ul>
-  820        * <li>Integer, Long, Float, Double: the corresponding wrapper object type from java.lang
-  821        * <li>Utf8: a string (must have suitable syntax if used as signature or name)
-  822        * <li>Class: any java.lang.Class object
-  823        * <li>String: any object (not just a java.lang.String)
-  824        * <li>InterfaceMethodRef: (NYI) a method handle to invoke on that call site's arguments
-  825        * </ul>
-  826        * @params hostClass context for linkage, access control, protection domain, and class loader
-  827        * @params data      bytes of a class file
-  828        * @params cpPatches where non-null entries exist, they replace corresponding CP entries in data
-  829        */
+  * Define a class but do not make it known to the class loader or system dictionary.
+  * 
+  * For each CP entry, the corresponding CP patch must either be null or have
+  * the a format that matches its tag:
+  * 1. Integer, Long, Float, Double: the corresponding wrapper object type from java.lang
+  * 2. Utf8: a string (must have suitable syntax if used as signature or name)
+  * 3. Class: any java.lang.Class object
+  * 4. String: any object (not just a java.lang.String)
+  * 5. InterfaceMethodRef: (NYI) a method handle to invoke on that call site's arguments
+  * 
+  * @hostClass context for linkage, access control, protection domain, and class loader
+  * @data      bytes of a class file
+  * @cpPatches where non-null entries exist, they replace corresponding CP entries in data
+  */
 // public native Class defineAnonymousClass(Class hostClass, byte[] data, Object[] cpPatches);
 static jclass defineAnonymousClass(jobject _this, 
                     jclass host_class, jbyteArray data, jobjectArray cp_patches)
 {
-    jvm_abort("defineAnonymousClass");
+    assert(host_class != nullptr && data != nullptr);
+    Class *c = defineClass(host_class->jvm_mirror->loader, (u1 *) data->data, data->len);
+    if (c == nullptr)
+        return nullptr; // todo
 
-    // Class *c = defineClass(host_class->jvm_mirror->loader, (u1 *) data->data, data->len);
-    // if (c == nullptr)
-    //     return nullptr; // todo
+    int cp_patches_len = cp_patches == nullptr ? 0 : cp_patches->len;    
+    for (int i = 0; i < cp_patches_len; i++) {
+        jobject o = cp_patches->get<jobject>(i);
+        if (o != nullptr) {
+            u1 type = c->cp.type(i);
+            if (type == JVM_CONSTANT_String) {
+                c->cp.info(i, (slot_t) o);
+                c->cp.type(i, JVM_CONSTANT_ResolvedString);
+            } else {
+                jvm_abort("defineAnonymousClass: unimplemented patch type"); // todo
+            }
+        }
+    }
 
-    // int cp_patches_len = cp_patches == nullptr ? 0 : cp_patches->len;    
-    // for (int i = 0; i < cp_patches_len; i++) {
-    //     jobject o = cp_patches->get<jobject>(i);
-    //     if (o != nullptr) {
-    //         u1 type = c->cp.type(i);
-    //         if (type == JVM_CONSTANT_String) {
-    //             c->cp.info(i, (slot_t) o);
-    //             c->cp.type(i, JVM_CONSTANT_ResolvedString);
-    //         } else {
-    //             jvm_abort("defineAnonymousClass: unimplemented patch type"); // todo
-    //         }
-    //     }
-    // }
+    c->nest_host = host_class->jvm_mirror;
+    linkClass(c);
 
-    // c->nest_host = host_class->jvm_mirror;
-    // linkClass(c);
-
-    // return c->java_mirror;
+    return c->java_mirror;
 }
 
 /** Lock the object.  It must get unlocked via {@link #monitorExit}. */
@@ -770,8 +834,8 @@ static JNINativeMethod methods[] = {
         { "objectFieldOffset0", "(Ljava/lang/reflect/Field;)J", (void *) objectFieldOffset },
         { "objectFieldOffset1", "(Ljava/lang/Class;Ljava/lang/String;)J", (void *) objectFieldOffset1 },
 
-        { "getBoolean", "(Ljava/lang/Object;J)Z", (void *) getBoolean },
-        { "putBoolean", "(Ljava/lang/Object;JZ)V", (void *) putBoolean },
+        { "getBoolean", "(Ljava/lang/Object;J)Z", (void *) obj_getBoolean },
+        { "putBoolean", "(Ljava/lang/Object;JZ)V", (void *) obj_putBoolean },
         { "getByte", "(Ljava/lang/Object;J)B", (void *) obj_getByte },
         { "putByte", "(Ljava/lang/Object;JB)V", (void *) obj_putByte },
         { "getChar", "(Ljava/lang/Object;J)C", (void *) obj_getChar },
@@ -786,8 +850,8 @@ static JNINativeMethod methods[] = {
         { "putFloat", "(Ljava/lang/Object;JF)V", (void *) obj_putFloat },
         { "getDouble", "(Ljava/lang/Object;J)D", (void *) obj_getDouble },
         { "putDouble", "(Ljava/lang/Object;JD)V", (void *) obj_putDouble },
-        { "getObject", "(Ljava/lang/Object;J)Ljava/lang/Object;", (void *) getObject },
-        { "putObject", "(Ljava/lang/Object;JLjava/lang/Object;)V", (void *) putObject },
+        { "getObject", "(Ljava/lang/Object;J)Ljava/lang/Object;", (void *) obj_getObject },
+        { "putObject", "(Ljava/lang/Object;JLjava/lang/Object;)V", (void *) obj_putObject },
         { "getObjectVolatile", "(Ljava/lang/Object;J)Ljava/lang/Object;", (void *) getObjectVolatile },
         { "putObjectVolatile", "(Ljava/lang/Object;JLjava/lang/Object;)V", (void *) putObjectVolatile },
         { "getOrderedObject", "(Ljava/lang/Object;J)Ljava/lang/Object;", (void *) getOrderedObject },
