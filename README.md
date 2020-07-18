@@ -1,4 +1,4 @@
-# JVM
+# YoVM
 An experimental JVM written in C++.
 
 ## Development environment
@@ -26,11 +26,11 @@ Ensure your Java version is Java8, and already set `JAVA_HOME` environment varia
 One command-line option:
 * -cp path: set class path.
 ```
-C:\>jvm HelloWorld -cp D:\code\kayo\testclasses
+C:\>yovm HelloWorld -cp D:\Code\yovm\test-classes\out\production\test-classes
 ```
 or, using CLASS_PATH environment variable.
 ```
-C:\>jvm HelloWorld
+C:\>yovm HelloWorld
 ```
 
 ## Quiz
@@ -44,7 +44,7 @@ public class HelloWorld {
 ```
 
 ```
-C:\>jvm HelloWorld -cp D:\code\jvm\testclasses
+C:\>yovm HelloWorld  
 Hello, world!
 
 C:\>
