@@ -179,20 +179,12 @@ Class *loadArrayClass(Object *loader, const utf8_t *arr_class_name)
     return c;
 }
 
-/*
- * Just used by native methods.
- * 所以导出为C接口。
- */
 const utf8_t *getBootPackage(const utf8_t *name)
 {
     auto iter = boot_packages.find(name);
     return iter != boot_packages.end() ? *iter : nullptr;
 }
 
-/*
- * Just used by native methods.
- * 所以导出为C接口。
- */
 utf8_set &getBootPackages()
 {
     return boot_packages;

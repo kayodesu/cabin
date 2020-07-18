@@ -225,14 +225,14 @@ static void expand(jobject self)
 	cls := clsObj.GetGoClass()
 	nameStr := nameObj.JSToGoStr()
 
-	frame.Thread.InvokeMethodWithShim(getSig, []heap.Slot{mnSlot})
+	frame.Thread.InvokeMethodWithShim(getSig, []Heap.Slot{mnSlot})
 	frame.Thread.CurrentFrame().AppendOnPopAction(func(shim *rtda.Frame) {
 		sigObj := shim.TopRef(0)
 		sigStr := sigObj.JSToGoStr()
 		if sigStr[0] == '(' {
 			if m := getMethod(cls, nameStr, sigStr); m != nil {
 				flags |= int32(m.AccessFlags)
-				mnObj.SetFieldValue("flags", "I", heap.NewIntSlot(flags))
+				mnObj.SetFieldValue("flags", "I", Heap.NewIntSlot(flags))
 			}
 		} else {
 			panic("TODO")
@@ -240,7 +240,7 @@ static void expand(jobject self)
 	})
 }
 // TODO
-func getMethod(cls *heap.Class, name, descriptor string) *heap.Method {
+func getMethod(cls *Heap.Class, name, descriptor string) *Heap.Method {
 	if m := cls.GetStaticMethod(name, descriptor); m != nil {
 		return m
 	}

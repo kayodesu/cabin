@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.9)
-project(jvm)
+project(YoVM)
 
 set(CMAKE_CXX_FLAGS "-std=c++17 -m64 -Wall -lz -lminizip -llibffi") # lz: link zlip
 
-add_executable(jvm
+add_executable(yovm
         src/main.cpp src/sysinfo_win.cpp
         src/interpreter/interpreter.cpp
         src/util/encoding.cpp src/util/convert.cpp src/classfile/attributes.cpp
-        src/runtime/frame.cpp src/runtime/vm_thread.cpp src/runtime/Monitor.cpp
+        src/runtime/frame.cpp src/runtime/vm_thread.cpp src/runtime/monitor.cpp
         src/memory/heap.cpp src/memory/gc.cpp
         src/native/java/io/FileDescriptor.cpp src/native/java/io/FileInputStream.cpp
         src/native/java/io/FileOutputStream.cpp src/native/java/lang/Class.cpp
@@ -44,6 +44,6 @@ add_executable(jvm
         src/objects/class_loader.cpp src/objects/prims.cpp src/objects/invoke.cpp
         src/objects/object.cpp src/metadata/class.cpp src/objects/class_object.cpp)
 
-target_link_libraries (jvm libz)
-target_link_libraries (jvm libminizip)
-target_link_libraries (jvm libffi)
+target_link_libraries (yovm libz)
+target_link_libraries (yovm libminizip)
+target_link_libraries (yovm libffi)

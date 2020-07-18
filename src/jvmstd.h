@@ -156,7 +156,7 @@ extern std::vector<std::pair<const utf8_t *, const utf8_t *>> g_properties;
 #define GC_THREAD_NAME "gc"     // name of gc thread
 
 #define MSG_MAX_LEN 1024 // message max length
-#define NEW_MSG(...) ({ auto buf = new char[MSG_MAX_LEN]; snprintf(buf, MSG_MAX_LEN, __VA_ARGS__); buf; })
+#define NEW_MSG(...) ({ auto _buf = new char[MSG_MAX_LEN]; snprintf(_buf, MSG_MAX_LEN, __VA_ARGS__); _buf; })
 #define MSG NEW_MSG
 
 #define printvm(...) do { printf("%s: %d: ", __FILE__, __LINE__); printf(__VA_ARGS__); } while(false)

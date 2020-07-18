@@ -2,7 +2,7 @@
  * Author: Yo Ka
  */
 
-#include "Monitor.h"
+#include "monitor.h"
 #include "vm_thread.h"
 
 #if 0

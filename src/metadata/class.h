@@ -17,7 +17,7 @@
 #include "../util/bytecode_reader.h"
 #include "../classfile/attributes.h"
 #include "../classfile/constants.h"
-#include "../memory/Heap.h"
+#include "../memory/heap.h"
 
 class Method;
 class Field;
