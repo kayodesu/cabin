@@ -2,53 +2,37 @@ package sunmisc;
 
 import sun.misc.Unsafe;
 
+import java.lang.reflect.Field;
+
 /**
- * Status: Pass
+ * Status: Fail
  */
-public class UnsafeMemoryTest {
+public class UnsafeMemoryTest1 {
+    static Unsafe unsafe = UnsafeTest.getUnsafe();
+
+    int i = 10;
+    int j = 20;
     
     public static void main(String[] args) {
-        Unsafe unsafe = UnsafeGetter.getUnsafe();
-        final long address = unsafe.allocateMemory(8);
-
-        unsafe.putAddress(address, address);
-        System.out.println(address == unsafe.getAddress(address));
-
-        unsafe.putByte(address, (byte)7);
-        System.out.println((byte)7 == unsafe.getByte(address));
-
-        unsafe.putByte(address, (byte)-7);
-        System.out.println((byte)-7 == unsafe.getByte(address));
-
-        unsafe.putShort(address, (short)500);
-        System.out.println((short)500 == unsafe.getShort(address));
-
-        unsafe.putShort(address, (short)-500);
-        System.out.println((short)-500 == unsafe.getShort(address));
-
-        unsafe.putChar(address, 'c');
-        System.out.println('c' == unsafe.getChar(address));
-
-        unsafe.putInt(address, 65536);
-        System.out.println(65536 == unsafe.getInt(address));
-
-        unsafe.putInt(address, -65536);
-        System.out.println(-65536 == unsafe.getInt(address));
-
-        unsafe.putLong(address, 9999999999L);
-        System.out.println(9999999999L == unsafe.getLong(address));
-
-        unsafe.putLong(address, -9999999999L);
-        System.out.println(-9999999999L == unsafe.getLong(address));
-
-        unsafe.putFloat(address, 3.14f);
-        System.out.println(Float.compare(unsafe.getFloat(address), 3.14f) == 0 ?"Pass":"Fail");
-
-        unsafe.putDouble(address, 2.71828);
-        System.out.println(Double.compare(unsafe.getDouble(address), 2.71828) == 0 ?"Pass":"Fail");
-
-        long newAddress = unsafe.reallocateMemory(address, 100);
-        unsafe.freeMemory(newAddress);
+//        UnsafeMemoryTest1 test = new UnsafeMemoryTest1();
+//
+//        System.out.println(test.i == 10);
+//        // set 'i' is 0
+//        unsafe.setMemory(test, objectFieldOffset("i"), 4 /* sizeof(int) */, (byte) 0);
+//        System.out.println(test.i == 0);
+//
+//        System.out.println(test.j == 20);
+//        // copy 'i' to 'j'
+//        unsafe.copyMemory(test, objectFieldOffset("i"), test, objectFieldOffset("j"), 4 /* sizeof(int) */);
+//        System.out.println(test.j == 0);
     }
-    
+
+    private static long objectFieldOffset(String fieldName) {
+        try {
+            Field f = UnsafeObjectTest1.class.getDeclaredField(fieldName);
+            return UnsafeTest.getUnsafe().objectFieldOffset(f);
+        } catch (NoSuchFieldException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

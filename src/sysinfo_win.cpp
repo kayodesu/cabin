@@ -16,6 +16,13 @@ int processorNumber()
     return sysInfo.dwNumberOfProcessors;
 }
 
+int pageSize()
+{
+    SYSTEM_INFO sysInfo;
+    GetSystemInfo(&sysInfo);
+    return sysInfo.dwPageSize;
+}
+
 long freeMemoryCount()
 {
     MEMORYSTATUSEX statex;

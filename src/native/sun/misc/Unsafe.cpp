@@ -2,8 +2,10 @@
  * Author: Yo Ka
  */
 
+#include <cstring>
 #include <iostream>
 #include "../../../slot.h"
+#include "../../../sysinfo.h"
 #include "../../../objects/object.h"
 #include "../../../objects/array_object.h"
 #include "../../../util/endianness.h"
@@ -88,7 +90,6 @@ static jboolean compareAndSwapObject(jobject _this, jobject o, jlong offset, job
     if (o->isArrayObject()) {
         Array *ao = dynamic_cast<Array *>(o);  // todo
         old = (jobject *)(ao->index(offset));
-//        old = arrobj_get(jobject, o, offset);
     } else {
         assert(0 <= offset && offset < o->clazz->inst_field_count);
         old = (jobject *)(o->data + offset);
@@ -512,7 +513,7 @@ static jlong allocateMemory(jobject _this, jlong bytes)
 // public native long reallocateMemory(long address, long bytes);
 static jlong reallocateMemory(jobject _this, jlong address, jlong bytes)
 {
-    return (jlong) (intptr_t) realloc((void *) (intptr_t) address, (size_t) bytes); // 有内存泄漏
+    return (jlong) (intptr_t) realloc((void *) (intptr_t) address, (size_t) bytes); // 有内存泄漏  todo
 }
 
 // public native void freeMemory(long address);
@@ -623,69 +624,91 @@ static jlong getAddress(jobject _this, jlong address)
     return getLong(_this, address);
 }
 
+static void *_getPoint(jobject o, jlong offset)
+{
+    void *p = nullptr;
+
+    if (o == nullptr) {
+        p = (void *) (intptr_t) offset;
+    } else {
+        Array *ao = dynamic_cast<Array *>(o);
+        if (ao != nullptr) {
+            // offset 在这里表示数组下标(index)
+            p = ao->index(offset);
+        } else {
+            // offset 在这里表示 slot id.
+            p = o->data;
+        }
+    }
+
+    return p;
+}
+
 /**
-  499        * Sets all bytes in a given block of memory to a fixed value
-  500        * (usually zero).
-  501        *
-  502        * <p>This method determines a block's base address by means of two parameters,
-  503        * and so it provides (in effect) a <em>double-register</em> addressing mode,
-  504        * as discussed in {@link #getInt(Object,long)}.  When the object reference is null,
-  505        * the offset supplies an absolute base address.
-  506        *
-  507        * <p>The stores are in coherent (atomic) units of a size determined
-  508        * by the address and length parameters.  If the effective address and
-  509        * length are all even modulo 8, the stores take place in 'long' units.
-  510        * If the effective address and length are (resp.) even modulo 4 or 2,
-  511        * the stores take place in units of 'int' or 'short'.
-  512        *
-  513        * @since 1.7
-  514        */
+ * Sets all bytes in a given block of memory to a fixed value (usually zero).
+ * 
+ * This method determines a block's base address by means of two parameters,
+ * and so it provides (in effect) a <em>double-register</em> addressing mode,
+ * as discussed in {@link #getInt(Object,long)}.  When the object reference is null,
+ * the offset supplies an absolute base address.
+ *
+ * The stores are in coherent (atomic) units of a size determined
+ * by the address and length parameters.  If the effective address and
+ * length are all even modulo 8, the stores take place in 'long' units.
+ * If the effective address and length are (resp.) even modulo 4 or 2,
+ * the stores take place in units of 'int' or 'short'.
+ */
 // public native void setMemory(Object o, long offset, long bytes, byte value);
 static void setMemory(jobject _this, jobject o, jlong offset, jlong bytes, jbyte value)
 {
-    jvm_abort("setMemory"); // todo
+    void *p = _getPoint(o, offset);
+    assert(p != nullptr);
+    // さすが Unsafe class. This is too unsafe.
+    memset(p, value, bytes);
 }
 
 /**
-  529        * Sets all bytes in a given block of memory to a copy of another
-  530        * block.
-  531        *
-  532        * <p>This method determines each block's base address by means of two parameters,
-  533        * and so it provides (in effect) a <em>double-register</em> addressing mode,
-  534        * as discussed in {@link #getInt(Object,long)}.  When the object reference is null,
-  535        * the offset supplies an absolute base address.
-  536        *
-  537        * <p>The transfers are in coherent (atomic) units of a size determined
-  538        * by the address and length parameters.  If the effective addresses and
-  539        * length are all even modulo 8, the transfer takes place in 'long' units.
-  540        * If the effective addresses and length are (resp.) even modulo 4 or 2,
-  541        * the transfer takes place in units of 'int' or 'short'.
-  542        *
-  543        * @since 1.7
-  544        */
+ * Sets all bytes in a given block of memory to a copy of another block.
+ *
+ * This method determines each block's base address by means of two parameters,
+ * and so it provides (in effect) a <em>double-register</em> addressing mode,
+ * as discussed in {@link #getInt(Object,long)}.  When the object reference is null,
+ * the offset supplies an absolute base address.
+ *
+ * The transfers are in coherent (atomic) units of a size determined
+ * by the address and length parameters.  If the effective addresses and
+ * length are all even modulo 8, the transfer takes place in 'long' units.
+ * If the effective addresses and length are (resp.) even modulo 4 or 2,
+ * the transfer takes place in units of 'int' or 'short'.
+ */
 // public native void copyMemory(Object srcBase, long srcOffset, Object destBase, long destOffset, long bytes);
 static void copyMemory(jobject _this, 
-                    jobject srcBase, jlong srcOffset, 
-                    jobject destBase, jlong destOffset, jlong bytes)
+                    jobject src_base, jlong src_offset, 
+                    jobject dest_base, jlong dest_offset, jlong bytes)
 {
-    jvm_abort("copyMemory"); // todo
+    void *src_p = _getPoint(src_base, src_offset);
+    void *dest_p = _getPoint(dest_base, dest_offset);
+
+    assert(src_p != nullptr);
+    assert(dest_p != nullptr);
+    memcpy(dest_p, src_p, bytes);
 }
 
 /**
-  988        * Gets the load average in the system run queue assigned
-  989        * to the available processors averaged over various periods of time.
-  990        * This method retrieves the given <tt>nelem</tt> samples and
-  991        * assigns to the elements of the given <tt>loadavg</tt> array.
-  992        * The system imposes a maximum of 3 samples, representing
-  993        * averages over the last 1,  5,  and  15 minutes, respectively.
-  994        *
-  995        * @params loadavg an array of double of size nelems
-  996        * @params nelems the number of samples to be retrieved and
-  997        *         must be 1 to 3.
-  998        *
-  999        * @return the number of samples actually retrieved; or -1
- 1000        *         if the load average is unobtainable.
- 1001        */
+* Gets the load average in the system run queue assigned
+* to the available processors averaged over various periods of time.
+* This method retrieves the given <tt>nelem</tt> samples and
+* assigns to the elements of the given <tt>loadavg</tt> array.
+* The system imposes a maximum of 3 samples, representing
+* averages over the last 1,  5,  and  15 minutes, respectively.
+*
+* @params loadavg an array of double of size nelems
+* @params nelems the number of samples to be retrieved and
+*         must be 1 to 3.
+*
+* @return the number of samples actually retrieved; or -1
+*         if the load average is unobtainable.
+*/
 // public native int getLoadAverage(double[] loadavg, int nelems);
 static jint getLoadAverage(jobject _this, jdoubleArray loadavg, jint nelems)
 {
@@ -705,9 +728,9 @@ static jboolean shouldBeInitialized(jobject _this, jclass c)
  * 
  * public native int pageSize();
 */
-static jint pageSize(jobject _this)
+static jint _pageSize(jobject _this)
 {
-    jvm_abort("pageSize"); // todo
+    return pageSize();
 }
 
 /**
@@ -903,7 +926,7 @@ static JNINativeMethod methods[] = {
 
         { "shouldBeInitialized", "(Ljava/lang/Class;)Z", (void *) shouldBeInitialized },
         { "getLoadAverage", "([DI)I", (void *) getLoadAverage },
-        { "pageSize", "()I", (void *) pageSize },
+        { "pageSize", "()I", (void *) _pageSize },
         { "defineAnonymousClass", "(Ljava/lang/Class;[B[Ljava/lang/Object;)" CLS, (void *) defineAnonymousClass },
         { "monitorEnter", "(Ljava/lang/Object;)V", (void *) monitorEnter },
         { "monitorExit", "(Ljava/lang/Object;)V", (void *) monitorExit },

@@ -2,14 +2,17 @@ package sunmisc;
 
 import sun.misc.Unsafe;
 
-public class UnsafeTest1 {
+/**
+ * Status: Pass
+ */
+public class UnsafeCASTest {
     
     public int x;
     public long y;
     public String z;
     
     public static void main(String[] args) throws Exception {
-        Unsafe unsafe = UnsafeGetter.getUnsafe();
+        Unsafe unsafe = UnsafeTest.getUnsafe();
 
         casInt(unsafe);
         casLong(unsafe);
@@ -27,8 +30,8 @@ public class UnsafeTest1 {
             System.out.println("casInt(arr) failed!");
         }
         
-        UnsafeTest1 obj = new UnsafeTest1();
-        long xOffset = unsafe.objectFieldOffset(UnsafeTest1.class.getField("x"));
+        UnsafeCASTest obj = new UnsafeCASTest();
+        long xOffset = unsafe.objectFieldOffset(UnsafeCASTest.class.getField("x"));
         unsafe.compareAndSwapInt(obj, xOffset, 0, 7);
         if (obj.x != 7) {
             System.out.println("casInt(obj) failed!");
@@ -44,8 +47,8 @@ public class UnsafeTest1 {
             System.out.println("casLong(arr) failed!");
         }
         
-        UnsafeTest1 obj = new UnsafeTest1();
-        long yOffset = unsafe.objectFieldOffset(UnsafeTest1.class.getField("y"));
+        UnsafeCASTest obj = new UnsafeCASTest();
+        long yOffset = unsafe.objectFieldOffset(UnsafeCASTest.class.getField("y"));
         unsafe.compareAndSwapLong(obj, yOffset, 0, 7);
         if (obj.y != 7) {
             System.out.println("casLong(obj) failed!");
@@ -64,8 +67,8 @@ public class UnsafeTest1 {
             System.out.println("casObj(arr) failed!");
         }
         
-        UnsafeTest1 obj = new UnsafeTest1();
-        long zOffset = unsafe.objectFieldOffset(UnsafeTest1.class.getField("z"));
+        UnsafeCASTest obj = new UnsafeCASTest();
+        long zOffset = unsafe.objectFieldOffset(UnsafeCASTest.class.getField("z"));
         unsafe.compareAndSwapObject(obj, zOffset, null, "two");
         if (obj.z != "two") {
             System.out.println("casObj(obj) failed!" + obj.z);

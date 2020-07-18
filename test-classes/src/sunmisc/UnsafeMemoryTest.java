@@ -8,7 +8,7 @@ import sun.misc.Unsafe;
 public class UnsafeMemoryTest {
     
     public static void main(String[] args) {
-        Unsafe unsafe = UnsafeGetter.getUnsafe();
+        Unsafe unsafe = UnsafeTest.getUnsafe();
         final long address = unsafe.allocateMemory(8);
 
         unsafe.putAddress(address, address);

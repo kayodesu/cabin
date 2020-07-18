@@ -7,6 +7,8 @@
 
 int processorNumber();
 
+int pageSize();
+
 long freeMemoryCount();
 
 long totalMemoryCount();
