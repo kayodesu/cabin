@@ -279,6 +279,35 @@ next:;
     }
 }
 
+void Class::generateIndepInterfaces()
+{
+    if (super_class != nullptr) {
+        indep_interfaces = super_class->indep_interfaces;
+    }
+    for (Class *c: interfaces) {
+        indep_interfaces.insert(c);
+    }
+
+    /* 独立化 indep_interfaces */
+
+    vector<Class *> need_del_interfaces;
+    for (Class *c: indep_interfaces) {
+        // 将 c 的父接口全部放入
+        for (Class *i: c->interfaces) {
+            need_del_interfaces.push_back(i);
+        }
+    }
+
+    for (size_t i = 0; i < need_del_interfaces.size(); i++) {
+        Class *del = need_del_interfaces[i];
+        indep_interfaces.erase(del);
+        // 将 del 的父接口全部放入
+        for (Class *c: del->interfaces) {
+            need_del_interfaces.push_back(c);
+        }
+    }
+}
+
 void Class::genPkgName()
 {
     char *pkg = dup(class_name);
@@ -460,6 +489,7 @@ Class::Class(Object *loader, u1 *bytecode, size_t len): loader(loader), bytecode
 
     createVtable(); // todo 接口有没有必要创建 vtable
     createItable();
+    generateIndepInterfaces();
 
     if (g_class_class != nullptr) {
         java_mirror = generteClassObject(this);
@@ -480,6 +510,7 @@ Class::Class(const char *className)
 
     createVtable();
     createItable();
+    generateIndepInterfaces();
 
     if (g_class_class != nullptr) {
         java_mirror = generteClassObject(this);
@@ -503,6 +534,7 @@ Class::Class(Object *loader, const char *className)
 
     createVtable();
     createItable();
+    generateIndepInterfaces();
 
     if (g_class_class != nullptr) {
         java_mirror = generteClassObject(this);
@@ -707,14 +739,27 @@ Method *Class::lookupMethod(const char *name, const char *descriptor)
         return method;
     }
 
-    // todo 在父类中查找
-    if (super_class != nullptr) {
-        if ((method = super_class->lookupMethod(name, descriptor)) != nullptr)
+//    // todo 在父类中查找
+//    if (super_class != nullptr) {
+//        if ((method = super_class->lookupMethod(name, descriptor)) != nullptr)
+//            return method;
+//    }
+//
+//    // todo 在父接口中查找
+//    for (auto c : interfaces) {
+//        if ((method = c->lookupMethod(name, descriptor)) != nullptr)
+//            return method;
+//    }
+
+    Class *super = super_class;
+    while (super != nullptr) {
+        if ((method = super->getDeclaredMethod(name, descriptor, false)) != nullptr)
             return method;
+        super = super->super_class;
     }
 
-    // todo 在父接口中查找
-    for (auto c : interfaces) {
+    for (Class *c: indep_interfaces) {
+        // 在接口 c 及其父接口中查找
         if ((method = c->lookupMethod(name, descriptor)) != nullptr)
             return method;
     }

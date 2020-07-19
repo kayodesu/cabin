@@ -34,7 +34,7 @@ Method *ConstantPool::resolveMethod(u2 i)
 {
     lock_guard<recursive_mutex> lock(mutex);
     assert(0 < i && i < size);
-    assert(_type[i] == JVM_CONSTANT_Methodref or _type[i] == JVM_CONSTANT_ResolvedMethod);
+    assert(_type[i] == JVM_CONSTANT_Methodref || _type[i] == JVM_CONSTANT_ResolvedMethod);
 
     if (_type[i] == JVM_CONSTANT_ResolvedMethod) {
         return (Method *) _info[i];
@@ -67,6 +67,19 @@ Method* ConstantPool::resolveInterfaceMethod(u2 i)
     info(i, (slot_t) m);
 
     return m;
+}
+
+Method *ConstantPool::resolveMethodOrInterfaceMethod(u2 i)
+{
+    lock_guard<recursive_mutex> lock(mutex);
+    assert(0 < i && i < size);
+
+    if (_type[i] == JVM_CONSTANT_Methodref || _type[i] == JVM_CONSTANT_ResolvedMethod)
+        return resolveMethod(i);
+    if (_type[i] == JVM_CONSTANT_InterfaceMethodref || _type[i] == JVM_CONSTANT_ResolvedInterfaceMethod)
+        return resolveInterfaceMethod(i);
+
+    jvm_abort("never go here");
 }
 
 Field *ConstantPool::resolveField(u2 i)

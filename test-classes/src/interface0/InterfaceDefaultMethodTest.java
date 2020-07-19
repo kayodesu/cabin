@@ -1,20 +1,16 @@
 package interface0;
 
+/**
+ * Status: Pass
+ */
 public class InterfaceDefaultMethodTest {
-
-    class TestInterfaceDefaultTest extends FirstTestClass implements FirstTest, SecondTest { }
-
-    class TestInterfaceFirstTestClass implements FirstTest, SecondTest, ThirdTest, DefaultTest { }
-
-    class FirstTestClass implements ThirdTest, FirstTest { }
-
-    interface FirstTest extends DefaultTest { }
-
     interface DefaultTest {
         default String test() {
             return "DefaultTest";
         }
     }
+    
+    interface FirstTest extends DefaultTest { }
 
     interface SecondTest extends FirstTest {
         default String test() {
@@ -28,25 +24,31 @@ public class InterfaceDefaultMethodTest {
         }
     }
 
+    class FirstTestClass implements ThirdTest, FirstTest { }
+    
+    class TestInterfaceDefaultTest extends FirstTestClass implements FirstTest, SecondTest { }
+
+    class TestInterfaceFirstTestClass implements FirstTest, SecondTest, ThirdTest, DefaultTest { }
+
     public static void main(String[] args) {
         InterfaceDefaultMethodTest test = new InterfaceDefaultMethodTest();
+        test.test1();
         test.test2();
     }
 
-    //@Test
     public void test1() {
         TestInterfaceDefaultTest testInterfaceDefaultTest = new TestInterfaceDefaultTest();
         DefaultTest defaultTest = testInterfaceDefaultTest;
         FirstTestClass firstTestClass = testInterfaceDefaultTest;
         SecondTest secondTest = testInterfaceDefaultTest;
         ThirdTest thirdTest = testInterfaceDefaultTest;
-//        Assert.assertEquals(defaultTest.test(), "ThirdTest");
-//        Assert.assertEquals(firstTestClass.test(), "ThirdTest");
-//        Assert.assertEquals(secondTest.test(), "ThirdTest");
-//        Assert.assertEquals(thirdTest.test(), "ThirdTest");
+
+        System.out.println(defaultTest.test() == "ThirdTest");
+        System.out.println(firstTestClass.test() == "ThirdTest");
+        System.out.println(secondTest.test() == "ThirdTest");
+        System.out.println(thirdTest.test() == "ThirdTest");
     }
 
-    //@Test
     public void test2() {
         TestInterfaceFirstTestClass testInterfaceFirstTestClass = new TestInterfaceFirstTestClass();
         DefaultTest defaultTest = testInterfaceFirstTestClass;
@@ -54,13 +56,9 @@ public class InterfaceDefaultMethodTest {
         SecondTest secondTest = testInterfaceFirstTestClass;
         ThirdTest thirdTest = testInterfaceFirstTestClass;
 
-        System.out.println(defaultTest.test());
-        System.out.println(firstTest.test());
-        System.out.println(secondTest.test());
-        System.out.println(thirdTest.test());
-//        Assert.assertEquals(defaultTest.test(), "ThirdTest");
-//        Assert.assertEquals(firstTest.test(), "ThirdTest");
-//        Assert.assertEquals(secondTest.test(), "ThirdTest");
-//        Assert.assertEquals(thirdTest.test(), "ThirdTest");
+        System.out.println(defaultTest.test() == "ThirdTest");
+        System.out.println(firstTest.test() == "ThirdTest");
+        System.out.println(secondTest.test() == "ThirdTest");
+        System.out.println(thirdTest.test() == "ThirdTest");
     }
 }

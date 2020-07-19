@@ -1,7 +1,7 @@
 package interface0;
 
 /**
- * Status: Fail
+ * Status: Pass
  */
 public class InterfaceMethodTest {
     public interface If1 {
@@ -27,7 +27,7 @@ public class InterfaceMethodTest {
     public static class Impl3 implements If1 {
         @Override
         public int y() {
-            return 100 + If1.super.y();
+            return 100 + If1.super.y(); //  invokespecial #2 <interface0/InterfaceMethodTest$If1.y>
         }
     }
     

@@ -116,8 +116,6 @@ static const char *instruction_names[] = {
 #endif
 
 static void callJNIMethod(Frame *frame);
-static void invokedynamic(BytecodeReader &reader, Class &clazz, slot_t *&ostack);
-
 static bool checkcast(Class *s, Class *t);
 
 /*
@@ -1105,19 +1103,22 @@ opc_invokevirtual: {
     if (m->isPrivate()) {
         resolved_method = m;
     } else {
-        assert(m->vtable_index >= 0);
-        assert(m->vtable_index < (int) obj->clazz->vtable.size());
-        resolved_method = obj->clazz->vtable[m->vtable_index];
+        // assert(m->vtable_index >= 0);
+        // assert(m->vtable_index < (int) obj->clazz->vtable.size());
+        // resolved_method = obj->clazz->vtable[m->vtable_index];
+        resolved_method = obj->clazz->lookupMethod(m->name, m->descriptor);
     }
 
-    assert(resolved_method == obj->clazz->lookupMethod(m->name, m->descriptor));
+    // assert(resolved_method == obj->clazz->lookupMethod(m->name, m->descriptor));
     goto _invoke_method;
 }
 opc_invokespecial: {
-    // invokespecial指令用于调用一些需要特殊处理的实例方法，
-    // 包括构造函数、私有方法和通过super关键字调用的超类方法。
+    // invokespecial指令用于调用一些需要特殊处理的实例方法， 包括：
+    // 1. 构造函数
+    // 2. 私有方法
+    // 3. 通过super关键字调用的超类方法，或者超接口中的默认方法。
     index = reader->readu2();
-    Method *m = cp->resolveMethod(index);
+    Method *m = cp->resolveMethodOrInterfaceMethod(index);
 
     /*
      * 如果调用的中超类中的函数，但不是构造函数，不是private 函数，且当前类的ACC_SUPER标志被设置，
@@ -1149,7 +1150,7 @@ opc_invokestatic: {
     // invokestatic指令用来调用静态方法。
     // 如果类还没有被初始化，会触发类的初始化。
     index = reader->readu2();
-    Method *m = cp->resolveMethod(index);
+    Method *m = cp->resolveMethodOrInterfaceMethod(index);
     if (m->isAbstract()) {
         THROW_EXCEPTION(S(java_lang_AbstractMethodError), nullptr);
     }

@@ -337,10 +337,11 @@ public:
         DSLOT(_info + i) = newDouble;
     }
 
-    Class *resolveClass(u2 i);
+    Class  *resolveClass(u2 i);
     Method *resolveMethod(u2 i);
     Method *resolveInterfaceMethod(u2 i);
-    Field *resolveField(u2 i);
+    Method *resolveMethodOrInterfaceMethod(u2 i);
+    Field  *resolveField(u2 i);
     Object *resolveString(u2 i);
     Object *resolveMethodType(u2 i);
     Object *resolveMethodHandle(u2 i);

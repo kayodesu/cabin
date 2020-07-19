@@ -10,7 +10,6 @@
 #include "../jvmstd.h"
 #include "constant_pool.h"
 #include "../objects/class_loader.h"
-#include "class.h"
 #include "../objects/object.h"
 #include "../objects/string_object.h"
 #include "../objects/class_object.h"
@@ -58,11 +57,13 @@ public:
 
     Class *super_class = nullptr;
 
-    /*
-     * 本类明确实现的interfaces，父类实现的不包括在内。
-     * 但如果父类实现，本类也声明了实现的接口，则包括在内。
-     */
+    // 本类声明实现的interfaces，父类声明实现的不包括在内。
+    // 但如果父类声明实现，本类也声明了实现的接口，则包括在内。
     std::vector<Class *> interfaces;
+
+    // 本类所实现的所有interfaces，包括本类和所有祖先类声明实现接口。
+    // 各接口之间相互独立（没有重复的，且没有继承关系）。
+    std::unordered_set<Class *> indep_interfaces; // independent interfaces
 
     Class *nest_host = nullptr;
     std::vector<Class *> nest_members;
@@ -126,6 +127,21 @@ public:
     std::vector<Annotation> rt_visi_annos;   // runtime visible annotations
     std::vector<Annotation> rt_invisi_annos; // runtime invisible annotations
 
+    // Hash
+    size_t operator()(const Class *c) const {
+        return (uintptr_t) c;
+    }
+
+    // Equals
+    bool operator()(const Class *c1, const Class *c2) const {
+        if (c1 == c2)
+            return true;
+        if (c1 == nullptr || c2 == nullptr)
+            return false;
+        return c1->equals(c2);
+//        return (c1->loader == c2->loader && utf8::equals(c1->class_name, c2->class_name));
+    }
+
 private:
     // 计算字段的个数，同时给它们编号
     void calcFieldsId();
@@ -136,6 +152,7 @@ private:
     
     void createVtable();
     void createItable();
+    void generateIndepInterfaces();
 
     u1 *bytecode = nullptr;
 
@@ -200,7 +217,7 @@ public:
     /*
      * 比较两个类是否相等
      */
-    bool equals(Class *c) const
+    bool equals(const Class *c) const
     {
         return this == c
                or (c != nullptr and loader == c->loader and utf8::equals(class_name, c->class_name));
