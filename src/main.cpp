@@ -201,7 +201,7 @@ static void initJVM(int argc, char *argv[])
     }
     g_java_home = home;
 
-    g_java_home = R"(C:\Program Files\Java\jdk1.8.0_221)"; // todo for testing ...............................
+    g_java_home = R"(C:\Program Files\Java\jre1.8.0_221)"; // todo for testing ...............................
 
     /* Access JAVA_HOME/release file to get the version of JDK */
     ifstream ifs(g_java_home + "/release");
@@ -267,7 +267,7 @@ static void initJVM(int argc, char *argv[])
         // parse bootstrap classpath
         if (bootstrap_classpath[0] == 0) { // empty
             strcpy(bootstrap_classpath, g_java_home.c_str());
-            strcat(bootstrap_classpath, "/jre/lib");
+            strcat(bootstrap_classpath, "/lib");
         }
 
         findFilesBySuffix(bootstrap_classpath, "jar", g_jre_lib_jars);

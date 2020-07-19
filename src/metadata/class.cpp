@@ -69,11 +69,12 @@ void Class::parseAttribute(BytecodeReader &r)
                 source_file_name = "Unknown source file";
             }
         } else if (S(EnclosingMethod) == attr_name) {
-            u2 classIndex = r.readu2();
+            u2 classIndex = r.readu2(); // 指向 CONSTANT_Class_info
             u2 methodIndex = r.readu2(); // 指向 CONSTANT_NameAndType_info
 
             if (classIndex > 0) {
-                enclosing.clazz = loadClass(loader, cp.className(classIndex));
+                // enclosing.clazz = loadClass(loader, cp.className(classIndex));
+                enclosing.clazz = cp.resolveClass(classIndex);
 
                 if (methodIndex > 0) {
                     enclosing.name = newString(cp.nameOfNameAndType(methodIndex));
