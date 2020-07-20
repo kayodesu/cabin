@@ -3,11 +3,15 @@
  */
 
 #include "../../jni_inner.h"
+#include "../../../objects/string_object.h"
 
 // Gets the platform defined TimeZone ID.
 // private static native String getSystemTimeZoneID(String javaHome);
 jstring getSystemTimeZoneID(jstring java_home)
 {
+    if (java_home == nullptr) {
+        // NullPointerException todo
+    }
     // todo
     jvm_abort("getSystemTimeZoneID");
 }

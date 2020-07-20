@@ -4,6 +4,7 @@
 
 #ifdef _WIN32
 
+#include <cstdlib>
 #include <windows.h> 
 #include "jvmstd.h"
 
@@ -169,5 +170,26 @@ const char *osArch()
         return "UNKNOWN ARCHITECTURE";
     }
 }
+
+//wstring getTimeZone()
+//{
+//     TIME_ZONE_INFORMATION   tzi;
+//
+//     GetSystemTime(&tzi.StandardDate);
+//
+//     GetTimeZoneInformation(&tzi);
+//
+//	size_t len = wcslen(tzi.StandardName) + 1;
+//	size_t converted = 0;
+//	char *standard_name =(char *) malloc(len * sizeof(char));
+//
+//	auto cc = wcstombs_s(&converted, standard_name, len, tzi.StandardName, _TRUNCATE);
+//
+//    auto   strDaylightName   =   tzi.DaylightName;
+//
+//     auto zone = tzi.Bias/ -60; //时区，如果是中国标准时间则得到8
+//
+//     return tzi.StandardName;
+//}
 
 #endif

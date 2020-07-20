@@ -21,4 +21,7 @@ const char *osName();
 // 返回操作系统的架构。e.g. amd64
 const char *osArch();
 
+// return timezone now.
+//std::wstring getTimeZone();
+
 #endif

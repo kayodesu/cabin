@@ -45,7 +45,7 @@ public:
     // 必须是全限定类名，包名之间以 '/' 分隔。
     const utf8_t *class_name;
 
-    int accsee_flags;
+    int access_flags;
 
     bool inited = false; // 此类是否被初始化过了（是否调用了<clinit>方法）。
 
@@ -204,16 +204,6 @@ public:
      */
     void clinit();
 
-    // static size_t getSize()
-    // {
-    //     return sizeof(Class) + sizeof(slot_t)*CLASS_CLASS_INST_FIELDS_COUNT;
-    // }
-
-    // size_t size() const override
-    // {
-    //     return getSize();
-    // }
-
     /*
      * 比较两个类是否相等
      */
@@ -292,18 +282,18 @@ public:
 
     std::string toString() const;
 
-    bool isInterface() const { return accIsInterface(accsee_flags); }
-    bool isPublic() const    { return accIsPublic(accsee_flags); }
-    bool isProtected() const { return accIsProtected(accsee_flags); }
-    bool isPrivate() const   { return accIsPrivate(accsee_flags); }
-    bool isAbstract() const  { return accIsAbstract(accsee_flags); }
-    bool isStatic() const    { return accIsStatic(accsee_flags); }
-    bool isFinal() const     { return accIsFinal(accsee_flags); }
-    bool isStrict() const    { return accIsStrict(accsee_flags); }
-    bool isSuper() const     { return accIsSuper(accsee_flags); }
-    bool isModule() const    { return accIsModule(accsee_flags); }
+    bool isInterface() const { return accIsInterface(access_flags); }
+    bool isPublic() const    { return accIsPublic(access_flags); }
+    bool isProtected() const { return accIsProtected(access_flags); }
+    bool isPrivate() const   { return accIsPrivate(access_flags); }
+    bool isAbstract() const  { return accIsAbstract(access_flags); }
+    bool isStatic() const    { return accIsStatic(access_flags); }
+    bool isFinal() const     { return accIsFinal(access_flags); }
+    bool isStrict() const    { return accIsStrict(access_flags); }
+    bool isSuper() const     { return accIsSuper(access_flags); }
+    bool isModule() const    { return accIsModule(access_flags); }
 
-    void setSynthetic() { accSetSynthetic(accsee_flags); }
+    void setSynthetic() { accSetSynthetic(access_flags); }
 
     /*---------------------- for module-info.class ----------------------*/
 private:

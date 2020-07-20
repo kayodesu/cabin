@@ -395,7 +395,6 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-
 static void showUsage(const char *name)
 {
 //    printf("Usage: %s [-options] class [arg1 arg2 ...]\n", name);

@@ -380,7 +380,7 @@ static jclass getComponentType(jclass _this)
 //public native int getModifiers();
 static jint getModifiers(jclass _this)
 {
-    return _this->jvm_mirror->accsee_flags;
+    return _this->jvm_mirror->access_flags;
 }
 
 /*

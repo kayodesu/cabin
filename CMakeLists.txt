@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.9)
-project(YoVM)
+project(yovm)
 
 set(CMAKE_CXX_FLAGS "-std=c++17 -m64 -Wall -lz -lminizip -llibffi") # lz: link zlip
 

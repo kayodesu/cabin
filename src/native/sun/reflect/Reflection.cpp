@@ -36,7 +36,7 @@ static jclass getCallerClass()
 // public static native int getClassAccessFlags(Class<?> type)
 static jint getClassAccessFlags(jclass type)
 {
-    return type->clazz->accsee_flags; // todo
+    return type->clazz->access_flags; // todo
 }
 
 static JNINativeMethod methods[] = {

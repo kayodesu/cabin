@@ -435,7 +435,7 @@ Class::Class(Object *loader, u1 *bytecode, size_t len): loader(loader), bytecode
         }
     }
 
-    accsee_flags = r.readu2();
+    access_flags = r.readu2();
     class_name = cp.className(r.readu2());
     genPkgName();
 
@@ -501,7 +501,7 @@ Class::Class(Object *loader, u1 *bytecode, size_t len): loader(loader), bytecode
 
 Class::Class(const char *className)
         : class_name(dup(className)), /* 形参className可能非持久，复制一份 */
-          accsee_flags(JVM_ACC_PUBLIC), inited(true),
+          access_flags(JVM_ACC_PUBLIC), inited(true),
           loader(nullptr), super_class(g_object_class)
 {
     assert(className != nullptr);
@@ -522,7 +522,7 @@ Class::Class(const char *className)
 
 Class::Class(Object *loader, const char *className)
         : class_name(dup(className)), /* 形参className可能非持久，复制一份 */
-          accsee_flags(JVM_ACC_PUBLIC), inited(true),
+          access_flags(JVM_ACC_PUBLIC), inited(true),
           loader(loader), super_class(g_object_class)
 {
     assert(className != nullptr);
