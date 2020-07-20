@@ -1,4 +1,4 @@
-# YoVM
+# yovm
 An experimental JVM written in C++.
 
 ## Development environment
