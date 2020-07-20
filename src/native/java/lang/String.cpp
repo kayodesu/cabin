@@ -8,6 +8,7 @@
 // public native String intern();
 static jstring intern(jstring _this)
 {
+    assert(g_string_class == _this->clazz);
     return _this->clazz->intern(_this);
 }
 

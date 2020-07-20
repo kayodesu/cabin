@@ -496,7 +496,7 @@ static jobjectArray getDeclaredFields0(jclass _this, jboolean public_only)
                 rslot(cls->fields[i].getType()), // type
                 islot(cls->fields[i].accsee_flags), /* modifiers todo */
                 islot(cls->fields[i].id), /* slot   todo */
-                rslot(jnull), /* signature  todo */
+                rslot(cls->fields[i].signature != nullptr ? newString(cls->fields[i].signature) : jnull), /* signature  todo */
                 rslot(jnull), /* annotations  todo */
         });
     }
@@ -550,7 +550,7 @@ static jobjectArray getDeclaredMethods0(jclass _this, jboolean public_only)
                 rslot(method->getExceptionTypes()), /* checked exceptions */
                 islot(method->accsee_flags), /* modifiers todo */
                 islot(0), /* slot   todo */
-                rslot(jnull), /* signature  todo */
+                rslot(method->signature != nullptr ? newString(method->signature) : jnull), /* signature  todo */
                 rslot(jnull), /* annotations  todo */
                 rslot(jnull), /* parameter annotations  todo */
                 rslot(jnull), /* annotation default  todo */

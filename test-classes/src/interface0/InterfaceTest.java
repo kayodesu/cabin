@@ -8,19 +8,21 @@ interface JJ<R extends Number> extends III<R> { }
 
 class CC { 
 	String impl(int i) { 
-		return "impl:"+i; 
+		return "impl:" + i;
 	}
-	String impl(float d) {
-		return "";
+	String impl(float f) {
+		return "impl:" + f;
 	}
 }
 
 public class InterfaceTest {
 	public static void main(String[] args) {
-		JJ<Integer> iii = (new CC())::impl;
-		System.out.println(iii);
-		JJ<Float> r = (new CC())::impl;
-		System.out.printf(">>> %s\n", iii.foo(44));
-//		System.out.printf(">>> %s\n", iii.foo(3.5));		// 并不能运作？？？
+		JJ<Integer> i = (new CC())::impl;
+		System.out.println(i);
+		System.out.printf(">>> %s\n\n", i.foo(44));
+
+		JJ<Float> f = (new CC())::impl;
+		System.out.println(f);
+		System.out.printf(">>> %s\n", f.foo(3.5F));
 	}
 }

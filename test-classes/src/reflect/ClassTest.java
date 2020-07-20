@@ -12,16 +12,18 @@ public class ClassTest implements Runnable {
     static boolean z;
 
     public static void main(String[] args) throws Exception {
-   //     _package();
-    //    _class();
+        _package();
+        _class();
         method();
     }
 
     public static void _package() {
+        System.out.println("--- package");
         System.out.println("reflect".equals(ClassTest.class.getPackage().getName()));
     }
 
     public static void _class() {
+        System.out.println("--- class");
         Class<?> c = ClassTest.class;
         System.out.println("reflect.ClassTest".equals(c.getName()));
         System.out.println(Object.class == c.getSuperclass());
@@ -33,6 +35,7 @@ public class ClassTest implements Runnable {
     }
 
     public static void method() throws Exception {
+        System.out.println("--- method");
         Method main = ClassTest.class.getMethod("main", String[].class);
         System.out.println(Arrays.deepEquals(new Class<?>[]{Exception.class}, main.getExceptionTypes()));
         System.out.println(Arrays.deepEquals(new Class<?>[]{String[].class}, main.getParameterTypes()));

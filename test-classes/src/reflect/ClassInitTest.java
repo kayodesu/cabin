@@ -1,7 +1,7 @@
 package reflect;
 
 /**
- * Status: Fail
+ * Status: Pass
  */
 public class ClassInitTest {
     

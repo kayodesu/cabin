@@ -44,6 +44,8 @@ add_executable(yovm
         src/objects/class_loader.cpp src/objects/prims.cpp src/objects/invoke.cpp
         src/objects/object.cpp src/metadata/class.cpp src/objects/class_object.cpp)
 
+# add_executable(test_sysinfo test/test_sysinfo.cpp src/sysinfo_win.cpp)
+
 target_link_libraries (yovm libz)
 target_link_libraries (yovm libminizip)
 target_link_libraries (yovm libffi)

@@ -9,11 +9,24 @@
 #include "../../../runtime/vm_thread.h"
 #include "../../../metadata/class.h"
 
+using namespace std;
 
 // public static native Class<?> getCallerClass(int level)
 static jclass getCallerClass0(jint level)
 {
-    jvm_abort("getCallerClass0");
+    if (level < 0) {
+        signalException(S(java_lang_IllegalArgumentException), to_string(level).c_str());
+    }
+
+    Frame *frame = (Frame *) getCurrentThread()->getTopFrame();
+    for (; level > 0 && frame != nullptr; level--) {
+        frame = frame->prev;
+    }
+
+    if (frame == nullptr) {
+        return nullptr;
+    }
+    return frame->method->clazz->java_mirror;
 }
 
 // public static native Class<?> getCallerClass()

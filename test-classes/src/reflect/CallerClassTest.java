@@ -3,7 +3,7 @@ package reflect;
 import sun.reflect.Reflection;
 
 /**
- * Status: Fail
+ * Status: Pass
  */
 public class CallerClassTest {
     
@@ -19,10 +19,11 @@ public class CallerClassTest {
     
     static class Bar {
         static void test() {
-            System.out.println(Reflection.getCallerClass(0).getName()); // sun.reflect.Reflection
-            System.out.println(Reflection.getCallerClass(1).getName()); // reflect.CallerClassTest$Bar
-            System.out.println(Reflection.getCallerClass(2).getName()); // reflect.CallerClassTest$Foo
-            System.out.println(Reflection.getCallerClass(3).getName()); // reflect.CallerClassTest
+            System.out.println(Reflection.getCallerClass(0)); // sun.reflect.Reflection
+            System.out.println(Reflection.getCallerClass(1)); // reflect.CallerClassTest$Bar
+            System.out.println(Reflection.getCallerClass(2)); // reflect.CallerClassTest$Foo
+            System.out.println(Reflection.getCallerClass(3)); // reflect.CallerClassTest
+            System.out.println(Reflection.getCallerClass(4)); // null
         }
     }
 }

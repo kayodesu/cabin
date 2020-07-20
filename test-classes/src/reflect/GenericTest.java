@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Status: Fail
+ * Status: Pass
  */
 public class GenericTest {
     private static class GenericClass<String> { }

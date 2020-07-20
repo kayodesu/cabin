@@ -3,7 +3,7 @@ package reflect;
 import java.lang.reflect.Field;
 
 /**
- * Status: Fail
+ * Status: Pass
  */
 public class FieldTest {
     
