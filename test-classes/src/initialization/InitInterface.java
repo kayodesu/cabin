@@ -22,8 +22,8 @@ public class InitInterface {
     }
 
     public void test() {
-        System.out.println("" + J.i);
-        System.out.println("" + K.j);
+        System.out.println(J.i);
+        System.out.println(K.j);
     }
     
     public static void main(String[] args) {

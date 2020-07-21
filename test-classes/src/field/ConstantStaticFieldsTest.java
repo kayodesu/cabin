@@ -4,7 +4,7 @@ package field;
  * A constant variable is a final variable of primitive type or type String
  * that is initialized with a constant expression (§15.28).
  *
- * Status: Fail
+ * Status: Pass
  */
 public class ConstantStaticFieldsTest {
     
@@ -21,8 +21,8 @@ public class ConstantStaticFieldsTest {
     public static final String str2 = str1 + " world!";
 
     public void test() {
-        System.out.println(true == ConstantStaticFieldsTest.z);
-        System.out.println(true == (Boolean) getFieldValue("z"));
+        System.out.println(ConstantStaticFieldsTest.z);
+        System.out.println((Boolean) getFieldValue("z"));
         System.out.println((byte)125 == (Byte) ConstantStaticFieldsTest.b);
         System.out.println((byte)125 == (Byte) getFieldValue("b"));
         System.out.println('c' == ConstantStaticFieldsTest.c);

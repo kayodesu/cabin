@@ -203,7 +203,7 @@ static jlong objectFieldOffset1(jobject _this, jclass c, jstring name)
         if (ao != nullptr) { /* get value from array */                 \
             assert(0 <= offset && offset < ao->len);                    \
             return ao->get<jtype>(offset);                              \
-        } else if (co != nullptr) { /* get static filed value*/         \
+        } else if (co != nullptr) { /* get static filed value */         \
             Class *c = co->jvm_mirror;                                  \
             initClass(c);                                               \
             assert(0 <= offset && offset < c->field_count);             \
@@ -329,60 +329,74 @@ static void obj_putObject(jobject _this, jobject o, jlong offset, jobject x)
 // public native boolean getBooleanVolatile(Object o, long offset);
 static jboolean getBooleanVolatile(jobject _this, jobject o, jlong offset)
 {
-    jvm_abort("getBooleanVolatile");
+    // todo Volatile
+    return obj_getBoolean(_this, o, offset);
+    // jvm_abort("getBooleanVolatile");
 }
 
 // public native byte getByteVolatile(Object o, long offset);
 static jbyte getByteVolatile(jobject _this, jobject o, jlong offset)
 {
-    jvm_abort("getByteVolatile");
+    // todo Volatile
+    return obj_getByte(_this, o, offset);
+    // jvm_abort("getByteVolatile");
 }
 
 // public native char getCharVolatile(Object o, long offset);
 static jchar getCharVolatile(jobject _this, jobject o, jlong offset)
 {
-    jvm_abort("getCharVolatile");
+    // todo Volatile
+    return obj_getChar(_this, o, offset);
+    // jvm_abort("getCharVolatile");
 }
 
 // public native short getShortVolatile(Object o, long offset);
 static jshort getShortVolatile(jobject _this, jobject o, jlong offset)
 {
-    jvm_abort("getShortVolatile");
+    // todo Volatile
+    return obj_getShort(_this, o, offset);
+    // jvm_abort("getShortVolatile");
 }
 
 // public native int getIntVolatile(Object o, long offset);
 static jint getIntVolatile(jobject _this, jobject o, jlong offset)
 {
     // todo Volatile
+    return obj_getInt(_this, o, offset);
 
-    jint value;
-    if (o->isArrayObject()) {
-        Array *ao = dynamic_cast<Array *>(o);  // todo
-        value = ao->get<jint>(offset);
-//        value = arrobj_get(jint, o, offset);  // todo
-    } else {
-        assert(0 <= offset && offset < o->clazz->inst_field_count);
-        value = o->data[offset];//o->getInstFieldValue<jint>(offset);  // todo
-    }
-    return value;
+    // jint value;
+    // if (o->isArrayObject()) {
+    //     Array *ao = dynamic_cast<Array *>(o);  // todo
+    //     value = ao->get<jint>(offset);
+    // } else {
+    //     assert(0 <= offset && offset < o->clazz->inst_field_count);
+    //     value = o->data[offset];   // todo
+    // }
+    // return value;
 }
 
 // public native long getLongVolatile(Object o, long offset);
 static jlong getLongVolatile(jobject _this, jobject o, jlong offset)
 {
-    jvm_abort("getLongVolatile");
+    // todo Volatile
+    return obj_getLong(_this, o, offset);
+    // jvm_abort("getLongVolatile");
 }
 
 // public native float getFloatVolatile(Object o, long offset);
 static jfloat getFloatVolatile(jobject _this, jobject o, jlong offset)
 {
-    jvm_abort("getFloatVolatile");
+    // todo Volatile
+    return obj_getFloat(_this, o, offset);
+    // jvm_abort("getFloatVolatile");
 }
 
 // public native double getDoubleVolatile(Object o, long offset);
 static jdouble getDoubleVolatile(jobject _this, jobject o, jlong offset)
 {
-    jvm_abort("getDoubleVolatile");
+    // todo Volatile
+    return obj_getDouble(_this, o, offset);
+    // jvm_abort("getDoubleVolatile");
 }
 
 // public native void putIntVolatile(Object o, long offset, int x);
@@ -891,11 +905,11 @@ static JNINativeMethod methods[] = {
         { "putFloatVolatile", "(Ljava/lang/Object;JF)V", (void *) putFloatVolatile },
         { "putDoubleVolatile", "(Ljava/lang/Object;JD)V", (void *) putDoubleVolatile },
 
+        { "getCharVolatile", "(Ljava/lang/Object;J)C", (void *) getCharVolatile },
         { "getIntVolatile", "(Ljava/lang/Object;J)I", (void *) getIntVolatile },
         { "getBooleanVolatile", "(Ljava/lang/Object;J)Z", (void *) getBooleanVolatile },
         { "getByteVolatile", "(Ljava/lang/Object;J)B", (void *) getByteVolatile },
         { "getShortVolatile", "(Ljava/lang/Object;J)S", (void *) getShortVolatile },
-        { "getCharVolatile", "(Ljava/lang/Object;J)C,", (void *) getCharVolatile },
         { "getLongVolatile", "(Ljava/lang/Object;J)J", (void *) getLongVolatile },
         { "getFloatVolatile", "(Ljava/lang/Object;J)F", (void *) getFloatVolatile },
         { "getDoubleVolatile", "(Ljava/lang/Object;J)D", (void *) getDoubleVolatile },
