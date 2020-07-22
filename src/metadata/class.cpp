@@ -579,26 +579,41 @@ void Class::clinit()
 
 Field *Class::lookupField(const utf8_t *name, const utf8_t *descriptor)
 {
-    for (u2 i = 0; i < field_count; i++) {
-        Field *f = fields + i;
-        if (utf8::equals(f->name, name) && utf8::equals(f->descriptor, descriptor))
+//    for (u2 i = 0; i < field_count; i++) {
+//        Field *f = fields + i;
+//        if (utf8::equals(f->name, name) && utf8::equals(f->descriptor, descriptor))
+//            return f;
+//    }
+//
+//    // todo 在父类中查找
+//    Field *field;
+//    if (super_class != nullptr) {
+//        if ((field = super_class->lookupField(name, descriptor)) != nullptr)
+//            return field;
+//    }
+//
+//    // todo 在父接口中查找
+//    for (auto c : interfaces) {
+//        if ((field = c->lookupField(name, descriptor)) != nullptr)
+//            return field;
+//    }
+//
+//    return nullptr;
+
+    Field *f;
+    Class *clazz = this;
+    do {
+        if ((f = clazz->getDeclaredField(name, descriptor)) != nullptr)
+            return f;
+        clazz = clazz->super_class;
+    } while (clazz != nullptr);
+
+    for (Class *c: indep_interfaces) {
+        // 在接口 c 及其父接口中查找
+        if ((f = c->lookupField(name, descriptor)) != nullptr)
             return f;
     }
 
-    // todo 在父类中查找
-    Field *field;
-    if (super_class != nullptr) {
-        if ((field = super_class->lookupField(name, descriptor)) != nullptr)
-            return field;
-    }
-
-    // todo 在父接口中查找
-    for (auto c : interfaces) {
-        if ((field = c->lookupField(name, descriptor)) != nullptr)
-            return field;
-    }
-
-    signalException(S(java_lang_NoSuchFieldError), NEW_MSG("%s~%s~%s\n", class_name, name, descriptor));
     return nullptr;
 }
 
@@ -620,6 +635,16 @@ Field *Class::lookupInstField(const utf8_t *name, const utf8_t *descriptor)
         return nullptr;
     }
     return field;
+}
+
+Field *Class::getDeclaredField(const char *name, const char *descriptor) const
+{
+    for (u2 i = 0; i < field_count; i++) {
+        Field *f = fields + i;
+        if (utf8::equals(f->name, name) && utf8::equals(f->descriptor, descriptor))
+            return f;
+    }
+    return nullptr;
 }
 
 Field *Class::getDeclaredInstField(int id, bool ensureExist)

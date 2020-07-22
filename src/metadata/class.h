@@ -217,6 +217,7 @@ public:
     Field *lookupStaticField(const char *name, const char *descriptor);
     Field *lookupInstField(const char *name, const char *descriptor);
 
+    Field *getDeclaredField(const char *name, const char *descriptor) const;
     Field *getDeclaredInstField(int id, bool ensureExist = true);
 
     Method *lookupMethod(const char *name, const char *descriptor);
