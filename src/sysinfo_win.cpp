@@ -5,6 +5,7 @@
 #ifdef _WIN32
 
 #include <cstdlib>
+#include <iostream>
 #include <windows.h> 
 #include "jvmstd.h"
 
@@ -24,20 +25,20 @@ int pageSize()
     return sysInfo.dwPageSize;
 }
 
-long freeMemoryCount()
+unsigned long long freeMemoryCount()
 {
-    MEMORYSTATUSEX statex;
-    statex.dwLength = sizeof(statex);
-    GlobalMemoryStatusEx(&statex);
-    return statex.ullAvailPhys;
+    MEMORYSTATUSEX state;
+    state.dwLength = sizeof(state);
+    GlobalMemoryStatusEx(&state);
+    return state.ullAvailPhys;
 }
 
-long totalMemoryCount()
+unsigned long long totalMemoryCount()
 {
-    MEMORYSTATUSEX statex;
-    statex.dwLength = sizeof(statex);
-    GlobalMemoryStatusEx(&statex);
-    return statex.ullTotalPhys;
+    MEMORYSTATUSEX state;
+    state.dwLength = sizeof(state);
+    GlobalMemoryStatusEx(&state);
+    return state.ullTotalPhys;
 }
 
 long maxMemoryCount()

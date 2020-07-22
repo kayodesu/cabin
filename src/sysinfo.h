@@ -9,9 +9,9 @@ int processorNumber();
 
 int pageSize();
 
-long freeMemoryCount();
+unsigned long long freeMemoryCount();
 
-long totalMemoryCount();
+unsigned long long totalMemoryCount();
 
 long maxMemoryCount();
 
