@@ -17,7 +17,7 @@ Heap::Heap() noexcept
     size = VM_HEAP_SIZE;
     assert(size > 0);
 
-    auto mem = (address) malloc(size);
+    mem = (address) malloc(size);
     assert(mem != 0);    
 
     freelist = new Node(mem, size, nullptr);
@@ -151,6 +151,15 @@ void Heap::back(address p, size_t len)
 
 over:
     unlock();
+}
+
+size_t Heap::freeMemory()
+{
+    size_t free_mem = 0;
+    for (auto node = freelist; node != nullptr; node = node->next) {
+        free_mem += node->len;
+    }
+    return free_mem;
 }
 
 string Heap::toString()

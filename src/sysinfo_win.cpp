@@ -5,8 +5,9 @@
 #ifdef _WIN32
 
 #include <cstdlib>
+#include <ctime>
+#include <windows.h>
 #include <iostream>
-#include <windows.h> 
 #include "jvmstd.h"
 
 using namespace std;
@@ -23,27 +24,6 @@ int pageSize()
     SYSTEM_INFO sysInfo;
     GetSystemInfo(&sysInfo);
     return sysInfo.dwPageSize;
-}
-
-unsigned long long freeMemoryCount()
-{
-    MEMORYSTATUSEX state;
-    state.dwLength = sizeof(state);
-    GlobalMemoryStatusEx(&state);
-    return state.ullAvailPhys;
-}
-
-unsigned long long totalMemoryCount()
-{
-    MEMORYSTATUSEX state;
-    state.dwLength = sizeof(state);
-    GlobalMemoryStatusEx(&state);
-    return state.ullTotalPhys;
-}
-
-long maxMemoryCount()
-{
-    jvm_abort("maxMemory");
 }
 
 const char *osName()
@@ -172,25 +152,35 @@ const char *osArch()
     }
 }
 
-//wstring getTimeZone()
-//{
-//     TIME_ZONE_INFORMATION   tzi;
+string getTimeZone()
+{
+    time_t raw_time;
+    time (&raw_time);
+
+    struct tm *time_info = localtime(&raw_time);
+
+    char timezone_[64];
+    strftime(timezone_, sizeof(timezone_), "%Z", time_info);
+    return timezone_;
+
+//    TIME_ZONE_INFORMATION   tzi;
 //
 //     GetSystemTime(&tzi.StandardDate);
 //
 //     GetTimeZoneInformation(&tzi);
 //
-//	size_t len = wcslen(tzi.StandardName) + 1;
-//	size_t converted = 0;
-//	char *standard_name =(char *) malloc(len * sizeof(char));
+////	size_t len = wcslen(tzi.StandardName) + 1;
+////	size_t converted = 0;
+////	char *standard_name =(char *) malloc(2 * len * sizeof(char));
+////
+////	auto cc = wcstombs_s(&converted, standard_name, len, tzi.StandardName, _TRUNCATE);
+////
+////    auto   strDaylightName   =   tzi.DaylightName;
+////
+////     auto zone = tzi.Bias/ -60; //时区，如果是中国标准时间则得到8
 //
-//	auto cc = wcstombs_s(&converted, standard_name, len, tzi.StandardName, _TRUNCATE);
-//
-//    auto   strDaylightName   =   tzi.DaylightName;
-//
-//     auto zone = tzi.Bias/ -60; //时区，如果是中国标准时间则得到8
-//
+//    wcout << "time zone: " << tzi.DaylightName << endl;
 //     return tzi.StandardName;
-//}
+}
 
 #endif

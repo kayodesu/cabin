@@ -2,6 +2,9 @@ package nio;
 
 import java.nio.ByteBuffer;
 
+/**
+ * Status: Pass
+ */
 public class ByteBufferTest {
     public static void main(String[] args) {
         ByteBuffer bb = ByteBuffer.allocate(8);

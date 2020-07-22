@@ -1,7 +1,7 @@
 package field;
 
 /**
- * Status: Fail
+ * Status: Pass
  */
 public class FieldAccessTest {
     

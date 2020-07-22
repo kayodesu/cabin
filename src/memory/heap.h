@@ -50,6 +50,15 @@ public:
     ~Heap();
     
     void *alloc(size_t len);
+
+    // 堆总大小，以字节为单位。
+    size_t totalMemory()
+    {
+        return size;
+    }
+
+    // 堆还有多少剩余空间，以字节为单位。
+    size_t freeMemory();
     
     std::string toString();
 

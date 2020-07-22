@@ -1,5 +1,5 @@
 /**
- * Status: Fail
+ * Status: Pass
  */
 public class RuntimeTest {
     

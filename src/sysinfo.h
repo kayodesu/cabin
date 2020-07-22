@@ -9,19 +9,12 @@ int processorNumber();
 
 int pageSize();
 
-unsigned long long freeMemoryCount();
-
-unsigned long long totalMemoryCount();
-
-long maxMemoryCount();
-
 // 返回操作系统的名称。e.g. window 10
 const char *osName();
 
 // 返回操作系统的架构。e.g. amd64
 const char *osArch();
 
-// return timezone now.
-//std::wstring getTimeZone();
+std::string getTimeZone();
 
 #endif
