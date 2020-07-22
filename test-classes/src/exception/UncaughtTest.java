@@ -8,7 +8,7 @@ package exception;
  * 	   at exception.UncaughtTest.foo(UncaughtTest.java:20)
  * 	   at exception.UncaughtTest.main(UncaughtTest.java:16)
  *
- * Status: Fail
+ * Status: Pass
  */
 public class UncaughtTest {
     

@@ -62,7 +62,9 @@ static jobject fillInStackTrace(jobject _this, jint dummy)
         // public StackTraceElement(String declaringClass, String methodName, String fileName, int lineNumber)
         // may be should call <init>, but 直接赋值 is also ok. todo
 
-        auto fileName = newString(f->method->clazz->source_file_name);
+        auto fileName = f->method->clazz->source_file_name != nullptr 
+                        ? newString(f->method->clazz->source_file_name) 
+                        : nullptr;
         auto className = newString(f->method->clazz->class_name);
         auto methodName = newString(f->method->name);
         auto lineNumber = f->method->getLineNumber(f->reader.pc - 1); // todo why 减1？ 减去opcode的长度

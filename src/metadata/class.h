@@ -120,7 +120,7 @@ public:
 
     bool deprecated = false;
     const char *signature = nullptr;
-    const char *source_file_name = "Unknown source file";
+    const char *source_file_name = nullptr;
 
     std::vector<BootstrapMethod> bootstrap_methods;
 

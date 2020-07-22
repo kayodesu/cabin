@@ -1,7 +1,7 @@
 package exception;
 
 /**
- * Status: Fail
+ * Status: Pass
  */
 public class InstructionNpeTest {
     

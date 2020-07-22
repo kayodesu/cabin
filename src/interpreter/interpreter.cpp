@@ -1364,8 +1364,10 @@ opc_arraylength: {
 opc_athrow: {
     jref eo = frame->popr(); // exception object
     if (eo == jnull) {
-        jvm_abort("NullPointerException in opc_athrow!"); // todo
-       /// thread_throw(new NullPointerException);
+        signalException(S(java_lang_NullPointerException), nullptr);
+        eo = exceptionOccured();
+        assert(eo != nullptr);
+        clearException();
     }
 
     // 遍历虚拟机栈找到可以处理此异常的方法

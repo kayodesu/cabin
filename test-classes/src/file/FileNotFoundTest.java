@@ -4,7 +4,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
 /**
- * Status: Fail
+ * Status: Pass
  */
 public class FileNotFoundTest {
     

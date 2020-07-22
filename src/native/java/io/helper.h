@@ -23,7 +23,7 @@ static inline void __openFile(jobject _this, jstring name, const char *mode)
 
     FILE *file = fopen(utf8_name, mode);
     if (file == nullptr) {
-        signalException(S(java_io_FileNotFoundException), utf8_name);
+        signalException(S(java_io_FileNotFoundException), MSG("%s (can't find)", utf8_name));
         return;
     }
 

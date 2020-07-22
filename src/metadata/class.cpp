@@ -61,12 +61,6 @@ void Class::parseAttribute(BytecodeReader &r)
             u2 source_file_index = r.readu2();
             if (source_file_index > 0) {
                 source_file_name = cp.utf8(source_file_index);
-            } else {
-                /*
-                 * 并不是每个class文件中都有源文件信息，这个因编译时的编译器选项而异。
-                 * todo 什么编译选项
-                 */
-                source_file_name = "Unknown source file";
             }
         } else if (S(EnclosingMethod) == attr_name) {
             u2 classIndex = r.readu2(); // 指向 CONSTANT_Class_info
