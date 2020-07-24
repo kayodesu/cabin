@@ -1,4 +1,9 @@
 
-add_executable(test_sysinfo test_sysinfo.cpp ../src/sysinfo_win.cpp)
+add_executable(test_sysinfo test_sysinfo.cpp)
+target_link_libraries(test_sysinfo libyovm)
 
-add_executable(test_properties test_properties.cpp ../src/main.cpp)
+add_executable(test_properties test_properties.cpp)
+target_link_libraries(test_properties libyovm)
+
+add_executable(test_method_type test_method_type.cpp)
+target_link_libraries(test_method_type libyovm)
