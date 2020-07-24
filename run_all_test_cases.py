@@ -3,7 +3,7 @@
 
 import os
 
-yovm = 'd:/code/jvm/build/jvm.exe -cp "d:/code/jvm/test-classes/out/production/test-classes" '
+yovm = 'd:/code/yovm/build/yovm.exe -cp "d:/code/yovm/test-classes/out/production/test-classes" '
 
 if __name__ == '__main__':
     for e in os.walk('./test-classes/src'):

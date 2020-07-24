@@ -168,15 +168,21 @@ Class *loadArrayClass(Object *loader, const utf8_t *arr_class_name)
 
     string ele_class_name = arrClassName2EleClassName(arr_class_name);
     Class *c = loadClass(loader, ele_class_name.c_str());
-    if (c != nullptr) {
-        // Array Class 用它的元素的类加载器加载。
-        c = Class::newArrayClass(c->loader, arr_class_name);
-        assert(c != nullptr);
-        if (c->loader == BOOT_CLASS_LOADER)
-            boot_packages.insert(c->pkg_name); // todo array class 的pkg_name是啥
-        addClassToClassLoader(c->loader, c);
-    }
-    return c;
+    if (c == nullptr)
+        return nullptr; // todo
+
+    /* Array Class 用它的元素的类加载器加载 */
+
+    Class *arr_class = findLoadedClass(c->loader, arr_class_name);
+    if (arr_class != nullptr)
+        return arr_class; // find out
+    
+    arr_class = Class::newArrayClass(c->loader, arr_class_name);            
+    assert(arr_class != nullptr);
+    if (arr_class->loader == BOOT_CLASS_LOADER)
+        boot_packages.insert(arr_class->pkg_name); // todo array class 的pkg_name是啥
+    addClassToClassLoader(arr_class->loader, arr_class);
+    return arr_class;
 }
 
 const utf8_t *getBootPackage(const utf8_t *name)

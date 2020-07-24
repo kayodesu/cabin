@@ -357,6 +357,7 @@ opc_ldc2_w: {
             frame->pushl(cp->_long(index));
             break;
         case JVM_CONSTANT_Double:
+         //    printvm("=====    %f\n", cp->_double(index));
             frame->pushd(cp->_double(index));
             break;
         default:
