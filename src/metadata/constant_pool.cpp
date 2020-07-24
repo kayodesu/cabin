@@ -45,7 +45,6 @@ Method *ConstantPool::resolveMethod(u2 i)
 
     type(i, JVM_CONSTANT_ResolvedMethod);
     info(i, (slot_t) m);
-
     return m;
 }
 

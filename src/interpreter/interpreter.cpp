@@ -1096,6 +1096,9 @@ opc_invokevirtual: {
     // invokevirtual指令用于调用对象的实例方法，根据对象的实际类型进行分派（虚方法分派）。
     index = reader->readu2();
     Method *m = cp->resolveMethod(index);
+    if (m == nullptr) {
+        // todo ....
+    }
 
     frame->ostack -= m->arg_slot_count;
     jref obj = RSLOT(frame->ostack);

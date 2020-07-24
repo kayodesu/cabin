@@ -118,6 +118,11 @@ public:
      * @pc, 发生异常的位置
      */
     int findExceptionHandler(Class *exception_type, size_t pc);
+    
+    /*
+     * Is signature polymorphic method?
+     */
+    bool isSignaturePolymorphic();
 
     [[nodiscard]] std::string toString() const;
 
@@ -134,6 +139,7 @@ public:
     [[nodiscard]] bool isSynthetic() const    { return accIsSynthetic(accsee_flags); }
 
     void setSynthetic() { accSetSynthetic(accsee_flags); }
+
 
 private:
     /*

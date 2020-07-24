@@ -667,6 +667,11 @@ Field *Class::getDeclaredInstField(int id, bool ensureExist)
 Method *Class::getDeclaredMethod(const utf8_t *name, const utf8_t *descriptor, bool ensureExist)
 {
     for (auto m : methods) {
+        // if (m->isSignaturePolymorphic()) {
+        //     if (strcmp(name, "invoke") == 0&&strcmp(m->name, "invoke") == 0) {
+        //         m->isSignaturePolymorphic();
+        //         printvm("===== %s, %s, %s\n", m->clazz->class_name, m->name, m->descriptor);
+        // }
         if (utf8::equals(m->name, name) && utf8::equals(m->descriptor, descriptor))
             return m;
     }

@@ -8,6 +8,7 @@
 #include "../objects/invoke.h"
 
 using namespace std;
+using namespace utf8;
 
 Method::ExceptionTable::ExceptionTable(Class *clazz, BytecodeReader &r)
 {
@@ -403,6 +404,34 @@ int Method::findExceptionHandler(Class *exceptionType, size_t pc)
     }
 
     return -1;
+}
+
+bool Method::isSignaturePolymorphic() 
+{
+    /*
+    * A method is signature polymorphic if all of the following are true:
+    * 1. It is declared in the java.lang.invoke.MethodHandle class or the java.lang.invoke.VarHandle class.
+    * 2. It has a single formal parameter of type Object[].
+    * 3. It has the ACC_VARARGS and ACC_NATIVE flags set.
+    */
+
+    bool b = equals(clazz->class_name, S(java_lang_invoke_MethodHandle))
+                 || equals(clazz->class_name, S(java_lang_invoke_VarHandle));
+    if (!b)
+        return false;
+
+    Array *ptypes = getParameterTypes(); // Class<?>[]
+    if (ptypes->len != 1)
+        return false;
+
+    auto ptype = ptypes->get<ClassObject *>(0);
+    if (!equals(ptype->jvm_mirror->class_name, S(array_java_lang_Object))) 
+        return false;
+
+    if (!(isVarargs() && isNative()))
+        return false;
+
+    return true;
 }
 
 string Method::toString() const

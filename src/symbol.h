@@ -146,6 +146,8 @@ extern const char *symbol_values[];
     action(java_lang_ThreadGroup, "java/lang/ThreadGroup"), \
     action(java_lang_ClassLoader, "java/lang/ClassLoader"), \
     action(java_lang_reflect_Field, "java/lang/reflect/Field"), \
+    action(java_lang_invoke_MethodHandle, "java/lang/invoke/MethodHandle"), \
+    action(java_lang_invoke_VarHandle, "java/lang/invoke/VarHandle"), \
     action(java_lang_reflect_Executable, "java/lang/reflect/Executable"), \
     action(java_lang_reflect_VMField, "java/lang/reflect/VMField"), \
     action(java_lang_VMClassLoader, "java/lang/VMClassLoader"), \
