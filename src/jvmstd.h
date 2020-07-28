@@ -106,7 +106,7 @@ class Heap;
 extern Heap *g_heap;
 
 class ClassLoader;
-struct Thread;
+class Thread;
 
 extern bool g_jdk_version_9_and_upper;
 

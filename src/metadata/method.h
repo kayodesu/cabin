@@ -29,7 +29,7 @@ public:
     const utf8_t *name = nullptr;
     const utf8_t *descriptor = nullptr;
 
-    int accsee_flags;
+    int access_flags;
 
     bool deprecated = false;
     const char *signature = nullptr;
@@ -126,19 +126,19 @@ public:
 
     [[nodiscard]] std::string toString() const;
 
-    [[nodiscard]] bool isPublic() const       { return accIsPublic(accsee_flags); }
-    [[nodiscard]] bool isProtected() const    { return accIsProtected(accsee_flags); }
-    [[nodiscard]] bool isPrivate() const      { return accIsPrivate(accsee_flags); }
-    [[nodiscard]] bool isAbstract() const     { return accIsAbstract(accsee_flags); }
-    [[nodiscard]] bool isStatic() const       { return accIsStatic(accsee_flags); }
-    [[nodiscard]] bool isFinal() const        { return accIsFinal(accsee_flags); }
-    [[nodiscard]] bool isSynchronized() const { return accIsSynchronized(accsee_flags); }
-    [[nodiscard]] bool isNative() const       { return accIsNative(accsee_flags); }
-    [[nodiscard]] bool isStrict() const       { return accIsStrict(accsee_flags); }
-    [[nodiscard]] bool isVarargs() const      { return accIsVarargs(accsee_flags); }
-    [[nodiscard]] bool isSynthetic() const    { return accIsSynthetic(accsee_flags); }
+    [[nodiscard]] bool isPublic() const       { return accIsPublic(access_flags); }
+    [[nodiscard]] bool isProtected() const    { return accIsProtected(access_flags); }
+    [[nodiscard]] bool isPrivate() const      { return accIsPrivate(access_flags); }
+    [[nodiscard]] bool isAbstract() const     { return accIsAbstract(access_flags); }
+    [[nodiscard]] bool isStatic() const       { return accIsStatic(access_flags); }
+    [[nodiscard]] bool isFinal() const        { return accIsFinal(access_flags); }
+    [[nodiscard]] bool isSynchronized() const { return accIsSynchronized(access_flags); }
+    [[nodiscard]] bool isNative() const       { return accIsNative(access_flags); }
+    [[nodiscard]] bool isStrict() const       { return accIsStrict(access_flags); }
+    [[nodiscard]] bool isVarargs() const      { return accIsVarargs(access_flags); }
+    [[nodiscard]] bool isSynthetic() const    { return accIsSynthetic(access_flags); }
 
-    void setSynthetic() { accSetSynthetic(accsee_flags); }
+    void setSynthetic() { accSetSynthetic(access_flags); }
 
 
 private:

@@ -19,9 +19,9 @@ public:
     
     virtual Object *clone() const;
 
-    friend ClassObject *generteClassObject(Class *c);
+    friend ClassObject *generateClassObject(Class *c);
 };
 
-ClassObject *generteClassObject(Class *c);
+ClassObject *generateClassObject(Class *c);
 
 #endif // JVM_CLASS_OBJECT_H

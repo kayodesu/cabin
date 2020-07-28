@@ -6,7 +6,7 @@ set(CMAKE_CXX_FLAGS "-std=c++17 -m64 -Wall -lz -lminizip -llibffi") # lz: link z
 add_subdirectory(test) 
 
 add_library(libyovm STATIC
-        src/jvm.cpp src/sysinfo_win.cpp
+        src/jvm.cpp src/platform/sysinfo_win.cpp src/platform/sysinfo_linux.cpp
         src/interpreter/interpreter.cpp
         src/util/encoding.cpp src/util/convert.cpp src/classfile/attributes.cpp
         src/runtime/frame.cpp src/runtime/vm_thread.cpp src/runtime/monitor.cpp

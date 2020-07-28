@@ -339,7 +339,7 @@ public:
     /*---------------------- for java.lang.String class ----------------------*/
 private:
     // A pool of strings, initially empty, is maintained privately by the String class.
-    std::unordered_set<Object *, StrObjHash, StrObjEquals> *str_pool;
+    std::unordered_set<Object *, StrObjHash, StrObjEquals> *str_pool = nullptr;
     std::mutex str_pool_mutex;
 public:
     void buildStrPool();
@@ -349,7 +349,7 @@ public:
     /*---------------------- for java.lang.Class class ----------------------*/
     // set by VM
     // private transient Module module;
-    jref modulexxxxxxx;// set by VM  todo  
+    jref modulexxxxxxx = nullptr;// set by VM  todo
 
     /* 将 ClassLoader 模块的函数定为友元，Class的构造函数只允许 ClassLoader 模块访问 */
 

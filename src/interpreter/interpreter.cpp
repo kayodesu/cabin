@@ -231,9 +231,9 @@ static slot_t *exec()
 
     jref _this = frame->method->isStatic() ? (jref) clazz : RSLOT(lvars);
 
-#define THROW_EXCEPTION(excep_name, message)  \
+#define THROW_EXCEPTION(exception_name, message)  \
     {                                         \
-        signalException(excep_name, message); \
+        signalException(exception_name, message); \
         jref eo = exceptionOccured();         \
         clearException();                     \
         frame->pushr(eo);                     \
@@ -1256,13 +1256,13 @@ opc_invokedynamic: {
                                         "invokeExact", "([Ljava/lang/Object;)Ljava/lang/Object;");
             assert(invokeExact->isVarargs());
             u2 slot_count = Method::calArgsSlotsCount(invoked_descriptor, true);
-            slot_t __args[slot_count];
-            RSLOT(__args) = exact_method_handle;
+            slot_t _args[slot_count];
+            RSLOT(_args) = exact_method_handle;
             slot_count--; // 减去"this"
             frame->ostack -= slot_count; // pop all args
-            memcpy(__args + 1, frame->ostack, slot_count * sizeof(slot_t));
+            memcpy(_args + 1, frame->ostack, slot_count * sizeof(slot_t));
             // invoke exact method, invokedynamic completely execute over.
-            execJavaFunc(invokeExact, __args);
+            execJavaFunc(invokeExact, _args);
 
             break;
         }
@@ -1427,6 +1427,7 @@ opc_checkcast: {
     }
     DISPATCH
 }
+
 opc_instanceof: {
     index =  reader->readu2();
     Class *c = cp->resolveClass(index);

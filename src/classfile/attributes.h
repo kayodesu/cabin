@@ -10,7 +10,7 @@
 #include "../slot.h"
 #include "../util/bytecode_reader.h"
 
-struct ConstantPool;
+class ConstantPool;
 struct ElementValuePair;
 class BytecodeReader;
 

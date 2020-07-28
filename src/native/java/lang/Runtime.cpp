@@ -6,7 +6,7 @@
 #include "../../../jvmstd.h"
 #include "../../../config.h"
 #include "../../../memory/heap.h"
-#include "../../../sysinfo.h"
+#include "../../../platform/sysinfo.h"
 
 // public native int availableProcessors();
 static jint availableProcessors(jobject _this)

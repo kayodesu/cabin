@@ -15,13 +15,13 @@
 #include "objects/array_object.h"
 #include "interpreter/interpreter.h"
 #include "memory/heap.h"
-#include "sysinfo.h"
+#include "platform/sysinfo.h"
 
 using namespace std;
 using namespace std::filesystem;
 using namespace utf8;
 
-#if TRACE_KAYO
+#if TRACE_JVM
 #define TRACE PRINT_TRACE
 #else
 #define TRACE(...)
@@ -164,19 +164,19 @@ void initProperties()
             JVM_MUST_SUPPORT_CLASSFILE_MAJOR_VERSION, JVM_MUST_SUPPORT_CLASSFILE_MINOR_VERSION);
     g_properties.emplace_back("java.class.version", class_version);
     g_properties.emplace_back("java.class.path", classpath);
-    g_properties.emplace_back("os.name", "");
-    g_properties.emplace_back("os.arch", "");
-    g_properties.emplace_back("os.version",  "");
-    g_properties.emplace_back("file.separator", "\\"); // todo 根据操作系统判断
-    g_properties.emplace_back("path.separator", ";"); // todo 根据操作系统判断
-    g_properties.emplace_back("line.separator", "\r\n"); // System.out.println最后输出换行符就会用到这个  // todo 根据操作系统判断
-    g_properties.emplace_back("user.name", "");
-    g_properties.emplace_back("user.home", "");
-    g_properties.emplace_back("user.dir", "");
-    g_properties.emplace_back("user.country", "CN");
-    g_properties.emplace_back("file.encoding", "UTF-8");
-    g_properties.emplace_back("sun.stdout.encoding", "UTF-8");
-    g_properties.emplace_back("sun.stderr.encoding", "UTF-8");
+    g_properties.emplace_back("os.name", osName());
+    g_properties.emplace_back("os.arch", osArch());
+    g_properties.emplace_back("os.version",  ""); // todo
+    g_properties.emplace_back("file.separator", getFileSeparator());
+    g_properties.emplace_back("path.separator", getPathSeparator());
+    g_properties.emplace_back("line.separator", getLineSeparator()); // System.out.println最后输出换行符就会用到这个
+    g_properties.emplace_back("user.name", "");// todo
+    g_properties.emplace_back("user.home", "");// todo
+    g_properties.emplace_back("user.dir", "");// todo
+    g_properties.emplace_back("user.country", "CN"); // todo
+    g_properties.emplace_back("file.encoding", "UTF-8");// todo
+    g_properties.emplace_back("sun.stdout.encoding", "UTF-8");// todo
+    g_properties.emplace_back("sun.stderr.encoding", "UTF-8");// todo
 }
 
 static void initHeap()

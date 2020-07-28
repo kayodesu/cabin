@@ -8,7 +8,7 @@
 #include <ctime>
 #include <windows.h>
 #include <iostream>
-#include "jvmstd.h"
+#include "../jvmstd.h"
 
 using namespace std;
 
@@ -150,6 +150,21 @@ const char *osArch()
 	} else {
         return "UNKNOWN ARCHITECTURE";
     }
+}
+
+const char *getFileSeparator()
+{
+    return "\\";
+}
+
+const char *getPathSeparator()
+{
+    return ";";
+}
+
+const char *getLineSeparator()
+{
+    return "\r\n";
 }
 
 string getTimeZone()

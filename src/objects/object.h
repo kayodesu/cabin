@@ -53,7 +53,7 @@ public:
     virtual size_t size() const;
 
     virtual bool isArrayObject() const;
-    virtual Object *clone() const; // todo ClassObject 是否支持clone??????
+    virtual Object *clone() const;
 
     
 #define setTField(T, t) \

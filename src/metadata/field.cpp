@@ -16,7 +16,7 @@ Field::Field(Class *c, BytecodeReader &r)
     clazz = c;
     ConstantPool &cp = c->cp;
 
-    accsee_flags = r.readu2();
+    access_flags = r.readu2();
     name = cp.utf8(r.readu2());
     descriptor = cp.utf8(r.readu2());
 
@@ -90,9 +90,9 @@ ClassObject *Field::getType()
             type = loadClass(clazz->loader, buf)->java_mirror;
         } else { // primitive
             assert(strlen(descriptor) == 1);
-            auto name = getPrimClassName(*descriptor);
-            assert(name != nullptr);
-            type = loadBootClass(name)->java_mirror;
+            auto n = getPrimClassName(*descriptor);
+            assert(n != nullptr);
+            type = loadBootClass(n)->java_mirror;
         }
     }
 

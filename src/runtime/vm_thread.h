@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #ifndef JVM_JTHREAD_H
 #define JVM_JTHREAD_H
 
@@ -23,6 +19,8 @@ class Array;
  * 如果Java虚拟机栈有大小限制，且执行线程所需的栈空间超出了这个限制，
  * 会导致StackOverflowError异常抛出。如果Java虚拟机栈可以动态扩展，
  * 但是内存已经耗尽，会导致OutOfMemoryError异常抛出。
+ *
+ * Author: Yo Ka
  */
 
 
@@ -157,9 +155,6 @@ void createCustomerThread(Object *jThread);
 
 Thread *getCurrentThread();
 
-// [[noreturn]] void thread_uncaught_exception(Object *exception);
-
-// [[noreturn]] void thread_throw(Throwable *t);
 
 Object *exceptionOccured();
 void signalException(const char *excep_name, const char *message = nullptr);

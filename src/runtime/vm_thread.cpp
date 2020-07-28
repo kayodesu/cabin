@@ -268,26 +268,6 @@ Array *Thread::dump(int max_depth)
     return arr;
 }
 
-// [[noreturn]] void thread_uncaught_exception(Object *exception)
-// {
-//     assert(exception != nullptr);
-
-//     Thread *thread = getCurrentThread();
-//     thread->clearVMStack();
-//     Method *pst = exception->clazz->lookupInstMethod(S(printStackTrace), S(___V));
-//     assert(pst != nullptr);
-//     execJavaFunc(pst, {exception});
-
-//     // 结束 this thread todo
-//     jvm_abort("thread_uncaught_exception\n");
-// }
-
-// [[noreturn]] void thread_throw(Throwable *t)
-// {
-//     assert(t != nullptr);
-//     thread_uncaught_exception(t->getJavaThrowable());
-// }
-
 Object *exceptionOccured() 
 {
    return getCurrentThread()->exception; 

@@ -487,7 +487,7 @@ Class::Class(Object *loader, u1 *bytecode, size_t len): loader(loader), bytecode
     generateIndepInterfaces();
 
     if (g_class_class != nullptr) {
-        java_mirror = generteClassObject(this);
+        java_mirror = generateClassObject(this);
     }
 
     state = LOADED;
@@ -508,7 +508,7 @@ Class::Class(const char *className)
     generateIndepInterfaces();
 
     if (g_class_class != nullptr) {
-        java_mirror = generteClassObject(this);
+        java_mirror = generateClassObject(this);
     }
 
     state = LOADED;
@@ -532,7 +532,7 @@ Class::Class(Object *loader, const char *className)
     generateIndepInterfaces();
 
     if (g_class_class != nullptr) {
-        java_mirror = generteClassObject(this);
+        java_mirror = generateClassObject(this);
     }
 
     state = LOADED;
@@ -817,12 +817,12 @@ Method *Class::lookupMethod(Object *mo)
 {
     assert(mo != nullptr);
 
-    // private String              name;
-    // private Class<?>            returnType;
-    // private Class<?>[]          parameterTypes;
+    // private String     name;
+    // private Class<?>   returnType;
+    // private Class<?>[] parameterTypes;
     jstrref name = mo->getRefField("name", S(sig_java_lang_String));
-    ClassObject *rtype = mo->getRefField<ClassObject>("returnType", S(sig_java_lang_Class));
-    Array *ptypes = mo->getRefField<Array>("parameterTypes", S(array_java_lang_Class));
+    auto rtype = mo->getRefField<ClassObject>("returnType", S(sig_java_lang_Class));
+    auto ptypes = mo->getRefField<Array>("parameterTypes", S(array_java_lang_Class));
 
     jstrref descriptor = toMethodDescriptor(methodType(rtype, ptypes));
     return lookupMethod(name->toUtf8(), descriptor->toUtf8());

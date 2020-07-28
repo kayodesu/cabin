@@ -494,7 +494,7 @@ static jobjectArray getDeclaredFields0(jclass _this, jboolean public_only)
                 // 参见 java/lang/reflect/Field 的说明
                 rslot(g_string_class->intern(cls->fields[i].name)), // name
                 rslot(cls->fields[i].getType()), // type
-                islot(cls->fields[i].accsee_flags), /* modifiers todo */
+                islot(cls->fields[i].access_flags), /* modifiers todo */
                 islot(cls->fields[i].id), /* slot   todo */
                 rslot(cls->fields[i].signature != nullptr ? newString(cls->fields[i].signature) : jnull), /* signature  todo */
                 rslot(jnull), /* annotations  todo */
@@ -548,7 +548,7 @@ static jobjectArray getDeclaredMethods0(jclass _this, jboolean public_only)
                 rslot(method->getParameterTypes()), /* parameter types */
                 rslot(method->getReturnType()),     /* return type */
                 rslot(method->getExceptionTypes()), /* checked exceptions */
-                islot(method->accsee_flags), /* modifiers todo */
+                islot(method->access_flags), /* modifiers todo */
                 islot(0), /* slot   todo */
                 rslot(method->signature != nullptr ? newString(method->signature) : jnull), /* signature  todo */
                 rslot(jnull), /* annotations  todo */
@@ -594,7 +594,7 @@ static jobjectArray getDeclaredConstructors0(jclass _this, jboolean public_only)
                 rslot(_this), // declaring class
                 rslot(constructor->getParameterTypes()),  // parameter types
                 rslot(constructor->getExceptionTypes()),  // checked exceptions
-                islot(constructor->accsee_flags), // modifiers todo
+                islot(constructor->access_flags), // modifiers todo
                 islot(0), // slot   todo
                 rslot(jnull), // signature  todo
                 rslot(jnull), // annotations  todo

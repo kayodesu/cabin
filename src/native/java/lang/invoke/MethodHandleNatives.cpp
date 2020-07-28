@@ -58,9 +58,9 @@ static int __method_flags(Method *m)
 {
     assert(m != nullptr);
 
-    int flags = m->accsee_flags; 
+    int flags = m->access_flags;
 
-    if(m->accsee_flags & MB_CALLER_SENSITIVE)
+    if(m->access_flags & MB_CALLER_SENSITIVE)
         flags |= CALLER_SENSITIVE;
 
     return flags;
@@ -250,7 +250,7 @@ func getMethod(cls *Heap.Class, name, descriptor string) *Heap.Method {
 	return nil
 }
  #endif
-static jobject resolve(jobject self, jclass caller)
+static jobject resolve(jobject self/*MemberName*/, jclass caller)
 {
 //    jvm_abort("resolve");
 
@@ -344,7 +344,7 @@ static jobject resolve(jobject self, jclass caller)
             break;
             #endif
             Field *f = clazz->lookupField(name->toUtf8(), sig->toUtf8());
-            flags |= f->accsee_flags;
+            flags |= f->access_flags;
             self->setIntField("flags", "I", flags); 
             return self;
         }  

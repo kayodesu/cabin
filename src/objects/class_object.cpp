@@ -7,6 +7,10 @@ ClassObject::ClassObject(Class *c): Object(g_class_class), jvm_mirror(c)
 {
     assert(g_class_class != nullptr);
     assert(jvm_mirror != nullptr);
+
+    data = (slot_t *) (this + 1);
+    // private final ClassLoader classLoader;
+    setRefField("classLoader", S(sig_java_lang_ClassLoader), c->loader);
 }
 
 Object *ClassObject::clone() const
@@ -14,7 +18,7 @@ Object *ClassObject::clone() const
     jvm_abort("ClassObject don't support clone"); // todo
 }
 
-ClassObject *generteClassObject(Class *c)
+ClassObject *generateClassObject(Class *c)
 {
     assert(c != nullptr);
     if (c->java_mirror != nullptr)
@@ -23,8 +27,5 @@ ClassObject *generteClassObject(Class *c)
 
     assert(g_class_class != nullptr);
     size_t size = sizeof(ClassObject) + g_class_class->inst_field_count * sizeof(slot_t);
-    ClassObject *co = new (calloc(1, size)) ClassObject(c);
-    // private final ClassLoader classLoader;
-    co->setRefField("classLoader", S(sig_java_lang_ClassLoader), c->loader);
-    return co;
+    return new (calloc(1, size)) ClassObject(c);
 }

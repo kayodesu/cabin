@@ -5,7 +5,7 @@
 #include <cstring>
 #include <iostream>
 #include "../../../slot.h"
-#include "../../../sysinfo.h"
+#include "../../../platform/sysinfo.h"
 #include "../../../objects/object.h"
 #include "../../../objects/array_object.h"
 #include "../../../util/endianness.h"

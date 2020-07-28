@@ -18,8 +18,6 @@ extern Class *g_object_class;
 extern Class *g_class_class;
 extern Class *g_string_class;
 
-// java.lang.Class 类中实例变量的 slots count todo
-// const static int CLASS_CLASS_INST_FIELDS_COUNT = 32; // big enough?
 
 void initClassLoader();
 

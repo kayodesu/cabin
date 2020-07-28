@@ -18,7 +18,7 @@ public:
     const utf8_t *name = nullptr;
     const utf8_t *descriptor = nullptr;
 
-    int accsee_flags;
+    int access_flags;
 
     bool deprecated = false;
     const char *signature = nullptr;
@@ -61,15 +61,15 @@ public:
     std::string toString() const;
     friend std::ostream &operator <<(std::ostream &os, const Field &field);
 
-    bool isPublic() const    { return accIsPublic(accsee_flags); }
-    bool isProtected() const { return accIsProtected(accsee_flags); }
-    bool isPrivate() const   { return accIsPrivate(accsee_flags); }
-    bool isStatic() const    { return accIsStatic(accsee_flags); }
-    bool isFinal() const     { return accIsFinal(accsee_flags); }
-    bool isTransient() const { return accIsTransient(accsee_flags); }
-    bool isVolatile() const  { return accIsVolatile(accsee_flags); }
+    bool isPublic() const    { return accIsPublic(access_flags); }
+    bool isProtected() const { return accIsProtected(access_flags); }
+    bool isPrivate() const   { return accIsPrivate(access_flags); }
+    bool isStatic() const    { return accIsStatic(access_flags); }
+    bool isFinal() const     { return accIsFinal(access_flags); }
+    bool isTransient() const { return accIsTransient(access_flags); }
+    bool isVolatile() const  { return accIsVolatile(access_flags); }
 
-    void setSynthetic() { accSetSynthetic(accsee_flags); }
+    void setSynthetic() { accSetSynthetic(access_flags); }
 };
 
 

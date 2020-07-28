@@ -2,7 +2,7 @@
  * Author: Yo Ka
  */
 #include <iostream>
-#include "../src/sysinfo.h"
+#include "../src/platform/sysinfo.h"
 
 using namespace std;
 

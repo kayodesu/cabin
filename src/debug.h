@@ -9,7 +9,7 @@
  * print trace or not
  */
 
-#define TRACE_KAYO 0
+#define TRACE_JVM 0 // jvm.cpp 中的打印
 #define TRACE_LOAD_CLASS 0
 #define TRACE_THREAD 0
 #define TRACE_INTERPRETER 0

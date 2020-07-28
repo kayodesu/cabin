@@ -44,6 +44,15 @@ jref method_type::methodType(ClassObject *rtype, Array *ptypes)
     return RSLOT(execJavaFunc(m, { rtype, ptypes }));
 }
 
+Array *method_type::parameterTypes(jref methodType)
+{
+    assert(methodType != nullptr);
+
+    // private final Class<?>[] ptypes;
+    auto ptypes = methodType->getRefField<Array>("ptypes", "[Ljava/lang/Class;");
+    return ptypes;
+}
+
 jstrref method_type::toMethodDescriptor(jref methodType)
 {
     assert(methodType != nullptr);

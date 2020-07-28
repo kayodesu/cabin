@@ -29,7 +29,6 @@ using namespace utf8;
 static utf8_set boot_packages;
 static unordered_map<const utf8_t *, Class *, utf8::Hash, utf8::Comparator> boot_classes;
 
-
 enum ClassLocation {
     IN_JAR,
     IN_MODULE
@@ -87,7 +86,7 @@ static optional<pair<u1 *, size_t>> readClass(const char *path,
     unz_file_info64 file_info{ };
     unzGetCurrentFileInfo64(module_file, &file_info, buf, sizeof(buf), nullptr, 0, nullptr, 0);
 
-    auto bytecode = new u1[file_info.uncompressed_size];//(u1 *) g_heap->allocBytecode(file_info.uncompressed_size); 
+    auto bytecode = new u1[file_info.uncompressed_size];
     int size = unzReadCurrentFile(module_file, bytecode, (unsigned int) (file_info.uncompressed_size));
     unzCloseCurrentFile(module_file);
     unzClose(module_file);
@@ -237,7 +236,7 @@ Class *loadClass(Object *class_loader, const utf8_t *name)
     // todo 再尝试用扩展classLoader load the class
 
     // public Class<?> loadClass(String name) throws ClassNotFoundException
-    Method *m = class_loader->clazz->lookupInstMethod("loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+    Method *m = class_loader->clazz->lookupInstMethod(S(loadClass), S(_java_lang_String__java_lang_Class));
     assert(m != nullptr);
 
     auto dot_name = slash2DotDup(name);
@@ -306,16 +305,8 @@ void initClassLoader()
     // 在 g_class_class 创建完成之前创建的 Class 都没有设置 java_mirror 字段，现在设置下。
     for (auto iter: boot_classes) {
         Class *c = iter.second;
-        c->java_mirror = generteClassObject(c);
+        c->java_mirror = generateClassObject(c);
     }
-
-    // if (g_class_class->inst_field_count > CLASS_CLASS_INST_FIELDS_COUNT) {
-    //     jvm_abort("What the fuck! [%d]", g_class_class->inst_field_count); // todo
-    // }
-
-    // // g_object_class->clazz = g_class_class->clazz = g_class_class;
-    // g_object_class->java_mirror = generteClassObject(g_object_class);
-    // g_class_class->java_mirror = generteClassObject(g_class_class);
 
     g_string_class = loadBootClass(S(java_lang_String));
     g_string_class->buildStrPool();
