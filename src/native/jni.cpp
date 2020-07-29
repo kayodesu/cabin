@@ -29,6 +29,7 @@ void initJNI()
     R(java_lang_Throwable_registerNatives);
     R(java_lang_Thread_registerNatives);
     R(java_lang_Runtime_registerNatives);
+    R(java_lang_Shutdown_registerNatives);
     R(java_lang_Module_registerNatives);
     R(java_lang_ClassLoader_registerNatives);
     R(java_lang_ClassLoader$NativeLibrary_registerNatives);

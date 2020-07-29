@@ -2,6 +2,7 @@
  * Author: Yo Ka
  */
 
+#include <iostream>
 #include <sstream>
 #include <optional>
 #include <unordered_set>
@@ -28,6 +29,9 @@ using namespace utf8;
 
 static utf8_set boot_packages;
 static unordered_map<const utf8_t *, Class *, utf8::Hash, utf8::Comparator> boot_classes;
+
+// vm中所有存在的 class loaders，include "boot class loader".
+static unordered_set<const Object *> loaders;
 
 enum ClassLocation {
     IN_JAR,
@@ -105,6 +109,8 @@ static void addClassToClassLoader(Object *class_loader, Class *c)
         boot_classes.insert(make_pair(c->class_name, c));
         return;
     }
+
+    loaders.insert(class_loader);
 
     if (class_loader->classes == nullptr) {
         class_loader->classes = new unordered_map<const utf8_t *, Class *, utf8::Hash, utf8::Comparator>;
@@ -310,26 +316,31 @@ void initClassLoader()
 
     g_string_class = loadBootClass(S(java_lang_String));
     g_string_class->buildStrPool();
+
+    loaders.insert(BOOT_CLASS_LOADER);
 }
 
-void printBootClassLoader()
+unordered_set<const Object *> getAllClassLoaders()
 {
-    printvm("boot class loader.\n");
+    return loaders;
+}
+
+void printBootLoadedClasses()
+{
+    cout << "boot class loader." << endl;
     for (auto iter : boot_classes) {
-        printvm("%s\n", iter.first);
+        cout << iter.first << endl;
     }
-    printvm("\n");
 }
 
 void printClassLoader(Object *class_loader)
 {
    if (class_loader == BOOT_CLASS_LOADER) {
-       printBootClassLoader();
+       printBootLoadedClasses();
        return;
    }
    
    for (auto iter : *(class_loader->classes)) {
-       printvm("%s\n", iter.first);
+       cout << iter.first << endl;
    }
-   printvm("\n");
 }

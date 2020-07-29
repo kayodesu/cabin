@@ -19,7 +19,7 @@ add_library(libyovm STATIC
         src/native/java/lang/System.cpp src/native/java/lang/Thread.cpp
         src/native/java/lang/Throwable.cpp src/native/java/security/AccessController.cpp
         src/native/sun/misc/Unsafe.cpp src/native/sun/misc/VM.cpp
-        src/native/sun/reflect/Reflection.cpp
+        src/native/sun/reflect/Reflection.cpp src/native/java/lang/Shutdown.cpp
         src/native/sun/reflect/NativeConstructorAccessorImpl.cpp
         src/native/sun/reflect/NativeMethodAccessorImpl.cpp
         src/native/sun/reflect/ConstantPool.cpp src/native/java/util/TimeZone.cpp

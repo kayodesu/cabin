@@ -87,7 +87,9 @@ static inline bool isDotName(const utf8_t *class_name)
     return strchr(class_name, '/') == nullptr;
 }
 
-void printBootClassLoader();
+std::unordered_set<const Object *> getAllClassLoaders();
+
+void printBootLoadedClasses();
 void printClassLoader(Object *class_loader);
 
 #endif //KAYOVM_CLASS_LOADER_H

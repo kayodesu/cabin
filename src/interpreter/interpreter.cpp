@@ -1025,7 +1025,9 @@ _method_return: {
 opc_getstatic: {
     index = reader->readu2();
     Field *field = cp->resolveField(index);
-    assert(field->isStatic()); // todo
+    if (!field->isStatic()) {
+        THROW_EXCEPTION(S(java_lang_IncompatibleClassChangeError), nullptr);
+    }
 
     initClass(field->clazz);
 
@@ -1038,7 +1040,9 @@ opc_getstatic: {
 opc_putstatic: {
     index = reader->readu2();
     Field *field = cp->resolveField(index);
-    assert(field->isStatic()); // todo
+    if (!field->isStatic()) {
+        THROW_EXCEPTION(S(java_lang_IncompatibleClassChangeError), nullptr);
+    }
 
     initClass(field->clazz);
 
@@ -1055,7 +1059,9 @@ opc_putstatic: {
 opc_getfield: {
     index = reader->readu2();
     Field *field = cp->resolveField(index);
-    assert(!field->isStatic()); // todo
+    if (field->isStatic()) {
+        THROW_EXCEPTION(S(java_lang_IncompatibleClassChangeError), nullptr);
+    }
 
     jref obj = frame->popr();
     NULL_POINTER_CHECK(obj)
@@ -1069,11 +1075,12 @@ opc_getfield: {
 opc_putfield: {
     index = reader->readu2();
     Field *field = cp->resolveField(index);
-    assert(!field->isStatic()); // todo
+    if (field->isStatic()) {
+        THROW_EXCEPTION(S(java_lang_IncompatibleClassChangeError), nullptr);
+    }
 
     // 如果是final字段，则只能在构造函数中初始化，否则抛出java.lang.IllegalAccessError。
     if (field->isFinal()) {
-        // todo
         if (!clazz->equals(field->clazz) || !equals(frame->method->name, S(object_init))) {
             THROW_EXCEPTION(S(java_lang_IllegalAccessError), nullptr);
         }
@@ -1098,6 +1105,9 @@ opc_invokevirtual: {
     Method *m = cp->resolveMethod(index);
     if (m == nullptr) {
         // todo ....
+    }
+    if (m->isStatic()) {
+        THROW_EXCEPTION(S(java_lang_IncompatibleClassChangeError), nullptr);
     }
 
     frame->ostack -= m->arg_slot_count;
@@ -1331,25 +1341,21 @@ opc_anewarray: {
     DISPATCH
 }
 opc_multianewarray: {
-    /*
-     * 创建多维数组
-     * todo 注意这种情况，基本类型的多维数组 int[][][]
-     */
+    // 创建多维数组
     index = reader->readu2();
     Class *ac = cp->resolveClass(index);
 
     u1 dim = reader->readu1(); // 多维数组的维度
     if (dim < 1) { // 必须大于或等于1
-        // todo error
-        jvm_abort("dim < 1");
+        THROW_EXCEPTION(S(java_lang_UnknownError),
+                        "The dimensions must be greater than or equal to 1.");
     }
 
     jint lens[dim];
     for (int i = dim - 1; i >= 0; i--) {
         lens[i] = frame->popi();
         if (lens[i] < 0) {
-            // todo error
-            jvm_abort("NegativeArraySizeException");
+            THROW_EXCEPTION(S(java_lang_NegativeArraySizeException), nullptr);
         }
     }
     frame->pushr(newMultiArray(ac, dim, lens));
@@ -1359,7 +1365,7 @@ opc_arraylength: {
     Object *o = frame->popr();
     NULL_POINTER_CHECK(o);
     if (!o->isArrayObject()) {
-        THROW_EXCEPTION(S(java_lang_UnknownError), "not a array"); // todo
+        THROW_EXCEPTION(S(java_lang_UnknownError), "not a array");
     }
     
     frame->pushi(((Array *) o)->len);

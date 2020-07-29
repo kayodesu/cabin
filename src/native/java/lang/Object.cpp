@@ -29,7 +29,7 @@ static jobject clone(jobject _this)
 // public final native Class<?> getClass();
 static jobject getClass(jobject _this)
 {
-    return _this->clazz->java_mirror; // todo 对不对
+    return _this->clazz->java_mirror;
 }
 
 // public final native void notifyAll();

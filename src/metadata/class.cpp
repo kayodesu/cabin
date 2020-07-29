@@ -1018,6 +1018,7 @@ Class *Class::elementClass()
 void Class::buildStrPool()
 {
     assert(this == g_string_class);
+    assert(str_pool == nullptr);
     str_pool = new unordered_set<Object *, StrObjHash, StrObjEquals>;
 }
 

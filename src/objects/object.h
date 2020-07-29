@@ -55,7 +55,6 @@ public:
     virtual bool isArrayObject() const;
     virtual Object *clone() const;
 
-    
 #define setTField(T, t) \
     void set##T##Field(Field *f, t v) \
     { \
