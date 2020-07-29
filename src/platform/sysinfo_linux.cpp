@@ -43,7 +43,7 @@ const char *getPathSeparator()
 
 const char *getLineSeparator()
 {
-    return "\r";
+    return "\n";
 }
 
 string getTimeZone()
