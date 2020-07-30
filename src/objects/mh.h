@@ -1,10 +1,10 @@
-#ifndef KAYOVM_INVOKE_H
-#define KAYOVM_INVOKE_H
+#ifndef YOVM_MH_H
+#define YOVM_MH_H
 
 #include "../jvmstd.h"
 
 /*
- * java/lang/invoke 包下类的便利操作函数
+ * MethodHandle 相关的操作函数
  *
  * Author: Yo Ka
  */
@@ -13,27 +13,17 @@ class Method;
 class Array;
 class ClassObject;
 
+void initMethodHandle();
+
 // java/lang/invoke/MethodType 类的便利操作函数
 namespace method_type {
-    /*
-     * new MethodType
-     */
-    jref fromMethodDescriptor(const utf8_t *descriptor, jref loader);
-
-    /*
-     * new MethodType
-     */
-    jref methodType(Method *m);
-
-    /*
-     * new MethodType
-     */
-    jref methodType(ClassObject *rtype, Array *ptypes);
-
     Array *parameterTypes(jref methodType);
 
     jstrref toMethodDescriptor(jref methodType);
 }
+
+jref findMethodType(const utf8_t *desc, jref loader);
+jref findMethodType(ClassObject *rtype, Array *ptypes);
 
 // java/lang/invoke/MemberName 类的便利操作函数
 namespace member_name {
@@ -55,9 +45,13 @@ namespace member_name {
     bool isStatic(jref memberName);
 }
 
+void initMemberName(jref member_name, jref target);
+void expandMemberName(jref member_name);
+jref resolveMemberName(jref member_name, Class *caller);
+
 // java/lang/invoke/MethodHandles 类的便利操作函数
 namespace method_handles {
     jref getCaller();
 }
 
-#endif //KAYOVM_INVOKE_H
+#endif //YOVM_MH_H

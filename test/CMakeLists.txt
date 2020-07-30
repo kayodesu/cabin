@@ -8,6 +8,9 @@ target_link_libraries(test_properties libyovm)
 add_executable(test_method_type test_method_type.cpp)
 target_link_libraries(test_method_type libyovm)
 
+add_executable(test_descriptor test_descriptor.cpp)
+target_link_libraries(test_descriptor libyovm)
+
 add_executable(test_load_class class_loader/test_load_class.cpp)
 target_link_libraries(test_load_class libyovm)
 

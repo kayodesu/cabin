@@ -16,6 +16,7 @@
 #include "interpreter/interpreter.h"
 #include "memory/heap.h"
 #include "platform/sysinfo.h"
+#include "objects/mh.h"
 
 using namespace std;
 using namespace std::filesystem;
@@ -319,6 +320,7 @@ void initJVM(int argc, char *argv[])
     initJNI();
     initClassLoader();
     initMainThread();
+    initMethodHandle();
 
     TRACE("init main thread over\n");
     // 先加载 sun.mis.VM or jdk.internal.misc.VM 类，然后执行其类初始化方法

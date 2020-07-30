@@ -16,7 +16,8 @@ class Class;
 class ClassObject;
 
 class Method {
-    Object *type_obj = nullptr;       // Ljava/lang/invoke/MethodType;
+//    Array *parameter_types = nullptr;  // [Ljava/lang/Class;
+//    Object *type_obj = nullptr;       // Ljava/lang/invoke/MethodType;
     Array *exception_types = nullptr; // [Ljava/lang/Class;
 
 public:
@@ -103,13 +104,9 @@ public:
     static u2 calArgsSlotsCount(const utf8_t *descriptor, bool isStatic);
 
     Array *getParameterTypes();
+
     ClassObject *getReturnType();
 
-    /*
-     * return the type of the method,
-     * Object of java/lang/invoke/MethodType.
-     */
-    Object *getType();
     Array *getExceptionTypes();
 
     [[nodiscard]] jint getLineNumber(int pc) const;
@@ -118,9 +115,14 @@ public:
      * @pc, 发生异常的位置
      */
     int findExceptionHandler(Class *exception_type, size_t pc);
-    
+
     /*
      * Is signature polymorphic method?
+     *
+     * A method is signature polymorphic if all of the following are true:
+     * 1. It is declared in the java.lang.invoke.MethodHandle class or the java.lang.invoke.VarHandle class.
+     * 2. It has a single formal parameter of type Object[].
+     * 3. It has the ACC_VARARGS and ACC_NATIVE flags set.
      */
     bool isSignaturePolymorphic();
 

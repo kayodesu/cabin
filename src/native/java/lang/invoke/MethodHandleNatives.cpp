@@ -4,7 +4,7 @@
 #include "../../../../metadata/class.h"
 #include "../../../../metadata/field.h"
 #include "../../../../metadata/method.h"
-#include "../../../../objects/invoke.h"
+#include "../../../../objects/mh.h"
 #include "../../../../objects/array_object.h"
 #include "../../../../interpreter/interpreter.h"
 
@@ -69,105 +69,7 @@ static int __method_flags(Method *m)
 // static native void init(MemberName self, Object ref);
 static void init(jobject self, jobject ref)
 {
-    /*
-	 * in fact, `ref` will be one of these three:
-	 * 1. java/lang/reflect/Field.
-	 * 2. java/lang/reflect/Constructor.
-	 * 3. java/lang/reflect/Method.
-	 */
-
-    // private Class<?> clazz;
-    auto clazz = ref->getRefField<ClassObject>(S(clazz), S(sig_java_lang_Class))->jvm_mirror;
-
-    // private int slot;
-    auto slot = ref->getIntField("slot", "I");
-
-    // private String name;
-    auto name = ref->getRefField("name", S(sig_java_lang_String));
-
-    // private transient String signature;
-    auto signature = ref->getRefField("signature", S(sig_java_lang_String));
-
-    //private Class<?> returnType;
-    auto rtype = ref->getRefField<ClassObject>("returnType", S(sig_java_lang_Class));
-    //private Class<?>[] parameterTypes;
-    auto ptypes = ref->getRefField<Array>("parameterTypes", S(array_java_lang_Class));
-
-    // private Object   type;        // may be null if not yet materialized
-    auto type = self->getRefField("type", S(sig_java_lang_Object));
-    //private Object   resolution;  // if null, this guy is resolved
-    auto resolution = self->getRefField("resolution", S(sig_java_lang_Object));
-    // printvm("type: %p, resolution: %p\n", type, resolution); ///////////////////////////////////////////
-
-    // private int modifiers;
-    auto modifiers = ref->getIntField("modifiers", "I");
-
-    if (equals(ref->clazz->class_name, "java/lang/reflect/Field")) {
-        jvm_abort("not support!");
-    } else if (equals(ref->clazz->class_name, "java/lang/reflect/Constructor")) {
-        jvm_abort("not support!");
-    } else if (equals(ref->clazz->class_name, "java/lang/reflect/Method")) {
-        
-#if 0
-    if(target->class == method_reflect_class) {
-        int slot = INST_DATA(target, int, mthd_slot_offset);
-        Class *decl_class = INST_DATA(target, Class*, mthd_class_offset);
-
-        ClassBlock *cb = CLASS_CB(decl_class);
-        MethodBlock *mb = &(cb->methods[slot]);
-        int flags = mbFlags(mb) | IS_METHOD;
-        int ref_kind;
-        
-        if(mb->access_flags & ACC_STATIC)
-            ref_kind = REF_invokeStatic;
-        else if(IS_INTERFACE(cb))
-            ref_kind = REF_invokeInterface;
-        else
-            ref_kind = REF_invokeVirtual;
-
-        flags |= ref_kind << REFERENCE_KIND_SHIFT;
-
-        INST_DATA(mname, Class*, mem_name_clazz_offset) = decl_class;
-        INST_DATA(mname, int, mem_name_flags_offset) = flags;
-        INST_DATA(mname, MethodBlock*, mem_name_vmtarget_offset) = mb;
-
-   }
-#endif
-        auto descriptor = toMethodDescriptor(methodType(rtype, ptypes))->toUtf8();
-        Method *m = clazz->lookupMethod(name->toUtf8(), descriptor);
-        auto type = self->getRefField("type", S(sig_java_lang_Object));
-        // printf("init: self(%p), slot: %d, type(%p), %s, %s\n", self, slot, type, name->toUtf8(), descriptor); /////////////////////////////////////////
-
-        if(m == nullptr) {
-            int xxxxxx = 3;
-        }
-        int flags = __method_flags(m) | IS_METHOD;
-
-        int ref_kind;
-        if (m->isStatic()) {
-            ref_kind = JVM_REF_invokeStatic;
-        } else if (clazz->isInterface()) {
-            ref_kind = JVM_REF_invokeInterface;
-        } else {
-            ref_kind = JVM_REF_invokeVirtual;
-        }
-
-        flags |= ref_kind << REFERENCE_KIND_SHIFT;
-
-        self->setRefField("clazz", "Ljava/lang/Class;", clazz->java_mirror);
-        self->setIntField("flags", "I", flags);
-        /*
-        classObj := ref.GetFieldValue("clazz", "Ljava/lang/Class;").Ref
-                class := classObj.GetGoClass()
-                slot := ref.GetFieldValue("slot", "I").IntValue()
-                method := class.Methods[slot]
-
-                mn.SetFieldValue("clazz", "Ljava/lang/Class;", heap.NewRefSlot(classObj))
-                mn.SetFieldValue("flags", "I", heap.NewIntSlot(getMNFlags(method)))
-        */
-    } else {
-        jvm_abort("never get here.");
-    }
+    initMemberName(self, ref);
 }
 /*
 func getMNFlags(method *heap.Method) int32 {
@@ -186,7 +88,7 @@ func getMNFlags(method *heap.Method) int32 {
 // static native void expand(MemberName self);
 static void expand(jobject self)
 {
-    jvm_abort("expand");
+    expandMemberName(self);
 }
 
 /*
@@ -209,150 +111,109 @@ static void expand(jobject self)
  *
  * static native MemberName resolve(MemberName self, Class<?> caller) throws LinkageError, ClassNotFoundException;
  */
- #if 0
- func resolve(frame *rtda.Frame) {
-	mnSlot := frame.GetLocalVar(0)
-	mnObj := mnSlot.Ref
-	// caller := frame.GetRefVar(1)
-	// panic("TODO: resolve!")
-	frame.PushRef(mnObj)
-
-	clsObj := mnObj.GetFieldValue("clazz", "Ljava/lang/Class;").Ref
-	nameObj := mnObj.GetFieldValue("name", "Ljava/lang/String;").Ref
-	flags := mnObj.GetFieldValue("flags", "I").IntValue()
-	getSig := mnObj.Class.GetInstanceMethod("getSignature", "()Ljava/lang/String;")
-
-	cls := clsObj.GetGoClass()
-	nameStr := nameObj.JSToGoStr()
-
-	frame.Thread.InvokeMethodWithShim(getSig, []Heap.Slot{mnSlot})
-	frame.Thread.CurrentFrame().AppendOnPopAction(func(shim *rtda.Frame) {
-		sigObj := shim.TopRef(0)
-		sigStr := sigObj.JSToGoStr()
-		if sigStr[0] == '(' {
-			if m := getMethod(cls, nameStr, sigStr); m != nil {
-				flags |= int32(m.AccessFlags)
-				mnObj.SetFieldValue("flags", "I", Heap.NewIntSlot(flags))
-			}
-		} else {
-			panic("TODO")
-		}
-	})
-}
-// TODO
-func getMethod(cls *Heap.Class, name, descriptor string) *Heap.Method {
-	if m := cls.GetStaticMethod(name, descriptor); m != nil {
-		return m
-	}
-	if m := cls.GetInstanceMethod(name, descriptor); m != nil {
-		return m
-	}
-	return nil
-}
- #endif
 static jobject resolve(jobject self/*MemberName*/, jclass caller)
 {
+     return resolveMemberName(self, caller != nullptr ? caller->jvm_mirror : nullptr);
+
+
 //    jvm_abort("resolve");
 
-    // jobject mn = frame->getLocalAsRef(0);
-    // jobject caller = frame->getLocalAsRef(1);
-
-    // todo
-    // private Class<?> clazz;       // class in which the method is defined
-    // private String   name;        // may be null if not yet materialized
-    // private Object   type;        // may be null if not yet materialized
-    // private int      flags;       // modifier bits; see reflect.Modifier
-    // private Object   resolution;  // if null, this guy is resolved
-    auto clazz = self->getRefField<ClassObject>("clazz", "Ljava/lang/Class;")->jvm_mirror;
-    auto name = self->getRefField("name", "Ljava/lang/String;");
-    // type maybe a String or an Object[] or a MethodType
-    // Object[]: (Class<?>) Object[0] is return type
-    //           (Class<?>[]) Object[1] is parameter types
-    auto type = self->getRefField("type", "Ljava/lang/Object;");
-    jint flags = self->getIntField("flags", "I");
-    auto resolution = self->getRefField("resolution", "Ljava/lang/Object;");
-
-    Method *m = self->clazz->lookupInstMethod("getSignature", "()Ljava/lang/String;");
-    jobject sig = RSLOT(execJavaFunc(m, {self}));
-
-    auto refKind = getRefKind(self);
-    switch (flags & ALL_KINDS) {
-        case IS_METHOD: {
-            Object *descriptor = nullptr;
-
-            // TODO "java/lang/invoke/MethodHandle" 及其子类暂时特殊处理，因为取到的type一直是错的，我也不知道为什么？？？？
-            if (equals(clazz->class_name, "java/lang/invoke/MethodHandle") &&
-                    (equals(name->toUtf8(), "invoke")
-                    || equals(name->toUtf8(), "invokeBasic")
-                    || equals(name->toUtf8(), "invokeExact")
-                    || equals(name->toUtf8(), "invokeWithArguments")
-                    || equals(name->toUtf8(), "linkToSpecial")
-                    || equals(name->toUtf8(), "linkToStatic")
-                    || equals(name->toUtf8(), "linkToVirtual")
-                    || equals(name->toUtf8(), "linkToInterface"))) {
-                descriptor = newString("([Ljava/lang/Object;)Ljava/lang/Object;");
-            } else if (equals(clazz->class_name, "java/lang/invoke/BoundMethodHandle$Species_L") && equals(name->toUtf8(), "make")) {
-                descriptor = newString("(Ljava/lang/invoke/MethodType;Ljava/lang/invoke/LambdaForm;Ljava/lang/Object;)Ljava/lang/invoke/BoundMethodHandle;");
-            } else if (equals(type->clazz->class_name, S(java_lang_String))) {
-                descriptor = type;
-            } else if (equals(type->clazz->class_name, "java/lang/invoke/MethodType")) {
-                descriptor = toMethodDescriptor(type);
-            } else if (type->isArrayObject()) {
-                auto arr = (Array *) (type);
-
-                auto rtype = arr->get<ClassObject *>(0);
-                auto ptypes = arr->get<Array *>(1);
-                descriptor = toMethodDescriptor(methodType(rtype, ptypes));
-            } else {
-                jvm_abort("never go here.");
-            }
-            assert(descriptor != nullptr);
-
-            // printf("resolve: self(%p), %s, %s, %s\n", self, name->toUtf8(), descriptor->toUtf8(), sig->toUtf8()); /////////////////////////////////
-
-            m = clazz->lookupMethod(name->toUtf8(), descriptor->toUtf8());
-            if (m == nullptr) {
-                int xxxx = 2;
-            }
-            flags |= __method_flags(m);
-            self->setIntField("flags", "I", flags); 
-            // if (refKind == JVM_REF_invokeStatic) {
-            //     m = clazz->getDeclaredStaticMethod(name->toUtf8(), descriptor->toUtf8());
-            //     flags |= __method_flags(m);
-            //     self->setIntField("flags", "I", flags); 
-            // } else {
-            //     jvm_abort("not support!");
-            // }
-
-            return self;
-        }
-        case IS_CONSTRUCTOR: {
-            jvm_abort("IS_CONSTRUCTOR.");
-            break;
-        }
-        case IS_FIELD: {
-            #if 0
-                        FieldBlock *fb;
-
-            fb = lookupField(clazz, name_sym, type_sym);
-            if(fb == NULL)
-                goto throw_excep;
-
-            flags |= fb->access_flags;
-            INST_DATA(mname, int, mem_name_flags_offset) = flags;
-            INST_DATA(mname, FieldBlock*, mem_name_vmtarget_offset) = fb;
-            break;
-            #endif
-            Field *f = clazz->lookupField(name->toUtf8(), sig->toUtf8());
-            flags |= f->access_flags;
-            self->setIntField("flags", "I", flags); 
-            return self;
-        }  
-        default:
-            jvm_abort("never go here.");
-    }
-
-    jvm_abort("not support!");
+//    // todo
+//    // private Class<?> clazz;       // class in which the method is defined
+//    // private String   name;        // may be null if not yet materialized
+//    // private Object   type;        // may be null if not yet materialized
+//    // private int      flags;       // modifier bits; see reflect.Modifier
+//    // private Object   resolution;  // if null, this guy is resolved
+//    auto clazz = self->getRefField<ClassObject>("clazz", "Ljava/lang/Class;")->jvm_mirror;
+//    auto name = self->getRefField("name", "Ljava/lang/String;");
+//    // type maybe a String or an Object[] or a MethodType
+//    // Object[]: (Class<?>) Object[0] is return type
+//    //           (Class<?>[]) Object[1] is parameter types
+//    auto type = self->getRefField("type", "Ljava/lang/Object;");
+//    jint flags = self->getIntField("flags", "I");
+//    auto resolution = self->getRefField("resolution", "Ljava/lang/Object;");
+//
+//    Method *m = self->clazz->lookupInstMethod("getSignature", "()Ljava/lang/String;");
+//    jobject sig = RSLOT(execJavaFunc(m, {self}));
+//
+//    auto refKind = getRefKind(self);
+//    switch (flags & ALL_KINDS) {
+//        case IS_METHOD: {
+//            Object *descriptor = nullptr;
+//
+//            // TODO "java/lang/invoke/MethodHandle" 及其子类暂时特殊处理，因为取到的type一直是错的，我也不知道为什么？？？？
+//            if (equals(clazz->class_name, "java/lang/invoke/MethodHandle") &&
+//                    (equals(name->toUtf8(), "invoke")
+//                    || equals(name->toUtf8(), "invokeBasic")
+//                    || equals(name->toUtf8(), "invokeExact")
+//                    || equals(name->toUtf8(), "invokeWithArguments")
+//                    || equals(name->toUtf8(), "linkToSpecial")
+//                    || equals(name->toUtf8(), "linkToStatic")
+//                    || equals(name->toUtf8(), "linkToVirtual")
+//                    || equals(name->toUtf8(), "linkToInterface"))) {
+//                descriptor = newString("([Ljava/lang/Object;)Ljava/lang/Object;");
+//            } else if (equals(clazz->class_name, "java/lang/invoke/BoundMethodHandle$Species_L") && equals(name->toUtf8(), "make")) {
+//                descriptor = newString("(Ljava/lang/invoke/MethodType;Ljava/lang/invoke/LambdaForm;Ljava/lang/Object;)Ljava/lang/invoke/BoundMethodHandle;");
+//            } else if (equals(type->clazz->class_name, S(java_lang_String))) {
+//                descriptor = type;
+//            } else if (equals(type->clazz->class_name, "java/lang/invoke/MethodType")) {
+//                descriptor = toMethodDescriptor(type);
+//            } else if (type->isArrayObject()) {
+//                auto arr = (Array *) (type);
+//
+//                auto rtype = arr->get<ClassObject *>(0);
+//                auto ptypes = arr->get<Array *>(1);
+//                descriptor = toMethodDescriptor(findMethodType(rtype, ptypes));
+//            } else {
+//                jvm_abort("never go here.");
+//            }
+//            assert(descriptor != nullptr);
+//
+//            // printf("resolve: self(%p), %s, %s, %s\n", self, name->toUtf8(), descriptor->toUtf8(), sig->toUtf8()); /////////////////////////////////
+//
+//            m = clazz->lookupMethod(name->toUtf8(), descriptor->toUtf8());
+//            if (m == nullptr) {
+//                int xxxx = 2;
+//            }
+//            flags |= __method_flags(m);
+//            self->setIntField("flags", "I", flags);
+//            // if (refKind == JVM_REF_invokeStatic) {
+//            //     m = clazz->getDeclaredStaticMethod(name->toUtf8(), descriptor->toUtf8());
+//            //     flags |= __method_flags(m);
+//            //     self->setIntField("flags", "I", flags);
+//            // } else {
+//            //     jvm_abort("not support!");
+//            // }
+//
+//            return self;
+//        }
+//        case IS_CONSTRUCTOR: {
+//            jvm_abort("IS_CONSTRUCTOR.");
+//            break;
+//        }
+//        case IS_FIELD: {
+//            #if 0
+//                        FieldBlock *fb;
+//
+//            fb = lookupField(clazz, name_sym, type_sym);
+//            if(fb == NULL)
+//                goto throw_excep;
+//
+//            flags |= fb->access_flags;
+//            INST_DATA(mname, int, mem_name_flags_offset) = flags;
+//            INST_DATA(mname, FieldBlock*, mem_name_vmtarget_offset) = fb;
+//            break;
+//            #endif
+//            Field *f = clazz->lookupField(name->toUtf8(), sig->toUtf8());
+//            flags |= f->access_flags;
+//            self->setIntField("flags", "I", flags);
+//            return self;
+//        }
+//        default:
+//            jvm_abort("never go here.");
+//    }
+//
+//    jvm_abort("not support!");
 }
 
 // static native int getMembers(Class<?> defc, String matchName, String matchSig,

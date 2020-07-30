@@ -32,6 +32,14 @@ extern const char *symbol_values[];
     action(slot, "slot"), \
     action(type, "type"), \
     action(flag, "flag"), \
+    action(flags, "flags"), \
+    action(invoke, "invoke"), \
+    action(invokeExact, "invokeExact"), \
+    action(invokeBasic, "invokeBasic"), \
+    action(linkToVirtual, "linkToVirtual"), \
+    action(linkToStatic, "linkToStatic"), \
+    action(linkToSpecial, "linkToSpecial"), \
+    action(linkToInterface, "linkToInterface"), \
     action(coder, "coder"), \
     action(clazz, "clazz"), \
     action(queue, "queue"), \
@@ -147,6 +155,7 @@ extern const char *symbol_values[];
     action(java_lang_ClassLoader, "java/lang/ClassLoader"), \
     action(java_lang_reflect_Field, "java/lang/reflect/Field"), \
     action(java_lang_invoke_MethodHandle, "java/lang/invoke/MethodHandle"), \
+    action(java_lang_invoke_MethodHandleNatives, "java/lang/invoke/MethodHandleNatives"), \
     action(java_lang_invoke_VarHandle, "java/lang/invoke/VarHandle"), \
     action(java_lang_reflect_Executable, "java/lang/reflect/Executable"), \
     action(java_lang_reflect_VMField, "java/lang/reflect/VMField"), \
@@ -257,6 +266,7 @@ extern const char *symbol_values[];
     action(_java_lang_Throwable__V, "(Ljava/lang/Throwable;)V"), \
     action(_array_java_lang_String__V, "([Ljava/lang/String;)V"), \
     action(___java_lang_Object, "()Ljava/lang/Object;"), \
+    action(___java_lang_String, "()Ljava/lang/String;"), \
     action(___java_lang_ClassLoader, "()Ljava/lang/ClassLoader;"), \
     action(_java_lang_Object_java_lang_Object__java_lang_Object, \
            "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"), \

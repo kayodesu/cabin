@@ -6,7 +6,7 @@
 #include "class.h"
 #include "method.h"
 #include "field.h"
-#include "../objects/invoke.h"
+#include "../objects/mh.h"
 #include "../interpreter/interpreter.h"
 
 using namespace std;
@@ -123,7 +123,7 @@ Object *ConstantPool::resolveMethodType(u2 i)
     lock_guard<recursive_mutex> lock(mutex);
     assert(0 < i && i < size);
     assert(_type[i] == JVM_CONSTANT_MethodType);
-    return fromMethodDescriptor(methodTypeDescriptor(i), clazz->loader);
+    return findMethodType(methodTypeDescriptor(i), clazz->loader);
 }
 
 Object *ConstantPool::resolveMethodHandle(u2 i)
@@ -186,10 +186,11 @@ Object *ConstantPool::resolveMethodHandle(u2 i)
             Method *m = resolveMethod(index);
             assert(m->isStatic());
 
+            jref mt = findMethodType(m->descriptor, m->clazz->loader);
             // public MethodHandle findStatic(Class<?> refc, String name, MethodType type)
             //                      throws NoSuchMethodException, IllegalAccessException;
             return RSLOT(execJavaFunc(caller->clazz->getDeclaredInstMethod("findStatic", d2),
-                         { caller, m->clazz->java_mirror, newString(m->name), m->getType() }));
+                         { caller, m->clazz->java_mirror, newString(m->name), mt }));
         }
         case JVM_REF_invokeSpecial: {
             // public MethodHandle findSpecial(Class<?> refc, String name, MethodType type, Class<?> specialCaller)

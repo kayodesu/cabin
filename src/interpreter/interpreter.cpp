@@ -7,7 +7,7 @@
 #include <ffi.h>
 #include "../jvmstd.h"
 #include "interpreter.h"
-#include "../objects/invoke.h"
+#include "../objects/mh.h"
 #include "../objects/object.h"
 #include "../metadata/class.h"
 #include "../metadata/method.h"
@@ -1229,7 +1229,7 @@ opc_invokedynamic: {
     const utf8_t *invoked_name = cp.invokeDynamicMethodName(index); // "run"
     const utf8_t *invoked_descriptor = cp.invokeDynamicMethodType(index); // "()Ljava/lang/Runnable;"
 
-    jref invoked_type = fromMethodDescriptor(invoked_descriptor, clazz->loader); // "java/lang/invoke/MethodType"
+    jref invoked_type = findMethodType(invoked_descriptor, clazz->loader); // "java/lang/invoke/MethodType"
     jref caller = getCaller(); // "java/lang/invoke/MethodHandles$Lookup"
 
     BootstrapMethod &bm = clazz->bootstrap_methods.at(cp.invokeDynamicBootstrapMethodIndex(index));

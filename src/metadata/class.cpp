@@ -15,7 +15,7 @@
 #include "../objects/class_object.h"
 #include "../interpreter/interpreter.h"
 #include "../objects/prims.h"
-#include "../objects/invoke.h"
+#include "../objects/mh.h"
 #include "../classfile/constants.h"
 
 using namespace std;
@@ -824,7 +824,7 @@ Method *Class::lookupMethod(Object *mo)
     auto rtype = mo->getRefField<ClassObject>("returnType", S(sig_java_lang_Class));
     auto ptypes = mo->getRefField<Array>("parameterTypes", S(array_java_lang_Class));
 
-    jstrref descriptor = toMethodDescriptor(methodType(rtype, ptypes));
+    jstrref descriptor = toMethodDescriptor(findMethodType(rtype, ptypes));
     return lookupMethod(name->toUtf8(), descriptor->toUtf8());
 }
 

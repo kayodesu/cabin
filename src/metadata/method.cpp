@@ -5,7 +5,7 @@
 #include "method.h"
 #include "class.h"
 #include "../objects/array_object.h"
-#include "../objects/invoke.h"
+#include "descriptor.h"
 
 using namespace std;
 using namespace utf8;
@@ -38,90 +38,14 @@ Method::ExceptionTable::ExceptionTable(Class *clazz, BytecodeReader &r)
 
 Array *Method::getParameterTypes()
 {
-    Object *type = getType();
-
-    // private final Class<?>[] ptypes;
-    auto ptypes = type->getRefField<Array>("ptypes", "[Ljava/lang/Class;");
-    assert(ptypes != nullptr);
-    return ptypes;
-
-//    if (parameterTypes == nullptr) {
-//        int dlen = strlen(type);
-//        char desc[dlen + 1];
-//        strcpy(desc, type);
-//
-//        Object* buf[METHOD_PARAMETERS_MAX_COUNT];
-//
-//        int parameter_types_count = 0;
-//
-//        char *b = strchr(desc, '(');
-//        const char *e = strchr(desc, ')');
-//        if (b == nullptr || e == nullptr) {
-//            thread_throw(new UnknownError(NEW_MSG("type error. %s\n", desc)));
-//        }
-//
-//        // parameter types
-//        while (++b < e) {
-//            if (*b == 'L') { // reference
-//                char *t = strchr(b, ';');
-//                if (t == nullptr) {
-//                    thread_throw(new UnknownError(NEW_MSG("type error. %s\n", desc)));
-//                }
-//
-//                *t = 0;   // end string
-//                buf[parameter_types_count++] = loadClass(clazz->loader, b + 1 /* jump 'L' */);
-//                *t = ';'; // recover
-//                b = t;
-//            } else if (*b == '[') { // array reference, 描述符形如 [B 或 [[Ljava/lang/String; 的形式
-//                char *t = b;
-//                while (*(++t) == '[');
-//                if (!isPrimDescriptor(*t)) {
-//                    t = strchr(t, ';');
-//                    if (t == nullptr) {
-//                        thread_throw(new UnknownError(NEW_MSG("type error. %s\n", desc)));
-//                    }
-//                }
-//
-//                char k = *(++t);
-//                *t = 0; // end string
-//                buf[parameter_types_count++] = loadClass(clazz->loader, b);
-//                *t = k; // recover
-//                b = t;
-//            } else if (isPrimDescriptor(*b)) {
-//                const char *class_name = primDescriptor2className(*b);
-//                buf[parameter_types_count++] = loadClass(clazz->loader, class_name);
-//            } else {
-//                thread_throw(new UnknownError(NEW_MSG("type error. %s\n", desc)));
-//            }
-//        }
-//
-//        // todo parameter_types_count == 0 是不是要填一个 void.class
-//
-//        parameterTypes = newArray(loadBootClass(S(array_java_lang_Class)), parameter_types_count);
-//        for (int i = 0; i < parameter_types_count; i++)
-//            parameterTypes->set(i, buf[i]);
-//    }
-//
-//    assert(parameterTypes != nullptr);
-//    return parameterTypes;
+    pair<Array *, ClassObject *> p = parseMethodDescriptor(descriptor, clazz->loader);
+    return p.first;
 }
 
 ClassObject *Method::getReturnType()
 {
-    Object *type = getType();
-
-    // private final Class<?> rtype;
-    auto rtype = type->getRefField<ClassObject>("rtype", "Ljava/lang/Class;");
-    assert(rtype != nullptr);
-    return rtype;
-}
-
-Object *Method::getType()
-{
-    if (type_obj == nullptr) {
-        type_obj = method_type::fromMethodDescriptor(descriptor, clazz->loader);
-    }
-    return type_obj;
+    pair<Array *, ClassObject *> p = parseMethodDescriptor(descriptor, clazz->loader);
+    return p.second;
 }
 
 Array *Method::getExceptionTypes()
@@ -408,13 +332,6 @@ int Method::findExceptionHandler(Class *exceptionType, size_t pc)
 
 bool Method::isSignaturePolymorphic() 
 {
-    /*
-    * A method is signature polymorphic if all of the following are true:
-    * 1. It is declared in the java.lang.invoke.MethodHandle class or the java.lang.invoke.VarHandle class.
-    * 2. It has a single formal parameter of type Object[].
-    * 3. It has the ACC_VARARGS and ACC_NATIVE flags set.
-    */
-
     bool b = equals(clazz->class_name, S(java_lang_invoke_MethodHandle))
                  || equals(clazz->class_name, S(java_lang_invoke_VarHandle));
     if (!b)
