@@ -10,7 +10,6 @@
 #include "../interpreter/interpreter.h"
 
 using namespace std;
-using namespace method_type;
 using namespace method_handles;
 
 Class *ConstantPool::resolveClass(u2 i)

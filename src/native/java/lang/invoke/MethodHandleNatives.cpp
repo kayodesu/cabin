@@ -13,7 +13,6 @@
  */
 
 using namespace utf8;
-using namespace method_type;
 using namespace member_name;
 
 /*

@@ -15,13 +15,6 @@ class ClassObject;
 
 void initMethodHandle();
 
-// java/lang/invoke/MethodType 类的便利操作函数
-namespace method_type {
-    Array *parameterTypes(jref methodType);
-
-    jstrref toMethodDescriptor(jref methodType);
-}
-
 jref findMethodType(const utf8_t *desc, jref loader);
 jref findMethodType(ClassObject *rtype, Array *ptypes);
 

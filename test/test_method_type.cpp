@@ -7,15 +7,15 @@
 #include "../src/metadata/method.h"
 #include "../src/objects/mh.h"
 #include "../src/objects/array_object.h"
+#include "../src/metadata/descriptor.h"
 
 using namespace std;
-using namespace method_type;
 
 void initJVM(int argc, char *argv[]);
 
 void printMT(jref mt)
 {
-    Array *ptypes = parameterTypes(mt); // Class<?>[]
+    Array *ptypes = mt->getRefField<Array>("ptypes", S(array_java_lang_Class)); // Class<?>[]
     for (int i = 0; i < ptypes->len; ++i) {
         auto t = ptypes->get<ClassObject *>(i);
         cout << t->jvm_mirror->class_name;
@@ -24,7 +24,6 @@ void printMT(jref mt)
         else
             cout << endl;
     }
-    cout << toMethodDescriptor(mt)->toUtf8() << endl;
 }
 
 int main(int argc, char *argv[])
@@ -32,9 +31,15 @@ int main(int argc, char *argv[])
     initJVM(argc, argv);
 
     for (auto &d : method_descriptors) {
-        cout << "--------------- " << d << endl;
+        cout << "--------------- " << endl << d << endl;
         jref mt = findMethodType(d, g_system_class_loader);
         printMT(mt);
+
+        string desc = unparseMethodDescriptor(mt);
+        cout << desc.c_str() << endl;
+
+        if (strcmp(d, desc.c_str()) != 0)
+            throw runtime_error("error");
     }
 }
 

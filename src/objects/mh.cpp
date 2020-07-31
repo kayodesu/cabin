@@ -14,7 +14,6 @@
 #include "../runtime/vm_thread.h"
 
 using namespace std;
-using namespace method_type;
 using namespace slot;
 using namespace utf8;
 
@@ -77,24 +76,24 @@ jref findMethodType(ClassObject *rtype, Array *ptypes)
     return RSLOT(execJavaFunc(m, { rtype, ptypes }));
 }
 
-Array *method_type::parameterTypes(jref methodType)
-{
-    assert(methodType != nullptr);
+//Array *method_type::parameterTypes(jref methodType)
+//{
+//    assert(methodType != nullptr);
+//
+//    // private final Class<?>[] ptypes;
+//    auto ptypes = methodType->getRefField<Array>("ptypes", "[Ljava/lang/Class;");
+//    return ptypes;
+//}
 
-    // private final Class<?>[] ptypes;
-    auto ptypes = methodType->getRefField<Array>("ptypes", "[Ljava/lang/Class;");
-    return ptypes;
-}
-
-jstrref method_type::toMethodDescriptor(jref methodType)
-{
-    assert(methodType != nullptr);
-
-    Class *mt = loadBootClass("java/lang/invoke/MethodType");
-    // public String toMethodDescriptorString();
-    Method *m = mt->getDeclaredInstMethod("toMethodDescriptorString", "()Ljava/lang/String;");
-    return (jstrref) RSLOT(execJavaFunc(m, {methodType}));
-}
+//jstrref method_type::toMethodDescriptor(jref methodType)
+//{
+//    assert(methodType != nullptr);
+//
+//    Class *mt = loadBootClass("java/lang/invoke/MethodType");
+//    // public String toMethodDescriptorString();
+//    Method *m = mt->getDeclaredInstMethod("toMethodDescriptorString", "()Ljava/lang/String;");
+//    return (jstrref) RSLOT(execJavaFunc(m, {methodType}));
+//}
 
 /* ----------------------------------------------------------------------------------------- */
 
@@ -372,7 +371,7 @@ Object *resolveMemberName(jref member_name, Class *caller)
     jstrref sig_str = RSLOT(execJavaFunc(mn_getSignature_method, { member_name }));
     const utf8_t *sig = sig_str->toUtf8();
 
-    auto xx = toMethodDescriptor(type)->toUtf8();
+//    auto xx = toMethodDescriptor(type)->toUtf8();
 
     switch(flags & ALL_KINDS) {
         case IS_METHOD: {

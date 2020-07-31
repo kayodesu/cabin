@@ -19,7 +19,6 @@
 using namespace std;
 using namespace utf8;
 using namespace slot;
-using namespace method_type;
 using namespace method_handles;
 
 #if TRACE_INTERPRETER

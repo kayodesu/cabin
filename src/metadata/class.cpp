@@ -21,7 +21,6 @@
 
 using namespace std;
 using namespace utf8;
-using namespace method_type;
 using namespace method_handles;
 
 

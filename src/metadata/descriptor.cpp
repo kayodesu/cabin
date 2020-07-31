@@ -166,3 +166,15 @@ string unparseMethodDescriptor(Array *ptypes /*Class *[]*/, ClassObject *rtype)
 
     return oss.str();
 }
+
+string unparseMethodDescriptor(jref method_type)
+{
+    assert(method_type != nullptr);
+
+    // private final Class<?>[] ptypes;
+    auto ptypes = method_type->getRefField<Array>("ptypes", S(array_java_lang_Class));
+    // private final Class<?> rtype;
+    auto rtype = method_type->getRefField<ClassObject>("rtype", S(sig_java_lang_Class));
+
+    return unparseMethodDescriptor(ptypes, rtype);
+}

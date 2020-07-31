@@ -20,4 +20,7 @@ parseMethodDescriptor(const char *desc, jref loader);
 
 std::string unparseMethodDescriptor(Array *ptypes /* ClassObject *[] */, ClassObject *rtype);
 
+// @method_type: Object of java.lang.invoke.MethodType
+std::string unparseMethodDescriptor(jref method_type);
+
 #endif //YOVM_DESCRIPTOR_H
