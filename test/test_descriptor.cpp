@@ -19,6 +19,7 @@ int main(int argc, char *argv[])
     jref scl = getSystemClassLoader();
 
     for (auto &d : method_descriptors) {
+        cout << d << endl;
         cout << numElementsInDescriptor(d + 1, strchr(d, ')')) << " | ";
         pair<Array *, ClassObject *> p = parseMethodDescriptor((char *) d, scl);
         assert(p.first != nullptr);
@@ -32,6 +33,11 @@ int main(int argc, char *argv[])
                 cout << " | ";
         }
         cout << p.second->jvm_mirror->class_name << endl;
+
+        cout << "--- unparse ---" << unparseMethodDescriptor(p.first, p.second) << endl << endl;
     }
+
+    cout << "---------" << endl;
+    cout << unparseMethodDescriptor(nullptr, nullptr) << endl;
 }
 

@@ -16,3 +16,6 @@ target_link_libraries(test_load_class libyovm)
 
 add_executable(test_class_loader class_loader/test_class_loader.cpp)
 target_link_libraries(test_class_loader libyovm)
+
+add_executable(test_clone_object test_clone_object.cpp)
+target_link_libraries(test_clone_object libyovm)
