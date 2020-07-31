@@ -232,12 +232,12 @@ static slot_t *exec()
     jref _this = frame->method->isStatic() ? (jref) clazz : RSLOT(lvars);
 
 #define THROW_EXCEPTION(exception_name, message)  \
-    {                                         \
+    {                                             \
         signalException(exception_name, message); \
-        jref eo = exceptionOccured();         \
-        clearException();                     \
-        frame->pushr(eo);                     \
-        goto opc_athrow;                      \
+        jref eo = exceptionOccured();             \
+        clearException();                         \
+        frame->pushr(eo);                         \
+        goto opc_athrow;                          \
     }
 
 #define NULL_POINTER_CHECK(ref)                                          \
@@ -248,7 +248,7 @@ static slot_t *exec()
 
 #define CHANGE_FRAME(new_frame)                                          \
     {                                                                    \
-        /*frame->ostack = ostack;  stack指针在变动，需要设置一下 todo */   \
+        /*frame->ostack = ostack;  stack指针在变动，需要设置一下 todo */    \
         frame = new_frame;                                               \
         reader = &frame->reader;                                         \
         clazz = frame->method->clazz;                                    \
@@ -1617,10 +1617,13 @@ slot_t *execJavaFunc(Method *method, std::initializer_list<jref> args)
 slot_t *execJavaFunc(Method *m, jref _this, Array *args)
 {
     assert(m != nullptr);
-    assert(_this != nullptr);
+    // If m is static, _this is nullptr.
 
     if (args == nullptr) {
-        return execJavaFunc(m, {_this});
+        if (_this != nullptr)
+            return execJavaFunc(m, {_this});
+        else
+            return execJavaFunc(m);
     }
 
     // Class[]
@@ -1630,8 +1633,11 @@ slot_t *execJavaFunc(Method *m, jref _this, Array *args)
 
     // 因为有 category two 的存在，result 的长度最大为 types_len * 2 + this_obj
     auto real_args = new slot_t[2 * types->len + 1];
-    RSLOT(real_args) = _this;
-    int k = 1; // 第0位已经存放_this了，下面从第一位开始。
+    int k = 0;
+    if (_this != nullptr) {
+        RSLOT(real_args) = _this;
+        k++;
+    }
     for (int i = 0; i < types->len; i++) {
         auto c = types->get<ClassObject *>(i)->jvm_mirror;
         auto o = args->get<jref>(i);

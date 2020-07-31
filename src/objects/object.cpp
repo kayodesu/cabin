@@ -37,7 +37,14 @@ Field *Object::lookupField(const char *name, const char *descriptor)
 Object *Object::clone() const
 {
     size_t s = size();
-    return (Object *) memcpy(g_heap->alloc(s), this, s);
+    void *p = g_heap->alloc(s);
+    memcpy(p, this, s);
+
+    // todo mutex 怎么处理
+
+    Object *clone = (Object *) p;
+    clone->data = (slot_t *) (clone + 1);
+    return clone;
 }
 
 //void Object::setFieldValue(Field *f, slot_t v)

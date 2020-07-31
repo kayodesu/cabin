@@ -18,4 +18,6 @@ int numElementsInDescriptor(const char *b, const char *e);
 std::pair<Array * /*ptypes*/, ClassObject * /*rtype*/>
 parseMethodDescriptor(const char *desc, jref loader);
 
+std::string unparseMethodDescriptor(Array *ptypes /* ClassObject *[] */, ClassObject *rtype);
+
 #endif //YOVM_DESCRIPTOR_H

@@ -13,7 +13,7 @@ bool isPrimDescriptor(utf8_t descriptor);
 bool isPrimWrapperClassName(const utf8_t *class_name);
 const utf8_t *getPrimArrayClassName(const utf8_t *class_name);
 const utf8_t *getPrimClassName(utf8_t descriptor);
-
+const utf8_t *getPrimDescriptorByClassName(const utf8_t *class_name);
 const slot_t *primObjUnbox(const Object *box);
 
 jref voidBox();

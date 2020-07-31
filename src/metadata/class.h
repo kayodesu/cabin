@@ -224,22 +224,20 @@ public:
     Method *lookupStaticMethod(const char *name, const char *descriptor);
     Method *lookupInstMethod(const char *name, const char *descriptor);
 
-    // @method: Object of java.lang.reflect.Method
-    Method *lookupMethod(Object *mo);
-
     /*
      * get在本类中定义的类，不包括继承的。
      */
     Method *getDeclaredMethod(const utf8_t *name, const utf8_t *descriptor, bool ensureExist = true);
     Method *getDeclaredStaticMethod(const utf8_t *name, const utf8_t *descriptor, bool ensureExist = true);
     Method *getDeclaredInstMethod(const utf8_t *name, const utf8_t *descriptor, bool ensureExist = true);
+    Method *getDeclaredPolymorphicSignatureMethod(const utf8_t *name);
 
     std::vector<Method *> getDeclaredMethods(const utf8_t *name, bool public_only);
 
     Method *getConstructor(const utf8_t *descriptor);
 
     // Class<?>[] parameterTypes;
-    Method *getConstructor(Array *parameterTypes);
+    Method *getConstructor(Array *parameter_types);
 
     std::vector<Method *> getConstructors(bool public_only);
 

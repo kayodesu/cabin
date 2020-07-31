@@ -347,6 +347,8 @@ void expandMemberName(jref member_name)
 //    return -1;
 //}
 
+// void *findNativeMethod(const char *class_name, const char *method_name, const char *method_type);
+
 Object *resolveMemberName(jref member_name, Class *caller)
 {
     assert(member_name != nullptr);
@@ -370,14 +372,18 @@ Object *resolveMemberName(jref member_name, Class *caller)
     jstrref sig_str = RSLOT(execJavaFunc(mn_getSignature_method, { member_name }));
     const utf8_t *sig = sig_str->toUtf8();
 
-//    auto xx = toMethodDescriptor(type)->toUtf8();
+    auto xx = toMethodDescriptor(type)->toUtf8();
 
     switch(flags & ALL_KINDS) {
         case IS_METHOD: {
             Method *m = clazz->lookupMethod(name, sig);
             if (m == nullptr) {
-//                m = lookupPolymorphicMethod();
-                jvm_abort("not implement"); // todo
+                // m = lookupPolymorphicMethod();
+                // m = findNativeMethod(clazz->class_name, m->name, nullptr);
+
+                // todo
+                m = clazz->getDeclaredPolymorphicSignatureMethod(name); 
+                // jvm_abort("not implement"); // todo
             }
             if (m == nullptr) {
                 jvm_abort("error"); // todo

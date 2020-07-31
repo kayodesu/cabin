@@ -17,6 +17,7 @@
 #include "../objects/prims.h"
 #include "../objects/mh.h"
 #include "../classfile/constants.h"
+#include "descriptor.h"
 
 using namespace std;
 using namespace utf8;
@@ -717,6 +718,18 @@ Method *Class::getDeclaredInstMethod(const utf8_t *name, const utf8_t *descripto
     return nullptr;
 }
 
+Method *Class::getDeclaredPolymorphicSignatureMethod(const utf8_t *name)
+{
+    assert(name != nullptr);
+
+    for (auto m : methods) {
+        if (utf8::equals(m->name, name) && m->isSignaturePolymorphic())
+            return m;
+    }
+    
+    return nullptr;
+}
+
 vector<Method *> Class::getDeclaredMethods(const utf8_t *name, bool public_only)
 {
     assert(name != nullptr);
@@ -735,21 +748,22 @@ Method *Class::getConstructor(const utf8_t *descriptor)
     return getDeclaredMethod(S(object_init), descriptor);
 }
 
-Method *Class::getConstructor(Array *parameterTypes)
+Method *Class::getConstructor(Array *parameter_types)
 {
-    assert(parameterTypes != nullptr);
+    assert(parameter_types != nullptr);
 
-    Class *c = loadBootClass("java/lang/invoke/MethodType");
-
-    // public static MethodType methodType(Class<?> rtype, Class<?>[] ptypes);
-    Method *m = c->getDeclaredStaticMethod(
-            "methodType", "(Ljava/lang/Class;[Ljava/lang/Class;)Ljava/lang/invoke/MethodType;");
-    auto mt = RSLOT(execJavaFunc(m, { loadBootClass(S(void))->java_mirror, parameterTypes } ));
-
-    // public String toMethodDescriptorString();
-    m = c->getDeclaredInstMethod("toMethodDescriptorString", "()Ljava/lang/String;");
-    auto s = execJavaFunc(m, {mt});
-    return getConstructor((RSLOT(s))->toUtf8());
+//    Class *c = loadBootClass("java/lang/invoke/MethodType");
+//
+//    // public static MethodType methodType(Class<?> rtype, Class<?>[] ptypes);
+//    Method *m = c->getDeclaredStaticMethod(
+//            "methodType", "(Ljava/lang/Class;[Ljava/lang/Class;)Ljava/lang/invoke/MethodType;");
+//    auto mt = RSLOT(execJavaFunc(m, { loadBootClass(S(void))->java_mirror, parameter_types } ));
+//
+//    // public String toMethodDescriptorString();
+//    m = c->getDeclaredInstMethod("toMethodDescriptorString", "()Ljava/lang/String;");
+//    auto s = (RSLOT(execJavaFunc(m, {mt})))->toUtf8();
+    string desc = unparseMethodDescriptor(parameter_types, nullptr);
+    return getConstructor(desc.c_str());
 }
 
 vector<Method *> Class::getConstructors(bool public_only)
@@ -811,21 +825,6 @@ Method *Class::lookupInstMethod(const char *name, const char *descriptor)
         return nullptr;
     }
     return m;
-}
-
-Method *Class::lookupMethod(Object *mo)
-{
-    assert(mo != nullptr);
-
-    // private String     name;
-    // private Class<?>   returnType;
-    // private Class<?>[] parameterTypes;
-    jstrref name = mo->getRefField("name", S(sig_java_lang_String));
-    auto rtype = mo->getRefField<ClassObject>("returnType", S(sig_java_lang_Class));
-    auto ptypes = mo->getRefField<Array>("parameterTypes", S(array_java_lang_Class));
-
-    jstrref descriptor = toMethodDescriptor(findMethodType(rtype, ptypes));
-    return lookupMethod(name->toUtf8(), descriptor->toUtf8());
 }
 
 bool Class::isSubclassOf(Class *father)

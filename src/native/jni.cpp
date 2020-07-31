@@ -96,7 +96,8 @@ void registerNatives(const char *class_name, JNINativeMethod *methods, int metho
 
 void *findNativeMethod(const char *class_name, const char *method_name, const char *method_descriptor)
 {
-    assert(class_name != nullptr && method_name != nullptr && method_descriptor != nullptr);
+    assert(class_name != nullptr && method_name != nullptr);
+
     for (auto &t: native_methods) {
         if (equals(get<0>(t), class_name)) {
             JNINativeMethod *methods = get<1>(t);

@@ -5,6 +5,7 @@
 #include <sstream>
 #include "../../jni_inner.h"
 #include "../../../runtime/frame.h"
+#include "../../../objects/array_object.h"
 #include "../../../interpreter/interpreter.h"
 
 using namespace std;
@@ -90,8 +91,9 @@ static jobject newInstance0(jobject c, jobjectArray args)
     } else {
         // parameter types of this constructor
         // private Class<?>[] parameterTypes;
-        auto parameterTypes = c->getRefField<Array>(S(parameterTypes), S(array_java_lang_Class));
-        Method *constructor = clazz->getConstructor(parameterTypes);
+        auto parameter_types = c->getRefField<Array>(S(parameterTypes), S(array_java_lang_Class));
+        Method *constructor = clazz->getConstructor(parameter_types);
+        assert(constructor != nullptr);
         execJavaFunc(constructor, obj, args);
     }
 

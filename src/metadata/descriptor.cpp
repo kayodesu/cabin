@@ -2,6 +2,7 @@
  * Author: Yo Ka
  */
 
+#include <sstream>
 #include "descriptor.h"
 #include "../metadata/class.h"
 #include "../objects/class_loader.h"
@@ -119,4 +120,49 @@ pair<Array *, ClassObject *> parseMethodDescriptor(const char *desc, jref loader
     e++; // jump ')'
     ClassObject *rtype = convertDescElement2ClassObject(e, e + strlen(e), loader);
     return make_pair(ptypes, rtype);
+}
+
+static string convertTypeToDesc(Class *type)
+{
+    assert(type != nullptr);
+
+    if (type->isPrimClass()) {
+        return getPrimDescriptorByClassName(type->class_name);
+    }
+
+    if (type->isArrayClass()) {
+        return type->class_name;
+    }
+
+    // 普通类
+    ostringstream oss;
+    oss << 'L';
+    oss << type->class_name;
+    oss << ';';
+    return oss.str();
+}
+
+string unparseMethodDescriptor(Array *ptypes /*Class *[]*/, ClassObject *rtype)
+{
+    ostringstream oss;
+
+    if (ptypes == nullptr) { // no argument
+        oss << "()";
+    } else {
+        oss << "(";
+        for (int i = 0; i < ptypes->len; i++) {
+            ClassObject *co = ptypes->get<ClassObject *>(i);
+            assert(co != nullptr);
+            oss << convertTypeToDesc(co->jvm_mirror);        
+        }
+        oss << ")";
+    }
+
+    if (rtype == nullptr) { // no return value
+        oss << "V";
+    } else {
+        oss << convertTypeToDesc(rtype->jvm_mirror);
+    }
+
+    return oss.str();
 }

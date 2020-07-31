@@ -117,7 +117,7 @@ public:
     int findExceptionHandler(Class *exception_type, size_t pc);
 
     /*
-     * Is signature polymorphic method?
+     * Is signature polymorphic（签名多态性） method?
      *
      * A method is signature polymorphic if all of the following are true:
      * 1. It is declared in the java.lang.invoke.MethodHandle class or the java.lang.invoke.VarHandle class.

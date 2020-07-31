@@ -83,6 +83,15 @@ const utf8_t *getPrimDescriptor(const utf8_t *wrapper_class_name)
     return nullptr;
 }
 
+const utf8_t *getPrimDescriptorByClassName(const utf8_t *class_name)
+{
+    for (auto &t : prims) {
+        if (equals(t.class_name, class_name))
+            return &(t.descriptor);
+    }
+    return nullptr;
+}
+
 const slot_t *primObjUnbox(const Object *box)
 {
     assert(box != nullptr);

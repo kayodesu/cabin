@@ -122,11 +122,18 @@ size_t Array::size() const
     return sizeof(Array) + clazz->getEleSize()*len;
 }
 
-//Array *Array::clone() const
-//{
-//size_t s = size();
-//  return (Array *) memcpy(g_heap.allocObject(s), this, s);
-//}
+Array *Array::clone() const
+{
+    size_t s = size();
+    void *p = g_heap->alloc(s);
+    memcpy(p, this, s);
+
+    // todo mutex 怎么处理
+
+    Array *clone = (Array *) p;
+    clone->data = (slot_t *) (clone + 1);
+    return clone;
+}
 
 Array *newTypeArray(ArrayType type, jint arr_len)
 {

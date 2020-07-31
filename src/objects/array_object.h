@@ -75,7 +75,7 @@ public:
 
     static void copy(Array *dst, jint dst_pos, const Array *src, jint src_pos, jint len);
     size_t size() const override;
-    //Array *clone() const;
+    Array *clone() const override;
     std::string toString() const override;
 };
 
