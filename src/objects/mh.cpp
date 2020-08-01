@@ -385,7 +385,10 @@ Object *resolveMemberName(jref member_name, Class *caller)
                 // jvm_abort("not implement"); // todo
             }
             if (m == nullptr) {
-                jvm_abort("error"); // todo
+                // todo
+                signalException(S(java_lang_NoSuchMethodError), "resolve member name, METHOD");
+                return nullptr;
+//                jvm_abort("error");
             }
 
             flags |= methodFlags(m);
@@ -393,18 +396,36 @@ Object *resolveMemberName(jref member_name, Class *caller)
             return member_name;
         }
         case IS_CONSTRUCTOR: {
-            jvm_abort("IS_CONSTRUCTOR"); // todo
+            Method *m = clazz->lookupMethod(name, sig);
+            if (m == nullptr) {
+                // todo
+                signalException(S(java_lang_NoSuchMethodError), "resolve member name, CONSTRUCTOR");
+                return nullptr;
+//                jvm_abort("error");
+            }
+
+            flags |= methodFlags(m);
+            member_name->setIntField(mn_flags_field, flags);
             return member_name;
         }
         case IS_FIELD: {
-            jvm_abort("IS_FIELD"); // todo
+            Field *f = clazz->lookupField(name, sig);
+            if (f == nullptr) {
+                // todo
+                signalException(S(java_lang_NoSuchFieldError), "resolve member name, FIELD");
+                return nullptr;
+//                jvm_abort("error");
+            }
+
+            flags |= f->access_flags;
+            member_name->setIntField(mn_flags_field, flags);
             return member_name;
         }
         default:
-            jvm_abort("error"); // todo
+            signalException(S(java_lang_LinkageError), "resolve member name");; // todo
     }
 
-    jvm_abort("resolveMemberName");
+    return nullptr;;
 }
 
 /* ----------------------------------------------------------------------------------------- */

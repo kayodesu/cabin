@@ -1,10 +1,18 @@
+#include <cstdarg>
 #include "../../../jni_inner.h"
 #include "../../../../jvmstd.h"
 #include "../../../../runtime/frame.h"
+#include "../../../../objects/array_object.h"
+#include "../../../../metadata/descriptor.h"
+#include "../../../../interpreter/interpreter.h"
 
 /*
  * Author: Yo Ka
  */
+
+using namespace std;
+using namespace slot;
+using namespace utf8;
 
 /**
  * Invokes the method handle, allowing any caller type type, but requiring an exact type match.
@@ -24,13 +32,15 @@
  * @throws Throwable anything thrown by the underlying method propagates unchanged through the method handle call
  */
 // public final native @PolymorphicSignature Object invokeExact(Object... args) throws Throwable;
-static void invokeExact(jobjectArray args)
+static jobject invokeExact(jobject _this, ...)
 {
-    // jref _this = frame->getLocalAsRef(0);
-    // _this 可能是 MethodHandle 的各种子类。
-    // if (_this->clazz->className cmp "java/lang/invoke/DirectMethodHandle")  // todo
-    // DirectMethodHandle 里面有 final MemberName member;
-    
+    assert(_this != nullptr);
+    // _this is a object of subclass of java.lang.invoke.MethodHandle
+
+    if (equals(_this->clazz->class_name, "java/lang/invoke/BoundMethodHandle$Species_L")) {
+        // final Object argL0;
+    }
+
     jvm_abort("invokeExact");
 }
 
@@ -70,9 +80,38 @@ static void invokeExact(jobjectArray args)
  * @throws Throwable anything thrown by the underlying method propagates unchanged through the method handle call
  */
 // public final native @PolymorphicSignature Object invoke(Object... args) throws Throwable;
-static void invoke(jobjectArray args)
+static jobject invoke(jobject _this, ...)
 {
-    jvm_abort("invoke");
+    assert(_this != nullptr);
+    // _this is a object of subclass of java.lang.invoke.MethodHandle
+
+    // MemberName internalMemberName();
+    Method *m = _this->clazz->lookupInstMethod("internalMemberName", "()Ljava/lang/invoke/MemberName;");
+    jref member_name = RSLOT(execJavaFunc(m, {_this}));
+    // private Class<?> clazz;       // class in which the method is defined
+    // private String   name;        // may be null if not yet materialized
+    // private Object   type;        // may be null if not yet materialized
+    Class *c = member_name->getRefField<ClassObject>(S(clazz), S(sig_java_lang_Class))->jvm_mirror;
+    auto name = member_name->getRefField(S(name), S(sig_java_lang_String))->toUtf8();
+
+    // public MethodType getInvocationType()
+    m = member_name->clazz->lookupInstMethod("getInvocationType", "()Ljava/lang/invoke/MethodType;");
+    jref method_type = RSLOT(execJavaFunc(m, {member_name}));
+    string desc = unparseMethodDescriptor(method_type);
+    int num = numElementsInMethodDescriptor(desc.c_str());
+    slot_t args[num];
+
+    va_list ap;
+    va_start(ap, _this);
+    for (int i = 0; i < num; i++) {
+        Object *o = va_arg(ap, Object *);
+        args[i] = rslot(o);
+    }
+    va_end(ap);
+
+    m = c->lookupMethod(name, desc.c_str());
+    slot_t *slot = execJavaFunc(m, args);
+    return RSLOT(slot);
 }
 
 /**
@@ -93,7 +132,7 @@ static void invoke(jobjectArray args)
  * @return the signature-polymorphic result, statically represented using {@code Object}
  */
 // final native @PolymorphicSignature Object invokeBasic(Object... args) throws Throwable;
-static void invokeBasic(jobjectArray args)
+static jobject invokeBasic(jobject _this, ...)
 {
     jvm_abort("invokeBasic");
 }
@@ -106,7 +145,7 @@ static void invokeBasic(jobjectArray args)
  * @return the signature-polymorphic result, statically represented using {@code Object}
  */
 // static native @PolymorphicSignature Object linkToVirtual(Object... args) throws Throwable;
-static void linkToVirtual(jobjectArray args)
+static jobject linkToVirtual(jobjectArray args)
 {
     jvm_abort("linkToVirtual");
 }
@@ -119,7 +158,7 @@ static void linkToVirtual(jobjectArray args)
  * @return the signature-polymorphic result, statically represented using {@code Object}
  */
 // static native @PolymorphicSignature Object linkToStatic(Object... args) throws Throwable;
-static void linkToStatic(jobjectArray args)
+static jobject linkToStatic(jobjectArray args)
 {
     jvm_abort("linkToStatic");
 }
@@ -132,7 +171,7 @@ static void linkToStatic(jobjectArray args)
  * @return the signature-polymorphic result, statically represented using {@code Object}
  */
 // static native @PolymorphicSignature Object linkToSpecial(Object... args) throws Throwable;
-static void linkToSpecial(jobjectArray args)
+static jobject linkToSpecial(jobjectArray args)
 {
     jvm_abort("linkToSpecial");
 }
@@ -145,7 +184,7 @@ static void linkToSpecial(jobjectArray args)
  * @return the signature-polymorphic result, statically represented using {@code Object}
  */
 // static native @PolymorphicSignature Object linkToInterface(Object... args) throws Throwable;
-static void linkToInterface(jobjectArray args)
+static jobject linkToInterface(jobjectArray args)
 {
     jvm_abort("linkToInterface");
 }

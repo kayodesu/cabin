@@ -10,6 +10,7 @@
 #include "../interpreter/interpreter.h"
 
 using namespace std;
+using namespace slot;
 using namespace method_handles;
 
 Class *ConstantPool::resolveClass(u2 i)
@@ -40,7 +41,11 @@ Method *ConstantPool::resolveMethod(u2 i)
     }
 
     Class *c = resolveClass(methodClassIndex(i));
-    Method *m = c->lookupMethod(methodName(i), methodType(i));
+    auto name = methodName(i);
+    Method *m = c->lookupMethod(name, methodType(i));
+    if (m == nullptr) {
+        m = c->getDeclaredPolymorphicSignatureMethod(name);
+    }
 
     type(i, JVM_CONSTANT_ResolvedMethod);
     info(i, (slot_t) m);
@@ -186,10 +191,16 @@ Object *ConstantPool::resolveMethodHandle(u2 i)
             assert(m->isStatic());
 
             jref mt = findMethodType(m->descriptor, m->clazz->loader);
-            // public MethodHandle findStatic(Class<?> refc, String name, MethodType type)
-            //                      throws NoSuchMethodException, IllegalAccessException;
-            return RSLOT(execJavaFunc(caller->clazz->getDeclaredInstMethod("findStatic", d2),
-                         { caller, m->clazz->java_mirror, newString(m->name), mt }));
+
+            Class *mthd_hndl_natives_class = loadBootClass(S(java_lang_invoke_MethodHandleNatives));
+            // static MethodHandle linkMethodHandleConstant(Class<?> callerClass, int refKind, 
+            //                                                  Class<?> defc, String name, Object type)
+            Method *m0 = mthd_hndl_natives_class->getDeclaredStaticMethod("linkMethodHandleConstant", "(Ljava/lang/Class;ILjava/lang/Class;Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/invoke/MethodHandle;");
+            return RSLOT(execJavaFunc(m0, { rslot(clazz->java_mirror), islot(kind), rslot(m->clazz->java_mirror), rslot(newString(m->name)), rslot(mt) }));
+            // // public MethodHandle findStatic(Class<?> refc, String name, MethodType type)
+            // //                      throws NoSuchMethodException, IllegalAccessException;
+            // Method *m0 = caller->clazz->getDeclaredInstMethod("findStatic", d2);
+            // return RSLOT(execJavaFunc(m0, { caller, m->clazz->java_mirror, newString(m->name), mt }));
         }
         case JVM_REF_invokeSpecial: {
             // public MethodHandle findSpecial(Class<?> refc, String name, MethodType type, Class<?> specialCaller)

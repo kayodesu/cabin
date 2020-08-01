@@ -15,6 +15,8 @@ class Array;
 // eg. I[BLjava/lang/String;ZZ, return 5.
 int numElementsInDescriptor(const char *b, const char *e);
 
+int numElementsInMethodDescriptor(const char *method_descriptor);
+
 std::pair<Array * /*ptypes*/, ClassObject * /*rtype*/>
 parseMethodDescriptor(const char *desc, jref loader);
 

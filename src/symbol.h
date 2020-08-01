@@ -238,6 +238,7 @@ extern const char *symbol_values[];
     action(sig_java_lang_VMThread, "Ljava/lang/VMThread;"), \
     action(sig_java_lang_ThreadGroup, "Ljava/lang/ThreadGroup;"), \
     action(sig_java_lang_ClassLoader, "Ljava/lang/ClassLoader;"), \
+    action(sig_java_lang_invoke_MethodType, "Ljava/lang/invoke/MethodType;"), \
     action(sig_java_lang_reflect_Field, "Ljava/lang/reflect/Field;"), \
     action(sig_java_lang_reflect_VMField, "Ljava/lang/reflect/VMField;"), \
     action(sig_java_lang_reflect_Method, "Ljava/lang/reflect/Method;"), \

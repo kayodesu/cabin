@@ -201,7 +201,7 @@ static slot_t *exec()
      
         // Reserved [0xca ... 0xff]
 #undef U
-#define U &&opc_unused   
+#define U &&opc_unused
         &&opc_breakpoint, 
         U, U, U, U, U,          // [0xcb ... 0xcf]
         U, U, U, U, U, U, U, U, // [0xd0 ... 0xd7]
@@ -1103,8 +1103,19 @@ opc_invokevirtual: {
     index = reader->readu2();
     Method *m = cp->resolveMethod(index);
     if (m == nullptr) {
-        // todo ....
+        // todo
+        jvm_abort("m == nullptr");
     }
+
+    if (m->isSignaturePolymorphic()) {
+        assert(m->isNative());
+//        frame->ostack -= m->arg_slot_count;
+        auto arg_slots_count = Method::calArgsSlotsCount(m->descriptor, true);
+        frame->ostack -= arg_slots_count;
+        resolved_method = m;
+        goto _invoke_method;
+    }
+
     if (m->isStatic()) {
         THROW_EXCEPTION(S(java_lang_IncompatibleClassChangeError), nullptr);
     }
@@ -1254,6 +1265,12 @@ opc_invokedynamic: {
             RSLOT(args + 1) = newString(invoked_name);
             RSLOT(args + 2) = invoked_type;
             bm.resolveArgs(&cp, args + 3);
+            jref eo = exceptionOccured();
+            if (eo != jnull) {
+                clearException();
+                frame->pushr(eo);
+                goto opc_athrow;
+            }
             auto call_set = RSLOT(execJavaFunc(bootstrap_method, args));
 
             // public abstract MethodHandle dynamicInvoker()
@@ -1264,7 +1281,7 @@ opc_invokedynamic: {
             Method *invokeExact = exact_method_handle->clazz->lookupInstMethod(
                                         "invokeExact", "([Ljava/lang/Object;)Ljava/lang/Object;");
             assert(invokeExact->isVarargs());
-            u2 slot_count = Method::calArgsSlotsCount(invoked_descriptor, true);
+            int slot_count = Method::calArgsSlotsCount(invoked_descriptor, false);
             slot_t _args[slot_count];
             RSLOT(_args) = exact_method_handle;
             slot_count--; // 减去"this"
@@ -1286,6 +1303,47 @@ opc_invokedynamic: {
 
     DISPATCH
 }
+opc_invokenative: {
+    TRACE("%s\n", frame->toString().c_str());
+    if (frame->method->native_method == nullptr){ // todo
+        jvm_abort("not find native method: %s\n", frame->method->toString().c_str());
+    }
+
+    // todo 不需要在这里做任何同步的操作
+
+    assert(frame->method->native_method != nullptr);
+
+    // if (strcmp(frame->method->clazz->className, "java/lang/invoke/MethodHandle") == 0) {
+    //     ((void (*)(Frame *)) frame->method->native_method)(frame);
+    // } else {
+    //     callJNIMethod(frame);
+    // }
+    callJNIMethod(frame);
+    jref eo = exceptionOccured();
+    if (eo != jnull) {
+        TRACE("native method throw a exception\n");
+        clearException();
+        frame->pushr(eo);
+        goto opc_athrow;
+    }
+
+//    if (frame->method->isSynchronized()) {
+//        _this->unlock();
+//    }
+    DISPATCH
+}
+//opc_invokehandle: {
+//    assert(resolved_method);
+//    Frame *new_frame = thread->allocFrame(resolved_method, false);
+//    TRACE("Alloc new frame: %s\n", new_frame->toString().c_str());
+//
+//    new_frame->lvars = frame->ostack; // todo 什么意思？？？？？？？？
+//    CHANGE_FRAME(new_frame)
+//    if (resolved_method->isSynchronized()) {
+////        _this->unlock(); // todo why unlock 而不是 lock ................................................
+//    }
+//    goto opc_invokenative;
+//}
 _invoke_method: {
     assert(resolved_method);
     Frame *new_frame = thread->allocFrame(resolved_method, false);
@@ -1500,35 +1558,6 @@ opc_jsr_w:
 opc_breakpoint:  
     THROW_EXCEPTION(S(java_lang_InternalError), "breakpoint doesn't support in this jvm.");
     DISPATCH
-opc_invokenative: {
-    TRACE("%s\n", frame->toString().c_str());
-    if (frame->method->native_method == nullptr){ // todo
-        jvm_abort("not find native method: %s\n", frame->method->toString().c_str());
-    }
-
-    // todo 不需要在这里做任何同步的操作
-
-    assert(frame->method->native_method != nullptr);
-
-    // if (strcmp(frame->method->clazz->className, "java/lang/invoke/MethodHandle") == 0) {
-    //     ((void (*)(Frame *)) frame->method->native_method)(frame);
-    // } else {
-    //     callJNIMethod(frame);
-    // }
-    callJNIMethod(frame);
-    jref eo = exceptionOccured();
-    if (eo != jnull) {
-        TRACE("native method throw a exception\n");
-        clearException();                     
-        frame->pushr(eo);                     
-        goto opc_athrow;                      
-    }
-
-//    if (frame->method->isSynchronized()) {
-//        _this->unlock();
-//    }
-    DISPATCH
-}
 opc_impdep2:
     jvm_abort("This instruction isn't used.\n"); // todo
     DISPATCH            

@@ -80,6 +80,19 @@ int numElementsInDescriptor(const char *b, const char *e)
     return no_params;
 }
 
+int numElementsInMethodDescriptor(const char *method_descriptor)
+{
+    assert(method_descriptor != nullptr && method_descriptor[0] == '(');
+
+    const char *b = method_descriptor + 1; // jump '('
+    const char *e = strchr(method_descriptor, ')');
+    if (e == nullptr) {
+        // todo error
+        jvm_abort("error");
+    }
+    return numElementsInDescriptor(b, e);
+}
+
 //int numElementsInDescriptor(const char *descriptor)
 //{
 //    assert(descriptor != nullptr);
