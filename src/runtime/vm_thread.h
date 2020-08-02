@@ -85,8 +85,6 @@ class Thread {
     u1 vm_stack[VM_STACK_SIZE]; // 虚拟机栈，一个线程只有一个虚拟机栈
     Frame *top_frame = nullptr;
 
-    jref exception = nullptr;
-
     friend Thread *initMainThread();
     friend void createVMThread(void *(*start)(void *), const utf8_t *thread_name);
 
@@ -142,6 +140,16 @@ public:
      */
     Array *dump(int maxDepth);
 
+private:
+    jref exception = nullptr;
+public:
+    static jref signalException(const char *excep_name, const char *message = nullptr);
+    static void setException(Object *exp);
+    static jref getException();
+    static bool checkExceptionOccurred();
+    static void clearException();
+    static void printStackTrace();
+
     //friend Monitor;
 };
 
@@ -154,12 +162,5 @@ void createVMThread(void *(*start)(void *), const utf8_t *thread_name);
 void createCustomerThread(Object *jThread);
 
 Thread *getCurrentThread();
-
-
-Object *exceptionOccured();
-void signalException(const char *excep_name, const char *message = nullptr);
-void setException(Object *exp);
-void clearException();
-void printStackTrace();
 
 #endif //JVM_JTHREAD_H

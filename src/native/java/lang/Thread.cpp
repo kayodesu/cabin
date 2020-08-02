@@ -33,7 +33,7 @@ static void yield()
 static void sleep(jlong millis)
 {
     if (millis <= 0) {
-        signalException(S(java_lang_IllegalArgumentException));
+        Thread::signalException(S(java_lang_IllegalArgumentException));
         return;
     }
     if (millis == 0)

@@ -56,7 +56,7 @@ void ElementValue::read(BytecodeReader &r)
             break;
         default:
             jvm_abort(MSG("unknown tag: %d\n", tag)); // todo
-            signalException(S(java_lang_UnknownError), MSG("unknown tag: %d\n", tag)); 
+            Thread::signalException(S(java_lang_UnknownError), MSG("unknown tag: %d\n", tag));
     }
 }
 

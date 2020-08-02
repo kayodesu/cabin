@@ -101,7 +101,7 @@ void Array::copy(Array *dst, jint dst_pos, const Array *src, jint src_pos, jint 
      * 如果两者都是引用数组，则可以拷贝，否则两者必须是相同类型的基本类型数组
      */
     if (src->clazz->getEleSize() != dst->clazz->getEleSize()) {
-        signalException(S(java_lang_ArrayStoreException));
+        Thread::signalException(S(java_lang_ArrayStoreException));
         return;
     }
 
@@ -110,7 +110,7 @@ void Array::copy(Array *dst, jint dst_pos, const Array *src, jint src_pos, jint 
         || len < 0
         || src_pos + len > src->len
         || dst_pos + len > dst->len) {
-        signalException(S(java_lang_ArrayIndexOutOfBoundsException));
+        Thread::signalException(S(java_lang_ArrayIndexOutOfBoundsException));
         return;
     }
 
@@ -149,7 +149,7 @@ Array *newTypeArray(ArrayType type, jint arr_len)
         case JVM_AT_INT:     arr_class_name = S(array_I); break;
         case JVM_AT_LONG:    arr_class_name = S(array_J); break;
         default:
-            signalException(S(java_lang_UnknownError), NEW_MSG("Invalid array type: %d\n", type));
+            Thread::signalException(S(java_lang_UnknownError), NEW_MSG("Invalid array type: %d\n", type));
             return nullptr;
     }
 

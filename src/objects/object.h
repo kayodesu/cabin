@@ -23,6 +23,7 @@ public:
     // 对象头，放在Object类的最开始处
     union {
         struct {
+            unsigned int accessible: 1; // gc时判断对象是否可达
             unsigned int marked: 2;
         };
         uintptr_t all_flags; // 以指针的大小对齐 todo 这样对齐有什么用

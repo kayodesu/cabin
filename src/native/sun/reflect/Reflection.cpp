@@ -15,7 +15,7 @@ using namespace std;
 static jclass getCallerClass0(jint level)
 {
     if (level < 0) {
-        signalException(S(java_lang_IllegalArgumentException), to_string(level).c_str());
+        Thread::signalException(S(java_lang_IllegalArgumentException), to_string(level).c_str());
     }
 
     Frame *frame = (Frame *) getCurrentThread()->getTopFrame();

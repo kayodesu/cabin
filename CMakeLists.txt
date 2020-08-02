@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.9)
 project(yovm)
 
+set(CMAKE_C_FLAGS "-std=c11 -m64 -Wall")
 set(CMAKE_CXX_FLAGS "-std=c++17 -m64 -Wall -lz -lminizip -llibffi") # lz: link zlip
 
 add_subdirectory(test) 

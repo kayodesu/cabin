@@ -4,11 +4,9 @@
 
 #ifdef _WIN32
 
-#include <cstdlib>
 #include <ctime>
+#include <string>
 #include <windows.h>
-#include <iostream>
-#include "../jvmstd.h"
 
 using namespace std;
 

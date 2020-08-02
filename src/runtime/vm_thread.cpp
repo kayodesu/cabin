@@ -268,22 +268,33 @@ Array *Thread::dump(int max_depth)
     return arr;
 }
 
-Object *exceptionOccured() 
+void Thread::setException(Object *exp)
 {
-   return getCurrentThread()->exception; 
-}
+    assert(exp == nullptr);
 
-void setException(Object *exp) 
-{
+    if (getException() != nullptr) {
+        jvm_abort("还有未处理的异常！"); // todo
+    }
+
     getCurrentThread()->exception = exp;
 }
 
-void clearException() 
+jref Thread::getException()
+{
+    return getCurrentThread()->exception;
+}
+
+bool Thread::checkExceptionOccurred()
+{
+    return getException() != nullptr;
+}
+
+void Thread::clearException()
 {
     getCurrentThread()->exception = nullptr;
 }
 
-void signalException(const char *excep_name, const char *message) 
+jref Thread::signalException(const char *excep_name, const char *message)
 {
     // if(VM_initing) {
     //     fprintf(stderr, "Exception occurred while VM initialising.\n");
@@ -307,12 +318,11 @@ void signalException(const char *excep_name, const char *message)
         execJavaFunc(ec->getConstructor("(Ljava/lang/String;)V"), { exp, newString(message) });
     }
 
-    assert(getCurrentThread()->exception == nullptr); // todo
-
-    getCurrentThread()->exception = exp;
+    setException(exp);
+    return exp;
 }
 
-void printStackTrace() 
+void Thread::printStackTrace()
 {
     Thread *thread = getCurrentThread();
     jref e = thread->exception;

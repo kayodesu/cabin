@@ -46,15 +46,15 @@ static optional<pair<u1 *, size_t>> readClass(const char *path,
 {
     unzFile module_file = unzOpen64(path);
     if (module_file == nullptr) {
-        signalException(S(java_io_IOException), MSG("unzOpen64 failed: %s\n", path));
-        printStackTrace();
+        Thread::signalException(S(java_io_IOException), MSG("unzOpen64 failed: %s\n", path));
+        Thread::printStackTrace();
         JVM_EXIT
     }
 
     if (unzGoToFirstFile(module_file) != UNZ_OK) {
         unzClose(module_file);
-        signalException(S(java_io_IOException), MSG("unzGoToFirstFile failed: %s\n", path));
-        printStackTrace();
+        Thread::signalException(S(java_io_IOException), MSG("unzGoToFirstFile failed: %s\n", path));
+        Thread::printStackTrace();
         JVM_EXIT
     }
 
@@ -82,8 +82,8 @@ static optional<pair<u1 *, size_t>> readClass(const char *path,
     // find out!
     if (unzOpenCurrentFile(module_file) != UNZ_OK) {
         unzClose(module_file);
-        signalException(S(java_io_IOException), MSG("unzOpenCurrentFile failed: %s\n", path));
-        printStackTrace();
+        Thread::signalException(S(java_io_IOException), MSG("unzOpenCurrentFile failed: %s\n", path));
+        Thread::printStackTrace();
         JVM_EXIT
     }
 
@@ -95,8 +95,8 @@ static optional<pair<u1 *, size_t>> readClass(const char *path,
     unzCloseCurrentFile(module_file);
     unzClose(module_file);
     if (size != (int) file_info.uncompressed_size) {
-        signalException(S(java_io_IOException), MSG("unzReadCurrentFile failed: %s\n", path));
-        printStackTrace();
+        Thread::signalException(S(java_io_IOException), MSG("unzReadCurrentFile failed: %s\n", path));
+        Thread::printStackTrace();
         JVM_EXIT
     }
     return make_pair(bytecode, file_info.uncompressed_size);
@@ -320,7 +320,12 @@ void initClassLoader()
     loaders.insert(BOOT_CLASS_LOADER);
 }
 
-unordered_set<const Object *> getAllClassLoaders()
+unordered_map<const utf8_t *, Class *, utf8::Hash, utf8::Comparator> *getAllBootClasses()
+{
+    return &boot_classes;
+}
+
+const unordered_set<const Object *> &getAllClassLoaders()
 {
     return loaders;
 }

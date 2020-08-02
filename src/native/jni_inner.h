@@ -1,11 +1,15 @@
-/*
- * Author: Yo Ka
- */
-
 #ifndef KAYO_JNI_INNER_H
 #define KAYO_JNI_INNER_H
 
 #include "../jvmstd.h"
+
+/*
+ * NOTICE:
+ * 不能再native函数中用throw抛异常，libffi不能处理这种情况，
+ * 会导致jvm假死（不会崩溃退出，进程还在，但不工作，CUP利用率近乎零）。
+ *
+ * Author: Yo Ka
+ */
 
 class ClassObject;
 

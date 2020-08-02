@@ -30,7 +30,7 @@ using namespace chrono;
 static jstring mapLibraryName(jstring libname)
 {
     if (libname == nullptr) {
-        signalException(S(java_lang_NullPointerException));
+        Thread::signalException(S(java_lang_NullPointerException));
         return jnull;
     }
 

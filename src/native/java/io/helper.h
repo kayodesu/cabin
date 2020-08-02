@@ -23,7 +23,7 @@ static inline void __openFile(jobject _this, jstring name, const char *mode)
 
     FILE *file = fopen(utf8_name, mode);
     if (file == nullptr) {
-        signalException(S(java_io_FileNotFoundException), MSG("%s (can't find)", utf8_name));
+        Thread::signalException(S(java_io_FileNotFoundException), MSG("%s (can't find)", utf8_name));
         return;
     }
 
@@ -47,7 +47,7 @@ static inline void __closeFile(jobject _this)
 {
     FILE *file = __getFileHandle(_this);
     if (fclose(file) != 0) {
-        signalException(S(java_io_IOException));
+        Thread::signalException(S(java_io_IOException));
         return;
     }
 }

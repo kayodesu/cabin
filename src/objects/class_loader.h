@@ -8,6 +8,7 @@
 #include <cassert>
 #include <cstring>
 #include <unordered_set>
+#include <unordered_map>
 #include "../util/encoding.h"
 
 class Object;
@@ -87,7 +88,8 @@ static inline bool isDotName(const utf8_t *class_name)
     return strchr(class_name, '/') == nullptr;
 }
 
-std::unordered_set<const Object *> getAllClassLoaders();
+std::unordered_map<const utf8_t *, Class *, utf8::Hash, utf8::Comparator> *getAllBootClasses();
+const std::unordered_set<const Object *> &getAllClassLoaders();
 
 void printBootLoadedClasses();
 void printClassLoader(Object *class_loader);

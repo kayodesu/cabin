@@ -60,7 +60,7 @@ static ClassObject *convertDescElement2ClassObject(char *&b, char *e, jref loade
     }
 
 error:
-    signalException(S(java_lang_UnknownError), nullptr); // todo
+    Thread::signalException(S(java_lang_UnknownError), nullptr); // todo
     return nullptr;
 }
 
@@ -109,7 +109,7 @@ static Array *convertDesc2ClassObjectArray(char *b, char *e, jref loader)
 
     for (int i = 0; b < e; i++) {
         ClassObject *co = convertDescElement2ClassObject(b, e, loader);
-        if (exceptionOccured())
+        if (Thread::checkExceptionOccurred())
             return nullptr;
 
         assert(i < num);
@@ -125,7 +125,7 @@ pair<Array *, ClassObject *> parseMethodDescriptor(const char *desc, jref loader
 
     char *e = strchr(desc, ')');
     if (e == nullptr || *desc != '(') {
-        signalException(S(java_lang_UnknownError), nullptr); // todo
+        Thread::signalException(S(java_lang_UnknownError), nullptr); // todo
         return make_pair(nullptr, nullptr);
     }
 

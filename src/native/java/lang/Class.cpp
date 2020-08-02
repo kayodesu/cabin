@@ -29,7 +29,7 @@ static jclass forName0(jstring name, jboolean initialize, jobject loader, jclass
 
     Class *c = loadClass(loader, dot2SlashDup(utf8_name));
     if (c == nullptr) {
-        signalException(S(java_lang_ClassNotFoundException));
+        Thread::signalException(S(java_lang_ClassNotFoundException));
         return nullptr;
     }
     if (initialize) {
@@ -217,7 +217,7 @@ static jboolean isInstance(jclass _this, jobject obj)
 static jboolean isAssignableFrom(jclass _this, jclass cls)
 {
     if (cls == nullptr) {
-        signalException(S(java_lang_NullPointerException));
+        Thread::signalException(S(java_lang_NullPointerException));
         return false;
     }
 

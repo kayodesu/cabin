@@ -12,7 +12,7 @@ void initJVM(int argc, char *argv[]);
 
 static void printAllClassLoaders()
 {
-    unordered_set<const Object *> loaders = getAllClassLoaders();
+    const unordered_set<const Object *> &loaders = getAllClassLoaders();
     for (auto x: loaders) {
         if (x == BOOT_CLASS_LOADER)
             cout << "boot class loader" << endl;

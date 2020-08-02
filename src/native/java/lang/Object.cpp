@@ -20,7 +20,7 @@ static jint hashCode(jobject _this)
 static jobject clone(jobject _this)
 {
     if (!_this->clazz->isSubclassOf(loadBootClass(S(java_lang_Cloneable)))) {
-        signalException(S(java_lang_CloneNotSupportedException));
+        Thread::signalException(S(java_lang_CloneNotSupportedException));
         return jnull;
     }
     return _this->clone();

@@ -230,13 +230,12 @@ static slot_t *exec()
 
     jref _this = frame->method->isStatic() ? (jref) clazz : RSLOT(lvars);
 
-#define THROW_EXCEPTION(exception_name, message)  \
-    {                                             \
-        signalException(exception_name, message); \
-        jref eo = exceptionOccured();             \
-        clearException();                         \
-        frame->pushr(eo);                         \
-        goto opc_athrow;                          \
+#define THROW_EXCEPTION(exception_name, message)                    \
+    {                                                               \
+        jref eo = Thread::signalException(exception_name, message); \
+        Thread::clearException();                                   \
+        frame->pushr(eo);                                           \
+        goto opc_athrow;                                            \
     }
 
 #define NULL_POINTER_CHECK(ref)                                          \
@@ -1265,9 +1264,9 @@ opc_invokedynamic: {
             RSLOT(args + 1) = newString(invoked_name);
             RSLOT(args + 2) = invoked_type;
             bm.resolveArgs(&cp, args + 3);
-            jref eo = exceptionOccured();
-            if (eo != jnull) {
-                clearException();
+            if (Thread::checkExceptionOccurred()) {
+                jref eo = Thread::getException();
+                Thread::clearException();
                 frame->pushr(eo);
                 goto opc_athrow;
             }
@@ -1313,16 +1312,11 @@ opc_invokenative: {
 
     assert(frame->method->native_method != nullptr);
 
-    // if (strcmp(frame->method->clazz->className, "java/lang/invoke/MethodHandle") == 0) {
-    //     ((void (*)(Frame *)) frame->method->native_method)(frame);
-    // } else {
-    //     callJNIMethod(frame);
-    // }
     callJNIMethod(frame);
-    jref eo = exceptionOccured();
-    if (eo != jnull) {
+    if (Thread::checkExceptionOccurred()) {
         TRACE("native method throw a exception\n");
-        clearException();
+        jref eo = Thread::getException();
+        Thread::clearException();
         frame->pushr(eo);
         goto opc_athrow;
     }
@@ -1431,10 +1425,9 @@ opc_arraylength: {
 opc_athrow: {
     jref eo = frame->popr(); // exception object
     if (eo == jnull) {
-        signalException(S(java_lang_NullPointerException), nullptr);
-        eo = exceptionOccured();
+        eo = Thread::signalException(S(java_lang_NullPointerException), nullptr);
         assert(eo != nullptr);
-        clearException();
+        Thread::clearException();
     }
 
     // 遍历虚拟机栈找到可以处理此异常的方法
@@ -1457,7 +1450,7 @@ opc_athrow: {
 
         if (frame->vm_invoke) {
             // frame 由虚拟机调用，将异常交由虚拟机处理
-            setException(eo);
+            Thread::setException(eo);
             return nullptr;
         }
 
@@ -1466,7 +1459,7 @@ opc_athrow: {
 
         if (frame->prev == nullptr) {
             // 虚拟机栈已空，还是无法处理异常，交由虚拟机处理
-            setException(eo);
+            Thread::setException(eo);
             return nullptr;
         }
 
@@ -1606,9 +1599,9 @@ slot_t *execJavaFunc(Method *method, const slot_t *args)
     }
 
     slot_t *result = exec();
-    if (exceptionOccured()) {
-        printStackTrace();
-        JVM_EXIT
+    if (Thread::checkExceptionOccurred()) {
+        Thread::printStackTrace();
+        JVM_EXIT // todo
     }
 
     return result;
