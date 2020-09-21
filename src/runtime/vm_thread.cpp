@@ -270,7 +270,7 @@ Array *Thread::dump(int max_depth)
 
 void Thread::setException(Object *exp)
 {
-    assert(exp == nullptr);
+    assert(exp != nullptr);
 
     if (getException() != nullptr) {
         jvm_abort("还有未处理的异常！"); // todo
