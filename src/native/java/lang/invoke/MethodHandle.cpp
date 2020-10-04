@@ -39,6 +39,7 @@ static jobject invokeExact(jobject _this, ...)
 
     if (equals(_this->clazz->class_name, "java/lang/invoke/BoundMethodHandle$Species_L")) {
         // final Object argL0;
+        jvm_abort("invokeExactxxxxxxxxxxxxxxxxxxxx");
     }
 
     jvm_abort("invokeExact");
@@ -98,6 +99,8 @@ static jobject invoke(jobject _this, ...)
     m = member_name->clazz->lookupInstMethod("getInvocationType", "()Ljava/lang/invoke/MethodType;");
     jref method_type = RSLOT(execJavaFunc(m, {member_name}));
     string desc = unparseMethodDescriptor(method_type);
+    // todo 判断desc，如果有基本类型参数，则参数值要进行unbox。
+    
     int num = numElementsInMethodDescriptor(desc.c_str());
     slot_t args[num];
 

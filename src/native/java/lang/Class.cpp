@@ -470,7 +470,7 @@ static jobject getConstantPool(jclass _this)
 static jobjectArray getDeclaredFields0(jclass _this, jboolean public_only)
 {
     Class *cls = _this->jvm_mirror;
-    jint field_count = public_only ? cls->public_field_count : cls->field_count;
+    jint field_count = public_only ? cls->public_field_count : cls->fields.size();
 
     Class *field_class = loadBootClass(S(java_lang_reflect_Field));
     auto field_array = newArray(field_class->arrayClass(), field_count);
@@ -492,12 +492,12 @@ static jobjectArray getDeclaredFields0(jclass _this, jboolean public_only)
                 rslot(_this), // declaring class
                 // name must be interned.
                 // 参见 java/lang/reflect/Field 的说明
-                rslot(g_string_class->intern(cls->fields[i].name)), // name
-                rslot(cls->fields[i].getType()), // type
-                islot(cls->fields[i].access_flags), /* modifiers todo */
-                islot(cls->fields[i].id), /* slot   todo */
+                rslot(g_string_class->intern(cls->fields[i]->name)), // name
+                rslot(cls->fields[i]->getType()), // type
+                islot(cls->fields[i]->access_flags), /* modifiers todo */
+                islot(cls->fields[i]->id), /* slot   todo */
 //                islot(i), /* slot   todo */
-                rslot(cls->fields[i].signature != nullptr ? newString(cls->fields[i].signature) : jnull), /* signature  todo */
+                rslot(cls->fields[i]->signature != nullptr ? newString(cls->fields[i]->signature) : jnull), /* signature  todo */
                 rslot(jnull), /* annotations  todo */
         });
     }

@@ -31,8 +31,7 @@ void Class::calcFieldsId()
         ins_id = super_class->inst_field_count; // todo 父类的私有变量是不是也算在了里面，不过问题不大，浪费点空间吧了
     }
 
-    for (u2 i = 0; i < field_count; i++) {
-        Field *f = fields + i;
+    for (Field *f: fields) {
         if (!f->isStatic()) {
             f->id = ins_id++;
             if (f->category_two)
@@ -450,27 +449,28 @@ Class::Class(Object *loader, u1 *bytecode, size_t len): loader(loader), bytecode
         interfaces.push_back(cp.resolveClass(r.readu2()));
 
     // parse fields
-    field_count = r.readu2();
-    if (field_count > 0) {
-        fields = (Field *) malloc(sizeof(Field) * field_count);
-        auto last_field = field_count - 1;
-        for (u2 i = 0; i < field_count; i++) {
+    u2 fields_count = r.readu2();
+    if (fields_count > 0) {
+        fields.resize(fields_count);
+        auto last_field = fields_count - 1;
+        for (u2 i = 0; i < fields_count; i++) {
+            auto f = new Field(this, r);
             // 保证所有的 public fields 放在前面             
-             if (accIsPublic(r.peeku2()))
-                 new (fields + public_field_count++) Field(this, r);
-             else
-                 new (fields + last_field--) Field(this, r);
+            if (f->isPublic())
+                fields[public_field_count++] = f;
+            else
+                fields[last_field--] = f;
         }
     }
 
     calcFieldsId();
 
     // parse methods
-    u2 method_count = r.readu2();
-    if (method_count > 0) {
-        methods.resize(method_count);
-        auto last_method = method_count - 1;
-        for (u2 i = 0; i < method_count; i++) {
+    u2 methods_count = r.readu2();
+    if (methods_count > 0) {
+        methods.resize(methods_count);
+        auto last_method = methods_count - 1;
+        for (u2 i = 0; i < methods_count; i++) {
             auto m = new Method(this, r);
             // 保证所有的 public methods 放在前面
             if (m->isPublic())
@@ -541,7 +541,6 @@ Class::Class(Object *loader, const char *className)
 
 Class::~Class()
 {
-    free(fields);
     delete[] bytecode;
 
     // todo something else
@@ -639,8 +638,7 @@ Field *Class::lookupInstField(const utf8_t *name, const utf8_t *descriptor)
 
 Field *Class::getDeclaredField(const char *name, const char *descriptor) const
 {
-    for (u2 i = 0; i < field_count; i++) {
-        Field *f = fields + i;
+    for (Field *f: fields) {
         if (utf8::equals(f->name, name) && utf8::equals(f->descriptor, descriptor))
             return f;
     }
@@ -649,8 +647,7 @@ Field *Class::getDeclaredField(const char *name, const char *descriptor) const
 
 Field *Class::getDeclaredInstField(int id, bool ensureExist)
 {
-    for (u2 i = 0; i < field_count; i++) {
-        Field *f = fields + i;
+    for (Field *f: fields) {
         if (!f->isStatic() && f->id == id)
             return f;
     }
@@ -662,6 +659,17 @@ Field *Class::getDeclaredInstField(int id, bool ensureExist)
 
     // not find
     return nullptr;
+}
+
+void Class::injectInstField(const utf8_t *name, const utf8_t *descriptor)
+{
+    assert(name != nullptr && descriptor != nullptr);
+    if (state != LOADED) {
+        jvm_abort("error"); // todo 只能在loade之后 inject Field
+    }
+
+    int access_flags = JVM_ACC_PRIVATE | JVM_ACC_SYNTHETIC;
+    auto f = new Field(this, name, descriptor, access_flags);
 }
 
 Method *Class::getDeclaredMethod(const utf8_t *name, const utf8_t *descriptor, bool ensureExist)

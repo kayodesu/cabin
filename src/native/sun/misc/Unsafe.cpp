@@ -130,8 +130,8 @@ static jlong staticFieldOffset(jobject _this, jobject f)
 
     // private Class<?> clazz;
     Class *c = f->getRefField<ClassObject>("clazz", "Ljava/lang/Class;")->jvm_mirror;    
-    for (int i = 0; i < c->field_count; i++) {
-        Field *field = c->fields + i;
+    for (int i = 0; i < c->fields.size(); i++) {
+        Field *field = c->fields[i];
         if (equals(field->name, name))
             return i;
     }
@@ -186,8 +186,8 @@ static jlong objectFieldOffset1(jobject _this, jclass c, jstring name)
         } else if (co != nullptr) { /* set static filed value */        \
             Class *c = co->jvm_mirror;                                  \
             initClass(c);                                               \
-            assert(0 <= offset && offset < c->field_count);             \
-            Field *f = c->fields + offset;                              \
+            assert(0 <= offset && offset < c->fields.size());           \
+            Field *f = c->fields[offset];                              \
             f->static_value.t = x;                                      \
         } else {                                                        \
             assert(0 <= offset && offset < o->clazz->inst_field_count); \
@@ -206,8 +206,8 @@ static jlong objectFieldOffset1(jobject _this, jclass c, jstring name)
         } else if (co != nullptr) { /* get static filed value */         \
             Class *c = co->jvm_mirror;                                  \
             initClass(c);                                               \
-            assert(0 <= offset && offset < c->field_count);             \
-            Field *f = c->fields + offset;                              \
+            assert(0 <= offset && offset < c->fields.size());           \
+            Field *f = c->fields[offset];                              \
             return f->static_value.t;                                   \
         } else {                                                        \
             assert(0 <= offset && offset < o->clazz->inst_field_count); \
@@ -459,8 +459,8 @@ static jobject getObjectVolatile(jobject _this, jobject o, jlong offset)
         return ao->get<jobject>(offset);
     } else if (co != nullptr) {
         Class *c = co->jvm_mirror;
-        assert(0 <= offset && offset < c->field_count);
-        Field *f = c->fields + offset;
+        assert(0 <= offset && offset < c->fields.size());
+        Field *f = c->fields[offset];
         return f->static_value.r;
     } else {
         assert(0 <= offset && offset < o->clazz->inst_field_count);

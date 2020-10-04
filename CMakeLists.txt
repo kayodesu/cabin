@@ -45,7 +45,7 @@ add_library(libyovm STATIC
         src/metadata/method.cpp src/metadata/field.cpp src/metadata/constant_pool.cpp src/native/jni.cpp
         src/objects/array_object.cpp src/objects/string_object.cpp 
         src/objects/class_loader.cpp src/objects/prims.cpp src/objects/mh.cpp
-        src/objects/object.cpp src/metadata/class.cpp src/objects/class_object.cpp)
+        src/objects/object.cpp src/metadata/class.cpp src/objects/class_object.cpp src/objects/java_classes.cpp src/objects/java_classes.h)
 
 add_executable(yovm src/main.cpp)
 

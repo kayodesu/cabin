@@ -5,9 +5,12 @@
 #ifndef YOVM_JAVA_CLASSES_H
 #define YOVM_JAVA_CLASSES_H
 
+class Field;
 
-class java_classes {
-
+class java_lang_invoke_MemberName {
+    static Field *vmindex;
+public:
+    void init();
 };
 
 

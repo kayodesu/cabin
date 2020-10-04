@@ -89,13 +89,12 @@ static void reachabilityAnalysis()
             Class *c = x.second;
 
             // 1. 分析类静态属性引用的对象
-            for (int i = 0; i < c->field_count; i++) {
-                Field &f = c->fields[i];
-                if (!f.isStatic() || f.isPrim())
+            for (Field *f: c->fields) {
+                if (!f->isStatic() || f->isPrim())
                     continue;
 
                 // static and reference field of a class
-                jref o = f.static_value.r;
+                jref o = f->static_value.r;
                 o->accessible = 1;
                 analysisReachableObject(o);
             }

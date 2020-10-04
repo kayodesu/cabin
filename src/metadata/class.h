@@ -85,8 +85,9 @@ public:
      *
      * todo 接口中的变量怎么处理
      */
-    Field *fields = nullptr;
-    u2 field_count = 0;        // declared field count
+    // Field *fields = nullptr;
+    // u2 field_count = 0;        // declared field count
+    std::vector<Field *> fields;    
     u2 public_field_count = 0; // declared public field count
 
     // instFieldsCount 有可能大于 fieldsCount，因为 instFieldsCount 包含了继承过来的 field.
@@ -216,6 +217,8 @@ public:
     Field *lookupField(const char *name, const char *descriptor);
     Field *lookupStaticField(const char *name, const char *descriptor);
     Field *lookupInstField(const char *name, const char *descriptor);
+
+    void injectInstField(const utf8_t *name, const utf8_t *descriptor);
 
     Field *getDeclaredField(const char *name, const char *descriptor) const;
     Field *getDeclaredInstField(int id, bool ensureExist = true);

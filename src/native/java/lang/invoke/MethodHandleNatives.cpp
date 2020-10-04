@@ -315,6 +315,15 @@ static jobject staticFieldBase(jobject self)
 // static native Object getMemberVMInfo(MemberName self);  // returns {vmindex,vmtarget}
 static jobject getMemberVMInfo(jobject self)
 {
+    /*
+     * return Object[2];
+     *
+     * 使用实例：
+     *  Object vminfo = MethodHandleNatives.getMemberVMInfo(this); // this is a MemberName
+        assert(vminfo instanceof Object[]);
+        long vmindex = (Long) ((Object[])vminfo)[0];
+        Object vmtarget = ((Object[])vminfo)[1];
+     */
     jvm_abort("getMemberVMInfo");
 }
 

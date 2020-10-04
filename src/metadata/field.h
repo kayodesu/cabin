@@ -54,6 +54,14 @@ public:
 public:
     Field(Class *c, BytecodeReader &r);
 
+    Field(Class *clazz, const utf8_t *name, const utf8_t *descriptor, int access_flags)
+            : clazz(clazz), name(name), descriptor(descriptor), access_flags(access_flags)
+    {
+        assert(clazz != nullptr);
+        assert(name != nullptr);
+        assert(descriptor != nullptr);
+    }
+
     ClassObject *getType();
 
     bool isPrim() const;
