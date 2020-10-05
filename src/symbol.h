@@ -155,6 +155,7 @@ extern const char *symbol_values[];
     action(java_lang_ClassLoader, "java/lang/ClassLoader"), \
     action(java_lang_reflect_Field, "java/lang/reflect/Field"), \
     action(java_lang_invoke_MethodHandle, "java/lang/invoke/MethodHandle"), \
+    action(java_lang_invoke_MemberName, "java/lang/invoke/MemberName"), \
     action(java_lang_invoke_MethodHandleNatives, "java/lang/invoke/MethodHandleNatives"), \
     action(java_lang_invoke_VarHandle, "java/lang/invoke/VarHandle"), \
     action(java_lang_reflect_Executable, "java/lang/reflect/Executable"), \

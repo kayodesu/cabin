@@ -670,6 +670,8 @@ void Class::injectInstField(const utf8_t *name, const utf8_t *descriptor)
 
     int access_flags = JVM_ACC_PRIVATE | JVM_ACC_SYNTHETIC;
     auto f = new Field(this, name, descriptor, access_flags);
+    fields.push_back(f);
+    inst_field_count++;
 }
 
 Method *Class::getDeclaredMethod(const utf8_t *name, const utf8_t *descriptor, bool ensureExist)

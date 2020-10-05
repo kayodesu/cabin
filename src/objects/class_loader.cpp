@@ -16,6 +16,7 @@
 #include "../interpreter/interpreter.h"
 #include "../runtime/vm_thread.h"
 #include "prims.h"
+#include "java_classes.h"
 
 using namespace std;
 using namespace utf8;
@@ -160,8 +161,9 @@ Class *loadBootClass(const utf8_t *name)
     }
 
     if (c != nullptr) {
-        boot_packages.insert(c->pkg_name);
-        addClassToClassLoader(BOOT_CLASS_LOADER, c);
+        boot_packages.insert(c->pkg_name);        
+        checkInjectedFields(c);
+        addClassToClassLoader(BOOT_CLASS_LOADER, c);        
     }
     return c;
 }

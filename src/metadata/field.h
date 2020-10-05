@@ -60,6 +60,7 @@ public:
         assert(clazz != nullptr);
         assert(name != nullptr);
         assert(descriptor != nullptr);
+        category_two = (descriptor[0] == 'J' || descriptor[0]== 'D');
     }
 
     ClassObject *getType();
