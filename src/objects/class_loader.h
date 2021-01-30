@@ -6,6 +6,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include "../util/encoding.h"
+#include "../classfile/constants.h"
 
 class Object;
 class Class;
@@ -33,6 +34,8 @@ static inline Class *loadArrayClass(const utf8_t *arr_class_name)
     assert(arr_class_name[0] == '['); // must be array class name
     return loadArrayClass(g_system_class_loader, arr_class_name);
 };
+
+Class *loadTypeArrayClass(ArrayType type);
 
 using utf8_set = std::unordered_set<const utf8_t *, utf8::Hash, utf8::Comparator>;
 

@@ -54,7 +54,7 @@ Thread *initMainThread()
     initClass(thread_class);
 
     Class *thread_group_class = loadBootClass(S(java_lang_ThreadGroup));
-    g_sys_thread_group = newObject(thread_group_class);
+    g_sys_thread_group = thread_group_class->allocObject();
 
     // 初始化 system_thread_group
     // java/lang/ThreadGroup 的无参数构造函数主要用来：
@@ -110,7 +110,7 @@ Thread::Thread(Object *tobj0, jint priority): tobj(tobj0)
     tid = this_thread::get_id();
 
     if (tobj == nullptr)
-        tobj = newObject(thread_class);
+        tobj = thread_class->allocObject();
 
     tobj->setLongField(eetop_field, (jlong) this);
     tobj->setIntField(S(priority), S(I), priority);
@@ -227,7 +227,7 @@ jref Thread::to_java_lang_management_ThreadInfo(jbool locked_monitors, jbool loc
 
     Class *c = loadBootClass("java/lang/management/ThreadInfo");
     c->clinit();
-    jref thread_info = newObject(c);
+    jref thread_info = c->allocObject();
     // private String threadName;
     thread_info->setRefField("threadName", "Ljava/lang/String;", name);
     // private long threadId;
@@ -248,10 +248,10 @@ Array *Thread::dump(int max_depth)
     // public StackTraceElement(String declaringClass, String methodName, String fileName, int lineNumber);
     Method *constructor = c->getConstructor("(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V");
 
-    Array *arr = newArray(loadArrayClass(S(array_java_lang_StackTraceElement)), size);
+    Array *arr = loadArrayClass(S(array_java_lang_StackTraceElement))->allocArray(size);
     for (size_t i = 0; i < size; i++) {
         Frame *f = vec[i];
-        jref o = newObject(c);
+        jref o = c->allocObject();
         execJavaFunc(constructor, { rslot(o),
                                     rslot(newString(f->method->clazz->class_name)),
                                     rslot(newString(f->method->name)),
@@ -307,7 +307,7 @@ jref Thread::signalException(const char *excep_name, const char *message)
     assert(ec != nullptr); // todo
 
     initClass(ec);
-    jref exp = newObject(ec);
+    jref exp = ec->allocObject();
     if (message == nullptr) {
         execJavaFunc(ec->getConstructor("()V"), {exp});
     } else {

@@ -22,7 +22,7 @@ static jobjectArray getSystemPackages0()
     utf8_set &packages = getBootPackages();
     auto size = packages.size();
 
-    auto ao = newArray(loadArrayClass(S(array_java_lang_String)), size);
+    auto ao = loadArrayClass(S(array_java_lang_String))->allocArray(size);
     auto p = (Object **) ao->data;
     for (auto pkg : packages) {
         *p++ = newString(pkg);

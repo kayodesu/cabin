@@ -45,7 +45,7 @@ public:
 
     Class *clazz;
 
-    static Object *newObject(Class *c);
+//    static Object *newObject(Class *c);
 
     virtual size_t size() const;
 
@@ -129,12 +129,14 @@ public:
     std::unordered_map<const utf8_t *, Class *, utf8::Hash, utf8::Comparator> *classes = nullptr;
 
     virtual std::string toString() const;
+
+    friend class Class;
 };
 
-static inline Object *newObject(Class *c)
-{
-    return Object::newObject(c);
-}
+//static inline Object *newObject(Class *c)
+//{
+//    return Object::newObject(c);
+//}
 
 
 #endif //CABIN_OBJECT_H

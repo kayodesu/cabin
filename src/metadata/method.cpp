@@ -61,7 +61,7 @@ Array *Method::getExceptionTypes()
         }
 
         auto ac = loadClass(clazz->loader, S(array_java_lang_Class));
-        exception_types = newArray(ac, count);
+        exception_types = ac->allocArray(count);
         for (int i = 0; i < count; i++)
             exception_types->setRef(i, types[i]->java_mirror);
     }

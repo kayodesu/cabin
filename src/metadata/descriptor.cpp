@@ -101,7 +101,7 @@ int numElementsInMethodDescriptor(const char *method_descriptor)
 static Array *convertDesc2ClassObjectArray(char *b, char *e, jref loader)
 {
     int num = numElementsInDescriptor(b, e);
-    Array *types = newArray(loadArrayClass(S(array_java_lang_Class)), num);
+    Array *types = loadArrayClass(S(array_java_lang_Class))->allocArray(num);
 
     for (int i = 0; b < e; i++) {
         ClassObject *co = convertDescElement2ClassObject(b, e, loader);

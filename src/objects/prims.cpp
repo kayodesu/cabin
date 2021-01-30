@@ -112,7 +112,7 @@ const slot_t *primObjUnbox(const Object *box)
 jref voidBox()
 {
     Class *c = loadBootClass(S(java_lang_Void));
-    return newObject(c);
+    return c->allocObject();
 }
 
 jref byteBox(jbyte x)

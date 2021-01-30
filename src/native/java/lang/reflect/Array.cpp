@@ -155,7 +155,7 @@ static jobject __newArray(jclass componentType, jint length)
         Thread::signalException(S(java_lang_NegativeArraySizeException));
         return nullptr;
     }
-    return newArray(componentType->jvm_mirror->arrayClass(), length);
+    return componentType->jvm_mirror->arrayClass()->allocArray(length);
 }
 
 static JNINativeMethod methods[] = {

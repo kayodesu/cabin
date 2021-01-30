@@ -188,6 +188,27 @@ Class *loadArrayClass(Object *loader, const utf8_t *arr_class_name)
     return arr_class;
 }
 
+Class *loadTypeArrayClass(ArrayType type)
+{
+    const char *arr_class_name;
+
+    switch (type) {
+        case JVM_AT_BOOLEAN: arr_class_name = S(array_Z); break;
+        case JVM_AT_CHAR:    arr_class_name = S(array_C); break;
+        case JVM_AT_FLOAT:   arr_class_name = S(array_F); break;
+        case JVM_AT_DOUBLE:  arr_class_name = S(array_D); break;
+        case JVM_AT_BYTE:    arr_class_name = S(array_B); break;
+        case JVM_AT_SHORT:   arr_class_name = S(array_S); break;
+        case JVM_AT_INT:     arr_class_name = S(array_I); break;
+        case JVM_AT_LONG:    arr_class_name = S(array_J); break;
+        default:
+            Thread::signalException(S(java_lang_UnknownError), NEW_MSG("Invalid array type: %d\n", type));
+            return nullptr;
+    }
+
+    return loadArrayClass(arr_class_name);
+}
+
 const utf8_t *getBootPackage(const utf8_t *name)
 {
     auto iter = boot_packages.find(name);
@@ -309,7 +330,7 @@ void initClassLoader()
     // 在 g_class_class 创建完成之前创建的 Class 都没有设置 java_mirror 字段，现在设置下。
     for (auto iter: boot_classes) {
         Class *c = iter.second;
-        c->java_mirror = generateClassObject(c);
+        c->generateClassObject();
     }
 
     g_string_class = loadBootClass(S(java_lang_String));

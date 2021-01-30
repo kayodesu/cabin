@@ -470,7 +470,7 @@ int main(int argc, char* argv[])
     TRACE("begin to execute main function.\n");
 
     // Create the String array holding the command line args
-    Array *args = newArray(loadArrayClass(S(array_java_lang_String)), main_func_args_count);
+    Array *args = loadArrayClass(S(array_java_lang_String))->allocArray(main_func_args_count);
     for (int i = 0; i < main_func_args_count; i++) {
         args->setRef(i, newString(main_func_args[i]));
     }

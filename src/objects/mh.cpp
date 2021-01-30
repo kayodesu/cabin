@@ -100,7 +100,7 @@ jref member_name::memberName(Method *m, jbyte refKind)
     Class *mn = loadBootClass("java/lang/invoke/MemberName");
     // public MemberName(Class<?> defClass, String name, MethodType type, byte refKind);
     auto cons = mn->getConstructor("(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/invoke/MethodType;B)V");
-    jref o = newObject(mn);
+    jref o = mn->allocObject();
     jref mt = findMethodType(m->descriptor, m->clazz->loader);
     execJavaFunc(cons, { rslot(o), rslot(m->clazz->java_mirror), rslot(newString(m->name)),
                          rslot(mt), islot(refKind) });

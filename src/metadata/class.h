@@ -210,6 +210,17 @@ public:
                or (c != nullptr and loader == c->loader and utf8::equals(class_name, c->class_name));
     }
 
+    size_t objectSize() const;      // for non array class
+
+    Object *allocObject(); // alloc non array object
+    Array *allocArray(jint arr_len);
+    Array *allocMultiArray(jint dim, const jint lens[]);
+
+    size_t objectSize(jint arrLen); // for array class
+
+    // Generate the class object of this (aka. java_mirror field).
+    void generateClassObject();
+
     Field *lookupField(const char *name, const char *descriptor);
     Field *lookupStaticField(const char *name, const char *descriptor);
     Field *lookupInstField(const char *name, const char *descriptor);

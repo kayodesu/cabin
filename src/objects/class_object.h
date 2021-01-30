@@ -16,10 +16,9 @@ public:
     Class *jvm_mirror;
     
     virtual Object *clone() const;
+//    virtual size_t size() const;
 
-    friend ClassObject *generateClassObject(Class *c);
+    friend class Class;
 };
-
-ClassObject *generateClassObject(Class *c);
 
 #endif // CABIN_CLASS_OBJECT_H

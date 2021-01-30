@@ -78,7 +78,7 @@ static jobject newInstance0(jobject c, jobjectArray args)
     auto co = c->getRefField<ClassObject>(S(clazz), S(sig_java_lang_Class));
     Class *clazz = co->jvm_mirror;
     initClass(clazz);
-    Object *obj = newObject(clazz);
+    Object *obj = clazz->allocObject();
 
     if (args == nullptr) { // 构造函数没有参数
         Method *constructor = clazz->getConstructor("()V");

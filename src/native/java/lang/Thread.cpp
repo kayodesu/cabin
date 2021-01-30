@@ -139,7 +139,7 @@ static jboolean holdsLock(jobject obj)
 static jobjectArray dumpThreads(jobjectArray threads)
 {
     size_t len = threads->size();
-    Array *result = newArray(loadArrayClass("[[java/lang/StackTraceElement"), len);
+    Array *result = loadArrayClass("[[java/lang/StackTraceElement")->allocArray(len);
 
     for (size_t i = 0; i < len; i++) {
         auto jThread = threads->get<jobject>(i);
@@ -155,7 +155,7 @@ static jobjectArray dumpThreads(jobjectArray threads)
 static jobjectArray getThreads()
 {
     size_t size = g_all_threads.size();
-    Array *threads = newArray(loadArrayClass(S(array_java_lang_Thread)), size);
+    Array *threads = loadArrayClass(S(array_java_lang_Thread))->allocArray(size);
 
     for (size_t i = 0; i < size; i++) {
         threads->setRef(i, g_all_threads[i]->tobj);

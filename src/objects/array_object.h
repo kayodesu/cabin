@@ -13,8 +13,8 @@ class Array: public Object {
 public:
     jsize len; // 数组的长度
 
-    static Array *newArray(Class *ac, jint arrLen);
-    static Array *newMultiArray(Class *ac, jint dim, const jint lens[]);
+//    static Array *newArray(Class *ac, jint arrLen);
+//    static Array *newMultiArray(Class *ac, jint dim, const jint lens[]);
 
     bool isArrayObject() const override { return true; }
     bool isPrimArray() const;
@@ -73,20 +73,22 @@ public:
     size_t size() const override;
     Array *clone() const override;
     std::string toString() const override;
+
+    friend class Class;
 };
 
 
-static inline Array *newArray(Class *ac, jint arrLen)
-{
-    return Array::newArray(ac, arrLen);
-}
-
-Array *newTypeArray(ArrayType type, jint arr_len);
-
-static inline Array *newMultiArray(Class *ac, jint dim, const jint lens[])
-{
-    return Array::newMultiArray(ac, dim, lens);
-}
+//static inline Array *newArray(Class *ac, jint arrLen)
+//{
+//    return Array::newArray(ac, arrLen);
+//}
+//
+//Array *newTypeArray(ArrayType type, jint arr_len);
+//
+//static inline Array *newMultiArray(Class *ac, jint dim, const jint lens[])
+//{
+//    return Array::newMultiArray(ac, dim, lens);
+//}
 
 /*
  * [[[I -> int

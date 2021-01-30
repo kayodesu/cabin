@@ -1362,7 +1362,7 @@ opc_new: {
     // if (strcmp(o->clazz->className, "java/lang/invoke/MemberName") == 0)
     //     printvm("%s\n", o->toString().c_str()); /////////////////////////////////////////////////////////////
     // frame->pushr(o);
-    frame->pushr(newObject(c));
+    frame->pushr(c->allocObject());
     DISPATCH
 }
 opc_newarray: {
@@ -1374,7 +1374,8 @@ opc_newarray: {
     }
 
     auto arr_type = reader->readu1();
-    frame->pushr(newTypeArray(ArrayType(arr_type), arr_len));
+    Class *c = loadTypeArrayClass(static_cast<ArrayType>(arr_type));
+    frame->pushr(c->allocArray(arr_len));
     DISPATCH
 }
 opc_anewarray: {
@@ -1386,7 +1387,7 @@ opc_anewarray: {
 
     index = reader->readu2();
     Class *ac = cp->resolveClass(index)->arrayClass();
-    frame->pushr(newArray(ac, arr_len));
+    frame->pushr(ac->allocArray(arr_len));
     DISPATCH
 }
 opc_multianewarray: {
@@ -1407,7 +1408,7 @@ opc_multianewarray: {
             THROW_EXCEPTION(S(java_lang_NegativeArraySizeException), nullptr);
         }
     }
-    frame->pushr(newMultiArray(ac, dim, lens));
+    frame->pushr(ac->allocMultiArray(dim, lens));
     DISPATCH
 }           
 opc_arraylength: {

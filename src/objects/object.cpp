@@ -18,11 +18,13 @@ Object::Object(Class *c): clazz(c)
     data = (slot_t *) (this + 1);
 }
 
-Object *Object::newObject(Class *c)
-{
-    size_t size = sizeof(Object) + c->inst_fields_count * sizeof(slot_t);
-    return new (g_heap->alloc(size)) Object(c);
-}
+//Object *Object::newObject(Class *c)
+//{
+//    assert(c != nullptr);
+////    size_t size = sizeof(Object) + c->inst_fields_count * sizeof(slot_t);
+////    return new (g_heap->alloc(size)) Object(c);
+//    return new (g_heap->alloc(c->objectSize())) Object(c);
+//}
 
 Field *Object::lookupField(const char *name, const char *descriptor)
 {

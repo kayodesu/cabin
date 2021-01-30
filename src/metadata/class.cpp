@@ -487,7 +487,7 @@ Class::Class(Object *loader, u1 *bytecode, size_t len): loader(loader), bytecode
     generateIndepInterfaces();
 
     if (g_class_class != nullptr) {
-        java_mirror = generateClassObject(this);
+        generateClassObject();
     }
 
     state = LOADED;
@@ -508,7 +508,7 @@ Class::Class(const char *className)
     generateIndepInterfaces();
 
     if (g_class_class != nullptr) {
-        java_mirror = generateClassObject(this);
+        generateClassObject();
     }
 
     state = LOADED;
@@ -532,7 +532,7 @@ Class::Class(Object *loader, const char *className)
     generateIndepInterfaces();
 
     if (g_class_class != nullptr) {
-        java_mirror = generateClassObject(this);
+        generateClassObject();
     }
 
     state = LOADED;
@@ -574,6 +574,54 @@ void Class::clinit()
 
     inited = true;
     state = INITED;
+}
+
+size_t Class::objectSize() const
+{
+    assert(!isArrayClass());
+    return sizeof(Object) + inst_fields_count*sizeof(slot_t);
+}
+
+Object *Class::allocObject()
+{
+    assert(!isArrayClass());
+    size_t size = objectSize();
+    return new (g_heap->alloc(size)) Object(this);
+}
+
+Array *Class::allocArray(jint arr_len)
+{
+    assert(isArrayClass());
+//    size_t size = sizeof(Array) + ac->getEleSize()*arrLen;
+    return new (g_heap->alloc(objectSize(arr_len))) Array(this, arr_len);
+}
+
+Array *Class::allocMultiArray(jint dim, const jint lens[])
+{
+    assert(dim >= 1);
+    assert(isArrayClass());
+
+//    size_t size = sizeof(Array) + ac->getEleSize()*lens[0];
+    return new (g_heap->alloc(objectSize(lens[0]))) Array(this, dim, lens);
+}
+
+
+
+size_t Class::objectSize(jint arrLen)
+{
+    assert(isArrayClass());
+    return sizeof(Array) + getEleSize()*arrLen;
+}
+
+void Class::generateClassObject()
+{
+    if (java_mirror == nullptr) {
+        assert(g_class_class != nullptr);
+        static size_t size = sizeof(ClassObject) + g_class_class->inst_fields_count * sizeof(slot_t);
+        // Class Object不在堆上分配，因为此对象无需gc。
+        java_mirror = new(calloc(1, size)) ClassObject(this);
+    }
+    assert(java_mirror != nullptr);
 }
 
 Field *Class::lookupField(const utf8_t *name, const utf8_t *descriptor)

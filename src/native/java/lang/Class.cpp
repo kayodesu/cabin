@@ -318,7 +318,7 @@ static jclass getSuperclass(jclass _this)
 static jobjectArray getInterfaces0(jclass _this)
 {
     Class *c = _this->jvm_mirror;
-    auto interfaces = newArray(loadArrayClass(S(array_java_lang_Class)), c->interfaces.size());
+    auto interfaces = loadArrayClass(S(array_java_lang_Class))->allocArray(c->interfaces.size());
     for (size_t i = 0; i < c->interfaces.size(); i++) {
         assert(c->interfaces[i] != nullptr);
         interfaces->setRef(i, c->interfaces[i]->java_mirror);
@@ -412,7 +412,7 @@ static jobjectArray getEnclosingMethod0(jclass _this)
         return nullptr;
     }
 
-    auto result = newArray(loadArrayClass(S(array_java_lang_Object)), 3);
+    auto result = loadArrayClass(S(array_java_lang_Object))->allocArray(3);
     result->setRef(0, c->enclosing.clazz->java_mirror);
     result->setRef(1, c->enclosing.name);
     result->setRef(2, c->enclosing.descriptor);
@@ -457,7 +457,7 @@ static jbyteArray getRawTypeAnnotations(jclass _this)
 static jobject getConstantPool(jclass _this)
 {
     Class *cp_class = loadBootClass("sun/reflect/ConstantPool");
-    jobject cp = newObject(cp_class);
+    jobject cp = cp_class->allocObject();
     cp->setRefField("constantPoolOop", "Ljava/lang/Object;", (jobject) &_this->jvm_mirror->cp); // todo 应该传递一个正在的 Object *
     return cp;
 }
@@ -469,7 +469,7 @@ static jobjectArray getDeclaredFields0(jclass _this, jboolean public_only)
     jint field_count = public_only ? cls->public_fields_count : cls->fields.size();
 
     Class *field_class = loadBootClass(S(java_lang_reflect_Field));
-    auto field_array = newArray(field_class->arrayClass(), field_count);
+    auto field_array = field_class->arrayClass()->allocArray(field_count);
 
     /*
      * Field(Class<?> declaringClass, String name, Class<?> type,
@@ -480,7 +480,7 @@ static jobjectArray getDeclaredFields0(jclass _this, jboolean public_only)
 
     // invoke constructor of class java/lang/reflect/Field
     for (int i = 0; i < field_count; i++) {
-        Object *o = newObject(field_class);
+        Object *o = field_class->allocObject();
         field_array->setRef(i, o);
 
         execJavaFunc(constructor, {
@@ -533,7 +533,7 @@ static jobjectArray getDeclaredMethods0(jclass _this, jboolean public_only)
         if (method->isClassInit() || method->isObjectInit()) {
             continue;
         }
-        Object *o = newObject(method_class);
+        Object *o = method_class->allocObject();
         methods.push_back(o);
 
         execJavaFunc(constructor, {
@@ -554,7 +554,7 @@ static jobjectArray getDeclaredMethods0(jclass _this, jboolean public_only)
         });
     }
         
-    Array *method_array = newArray(method_class->arrayClass(), methods.size());
+    Array *method_array = method_class->arrayClass()->allocArray(methods.size());
     for (size_t i = 0; i < methods.size(); i++) {
         method_array->setRef(i, methods[i]);
     }
@@ -570,7 +570,7 @@ static jobjectArray getDeclaredConstructors0(jclass _this, jboolean public_only)
     int constructor_count = constructors.size();
 
     Class *constructor_class = loadBootClass("java/lang/reflect/Constructor");
-    auto constructor_array = newArray(constructor_class->arrayClass(), constructor_count);
+    auto constructor_array = constructor_class->arrayClass()->allocArray(constructor_count);
 
     /*
      * Constructor(Class<T> declaringClass, Class<?>[] parameterTypes,
@@ -583,7 +583,7 @@ static jobjectArray getDeclaredConstructors0(jclass _this, jboolean public_only)
     // invoke constructor of class java/lang/reflect/Constructor
     for (int i = 0; i < constructor_count; i++) {
         auto constructor = constructors[i];
-        Object *o = newObject(constructor_class);
+        Object *o = constructor_class->allocObject();
         constructor_array->setRef(i, o);
 
         execJavaFunc(constructor_constructor, {
