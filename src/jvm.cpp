@@ -10,7 +10,7 @@
 #include "metadata/method.h"
 #include "objects/array_object.h"
 #include "interpreter/interpreter.h"
-#include "memory/heap.h"
+#include "heap/heap.h"
 #include "platform/sysinfo.h"
 #include "objects/mh.h"
 

@@ -1,5 +1,5 @@
-#ifndef JVM_SYSINFO_H
-#define JVM_SYSINFO_H
+#ifndef CABIN_SYSINFO_H
+#define CABIN_SYSINFO_H
 
 int processorNumber();
 
@@ -17,4 +17,4 @@ const char *getLineSeparator();
 
 std::string getTimeZone();
 
-#endif
+#endif // CABIN_SYSINFO_H

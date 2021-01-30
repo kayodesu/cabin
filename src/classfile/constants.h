@@ -1,6 +1,5 @@
-
-#ifndef CLASSFILE_CONSTANTS_H
-#define CLASSFILE_CONSTANTS_H
+#ifndef CABIN_CONSTANTS_H
+#define CABIN_CONSTANTS_H
 
 #include <cstdint>
 
@@ -667,4 +666,4 @@ enum {
    5    /* jsr_w */                     \
 }
 
-#endif /* CLASSFILE_CONSTANTS */
+#endif // CABIN_CONSTANTS_H

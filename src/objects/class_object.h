@@ -1,5 +1,5 @@
-#ifndef JVM_CLASS_OBJECT_H
-#define JVM_CLASS_OBJECT_H
+#ifndef CABIN_CLASS_OBJECT_H
+#define CABIN_CLASS_OBJECT_H
 
 #include "object.h"
 
@@ -22,4 +22,4 @@ public:
 
 ClassObject *generateClassObject(Class *c);
 
-#endif // JVM_CLASS_OBJECT_H
+#endif // CABIN_CLASS_OBJECT_H

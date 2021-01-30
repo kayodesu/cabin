@@ -11,7 +11,7 @@ add_library(libcabin STATIC
         src/interpreter/interpreter.cpp src/metadata/descriptor.cpp
         src/util/encoding.cpp src/util/convert.cpp src/classfile/attributes.cpp
         src/runtime/frame.cpp src/runtime/vm_thread.cpp src/runtime/monitor.cpp
-        src/memory/heap.cpp src/memory/gc.cpp
+        src/heap/heap.cpp src/heap/gc.cpp
         src/native/java/io/FileDescriptor.cpp src/native/java/io/FileInputStream.cpp
         src/native/java/io/FileOutputStream.cpp src/native/java/lang/Class.cpp
         src/native/java/lang/Double.cpp src/native/java/lang/Float.cpp

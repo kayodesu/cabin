@@ -1,5 +1,5 @@
-#ifndef JVM_ENDIANNESS_H
-#define JVM_ENDIANNESS_H
+#ifndef CABIN_ENDIANNESS_H
+#define CABIN_ENDIANNESS_H
 
 /*
  * 大端(big endian):低地址存放高字节
@@ -97,4 +97,4 @@ static inline T changeToBigEndian(T x)
     return ENDIANNESS == 'b' ? x : swapEndian(x);
 }
 
-#endif //JVM_ENDIANNESS_H
+#endif //CABIN_ENDIANNESS_H

@@ -1,5 +1,5 @@
-#ifndef KAYO_STRING_OBJECT_H
-#define KAYO_STRING_OBJECT_H
+#ifndef CABIN_STRING_OBJECT_H
+#define CABIN_STRING_OBJECT_H
 
 #include "object.h"
 
@@ -19,4 +19,4 @@ struct StrObjHash {
     size_t operator()(Object *x) const;
 };
 
-#endif //KAYO_STRING_OBJECT_H
+#endif //CABIN_STRING_OBJECT_H

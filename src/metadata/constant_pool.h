@@ -1,9 +1,5 @@
-/*
- * Author: Yo Ka
- */
-
-#ifndef KAYO_CONSTANT_POOL_H
-#define KAYO_CONSTANT_POOL_H
+#ifndef CABIN_CONSTANT_POOL_H
+#define CABIN_CONSTANT_POOL_H
 
 #include <cassert>
 #include <mutex>
@@ -348,4 +344,4 @@ public:
 };
 
 
-#endif //KAYO_CONSTANT_POOL_H
+#endif //CABIN_CONSTANT_POOL_H

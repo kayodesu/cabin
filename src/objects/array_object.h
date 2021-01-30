@@ -1,5 +1,5 @@
-#ifndef KAYO_ARRAY_OBJECT_H
-#define KAYO_ARRAY_OBJECT_H
+#ifndef CABIN_ARRAY_OBJECT_H
+#define CABIN_ARRAY_OBJECT_H
 
 #include <string>
 #include "object.h"
@@ -94,4 +94,4 @@ static inline Array *newMultiArray(Class *ac, jint dim, const jint lens[])
  */
 std::string arrClassName2EleClassName(const utf8_t *arr_class_name);
 
-#endif //KAYO_ARRAY_OBJECT_H
+#endif //CABIN_ARRAY_OBJECT_H

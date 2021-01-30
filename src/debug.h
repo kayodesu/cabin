@@ -1,5 +1,5 @@
-#ifndef JVM_DEBUG_H
-#define JVM_DEBUG_H
+#ifndef CABIN_DEBUG_H
+#define CABIN_DEBUG_H
 
 /*
  * print trace or not
@@ -12,4 +12,4 @@
 
 #define PRINT_TRACE printvm
 
-#endif //JVM_DEBUG_H
+#endif //CABIN_DEBUG_H

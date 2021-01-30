@@ -1,5 +1,5 @@
-#ifndef JVM_PRIM_H
-#define JVM_PRIM_H
+#ifndef CABIN_PRIM_H
+#define CABIN_PRIM_H
 
 #include "../jvmstd.h"
 #include "../slot.h"
@@ -22,4 +22,4 @@ jref floatBox(jfloat x);
 jref longBox(jlong x);
 jref doubleBox(jdouble x);
 
-#endif // JVM_PRIM_H
+#endif // CABIN_PRIM_H

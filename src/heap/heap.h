@@ -1,5 +1,5 @@
-#ifndef JVM_HEAP_H
-#define JVM_HEAP_H
+#ifndef CABIN_HEAP_H
+#define CABIN_HEAP_H
 
 #include <cstddef>
 #include <cstdint>
@@ -61,4 +61,4 @@ public:
     friend void gc();
 };
 
-#endif //JVM_HEAP_H
+#endif //CABIN_HEAP_H

@@ -1,5 +1,5 @@
-#ifndef JVM_CONFIG_H
-#define JVM_CONFIG_H
+#ifndef CABIN_CONFIG_H
+#define CABIN_CONFIG_H
 
 // jvm 最大支持的classfile版本
 #define JVM_MUST_SUPPORT_CLASSFILE_MAJOR_VERSION 57
@@ -11,4 +11,4 @@
 // every thread has a vm stack
 #define VM_STACK_SIZE (128*1024)     // 128Kb
 
-#endif //JVM_CONFIG_H
+#endif //CABIN_CONFIG_H

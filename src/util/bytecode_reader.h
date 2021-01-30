@@ -1,5 +1,5 @@
-#ifndef JVM_BYTECODE_READER_H
-#define JVM_BYTECODE_READER_H
+#ifndef CABIN_BYTECODE_READER_H
+#define CABIN_BYTECODE_READER_H
 
 #include <cassert>
 #include <cstring>
@@ -153,4 +153,4 @@ public:
     }
 };
 
-#endif //JVM_BYTECODE_READER_H
+#endif // CABIN_BYTECODE_READER_H

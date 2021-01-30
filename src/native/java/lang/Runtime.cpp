@@ -1,7 +1,7 @@
 #include "../../jni_inner.h"
 #include "../../../jvmstd.h"
 #include "../../../config.h"
-#include "../../../memory/heap.h"
+#include "../../../heap/heap.h"
 #include "../../../platform/sysinfo.h"
 
 // public native int availableProcessors();

@@ -1,6 +1,5 @@
-#ifndef JVM_SYMBOL_H
-#define JVM_SYMBOL_H
-
+#ifndef CABIN_SYMBOL_H
+#define CABIN_SYMBOL_H
 
 extern const char *symbol_values[];
 #define SYMBOL_NAME_ENUM(name) symbol_##name
@@ -281,4 +280,4 @@ enum {
 
 void initSymbol();
 
-#endif //JVM_SYMBOL_H
+#endif //CABIN_SYMBOL_H

@@ -1,5 +1,5 @@
-#ifndef JVM_JCLASS_H
-#define JVM_JCLASS_H
+#ifndef CABIN_CLASS_H
+#define CABIN_CLASS_H
 
 #include <string>
 #include <vector>
@@ -16,7 +16,7 @@
 #include "../util/bytecode_reader.h"
 #include "../classfile/attributes.h"
 #include "../classfile/constants.h"
-#include "../memory/heap.h"
+#include "../heap/heap.h"
 
 class Method;
 class Field;
@@ -356,4 +356,4 @@ public:
     friend Class *loadArrayClass(Object *loader, const utf8_t *arr_class_name);
 };
 
-#endif //JVM_JCLASS_H
+#endif //CABIN_CLASS_H

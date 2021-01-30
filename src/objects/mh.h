@@ -1,5 +1,5 @@
-#ifndef YOVM_MH_H
-#define YOVM_MH_H
+#ifndef CABIN_MH_H
+#define CABIN_MH_H
 
 #include "../jvmstd.h"
 
@@ -45,4 +45,4 @@ namespace method_handles {
     jref getCaller();
 }
 
-#endif //YOVM_MH_H
+#endif //CABIN_MH_H

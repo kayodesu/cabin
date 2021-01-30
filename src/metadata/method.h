@@ -1,5 +1,5 @@
-#ifndef KAYO_METHOD_H
-#define KAYO_METHOD_H
+#ifndef CABIN_METHOD_H
+#define CABIN_METHOD_H
 
 #include <vector>
 #include "../classfile/attributes.h"
@@ -176,4 +176,4 @@ public:
 };
 
 
-#endif //KAYO_METHOD_H
+#endif //CABIN_METHOD_H

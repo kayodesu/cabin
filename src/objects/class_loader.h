@@ -1,5 +1,5 @@
-#ifndef KAYOVM_CLASS_LOADER_H
-#define KAYOVM_CLASS_LOADER_H
+#ifndef CABIN_CLASS_LOADER_H
+#define CABIN_CLASS_LOADER_H
 
 #include <cassert>
 #include <cstring>
@@ -90,4 +90,4 @@ const std::unordered_set<const Object *> &getAllClassLoaders();
 void printBootLoadedClasses();
 void printClassLoader(Object *class_loader);
 
-#endif //KAYOVM_CLASS_LOADER_H
+#endif // CABIN_CLASS_LOADER_H

@@ -1,5 +1,5 @@
-#ifndef JVM_JOBJECT_H
-#define JVM_JOBJECT_H
+#ifndef CABIN_OBJECT_H
+#define CABIN_OBJECT_H
 
 #include <cassert>
 #include <mutex>
@@ -137,4 +137,4 @@ static inline Object *newObject(Class *c)
 }
 
 
-#endif //JVM_JOBJECT_H
+#endif //CABIN_OBJECT_H

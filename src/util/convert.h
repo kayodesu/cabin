@@ -1,5 +1,5 @@
-#ifndef JVM_CONVERT_H
-#define JVM_CONVERT_H
+#ifndef CABIN_CONVERT_H
+#define CABIN_CONVERT_H
 
 #include "../jvmstd.h"
 
@@ -35,4 +35,4 @@ jint float_to_raw_int_bits(jfloat f);
 
 jlong double_to_raw_long_bits(jdouble d);
 
-#endif //JVM_CONVERT_H
+#endif // CABIN_CONVERT_H

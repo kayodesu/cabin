@@ -1,5 +1,5 @@
-#ifndef JVM_ATTRIBUTE_H
-#define JVM_ATTRIBUTE_H
+#ifndef CABIN_ATTRIBUTE_H
+#define CABIN_ATTRIBUTE_H
 
 #include <vector>
 #include "../jvmstd.h"
@@ -195,4 +195,4 @@ struct Module {
     explicit Module(ConstantPool &cp, BytecodeReader &r);
 };
 
-#endif //JVM_ATTRIBUTE_H
+#endif //CABIN_ATTRIBUTE_H

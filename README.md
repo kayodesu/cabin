@@ -1,4 +1,4 @@
-# yovm
+# Cabin VM
 An experimental JVM written in C++.
 
 ## Development environment
@@ -26,11 +26,11 @@ Ensure your Java version is Java8, and already set `JAVA_HOME` environment varia
 One command-line option:
 * -cp path: set class path.
 ```
-C:\>yovm HelloWorld -cp D:\Code\yovm\test-classes\out\production\test-classes
+C:\>cabin HelloWorld -cp D:\Code\yovm\test-classes\out\production\test-classes
 ```
 or, using CLASS_PATH environment variable.
 ```
-C:\>yovm HelloWorld
+C:\>cabin HelloWorld
 ```
 
 ## Test Cases [70/111(63.06%) Passed]

@@ -1,5 +1,5 @@
-#ifndef JVM_INTERPRETER_H
-#define JVM_INTERPRETER_H
+#ifndef CABIN_INTERPRETER_H
+#define CABIN_INTERPRETER_H
 
 #include <initializer_list>
 #include <cstdarg>
@@ -25,4 +25,4 @@ slot_t *execJavaFunc(Method *m, std::initializer_list<jref> args);
 slot_t *execJavaFunc(Method *m, jref _this, Array *args);
 
 
-#endif //JVM_INTERPRETER_H
+#endif //CABIN_INTERPRETER_H

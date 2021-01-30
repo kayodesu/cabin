@@ -1,5 +1,5 @@
-#ifndef KAYO_FIELD_H
-#define KAYO_FIELD_H
+#ifndef CABIN_FIELD_H
+#define CABIN_FIELD_H
 
 #include <vector>
 #include "../classfile/attributes.h"
@@ -78,4 +78,4 @@ public:
 };
 
 
-#endif //KAYO_FIELD_H
+#endif //CABIN_FIELD_H

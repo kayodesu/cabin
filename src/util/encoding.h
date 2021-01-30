@@ -1,5 +1,5 @@
-#ifndef KAYOVM_ENCODING_H
-#define KAYOVM_ENCODING_H
+#ifndef CABIN_ENCODING_H
+#define CABIN_ENCODING_H
 
 #include <cstdint>
 #include <cstddef>
@@ -60,4 +60,4 @@ namespace unicode {
     utf8_t *toUtf8(const unicode_t *unicode, size_t len);
 }
 
-#endif //KAYOVM_ENCODING_H
+#endif //CABIN_ENCODING_H

@@ -1,5 +1,5 @@
-#ifndef YOVM_DESCRIPTOR_H
-#define YOVM_DESCRIPTOR_H
+#ifndef CABIN_DESCRIPTOR_H
+#define CABIN_DESCRIPTOR_H
 
 #include "../jvmstd.h"
 
@@ -21,4 +21,4 @@ std::string unparseMethodDescriptor(Array *ptypes /* ClassObject *[] */, ClassOb
 // @method_type: Object of java.lang.invoke.MethodType
 std::string unparseMethodDescriptor(jref method_type);
 
-#endif //YOVM_DESCRIPTOR_H
+#endif //CABINDESCRIPTOR_H

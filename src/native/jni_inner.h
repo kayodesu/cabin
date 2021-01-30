@@ -1,5 +1,5 @@
-#ifndef KAYO_JNI_INNER_H
-#define KAYO_JNI_INNER_H
+#ifndef CABIN_JNI_INNER_H
+#define CABIN_JNI_INNER_H
 
 #include "../jvmstd.h"
 
@@ -56,4 +56,4 @@ struct JNINativeMethod {
 void registerNatives(const char *class_name, JNINativeMethod *methods, int methods_count);
 
 
-#endif //KAYO_JNI_INNER_H
+#endif //CABIN_JNI_INNER_H
