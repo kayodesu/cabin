@@ -1,4 +1,4 @@
-#include "../../jni_inner.h"
+#include "../../jni_internal.h"
 
 // static native void copyFromShortArray(Object src, long srcPos, long dstAddr, long length);
 static void copyFromShortArray(jobject _this, jobject src, jlong srcPos, jlong dstAddr, jlong length)

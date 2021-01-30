@@ -1,4 +1,4 @@
-#include "../../jni_inner.h"
+#include "../../jni_internal.h"
 #include "../../../metadata/class.h"
 
 // public native String intern();

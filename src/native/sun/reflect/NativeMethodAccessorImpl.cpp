@@ -1,6 +1,6 @@
 #include <cassert>
-#include "../../jni_inner.h"
-#include "../../../jvmstd.h"
+#include "../../jni_internal.h"
+#include "../../../cabin.h"
 #include "../../../objects/object.h"
 #include "../../../objects/array_object.h"
 #include "../../../metadata/class.h"

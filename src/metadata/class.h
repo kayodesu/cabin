@@ -7,7 +7,7 @@
 #include <cstring>
 #include <unordered_set>
 #include <mutex>
-#include "../jvmstd.h"
+#include "../cabin.h"
 #include "constant_pool.h"
 #include "../objects/class_loader.h"
 #include "../objects/object.h"

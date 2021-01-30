@@ -7,7 +7,7 @@
 #include "../../../interpreter/interpreter.h"
 #include "../../../runtime/frame.h"
 #include "../../../runtime/vm_thread.h"
-#include "../../jni_inner.h"
+#include "../../jni_internal.h"
 
 using namespace std;
 using namespace utf8;
@@ -681,28 +681,26 @@ static jobjectArray getNestMembers0(jclass _this)
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "getPrimitiveClass", "(Ljava/lang/String;)Ljava/lang/Class;", (void *) getPrimitiveClass },
-        { "getName0", "()Ljava/lang/String;", (void *) getName0 },  
-        { "initClassName", "()Ljava/lang/String;", (void *) initClassName },  
-        { "getSimpleBinaryName0", "()Ljava/lang/String;", (void *) getSimpleBinaryName0 },  
-        { "forName0",
-        "(Ljava/lang/String;ZLjava/lang/ClassLoader;Ljava/lang/Class;)Ljava/lang/Class;",
-          (void *) forName0 },
-        { "desiredAssertionStatus0", "(Ljava/lang/Class;)Z", (void *) desiredAssertionStatus0 },
+        { "getPrimitiveClass", _STR_ CLS, (void *) getPrimitiveClass },
+        { "getName0", __STR, (void *) getName0 },
+        { "initClassName", __STR, (void *) initClassName },
+        { "getSimpleBinaryName0", __STR, (void *) getSimpleBinaryName0 },
+        { "forName0", _STR "ZLjava/lang/ClassLoader;" CLS_ CLS, (void *) forName0 },
+        { "desiredAssertionStatus0", _CLS_ "Z", (void *) desiredAssertionStatus0 },
 
-        { "isInstance", "(Ljava/lang/Object;)Z", (void *) isInstance },
-        { "isAssignableFrom", "(Ljava/lang/Class;)Z", (void *) isAssignableFrom },
+        { "isInstance", _OBJ_ "Z", (void *) isInstance },
+        { "isAssignableFrom", _CLS_ "Z", (void *) isAssignableFrom },
         { "isInterface", "()Z", (void *) isInterface },
         { "isArray", "()Z", (void *) isArray },
         { "isPrimitive", "()Z", (void *) isPrimitive },
 
-        { "getSuperclass", "()" CLS, (void *) getSuperclass },
+        { "getSuperclass", __CLS, (void *) getSuperclass },
         { "getInterfaces0", "()[Ljava/lang/Class;", (void *) getInterfaces0 },
-        { "getComponentType", "()Ljava/lang/Class;", (void *) getComponentType },
+        { "getComponentType", __CLS, (void *) getComponentType },
         { "getModifiers", "()I", (void *) getModifiers },
         { "getEnclosingMethod0", "()[Ljava/lang/Object;", (void *) getEnclosingMethod0 },
-        { "getDeclaringClass0", "()" CLS, (void *) getDeclaringClass0 },
-        { "getGenericSignature0", "()" STR, (void *) getGenericSignature0 },
+        { "getDeclaringClass0", __CLS, (void *) getDeclaringClass0 },
+        { "getGenericSignature0", __STR, (void *) getGenericSignature0 },
         { "getProtectionDomain0", "()Ljava/security/ProtectionDomain;", (void *) getProtectionDomain0 },
         { "getConstantPool", "()Lsun/reflect/ConstantPool;", (void *) getConstantPool },
 
@@ -719,7 +717,7 @@ static JNINativeMethod methods[] = {
 
         { "getRecordComponents0", "()[Ljava/lang/reflect/RecordComponent;", (void *) getRecordComponents0 },
         { "isRecord0", "()Z", (void *) isRecord0 },
-        { "getNestHost0", "()Ljava/lang/Class;", (void *) getNestHost0 },
+        { "getNestHost0", __CLS, (void *) getNestHost0 },
         { "getNestMembers0", "()[Ljava/lang/Class;", (void *) getNestMembers0 },
 };
 

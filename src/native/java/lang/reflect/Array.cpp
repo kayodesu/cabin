@@ -1,4 +1,4 @@
-#include "../../../jni_inner.h"
+#include "../../../jni_internal.h"
 #include "../../../../objects/array_object.h"
 #include "../../../../objects/prims.h"
 #include "../../../../metadata/class.h"
@@ -160,7 +160,7 @@ static jobject __newArray(jclass componentType, jint length)
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "get", "(Ljava/lang/Object;I)Ljava/lang/Object;", (void *) get },
+        { "get", "(Ljava/lang/Object;I)" OBJ, (void *) get },
         { "set", "(Ljava/lang/Object;ILjava/lang/Object;)V", (void *) set },
         { "getLength", "(Ljava/lang/Object;)I", (void *) getLength },
         { "newArray", "(Ljava/lang/Class;I)" OBJ, (void *) __newArray },

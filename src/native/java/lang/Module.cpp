@@ -1,4 +1,4 @@
-#include "../../jni_inner.h"
+#include "../../jni_internal.h"
 
 // JVM_DefineModule
 // private static native void defineModule0(
@@ -41,15 +41,19 @@ static void addExportsToAllUnnamed0(jobject from, jstring pn)
     jvm_abort("not implement");
 }
 
+#undef _M
+#define _M "(Ljava/lang/Module;"
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "defineModule0", "(Ljava/lang/Module;Z" STR STR "[Ljava/lang/String;)V", (void *) defineModule0 },
-        { "addReads0", "(Ljava/lang/Module;Ljava/lang/Module;)V", (void *) addReads0 },
-        { "addExports0", "(Ljava/lang/Module;Ljava/lang/String;Ljava/lang/Module;)V", (void *) addExports0 },
-        { "addExportsToAll0", "(Ljava/lang/Module;Ljava/lang/String;)V", (void *) addExportsToAll0 },
-        { "addExportsToAllUnnamed0", "(Ljava/lang/Module;Ljava/lang/String;)V", (void *) addExportsToAllUnnamed0 },
+        { "defineModule0", _M "Z" STR STR "[" STR_ "V", (void *) defineModule0 },
+        { "addReads0", _M "Ljava/lang/Module;)V", (void *) addReads0 },
+        { "addExports0", _M STR "Ljava/lang/Module;)V", (void *) addExports0 },
+        { "addExportsToAll0", _M STR_ "V", (void *) addExportsToAll0 },
+        { "addExportsToAllUnnamed0", _M STR_ "V", (void *) addExportsToAllUnnamed0 },
 };
+
+#undef _M
 
 void java_lang_Module_registerNatives()
 {

@@ -1,6 +1,6 @@
 #include <cassert>
 #include "../../../../symbol.h"
-#include "../../../jni_inner.h"
+#include "../../../jni_internal.h"
 #include "../../../../objects/class_loader.h"
 #include "../../../../metadata/class.h"
 #include "../../../../metadata/method.h"

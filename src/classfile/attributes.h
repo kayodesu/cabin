@@ -2,7 +2,7 @@
 #define CABIN_ATTRIBUTE_H
 
 #include <vector>
-#include "../jvmstd.h"
+#include "../cabin.h"
 #include "../slot.h"
 #include "../util/bytecode_reader.h"
 

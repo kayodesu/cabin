@@ -1,7 +1,7 @@
 #ifndef CABIN_DESCRIPTOR_H
 #define CABIN_DESCRIPTOR_H
 
-#include "../jvmstd.h"
+#include "../cabin.h"
 
 class ClassObject;
 class Array;

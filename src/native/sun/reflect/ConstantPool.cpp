@@ -1,4 +1,4 @@
-#include "../../jni_inner.h"
+#include "../../jni_internal.h"
 #include "../../../metadata/constant_pool.h"
 #include "../../../metadata/class.h"
 

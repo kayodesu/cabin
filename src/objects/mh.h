@@ -1,7 +1,7 @@
 #ifndef CABIN_MH_H
 #define CABIN_MH_H
 
-#include "../jvmstd.h"
+#include "../cabin.h"
 
 /*
  * MethodHandle 相关的操作函数

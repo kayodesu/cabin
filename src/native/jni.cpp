@@ -1,5 +1,5 @@
 #include <vector>
-#include "jni_inner.h"
+#include "jni_internal.h"
 #include "../runtime/vm_thread.h"
 
 using namespace std;
@@ -79,7 +79,7 @@ void initJNI()
     R(java_util_zip_ZipFile_registerNatives);
 
     R(jdk_internal_misc_VM_registerNatives);
-#undef R    
+#undef R
 }
 
 static vector<tuple<const char * /* class name */, JNINativeMethod *, int /* methods count */>> native_methods;

@@ -1,7 +1,7 @@
 #ifndef CABIN_CONVERT_H
 #define CABIN_CONVERT_H
 
-#include "../jvmstd.h"
+#include "../cabin.h"
 
 /*
  * 将字节数组转换为32位整形.

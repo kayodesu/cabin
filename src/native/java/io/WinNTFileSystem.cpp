@@ -1,7 +1,7 @@
 #include <fstream>
 #include <filesystem>
 #include <sys/stat.h>
-#include "../../jni_inner.h"
+#include "../../jni_internal.h"
 #include "../../../runtime/frame.h"
 #include "../../../objects/object.h"
 
@@ -179,15 +179,15 @@ static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
         { "initIDs", "()V", (void *) initIDs },
         { "getDriveDirectory", "(I)" STR, (void *) getDriveDirectory },
-        { "canonicalize0", "(Ljava/lang/String;)" STR, (void *) canonicalize0 },
-        { "canonicalizeWithPrefix0", "(" STR STR ")" STR, (void *) canonicalizeWithPrefix0 },
+        { "canonicalize0", _STR_ STR, (void *) canonicalize0 },
+        { "canonicalizeWithPrefix0", _STR STR_ STR, (void *) canonicalizeWithPrefix0 },
         { "getBooleanAttributes", "(Ljava/io/File;)I", (void *) getBooleanAttributes },
         { "checkAccess", "(Ljava/io/File;I)Z", (void *) checkAccess },
         { "getLastModifiedTime", "(Ljava/io/File;)J", (void *) getLastModifiedTime },
         { "getLength", "(Ljava/io/File;)J", (void *) getLength },
         { "setPermission", "(Ljava/io/File;IZZ)Z", (void *) setPermission },
-        { "createFileExclusively", "(Ljava/lang/String;)Z", (void *) createFileExclusively },
-        { "list", "(Ljava/io/File;)[Ljava/lang/String;", (void *) list },
+        { "createFileExclusively", _STR_ "Z", (void *) createFileExclusively },
+        { "list", "(Ljava/io/File;)[" STR, (void *) list },
         { "createDirectory", "(Ljava/io/File;)Z", (void *) createDirectory },
         { "setLastModifiedTime", "(Ljava/io/File;J)Z", (void *) setLastModifiedTime },
         { "setReadOnly", "(Ljava/io/File;)Z", (void *) setReadOnly },
@@ -195,7 +195,7 @@ static JNINativeMethod methods[] = {
         { "rename0", "(Ljava/io/File;Ljava/io/File;)Z", (void *) rename0 },
         { "listRoots0", "()I", (void *) listRoots0 },
         { "getSpace0", "(Ljava/io/File;I)J", (void *) getSpace0 },
-        { "getNameMax0", "(Ljava/lang/String;)I", (void *) getNameMax0 },
+        { "getNameMax0", _STR_ "I", (void *) getNameMax0 },
 };
 
 void java_io_WinNTFileSystem_registerNatives()

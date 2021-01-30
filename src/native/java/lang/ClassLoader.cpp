@@ -1,4 +1,4 @@
-#include "../../jni_inner.h"
+#include "../../jni_internal.h"
 #include "../../../objects/class_loader.h"
 #include "../../../metadata/class.h"
 #include "../../../objects/class_object.h"
@@ -90,6 +90,8 @@ static JNINativeMethod methods[] = {
         { "findBuiltinLib", _STR_ STR, (void *) findBuiltinLib },
         { "retrieveDirectives", "()Ljava/lang/AssertionStatusDirectives;", (void *) retrieveDirectives },
 };
+
+#undef PD
 
 void java_lang_ClassLoader_registerNatives()
 {

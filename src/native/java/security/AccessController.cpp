@@ -1,4 +1,4 @@
-#include "../../jni_inner.h"
+#include "../../jni_internal.h"
 #include "../../../symbol.h"
 #include "../../../slot.h"
 #include "../../../metadata/method.h"
@@ -74,6 +74,8 @@ static JNINativeMethod methods[] = {
         { "doPrivileged", "(Ljava/security/PrivilegedExceptionAction;)" OBJ, (void *) doPrivileged2 },
         { "doPrivileged", "(Ljava/security/PrivilegedExceptionAction;" ACC ")" OBJ, (void *) doPrivileged3 },
 };
+
+#undef ACC
 
 void java_security_AccessController_registerNatives()
 {

@@ -1,4 +1,4 @@
-#include "../../jni_inner.h"
+#include "../../jni_internal.h"
 
 // private static native NetworkInterface[] getAll() throws SocketException;
 static jobjectArray getAll()

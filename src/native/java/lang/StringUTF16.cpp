@@ -1,4 +1,4 @@
-#include "../../jni_inner.h"
+#include "../../jni_internal.h"
 #include "../../../util/endianness.h"
 
 // private static native boolean isBigEndian();

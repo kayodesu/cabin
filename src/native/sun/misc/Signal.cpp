@@ -1,4 +1,4 @@
-#include "../../jni_inner.h"
+#include "../../jni_internal.h"
 
 // private static native int findSignal(String string);
 static jint findSignal(jstring string)

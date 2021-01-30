@@ -1,6 +1,6 @@
 #include <vector>
 #include "gc.h"
-#include "../jvmstd.h"
+#include "../cabin.h"
 #include "heap.h"
 #include "../runtime/vm_thread.h"
 #include "../runtime/frame.h"

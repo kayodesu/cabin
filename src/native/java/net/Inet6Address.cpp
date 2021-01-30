@@ -1,4 +1,4 @@
-#include "../../jni_inner.h"
+#include "../../jni_internal.h"
 
 // Perform class load-time initializations.
 // private static native void init();

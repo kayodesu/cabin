@@ -1,6 +1,6 @@
-#include "../../jni_inner.h"
+#include "../../jni_internal.h"
 #include "../../../symbol.h"
-#include "../../../jvmstd.h"
+#include "../../../cabin.h"
 #include "../../../objects/object.h"
 #include "../../../runtime/vm_thread.h"
 

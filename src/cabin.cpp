@@ -3,7 +3,7 @@
 #include <filesystem>
 #include <fstream>
 #include <thread>
-#include "jvmstd.h"
+#include "cabin.h"
 #include "debug.h"
 #include "runtime/vm_thread.h"
 #include "metadata/class.h"
@@ -39,6 +39,8 @@ Object *g_sys_thread_group;
 
 vector<Thread *> g_all_threads;
 
+static void showUsage(const char *name);
+static void showVersionAndCopyright();
 
 static void *gcLoop(void *arg)
 {
@@ -85,9 +87,6 @@ u2 g_classfile_manor_version = 0;
 
 static char bootstrap_classpath[PATH_MAX] = { 0 };
 char classpath[PATH_MAX] = { 0 };
-
-static void showUsage(const char *name);
-static void showVersionAndCopyright();
 
 static void parseCommandLine(int argc, char *argv[])
 {
@@ -342,58 +341,6 @@ void initJVM(int argc, char *argv[])
 
 Object *g_system_class_loader;
 
-int runJVM(int argc, char* argv[])
-{
-    time_t time1;
-    time(&time1);
-
-    initJVM(argc, argv);
-    TRACE("init jvm is over.\n");
-
-    if (main_class_name[0] == 0) {  // empty  todo
-        jvm_abort("no input file\n");
-    }
-
-    Class *main_class = loadClass(g_system_class_loader, dot2Slash(main_class_name));
-    assert(main_class != nullptr);
-
-    Method *main_method = main_class->lookupStaticMethod(S(main), S(_array_java_lang_String__V));
-    if (main_method == nullptr) {
-        // java_lang_NoSuchMethodError, "main" todo
-        jvm_abort("can't find method main."); // todo
-    } else {
-        if (!main_method->isPublic()) {
-            jvm_abort("method main must be public."); // todo
-        }
-        if (!main_method->isStatic()) {
-            jvm_abort("method main must be static."); // todo
-        }
-    }
-
-    createVMThread(gcLoop, GC_THREAD_NAME); // gc thread
-
-    // 开始在主线程中执行 main 方法
-    TRACE("begin to execute main function.\n");
-
-    // Create the String array holding the command line args
-    Array *args = newArray(loadArrayClass(S(array_java_lang_String)), main_func_args_count);
-    for (int i = 0; i < main_func_args_count; i++) {
-        args->setRef(i, newString(main_func_args[i]));
-    }
-    // Call the main method
-    execJavaFunc(main_method, {args});
-
-    // todo 如果有其他的非后台线程在执行，则main线程需要在此wait
-
-    // todo main_thread 退出，做一些清理工作。
-
-    time_t time2;
-    time(&time2);
-
-    printf("run jvm: %lds\n", ((long)(time2)) - ((long)(time1)));
-    return 0;
-}
-
 static void showUsage(const char *name)
 {
 //    printf("Usage: %s [-options] class [arg1 arg2 ...]\n", name);
@@ -467,3 +414,346 @@ static void showVersionAndCopyright()
     //   printf("\nBoot Library Path: %s\n", classlibDefaultBootDllPath());  // todo
     //   printf("Boot Class Path: %s\n", classlibDefaultBootClassPath());  // todo
 }
+
+
+/*
+ * 测试模块开关。
+ * 最多只能有一个开启，需要测试哪个模块开启哪个开关。
+ * 全部关闭表示关闭测试，运行JVM。
+ */
+
+#define TEST_SLOT              0
+#define TEST_CLASS_LOADER      0
+#define TEST_LOAD_CLASS        0
+#define TEST_CLONE_OBJECT      0
+#define TEST_PROPERTIES        0
+#define TEST_SYSTEM_INFO       0
+#define TEST_METHOD_TYPE       0
+#define TEST_METHOD_DESCRIPTOR 0
+
+#if !(TEST_SLOT || TEST_CLASS_LOADER || TEST_LOAD_CLASS \
+        || TEST_CLONE_OBJECT || TEST_PROPERTIES || TEST_SYSTEM_INFO \
+        || TEST_METHOD_TYPE || TEST_METHOD_DESCRIPTOR)
+int main(int argc, char* argv[])
+{
+    time_t time1;
+    time(&time1);
+
+    initJVM(argc, argv);
+    TRACE("init jvm is over.\n");
+
+    if (main_class_name[0] == 0) {  // empty  todo
+        JVM_PANIC("no input file\n");
+    }
+
+    Class *main_class = loadClass(g_system_class_loader, dot2Slash(main_class_name));
+    if (main_class == nullptr) {
+        JVM_PANIC("main_class == nullptr"); // todo
+    }
+
+    Method *main_method = main_class->lookupStaticMethod(S(main), S(_array_java_lang_String__V));
+    if (main_method == nullptr) {
+        // java_lang_NoSuchMethodError, "main" todo
+        JVM_PANIC("can't find method main."); // todo
+    } else {
+        if (!main_method->isPublic()) {
+            JVM_PANIC("method main must be public."); // todo
+        }
+        if (!main_method->isStatic()) {
+            JVM_PANIC("method main must be static."); // todo
+        }
+    }
+
+    createVMThread(gcLoop, GC_THREAD_NAME); // gc thread
+
+    // 开始在主线程中执行 main 方法
+    TRACE("begin to execute main function.\n");
+
+    // Create the String array holding the command line args
+    Array *args = newArray(loadArrayClass(S(array_java_lang_String)), main_func_args_count);
+    for (int i = 0; i < main_func_args_count; i++) {
+        args->setRef(i, newString(main_func_args[i]));
+    }
+    // Call the main method
+    execJavaFunc(main_method, {args});
+
+    // todo 如果有其他的非后台线程在执行，则main线程需要在此wait
+
+    // todo main_thread 退出，做一些清理工作。
+
+    time_t time2;
+    time(&time2);
+
+    printf("run jvm: %lds\n", ((long)(time2)) - ((long)(time1)));
+    return 0;
+}
+#endif
+
+#if (TEST_SLOT)
+union Slot {
+public:
+    int32_t i;
+    float f;
+    void *p;
+    int64_t j; // jlong
+    double d;
+
+    Slot() = default;
+    Slot(int i) {this->i = i;}
+    void setInt(int v) { i = v; }
+    int getInt() const { return i; }
+};
+
+int main()
+{
+    cout << sizeof(short) << endl;
+    cout << sizeof(int) << endl;
+    cout << sizeof(long) << endl;
+    cout << sizeof(float) << endl;
+    cout << sizeof(void *) << endl;
+    cout << sizeof(int64_t) << endl;
+    cout << sizeof(double) << endl;
+
+    cout << sizeof(Slot) << endl;
+    Slot slot(8);
+    slot.setInt(1000);
+    cout << slot.getInt() << endl;
+
+
+    cout << &slot << endl << &(slot.i) << endl;
+}
+#endif
+
+#if (TEST_CLASS_LOADER)
+static void printAllClassLoaders()
+{
+    const unordered_set<const Object *> &loaders = getAllClassLoaders();
+    for (auto x: loaders) {
+        if (x == BOOT_CLASS_LOADER)
+            cout << "boot class loader" << endl;
+        else
+            cout << x->clazz->class_name << endl;
+    }
+}
+
+int main(int argc, char *argv[])
+{
+    initJVM(argc, argv);
+
+    printAllClassLoaders();
+    cout << "---------------" << endl;
+
+    Object *scl = getSystemClassLoader();
+    loadClass(scl, "HelloWorld");
+
+    printAllClassLoaders();
+}
+#endif
+
+#if (TEST_LOAD_CLASS)
+static void printClass(Class *c)
+{
+    cout << "---------------" << endl;
+    cout << c->class_name << ", ";
+    cout << c->java_mirror->jvm_mirror->class_name << ", ";
+    cout << (c == c->java_mirror->jvm_mirror) << endl;
+}
+
+int main(int argc, char *argv[])
+{
+    initJVM(argc, argv);
+
+//    printBootLoadedClasses();
+    printClass(loadBootClass("boolean"));
+    printClass(loadClass(getSystemClassLoader(), "HelloWorld"));
+}
+#endif
+
+#if (TEST_CLONE_OBJECT)
+#define LEN 20
+
+static void testCloneIntArray()
+{
+    cout << "-------------------" << endl;
+
+    Array *x = newArray(loadArrayClass("[I"), LEN);
+    for (int i = 0; i < LEN; ++i) {
+        x->setInt(i, i);
+    }
+
+    auto x0 = (Array *) x->clone();
+    for (int i = 0; i < LEN; ++i) {
+        x0->setInt(i, i + 100);
+    }
+
+    cout << x << ", " << x->len << endl;
+    for (int i = 0; i < LEN; ++i) {
+        cout << x->get<jint>(i);
+        if (i == LEN - 1)
+            cout << "." << endl;
+        else
+            cout << ", ";
+    }
+
+    cout << x0 << ", " << x0->len << endl;
+    for (int i = 0; i < LEN; ++i) {
+        cout << x0->get<jint>(i);
+        if (i == LEN - 1)
+            cout << "." << endl;
+        else
+            cout << ", ";
+    }
+}
+
+static void testCloneStringArray()
+{
+    cout << "-------------------" << endl;
+
+    Array *x = newArray(loadArrayClass("[Ljava/lang/String;"), LEN);
+    for (int i = 0; i < LEN; ++i) {
+        ostringstream oss;
+        oss << i;
+        x->setRef(i, newString(oss.str().c_str()));
+    }
+
+    auto x0 = (Array *) x->clone();
+    for (int i = 0; i < LEN; ++i) {
+        ostringstream oss;
+        oss << i + 100;
+        x0->setRef(i, newString(oss.str().c_str()));
+    }
+
+    cout << x << ", " << x->len << endl;
+    for (int i = 0; i < LEN; ++i) {
+        cout << x->get<Object *>(i)->toUtf8();
+        if (i == LEN - 1)
+            cout << "." << endl;
+        else
+            cout << ", ";
+    }
+
+    cout << x0 << ", " << x0->len << endl;
+    for (int i = 0; i < LEN; ++i) {
+        cout << x0->get<Object *>(i)->toUtf8();
+        if (i == LEN - 1)
+            cout << "." << endl;
+        else
+            cout << ", ";
+    }
+}
+
+int main(int argc, char *argv[])
+{
+    initJVM(argc, argv);
+
+    testCloneIntArray();
+    testCloneStringArray();
+
+    return 0;
+}
+#endif
+
+#if (TEST_PROPERTIES)
+int main()
+{
+    initProperties();
+
+    for (auto &x: g_properties) {
+        cout << x.first << ": " << x.second << endl;
+    }
+}
+#endif
+
+#if (TEST_SYSTEM_INFO)
+int main()
+{
+    cout << "processor number: " << processorNumber() << endl;
+    cout << "page size: " << pageSize() << endl;
+    cout << "os name: " << osName() << endl;
+    cout << "os arch: " << osArch() << endl;
+    cout << "time zone: " << getTimeZone() << endl;
+}
+#endif
+
+#if (TEST_METHOD_DESCRIPTOR || TEST_METHOD_TYPE)
+// Some method descriptors for testing.
+static const char *method_descriptors[] = {
+        "()V",
+        "(I)V",
+        "(B)C",
+        "(Ljava/lang/Integer;)V",
+        "(Ljava/lang/Object;[[BLjava/lang/Integer;[Ljava/lang/Object;)V",
+        "(II[Ljava/lang/String;)Ljava/lang/Integer;",
+        "([Ljava/io/File;)Ljava/lang/Object;",
+        "([[[Ljava/lang/Double;)[[Ljava/lang/Object;",
+        "(ZBSIJFD)[[Ljava/lang/String;",
+        "(ZZZZZZZZZZZZZZZZ)Z",
+};
+#endif
+
+#if (TEST_METHOD_DESCRIPTOR)
+#include "metadata/descriptor.h"
+
+int main(int argc, char *argv[])
+{
+    initJVM(argc, argv);
+
+    jref scl = getSystemClassLoader();
+
+    for (auto &d : method_descriptors) {
+        cout << d << endl;
+        cout << numElementsInDescriptor(d + 1, strchr(d, ')')) << " | ";
+        pair<Array *, ClassObject *> p = parseMethodDescriptor((char *) d, scl);
+        assert(p.first != nullptr);
+        assert(p.second != nullptr);
+        for (int i = 0; i < p.first->len; i++) {
+            auto co = p.first->get<ClassObject *>(i);
+            cout << co->jvm_mirror->class_name;
+            if (i < p.first->len - 1)
+                cout << ", ";
+            else
+                cout << " | ";
+        }
+        cout << p.second->jvm_mirror->class_name << endl;
+
+        cout << "--- unparse ---" << unparseMethodDescriptor(p.first, p.second) << endl << endl;
+    }
+
+    cout << "---------" << endl;
+    cout << unparseMethodDescriptor(nullptr, nullptr) << endl;
+}
+#endif
+
+#if (TEST_METHOD_TYPE)
+#include "metadata/descriptor.h"
+
+static void printMT(jref mt)
+{
+    auto ptypes = mt->getRefField<Array>("ptypes", S(array_java_lang_Class)); // Class<?>[]
+    for (int i = 0; i < ptypes->len; ++i) {
+        auto t = ptypes->get<ClassObject *>(i);
+        cout << t->jvm_mirror->class_name;
+        if (i < ptypes->len - 1)
+            cout << ", ";
+        else
+            cout << endl;
+    }
+}
+
+int main(int argc, char *argv[])
+{
+    initJVM(argc, argv);
+
+    for (auto &d : method_descriptors) {
+        cout << "--------------- " << endl << d << endl;
+        jref mt = findMethodType(d, g_system_class_loader);
+        printMT(mt);
+
+        string desc = unparseMethodDescriptor(mt);
+        cout << desc.c_str() << endl;
+
+        if (strcmp(d, desc.c_str()) != 0)
+            throw runtime_error("error");
+    }
+}
+#endif

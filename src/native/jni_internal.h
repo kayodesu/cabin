@@ -1,7 +1,7 @@
-#ifndef CABIN_JNI_INNER_H
-#define CABIN_JNI_INNER_H
+#ifndef CABIN_JNI_INTERNAL_H
+#define CABIN_JNI_INTERNAL_H
 
-#include "../jvmstd.h"
+#include "../cabin.h"
 
 /*
  * NOTICE:
@@ -26,18 +26,23 @@ typedef jarray       jfloatArray;
 typedef jarray       jdoubleArray;
 typedef jarray       jobjectArray;
 
-
-#define OBJ "Ljava/lang/Object;"
+#define OBJ   "Ljava/lang/Object;"
+#define _OBJ  "(Ljava/lang/Object;"
+#define OBJ_  "Ljava/lang/Object;)"
 #define _OBJ_ "(Ljava/lang/Object;)"
-#define _OBJ "(Ljava/lang/Object;"
-#define OBJ_ "Ljava/lang/Object;)"
+#define __OBJ "()Ljava/lang/Object;"
 
-#define CLS "Ljava/lang/Class;"
-#define _CLS "(Ljava/lang/Class;"
+#define CLS   "Ljava/lang/Class;"
+#define _CLS  "(Ljava/lang/Class;"
+#define CLS_  "Ljava/lang/Class;)"
 #define _CLS_ "(Ljava/lang/Class;)"
+#define __CLS "()Ljava/lang/Class;"
 
-#define STR "Ljava/lang/String;"
+#define STR   "Ljava/lang/String;"
+#define _STR  "(Ljava/lang/String;"
+#define STR_  "Ljava/lang/String;)"
 #define _STR_ "(Ljava/lang/String;)"
+#define __STR "()Ljava/lang/String;"
 
 #define ARRAY_LENGTH(arr) (sizeof(arr)/sizeof(*arr))
 
@@ -56,4 +61,4 @@ struct JNINativeMethod {
 void registerNatives(const char *class_name, JNINativeMethod *methods, int methods_count);
 
 
-#endif //CABIN_JNI_INNER_H
+#endif //CABIN_JNI_INTERNAL_H

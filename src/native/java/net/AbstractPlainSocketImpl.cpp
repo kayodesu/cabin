@@ -1,4 +1,4 @@
-#include "../../jni_inner.h"
+#include "../../jni_internal.h"
 
 // private static native boolean isReusePortAvailable0();
 static jbool isReusePortAvailable0()

@@ -3,7 +3,7 @@
 
 #include <cassert>
 #include <mutex>
-#include "../jvmstd.h"
+#include "../cabin.h"
 #include "../classfile/constants.h"
 #include "../slot.h"
 

@@ -1,4 +1,4 @@
-#include "../../jni_inner.h"
+#include "../../jni_internal.h"
 #include "helper.h"
 #include "../../../objects/array_object.h"
 

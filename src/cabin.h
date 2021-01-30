@@ -1,5 +1,5 @@
-#ifndef CABIN_JVMSTD_H
-#define CABIN_JVMSTD_H
+#ifndef CABIN_CABIN_H
+#define CABIN_CABIN_H
 
 #include <cstdio>
 #include <cstdlib>
@@ -160,9 +160,9 @@ extern std::vector<std::pair<const utf8_t *, const utf8_t *>> g_properties;
 // 出现异常，退出jvm
 #define jvm_abort(...) do { printvm("fatal error! "); printf(__VA_ARGS__); exit(-1); } while(false)
 
-#define JVM_PANIC jvm_abort
+#define JVM_PANIC(...) do { printvm("fatal error! "); printf(__VA_ARGS__); exit(-1); } while(false)
 
 // 退出jvm
 #define JVM_EXIT exit(0);
 
-#endif //CABIN_JVMSTD_H
+#endif //CABIN_CABIN_H

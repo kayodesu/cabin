@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include "../classfile/constants.h"
 #include "../util/encoding.h"
-#include "../jvmstd.h"
+#include "../cabin.h"
 #include "../slot.h"
 #include "../metadata/field.h"
 

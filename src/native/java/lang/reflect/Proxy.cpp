@@ -1,4 +1,4 @@
-#include "../../../jni_inner.h"
+#include "../../../jni_internal.h"
 
 //private static native Class<?> defineClass0(ClassLoader loader, String name, byte[] b, int off, int len);
 static jclass defineClass0(jobject loader, jstring name, jbyteArray b, jint off, jint len)
@@ -8,7 +8,7 @@ static jclass defineClass0(jobject loader, jstring name, jbyteArray b, jint off,
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "defineClass0", "(Ljava/lang/ClassLoader;Ljava/lang/String;[BII)" CLS, (void *) defineClass0 },
+        { "defineClass0", "(Ljava/lang/ClassLoader;" STR "[BII)" CLS, (void *) defineClass0 },
 };
 
 void java_lang_reflect_Proxy_registerNatives()

@@ -1,7 +1,7 @@
 #ifndef CABIN_GC_H
 #define CABIN_GC_H
 
-#include "../jvmstd.h"
+#include "../cabin.h"
 
 void gc();
 

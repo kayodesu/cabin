@@ -1,9 +1,9 @@
-#ifndef KAYO_SLOT_H
-#define KAYO_SLOT_H
+#ifndef CABIN_SLOT_H
+#define CABIN_SLOT_H
 
 #include <cassert>
 #include <typeinfo>
-#include "jvmstd.h"
+#include "cabin.h"
 
 // 一个slot_t类型必须可以容纳 jbool, jbyte, jchar, jshort，jint，jfloat, jref 称为类型一
 // jlong, jdouble 称为类型二，占两个slot
@@ -51,4 +51,4 @@ namespace slot {
     jref getRef(const slot_t *slots);
 }
 
-#endif //KAYO_SLOT_H
+#endif //CABIN_SLOT_H

@@ -1,4 +1,4 @@
-#include "../../../jni_inner.h"
+#include "../../../jni_internal.h"
 
 // private native byte[] getTypeAnnotationBytes0();
 static jbyteArray getTypeAnnotationBytes0(jobject _this)

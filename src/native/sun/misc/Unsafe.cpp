@@ -6,7 +6,7 @@
 #include "../../../objects/array_object.h"
 #include "../../../util/endianness.h"
 #include "../../../runtime/frame.h"
-#include "../../jni_inner.h"
+#include "../../jni_internal.h"
 
 using namespace std;
 using namespace utf8;

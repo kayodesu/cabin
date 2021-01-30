@@ -1,6 +1,6 @@
 #include <cstdarg>
-#include "../../../jni_inner.h"
-#include "../../../../jvmstd.h"
+#include "../../../jni_internal.h"
+#include "../../../../cabin.h"
 #include "../../../../runtime/frame.h"
 #include "../../../../objects/array_object.h"
 #include "../../../../metadata/descriptor.h"

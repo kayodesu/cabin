@@ -4,7 +4,7 @@
 #include <vector>
 #include <thread>
 #include "../config.h"
-#include "../jvmstd.h"
+#include "../cabin.h"
 #include "../util/encoding.h"
 
 class Object;

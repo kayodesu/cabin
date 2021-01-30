@@ -1,4 +1,4 @@
-#include "../../jni_inner.h"
+#include "../../jni_internal.h"
 #include "../../../util/convert.h"
 
 // public static native int floatToRawIntBits(float value);

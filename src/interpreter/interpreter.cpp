@@ -1,7 +1,7 @@
 #include <iostream>
 #include <cmath>
 #include <ffi.h>
-#include "../jvmstd.h"
+#include "../cabin.h"
 #include "interpreter.h"
 #include "../objects/mh.h"
 #include "../objects/object.h"

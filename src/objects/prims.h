@@ -1,7 +1,7 @@
 #ifndef CABIN_PRIM_H
 #define CABIN_PRIM_H
 
-#include "../jvmstd.h"
+#include "../cabin.h"
 #include "../slot.h"
 
 bool isPrimClassName(const utf8_t *class_name);

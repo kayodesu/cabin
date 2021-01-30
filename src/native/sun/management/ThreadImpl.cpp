@@ -1,7 +1,7 @@
 #include "../../../runtime/frame.h"
 #include "../../../runtime/vm_thread.h"
 #include "../../../objects/array_object.h"
-#include "../../jni_inner.h"
+#include "../../jni_internal.h"
 
 /*
  * VM support where maxDepth == -1 to request entire stack dump

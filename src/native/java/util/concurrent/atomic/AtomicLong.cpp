@@ -1,4 +1,4 @@
-#include "../../../../jni_inner.h"
+#include "../../../../jni_internal.h"
 
 /*
  * Returns whether underlying JVM supports lockless CompareAndSet

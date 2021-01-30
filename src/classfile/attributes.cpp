@@ -1,6 +1,6 @@
 #include <vector>
 #include <sstream>
-#include "../jvmstd.h"
+#include "../cabin.h"
 #include "../slot.h"
 #include "attributes.h"
 #include "../runtime/vm_thread.h"

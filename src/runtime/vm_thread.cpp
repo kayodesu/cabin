@@ -1,7 +1,7 @@
 #include <cassert>
 #include <thread>
 #include "vm_thread.h"
-#include "../jvmstd.h"
+#include "../cabin.h"
 #include "../debug.h"
 #include "../objects/class_loader.h"
 #include "../objects/object.h"

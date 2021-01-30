@@ -1,4 +1,4 @@
-#include "../../jni_inner.h"
+#include "../../jni_internal.h"
 
 // static native boolean isIPv6Supported();
 static jbool isIPv6Supported()

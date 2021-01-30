@@ -1,5 +1,5 @@
-#include "../../jni_inner.h"
-#include "../../../jvmstd.h"
+#include "../../jni_internal.h"
+#include "../../../cabin.h"
 #include "../../../config.h"
 #include "../../../heap/heap.h"
 #include "../../../platform/sysinfo.h"

@@ -1,6 +1,6 @@
 #include "../../../symbol.h"
-#include "../../jni_inner.h"
-#include "../../../jvmstd.h"
+#include "../../jni_internal.h"
+#include "../../../cabin.h"
 #include "../../../metadata/class.h"
 #include "../../../objects/object.h"
 #include "../../../objects/class_loader.h"
@@ -49,8 +49,8 @@ static void wait(jobject _this, jlong timeout)
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
         { "hashCode", "()I", (void *) hashCode },
-        { "getClass", "()Ljava/lang/Class;", (void *) getClass },
-        { "clone", "()Ljava/lang/Object;", (void *) clone },
+        { "getClass", __CLS, (void *) getClass },
+        { "clone", __OBJ, (void *) clone },
         { "notifyAll", "()V", (void *) notifyAll },
         { "notify", "()V", (void *) notify },
         { "wait", "(J)V", (void *) wait },

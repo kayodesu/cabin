@@ -1,4 +1,4 @@
-#include "../../jni_inner.h"
+#include "../../jni_internal.h"
 #include "../../../objects/string_object.h"
 
 // Gets the platform defined TimeZone ID.
@@ -25,8 +25,8 @@ jstring getSystemGMTOffsetID()
 
 static JNINativeMethod methods[] = {
     JNINativeMethod_registerNatives,
-    {"getSystemTimeZoneID", "(Ljava/lang/String;)Ljava/lang/String;", (void *)getSystemTimeZoneID},
-    {"getSystemGMTOffsetID", "()Ljava/lang/String;", (void *)getSystemGMTOffsetID},
+    {"getSystemTimeZoneID", _STR_ STR, (void *)getSystemTimeZoneID},
+    {"getSystemGMTOffsetID", __STR, (void *)getSystemGMTOffsetID},
 };
 
 void java_util_TimeZone_registerNatives()

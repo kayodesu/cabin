@@ -1,5 +1,5 @@
-#include "../../../jni_inner.h"
-#include "../../../../jvmstd.h"
+#include "../../../jni_internal.h"
+#include "../../../../cabin.h"
 #include "../../../../runtime/frame.h"
 #include "../../../../metadata/class.h"
 #include "../../../../metadata/field.h"
@@ -335,31 +335,43 @@ static void setCallSiteTargetVolatile(jobject site, jobject target)
     jvm_abort("setCallSiteTargetVolatile");
 }
 
+#undef MM
+#undef _MM_
+#undef T
+
+#define MM "Ljava/lang/invoke/MemberName;"
+#define _MM_ "(Ljava/lang/invoke/MemberName;)"
+#define T "(Ljava/lang/invoke/CallSite;Ljava/lang/invoke/MethodHandle)V"
+
 static JNINativeMethod methods[] = {
     JNINativeMethod_registerNatives,
 
     // MemberName support
 
-    {"init", "(Ljava/lang/invoke/MemberName;Ljava/lang/Object;)V", (void *)init},
-    {"expand", "(Ljava/lang/invoke/MemberName;)V", (void *)expand},
-    {"resolve", "(Ljava/lang/invoke/MemberName;" CLS ")Ljava/lang/invoke/MemberName;", (void *)resolve},
-    {"getMembers", _CLS STR STR "I" CLS "I[Ljava/lang/invoke/MemberName;)I", (void *)getMembers},
+    {"init", "(" MM OBJ_ "V", (void *)init},
+    {"expand", _MM_ "V", (void *)expand},
+    {"resolve", "(" MM CLS_ MM, (void *)resolve},
+    {"getMembers", _CLS STR STR "I" CLS "I[" MM ")I", (void *)getMembers},
 
     // Field layout queries parallel to sun.misc.Unsafe:
 
-    {"objectFieldOffset", "(Ljava/lang/invoke/MemberName;)J", (void *)objectFieldOffset},
-    {"staticFieldOffset", "(Ljava/lang/invoke/MemberName;)J", (void *)staticFieldOffset},
-    {"staticFieldBase", "(Ljava/lang/invoke/MemberName;)" OBJ, (void *)staticFieldBase},
-    {"getMemberVMInfo", "(Ljava/lang/invoke/MemberName;)" OBJ, (void *)getMemberVMInfo},
+    {"objectFieldOffset", _MM_ "J", (void *)objectFieldOffset},
+    {"staticFieldOffset", _MM_ "J", (void *)staticFieldOffset},
+    {"staticFieldBase", _MM_ OBJ, (void *)staticFieldBase},
+    {"getMemberVMInfo", _MM_ OBJ, (void *)getMemberVMInfo},
 
     // MethodHandle support
     {"getConstant", "(I)I", (void *)getConstant},
 
     // CallSite support
     /* Tell the JVM that we need to change the target of a CallSite. */
-    {"setCallSiteTargetNormal", "(Ljava/lang/invoke/CallSite;Ljava/lang/invoke/MethodHandle)V", (void *)setCallSiteTargetNormal},
-    {"setCallSiteTargetVolatile", "(Ljava/lang/invoke/CallSite;Ljava/lang/invoke/MethodHandle)V", (void *)setCallSiteTargetVolatile},
+    {"setCallSiteTargetNormal", T, (void *)setCallSiteTargetNormal},
+    {"setCallSiteTargetVolatile", T, (void *)setCallSiteTargetVolatile},
 };
+
+#undef MM
+#undef _MM_
+#undef T
 
 void java_lang_invoke_MethodHandleNatives_registerNatives()
 {

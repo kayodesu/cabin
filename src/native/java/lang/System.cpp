@@ -1,5 +1,5 @@
 #include <chrono>
-#include "../../jni_inner.h"
+#include "../../jni_internal.h"
 #include "../../../objects/object.h"
 #include "../../../metadata/field.h"
 #include "../../../objects/array_object.h"
@@ -113,8 +113,8 @@ static jlong currentTimeMillis()
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
         { "mapLibraryName", _STR_ STR, (void *) mapLibraryName },
-        { "arraycopy", "(Ljava/lang/Object;ILjava/lang/Object;II)V", (void *) arraycopy },
-        { "identityHashCode", "(Ljava/lang/Object;)I", (void *) identityHashCode },
+        { "arraycopy", _OBJ "ILjava/lang/Object;II)V", (void *) arraycopy },
+        { "identityHashCode", _OBJ_ "I", (void *) identityHashCode },
         { "initProperties", "(Ljava/util/Properties;)Ljava/util/Properties;", (void *) initProperties },
 
         { "setIn0", "(Ljava/io/InputStream;)V", (void *) setIn0 },

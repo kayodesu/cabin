@@ -2,7 +2,7 @@
 #include "prims.h"
 #include "../symbol.h"
 #include "../util/encoding.h"
-#include "../jvmstd.h"
+#include "../cabin.h"
 #include "../metadata/field.h"
 #include "object.h"
 #include "../metadata/class.h"

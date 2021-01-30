@@ -1,4 +1,4 @@
-#include "../../jni_inner.h"
+#include "../../jni_internal.h"
 #include "../../../slot.h"
 #include "../../../metadata/class.h"
 #include "../../../runtime/frame.h"

@@ -1,7 +1,7 @@
 #include <minizip/unzip.h>
-#include "../../../jni_inner.h"
+#include "../../../jni_internal.h"
 #include "../../../../symbol.h"
-#include "../../../../jvmstd.h"
+#include "../../../../cabin.h"
 #include "../../../../objects/string_object.h"
 #include "../../../../runtime/vm_thread.h"
 

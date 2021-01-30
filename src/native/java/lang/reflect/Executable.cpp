@@ -1,4 +1,4 @@
-#include "../../../jni_inner.h"
+#include "../../../jni_internal.h"
 
 // private native Parameter[] getParameters0();
 static jobjectArray getParameters0(jobject _this)
