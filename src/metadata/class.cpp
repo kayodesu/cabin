@@ -28,7 +28,7 @@ void Class::calcFieldsId()
 {
     int ins_id = 0;
     if (super_class != nullptr) {
-        ins_id = super_class->inst_field_count; // todo 父类的私有变量是不是也算在了里面，不过问题不大，浪费点空间吧了
+        ins_id = super_class->inst_fields_count; // todo 父类的私有变量是不是也算在了里面，不过问题不大，浪费点空间吧了
     }
 
     for (Field *f: fields) {
@@ -39,7 +39,7 @@ void Class::calcFieldsId()
         }
     }
 
-    inst_field_count = ins_id;
+    inst_fields_count = ins_id;
 }
 
 void Class::parseAttribute(BytecodeReader &r)
@@ -457,7 +457,7 @@ Class::Class(Object *loader, u1 *bytecode, size_t len): loader(loader), bytecode
             auto f = new Field(this, r);
             // 保证所有的 public fields 放在前面             
             if (f->isPublic())
-                fields[public_field_count++] = f;
+                fields[public_fields_count++] = f;
             else
                 fields[last_field--] = f;
         }
@@ -474,7 +474,7 @@ Class::Class(Object *loader, u1 *bytecode, size_t len): loader(loader), bytecode
             auto m = new Method(this, r);
             // 保证所有的 public methods 放在前面
             if (m->isPublic())
-                methods[public_method_count++] = m;
+                methods[public_methods_count++] = m;
             else
                 methods[last_method--] = m;
         }
@@ -671,7 +671,7 @@ void Class::injectInstField(const utf8_t *name, const utf8_t *descriptor)
     int access_flags = JVM_ACC_PRIVATE | JVM_ACC_SYNTHETIC;
     auto f = new Field(this, name, descriptor, access_flags);
     fields.push_back(f);
-    inst_field_count++;
+    inst_fields_count++;
 }
 
 Method *Class::getDeclaredMethod(const utf8_t *name, const utf8_t *descriptor, bool ensureExist)

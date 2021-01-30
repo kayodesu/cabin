@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #ifndef JVM_CONVERT_H
 #define JVM_CONVERT_H
 

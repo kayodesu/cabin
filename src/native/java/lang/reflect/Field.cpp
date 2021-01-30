@@ -1,9 +1,5 @@
 #include "../../../jni_inner.h"
 
-/*
- * Author: Yo Ka
- */
-
 // private native byte[] getTypeAnnotationBytes0();
 static jbyteArray getTypeAnnotationBytes0(jobject _this)
 {

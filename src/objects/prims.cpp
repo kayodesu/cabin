@@ -120,7 +120,7 @@ jref byteBox(jbyte x)
     Class *c = loadBootClass(S(java_lang_Byte));
     // public static Byte valueOf(byte b);
     Method *m = c->getDeclaredStaticMethod(S(valueOf), "(B)Ljava/lang/Byte;");
-    return RSLOT(execJavaFunc(m, {islot(x)}));
+    return getRef(execJavaFunc(m, {islot(x)}));
 }
 
 jref boolBox(jbool x)
@@ -128,7 +128,7 @@ jref boolBox(jbool x)
     Class *c = loadBootClass(S(java_lang_Boolean));
     // public static Boolean valueOf(boolean b);
     Method *m = c->getDeclaredStaticMethod(S(valueOf), "(Z)Ljava/lang/Boolean;");
-    return RSLOT(execJavaFunc(m, {islot(x)}));
+    return getRef(execJavaFunc(m, {islot(x)}));
 }
 
 jref charBox(jchar x)
@@ -136,7 +136,7 @@ jref charBox(jchar x)
     Class *c = loadBootClass(S(java_lang_Character));
     // public static Character valueOf(char c);
     Method *m = c->getDeclaredStaticMethod(S(valueOf), "(C)Ljava/lang/Character;");
-    return RSLOT(execJavaFunc(m, {islot(x)}));
+    return getRef(execJavaFunc(m, {islot(x)}));
 }
 
 jref shortBox(jshort x)
@@ -144,7 +144,7 @@ jref shortBox(jshort x)
     Class *c = loadBootClass(S(java_lang_Short));
     // public static Short valueOf(short s);
     Method *m = c->getDeclaredStaticMethod(S(valueOf), "(S)Ljava/lang/Short;");
-    return RSLOT(execJavaFunc(m, {islot(x)}));
+    return getRef(execJavaFunc(m, {islot(x)}));
 }
 
 
@@ -153,7 +153,7 @@ jref intBox(jint x)
     Class *c = loadBootClass(S(java_lang_Integer));
     // public static Integer valueOf(int i);
     Method *m = c->getDeclaredStaticMethod(S(valueOf), "(I)Ljava/lang/Integer;");
-    return RSLOT(execJavaFunc(m, {islot(x)}));
+    return getRef(execJavaFunc(m, {islot(x)}));
 }
 
 jref floatBox(jfloat x)
@@ -161,7 +161,7 @@ jref floatBox(jfloat x)
     Class *c = loadBootClass(S(java_lang_Float));
     // public static Float valueOf(float f);
     Method *m = c->getDeclaredStaticMethod(S(valueOf), "(F)Ljava/lang/Float;");
-    return RSLOT(execJavaFunc(m, {fslot(x)}));
+    return getRef(execJavaFunc(m, {fslot(x)}));
 }
 
 jref longBox(jlong x)
@@ -171,7 +171,7 @@ jref longBox(jlong x)
     Method *m = c->getDeclaredStaticMethod(S(valueOf), "(J)Ljava/lang/Long;");
     slot_t args[2];
     setLong(args, x);
-    return RSLOT(execJavaFunc(m, args));
+    return getRef(execJavaFunc(m, args));
 }
 
 jref doubleBox(jdouble x)
@@ -181,5 +181,5 @@ jref doubleBox(jdouble x)
     Method *m = c->getDeclaredStaticMethod(S(valueOf), "(D)Ljava/lang/Double;");
     slot_t args[2];
     setDouble(args, x);
-    return RSLOT(execJavaFunc(m, args));
+    return getRef(execJavaFunc(m, args));
 }

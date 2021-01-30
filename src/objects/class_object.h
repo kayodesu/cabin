@@ -8,8 +8,6 @@ class Class;
 /*
  * Object of java.lang.Class
  * 只能由虚拟机创建
- * 
- * Author: Yo Ka
  */
 class ClassObject: public Object {
     ClassObject(Class *c);

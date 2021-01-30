@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #ifndef JVM_GC_H
 #define JVM_GC_H
 

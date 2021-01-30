@@ -4,10 +4,6 @@
 #include "../../../../metadata/class.h"
 #include "../../../../runtime/vm_thread.h"
 
-/*
- * Author: Yo Ka
- */
-
 using namespace utf8;
 
 // public static native Object get(Object array, int index)
@@ -81,49 +77,49 @@ static void set(jobject array, jint index, jobject value)
         if (!equals(value->clazz->class_name, S(java_lang_Boolean))) 
             Thread::signalException(S(java_lang_IllegalArgumentException), "argument type mismatch");
         else
-            arr->setBoolean(index, jint2jbool(ISLOT(value->unbox())));
+            arr->setBoolean(index, slot::getBool(value->unbox()));
         return;
     case 'B': // byte[]
         if (!equals(value->clazz->class_name, S(java_lang_Byte))) 
             Thread::signalException(S(java_lang_IllegalArgumentException), "argument type mismatch");
         else
-            arr->setByte(index, jint2jbyte(ISLOT(value->unbox())));
+            arr->setByte(index, slot::getByte(value->unbox()));
         return;
     case 'C': // char[]
         if (!equals(value->clazz->class_name, S(java_lang_Character))) 
             Thread::signalException(S(java_lang_IllegalArgumentException), "argument type mismatch");
         else
-            arr->setChar(index, jint2jchar(ISLOT(value->unbox())));
+            arr->setChar(index, slot::getChar(value->unbox()));
         return;
     case 'S': // short[]
         if (!equals(value->clazz->class_name, S(java_lang_Short))) 
             Thread::signalException(S(java_lang_IllegalArgumentException), "argument type mismatch");
         else
-            arr->setShort(index, jint2jshort(ISLOT(value->unbox())));
+            arr->setShort(index, slot::getShort(value->unbox()));
         return;
     case 'I': // int[]
         if (!equals(value->clazz->class_name, S(java_lang_Integer))) 
             Thread::signalException(S(java_lang_IllegalArgumentException), "argument type mismatch");
         else
-            arr->setInt(index, ISLOT(value->unbox()));
+            arr->setInt(index, slot::getInt(value->unbox()));
         return;    
     case 'J': // long[]
         if (!equals(value->clazz->class_name, S(java_lang_Long))) 
             Thread::signalException(S(java_lang_IllegalArgumentException), "argument type mismatch");
         else
-            arr->setLong(index, LSLOT(value->unbox()));
+            arr->setLong(index, slot::getLong(value->unbox()));
         return;    
     case 'F': // float[]
         if (!equals(value->clazz->class_name, S(java_lang_Float))) 
             Thread::signalException(S(java_lang_IllegalArgumentException), "argument type mismatch");
         else
-            arr->setFloat(index, FSLOT(value->unbox()));
+            arr->setFloat(index, slot::getFloat(value->unbox()));
         return;    
     case 'D': // double[]
         if (!equals(value->clazz->class_name, S(java_lang_Double))) 
             Thread::signalException(S(java_lang_IllegalArgumentException), "argument type mismatch");
         else
-            arr->setDouble(index, DSLOT(value->unbox()));
+            arr->setDouble(index, slot::getDouble(value->unbox()));
         return;    
     default:  // reference array
         arr->setRef(index, value);

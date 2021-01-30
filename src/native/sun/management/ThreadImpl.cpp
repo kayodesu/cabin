@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include "../../../runtime/frame.h"
 #include "../../../runtime/vm_thread.h"
 #include "../../../objects/array_object.h"

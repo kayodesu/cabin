@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #ifndef JVM_JOBJECT_H
 #define JVM_JOBJECT_H
 
@@ -113,13 +109,13 @@ public:
     template <typename T = Object> T *getRefField(const Field *f)
     {
         assert(f != nullptr);
-        return slot::getRef<T>(data + f->id);
+        return (T *) slot::getRef(data + f->id);
     }
 
     template <typename T = Object> T *getRefField(const char *name, const char *descriptor)
     {
         assert(name != nullptr && descriptor != nullptr);
-        return getRefField<T>(lookupField(name, descriptor));
+        return (T *) getRefField(lookupField(name, descriptor));
     }
 
 public:

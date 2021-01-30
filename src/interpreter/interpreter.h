@@ -13,8 +13,6 @@ class Array;
 /*
  * 此方法用于虚拟机主动调用函数，
  * 函数调用指令（invokestatic, invokespecial, ...）中不能使用
- *
- * Author: Yo Ka
  */
 
 slot_t *execJavaFunc(Method *m, const slot_t *args = nullptr);

@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #ifndef KAYO_STRING_OBJECT_H
 #define KAYO_STRING_OBJECT_H
 

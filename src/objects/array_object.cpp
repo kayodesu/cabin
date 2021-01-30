@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include "array_object.h"
 #include "../metadata/class.h"
 #include "prims.h"

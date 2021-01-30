@@ -26,6 +26,6 @@ ClassObject *generateClassObject(Class *c)
 
 
     assert(g_class_class != nullptr);
-    size_t size = sizeof(ClassObject) + g_class_class->inst_field_count * sizeof(slot_t);
+    size_t size = sizeof(ClassObject) + g_class_class->inst_fields_count * sizeof(slot_t);
     return new (calloc(1, size)) ClassObject(c);
 }

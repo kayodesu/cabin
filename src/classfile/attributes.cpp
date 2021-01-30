@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include <vector>
 #include <sstream>
 #include "../jvmstd.h"
@@ -13,6 +9,7 @@
 #include "constants.h"
 
 using namespace std;
+using namespace slot;
 
 void Annotation::read(BytecodeReader &r)
 {
@@ -89,35 +86,43 @@ slot_t *BootstrapMethod::resolveArgs(ConstantPool *cp, slot_t *result)
     for (u2 i : bootstrap_arguments) {
         switch (cp->type(i)) {
             case JVM_CONSTANT_String:
-                RSLOT(result) = cp->resolveString(i);
+//                RSLOT(result) = cp->resolveString(i);
+                setRef(result, cp->resolveString(i));
                 result++;
                 break;
             case JVM_CONSTANT_Class:
-                RSLOT(result) = cp->resolveClass(i)->java_mirror;
+//                RSLOT(result) = cp->resolveClass(i)->java_mirror;
+                setRef(result, cp->resolveClass(i)->java_mirror);
                 result++;
                 break;
             case JVM_CONSTANT_Integer:
-                ISLOT(result) = cp->_int(i);
+//                ISLOT(result) = cp->_int(i);
+                setInt(result, cp->_int(i));
                 result++;
                 break;
             case JVM_CONSTANT_Float:
-                FSLOT(result) = cp->_float(i);
+//                FSLOT(result) = cp->_float(i);
+                setFloat(result, cp->_float(i));
                 result++;
                 break;
             case JVM_CONSTANT_Long:
-                LSLOT(result) = cp->_long(i);
+//                LSLOT(result) = cp->_long(i);
+                setLong(result, cp->_long(i));
                 result += 2;
                 break;
             case JVM_CONSTANT_Double:
-                DSLOT(result) = cp->_double(i);
+//                DSLOT(result) = cp->_double(i);
+                setDouble(result, cp->_double(i));
                 result += 2;
                 break;
             case JVM_CONSTANT_MethodHandle:
-                RSLOT(result) = cp->resolveMethodHandle(i);
+//                RSLOT(result) = cp->resolveMethodHandle(i);
+                setRef(result, cp->resolveMethodHandle(i));
                 result++;
                 break;
             case JVM_CONSTANT_MethodType:
-                RSLOT(result) = cp->resolveMethodType(i);
+//                RSLOT(result) = cp->resolveMethodType(i);
+                setRef(result, cp->resolveMethodType(i));
                 result++;
                 break;
             default:

@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include <cstring>
 #include <iostream>
 #include "../../../slot.h"
@@ -59,7 +55,7 @@ static jboolean compareAndSwapInt(jobject _this, jobject o, jlong offset, jint e
     if (o->isArrayObject()) {
         old = (jint *)(((Array *) o)->index(offset));
     } else {
-        assert(0 <= offset && offset < o->clazz->inst_field_count);
+        assert(0 <= offset && offset < o->clazz->inst_fields_count);
         old = (jint *) (o->data + offset);
     }
 
@@ -75,7 +71,7 @@ static jboolean compareAndSwapLong(jobject _this, jobject o, jlong offset, jlong
         Array *ao = dynamic_cast<Array *>(o);  // todo
         old = (jlong *)(ao->index(offset));
     } else {
-        assert(0 <= offset && offset < o->clazz->inst_field_count);
+        assert(0 <= offset && offset < o->clazz->inst_fields_count);
         old = (jlong *)(o->data + offset);
     }
 
@@ -91,7 +87,7 @@ static jboolean compareAndSwapObject(jobject _this, jobject o, jlong offset, job
         Array *ao = dynamic_cast<Array *>(o);  // todo
         old = (jobject *)(ao->index(offset));
     } else {
-        assert(0 <= offset && offset < o->clazz->inst_field_count);
+        assert(0 <= offset && offset < o->clazz->inst_fields_count);
         old = (jobject *)(o->data + offset);
     }
 
@@ -190,7 +186,7 @@ static jlong objectFieldOffset1(jobject _this, jclass c, jstring name)
             Field *f = c->fields[offset];                              \
             f->static_value.t = x;                                      \
         } else {                                                        \
-            assert(0 <= offset && offset < o->clazz->inst_field_count); \
+            assert(0 <= offset && offset < o->clazz->inst_fields_count); \
             slotSetFunc(o->data + offset, x);                           \
         }                                                               \
     } while (false)
@@ -210,7 +206,7 @@ static jlong objectFieldOffset1(jobject _this, jclass c, jstring name)
             Field *f = c->fields[offset];                              \
             return f->static_value.t;                                   \
         } else {                                                        \
-            assert(0 <= offset && offset < o->clazz->inst_field_count); \
+            assert(0 <= offset && offset < o->clazz->inst_fields_count); \
             return slotGetFunc(o->data + offset);                       \
         }                                                               \
     } while (false)
@@ -369,7 +365,7 @@ static jint getIntVolatile(jobject _this, jobject o, jlong offset)
     //     Array *ao = dynamic_cast<Array *>(o);  // todo
     //     value = ao->get<jint>(offset);
     // } else {
-    //     assert(0 <= offset && offset < o->clazz->inst_field_count);
+    //     assert(0 <= offset && offset < o->clazz->inst_fields_count);
     //     value = o->data[offset];   // todo
     // }
     // return value;
@@ -463,7 +459,7 @@ static jobject getObjectVolatile(jobject _this, jobject o, jlong offset)
         Field *f = c->fields[offset];
         return f->static_value.r;
     } else {
-        assert(0 <= offset && offset < o->clazz->inst_field_count);
+        assert(0 <= offset && offset < o->clazz->inst_fields_count);
         return *(jobject *)(o->data + offset);//o->getInstFieldValue<jobject>(offset);  // todo
     }
 }

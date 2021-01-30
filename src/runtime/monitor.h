@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #ifndef KAYOVM_MONITOR_H
 #define KAYOVM_MONITOR_H
 

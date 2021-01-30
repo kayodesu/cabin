@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include <iostream>
 #include <cmath>
 #include <ffi.h>
@@ -228,7 +224,7 @@ static slot_t *exec()
     // slot_t *ostack = frame->ostack;
     slot_t *lvars = frame->lvars;
 
-    jref _this = frame->method->isStatic() ? (jref) clazz : RSLOT(lvars);
+    jref _this = frame->method->isStatic() ? (jref) clazz : getRef(lvars);
 
 #define THROW_EXCEPTION(exception_name, message)                    \
     {                                                               \
@@ -253,8 +249,8 @@ static slot_t *exec()
         cp = &frame->method->clazz->cp;                                  \
         /*ostack = frame->ostack; */                                     \
         lvars = frame->lvars;                                            \
-        _this = frame->method->isStatic() ? (jref) clazz : RSLOT(lvars); \
-        TRACE("executing frame: %s\n", frame->toString().c_str());       \
+        _this = frame->method->isStatic() ? (jref) clazz : getRef(lvars); \
+        TRACE("executing frame: %s\n", frame->toString().c_str());        \
     }
 
     u1 opcode;
@@ -781,10 +777,12 @@ opc_lxor:
 #undef BINARY_OP
 opc_iinc: 
     index = reader->readu1();
-    ISLOT(lvars + index) = ISLOT(lvars + index) + reader->reads1();
+//    ISLOT(lvars + index) = ISLOT(lvars + index) + reader->reads1();
+    setInt(lvars + index, getInt(lvars + index) + reader->reads1()); // todo reads1??
     DISPATCH
 _wide_iinc:  
-    ISLOT(lvars + index) = ISLOT(lvars + index) + reader->readu2();  
+//    ISLOT(lvars + index) = ISLOT(lvars + index) + reader->readu2();
+    setInt(lvars + index, getInt(lvars + index) + reader->readu2()); // todo readu2??
     DISPATCH
 opc_i2l:
     frame->pushl(frame->popi());
@@ -1120,7 +1118,7 @@ opc_invokevirtual: {
     }
 
     frame->ostack -= m->arg_slot_count;
-    jref obj = RSLOT(frame->ostack);
+    jref obj = getRef(frame->ostack);
     NULL_POINTER_CHECK(obj)
 
     if (m->isPrivate()) {
@@ -1163,7 +1161,7 @@ opc_invokespecial: {
     }
 
     frame->ostack -= m->arg_slot_count;
-    jref obj = RSLOT(frame->ostack);
+    jref obj = getRef(frame->ostack);
     NULL_POINTER_CHECK(obj)
 
     resolved_method = m;
@@ -1208,7 +1206,7 @@ opc_invokeinterface: {
     /* todo 本地方法 */
 
     frame->ostack -= m->arg_slot_count;
-    jref obj = RSLOT(frame->ostack);
+    jref obj = getRef(frame->ostack);
     NULL_POINTER_CHECK(obj)
 
     // itable的实现还不对 todo
@@ -1260,9 +1258,9 @@ opc_invokedynamic: {
             
             // args's length is big enough,多余的长度无所谓，bootstrap_method 会按需读取的。
             slot_t args[3 + bm.bootstrap_arguments.size() * 2];
-            RSLOT(args) = caller;
-            RSLOT(args + 1) = newString(invoked_name);
-            RSLOT(args + 2) = invoked_type;
+            setRef(args, caller);
+            setRef(args + 1, newString(invoked_name));
+            setRef(args + 2, invoked_type);
             bm.resolveArgs(&cp, args + 3);
             if (Thread::checkExceptionOccurred()) {
                 jref eo = Thread::getException();
@@ -1270,11 +1268,11 @@ opc_invokedynamic: {
                 frame->pushr(eo);
                 goto opc_athrow;
             }
-            auto call_set = RSLOT(execJavaFunc(bootstrap_method, args));
+            auto call_set = getRef(execJavaFunc(bootstrap_method, args));
 
             // public abstract MethodHandle dynamicInvoker()
             auto dyn_invoker = call_set->clazz->lookupInstMethod("dynamicInvoker", "()Ljava/lang/invoke/MethodHandle;");
-            auto exact_method_handle = RSLOT(execJavaFunc(dyn_invoker, {call_set}));
+            auto exact_method_handle = getRef(execJavaFunc(dyn_invoker, {call_set}));
 
             // public final Object invokeExact(Object... args) throws Throwable
             Method *invokeExact = exact_method_handle->clazz->lookupInstMethod(
@@ -1282,7 +1280,7 @@ opc_invokedynamic: {
             assert(invokeExact->isVarargs());
             int slot_count = Method::calArgsSlotsCount(invoked_descriptor, false);
             slot_t _args[slot_count];
-            RSLOT(_args) = exact_method_handle;
+            setRef(_args, exact_method_handle);
             slot_count--; // 减去"this"
             frame->ostack -= slot_count; // pop all args
             memcpy(_args + 1, frame->ostack, slot_count * sizeof(slot_t));
@@ -1470,7 +1468,7 @@ opc_athrow: {
 }
     
 opc_checkcast: {
-    jref obj = RSLOT(frame->ostack - 1); // 不改变操作数栈
+    jref obj = getRef(frame->ostack - 1); // 不改变操作数栈
     index = reader->readu2();
 
     // 如果引用是null，则指令执行结束。也就是说，null 引用可以转换成任何类型
@@ -1656,7 +1654,7 @@ slot_t *execJavaFunc(Method *m, jref _this, Array *args)
     auto real_args = new slot_t[2 * types->len + 1];
     int k = 0;
     if (_this != nullptr) {
-        RSLOT(real_args) = _this;
+        setRef(real_args, _this);
         k++;
     }
     for (int i = 0; i < types->len; i++) {
@@ -1670,7 +1668,7 @@ slot_t *execJavaFunc(Method *m, jref _this, Array *args)
                 || strcmp(o->clazz->class_name, "double") == 0) // category_two
                 real_args[k++] = *++unbox;
         } else {
-            RSLOT(real_args + k) = o;
+            setRef(real_args + k, o);
             k++;
         }
     }
@@ -1716,21 +1714,24 @@ static void callJNIMethod(Frame *frame)
         switch (*p) {
             case JVM_SIGNATURE_BOOLEAN:
             case JVM_SIGNATURE_BYTE: {
-                jbyte b = jint2jbyte(ISLOT(lvars));
+//                jbyte b = jint2jbyte(ISLOT(lvars));
+                jbyte b = getByte(lvars);
                 *(jbyte *)lvars = b;
                 arg_types[argc] = &ffi_type_sint8;
                 arg_values[argc] = (void *) lvars;
                 break;
             }
             case JVM_SIGNATURE_CHAR: {
-                jchar c = jint2jchar(ISLOT(lvars));
+//                jchar c = jint2jchar(ISLOT(lvars));
+                jchar c = getChar(lvars);
                 *(jchar *)lvars = c;
                 arg_types[argc] = &ffi_type_uint16;
                 arg_values[argc] = (void *) lvars;
                 break;
             }
             case JVM_SIGNATURE_SHORT: {
-                jshort s = jint2jshort(ISLOT(lvars));
+//                jshort s = jint2jshort(ISLOT(lvars));
+                jshort s = getShort(lvars);
                 *(jshort *)lvars = s;
                 arg_types[argc] = &ffi_type_sint16;
                 arg_values[argc] = (void *) lvars;

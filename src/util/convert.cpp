@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include "convert.h"
 
 union fi {

@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include <cassert>
 #include "../../../../symbol.h"
 #include "../../../jni_inner.h"

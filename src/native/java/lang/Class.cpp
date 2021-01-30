@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include <vector>
 #include "../../../objects/object.h"
 #include "../../../metadata/class.h"
@@ -470,7 +466,7 @@ static jobject getConstantPool(jclass _this)
 static jobjectArray getDeclaredFields0(jclass _this, jboolean public_only)
 {
     Class *cls = _this->jvm_mirror;
-    jint field_count = public_only ? cls->public_field_count : cls->fields.size();
+    jint field_count = public_only ? cls->public_fields_count : cls->fields.size();
 
     Class *field_class = loadBootClass(S(java_lang_reflect_Field));
     auto field_array = newArray(field_class->arrayClass(), field_count);
@@ -518,7 +514,7 @@ static jobjectArray getDeclaredFields0(jclass _this, jboolean public_only)
 static jobjectArray getDeclaredMethods0(jclass _this, jboolean public_only)
 {
     Class *cls = _this->jvm_mirror;
-    jint method_count = public_only ? cls->public_method_count : cls->methods.size();
+    jint method_count = public_only ? cls->public_methods_count : cls->methods.size();
 
     Class *method_class = loadBootClass(S(java_lang_reflect_Method));
 

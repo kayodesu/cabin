@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include <cassert>
 #include <cstring>
 #include <unordered_set>

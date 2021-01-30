@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #ifndef KAYO_ARRAY_OBJECT_H
 #define KAYO_ARRAY_OBJECT_H
 

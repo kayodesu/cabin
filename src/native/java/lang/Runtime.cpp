@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include "../../jni_inner.h"
 #include "../../../jvmstd.h"
 #include "../../../config.h"

@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include "../../../../runtime/frame.h"
 #include "../../../../objects/array_object.h"
 #include "../../../jni_inner.h"

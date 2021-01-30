@@ -8,10 +8,6 @@
 #include "../../../../objects/array_object.h"
 #include "../../../../interpreter/interpreter.h"
 
-/*
- * Author: Yo Ka
- */
-
 using namespace utf8;
 using namespace member_name;
 
@@ -294,7 +290,7 @@ static jlong objectFieldOffset(jobject self)
     auto type = self->getRefField("type", "Ljava/lang/Object;");
 
     Method *m = self->clazz->lookupInstMethod("getSignature", "()Ljava/lang/String;");
-    jobject sig = RSLOT(execJavaFunc(m, {self}));
+    jobject sig = slot::getRef(execJavaFunc(m, {self}));
 
     Field *f = clazz->lookupField(name->toUtf8(), sig->toUtf8());
     return f->id;

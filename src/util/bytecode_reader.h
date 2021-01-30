@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #ifndef JVM_BYTECODE_READER_H
 #define JVM_BYTECODE_READER_H
 

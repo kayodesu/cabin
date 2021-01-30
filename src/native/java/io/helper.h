@@ -6,8 +6,6 @@
 
 /*
  * 一些帮助函数，只用于本目录下的文件。
- * 
- * Author: Yo Ka
  */
 
 static inline jobject __getFileDescriptor(jobject _this)

@@ -1,6 +1,3 @@
-/*
- * Author: Yo Ka
- */
 #include "../../jni_inner.h"
 
 /*

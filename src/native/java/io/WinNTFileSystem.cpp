@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include <fstream>
 #include <filesystem>
 #include <sys/stat.h>

@@ -1,10 +1,6 @@
 #include "../../jni_inner.h"
 
 /*
- * Author: Yo Ka
- */
-
-/*
  * private static final int O_RDONLY = 1;
     private static final int O_RDWR =   2;
     private static final int O_SYNC =   4;

@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include "../../jni_inner.h"
 #include "../../../slot.h"
 #include "../../../metadata/class.h"
@@ -31,7 +27,7 @@ static jobject createLong(jobject _this, jstring name, jint variability, jint un
     initClass(bb);
 
     Method *allocate = bb->getDeclaredStaticMethod("allocate", "(I)Ljava/nio/ByteBuffer;");
-    return RSLOT(execJavaFunc(allocate, { slot::islot(sizeof(jlong)) }));
+    return slot::getRef(execJavaFunc(allocate, { slot::islot(sizeof(jlong)) }));
 }
 
 static JNINativeMethod methods[] = {

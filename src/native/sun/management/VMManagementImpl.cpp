@@ -2,10 +2,6 @@
 #include "../../../runtime/frame.h"
 #include "../../../objects/object.h"
 
-/*
- * Author: Yo Ka
- */
-
 // private native static String getVersion0();
 static jstring getVersion0()
 {

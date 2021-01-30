@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #ifndef KAYO_FIELD_H
 #define KAYO_FIELD_H
 

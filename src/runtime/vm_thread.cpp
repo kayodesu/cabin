@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include <cassert>
 #include <thread>
 #include "vm_thread.h"
@@ -125,7 +121,7 @@ Thread::Thread(Object *tobj0, jint priority): tobj(tobj0)
 Thread *Thread::from(Object *tobj0)
 {
     assert(tobj0 != nullptr);
-    assert(0 <= eetop_field->id && eetop_field->id < tobj0->clazz->inst_field_count);
+    assert(0 <= eetop_field->id && eetop_field->id < tobj0->clazz->inst_fields_count);
     jlong eetop = tobj0->getLongField(eetop_field);
     return reinterpret_cast<Thread *>(eetop);
 }

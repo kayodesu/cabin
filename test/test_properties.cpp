@@ -1,6 +1,3 @@
-/*
- * Author: Yo Ka
- */
 #include <iostream>
 #include "../src/jvmstd.h"
 

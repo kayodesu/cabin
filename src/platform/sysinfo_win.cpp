@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #ifdef _WIN32
 
 #include <ctime>

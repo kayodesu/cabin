@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include "../../jni_inner.h"
 #include "../../../objects/object.h"
 #include "../../../jvmstd.h"
@@ -18,7 +14,7 @@ static jclass getCallerClass0(jint level)
         Thread::signalException(S(java_lang_IllegalArgumentException), to_string(level).c_str());
     }
 
-    Frame *frame = (Frame *) getCurrentThread()->getTopFrame();
+    auto frame = (Frame *) getCurrentThread()->getTopFrame();
     for (; level > 0 && frame != nullptr; level--) {
         frame = frame->prev;
     }

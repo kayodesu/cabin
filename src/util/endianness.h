@@ -4,8 +4,6 @@
 /*
  * 大端(big endian):低地址存放高字节
  * 小端(little endian):低字节存放低字节
- * 
- * Author: Yo Ka
  */
 
 static const union { char c[4]; unsigned long l; } endian_test = { { 'l', '?', '?', 'b' } };

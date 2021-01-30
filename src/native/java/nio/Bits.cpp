@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include "../../jni_inner.h"
 
 // static native void copyFromShortArray(Object src, long srcPos, long dstAddr, long length);

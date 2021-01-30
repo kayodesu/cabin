@@ -1,4 +1,3 @@
-
 #ifndef KAYOVM_ENCODING_H
 #define KAYOVM_ENCODING_H
 
@@ -15,8 +14,6 @@
  * this vm 操作的utf8字符串，要求以'\0'结尾并且不包含utf8的结束符.
  *
  * todo java.lang.String 内部是用utf16表示的，和Unicode有什么区别？？
- *
- * Author: Yo Ka
  */
 
 namespace utf8 {

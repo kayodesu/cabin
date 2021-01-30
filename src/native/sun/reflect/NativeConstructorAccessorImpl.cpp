@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include <sstream>
 #include "../../jni_inner.h"
 #include "../../../runtime/frame.h"

@@ -1,9 +1,5 @@
 #include "../../jni_inner.h"
 
-/*
- * Author: Yo Ka
- */
-
 // private static native int findSignal(String string);
 static jint findSignal(jstring string)
 {

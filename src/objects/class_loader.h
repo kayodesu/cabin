@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #ifndef KAYOVM_CLASS_LOADER_H
 #define KAYOVM_CLASS_LOADER_H
 

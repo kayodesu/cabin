@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #ifndef JVM_STACK_FRAME_H
 #define JVM_STACK_FRAME_H
 
@@ -39,18 +35,18 @@ public:
 
     // push to ostack.
     void push(slot_t v)   { *ostack++ = v; }
-    void pushi(jint v)    { ISLOT(ostack) = v; ostack++; }
-    void pushf(jfloat v)  { FSLOT(ostack) = v; ostack++; }
-    void pushl(jlong v)   { LSLOT(ostack) = v; ostack += 2; }
-    void pushd(jdouble v) { DSLOT(ostack) = v; ostack += 2; }
-    void pushr(jref v)    { RSLOT(ostack) = v; ostack++; }
+    void pushi(jint v)    { slot::setInt(ostack, v); ostack++; }
+    void pushf(jfloat v)  { slot::setFloat(ostack, v); ostack++; }
+    void pushl(jlong v)   { slot::setLong(ostack, v); ostack += 2; }
+    void pushd(jdouble v) { slot::setDouble(ostack, v); ostack += 2; }
+    void pushr(jref v)    { slot::setRef(ostack, v); ostack++; }
 
     // pop from ostack.
-    jint    popi() { ostack--;    return ISLOT(ostack); }
-    jfloat  popf() { ostack--;    return FSLOT(ostack); }
-    jlong   popl() { ostack -= 2; return LSLOT(ostack); }
-    jdouble popd() { ostack -= 2; return DSLOT(ostack); }
-    jref    popr() { ostack--;    return RSLOT(ostack); }
+    jint    popi() { ostack--;    return slot::getInt(ostack); }
+    jfloat  popf() { ostack--;    return slot::getFloat(ostack); }
+    jlong   popl() { ostack -= 2; return slot::getLong(ostack); }
+    jdouble popd() { ostack -= 2; return slot::getDouble(ostack); }
+    jref    popr() { ostack--;    return slot::getRef(ostack); }
 
     // the end address of this frame
     [[nodiscard]] intptr_t end() const

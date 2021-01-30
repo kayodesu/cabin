@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #ifndef JVM_SYSINFO_H
 #define JVM_SYSINFO_H
 

@@ -1,10 +1,6 @@
 #include "../../../../jni_inner.h"
 
 /*
- * Author: Yo Ka
- */
-
-/*
  * Returns whether underlying JVM supports lockless CompareAndSet
  * for longs. Called only once and cached in VM_SUPPORTS_LONG_CAS.
  *

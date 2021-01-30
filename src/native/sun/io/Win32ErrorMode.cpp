@@ -1,9 +1,5 @@
 #include "../../jni_inner.h"
 
-/*
- * Author: Yo Ka
- */
-
 // static
 static jlong setErrorMode(jlong l)
 {

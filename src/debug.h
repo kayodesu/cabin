@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #ifndef JVM_DEBUG_H
 #define JVM_DEBUG_H
 

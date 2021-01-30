@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #ifndef YOVM_DESC_STRS_H
 #define YOVM_DESC_STRS_H
 

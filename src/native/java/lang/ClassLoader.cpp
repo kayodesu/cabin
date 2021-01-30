@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include "../../jni_inner.h"
 #include "../../../objects/class_loader.h"
 #include "../../../metadata/class.h"

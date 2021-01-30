@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include "../../jni_inner.h"
 #include "../../../symbol.h"
 #include "../../../objects/object.h"

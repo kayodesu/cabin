@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include <sstream>
 #include "../symbol.h"
 #include "class_loader.h"
@@ -24,7 +20,7 @@ Object::Object(Class *c): clazz(c)
 
 Object *Object::newObject(Class *c)
 {
-    size_t size = sizeof(Object) + c->inst_field_count * sizeof(slot_t);
+    size_t size = sizeof(Object) + c->inst_fields_count * sizeof(slot_t);
     return new (g_heap->alloc(size)) Object(c);
 }
 
@@ -104,7 +100,7 @@ const slot_t *Object::unbox() const
 size_t Object::size() const
 {
     assert(clazz != nullptr);
-    return sizeof(*this) + clazz->inst_field_count * sizeof(slot_t);
+    return sizeof(*this) + clazz->inst_fields_count * sizeof(slot_t);
 }
 
 bool Object::isArrayObject() const

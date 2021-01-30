@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #ifdef __linux__
 
 #include <unistd.h>

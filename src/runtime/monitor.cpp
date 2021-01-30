@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include "monitor.h"
 #include "vm_thread.h"
 

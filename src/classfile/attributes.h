@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #ifndef JVM_ATTRIBUTE_H
 #define JVM_ATTRIBUTE_H
 

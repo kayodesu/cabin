@@ -5,12 +5,7 @@
 #include "../metadata/field.h"
 #include "../config.h"
 
-/*
- * Author: Yo Ka
- */
-
 using namespace std;
-
 
 Heap::Heap() noexcept
 {

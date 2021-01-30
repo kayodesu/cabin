@@ -24,8 +24,6 @@ class ClassObject;
 
 /*
  * The metadata of a class.
- * 
- * Author: Yo Ka
  */
 
 class Class {
@@ -73,7 +71,7 @@ public:
      * 所有的 public functions 都放在了最前面
      */
     std::vector<Method *> methods;
-    u2 public_method_count = 0;
+    u2 public_methods_count = 0;
 
     /*
      * 本类中所定义的变量（不包括继承而来的）
@@ -88,11 +86,11 @@ public:
     // Field *fields = nullptr;
     // u2 field_count = 0;        // declared field count
     std::vector<Field *> fields;    
-    u2 public_field_count = 0; // declared public field count
+    u2 public_fields_count = 0; // declared public field count
 
     // instFieldsCount 有可能大于 fieldsCount，因为 instFieldsCount 包含了继承过来的 field.
     // 类型二统计为两个数量
-    int inst_field_count = 0;
+    int inst_fields_count = 0;
 
     // vtable 只保存虚方法。
     // 该类所有函数自有函数（除了private, static, final, abstract）和 父类的函数虚拟表。
@@ -106,9 +104,7 @@ public:
         ITable(const ITable &itable);
         ITable& operator=(const ITable &itable);
         void add(const ITable &itable);
-    };
-
-    ITable itable;    
+    } itable;
     Method *findFromITable(Class *interface_class, int index);
 
     struct {

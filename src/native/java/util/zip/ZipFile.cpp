@@ -5,10 +5,6 @@
 #include "../../../../objects/string_object.h"
 #include "../../../../runtime/vm_thread.h"
 
-/*
- * Author: Yo Ka
- */
-
 // private static native void initIDs();
 void initIDs()
 {

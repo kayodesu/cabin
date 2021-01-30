@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include <ctime>
 #include <iostream>
 #include <filesystem>
@@ -157,7 +153,7 @@ static void parseCommandLine(int argc, char *argv[])
 void initProperties()
 {
     g_properties.emplace_back("java.version", VM_VERSION);
-    g_properties.emplace_back("java.vendor", "kayo" );
+    g_properties.emplace_back("java.vendor", "cabin" );
     g_properties.emplace_back("java.vendor.url", "doesn't have");
     g_properties.emplace_back("java.home", g_java_home.c_str());
     auto class_version = new utf8_t[32];

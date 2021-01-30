@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #ifndef JVM_CONFIG_H
 #define JVM_CONFIG_H
 

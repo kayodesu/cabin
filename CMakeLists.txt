@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.9)
-project(yovm)
+project(cabin)
 
 set(CMAKE_C_FLAGS "-std=c11 -m64 -Wall")
 set(CMAKE_CXX_FLAGS "-std=c++17 -m64 -Wall -lz -lminizip -llibffi") # lz: link zlip
 
 add_subdirectory(test) 
 
-add_library(libyovm STATIC
+add_library(libcabin STATIC
         src/jvm.cpp src/platform/sysinfo_win.cpp src/platform/sysinfo_linux.cpp
         src/interpreter/interpreter.cpp src/metadata/descriptor.cpp
         src/util/encoding.cpp src/util/convert.cpp src/classfile/attributes.cpp
@@ -45,12 +45,12 @@ add_library(libyovm STATIC
         src/metadata/method.cpp src/metadata/field.cpp src/metadata/constant_pool.cpp src/native/jni.cpp
         src/objects/array_object.cpp src/objects/string_object.cpp 
         src/objects/class_loader.cpp src/objects/prims.cpp src/objects/mh.cpp
-        src/objects/object.cpp src/metadata/class.cpp src/objects/class_object.cpp src/objects/java_classes.cpp src/objects/java_classes.h)
+        src/objects/object.cpp src/metadata/class.cpp src/objects/class_object.cpp src/objects/java_classes.cpp src/objects/java_classes.h src/slot.cpp)
 
-add_executable(yovm src/main.cpp)
+add_executable(cabin src/main.cpp)
 
-target_link_libraries(libyovm libz)
-target_link_libraries(libyovm libminizip)
-target_link_libraries(libyovm libffi)
-target_link_libraries(yovm libyovm)
+target_link_libraries(libcabin libz)
+target_link_libraries(libcabin libminizip)
+target_link_libraries(libcabin libffi)
+target_link_libraries(cabin libcabin)
 

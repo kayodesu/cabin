@@ -3,10 +3,6 @@
 #include "../../../objects/class_loader.h"
 #include "../../../objects/string_object.h"
 
-/*
- * Author: Yo Ka
- */
-
 // private static native String getSystemPackage0(String name);
 static jstring getSystemPackage0(jstring name)
 {

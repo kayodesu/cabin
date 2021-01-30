@@ -1,9 +1,5 @@
 #include "../../jni_inner.h"
 
-/*
- * Author: Yo Ka
- */
-
 // public static native String getJdkSpecialVersion()
 static jstring getJdkSpecialVersion()
 {

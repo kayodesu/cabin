@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include "symbol.h"
 #include "util/encoding.h"
 

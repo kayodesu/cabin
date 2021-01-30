@@ -2,10 +2,6 @@
 #include "../../../metadata/constant_pool.h"
 #include "../../../metadata/class.h"
 
-/*
- * Author: Yo Ka
- */
-
 // private native int getSize0(Object constantPoolOop);
 static jint getSize0(jobject _this, jobject constantPoolOop)
 {

@@ -1,6 +1,3 @@
-/*
- * Author: Yo Ka
- */
 #include <iostream>
 #include "desc_strs.h"
 #include "../src/jvmstd.h"

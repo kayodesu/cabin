@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include <sstream>
 #include "descriptor.h"
 #include "../metadata/class.h"

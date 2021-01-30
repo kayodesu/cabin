@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #ifndef JVM_PRIM_H
 #define JVM_PRIM_H
 

@@ -8,11 +8,8 @@
 #include "../../../interpreter/interpreter.h"
 #include "../../../metadata/descriptor.h"
 
-/*
- * Author: Yo Ka
- */
-
 using namespace std;
+using namespace slot;
 
 // private static native Object invoke0(Method method, Object o, Object[] os);
 static jobject invoke0(jobject method, jobject o, jobjectArray os)
@@ -40,23 +37,27 @@ static jobject invoke0(jobject method, jobject o, jobjectArray os)
     case Method::RET_VOID:
         return voidBox();
     case Method::RET_BYTE:
-        return byteBox(jint2jbyte(ISLOT(result)));
+//        return byteBox(jint2jbyte(ISLOT(result)));
+        return byteBox(getByte(result));
     case Method::RET_BOOL:
-        return boolBox(jint2jbool(ISLOT(result)));
+//        return boolBox(jint2jbool(ISLOT(result)));
+        return boolBox(getBool(result));
     case Method::RET_CHAR:
-        return charBox(jint2jchar(ISLOT(result)));
+//        return charBox(jint2jchar(ISLOT(result)));
+        return charBox(getChar(result));
     case Method::RET_SHORT:
-        return shortBox(jint2jshort(ISLOT(result)));
+//        return shortBox(jint2jshort(ISLOT(result)));
+        return shortBox(getShort(result));
     case Method::RET_INT:
-        return intBox(ISLOT(result));
+        return intBox(getInt(result));
     case Method::RET_FLOAT:
-        return floatBox(FSLOT(result));
+        return floatBox(getFloat(result));
     case Method::RET_LONG:
-        return longBox(LSLOT(result));
+        return longBox(getLong(result));
     case Method::RET_DOUBLE:
-        return doubleBox(DSLOT(result));
+        return doubleBox(getDouble(result));
     case Method::RET_REFERENCE:
-        return RSLOT(result);
+        return getRef(result);
     default:
         jvm_abort("never go here\n"); // todo
     }

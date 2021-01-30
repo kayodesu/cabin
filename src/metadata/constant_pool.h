@@ -278,7 +278,7 @@ public:
         std::lock_guard<std::recursive_mutex> lock(mutex);
         assert(0 < i && i < size);
         assert(_type[i] == JVM_CONSTANT_Integer);
-        return ISLOT(_info + i);
+        return slot::getInt(_info + i);
     }
 
     void _int(u2 i, jint newInt)
@@ -286,7 +286,7 @@ public:
         std::lock_guard<std::recursive_mutex> lock(mutex);
         assert(0 < i && i < size);
         assert(_type[i] == JVM_CONSTANT_Integer);
-        ISLOT(_info + i) = newInt;
+        slot::setInt(_info + i, newInt);
     }
 
     jfloat _float(u2 i)
@@ -294,7 +294,7 @@ public:
         std::lock_guard<std::recursive_mutex> lock(mutex);
         assert(0 < i && i < size);
         assert(_type[i] == JVM_CONSTANT_Float);
-        return FSLOT(_info + i);
+        return slot::getFloat(_info + i);
     }
 
     void _float(u2 i, jfloat newFloat)
@@ -302,7 +302,7 @@ public:
         std::lock_guard<std::recursive_mutex> lock(mutex);
         assert(0 < i && i < size);
         assert(_type[i] == JVM_CONSTANT_Float);
-        FSLOT(_info + i) = newFloat;
+        slot::setFloat(_info + i, newFloat);
     }
 
     jlong _long(u2 i)
@@ -310,7 +310,7 @@ public:
         std::lock_guard<std::recursive_mutex> lock(mutex);
         assert(0 < i && i < size);
         assert(_type[i] == JVM_CONSTANT_Long);
-        return LSLOT(_info + i);
+        return slot::getLong(_info + i);
     }
 
     void _long(u2 i, jlong newLong)
@@ -318,7 +318,7 @@ public:
         std::lock_guard<std::recursive_mutex> lock(mutex);
         assert(0 < i && i < size);
         assert(_type[i] == JVM_CONSTANT_Long);
-        LSLOT(_info + i) = newLong;
+        slot::setLong(_info + i, newLong);
     }
 
     jdouble _double(u2 i)
@@ -326,7 +326,7 @@ public:
         std::lock_guard<std::recursive_mutex> lock(mutex);
         assert(0 < i && i < size);
         assert(_type[i] == JVM_CONSTANT_Double);
-        return DSLOT(_info + i);
+        return slot::getDouble(_info + i);
     }
 
     void _double(u2 i, jdouble newDouble)
@@ -334,7 +334,7 @@ public:
         std::lock_guard<std::recursive_mutex> lock(mutex);
         assert(0 < i && i < size);
         assert(_type[i] == JVM_CONSTANT_Double);
-        DSLOT(_info + i) = newDouble;
+        slot::setDouble(_info + i, newDouble);
     }
 
     Class  *resolveClass(u2 i);

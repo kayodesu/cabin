@@ -5,8 +5,6 @@
 
 /*
  * MethodHandle 相关的操作函数
- *
- * Author: Yo Ka
  */
 
 class Method;

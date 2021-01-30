@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include "method.h"
 #include "class.h"
 #include "../objects/array_object.h"

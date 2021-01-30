@@ -7,8 +7,6 @@
  * NOTICE:
  * 不能再native函数中用throw抛异常，libffi不能处理这种情况，
  * 会导致jvm假死（不会崩溃退出，进程还在，但不工作，CUP利用率近乎零）。
- *
- * Author: Yo Ka
  */
 
 class ClassObject;
@@ -55,7 +53,7 @@ struct JNINativeMethod {
  * 要保证每个 class name 只会注册一次，
  * 重复注册后面注册的无效。
  */
-void registerNatives(const char *class_name, JNINativeMethod *methods, int method_count);
+void registerNatives(const char *class_name, JNINativeMethod *methods, int methods_count);
 
 
 #endif //KAYO_JNI_INNER_H

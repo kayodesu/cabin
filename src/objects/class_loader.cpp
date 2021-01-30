@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include <iostream>
 #include <sstream>
 #include <optional>
@@ -250,7 +246,7 @@ Class *loadClass(Object *class_loader, const utf8_t *name)
     auto dot_name = slash2DotDup(name);
     slot_t *slot = execJavaFunc(m, { class_loader, newString(dot_name) });
     assert(slot != nullptr);
-    auto co = (ClassObject *) RSLOT(slot);
+    auto co = (ClassObject *) slot::getRef(slot);
     assert(co != nullptr && co->jvm_mirror != nullptr);
     c = co->jvm_mirror;
     addClassToClassLoader(class_loader, c);
@@ -297,7 +293,7 @@ Object *getSystemClassLoader()
 
     // public static ClassLoader getSystemClassLoader();
     Method *get = scl->getDeclaredStaticMethod(S(getSystemClassLoader), S(___java_lang_ClassLoader));
-    return RSLOT(execJavaFunc(get));
+    return slot::getRef(execJavaFunc(get));
 }
 
 Class *g_object_class;

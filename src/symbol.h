@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #ifndef JVM_SYMBOL_H
 #define JVM_SYMBOL_H
 

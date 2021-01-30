@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include <vector>
 #include "gc.h"
 #include "../jvmstd.h"
@@ -35,11 +31,11 @@ static void analysisReachableObject(jref obj)
             }
         }
     } else {
-        int count = obj->clazz->inst_field_count;
+        int count = obj->clazz->inst_fields_count;
         for (int i = 0; i < count; i++) {
             slot_t slot = obj->data[i];
             // todo  这里要先判断 slot 存放的是不是 jref
-            jref o = RSLOT(slot);
+            jref o = slot::getRef(&slot);
             o->accessible = 1;
             analysisReachableObject(o);
         }

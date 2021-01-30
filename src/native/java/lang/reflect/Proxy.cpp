@@ -1,7 +1,4 @@
 #include "../../../jni_inner.h"
-/*
- * Author: Yo Ka
- */
 
 //private static native Class<?> defineClass0(ClassLoader loader, String name, byte[] b, int off, int len);
 static jclass defineClass0(jobject loader, jstring name, jbyteArray b, jint off, jint len)

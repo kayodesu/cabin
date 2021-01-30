@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #ifndef KAYO_METHOD_H
 #define KAYO_METHOD_H
 

@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include "string_object.h"
 #include "class_loader.h"
 #include "../metadata/field.h"
@@ -12,6 +8,7 @@
 
 using namespace std;
 using namespace utf8;
+using namespace slot;
 
 bool StrObjEquals::operator()(Object *x, Object *y) const
 {
@@ -22,7 +19,7 @@ bool StrObjEquals::operator()(Object *x, Object *y) const
 
     // public boolean equals(Object anObject);
     Method *equals = g_string_class->getDeclaredInstMethod("equals", "(Ljava/lang/Object;)Z");
-    return ISLOT(execJavaFunc(equals, { x, y })) != 0;
+    return getBool(execJavaFunc(equals, { x, y })) != jfalse;
 }
 
 size_t StrObjHash::operator()(Object *x) const
@@ -32,7 +29,7 @@ size_t StrObjHash::operator()(Object *x) const
 
     // public int hashCode();
     Method *hashCode = g_string_class->getDeclaredInstMethod("hashCode", "()I");
-    return (size_t) ISLOT(execJavaFunc(hashCode, {x}));
+    return (size_t) getInt(execJavaFunc(hashCode, {x}));
 
 }
 

@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include "field.h"
 #include "class.h"
 #include "../objects/prims.h"

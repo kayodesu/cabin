@@ -6,10 +6,6 @@
 #include "../../../../metadata/descriptor.h"
 #include "../../../../interpreter/interpreter.h"
 
-/*
- * Author: Yo Ka
- */
-
 using namespace std;
 using namespace slot;
 using namespace utf8;
@@ -88,7 +84,7 @@ static jobject invoke(jobject _this, ...)
 
     // MemberName internalMemberName();
     Method *m = _this->clazz->lookupInstMethod("internalMemberName", "()Ljava/lang/invoke/MemberName;");
-    jref member_name = RSLOT(execJavaFunc(m, {_this}));
+    jref member_name = getRef(execJavaFunc(m, {_this}));
     // private Class<?> clazz;       // class in which the method is defined
     // private String   name;        // may be null if not yet materialized
     // private Object   type;        // may be null if not yet materialized
@@ -97,7 +93,7 @@ static jobject invoke(jobject _this, ...)
 
     // public MethodType getInvocationType()
     m = member_name->clazz->lookupInstMethod("getInvocationType", "()Ljava/lang/invoke/MethodType;");
-    jref method_type = RSLOT(execJavaFunc(m, {member_name}));
+    jref method_type = getRef(execJavaFunc(m, {member_name}));
     string desc = unparseMethodDescriptor(method_type);
     // todo 判断desc，如果有基本类型参数，则参数值要进行unbox。
     
@@ -114,7 +110,7 @@ static jobject invoke(jobject _this, ...)
 
     m = c->lookupMethod(name, desc.c_str());
     slot_t *slot = execJavaFunc(m, args);
-    return RSLOT(slot);
+    return getRef(slot);
 }
 
 /**

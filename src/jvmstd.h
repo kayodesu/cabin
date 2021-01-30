@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #ifndef JVM_JVMSTD_H
 #define JVM_JVMSTD_H
 
@@ -163,6 +159,8 @@ extern std::vector<std::pair<const utf8_t *, const utf8_t *>> g_properties;
 
 // 出现异常，退出jvm
 #define jvm_abort(...) do { printvm("fatal error! "); printf(__VA_ARGS__); exit(-1); } while(false)
+
+#define JVM_PANIC jvm_abort
 
 // 退出jvm
 #define JVM_EXIT exit(0);

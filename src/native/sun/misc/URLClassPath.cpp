@@ -1,9 +1,5 @@
 #include "../../jni_inner.h"
 
-/*
- * Author: Yo Ka
- */
-
 // private static native URL[] getLookupCacheURLs(ClassLoader var0);
 static jobjectArray getLookupCacheURLs(jobject var0)
 {

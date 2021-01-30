@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include "../symbol.h"
 #include "../slot.h"
 #include "mh.h"
@@ -73,7 +69,7 @@ jref findMethodType(ClassObject *rtype, Array *ptypes)
     // static MethodType findMethodHandleType(Class<?> rtype, Class<?>[] ptypes)
     Method *m = mhn->getDeclaredStaticMethod("findMethodHandleType",
                 "(Ljava/lang/Class;[Ljava/lang/Class;)Ljava/lang/invoke/MethodType;");
-    return RSLOT(execJavaFunc(m, { rtype, ptypes }));
+    return getRef(execJavaFunc(m, { rtype, ptypes }));
 }
 
 //Array *method_type::parameterTypes(jref methodType)
@@ -118,7 +114,7 @@ jbyte member_name::getRefKind(jref member_name)
     Class *mn = loadBootClass("java/lang/invoke/MemberName");
     // public byte getReferenceKind();
     auto m = mn->getDeclaredInstMethod("getReferenceKind", "()B");
-    return (jbyte) ISLOT(execJavaFunc(m, {member_name}));
+    return getByte(execJavaFunc(m, {member_name}));
 }
 
 bool member_name::isMethod(jref member_name)
@@ -128,7 +124,7 @@ bool member_name::isMethod(jref member_name)
     Class *mn = loadBootClass("java/lang/invoke/MemberName");
     // public boolean isMethod();
     auto m = mn->getDeclaredInstMethod("isMethod", "()Z");
-    return ISLOT(execJavaFunc(m, {member_name})) != 0;
+    return getBool(execJavaFunc(m, {member_name})) != jfalse;
 }
 
 bool member_name::isConstructor(jref member_name)
@@ -138,7 +134,7 @@ bool member_name::isConstructor(jref member_name)
     Class *mn = loadBootClass("java/lang/invoke/MemberName");
     // public boolean isConstructor();
     auto m = mn->getDeclaredInstMethod("isConstructor", "()Z");
-    return ISLOT(execJavaFunc(m, {member_name})) != 0;
+    return getBool(execJavaFunc(m, {member_name})) != jfalse;
 }
 
 bool member_name::isField(jref member_name)
@@ -148,7 +144,7 @@ bool member_name::isField(jref member_name)
     Class *mn = loadBootClass("java/lang/invoke/MemberName");
     // public boolean isField();
     auto m = mn->getDeclaredInstMethod("isField", "()Z");
-    return ISLOT(execJavaFunc(m, {member_name})) != 0;
+    return getBool(execJavaFunc(m, {member_name})) != jfalse;
 }
 
 bool member_name::isType(jref member_name)
@@ -158,7 +154,7 @@ bool member_name::isType(jref member_name)
     Class *mn = loadBootClass("java/lang/invoke/MemberName");
     // public boolean isType();
     auto m = mn->getDeclaredInstMethod("isType", "()Z");
-    return ISLOT(execJavaFunc(m, {member_name})) != 0;
+    return getBool(execJavaFunc(m, {member_name})) != jfalse;
 }
 
 bool member_name::isStatic(jref member_name)
@@ -168,7 +164,7 @@ bool member_name::isStatic(jref member_name)
     Class *mn = loadBootClass("java/lang/invoke/MemberName");
     // public boolean isStatic();
     auto m = mn->getDeclaredInstMethod("isStatic", "()Z");
-    return ISLOT(execJavaFunc(m, {member_name})) != 0;
+    return getBool(execJavaFunc(m, {member_name})) != jfalse;
 }
 
 /* Method flags */
@@ -368,7 +364,7 @@ Object *resolveMemberName(jref member_name, Class *caller)
         jvm_abort("11111111111"); // todo
     }
 
-    jstrref sig_str = RSLOT(execJavaFunc(mn_getSignature_method, { member_name }));
+    jstrref sig_str = getRef(execJavaFunc(mn_getSignature_method, { member_name }));
     const utf8_t *sig = sig_str->toUtf8();
 
 //    auto xx = toMethodDescriptor(type)->toUtf8();
@@ -435,5 +431,5 @@ jref method_handles::getCaller()
     // public static Lookup lookup();
     Class *mh = loadBootClass("java/lang/invoke/MethodHandles");
     auto lookup = mh->getDeclaredStaticMethod("lookup", "()Ljava/lang/invoke/MethodHandles$Lookup;");
-    return RSLOT(execJavaFunc(lookup));
+    return getRef(execJavaFunc(lookup));
 }

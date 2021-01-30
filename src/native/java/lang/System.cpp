@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include <chrono>
 #include "../../jni_inner.h"
 #include "../../../objects/object.h"

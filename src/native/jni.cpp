@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include <vector>
 #include "jni_inner.h"
 #include "../runtime/vm_thread.h"
@@ -86,12 +82,12 @@ void initJNI()
 #undef R    
 }
 
-static vector<tuple<const char * /* class name */, JNINativeMethod *, int /* method count */>> native_methods;
+static vector<tuple<const char * /* class name */, JNINativeMethod *, int /* methods count */>> native_methods;
 
-void registerNatives(const char *class_name, JNINativeMethod *methods, int method_count)
+void registerNatives(const char *class_name, JNINativeMethod *methods, int methods_count)
 {
-    assert(class_name != nullptr && methods != nullptr && method_count > 0);
-    native_methods.emplace_back(class_name, methods, method_count);
+    assert(class_name != nullptr && methods != nullptr && methods_count > 0);
+    native_methods.emplace_back(class_name, methods, methods_count);
 }
 
 void *findNativeMethod(const char *class_name, const char *method_name, const char *method_descriptor)

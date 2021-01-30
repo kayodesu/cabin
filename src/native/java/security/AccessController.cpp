@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include "../../jni_inner.h"
 #include "../../../symbol.h"
 #include "../../../slot.h"
@@ -24,7 +20,7 @@ static jobject doPrivileged(jobject action)
      */
     Method *m = action->clazz->getDeclaredMethod(S(run), S(___java_lang_Object));
 
-    return RSLOT(execJavaFunc(m, {action}));
+    return slot::getRef(execJavaFunc(m, {action}));
 }
 
 // @CallerSensitive
