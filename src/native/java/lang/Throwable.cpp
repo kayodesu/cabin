@@ -94,7 +94,7 @@ static jint getStackTraceDepth(jobject _this)
 {
     auto backtrace = (Array *) _this->getRefField(S(backtrace), S(sig_java_lang_Object));
     assert(backtrace != nullptr);
-    return backtrace->len;
+    return backtrace->arr_len;
 }
 
 static JNINativeMethod methods[] = {

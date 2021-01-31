@@ -23,28 +23,31 @@ using namespace std;
 //    return new (g_heap->alloc(ac->objectSize(lens[0]))) Array(ac, dim, lens);
 //}
 
-Array::Array(Class *ac, jint arrLen): Object(ac), len(arrLen)
+Array::Array(Class *ac, jint arr_len): Object(ac)
 {
     assert(ac != nullptr);
     assert(ac->isArrayClass());
-    assert(arrLen >= 0); // 长度为0的array是合法的
+    assert(arr_len >= 0); // 长度为0的array是合法的
 
+    this->arr_len = arr_len;
     // java 数组创建后要赋默认值，0, 0.0, false,'\0', NULL 之类的
     // heap 申请对象时已经清零了。
     data = (slot_t *) (this + 1);
 }
 
-Array::Array(Class *ac, jint dim, const jint lens[]): Object(ac), len(lens[0])
+Array::Array(Class *ac, jint dim, const jint lens[]): Object(ac)
 {
     assert(ac != nullptr);
     assert(dim >= 1);
     assert(ac->isArrayClass());
-    assert(len >= 0); // 长度为0的array是合法的
+
+    arr_len = lens[0];
+    assert(arr_len >= 0); // 长度为0的array是合法的
 
     data = (slot_t *) (this + 1);
 
     for (int d = 1; d < dim; d++) {
-        for (int i = 0; i < len; i++) {
+        for (int i = 0; i < arr_len; i++) {
 //            setRef(i, newMultiArray(ac->componentClass(), dim - 1, lens + 1));
             setRef(i, ac->componentClass()->allocMultiArray(dim - 1, lens + 1));
         }
@@ -58,13 +61,13 @@ bool Array::isPrimArray() const
 
 void *Array::index(jint index0) const
 {
-    assert(0 <= index0 && index0 < len);
+    assert(0 <= index0 && index0 < arr_len);
     return ((u1 *) (data)) + clazz->getEleSize()*index0;
 }
 
 void Array::setRef(int i, jref value)
 {
-    assert(0 <= i && i < len);
+    assert(0 <= i && i < arr_len);
     assert(clazz->isRefArrayClass());
 
     auto data = (slot_t *) index(i);
@@ -105,8 +108,8 @@ void Array::copy(Array *dst, jint dst_pos, const Array *src, jint src_pos, jint 
     if (src_pos < 0
         || dst_pos < 0
         || len < 0
-        || src_pos + len > src->len
-        || dst_pos + len > dst->len) {
+        || src_pos + len > src->arr_len
+        || dst_pos + len > dst->arr_len) {
         Thread::signalException(S(java_lang_ArrayIndexOutOfBoundsException));
         return;
     }
@@ -116,7 +119,8 @@ void Array::copy(Array *dst, jint dst_pos, const Array *src, jint src_pos, jint 
 
 size_t Array::size() const
 {
-    return sizeof(Array) + clazz->getEleSize()*len;
+    return clazz->objectSize(arr_len);
+//    return sizeof(Array) + clazz->getEleSize()*len;
 }
 
 Array *Array::clone() const

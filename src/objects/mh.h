@@ -9,12 +9,11 @@
 
 class Method;
 class Array;
-class ClassObject;
 
 void initMethodHandle();
 
 jref findMethodType(const utf8_t *desc, jref loader);
-jref findMethodType(ClassObject *rtype, Array *ptypes);
+jref findMethodType(ClsObj *rtype, Array *ptypes);
 
 // java/lang/invoke/MemberName 类的便利操作函数
 namespace member_name {

@@ -1,7 +1,6 @@
 #include "../../jni_internal.h"
 #include "../../../objects/class_loader.h"
 #include "../../../metadata/class.h"
-#include "../../../objects/class_object.h"
 #include "../../../objects/string_object.h"
 
 using namespace utf8;

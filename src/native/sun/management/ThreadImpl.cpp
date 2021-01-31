@@ -25,9 +25,9 @@ static jobjectArray dumpThreads0(jlongArray ids, jboolean lockedMonitors, jboole
             thread_infos->setRef(i, thread_info);
         }
     } else {
-        thread_infos = ac->allocArray(ids->len);
+        thread_infos = ac->allocArray(ids->arr_len);
 
-        for (int i = 0; i < ids->len; i++) {
+        for (int i = 0; i < ids->arr_len; i++) {
             auto id = ids->get<jlong>(i);
             Thread *t = Thread::from(id);
             assert(t != nullptr);

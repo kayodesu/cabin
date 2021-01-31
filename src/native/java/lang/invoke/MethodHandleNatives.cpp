@@ -248,7 +248,7 @@ static jint getMembers(jclass defc, jstring match_name, jstring match_sig,
             if(skip-- > 0)
                 continue;
 
-            if(count < results->len) {
+            if(count < results->arr_len) {
                 Object *member_name = results->get<jobject>(count);
                 count++;
                 int flags = __method_flags(m) | IS_METHOD;
@@ -282,7 +282,7 @@ static jlong objectFieldOffset(jobject self)
     // private Class<?> clazz;       // class in which the method is defined
     // private String   name;        // may be null if not yet materialized
     // private Object   type;        // may be null if not yet materialized
-    auto clazz = self->getRefField<ClassObject>("clazz", "Ljava/lang/Class;")->jvm_mirror;
+    auto clazz = self->getRefField<ClsObj>("clazz", "Ljava/lang/Class;")->jvm_mirror;
     auto name = self->getRefField("name", "Ljava/lang/String;");
     // type maybe a String or an Object[] or a MethodType
     // Object[]: (Class<?>) Object[0] is return type

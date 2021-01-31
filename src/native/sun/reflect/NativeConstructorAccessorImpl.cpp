@@ -75,7 +75,7 @@ static jobject newInstance0(jobject c, jobjectArray args)
      */
 
     // which class this constructor belongs to.
-    auto co = c->getRefField<ClassObject>(S(clazz), S(sig_java_lang_Class));
+    auto co = c->getRefField<ClsObj>(S(clazz), S(sig_java_lang_Class));
     Class *clazz = co->jvm_mirror;
     initClass(clazz);
     Object *obj = clazz->allocObject();

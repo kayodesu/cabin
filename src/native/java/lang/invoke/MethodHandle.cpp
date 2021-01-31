@@ -88,7 +88,7 @@ static jobject invoke(jobject _this, ...)
     // private Class<?> clazz;       // class in which the method is defined
     // private String   name;        // may be null if not yet materialized
     // private Object   type;        // may be null if not yet materialized
-    Class *c = member_name->getRefField<ClassObject>(S(clazz), S(sig_java_lang_Class))->jvm_mirror;
+    Class *c = member_name->getRefField<ClsObj>(S(clazz), S(sig_java_lang_Class))->jvm_mirror;
     auto name = member_name->getRefField(S(name), S(sig_java_lang_String))->toUtf8();
 
     // public MethodType getInvocationType()

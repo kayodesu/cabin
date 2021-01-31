@@ -12,7 +12,6 @@
 #include "method.h"
 #include "field.h"
 #include "../objects/array_object.h"
-#include "../objects/class_object.h"
 #include "../interpreter/interpreter.h"
 #include "../objects/prims.h"
 #include "../objects/mh.h"
@@ -582,6 +581,12 @@ size_t Class::objectSize() const
     return sizeof(Object) + inst_fields_count*sizeof(slot_t);
 }
 
+size_t Class::objectSize(jint arr_len)
+{
+    assert(isArrayClass());
+    return sizeof(Array) + getEleSize()*arr_len;
+}
+
 Object *Class::allocObject()
 {
     assert(!isArrayClass());
@@ -605,21 +610,18 @@ Array *Class::allocMultiArray(jint dim, const jint lens[])
     return new (g_heap->alloc(objectSize(lens[0]))) Array(this, dim, lens);
 }
 
-
-
-size_t Class::objectSize(jint arrLen)
-{
-    assert(isArrayClass());
-    return sizeof(Array) + getEleSize()*arrLen;
-}
-
 void Class::generateClassObject()
 {
     if (java_mirror == nullptr) {
         assert(g_class_class != nullptr);
-        static size_t size = sizeof(ClassObject) + g_class_class->inst_fields_count * sizeof(slot_t);
+        static size_t size = sizeof(ClsObj) + g_class_class->inst_fields_count * sizeof(slot_t);
+
         // Class Object不在堆上分配，因为此对象无需gc。
-        java_mirror = new(calloc(1, size)) ClassObject(this);
+        java_mirror = new(calloc(1, size)) Object(g_class_class);
+        java_mirror->jvm_mirror = this;
+
+        // private final ClassLoader classLoader;
+        java_mirror->setRefField("classLoader", S(sig_java_lang_ClassLoader), loader);
     }
     assert(java_mirror != nullptr);
 }

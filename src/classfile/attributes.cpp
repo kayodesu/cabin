@@ -5,7 +5,6 @@
 #include "attributes.h"
 #include "../runtime/vm_thread.h"
 #include "../metadata/class.h"
-#include "../objects/class_object.h"
 #include "constants.h"
 
 using namespace std;

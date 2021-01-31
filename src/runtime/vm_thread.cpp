@@ -331,7 +331,7 @@ void Thread::printStackTrace()
 
     // [Ljava/lang/Object;
     auto backtrace = e->getRefField<Array>("backtrace", "Ljava/lang/Object;");
-    for (int i = 0; i < backtrace->len; i++) {
+    for (int i = 0; i < backtrace->arr_len; i++) {
         jref element = backtrace->get<jref>(i); // java.lang.StackTraceElement
 
         // private String declaringClass;

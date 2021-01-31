@@ -6,7 +6,6 @@
 #include "../classfile/constants.h"
 
 class Class;
-class ClassObject;
 
 class Field {
 public:    
@@ -22,7 +21,7 @@ public:
 private:
     // the declared type(class Object) of this field
     // like, int k; the type of k is int.class
-    ClassObject *type = nullptr;
+    ClsObj *type = nullptr;
 public:
     bool category_two;
 
@@ -59,7 +58,7 @@ public:
         category_two = (descriptor[0] == 'J' || descriptor[0]== 'D');
     }
 
-    ClassObject *getType();
+    ClsObj *getType();
 
     bool isPrim() const;
 

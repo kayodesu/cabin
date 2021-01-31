@@ -34,6 +34,10 @@ Field *Object::lookupField(const char *name, const char *descriptor)
 
 Object *Object::clone() const
 {
+    if (clazz == g_class_class) {
+        jvm_abort("Object of java.lang.Class don't support clone"); // todo
+    }
+
     size_t s = size();
     void *p = g_heap->alloc(s);
     memcpy(p, this, s);
@@ -102,12 +106,18 @@ const slot_t *Object::unbox() const
 size_t Object::size() const
 {
     assert(clazz != nullptr);
-    return sizeof(*this) + clazz->inst_fields_count * sizeof(slot_t);
+    return clazz->objectSize();
+//    return sizeof(*this) + clazz->inst_fields_count * sizeof(slot_t);
 }
 
 bool Object::isArrayObject() const
 {
     return clazz->class_name[0] == '[';
+}
+
+bool Object::isClassObject() const
+{
+    return clazz == g_class_class;
 }
 
 utf8_t *Object::toUtf8() const

@@ -9,10 +9,8 @@
  * 会导致jvm假死（不会崩溃退出，进程还在，但不工作，CUP利用率近乎零）。
  */
 
-class ClassObject;
-
 typedef Object*      jobject;
-typedef ClassObject* jclass;
+typedef Object*      jclass;
 typedef jobject      jthrowable;
 typedef jobject      jstring;
 typedef Array*       jarray;

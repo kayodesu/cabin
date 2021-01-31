@@ -1,7 +1,6 @@
 #include "field.h"
 #include "class.h"
 #include "../objects/prims.h"
-#include "../objects/class_object.h"
 
 using namespace std;
 using namespace utf8;
@@ -75,7 +74,7 @@ Field::Field(Class *c, BytecodeReader &r)
     }
 }
 
-ClassObject *Field::getType()
+ClsObj *Field::getType()
 {
     if (type == nullptr) {
         if (*descriptor == '[') { // array

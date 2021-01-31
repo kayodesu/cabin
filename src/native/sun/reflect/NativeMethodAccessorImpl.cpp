@@ -21,9 +21,9 @@ static jobject invoke0(jobject method, jobject o, jobjectArray os)
     // private String     name;
     // private Class<?>   returnType;
     // private Class<?>[] parameterTypes;
-    Class *c = method->getRefField<ClassObject>(S(clazz), S(sig_java_lang_Class))->jvm_mirror;
+    Class *c = method->getRefField<ClsObj>(S(clazz), S(sig_java_lang_Class))->jvm_mirror;
     jstrref name = method->getRefField(S(name), S(sig_java_lang_String));
-    auto rtype = method->getRefField<ClassObject>(S(returnType), S(sig_java_lang_Class));
+    auto rtype = method->getRefField<ClsObj>(S(returnType), S(sig_java_lang_Class));
     auto ptypes = method->getRefField<Array>(S(parameterTypes), S(array_java_lang_Class));
 
     string desc = unparseMethodDescriptor(ptypes, rtype);

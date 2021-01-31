@@ -8,7 +8,6 @@
 #include "../symbol.h"
 #include "../metadata/class.h"
 #include "array_object.h"
-#include "class_object.h"
 #include "../interpreter/interpreter.h"
 #include "../runtime/vm_thread.h"
 #include "prims.h"
@@ -267,7 +266,7 @@ Class *loadClass(Object *class_loader, const utf8_t *name)
     auto dot_name = slash2DotDup(name);
     slot_t *slot = execJavaFunc(m, { class_loader, newString(dot_name) });
     assert(slot != nullptr);
-    auto co = (ClassObject *) slot::getRef(slot);
+    auto co = (ClsObj *) slot::getRef(slot);
     assert(co != nullptr && co->jvm_mirror != nullptr);
     c = co->jvm_mirror;
     addClassToClassLoader(class_loader, c);

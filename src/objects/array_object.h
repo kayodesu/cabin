@@ -11,7 +11,7 @@ class Array: public Object {
     Array(Class *ac, jint dim, const jint lens[]);
 
 public:
-    jsize len; // 数组的长度
+//    jsize arr_len; // 数组的长度
 
 //    static Array *newArray(Class *ac, jint arrLen);
 //    static Array *newMultiArray(Class *ac, jint dim, const jint lens[]);
@@ -21,7 +21,7 @@ public:
 
     bool checkBounds(jint index)
     {
-        return 0 <= index && index < len;
+        return 0 <= index && index < arr_len;
     }
 
     void *index(jint index0) const;
@@ -47,7 +47,7 @@ public:
     void set##Type(jint i, jtype v)            \
     {                                          \
         assert(clazz->is##Type##ArrayClass()); \
-        assert(0 <= i && i < len);             \
+        assert(0 <= i && i < arr_len);         \
         *(jtype *) index(i) = v;               \
     }  
 

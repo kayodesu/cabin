@@ -9,7 +9,6 @@
 class Object;
 class Array;
 class Class;
-class ClassObject;
 
 class Method {
 //    Array *parameter_types = nullptr;  // [Ljava/lang/Class;
@@ -101,7 +100,7 @@ public:
 
     Array *getParameterTypes();
 
-    ClassObject *getReturnType();
+    ClsObj *getReturnType();
 
     Array *getExceptionTypes();
 

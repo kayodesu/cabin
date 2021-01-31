@@ -4,7 +4,6 @@
 #include "../metadata/class.h"
 #include "../metadata/method.h"
 #include "array_object.h"
-#include "class_object.h"
 #include "../interpreter/interpreter.h"
 #include "../metadata/descriptor.h"
 #include "../runtime/vm_thread.h"
@@ -54,14 +53,14 @@ jref findMethodType(const utf8_t *desc, jref loader)
 {
     assert(desc != nullptr);
 
-    pair<Array *, ClassObject *> p = parseMethodDescriptor(desc, loader);
+    pair<Array *, ClsObj *> p = parseMethodDescriptor(desc, loader);
     if (Thread::checkExceptionOccurred())
         return nullptr;
 
     return findMethodType(p.second, p.first);
 }
 
-jref findMethodType(ClassObject *rtype, Array *ptypes)
+jref findMethodType(ClsObj *rtype, Array *ptypes)
 {
     assert(rtype != nullptr && ptypes != nullptr);
 
@@ -212,7 +211,7 @@ void initMemberName(jref member_name, jref target)
 
     if (target->clazz == method_reflect_class) {
         // private Class<?> clazz;
-        Class *decl_class = target->getRefField<ClassObject>("clazz", "Ljava/lang/Class;")->jvm_mirror;
+        Class *decl_class = target->getRefField<ClsObj>("clazz", "Ljava/lang/Class;")->jvm_mirror;
         // private int slot;
         int slot = target->getIntField("slot", "I");
 
@@ -349,7 +348,7 @@ Object *resolveMemberName(jref member_name, Class *caller)
     assert(member_name != nullptr);
 
     jstrref name_str = member_name->getRefField(mn_name_field);
-    Class *clazz = member_name->getRefField<ClassObject>(mn_clazz_field)->jvm_mirror;
+    Class *clazz = member_name->getRefField<ClsObj>(mn_clazz_field)->jvm_mirror;
     jref type = member_name->getRefField(mn_type_field);
     jint flags = member_name->getIntField(mn_flags_field);
 

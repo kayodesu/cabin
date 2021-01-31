@@ -1418,7 +1418,7 @@ opc_arraylength: {
         THROW_EXCEPTION(S(java_lang_UnknownError), "not a array");
     }
     
-    frame->pushi(((Array *) o)->len);
+    frame->pushi(((Array *) o)->arr_len);
     DISPATCH
 }
 opc_athrow: {
@@ -1649,17 +1649,17 @@ slot_t *execJavaFunc(Method *m, jref _this, Array *args)
     // Class[]
     Array *types = m->getParameterTypes();
     assert(types != nullptr);
-    assert(types->len == args->len);
+    assert(types->arr_len == args->arr_len);
 
     // 因为有 category two 的存在，result 的长度最大为 types_len * 2 + this_obj
-    auto real_args = new slot_t[2 * types->len + 1];
+    auto real_args = new slot_t[2 * types->arr_len + 1];
     int k = 0;
     if (_this != nullptr) {
         setRef(real_args, _this);
         k++;
     }
-    for (int i = 0; i < types->len; i++) {
-        auto c = types->get<ClassObject *>(i)->jvm_mirror;
+    for (int i = 0; i < types->arr_len; i++) {
+        auto c = types->get<ClsObj *>(i)->jvm_mirror;
         auto o = args->get<jref>(i);
 
         if (c->isPrimClass()) {

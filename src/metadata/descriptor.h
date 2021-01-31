@@ -3,7 +3,6 @@
 
 #include "../cabin.h"
 
-class ClassObject;
 class Array;
 
 // @b: include
@@ -13,10 +12,10 @@ int numElementsInDescriptor(const char *b, const char *e);
 
 int numElementsInMethodDescriptor(const char *method_descriptor);
 
-std::pair<Array * /*ptypes*/, ClassObject * /*rtype*/>
+std::pair<Array * /*ptypes*/, ClsObj * /*rtype*/>
 parseMethodDescriptor(const char *desc, jref loader);
 
-std::string unparseMethodDescriptor(Array *ptypes /* ClassObject *[] */, ClassObject *rtype);
+std::string unparseMethodDescriptor(Array *ptypes /* ClassObject *[] */, ClsObj *rtype);
 
 // @method_type: Object of java.lang.invoke.MethodType
 std::string unparseMethodDescriptor(jref method_type);

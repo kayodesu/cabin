@@ -20,7 +20,7 @@ static jobject get(jobject array, jint index)
     }
 
     Array *arr = (Array *) array;    
-    if (index < 0 || index >= arr->len) {
+    if (index < 0 || index >= arr->arr_len) {
         Thread::signalException(S(java_lang_ArrayIndexOutOfBoundsException), MSG("%d", index));
         return nullptr;
     }
@@ -61,7 +61,7 @@ static void set(jobject array, jint index, jobject value)
     }
 
     Array *arr = (Array *) array;    
-    if (index < 0 || index >= arr->len) {
+    if (index < 0 || index >= arr->arr_len) {
         Thread::signalException(S(java_lang_ArrayIndexOutOfBoundsException), MSG("%d", index));
         return;
     }
@@ -140,7 +140,7 @@ static jint getLength(jobject array)
     }
 
     Array *arr = (Array *) array;
-    return arr->len;
+    return arr->arr_len;
 }
 
 // private static native Object newArray(Class<?> componentType, int length)

@@ -12,7 +12,6 @@
 #include "../objects/class_loader.h"
 #include "../objects/object.h"
 #include "../objects/string_object.h"
-#include "../objects/class_object.h"
 #include "../util/bytecode_reader.h"
 #include "../classfile/attributes.h"
 #include "../classfile/constants.h"
@@ -20,7 +19,7 @@
 
 class Method;
 class Field;
-class ClassObject;
+//typedef Object ClassObject;
 
 /*
  * The metadata of a class.
@@ -47,7 +46,7 @@ public:
 
     bool inited = false; // 此类是否被初始化过了（是否调用了<clinit>方法）。
 
-    ClassObject *java_mirror = nullptr;
+    Object *java_mirror = nullptr;
 
     // the class loader who loaded this class
     // 可能为null，表示 bootstrap class loader.
@@ -84,9 +83,9 @@ public:
      * todo 接口中的变量怎么处理
      */
     // Field *fields = nullptr;
-    // u2 field_count = 0;        // declared field count
+    // u2 field_count = 0;        // declared fields count
     std::vector<Field *> fields;    
-    u2 public_fields_count = 0; // declared public field count
+    u2 public_fields_count = 0; // declared public fields count
 
     // instFieldsCount 有可能大于 fieldsCount，因为 instFieldsCount 包含了继承过来的 field.
     // 类型二统计为两个数量
@@ -210,15 +209,15 @@ public:
                or (c != nullptr and loader == c->loader and utf8::equals(class_name, c->class_name));
     }
 
-    size_t objectSize() const;      // for non array class
+    size_t objectSize() const;       // for non array class
+    size_t objectSize(jint arr_len); // for array class
 
     Object *allocObject(); // alloc non array object
     Array *allocArray(jint arr_len);
     Array *allocMultiArray(jint dim, const jint lens[]);
 
-    size_t objectSize(jint arrLen); // for array class
-
-    // Generate the class object of this (aka. java_mirror field).
+    // Generate the class object of this (aka 'java_mirror' field).
+    // This Object 只能由虚拟机创建
     void generateClassObject();
 
     Field *lookupField(const char *name, const char *descriptor);

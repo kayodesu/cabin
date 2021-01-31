@@ -23,7 +23,7 @@ static void analysisReachableObject(jref obj)
     if (obj->clazz->isRefArrayClass()) {
         Array *arr = dynamic_cast<Array *>(obj);
         assert(arr != nullptr);
-        for (int i = 0; i < arr->len; i++) {
+        for (int i = 0; i < arr->arr_len; i++) {
             jref o = arr->get<jref>(i);
             if (o != nullptr) {
                 o->accessible = 1; // 此对象可达
@@ -96,7 +96,7 @@ static void reachabilityAnalysis()
             }
 
             // 2. 分析类对象中引用的对象
-            ClassObject *co = c->java_mirror;
+            ClsObj *co = c->java_mirror;
             assert(co->accessible = 1);
             analysisReachableObject(co);
         }

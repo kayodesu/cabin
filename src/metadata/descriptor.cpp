@@ -11,7 +11,7 @@ using namespace std;
 // @b: include
 // @e：exclude
 // eg. Ljava/lang/String;
-static ClassObject *convertDescElement2ClassObject(char *&b, char *e, jref loader)
+static Object *convertDescElement2ClassObject(char *&b, char *e, jref loader)
 {
     assert(b != nullptr && e != nullptr);
 
@@ -104,7 +104,7 @@ static Array *convertDesc2ClassObjectArray(char *b, char *e, jref loader)
     Array *types = loadArrayClass(S(array_java_lang_Class))->allocArray(num);
 
     for (int i = 0; b < e; i++) {
-        ClassObject *co = convertDescElement2ClassObject(b, e, loader);
+        Object *co = convertDescElement2ClassObject(b, e, loader);
         if (Thread::checkExceptionOccurred())
             return nullptr;
 
@@ -115,7 +115,7 @@ static Array *convertDesc2ClassObjectArray(char *b, char *e, jref loader)
     return types;
 }
 
-pair<Array *, ClassObject *> parseMethodDescriptor(const char *desc, jref loader)
+pair<Array *, ClsObj *> parseMethodDescriptor(const char *desc, jref loader)
 {
     assert(desc != nullptr);
 
@@ -127,7 +127,7 @@ pair<Array *, ClassObject *> parseMethodDescriptor(const char *desc, jref loader
 
     Array *ptypes = convertDesc2ClassObjectArray((char *) (desc + 1), e, loader);
     e++; // jump ')'
-    ClassObject *rtype = convertDescElement2ClassObject(e, e + strlen(e), loader);
+    ClsObj *rtype = convertDescElement2ClassObject(e, e + strlen(e), loader);
     return make_pair(ptypes, rtype);
 }
 
@@ -151,7 +151,7 @@ static string convertTypeToDesc(Class *type)
     return oss.str();
 }
 
-string unparseMethodDescriptor(Array *ptypes /*Class *[]*/, ClassObject *rtype)
+string unparseMethodDescriptor(Array *ptypes /*Class *[]*/, ClsObj *rtype)
 {
     ostringstream oss;
 
@@ -159,8 +159,8 @@ string unparseMethodDescriptor(Array *ptypes /*Class *[]*/, ClassObject *rtype)
         oss << "()";
     } else {
         oss << "(";
-        for (int i = 0; i < ptypes->len; i++) {
-            ClassObject *co = ptypes->get<ClassObject *>(i);
+        for (int i = 0; i < ptypes->arr_len; i++) {
+            auto co = ptypes->get<ClsObj *>(i);
             assert(co != nullptr);
             oss << convertTypeToDesc(co->jvm_mirror);        
         }
@@ -183,7 +183,7 @@ string unparseMethodDescriptor(jref method_type)
     // private final Class<?>[] ptypes;
     auto ptypes = method_type->getRefField<Array>("ptypes", S(array_java_lang_Class));
     // private final Class<?> rtype;
-    auto rtype = method_type->getRefField<ClassObject>("rtype", S(sig_java_lang_Class));
+    auto rtype = method_type->getRefField<ClsObj>("rtype", S(sig_java_lang_Class));
 
     return unparseMethodDescriptor(ptypes, rtype);
 }

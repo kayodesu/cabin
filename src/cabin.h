@@ -93,6 +93,8 @@ class Class;
 typedef Object* jref;     // JVM 中的引用类型。
 typedef jref    jstrref;  // java.lang.String 的引用。
 
+typedef Object ClsObj;
+
 #define jnull ((jref) 0)
 
 typedef char utf8_t;

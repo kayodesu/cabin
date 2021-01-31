@@ -34,13 +34,13 @@ Method::ExceptionTable::ExceptionTable(Class *clazz, BytecodeReader &r)
 
 Array *Method::getParameterTypes()
 {
-    pair<Array *, ClassObject *> p = parseMethodDescriptor(descriptor, clazz->loader);
+    pair<Array *, ClsObj *> p = parseMethodDescriptor(descriptor, clazz->loader);
     return p.first;
 }
 
-ClassObject *Method::getReturnType()
+ClsObj *Method::getReturnType()
 {
-    pair<Array *, ClassObject *> p = parseMethodDescriptor(descriptor, clazz->loader);
+    pair<Array *, ClsObj *> p = parseMethodDescriptor(descriptor, clazz->loader);
     return p.second;
 }
 
@@ -334,10 +334,10 @@ bool Method::isSignaturePolymorphic()
         return false;
 
     Array *ptypes = getParameterTypes(); // Class<?>[]
-    if (ptypes->len != 1)
+    if (ptypes->arr_len != 1)
         return false;
 
-    auto ptype = ptypes->get<ClassObject *>(0);
+    auto ptype = ptypes->get<ClsObj *>(0);
     if (!equals(ptype->jvm_mirror->class_name, S(array_java_lang_Object))) 
         return false;
 

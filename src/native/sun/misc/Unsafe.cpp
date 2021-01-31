@@ -122,10 +122,10 @@ static void ensureClassInitialized(jobject _this, jclass c)
 static jlong staticFieldOffset(jobject _this, jobject f)
 {
     // private String name;
-    auto name = f->getRefField<ClassObject>("name", "Ljava/lang/String;")->toUtf8();
+    auto name = f->getRefField<ClsObj>("name", "Ljava/lang/String;")->toUtf8();
 
     // private Class<?> clazz;
-    Class *c = f->getRefField<ClassObject>("clazz", "Ljava/lang/Class;")->jvm_mirror;    
+    Class *c = f->getRefField<ClsObj>("clazz", "Ljava/lang/Class;")->jvm_mirror;
     for (int i = 0; i < c->fields.size(); i++) {
         Field *field = c->fields[i];
         if (equals(field->name, name))
@@ -140,7 +140,7 @@ static jlong staticFieldOffset(jobject _this, jobject f)
 static jobject staticFieldBase(jobject _this, jobject f)
 {
     // private Class<?> clazz;
-    ClassObject *co = f->getRefField<ClassObject>("clazz", "Ljava/lang/Class;");
+    auto co = f->getRefField<ClsObj>("clazz", "Ljava/lang/Class;");
     return co;
 }
 
@@ -173,14 +173,12 @@ static jlong objectFieldOffset1(jobject _this, jclass c, jstring name)
 
 #define OBJECT_PUT(o, offset, x, arrSetFunc, t, slotSetFunc)            \
     do {                                                                \
-        Array *ao = dynamic_cast<Array *>(o);                           \
-        ClassObject *co = dynamic_cast<ClassObject *>(o);               \
-                                                                        \
-        if (ao != nullptr) { /* set value to array */                   \
-            assert(0 <= offset && offset < ao->len);                    \
+        if (o->isArrayObject()) { /* set value to array */                   \
+            Array *ao = dynamic_cast<Array *>(o);                           \
+            assert(0 <= offset && offset < ao->arr_len);                \
             ao->arrSetFunc(offset, x);                                  \
-        } else if (co != nullptr) { /* set static filed value */        \
-            Class *c = co->jvm_mirror;                                  \
+        } else if (o->isClassObject()) { /* set static filed value */        \
+            Class *c = o->jvm_mirror;                                  \
             initClass(c);                                               \
             assert(0 <= offset && offset < c->fields.size());           \
             Field *f = c->fields[offset];                              \
@@ -193,14 +191,12 @@ static jlong objectFieldOffset1(jobject _this, jclass c, jstring name)
 
 #define OBJECT_GET(o, offset, jtype, t, slotGetFunc)                    \
     do {                                                                \
-        Array *ao = dynamic_cast<Array *>(o);                           \
-        ClassObject *co = dynamic_cast<ClassObject *>(o);               \
-                                                                        \
-        if (ao != nullptr) { /* get value from array */                 \
-            assert(0 <= offset && offset < ao->len);                    \
+        if (o->isArrayObject()) { /* get value from array */                 \
+            Array *ao = dynamic_cast<Array *>(o);                           \
+            assert(0 <= offset && offset < ao->arr_len);                \
             return ao->get<jtype>(offset);                              \
-        } else if (co != nullptr) { /* get static filed value */         \
-            Class *c = co->jvm_mirror;                                  \
+        } else if (o->isClassObject()) { /* get static filed value */         \
+            Class *c = o->jvm_mirror;                                  \
             initClass(c);                                               \
             assert(0 <= offset && offset < c->fields.size());           \
             Field *f = c->fields[offset];                              \
@@ -448,13 +444,11 @@ static jobject getObjectVolatile(jobject _this, jobject o, jlong offset)
 {
     // todo Volatile
 
-    ClassObject *co = dynamic_cast<ClassObject *>(o);
-    Array *ao = dynamic_cast<Array *>(o);
-    if (ao != nullptr) {
+    if (o->isArrayObject()) {
         Array *ao = dynamic_cast<Array *>(o);  
         return ao->get<jobject>(offset);
-    } else if (co != nullptr) {
-        Class *c = co->jvm_mirror;
+    } else if (o->isClassObject()) {
+        Class *c = o->jvm_mirror;
         assert(0 <= offset && offset < c->fields.size());
         Field *f = c->fields[offset];
         return f->static_value.r;
@@ -763,11 +757,11 @@ static jclass defineAnonymousClass(jobject _this,
                     jclass host_class, jbyteArray data, jobjectArray cp_patches)
 {
     assert(host_class != nullptr && data != nullptr);
-    Class *c = defineClass(host_class->jvm_mirror->loader, (u1 *) data->data, data->len);
+    Class *c = defineClass(host_class->jvm_mirror->loader, (u1 *) data->data, data->arr_len);
     if (c == nullptr)
         return nullptr; // todo
 
-    int cp_patches_len = cp_patches == nullptr ? 0 : cp_patches->len;    
+    int cp_patches_len = cp_patches == nullptr ? 0 : cp_patches->arr_len;
     for (int i = 0; i < cp_patches_len; i++) {
         jobject o = cp_patches->get<jobject>(i);
         if (o != nullptr) {

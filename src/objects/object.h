@@ -45,11 +45,17 @@ public:
 
     Class *clazz;
 
+    union {
+        Class *jvm_mirror = nullptr; // present only if Object of java.lang.Class
+        jsize arr_len;     // present only if array Object
+    };
+
 //    static Object *newObject(Class *c);
 
     virtual size_t size() const;
 
     virtual bool isArrayObject() const;
+    virtual bool isClassObject() const;
     virtual Object *clone() const;
 
 #define setTField(T, t) \

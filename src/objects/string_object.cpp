@@ -99,14 +99,14 @@ utf8_t *strObjToUtf8(jstrref so)
         // byte[] value;
         auto value = so->getRefField<Array>(S(value), S(array_B));
         static_assert(sizeof(utf8_t) == sizeof(jbyte), ""); // todo
-        auto utf8 = new utf8_t[value->len + 1];
-        utf8[value->len] = 0;
-        memcpy(utf8, value->data, value->len * sizeof(jbyte));
+        auto utf8 = new utf8_t[value->arr_len + 1];
+        utf8[value->arr_len] = 0;
+        memcpy(utf8, value->data, value->arr_len * sizeof(jbyte));
         return utf8;
     } else {
         // char[] value;
         auto value = so->getRefField<Array>(S(value), S(array_C));
-        return unicode::toUtf8((const unicode_t *) (value->data), value->len);
+        return unicode::toUtf8((const unicode_t *) (value->data), value->arr_len);
     }
 }
 
