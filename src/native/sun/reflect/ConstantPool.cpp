@@ -33,9 +33,9 @@ static jstring getUTF8At0(jobject _this, jobject constantPoolOop, jint i)
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
         { "getSize0", "(Ljava/lang/Object;)I", (void *) getSize0 },
-        { "getClassAt0", "(Ljava/lang/Object;I)Ljava/lang/Class;", (void *) getClassAt0 },
+        { "getClassAt0", "(Ljava/lang/Object;I)" CLS, (void *) getClassAt0 },
         { "getLongAt0", "(Ljava/lang/Object;I)J", (void *) getLongAt0 },
-        { "getUTF8At0", "(Ljava/lang/Object;I)Ljava/lang/String;", (void *) getUTF8At0 },
+        { "getUTF8At0", "(Ljava/lang/Object;I)" STR, (void *) getUTF8At0 },
 };
 
 void sun_reflect_ConstantPool_registerNatives()

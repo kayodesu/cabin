@@ -145,7 +145,7 @@ static jint getLength(jobject array)
 
 // private static native Object newArray(Class<?> componentType, int length)
 //                  throws NegativeArraySizeException;
-static jobject __newArray(jclass componentType, jint length)
+static jobject newArray(jclass componentType, jint length)
 {
     if (componentType == nullptr) {
         Thread::signalException(S(java_lang_NullPointerException));
@@ -160,10 +160,10 @@ static jobject __newArray(jclass componentType, jint length)
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "get", "(Ljava/lang/Object;I)" OBJ, (void *) get },
-        { "set", "(Ljava/lang/Object;ILjava/lang/Object;)V", (void *) set },
-        { "getLength", "(Ljava/lang/Object;)I", (void *) getLength },
-        { "newArray", "(Ljava/lang/Class;I)" OBJ, (void *) __newArray },
+        { "get", _OBJ "I)" OBJ, (void *) get },
+        { "set", _OBJ "ILjava/lang/Object;)V", (void *) set },
+        { "getLength", _OBJ ")I", (void *) getLength },
+        { "newArray", _CLS "I)" OBJ, (void *) newArray },
 };
 
 void java_lang_reflect_Array_registerNatives()

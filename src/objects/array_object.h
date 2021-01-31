@@ -11,12 +11,7 @@ class Array: public Object {
     Array(Class *ac, jint dim, const jint lens[]);
 
 public:
-//    jsize arr_len; // 数组的长度
-
-//    static Array *newArray(Class *ac, jint arrLen);
-//    static Array *newMultiArray(Class *ac, jint dim, const jint lens[]);
-
-    bool isArrayObject() const override { return true; }
+    virtual bool isArrayObject() const override { return true; }
     bool isPrimArray() const;
 
     bool checkBounds(jint index)
@@ -70,9 +65,9 @@ public:
     }
 
     static void copy(Array *dst, jint dst_pos, const Array *src, jint src_pos, jint len);
-    size_t size() const override;
-    Array *clone() const override;
-    std::string toString() const override;
+    virtual size_t size() const override;
+    virtual Array *clone() const override;
+    virtual std::string toString() const override;
 
     friend class Class;
 };

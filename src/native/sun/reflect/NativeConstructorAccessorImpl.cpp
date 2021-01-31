@@ -98,7 +98,7 @@ static jobject newInstance0(jobject c, jobjectArray args)
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "newInstance0", "(Ljava/lang/reflect/Constructor;[Ljava/lang/Object;)" OBJ, (void *) newInstance0 },
+        { "newInstance0", "(Ljava/lang/reflect/Constructor;[" OBJ_ OBJ, (void *) newInstance0 },
 };
 
 void sun_reflect_NativeConstructorAccessorImpl_registerNatives()

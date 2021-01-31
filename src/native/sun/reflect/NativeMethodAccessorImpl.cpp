@@ -65,7 +65,7 @@ static jobject invoke0(jobject method, jobject o, jobjectArray os)
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "invoke0", "(Ljava/lang/reflect/Method;" OBJ "[Ljava/lang/Object;)" OBJ, (void *) invoke0 },
+        { "invoke0", "(Ljava/lang/reflect/Method;" OBJ "[" OBJ_ OBJ, (void *) invoke0 },
 };
 
 void sun_reflect_NativeMethodAccessorImpl_registerNatives()

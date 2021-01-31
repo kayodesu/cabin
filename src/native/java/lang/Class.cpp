@@ -457,7 +457,7 @@ static jobject getConstantPool(jclass _this)
 {
     Class *cp_class = loadBootClass("sun/reflect/ConstantPool");
     jobject cp = cp_class->allocObject();
-    cp->setRefField("constantPoolOop", "Ljava/lang/Object;", (jobject) &_this->jvm_mirror->cp); // todo 应该传递一个正在的 Object *
+    cp->setRefField("constantPoolOop", OBJ, (jobject) &_this->jvm_mirror->cp); // todo 应该传递一个正在的 Object *
     return cp;
 }
 
@@ -474,8 +474,7 @@ static jobjectArray getDeclaredFields0(jclass _this, jboolean public_only)
      * Field(Class<?> declaringClass, String name, Class<?> type,
      *      int modifiers, int slot, String signature, byte[] annotations)
      */
-    Method *constructor = field_class->getConstructor(
-            "(Ljava/lang/Class;" "Ljava/lang/String;" "Ljava/lang/Class;" "II" "Ljava/lang/String;" "[B)V");
+    Method *constructor = field_class->getConstructor(_CLS STR CLS "II" STR "[B)V");
 
     // invoke constructor of class java/lang/reflect/Field
     for (int i = 0; i < field_count; i++) {
@@ -522,9 +521,7 @@ static jobjectArray getDeclaredMethods0(jclass _this, jboolean public_only)
      *      Class<?>[] checkedExceptions, int modifiers, int slot, String signature,
      *      byte[] annotations, byte[] parameterAnnotations, byte[] annotationDefault)
      */
-    Method *constructor = method_class->getConstructor(
-                "(Ljava/lang/Class;" "Ljava/lang/String;" "[Ljava/lang/Class;" "Ljava/lang/Class;"
-                "[Ljava/lang/Class;" "II" "Ljava/lang/String;" "[B[B[B)V");
+    Method *constructor = method_class->getConstructor(_CLS STR "[" CLS CLS "[" CLS "II" STR "[B[B[B)V");
 
     vector<jref> methods;
     for (int i = 0; i < method_count; i++) {
@@ -576,8 +573,7 @@ static jobjectArray getDeclaredConstructors0(jclass _this, jboolean public_only)
      *      Class<?>[] checkedExceptions, int modifiers, int slot,
      *      String signature, byte[] annotations, byte[] parameterAnnotations)
      */
-    Method *constructor_constructor = constructor_class->getConstructor(
-                "(Ljava/lang/Class;" "[Ljava/lang/Class;" "[Ljava/lang/Class;" "II" "Ljava/lang/String;" "[B[B)V");
+    Method *constructor_constructor = constructor_class->getConstructor(_CLS "[" CLS "[" CLS "II" STR "[B[B)V");
 
     // invoke constructor of class java/lang/reflect/Constructor
     for (int i = 0; i < constructor_count; i++) {

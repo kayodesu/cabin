@@ -24,8 +24,8 @@ static jboolean getJvmVersionInfo()
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "getJdkSpecialVersion", "()Ljava/lang/String;", (void *) getJdkSpecialVersion },
-        { "getJvmSpecialVersion", "()Ljava/lang/String;", (void *) getJvmSpecialVersion },
+        { "getJdkSpecialVersion", __STR, (void *) getJdkSpecialVersion },
+        { "getJvmSpecialVersion", __STR, (void *) getJvmSpecialVersion },
         { "getJdkVersionInfo", "()V", (void *) getJdkVersionInfo },
         { "getJvmVersionInfo", "()Z", (void *) getJvmVersionInfo },
 };

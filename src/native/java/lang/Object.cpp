@@ -1,9 +1,6 @@
 #include "../../../symbol.h"
 #include "../../jni_internal.h"
-#include "../../../cabin.h"
 #include "../../../metadata/class.h"
-#include "../../../objects/object.h"
-#include "../../../objects/class_loader.h"
 #include "../../../runtime/vm_thread.h"
 
 // public native int hashCode();

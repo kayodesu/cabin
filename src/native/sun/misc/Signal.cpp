@@ -20,7 +20,7 @@ static void raise0(jint i)
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "findSignal", "(Ljava/lang/String;)I", (void *) findSignal },
+        { "findSignal", _STR_ "I", (void *) findSignal },
         { "handle0", "(IJ)J", (void *) handle0 },
         { "raise0", "(I)V", (void *) raise0 },
 };

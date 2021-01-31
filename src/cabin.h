@@ -161,7 +161,6 @@ extern std::vector<std::pair<const utf8_t *, const utf8_t *>> g_properties;
 
 // 出现异常，退出jvm
 #define jvm_abort(...) do { printvm("fatal error! "); printf(__VA_ARGS__); exit(-1); } while(false)
-
 #define JVM_PANIC(...) do { printvm("fatal error! "); printf(__VA_ARGS__); exit(-1); } while(false)
 
 // 退出jvm

@@ -147,6 +147,8 @@ Object *ConstantPool::resolveMethodHandle(u2 i)
                        "Ljava/lang/invoke/MethodHandle;";
     const utf8_t *d3 = "(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/Class;)"
                        "Ljava/lang/invoke/MethodHandle;";
+    const utf8_t *d4 = "(Ljava/lang/Class;ILjava/lang/Class;Ljava/lang/String;Ljava/lang/Object;)"
+                       "Ljava/lang/invoke/MethodHandle;";
 
     switch (kind) {
         case JVM_REF_getField: {
@@ -195,7 +197,7 @@ Object *ConstantPool::resolveMethodHandle(u2 i)
             Class *mthd_hndl_natives_class = loadBootClass(S(java_lang_invoke_MethodHandleNatives));
             // static MethodHandle linkMethodHandleConstant(Class<?> callerClass, int refKind, 
             //                                                  Class<?> defc, String name, Object type)
-            Method *m0 = mthd_hndl_natives_class->getDeclaredStaticMethod("linkMethodHandleConstant", "(Ljava/lang/Class;ILjava/lang/Class;Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/invoke/MethodHandle;");
+            Method *m0 = mthd_hndl_natives_class->getDeclaredStaticMethod("linkMethodHandleConstant", d4);
             return getRef(execJavaFunc(m0, { rslot(clazz->java_mirror), islot(kind), rslot(m->clazz->java_mirror), rslot(newString(m->name)), rslot(mt) }));
             // // public MethodHandle findStatic(Class<?> refc, String name, MethodType type)
             // //                      throws NoSuchMethodException, IllegalAccessException;
