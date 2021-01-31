@@ -134,7 +134,7 @@ Class *loadBootClass(const utf8_t *name)
 
     Class *c = nullptr;
     if (isPrimClassName(name)) {
-        c = Class::newClass(name);
+        c = new Class(name);
     } else {
         if (g_jdk_version_9_and_upper) {
             for (auto &mod : g_jdk_modules) {
@@ -179,7 +179,7 @@ Class *loadArrayClass(Object *loader, const utf8_t *arr_class_name)
     if (arr_class != nullptr)
         return arr_class; // find out
     
-    arr_class = Class::newArrayClass(c->loader, arr_class_name);            
+    arr_class = new Class(c->loader, arr_class_name);
     assert(arr_class != nullptr);
     if (arr_class->loader == BOOT_CLASS_LOADER)
         boot_packages.insert(arr_class->pkg_name); // todo array class 的pkg_name是啥
@@ -275,7 +275,7 @@ Class *loadClass(Object *class_loader, const utf8_t *name)
 
 Class *defineClass(jref class_loader, u1 *bytecode, size_t len)
 {
-    return Class::newClass(class_loader, bytecode, len);
+    return new Class(class_loader, bytecode, len);
 }
 
 Class *defineClass(jref class_loader, jref name,

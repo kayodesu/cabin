@@ -50,8 +50,6 @@ public:
         jsize arr_len;     // present only if array Object
     };
 
-//    static Object *newObject(Class *c);
-
     virtual size_t size() const;
 
     virtual bool isArrayObject() const;
@@ -138,11 +136,5 @@ public:
 
     friend class Class;
 };
-
-//static inline Object *newObject(Class *c)
-//{
-//    return Object::newObject(c);
-//}
-
 
 #endif //CABIN_OBJECT_H

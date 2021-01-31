@@ -77,19 +77,6 @@ public:
     friend class Class;
 };
 
-
-//static inline Array *newArray(Class *ac, jint arrLen)
-//{
-//    return Array::newArray(ac, arrLen);
-//}
-//
-//Array *newTypeArray(ArrayType type, jint arr_len);
-//
-//static inline Array *newMultiArray(Class *ac, jint dim, const jint lens[])
-//{
-//    return Array::newMultiArray(ac, dim, lens);
-//}
-
 /*
  * [[[I -> int
  * [Ljava/lang/Object; -> java/lang/Object

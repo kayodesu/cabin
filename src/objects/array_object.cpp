@@ -5,24 +5,6 @@
 
 using namespace std;
 
-//Array *Array::newArray(Class *ac, jint arrLen)
-//{
-//    assert(ac != nullptr);
-//    assert(ac->isArrayClass());
-////    size_t size = sizeof(Array) + ac->getEleSize()*arrLen;
-//    return new (g_heap->alloc(ac->objectSize(arrLen))) Array(ac, arrLen);
-//}
-//
-//Array *Array::newMultiArray(Class *ac, jint dim, const jint lens[])
-//{
-//    assert(ac != nullptr);
-//    assert(dim >= 1);
-//    assert(ac->isArrayClass());
-//
-////    size_t size = sizeof(Array) + ac->getEleSize()*lens[0];
-//    return new (g_heap->alloc(ac->objectSize(lens[0]))) Array(ac, dim, lens);
-//}
-
 Array::Array(Class *ac, jint arr_len): Object(ac)
 {
     assert(ac != nullptr);
@@ -135,27 +117,6 @@ Array *Array::clone() const
     clone->data = (slot_t *) (clone + 1);
     return clone;
 }
-
-//Array *newTypeArray(ArrayType type, jint arr_len)
-//{
-//    const char *arr_class_name;
-//
-//    switch (type) {
-//        case JVM_AT_BOOLEAN: arr_class_name = S(array_Z); break;
-//        case JVM_AT_CHAR:    arr_class_name = S(array_C); break;
-//        case JVM_AT_FLOAT:   arr_class_name = S(array_F); break;
-//        case JVM_AT_DOUBLE:  arr_class_name = S(array_D); break;
-//        case JVM_AT_BYTE:    arr_class_name = S(array_B); break;
-//        case JVM_AT_SHORT:   arr_class_name = S(array_S); break;
-//        case JVM_AT_INT:     arr_class_name = S(array_I); break;
-//        case JVM_AT_LONG:    arr_class_name = S(array_J); break;
-//        default:
-//            Thread::signalException(S(java_lang_UnknownError), NEW_MSG("Invalid array type: %d\n", type));
-//            return nullptr;
-//    }
-//
-//    return loadArrayClass(arr_class_name)->allocArray(arr_len);
-//}
 
 string Array::toString() const
 {

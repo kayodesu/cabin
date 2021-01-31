@@ -19,7 +19,6 @@
 
 class Method;
 class Field;
-//typedef Object ClassObject;
 
 /*
  * The metadata of a class.
@@ -160,28 +159,8 @@ private:
     explicit Class(const char *class_name);
 
     // 创建 array class，由虚拟机直接生成。
-    Class(Object *loader, const char *className);
+    Class(Object *loader, const char *class_name);
 
-    static Class *newClass(Object *loader, u1 *bytecode, size_t len)
-    {
-        // 因为 class object 无需清理，就不在堆上分配了，
-        // 在本地内存创建即可。
-        return new (calloc(1, sizeof(Class))) Class(loader, bytecode, len);
-    }
-
-    static Class *newClass(const char *class_name)
-    {
-        // 因为 class object 无需清理，就不在堆上分配了，
-        // 在本地内存创建即可。
-        return new (calloc(1, sizeof(Class))) Class(class_name);
-    }
-
-    static Class *newArrayClass(Object *loader, const char *class_name)
-    {
-        // 因为 class object 无需清理，就不在堆上分配了，
-        // 在本地内存创建即可。
-        return new (calloc(1, sizeof(Class))) Class(loader, class_name);
-    }
 public:
     ~Class();
 

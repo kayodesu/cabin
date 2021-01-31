@@ -492,13 +492,13 @@ Class::Class(Object *loader, u1 *bytecode, size_t len): loader(loader), bytecode
     state = LOADED;
 }
 
-Class::Class(const char *className)
-        : class_name(dup(className)), /* 形参className可能非持久，复制一份 */
+Class::Class(const char *class_name)
+        : class_name(dup(class_name)), /* 形参className可能非持久，复制一份 */
           access_flags(JVM_ACC_PUBLIC), inited(true),
           loader(nullptr), super_class(g_object_class)
 {
-    assert(className != nullptr);
-    assert(isPrimClassName(className));
+    assert(class_name != nullptr);
+    assert(isPrimClassName(class_name));
 
     pkg_name = "";
 
@@ -513,13 +513,13 @@ Class::Class(const char *className)
     state = LOADED;
 }
 
-Class::Class(Object *loader, const char *className)
-        : class_name(dup(className)), /* 形参className可能非持久，复制一份 */
+Class::Class(Object *loader, const char *class_name)
+        : class_name(dup(class_name)), /* 形参className可能非持久，复制一份 */
           access_flags(JVM_ACC_PUBLIC), inited(true),
           loader(loader), super_class(g_object_class)
 {
-    assert(className != nullptr);
-    assert(className[0] == '[');
+    assert(class_name != nullptr);
+    assert(class_name[0] == '[');
 
     pkg_name = "";
 
