@@ -2,7 +2,7 @@
 #include "../symbol.h"
 #include "class_loader.h"
 #include "object.h"
-#include "array_object.h"
+#include "array.h"
 #include "../metadata/class.h"
 #include "../metadata/field.h"
 #include "../interpreter/interpreter.h"
@@ -112,14 +112,126 @@ bool Object::isClassObject() const
     return clazz == g_class_class;
 }
 
-utf8_t *Object::toUtf8() const
-{
-    return strObjToUtf8((jstrref) this);
-}
-
 string Object::toString() const
 {
     ostringstream os;
     os << "Object(" << this << "), " << clazz->class_name;
     return os.str();
+}
+
+static utf8_t *string2utf8(jstrref so)
+{
+    assert(so != nullptr);
+    assert(g_string_class != nullptr);
+    assert(so->clazz == g_string_class);
+
+    if (g_jdk_version_9_and_upper) {
+        // byte[] value;
+        auto value = so->getRefField<Array>(S(value), S(array_B));
+        static_assert(sizeof(utf8_t) == sizeof(jbyte), ""); // todo
+        auto utf8 = new utf8_t[value->arr_len + 1];
+        utf8[value->arr_len] = 0;
+        memcpy(utf8, value->data, value->arr_len * sizeof(jbyte));
+        return utf8;
+    } else {
+        // char[] value;
+        auto value = so->getRefField<Array>(S(value), S(array_C));
+        return unicode::toUtf8((const unicode_t *) (value->data), value->arr_len);
+    }
+}
+
+utf8_t *Object::toUtf8() const
+{
+    return string2utf8((jstrref) this);
+}
+
+static Object *newString_jdk_8_and_under(const utf8_t *str)
+{
+    assert(g_string_class != nullptr && str != nullptr);
+
+    initClass(g_string_class);
+    auto strobj = g_string_class->allocObject();
+    auto len = length(str);
+
+    // set java/lang/String 的 value 变量赋值
+    Array *value = loadArrayClass(S(array_C))->allocArray(len); // [C
+    toUnicode(str, (unicode_t *) (value->data));
+    strobj->setRefField(S(value), S(array_C), value);
+
+    return strobj;
+}
+
+static Object *newString_jdk_9_and_upper(const utf8_t *str)
+{
+    assert(g_string_class != nullptr && str != nullptr);
+
+    initClass(g_string_class);
+    assert(is_jtrue(g_string_class->lookupField("COMPACT_STRINGS", "Z")->static_value.z));
+
+    auto strobj = g_string_class->allocObject();
+    auto len = length(str);
+
+    // set java/lang/String 的 value 变量赋值
+    // private final byte[] value;
+    Array *value = loadArrayClass(S(array_B))->allocArray(len); // [B
+    memcpy(value->data, str, len);
+    strobj->setRefField(S(value), S(array_B), value);
+
+    // set java/lang/String 的 coder 变量赋值
+    // private final byte coder;
+    // 可取一下两值之一：
+    // @Native static final byte LATIN1 = 0;
+    // @Native static final byte UTF16  = 1;
+    strobj->setByteField(S(coder), "B", 0);
+    return strobj;
+}
+
+jstrref newString(const utf8_t *str)
+{
+    if (g_jdk_version_9_and_upper) {
+        return newString_jdk_9_and_upper(str);
+    } else {
+        return newString_jdk_8_and_under(str);
+    }
+}
+
+jstrref newString(const unicode_t *str, jsize len)
+{
+    // todo
+    jvm_abort("not implement.");
+}
+
+bool StringEquals::operator()(jstrref x, jstrref y) const
+{
+    assert(x != nullptr);
+    assert(y != nullptr);
+    assert(x->clazz == g_string_class);
+    assert(y->clazz == g_string_class);
+
+    // public boolean equals(Object anObject);
+    Method *equals = g_string_class->getDeclaredInstMethod("equals", "(Ljava/lang/Object;)Z");
+    return getBool(execJavaFunc(equals, { x, y })) != jfalse;
+}
+
+size_t StringHash::operator()(jstrref x) const
+{
+    assert(x != nullptr);
+    assert(x->clazz == g_string_class);
+
+    // public int hashCode();
+    Method *hashCode = g_string_class->getDeclaredInstMethod("hashCode", "()I");
+    return (size_t) getInt(execJavaFunc(hashCode, {x}));
+
+}
+
+jsize stringGetLength(jstrref so)
+{
+    // todo
+    jvm_abort("not implement.");
+}
+
+jsize stringGetUTFLength(jstrref so)
+{
+    // todo
+    jvm_abort("not implement.");
 }

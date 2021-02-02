@@ -1,7 +1,7 @@
 #include "../../jni_internal.h"
 #include "../../../symbol.h"
 #include "helper.h"
-#include "../../../objects/array_object.h"
+#include "../../../objects/array.h"
 
 
 // private static native void initIDs();

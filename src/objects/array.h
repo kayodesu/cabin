@@ -1,5 +1,5 @@
-#ifndef CABIN_ARRAY_OBJECT_H
-#define CABIN_ARRAY_OBJECT_H
+#ifndef CABIN_ARRAY_H
+#define CABIN_ARRAY_H
 
 #include <string>
 #include "object.h"
@@ -11,8 +11,10 @@ class Array: public Object {
     Array(Class *ac, jint dim, const jint lens[]);
 
 public:
-    virtual bool isArrayObject() const override { return true; }
-    bool isPrimArray() const;
+    jsize arr_len;     // present only if array Object
+
+    [[nodiscard]] bool isArrayObject() const override { return true; }
+    [[nodiscard]] bool isPrimArray() const;
 
     bool checkBounds(jint index)
     {
@@ -65,9 +67,9 @@ public:
     }
 
     static void copy(Array *dst, jint dst_pos, const Array *src, jint src_pos, jint len);
-    virtual size_t size() const override;
-    virtual Array *clone() const override;
-    virtual std::string toString() const override;
+    [[nodiscard]] size_t size() const override;
+    [[nodiscard]] Array *clone() const override;
+    [[nodiscard]] std::string toString() const override;
 
     friend class Class;
 };
@@ -78,4 +80,4 @@ public:
  */
 std::string arrClassName2EleClassName(const utf8_t *arr_class_name);
 
-#endif //CABIN_ARRAY_OBJECT_H
+#endif //CABIN_ARRAY_H

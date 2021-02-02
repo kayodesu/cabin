@@ -6,7 +6,7 @@
 #include "../runtime/frame.h"
 #include "../objects/class_loader.h"
 #include "../objects/object.h"
-#include "../objects/array_object.h"
+#include "../objects/array.h"
 #include "../metadata/class.h"
 #include "../util/encoding.h"
 

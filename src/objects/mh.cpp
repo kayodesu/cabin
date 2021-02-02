@@ -3,7 +3,7 @@
 #include "mh.h"
 #include "../metadata/class.h"
 #include "../metadata/method.h"
-#include "array_object.h"
+#include "array.h"
 #include "../interpreter/interpreter.h"
 #include "../metadata/descriptor.h"
 #include "../runtime/vm_thread.h"

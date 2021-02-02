@@ -2,7 +2,7 @@
 #include "../../jni_internal.h"
 #include "../../../cabin.h"
 #include "../../../objects/object.h"
-#include "../../../objects/array_object.h"
+#include "../../../objects/array.h"
 #include "../../../metadata/class.h"
 #include "../../../objects/prims.h"
 #include "../../../interpreter/interpreter.h"

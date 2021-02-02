@@ -1,7 +1,6 @@
 #include "../../jni_internal.h"
-#include "../../../objects/array_object.h"
+#include "../../../objects/array.h"
 #include "../../../objects/class_loader.h"
-#include "../../../objects/string_object.h"
 
 // private static native String getSystemPackage0(String name);
 static jstring getSystemPackage0(jstring name)

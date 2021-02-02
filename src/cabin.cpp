@@ -8,7 +8,7 @@
 #include "runtime/vm_thread.h"
 #include "metadata/class.h"
 #include "metadata/method.h"
-#include "objects/array_object.h"
+#include "objects/array.h"
 #include "interpreter/interpreter.h"
 #include "heap/heap.h"
 #include "platform/sysinfo.h"

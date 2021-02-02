@@ -1,7 +1,7 @@
 #include "../../jni_internal.h"
 #include "../../../symbol.h"
 #include "../../../objects/object.h"
-#include "../../../objects/array_object.h"
+#include "../../../objects/array.h"
 #include "../../../runtime/vm_thread.h"
 #include "../../../runtime/frame.h"
 #include "../../../interpreter/interpreter.h"

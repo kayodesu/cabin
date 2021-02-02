@@ -3,7 +3,7 @@
 #include "../metadata/class.h"
 #include "../objects/class_loader.h"
 #include "../objects/prims.h"
-#include "../objects/array_object.h"
+#include "../objects/array.h"
 #include "../runtime/vm_thread.h"
 
 using namespace std;

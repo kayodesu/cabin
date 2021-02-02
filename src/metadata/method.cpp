@@ -1,6 +1,6 @@
 #include "method.h"
 #include "class.h"
-#include "../objects/array_object.h"
+#include "../objects/array.h"
 #include "descriptor.h"
 
 using namespace std;

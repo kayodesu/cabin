@@ -1,6 +1,6 @@
 #include "../../../runtime/frame.h"
 #include "../../../runtime/vm_thread.h"
-#include "../../../objects/array_object.h"
+#include "../../../objects/array.h"
 #include "../../jni_internal.h"
 
 /*

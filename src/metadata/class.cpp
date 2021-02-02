@@ -11,7 +11,7 @@
 #include "class.h"
 #include "method.h"
 #include "field.h"
-#include "../objects/array_object.h"
+#include "../objects/array.h"
 #include "../interpreter/interpreter.h"
 #include "../objects/prims.h"
 #include "../objects/mh.h"
@@ -1077,7 +1077,7 @@ void Class::buildStrPool()
 {
     assert(this == g_string_class);
     assert(str_pool == nullptr);
-    str_pool = new unordered_set<Object *, StrObjHash, StrObjEquals>;
+    str_pool = new unordered_set<Object *, StringHash, StringEquals>;
 }
 
 jstrref Class::intern(const utf8_t *str)

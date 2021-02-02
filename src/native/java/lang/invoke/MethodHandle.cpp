@@ -2,7 +2,7 @@
 #include "../../../jni_internal.h"
 #include "../../../../cabin.h"
 #include "../../../../runtime/frame.h"
-#include "../../../../objects/array_object.h"
+#include "../../../../objects/array.h"
 #include "../../../../metadata/descriptor.h"
 #include "../../../../interpreter/interpreter.h"
 

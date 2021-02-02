@@ -5,7 +5,7 @@
 #include "../../../../metadata/field.h"
 #include "../../../../metadata/method.h"
 #include "../../../../objects/mh.h"
-#include "../../../../objects/array_object.h"
+#include "../../../../objects/array.h"
 #include "../../../../interpreter/interpreter.h"
 
 using namespace utf8;

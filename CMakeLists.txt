@@ -41,7 +41,7 @@ add_executable(cabin
         src/native/jdk/internal/misc/VM.cpp
         src/native/jdk/internal/misc/Unsafe.cpp src/native/jdk/internal/util/SystemProps-Raw.cpp
         src/metadata/method.cpp src/metadata/field.cpp src/metadata/constant_pool.cpp src/native/jni.cpp
-        src/objects/array_object.cpp src/objects/string_object.cpp 
+        src/objects/array.cpp
         src/objects/class_loader.cpp src/objects/prims.cpp src/objects/mh.cpp
         src/objects/object.cpp src/metadata/class.cpp src/objects/java_classes.cpp src/slot.cpp)
 

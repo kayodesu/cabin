@@ -1,5 +1,4 @@
 #include "../../jni_internal.h"
-#include "../../../objects/string_object.h"
 
 // Gets the platform defined TimeZone ID.
 // private static native String getSystemTimeZoneID(String javaHome);

@@ -2,7 +2,7 @@
 #include "../../jni_internal.h"
 #include "../../../objects/object.h"
 #include "../../../metadata/field.h"
-#include "../../../objects/array_object.h"
+#include "../../../objects/array.h"
 #include "../../../interpreter/interpreter.h"
 #include "../../../runtime/frame.h"
 #include "../../../runtime/vm_thread.h"

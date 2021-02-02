@@ -1,5 +1,5 @@
 #include "../../../jni_internal.h"
-#include "../../../../objects/array_object.h"
+#include "../../../../objects/array.h"
 #include "../../../../objects/prims.h"
 #include "../../../../metadata/class.h"
 #include "../../../../runtime/vm_thread.h"

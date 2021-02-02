@@ -10,7 +10,7 @@
 #include "../debug.h"
 #include "../runtime/vm_thread.h"
 #include "../runtime/frame.h"
-#include "../objects/array_object.h"
+#include "../objects/array.h"
 
 using namespace std;
 using namespace utf8;

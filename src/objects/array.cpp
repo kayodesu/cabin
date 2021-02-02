@@ -1,4 +1,4 @@
-#include "array_object.h"
+#include "array.h"
 #include "../metadata/class.h"
 #include "prims.h"
 #include "../runtime/vm_thread.h"

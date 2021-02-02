@@ -2,7 +2,7 @@
 #include "../../../jni_internal.h"
 #include "../../../../symbol.h"
 #include "../../../../cabin.h"
-#include "../../../../objects/string_object.h"
+#include "../../../../objects/object.h"
 #include "../../../../runtime/vm_thread.h"
 
 // private static native void initIDs();

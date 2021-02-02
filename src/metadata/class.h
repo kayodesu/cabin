@@ -11,7 +11,6 @@
 #include "constant_pool.h"
 #include "../objects/class_loader.h"
 #include "../objects/object.h"
-#include "../objects/string_object.h"
 #include "../util/bytecode_reader.h"
 #include "../classfile/attributes.h"
 #include "../classfile/constants.h"
@@ -325,7 +324,7 @@ public:
     /*---------------------- for java.lang.String class ----------------------*/
 private:
     // A pool of strings, initially empty, is maintained privately by the String class.
-    std::unordered_set<Object *, StrObjHash, StrObjEquals> *str_pool = nullptr;
+    std::unordered_set<Object *, StringHash, StringEquals> *str_pool = nullptr;
     std::mutex str_pool_mutex;
 public:
     void buildStrPool();

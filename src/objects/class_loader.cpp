@@ -7,7 +7,7 @@
 #include "class_loader.h"
 #include "../symbol.h"
 #include "../metadata/class.h"
-#include "array_object.h"
+#include "array.h"
 #include "../interpreter/interpreter.h"
 #include "../runtime/vm_thread.h"
 #include "prims.h"

@@ -45,10 +45,7 @@ public:
 
     Class *clazz;
 
-    union {
-        Class *jvm_mirror = nullptr; // present only if Object of java.lang.Class
-        jsize arr_len;     // present only if array Object
-    };
+    Class *jvm_mirror = nullptr; // present only if Object of java.lang.Class
 
     virtual size_t size() const;
 
@@ -136,5 +133,20 @@ public:
 
     friend class Class;
 };
+
+jstrref newString(const utf8_t *str);
+jstrref newString(const unicode_t *str, jsize len);
+
+jsize stringGetLength(jstrref so);
+jsize stringGetUTFLength(jstrref so);
+
+struct StringEquals {
+    bool operator()(jstrref x, jstrref y) const;
+};
+
+struct StringHash {
+    size_t operator()(jstrref x) const;
+};
+
 
 #endif //CABIN_OBJECT_H
