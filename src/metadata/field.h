@@ -61,7 +61,7 @@ private:
         if (isStatic()) {
             memset(&static_value, 0, sizeof(static_value));
         } else {
-            id = 0; // todo id 应该怎么设置？？
+            id = -1;
         }
     }
 

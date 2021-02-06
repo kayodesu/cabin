@@ -8,10 +8,6 @@ using namespace utf8;
 Field::Field(Class *c, BytecodeReader &r)
 {
     assert(c != nullptr);
-
-    id = 0;
-    memset(&static_value, 0, sizeof(static_value));
-
     clazz = c;
     ConstantPool &cp = c->cp;
 
@@ -20,6 +16,12 @@ Field::Field(Class *c, BytecodeReader &r)
     descriptor = cp.utf8(r.readu2());
 
     category_two = (descriptor[0] == 'J' || descriptor[0]== 'D');
+
+    if (isStatic()) {
+        memset(&static_value, 0, sizeof(static_value));
+    } else {
+        id = -1;
+    }
 
     // parse field's attributes
     u2 attr_count = r.readu2();
