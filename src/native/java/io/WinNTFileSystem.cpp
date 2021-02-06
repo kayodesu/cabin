@@ -18,7 +18,7 @@ static void initIDs()
 static void getDriveDirectory(jobject _this, jint drive)
 {
     // todo
-    jvm_abort("getDriveDirectory");
+    JVM_PANIC("getDriveDirectory");
 }
 
 // private native String canonicalize0(String path) throws IOException;
@@ -51,7 +51,7 @@ static jstring canonicalize0(jobject _this, jstring path)
  */
 static jlong canonicalizeWithPrefix0(jobject _this, jstring canonicalPrefix, jstring pathWithCanonicalPrefix)
 {
-    jvm_abort("canonicalizeWithPrefix0");
+    JVM_PANIC("canonicalizeWithPrefix0");
 }
 
 // public native int getBooleanAttributes(File f);
@@ -76,7 +76,7 @@ static jint getBooleanAttributes(jobject _this, jobject f)
 // public native boolean checkAccess(File f, int access);
 static jboolean checkAccess(jobject _this, jobject f, jint access)
 {
-    jvm_abort("checkAccess");
+    JVM_PANIC("checkAccess");
 }
 
 // public native long getLastModifiedTime(File f);
@@ -88,7 +88,7 @@ static jlong getLastModifiedTime(jobject _this, jobject f)
 //    file_time_type mtime = last_write_time(__path);
     struct stat buf; // todo 平台相关代码
     if (stat(_path, &buf) == -1) {
-        jvm_abort("stat faild: %s\n", _path);  // todo
+        JVM_PANIC("stat faild: %s\n", _path);  // todo
     }
 
     return buf.st_mtime;
@@ -107,61 +107,61 @@ static jlong getLength(jobject _this, jobject f)
 // public native boolean setPermission(File f, int access, boolean enable, boolean ownerOnly);
 static jboolean setPermission(jobject _this, jobject f, jint access, jboolean enable, jboolean owner_only)
 {
-    jvm_abort("setPermission");
+    JVM_PANIC("setPermission");
 }
 
 // public native boolean createFileExclusively(String path) throws IOException;
 static jboolean createFileExclusively(jobject _this, jstring path)
 {
-    jvm_abort("createFileExclusively");
+    JVM_PANIC("createFileExclusively");
 }
 
 // public native String[] list(File f);
 static jobjectArray list(jobject _this, jobject f)
 {
-    jvm_abort("list");
+    JVM_PANIC("list");
 }
 
 // public native boolean createDirectory(File f);
 static jboolean createDirectory(jobject _this, jobject f)
 {
-    jvm_abort("createDirectory");
+    JVM_PANIC("createDirectory");
 }
 
 // public native boolean setLastModifiedTime(File f, long time);
 static jboolean setLastModifiedTime(jobject _this, jobject f, jlong time)
 {
-    jvm_abort("setLastModifiedTime");
+    JVM_PANIC("setLastModifiedTime");
 }
 
 // public native boolean setReadOnly(File f);
 static jboolean setReadOnly(jobject _this, jobject f)
 {
-    jvm_abort("setReadOnly");
+    JVM_PANIC("setReadOnly");
 }
 
 // private native boolean delete0(File f);
 static jboolean delete0(jobject _this, jobject f)
 {
-    jvm_abort("delete0");
+    JVM_PANIC("delete0");
 }
 
 // private native boolean rename0(File f1, File f2);
 static jboolean rename0(jobject _this, jobject f1, jobject f2)
 {
-    jvm_abort("rename0");
+    JVM_PANIC("rename0");
 }
 
 // private static native int listRoots0();
 static jint listRoots0(jobject _this)
 {
-    jvm_abort("listRoots0");
+    JVM_PANIC("listRoots0");
 }
 
 // private native long getSpace0(File f, int t);
 static jlong getSpace0(jobject _this, jobject f1, jint t)
 {
-    jvm_abort("getSpace0");
+    JVM_PANIC("getSpace0");
 }
 
 /*
@@ -172,7 +172,7 @@ static jlong getSpace0(jobject _this, jobject f1, jint t)
  */
 static jint getNameMax0(jobject _this, jstring path)
 {
-    jvm_abort("getNameMax0");
+    JVM_PANIC("getNameMax0");
 }
 
 static JNINativeMethod methods[] = {

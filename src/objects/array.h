@@ -78,6 +78,11 @@ public:
  * [[[I -> int
  * [Ljava/lang/Object; -> java/lang/Object
  */
-std::string arrClassName2EleClassName(const utf8_t *arr_class_name);
+std::string arrClassName2eleClassName(const utf8_t *arr_class_name);
+
+#define newArray(arr_class_name, arr_len) loadArrayClass(arr_class_name)->allocArray(arr_len)
+#define newStringArray(arr_len) newArray(S(array_java_lang_String), arr_len)
+#define newClassArray(arr_len)  newArray(S(array_java_lang_Class), arr_len)
+#define newObjectArray(arr_len) newArray(S(array_java_lang_Object), arr_len)
 
 #endif //CABIN_ARRAY_H

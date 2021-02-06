@@ -39,7 +39,7 @@ jint getTotal(jlong jzfile)
     unz_global_info64 info;
     if (unzGetGlobalInfo64((unzFile) jzfile, &info) != UNZ_OK) {
         // todo error
-        jvm_abort("unzGetGlobalInfo64 failed\n");
+        JVM_PANIC("unzGetGlobalInfo64 failed\n");
     }
     return info.number_entry;
 }
@@ -58,7 +58,7 @@ jlong getNextEntry(jlong jzfile, jint i)
 	stack.PushLong(jzentry)
  */
     // todo
-    jvm_abort("getNextEntry");
+    JVM_PANIC("getNextEntry");
 }
 
 // // private static native void freeEntry(long jzfile, long jzentry);
@@ -84,13 +84,13 @@ jlong getEntry(jlong jzfile, jbyteArray name, jboolean addSlash)
 	stack := frame.OperandStack()
 	stack.PushLong(jzentry)
      */
-    jvm_abort("getEntry");
+    JVM_PANIC("getEntry");
 }
 
 // private static native byte[] getEntryBytes(long jzentry, int type);
 jbyteArray getEntryBytes(jlong jzentry, jint type)
 {
-    jvm_abort("getEntryBytes");
+    JVM_PANIC("getEntryBytes");
 // todo
     /*
      * 	vars := frame.LocalVars()
@@ -125,7 +125,7 @@ jbyteArray getEntryBytes(jlong jzentry, jint type)
 // private static native int getEntryFlag(long jzentry);
 jint getEntryFlag(jlong jzentry)
 {
-    jvm_abort("getEntryFlag");
+    JVM_PANIC("getEntryFlag");
 /*
  * todo
  * 	entry := _getEntryPop(frame)
@@ -139,7 +139,7 @@ jint getEntryFlag(jlong jzentry)
 // private static native long getEntryTime(long jzentry);
 jlong getEntryTime(jlong jzentry)
 {
-    jvm_abort("getEntryTime");
+    JVM_PANIC("getEntryTime");
 /*
  * todo
  * 	entry := _getEntryPop(frame)
@@ -155,7 +155,7 @@ jlong getEntryTime(jlong jzentry)
 // private static native long getEntryCrc(long jzentry);
 jlong getEntryCrc(jlong jzentry)
 {
-    jvm_abort("getEntryCrc");
+    JVM_PANIC("getEntryCrc");
     /*
      * todo
      * 	entry := _getEntryPop(frame)
@@ -169,7 +169,7 @@ jlong getEntryCrc(jlong jzentry)
 // private static native long getEntrySize(long jzentry);
 jlong getEntrySize(jlong jzentry)
 {
-    jvm_abort("getEntrySize");
+    JVM_PANIC("getEntrySize");
 /*
  * todo
  * 	entry := _getEntryPop(frame)
@@ -183,7 +183,7 @@ jlong getEntrySize(jlong jzentry)
 // private static native long getEntryCSize(long jzentry);
 jlong getEntryCSize(jlong jzentry)
 {
-    jvm_abort("getEntryCSize");
+    JVM_PANIC("getEntryCSize");
     /*
      * todo
      *
@@ -202,7 +202,7 @@ jlong getEntryCSize(jlong jzentry)
 // private static native int getEntryMethod(long jzentry);
 jint getEntryMethod(jlong jzentry)
 {
-    jvm_abort("getEntryMethod");
+    JVM_PANIC("getEntryMethod");
     /*
      * todo
      * 	// entry := _getEntryPop(frame)
@@ -227,7 +227,7 @@ jint getEntryMethod(jlong jzentry)
 // private static native int read(long jzfile, long jzentry, long pos, byte[] b, int off, int len);
 jint __read(jlong jzfile, jlong jzentry, jlong pos, jbyteArray b, jint off, jint len)
 {
-    jvm_abort("read");
+    JVM_PANIC("read");
 /*
  * todo
  * 	vars := frame.LocalVars()

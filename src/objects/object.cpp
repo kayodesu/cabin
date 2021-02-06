@@ -27,7 +27,7 @@ Field *Object::lookupField(const char *name, const char *descriptor)
 Object *Object::clone() const
 {
     if (clazz == g_class_class) {
-        jvm_abort("Object of java.lang.Class don't support clone"); // todo
+        JVM_PANIC("Object of java.lang.Class don't support clone"); // todo
     }
 
     size_t s = size();
@@ -154,7 +154,7 @@ static Object *newString_jdk_8_and_under(const utf8_t *str)
     auto len = length(str);
 
     // set java/lang/String 的 value 变量赋值
-    Array *value = loadArrayClass(S(array_C))->allocArray(len); // [C
+    Array *value = newArray(S(array_C), len); // [C
     toUnicode(str, (unicode_t *) (value->data));
     strobj->setRefField(S(value), S(array_C), value);
 
@@ -173,7 +173,7 @@ static Object *newString_jdk_9_and_upper(const utf8_t *str)
 
     // set java/lang/String 的 value 变量赋值
     // private final byte[] value;
-    Array *value = loadArrayClass(S(array_B))->allocArray(len); // [B
+    Array *value = newArray(S(array_B), len); // [B
     memcpy(value->data, str, len);
     strobj->setRefField(S(value), S(array_B), value);
 
@@ -198,7 +198,7 @@ jstrref newString(const utf8_t *str)
 jstrref newString(const unicode_t *str, jsize len)
 {
     // todo
-    jvm_abort("not implement.");
+    JVM_PANIC("not implement.");
 }
 
 bool StringEquals::operator()(jstrref x, jstrref y) const
@@ -221,17 +221,16 @@ size_t StringHash::operator()(jstrref x) const
     // public int hashCode();
     Method *hashCode = g_string_class->getDeclaredInstMethod("hashCode", "()I");
     return (size_t) getInt(execJavaFunc(hashCode, {x}));
-
 }
 
 jsize stringGetLength(jstrref so)
 {
     // todo
-    jvm_abort("not implement.");
+    JVM_PANIC("not implement.");
 }
 
 jsize stringGetUTFLength(jstrref so)
 {
     // todo
-    jvm_abort("not implement.");
+    JVM_PANIC("not implement.");
 }

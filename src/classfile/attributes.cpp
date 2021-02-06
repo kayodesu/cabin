@@ -51,8 +51,8 @@ void ElementValue::read(BytecodeReader &r)
             }
             break;
         default:
-            jvm_abort(MSG("unknown tag: %d\n", tag)); // todo
-            Thread::signalException(S(java_lang_UnknownError), MSG("unknown tag: %d\n", tag));
+            JVM_PANIC("unknown tag: %d\n", tag); // todo
+            SIGNAL_EXCEPTION(S(java_lang_UnknownError), "unknown tag: %d\n", tag);
     }
 }
 
@@ -125,7 +125,7 @@ slot_t *BootstrapMethod::resolveArgs(ConstantPool *cp, slot_t *result)
                 result++;
                 break;
             default:
-                jvm_abort("never goes here, wrong type."); // todo
+                JVM_PANIC("never goes here, wrong type."); // todo
         }
     }
 

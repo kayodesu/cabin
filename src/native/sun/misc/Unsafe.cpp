@@ -27,13 +27,13 @@ elsewhere.
 // public native void park(boolean isAbsolute, long time);
 static void park(jobject _this, jboolean isAbsolute, jlong time)
 {
-    jvm_abort("park");
+    JVM_PANIC("park");
 }
 
 // public native void unpark(Object thread);
 static void unpark(jobject _this, jobject thread)
 {
-    jvm_abort("unpark");
+    JVM_PANIC("unpark");
 }
 
 /*************************************    compare and swap    ************************************/
@@ -100,7 +100,7 @@ static jboolean compareAndSwapObject(jobject _this, jobject o, jlong offset, job
 // public native Object allocateInstance(Class<?> type) throws InstantiationException;
 static jobject allocateInstance(jobject _this, jclass type)
 {
-    jvm_abort("allocateInstance");
+    JVM_PANIC("allocateInstance");
 }
 
 // public native Class defineClass(String name, byte[] b, int off, int len,
@@ -108,7 +108,7 @@ static jobject allocateInstance(jobject _this, jclass type)
 static jclass __defineClass(jobject _this, jstring name, 
                 jbyteArray b, jint off, jint len, jobject loader, jobject protectionDomain)
 {
-    jvm_abort("defineClass");
+    JVM_PANIC("defineClass");
 }
 
 // public native void ensureClassInitialized(Class<?> c);
@@ -132,7 +132,7 @@ static jlong staticFieldOffset(jobject _this, jobject f)
             return i;
     }
 
-    jvm_abort("never go here"); // todo
+    JVM_PANIC("never go here"); // todo
     return -1; 
 }
 
@@ -168,7 +168,7 @@ static jlong objectFieldOffset(jobject _this, jobject field)
 // private native long objectFieldOffset1(Class<?> c, String name);
 static jlong objectFieldOffset1(jobject _this, jclass c, jstring name)
 {
-    jvm_abort("objectFieldOffset1");
+    JVM_PANIC("objectFieldOffset1");
 }
 
 #define OBJECT_PUT(o, offset, x, arrSetFunc, t, slotSetFunc)            \
@@ -323,7 +323,7 @@ static jboolean getBooleanVolatile(jobject _this, jobject o, jlong offset)
 {
     // todo Volatile
     return obj_getBoolean(_this, o, offset);
-    // jvm_abort("getBooleanVolatile");
+    // JVM_PANIC("getBooleanVolatile");
 }
 
 // public native byte getByteVolatile(Object o, long offset);
@@ -331,7 +331,7 @@ static jbyte getByteVolatile(jobject _this, jobject o, jlong offset)
 {
     // todo Volatile
     return obj_getByte(_this, o, offset);
-    // jvm_abort("getByteVolatile");
+    // JVM_PANIC("getByteVolatile");
 }
 
 // public native char getCharVolatile(Object o, long offset);
@@ -339,7 +339,7 @@ static jchar getCharVolatile(jobject _this, jobject o, jlong offset)
 {
     // todo Volatile
     return obj_getChar(_this, o, offset);
-    // jvm_abort("getCharVolatile");
+    // JVM_PANIC("getCharVolatile");
 }
 
 // public native short getShortVolatile(Object o, long offset);
@@ -347,7 +347,7 @@ static jshort getShortVolatile(jobject _this, jobject o, jlong offset)
 {
     // todo Volatile
     return obj_getShort(_this, o, offset);
-    // jvm_abort("getShortVolatile");
+    // JVM_PANIC("getShortVolatile");
 }
 
 // public native int getIntVolatile(Object o, long offset);
@@ -372,7 +372,7 @@ static jlong getLongVolatile(jobject _this, jobject o, jlong offset)
 {
     // todo Volatile
     return obj_getLong(_this, o, offset);
-    // jvm_abort("getLongVolatile");
+    // JVM_PANIC("getLongVolatile");
 }
 
 // public native float getFloatVolatile(Object o, long offset);
@@ -380,7 +380,7 @@ static jfloat getFloatVolatile(jobject _this, jobject o, jlong offset)
 {
     // todo Volatile
     return obj_getFloat(_this, o, offset);
-    // jvm_abort("getFloatVolatile");
+    // JVM_PANIC("getFloatVolatile");
 }
 
 // public native double getDoubleVolatile(Object o, long offset);
@@ -388,55 +388,55 @@ static jdouble getDoubleVolatile(jobject _this, jobject o, jlong offset)
 {
     // todo Volatile
     return obj_getDouble(_this, o, offset);
-    // jvm_abort("getDoubleVolatile");
+    // JVM_PANIC("getDoubleVolatile");
 }
 
 // public native void putIntVolatile(Object o, long offset, int x);
 static void putIntVolatile(jobject _this, jobject o, jlong offset, jint x)
 {
-    jvm_abort("putIntVolatile");
+    JVM_PANIC("putIntVolatile");
 }
 
 // public native void putBooleanVolatile(Object o, long offset, boolean x);
 static void putBooleanVolatile(jobject _this, jobject o, jlong offset, jboolean x)
 {
-    jvm_abort("putBooleanVolatile");
+    JVM_PANIC("putBooleanVolatile");
 }
 
 // public native void putByteVolatile(Object o, long offset, byte x);
 static void putByteVolatile(jobject _this, jobject o, jlong offset, jbyte x)
 {
-    jvm_abort("putByteVolatile");
+    JVM_PANIC("putByteVolatile");
 }
 
 // public native void putShortVolatile(Object o, long offset, short x);
 static void putShortVolatile(jobject _this, jobject o, jlong offset, jshort x)
 {
-    jvm_abort("putShortVolatile");
+    JVM_PANIC("putShortVolatile");
 }
 
 // public native void putCharVolatile(Object o, long offset, char x);
 static void putCharVolatile(jobject _this, jobject o, jlong offset, jchar x)
 {
-    jvm_abort("putCharVolatile");
+    JVM_PANIC("putCharVolatile");
 }
 
 // public native void putLongVolatile(Object o, long offset, long x);
 static void putLongVolatile(jobject _this, jobject o, jlong offset, jlong x)
 {
-    jvm_abort("putLongVolatile");
+    JVM_PANIC("putLongVolatile");
 }
 
 // public native void putFloatVolatile(Object o, long offset, float x);
 static void putFloatVolatile(jobject _this, jobject o, jlong offset, jfloat x)
 {
-    jvm_abort("putFloatVolatile");
+    JVM_PANIC("putFloatVolatile");
 }
 
 // public native void putDoubleVolatile(Object o, long offset, double x);
 static void putDoubleVolatile(jobject _this, jobject o, jlong offset, jdouble x)
 {
-    jvm_abort("putDoubleVolatile");
+    JVM_PANIC("putDoubleVolatile");
 }
 // -------------------------
 // public native Object getObjectVolatile(Object o, long offset);
@@ -473,27 +473,27 @@ static void putObjectVolatile(jobject _this, jobject o, jlong offset, jobject x)
 // public native Object getOrderedObject(Object o, long offset);
 static void getOrderedObject(jobject _this, jobject o, jlong offset)
 {
-    jvm_abort("getOrderedObject");
+    JVM_PANIC("getOrderedObject");
 }
 
 // public native void putOrderedObject(Object o, long offset, Object x);
 static void putOrderedObject(jobject _this, jobject o, jlong offset, jobject x)
 {
-    jvm_abort("putOrderedObject");
+    JVM_PANIC("putOrderedObject");
 }
 
 /** Ordered/Lazy version of {@link #putIntVolatile(Object, long, int)}  */
 // public native void putOrderedInt(Object o, long offset, int x);
 static void putOrderedInt(jobject _this, jobject o, jlong offset, jint x)
 {
-    jvm_abort("putOrderedInt");
+    JVM_PANIC("putOrderedInt");
 }
 
 /** Ordered/Lazy version of {@link #putLongVolatile(Object, long, long)} */
 // public native void putOrderedLong(Object o, long offset, long x);
 static void putOrderedLong(jobject _this, jobject o, jlong offset, jlong x)
 {
-    jvm_abort("putOrderedLong");
+    JVM_PANIC("putOrderedLong");
 }
 
 /*************************************    unsafe memory    ************************************/
@@ -716,7 +716,7 @@ static void copyMemory(jobject _this,
 // public native int getLoadAverage(double[] loadavg, int nelems);
 static jint getLoadAverage(jobject _this, jdoubleArray loadavg, jint nelems)
 {
-    jvm_abort("getLoadAverage"); // todo
+    JVM_PANIC("getLoadAverage"); // todo
 }
 
 // (Ljava/lang/Class;)Z
@@ -770,7 +770,7 @@ static jclass defineAnonymousClass(jobject _this,
                 c->cp.info(i, (slot_t) o);
                 c->cp.type(i, JVM_CONSTANT_ResolvedString);
             } else {
-                jvm_abort("defineAnonymousClass: unimplemented patch type"); // todo
+                JVM_PANIC("defineAnonymousClass: unimplemented patch type"); // todo
             }
         }
     }
@@ -785,7 +785,7 @@ static jclass defineAnonymousClass(jobject _this,
 //  public native void monitorEnter(Object o);
 static void monitorEnter(jobject _this, jobject o)
 {
-    jvm_abort("monitorEnter"); // todo
+    JVM_PANIC("monitorEnter"); // todo
 }
 
 /**
@@ -795,7 +795,7 @@ static void monitorEnter(jobject _this, jobject o)
  */
 static void monitorExit(jobject _this, jobject o)
 {
-    jvm_abort("monitorExit"); // todo
+    JVM_PANIC("monitorExit"); // todo
 }
 
 /**
@@ -806,32 +806,32 @@ static void monitorExit(jobject _this, jobject o)
 // public native boolean tryMonitorEnter(Object o);
 static jboolean tryMonitorEnter(jobject _this, jobject o)
 {
-    jvm_abort("tryMonitorEnter"); // todo
+    JVM_PANIC("tryMonitorEnter"); // todo
 }
 
 /** Throw the exception without telling the verifier. */
 // public native void throwException(Throwable ee);
 static void throwException(jobject _this, jobject ee)
 {
-    jvm_abort("throwException"); // todo
+    JVM_PANIC("throwException"); // todo
 }
 
 // "()V"
 static void loadFence(jobject _this)
 {
-    jvm_abort("loadFence"); // todo
+    JVM_PANIC("loadFence"); // todo
 }
 
 // "()V"
 static void storeFence(jobject _this)
 {
-    jvm_abort("storeFence"); // todo
+    JVM_PANIC("storeFence"); // todo
 }
 
 // "()V"
 static void fullFence(jobject _this)
 {
-    jvm_abort("fullFence"); // todo
+    JVM_PANIC("fullFence"); // todo
 }
 
 #undef CLD

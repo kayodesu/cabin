@@ -27,7 +27,7 @@ static void initialize()
  */
 static jobject latestUserDefinedLoader()
 {
-    jvm_abort("latestUserDefinedLoader"); // todo
+    JVM_PANIC("latestUserDefinedLoader"); // todo
 }
 
 static JNINativeMethod methods[] = {

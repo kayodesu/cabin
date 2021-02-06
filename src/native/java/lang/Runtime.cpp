@@ -40,26 +40,26 @@ static jlong maxMemory(jobject _this)
 // public native void gc();
 static void gc(jobject _this)
 {
-    jvm_abort("gc");
+    JVM_PANIC("gc");
 }
 
 /* Wormhole for calling java.lang.ref.Finalizer.runFinalization */
 // private static native void runFinalization0();
 static void runFinalization0(jobject _this)
 {
-    jvm_abort("runFinalization0");
+    JVM_PANIC("runFinalization0");
 }
 
 // public native void traceInstructions(boolean on)
 static void traceInstructions(jobject _this, jboolean on)
 {
-    jvm_abort("traceInstructions");
+    JVM_PANIC("traceInstructions");
 }
 
 // public native void traceMethodCalls(boolean on);
 static void traceMethodCalls(jobject _this, jboolean on)
 {
-    jvm_abort("traceMethodCalls");
+    JVM_PANIC("traceMethodCalls");
 }
 
 static JNINativeMethod methods[] = {

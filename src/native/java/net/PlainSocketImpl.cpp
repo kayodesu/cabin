@@ -4,56 +4,56 @@
 static void initIDs()
 {
     // todo
-    jvm_abort("not implement");
+    JVM_PANIC("not implement");
 }
 
 // static native int socket0(boolean stream) throws IOException;
 static jint socket0(jbool stream)
 {
     // todo
-    jvm_abort("not implement");
+    JVM_PANIC("not implement");
 }
 
 // static native void bind0(int fd, InetAddress localAddress, int localport, boolean exclBind) throws IOException;
 static void bind0(jint fd, jobject localAddress, jint localport, jbool exclBind)
 {
     // todo
-    jvm_abort("not implement");
+    JVM_PANIC("not implement");
 }
 
 // static native int connect0(int fd, InetAddress remote, int remotePort) throws IOException;
 static jint connect0(jint fd, jobject localAdremotedress, jint remotePort)
 {
     // todo
-    jvm_abort("not implement");
+    JVM_PANIC("not implement");
 }
 
 // static native void waitForConnect(int fd, int timeout) throws IOException;
 static void waitForConnect(jint fd, jint timeout)
 {
     // todo
-    jvm_abort("not implement");
+    JVM_PANIC("not implement");
 }
 
 // static native int localPort0(int fd) throws IOException;
 static jint localPort0(jint fd)
 {
     // todo
-    jvm_abort("not implement");
+    JVM_PANIC("not implement");
 }
 
 // static native void localAddress(int fd, InetAddressContainer in) throws SocketException;
 static void localAddress(jint fd, jobject in)
 {
     // todo
-    jvm_abort("not implement");
+    JVM_PANIC("not implement");
 }
 
 // static native void listen0(int fd, int backlog) throws IOException;
 static void listen0(jint fd, jint backlog)
 {
     // todo
-    jvm_abort("not implement");
+    JVM_PANIC("not implement");
 }
 
 // static native int accept0(int fd, InetSocketAddress[] isaa) throws IOException;

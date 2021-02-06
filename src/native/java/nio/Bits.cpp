@@ -3,38 +3,38 @@
 // static native void copyFromShortArray(Object src, long srcPos, long dstAddr, long length);
 static void copyFromShortArray(jobject _this, jobject src, jlong srcPos, jlong dstAddr, jlong length)
 {
-    jvm_abort("copyFromShortArray"); // todo
+    JVM_PANIC("copyFromShortArray"); // todo
 }
 
 // static native void copyToShortArray(long srcAddr, Object dst, long dstPos, long length);
 static void copyToShortArray(jobject _this, jlong srcAddr, jobject dst, jlong dstPos, jlong length)
 {
-    jvm_abort("copyToShortArray"); // todo
+    JVM_PANIC("copyToShortArray"); // todo
 }
 
 // static native void copyFromIntArray(Object src, long srcPos, long dstAddr, long length);
 static void copyFromIntArray(jobject _this, jobject src, jlong srcPos, jlong dstAddr, jlong length)
 {
-    jvm_abort("copyFromIntArray"); // todo
+    JVM_PANIC("copyFromIntArray"); // todo
 }
 
 
 // static native void copyToIntArray(long srcAddr, Object dst, long dstPos, long length);
 static void copyToIntArray(jobject _this, jlong srcAddr, jobject dst, jlong dstPos, jlong length)
 {
-    jvm_abort("copyToIntArray"); // todo
+    JVM_PANIC("copyToIntArray"); // todo
 }
 
 // static native void copyFromLongArray(Object src, long srcPos, long dstAddr, long length);
 static void copyFromLongArray(jobject _this, jobject src, jlong srcPos, jlong dstAddr, jlong length)
 {
-    jvm_abort("copyFromLongArray"); // todo
+    JVM_PANIC("copyFromLongArray"); // todo
 }
 
 // static native void copyToLongArray(long srcAddr, Object dst, long dstPos, long length);
 static void copyToLongArray(jobject _this, jlong srcAddr, jobject dst, jlong dstPos, jlong length)
 {
-    jvm_abort("copyToLongArray"); // todo
+    JVM_PANIC("copyToLongArray"); // todo
 }
 
 static JNINativeMethod methods[] = {

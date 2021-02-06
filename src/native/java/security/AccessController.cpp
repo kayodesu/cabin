@@ -59,7 +59,7 @@ static jobject getStackAccessControlContext()
 static jobject getInheritedAccessControlContext()
 {
     // todo
-    jvm_abort("getInheritedAccessControlContext");
+    JVM_PANIC("getInheritedAccessControlContext");
 }
 
 #undef ACC

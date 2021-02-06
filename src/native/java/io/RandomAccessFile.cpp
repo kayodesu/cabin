@@ -18,61 +18,61 @@
  */
 static void open0(jobject _this, jstring name, jint mode)
 {
-    jvm_abort("open0");
+    JVM_PANIC("open0");
 }
 
 // private native void close0() throws IOException;
 static void close0(jobject _this)
 {
-    jvm_abort("close0");
+    JVM_PANIC("close0");
 }
 
 // private native void writeBytes(byte b[], int off, int len) throws IOException;
 static void writeBytes(jobject _this, jbyteArray b, jint off, jint len)
 {
-    jvm_abort("writeBytes");
+    JVM_PANIC("writeBytes");
 }
 
 // private native void write0(int b) throws IOException;
 static void write0(jobject _this, jint b)
 {
-    jvm_abort("write0");
+    JVM_PANIC("write0");
 }
 
 // private native int readBytes(byte b[], int off, int len) throws IOException;
 static void readBytes(jobject _this, jbyteArray b, jint off, jint len)
 {
-    jvm_abort("readBytes");
+    JVM_PANIC("readBytes");
 }
 
 // public native int read() throws IOException;
 static void read(jobject _this)
 {
-    jvm_abort("read");
+    JVM_PANIC("read");
 }
 
 // private native void seek0(long pos) throws IOException;
 static void seek0(jobject _this, jlong pos)
 {
-    jvm_abort("seek0");
+    JVM_PANIC("seek0");
 }
 
 // public native long getFilePointer() throws IOException;
 static jlong getFilePointer(jobject _this)
 {
-    jvm_abort("getFilePointer");
+    JVM_PANIC("getFilePointer");
 }
 
 // public native long length() throws IOException;
 static jlong length(jobject _this)
 {
-    jvm_abort("length");
+    JVM_PANIC("length");
 }
 
 // public native void setLength(long newLength) throws IOException;
 static void setLength(jobject _this, jlong newLength)
 {
-    jvm_abort("setLength");
+    JVM_PANIC("setLength");
 }
 
 static JNINativeMethod methods[] = {

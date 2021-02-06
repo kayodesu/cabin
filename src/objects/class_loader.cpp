@@ -12,6 +12,7 @@
 #include "../runtime/vm_thread.h"
 #include "prims.h"
 #include "java_classes.h"
+#include "../classpath/classpath.h"
 
 using namespace std;
 using namespace utf8;
@@ -28,75 +29,6 @@ static unordered_map<const utf8_t *, Class *, utf8::Hash, utf8::Comparator> boot
 
 // vm中所有存在的 class loaders，include "boot class loader".
 static unordered_set<const Object *> loaders;
-
-enum ClassLocation {
-    IN_JAR,
-    IN_MODULE
-};
-
-/*
- * @param class_name: xxx/xxx/xxx
- */
-static optional<pair<u1 *, size_t>> readClass(const char *path,
-                                        const char *class_name, ClassLocation location)
-{
-    unzFile module_file = unzOpen64(path);
-    if (module_file == nullptr) {
-        Thread::signalException(S(java_io_IOException), MSG("unzOpen64 failed: %s\n", path));
-        Thread::printStackTrace();
-        JVM_EXIT
-    }
-
-    if (unzGoToFirstFile(module_file) != UNZ_OK) {
-        unzClose(module_file);
-        Thread::signalException(S(java_io_IOException), MSG("unzGoToFirstFile failed: %s\n", path));
-        Thread::printStackTrace();
-        JVM_EXIT
-    }
-
-    char buf[strlen(class_name) + 32]; // big enough
-    if (location == IN_JAR) {
-        strcat(strcpy(buf, class_name), ".class");
-    } else if (location == IN_MODULE) {
-        // All classes 放在 module 的 "classes" 目录下
-        strcat(strcat(strcpy(buf, "classes/"), class_name), ".class");
-    } else {
-        jvm_abort("never goes here."); // todo
-    }
-// typedef int (*unzFileNameComparer)(unzFile file, const char *filename1, const char *filename2);
-//    int k = unzLocateFile(module_file, buf, 1);
-    int k  = unzLocateFile(module_file, buf,
-                        [](unzFile file, const char *filename1, const char *filename2) {
-                            return strcmp(filename1, filename2);
-                        });
-    if (k != UNZ_OK) {
-        // not found
-        unzClose(module_file);
-        return nullopt;
-    }
-
-    // find out!
-    if (unzOpenCurrentFile(module_file) != UNZ_OK) {
-        unzClose(module_file);
-        Thread::signalException(S(java_io_IOException), MSG("unzOpenCurrentFile failed: %s\n", path));
-        Thread::printStackTrace();
-        JVM_EXIT
-    }
-
-    unz_file_info64 file_info{ };
-    unzGetCurrentFileInfo64(module_file, &file_info, buf, sizeof(buf), nullptr, 0, nullptr, 0);
-
-    auto bytecode = new u1[file_info.uncompressed_size];
-    int size = unzReadCurrentFile(module_file, bytecode, (unsigned int) (file_info.uncompressed_size));
-    unzCloseCurrentFile(module_file);
-    unzClose(module_file);
-    if (size != (int) file_info.uncompressed_size) {
-        Thread::signalException(S(java_io_IOException), MSG("unzReadCurrentFile failed: %s\n", path));
-        Thread::printStackTrace();
-        JVM_EXIT
-    }
-    return make_pair(bytecode, file_info.uncompressed_size);
-}
 
 static void addClassToClassLoader(Object *class_loader, Class *c)
 {
@@ -136,22 +68,9 @@ Class *loadBootClass(const utf8_t *name)
     if (isPrimClassName(name)) {
         c = new Class(name);
     } else {
-        if (g_jdk_version_9_and_upper) {
-            for (auto &mod : g_jdk_modules) {
-                auto content = readClass(mod.c_str(), name, IN_MODULE);
-                if (content.has_value()) { // find out
-                    c = defineClass(BOOT_CLASS_LOADER, content->first,
-                                    content->second); //content.value().first
-                }
-            }
-        } else {
-            for (auto &jar : g_jre_lib_jars) {
-                auto content = readClass(jar.c_str(), name, IN_JAR);
-                if (content.has_value()) { // find out
-                    c = defineClass(BOOT_CLASS_LOADER, content->first,
-                                    content->second); //content.value().first
-                }
-            }
+        auto content = readBootClass(name);
+        if (content.has_value()) { // find out
+            c = defineClass(BOOT_CLASS_LOADER, content->first, content->second);
         }
     }
 
@@ -168,7 +87,7 @@ Class *loadArrayClass(Object *loader, const utf8_t *arr_class_name)
     assert(arr_class_name != nullptr);
     assert(arr_class_name[0] == '['); // must be array class name
 
-    string ele_class_name = arrClassName2EleClassName(arr_class_name);
+    string ele_class_name = arrClassName2eleClassName(arr_class_name);
     Class *c = loadClass(loader, ele_class_name.c_str());
     if (c == nullptr)
         return nullptr; // todo
@@ -201,7 +120,7 @@ Class *loadTypeArrayClass(ArrayType type)
         case JVM_AT_INT:     arr_class_name = S(array_I); break;
         case JVM_AT_LONG:    arr_class_name = S(array_J); break;
         default:
-            Thread::signalException(S(java_lang_UnknownError), NEW_MSG("Invalid array type: %d\n", type));
+            SIGNAL_EXCEPTION(S(java_lang_UnknownError), "Invalid array type: %d\n", type);
             return nullptr;
     }
 

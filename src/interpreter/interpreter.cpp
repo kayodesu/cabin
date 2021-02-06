@@ -110,6 +110,8 @@ static const char *instruction_names[] = {
 #define PRINT_OPCODE
 #endif
 
+static unsigned char opcode_len[JVM_OPC_MAX+1] = JVM_OPCODE_LENGTH_INITIALIZER;
+
 static void callJNIMethod(Frame *frame);
 static bool checkcast(Class *s, Class *t);
 
@@ -226,41 +228,42 @@ static slot_t *exec()
 
     jref _this = frame->method->isStatic() ? (jref) clazz : getRef(lvars);
 
-#define THROW_EXCEPTION(exception_name, message)                    \
-    {                                                               \
-        jref eo = Thread::signalException(exception_name, message); \
-        Thread::clearException();                                   \
-        frame->pushr(eo);                                           \
-        goto opc_athrow;                                            \
-    }
+#define THROW_EXCEPTION(exception_name, ...) \
+do { \
+    SIGNAL_EXCEPTION(exception_name, __VA_ARGS__); \
+    jref eo = Thread::getException(); \
+    Thread::clearException(); \
+    frame->pushr(eo); \
+    goto opc_athrow; \
+} while(false)
 
-#define NULL_POINTER_CHECK(ref)                                          \
-    {                                                                    \
-        if (ref == nullptr)                                              \
-            THROW_EXCEPTION(S(java_lang_NullPointerException), nullptr); \
-    }
+#define NULL_POINTER_CHECK(ref) \
+do { \
+    if (ref == nullptr) \
+        THROW_EXCEPTION(S(java_lang_NullPointerException), "null pointer"); \
+} while(false)
 
-#define CHANGE_FRAME(new_frame)                                          \
-    {                                                                    \
-        /*frame->ostack = ostack;  stack指针在变动，需要设置一下 todo */    \
-        frame = new_frame;                                               \
-        reader = &frame->reader;                                         \
-        clazz = frame->method->clazz;                                    \
-        cp = &frame->method->clazz->cp;                                  \
-        /*ostack = frame->ostack; */                                     \
-        lvars = frame->lvars;                                            \
-        _this = frame->method->isStatic() ? (jref) clazz : getRef(lvars); \
-        TRACE("executing frame: %s\n", frame->toString().c_str());        \
-    }
+#define CHANGE_FRAME(new_frame) \
+do { \
+    /*frame->ostack = ostack;  stack指针在变动，需要设置一下 todo */ \
+    frame = new_frame; \
+    reader = &frame->reader; \
+    clazz = frame->method->clazz; \
+    cp = &frame->method->clazz->cp; \
+    /*ostack = frame->ostack; */                                     \
+    lvars = frame->lvars; \
+    _this = frame->method->isStatic() ? (jref) clazz : getRef(lvars); \
+    TRACE("executing frame: %s\n", frame->toString().c_str()); \
+} while(false)
 
     u1 opcode;
     
-#define DISPATCH                   \
-    {                              \
-        opcode = reader->readu1(); \
-        PRINT_OPCODE;              \
-        goto *handlers[opcode];    \
-    }
+#define DISPATCH \
+{ \
+    opcode = reader->readu1(); \
+    PRINT_OPCODE; \
+    goto *handlers[opcode]; \
+}
 
 opc_nop:
     DISPATCH
@@ -338,7 +341,7 @@ _ldc: {
             frame->pushr(cp->resolveClass(index)->java_mirror);
             break;
         default:
-            THROW_EXCEPTION(S(java_lang_UnknownError), MSG("unknown type: %d", type));
+            THROW_EXCEPTION(S(java_lang_UnknownError), "unknown type: %d", type);
             break;
     }
     DISPATCH
@@ -355,7 +358,7 @@ opc_ldc2_w: {
             frame->pushd(cp->_double(index));
             break;
         default:
-            THROW_EXCEPTION(S(java_lang_UnknownError), MSG("unknown type: %d", type));
+            THROW_EXCEPTION(S(java_lang_UnknownError), "unknown type: %d", type);
             break;
     }
     DISPATCH
@@ -418,12 +421,12 @@ opc_dload_3:
     *frame->ostack++ = lvars[4];
     DISPATCH
     
-#define GET_AND_CHECK_ARRAY             \
-    index = frame->popi();              \
+#define GET_AND_CHECK_ARRAY \
+    index = frame->popi(); \
     auto arr = (Array *) frame->popr(); \
-    NULL_POINTER_CHECK(arr)             \
-    if (!arr->checkBounds(index))       \
-       THROW_EXCEPTION(S(java_lang_ArrayIndexOutOfBoundsException), nullptr);
+    NULL_POINTER_CHECK(arr); \
+    if (!arr->checkBounds(index)) \
+       THROW_EXCEPTION(S(java_lang_ArrayIndexOutOfBoundsException), "index is %d", index);
 
 opc_iaload: {
     GET_AND_CHECK_ARRAY
@@ -557,7 +560,7 @@ opc_bastore: {
     } else if (arr->clazz->isBooleanArrayClass()) {  
         arr->setBoolean(index, value != 0 ? jtrue : jfalse);
     } else {
-        jvm_abort("never go here"); // todo
+        JVM_PANIC("never go here"); // todo
     }
     DISPATCH
 }
@@ -640,62 +643,63 @@ opc_swap:
     swap(frame->ostack[-1], frame->ostack[-2]);
     DISPATCH
 
-#define BINARY_OP(type, t, oper)     \
-    {                                \
-        type v2 = frame->pop##t();   \
-        type v1 = frame->pop##t();   \
-        frame->push##t(v1 oper v2);  \
-        DISPATCH                     \
-    }
+#define BINARY_OP(type, t, oper) \
+do { \
+    type v2 = frame->pop##t(); \
+    type v1 = frame->pop##t(); \
+    frame->push##t(v1 oper v2); \
+    DISPATCH \
+} while(false)
+
 opc_iadd:
-    BINARY_OP(jint, i, +)
+    BINARY_OP(jint, i, +);
 opc_ladd:
-    BINARY_OP(jlong, l, +)
+    BINARY_OP(jlong, l, +);
 opc_fadd:
-    BINARY_OP(jfloat, f, +)
+    BINARY_OP(jfloat, f, +);
 opc_dadd:
-    BINARY_OP(jdouble, d, +)
+    BINARY_OP(jdouble, d, +);
 opc_isub:
-    BINARY_OP(jint, i, -)
+    BINARY_OP(jint, i, -);
 opc_lsub:
-    BINARY_OP(jlong, l, -)
+    BINARY_OP(jlong, l, -);
 opc_fsub:
-    BINARY_OP(jfloat, f, -)
+    BINARY_OP(jfloat, f, -);
 opc_dsub:
-    BINARY_OP(jdouble, d, -)
+    BINARY_OP(jdouble, d, -);
 opc_imul:
-    BINARY_OP(jint, i, *)
+    BINARY_OP(jint, i, *);
 opc_lmul:
-    BINARY_OP(jlong, l, *)
+    BINARY_OP(jlong, l, *);
 opc_fmul:
-    BINARY_OP(jfloat, f, *)
+    BINARY_OP(jfloat, f, *);
 opc_dmul:
-    BINARY_OP(jdouble, d, *)
+    BINARY_OP(jdouble, d, *);
     
-#define ZERO_DIVISOR_CHECK(value)                                                  \
-    {                                                                              \
-        if (value == 0)                                                            \
-            THROW_EXCEPTION(S(java_lang_ArithmeticException), "division by zero"); \
-    }
+#define ZERO_DIVISOR_CHECK(value) \
+do { \
+    if (value == 0) \
+        THROW_EXCEPTION(S(java_lang_ArithmeticException), "division by zero"); \
+} while(false)
 
 opc_idiv:
-    ZERO_DIVISOR_CHECK(getInt(frame->ostack - 1))
-    BINARY_OP(jint, i, /)
+    ZERO_DIVISOR_CHECK(getInt(frame->ostack - 1));
+    BINARY_OP(jint, i, /);
 opc_ldiv:
-    ZERO_DIVISOR_CHECK(getLong(frame->ostack - 1))
-    BINARY_OP(jlong, l, /)
+    ZERO_DIVISOR_CHECK(getLong(frame->ostack - 1));
+    BINARY_OP(jlong, l, /);
 opc_fdiv:
-    ZERO_DIVISOR_CHECK(getFloat(frame->ostack - 1))
-    BINARY_OP(jfloat, f, /)
+    ZERO_DIVISOR_CHECK(getFloat(frame->ostack - 1));
+    BINARY_OP(jfloat, f, /);
 opc_ddiv:
-    ZERO_DIVISOR_CHECK(getDouble(frame->ostack - 1))
-    BINARY_OP(jdouble, d, /)
+    ZERO_DIVISOR_CHECK(getDouble(frame->ostack - 1));
+    BINARY_OP(jdouble, d, /);
 opc_irem: 
-    ZERO_DIVISOR_CHECK(getInt(frame->ostack - 1))
-    BINARY_OP(jint, i, %)
+    ZERO_DIVISOR_CHECK(getInt(frame->ostack - 1));
+    BINARY_OP(jint, i, %);
 opc_lrem:
-    ZERO_DIVISOR_CHECK(getLong(frame->ostack - 1))
-    BINARY_OP(jlong, l, %)
+    ZERO_DIVISOR_CHECK(getLong(frame->ostack - 1));
+    BINARY_OP(jlong, l, %);
 #undef ZERO_DIVISOR_CHECK
 
 opc_frem: {
@@ -763,17 +767,17 @@ opc_lushr: {
     DISPATCH
 }
 opc_iand:
-    BINARY_OP(jint, i, &)
+    BINARY_OP(jint, i, &);
 opc_land:
-    BINARY_OP(jlong, l, &)
+    BINARY_OP(jlong, l, &);
 opc_ior:
-    BINARY_OP(jint, i, |)
+    BINARY_OP(jint, i, |);
 opc_lor:
-    BINARY_OP(jlong, l, |)
+    BINARY_OP(jlong, l, |);
 opc_ixor:
-    BINARY_OP(jint, i, ^)
+    BINARY_OP(jint, i, ^);
 opc_lxor:
-    BINARY_OP(jlong, l, ^)
+    BINARY_OP(jlong, l, ^);
 #undef BINARY_OP
 opc_iinc: 
     index = reader->readu1();
@@ -837,70 +841,77 @@ opc_i2s:
             (jint)((v1) > (v2) ? 1 : ((v1) == (v2) ? 0 : ((v1) < (v2) ? -1 : (default_value))))
 
 #define CMP(type, t, cmp_result) \
-{                                \
-    type v2 = frame->pop##t();   \
-    type v1 = frame->pop##t();   \
-    frame->pushi(cmp_result);    \
-    DISPATCH                     \
-}
-opc_lcmp: 
-    CMP(jlong, l, DO_CMP(v1, v2, -1))
-opc_fcmpl: 
-    CMP(jfloat, f, DO_CMP(v1, v2, -1))
-opc_fcmpg: 
-    CMP(jfloat, f, DO_CMP(v1, v2, 1))
-opc_dcmpl:
-    CMP(jdouble, d, DO_CMP(v1, v2, -1))
-opc_dcmpg:
-    CMP(jdouble, d, DO_CMP(v1, v2, 1))
+do { \
+    type v2 = frame->pop##t(); \
+    type v1 = frame->pop##t(); \
+    frame->pushi(cmp_result); \
+    DISPATCH \
+} while(false)
 
-#define IF_COND(cond)                                             \
-{                                                                 \
-    jint v = frame->popi();                                       \
-    jint offset = reader->reads2();                               \
-    if (v cond 0)                                                 \
-        reader->skip(offset - 3);  /* minus instruction length */ \
-    DISPATCH                                                      \
-}
+opc_lcmp: 
+    CMP(jlong, l, DO_CMP(v1, v2, -1));
+opc_fcmpl: 
+    CMP(jfloat, f, DO_CMP(v1, v2, -1));
+opc_fcmpg: 
+    CMP(jfloat, f, DO_CMP(v1, v2, 1));
+opc_dcmpl:
+    CMP(jdouble, d, DO_CMP(v1, v2, -1));
+opc_dcmpg:
+    CMP(jdouble, d, DO_CMP(v1, v2, 1));
+
+#undef CMP
+
+#define IF_COND(cond, opc_len) \
+do { \
+    jint v = frame->popi(); \
+    jint offset = reader->reads2(); \
+    if (v cond 0) \
+        reader->skip(offset - opc_len); \
+    DISPATCH \
+} while(false)
+
 opc_ifeq:
-    IF_COND(==)
+    IF_COND(==, opcode_len[JVM_OPC_ifeq]);
 opc_ifne:
-    IF_COND(!=)
+    IF_COND(!=, opcode_len[JVM_OPC_ifne]);
 opc_iflt:
-    IF_COND(<)
+    IF_COND(<, opcode_len[JVM_OPC_iflt]);
 opc_ifge:
-    IF_COND(>=)
+    IF_COND(>=, opcode_len[JVM_OPC_ifge]);
 opc_ifgt:
-    IF_COND(>)
+    IF_COND(>, opcode_len[JVM_OPC_ifgt]);
 opc_ifle:
-    IF_COND(<=)
+    IF_COND(<=, opcode_len[JVM_OPC_ifle]);
+
 #undef IF_COND
 
-#define IF_CMP_COND(t, cond)                                     \
-{                                                                \
-    s2 offset = reader->reads2();                                \
-    auto v2 = frame->pop##t();                                   \
-    auto v1 = frame->pop##t();                                   \
-    if (v1 cond v2)                                              \
-        reader->skip(offset - 3); /* minus instruction length */ \
-    DISPATCH                                                     \
-}
+#define IF_CMP_COND(t, cond, opc_len) \
+do { \
+    s2 offset = reader->reads2(); \
+    auto v2 = frame->pop##t(); \
+    auto v1 = frame->pop##t(); \
+    if (v1 cond v2) \
+        reader->skip(offset - opc_len); \
+    DISPATCH \
+} while(false)
+
 opc_if_icmpeq:
-    IF_CMP_COND(i, ==)
+    IF_CMP_COND(i, ==, opcode_len[JVM_OPC_if_icmpeq]);
 opc_if_acmpeq:
-    IF_CMP_COND(r, ==)
+    IF_CMP_COND(r, ==, opcode_len[JVM_OPC_if_acmpeq]);
 opc_if_icmpne:
-    IF_CMP_COND(i, !=)
+    IF_CMP_COND(i, !=, opcode_len[JVM_OPC_if_icmpne]);
 opc_if_acmpne:
-    IF_CMP_COND(r, !=)
+    IF_CMP_COND(r, !=, opcode_len[JVM_OPC_if_acmpne]);
 opc_if_icmplt:
-    IF_CMP_COND(i, <)
+    IF_CMP_COND(i, <, opcode_len[JVM_OPC_if_icmplt]);
 opc_if_icmpge:
-    IF_CMP_COND(i, >=)
+    IF_CMP_COND(i, >=, opcode_len[JVM_OPC_if_icmpge]);
 opc_if_icmpgt:
-    IF_CMP_COND(i, >)
+    IF_CMP_COND(i, >, opcode_len[JVM_OPC_if_icmpgt]);
 opc_if_icmple:
-    IF_CMP_COND(i, <=)
+    IF_CMP_COND(i, <=, opcode_len[JVM_OPC_if_icmple]);
+
 #undef IF_CMP_COND
 
 opc_goto: {
@@ -1015,14 +1026,14 @@ _method_return: {
     if (frame->method->isSynchronized()) {
 //                    _this->unlock();
     }
-    CHANGE_FRAME(invoke_frame)
+    CHANGE_FRAME(invoke_frame);
     DISPATCH  
 }
 opc_getstatic: {
     index = reader->readu2();
     Field *field = cp->resolveField(index);
     if (!field->isStatic()) {
-        THROW_EXCEPTION(S(java_lang_IncompatibleClassChangeError), nullptr);
+        THROW_EXCEPTION(S(java_lang_IncompatibleClassChangeError), field->toString().c_str());
     }
 
     initClass(field->clazz);
@@ -1037,7 +1048,7 @@ opc_putstatic: {
     index = reader->readu2();
     Field *field = cp->resolveField(index);
     if (!field->isStatic()) {
-        THROW_EXCEPTION(S(java_lang_IncompatibleClassChangeError), nullptr);
+        THROW_EXCEPTION(S(java_lang_IncompatibleClassChangeError), field->toString().c_str());
     }
 
     initClass(field->clazz);
@@ -1056,11 +1067,11 @@ opc_getfield: {
     index = reader->readu2();
     Field *field = cp->resolveField(index);
     if (field->isStatic()) {
-        THROW_EXCEPTION(S(java_lang_IncompatibleClassChangeError), nullptr);
+        THROW_EXCEPTION(S(java_lang_IncompatibleClassChangeError), field->toString().c_str());
     }
 
     jref obj = frame->popr();
-    NULL_POINTER_CHECK(obj)
+    NULL_POINTER_CHECK(obj);
 
     *frame->ostack++ = obj->data[field->id];
     if (field->category_two) {
@@ -1072,13 +1083,13 @@ opc_putfield: {
     index = reader->readu2();
     Field *field = cp->resolveField(index);
     if (field->isStatic()) {
-        THROW_EXCEPTION(S(java_lang_IncompatibleClassChangeError), nullptr);
+        THROW_EXCEPTION(S(java_lang_IncompatibleClassChangeError), field->toString().c_str());
     }
 
     // 如果是final字段，则只能在构造函数中初始化，否则抛出java.lang.IllegalAccessError。
     if (field->isFinal()) {
         if (!clazz->equals(field->clazz) || !equals(frame->method->name, S(object_init))) {
-            THROW_EXCEPTION(S(java_lang_IllegalAccessError), nullptr);
+            THROW_EXCEPTION(S(java_lang_IllegalAccessError), field->toString().c_str());
         }
     }
 
@@ -1090,7 +1101,7 @@ opc_putfield: {
     slot_t *value = frame->ostack;
 
     jref obj = frame->popr();
-    NULL_POINTER_CHECK(obj)
+    NULL_POINTER_CHECK(obj);
 
     obj->setFieldValue(field, value);
     DISPATCH
@@ -1101,7 +1112,7 @@ opc_invokevirtual: {
     Method *m = cp->resolveMethod(index);
     if (m == nullptr) {
         // todo
-        jvm_abort("m == nullptr");
+        JVM_PANIC("m == nullptr");
     }
 
     if (m->isSignaturePolymorphic()) {
@@ -1114,12 +1125,12 @@ opc_invokevirtual: {
     }
 
     if (m->isStatic()) {
-        THROW_EXCEPTION(S(java_lang_IncompatibleClassChangeError), nullptr);
+        THROW_EXCEPTION(S(java_lang_IncompatibleClassChangeError), m->toString().c_str());
     }
 
     frame->ostack -= m->arg_slot_count;
     jref obj = getRef(frame->ostack);
-    NULL_POINTER_CHECK(obj)
+    NULL_POINTER_CHECK(obj);
 
     if (m->isPrivate()) {
         resolved_method = m;
@@ -1154,15 +1165,15 @@ opc_invokespecial: {
     }
 
     if (m->isAbstract()) {
-        THROW_EXCEPTION(S(java_lang_AbstractMethodError), nullptr);
+        THROW_EXCEPTION(S(java_lang_AbstractMethodError), m->toString().c_str());
     }
     if (m->isStatic()) {
-        THROW_EXCEPTION(S(java_lang_IncompatibleClassChangeError), nullptr);
+        THROW_EXCEPTION(S(java_lang_IncompatibleClassChangeError), m->toString().c_str());
     }
 
     frame->ostack -= m->arg_slot_count;
     jref obj = getRef(frame->ostack);
-    NULL_POINTER_CHECK(obj)
+    NULL_POINTER_CHECK(obj);
 
     resolved_method = m;
     goto _invoke_method;
@@ -1173,10 +1184,10 @@ opc_invokestatic: {
     index = reader->readu2();
     Method *m = cp->resolveMethodOrInterfaceMethod(index);
     if (m->isAbstract()) {
-        THROW_EXCEPTION(S(java_lang_AbstractMethodError), nullptr);
+        THROW_EXCEPTION(S(java_lang_AbstractMethodError), m->toString().c_str());
     }
     if (!m->isStatic()) {
-        THROW_EXCEPTION(S(java_lang_IncompatibleClassChangeError), nullptr);
+        THROW_EXCEPTION(S(java_lang_IncompatibleClassChangeError), m->toString().c_str());
     }
 
     initClass(m->clazz);
@@ -1207,7 +1218,7 @@ opc_invokeinterface: {
 
     frame->ostack -= m->arg_slot_count;
     jref obj = getRef(frame->ostack);
-    NULL_POINTER_CHECK(obj)
+    NULL_POINTER_CHECK(obj);
 
     // itable的实现还不对 todo
     // resolved_method = obj->clazz->findFromITable(m->clazz, m->itable_index);
@@ -1215,11 +1226,11 @@ opc_invokeinterface: {
     // assert(resolved_method == obj->clazz->lookupMethod(m->name, m->descriptor));
     resolved_method = obj->clazz->lookupMethod(m->name, m->descriptor);
     if (resolved_method->isAbstract()) {
-        THROW_EXCEPTION(S(java_lang_AbstractMethodError), nullptr);
+        THROW_EXCEPTION(S(java_lang_AbstractMethodError), resolved_method->toString().c_str());
     }
 
     if (!resolved_method->isPublic()) {
-        THROW_EXCEPTION(S(java_lang_IllegalAccessError), nullptr);
+        THROW_EXCEPTION(S(java_lang_IllegalAccessError), resolved_method->toString().c_str());
     }
 
     goto _invoke_method;
@@ -1290,20 +1301,20 @@ opc_invokedynamic: {
             break;
         }
         case JVM_REF_newInvokeSpecial:
-            jvm_abort("JVM_REF_newInvokeSpecial"); // todo
+            JVM_PANIC("JVM_REF_newInvokeSpecial"); // todo
             break;
         default:
-            jvm_abort("never goes here"); // todo
+            JVM_PANIC("never goes here"); // todo
             break;
     }
-    jvm_abort("never goes here"); // todo
+    JVM_PANIC("never goes here"); // todo
 
     DISPATCH
 }
 opc_invokenative: {
     TRACE("%s\n", frame->toString().c_str());
     if (frame->method->native_method == nullptr){ // todo
-        jvm_abort("not find native method: %s\n", frame->method->toString().c_str());
+        JVM_PANIC("not find native method: %s\n", frame->method->toString().c_str());
     }
 
     // todo 不需要在这里做任何同步的操作
@@ -1342,7 +1353,7 @@ _invoke_method: {
     TRACE("Alloc new frame: %s\n", new_frame->toString().c_str());
 
     new_frame->lvars = frame->ostack; // todo 什么意思？？？？？？？？
-    CHANGE_FRAME(new_frame)    
+    CHANGE_FRAME(new_frame);
     if (resolved_method->isSynchronized()) {
 //        _this->unlock(); // todo why unlock 而不是 lock ................................................
     }
@@ -1355,7 +1366,7 @@ opc_new: {
     initClass(c);
 
     if (c->isInterface() || c->isAbstract()) {
-        THROW_EXCEPTION(S(java_lang_InstantiationException), nullptr);
+        THROW_EXCEPTION(S(java_lang_InstantiationException), c->toString().c_str());
     }
 
     // jref o = newObject(c);
@@ -1370,7 +1381,7 @@ opc_newarray: {
     // 包括 boolean[], byte[], char[], short[], int[], long[], float[] 和 double[] 8种。
     jint arr_len = frame->popi();
     if (arr_len < 0) {
-        THROW_EXCEPTION(S(java_lang_NegativeArraySizeException), nullptr);
+        THROW_EXCEPTION(S(java_lang_NegativeArraySizeException), "len is %d", arr_len);
     }
 
     auto arr_type = reader->readu1();
@@ -1382,7 +1393,7 @@ opc_anewarray: {
     // 创建一维引用类型数组
     jint arr_len = frame->popi();
     if (arr_len < 0) {
-        THROW_EXCEPTION(S(java_lang_NegativeArraySizeException), nullptr);
+        THROW_EXCEPTION(S(java_lang_NegativeArraySizeException), "len is %d", arr_len);
     }
 
     index = reader->readu2();
@@ -1405,7 +1416,7 @@ opc_multianewarray: {
     for (int i = dim - 1; i >= 0; i--) {
         lens[i] = frame->popi();
         if (lens[i] < 0) {
-            THROW_EXCEPTION(S(java_lang_NegativeArraySizeException), nullptr);
+            THROW_EXCEPTION(S(java_lang_NegativeArraySizeException), "len is %d", lens[i]);
         }
     }
     frame->pushr(ac->allocMultiArray(dim, lens));
@@ -1424,14 +1435,16 @@ opc_arraylength: {
 opc_athrow: {
     jref eo = frame->popr(); // exception object
     if (eo == jnull) {
-        eo = Thread::signalException(S(java_lang_NullPointerException), nullptr);
+        Thread::signalException(S(java_lang_NullPointerException));
+        eo = Thread::getException();
         assert(eo != nullptr);
         Thread::clearException();
     }
 
     // 遍历虚拟机栈找到可以处理此异常的方法
     while (true) {
-        int handler_pc = frame->method->findExceptionHandler(eo->clazz, reader->pc - 1); // instruction length todo 好像是错的
+        int handler_pc = frame->method->findExceptionHandler(
+                eo->clazz, reader->pc - opcode_len[JVM_OPC_athrow]); // instruction length todo 好像是错的
         if (handler_pc >= 0) {  // todo 可以等于0吗
             /*
              * 找到可以处理的代码块了
@@ -1463,7 +1476,7 @@ opc_athrow: {
         }
 
         TRACE("athrow: pop frame: %s\n", frame->toString().c_str());
-        CHANGE_FRAME(frame->prev)
+        CHANGE_FRAME(frame->prev);
     }
     DISPATCH
 }
@@ -1476,8 +1489,8 @@ opc_checkcast: {
     if (obj != jnull) {
         Class *c = cp->resolveClass(index);
         if (!checkcast(obj->clazz, c)) {
-            auto err_msg = MSG("class %s cannot be cast to %s", obj->clazz->class_name, c->class_name);
-            THROW_EXCEPTION(S(java_lang_ClassCastException), err_msg);
+            THROW_EXCEPTION(S(java_lang_ClassCastException),
+                            "class %s cannot be cast to %s", obj->clazz->class_name, c->class_name);
         }
     }
     DISPATCH
@@ -1530,7 +1543,7 @@ opc_wide:
 opc_ifnull: {
     s2 offset = reader->reads2();
     if (frame->popr() == jnull) {
-        reader->skip(offset - 3); // minus instruction length
+        reader->skip(offset - opcode_len[JVM_OPC_ifnull]);
     }
     DISPATCH
 }
@@ -1551,10 +1564,10 @@ opc_breakpoint:
     THROW_EXCEPTION(S(java_lang_InternalError), "breakpoint doesn't support in this jvm.");
     DISPATCH
 opc_impdep2:
-    jvm_abort("This instruction isn't used.\n"); // todo
+    JVM_PANIC("This instruction isn't used.\n"); // todo
     DISPATCH            
 opc_unused:
-    jvm_abort("This instruction isn't used. %d(0x%x)\n", opcode, opcode); // todo    
+    JVM_PANIC("This instruction isn't used. %d(0x%x)\n", opcode, opcode); // todo
     DISPATCH    
 }
 
@@ -1829,7 +1842,7 @@ static void callJNIMethod(Frame *frame)
         }
         default:
             // todo error
-            jvm_abort("never go here");
+            JVM_PANIC("never go here");
             break;
     }
 }

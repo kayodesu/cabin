@@ -23,14 +23,14 @@ static jclass defineClass2(jobject _this,
                 jstring name, jobject b, jint off, jint len, jobject pd, jstring source)
 {
     // todo
-    jvm_abort("defineClass2");
+    JVM_PANIC("defineClass2");
 }
 
 // private native void resolveClass0(Class<?> c);
 static void resolveClass0(jobject _this, jclass c)
 {
     // todo
-    jvm_abort("resolveClass0");
+    JVM_PANIC("resolveClass0");
 }
 
 // load bootstrap class
@@ -62,7 +62,7 @@ static jstring findBuiltinLib(jstring name)
     } else if (equals(utf8_name, "management.dll")) {
         return newString("ffffffff"); // todo
     } else {
-        jvm_abort(utf8_name); // todo
+        JVM_PANIC(utf8_name); // todo
     }
 }
 
@@ -71,7 +71,7 @@ static jstring findBuiltinLib(jstring name)
 static void retrieveDirectives()
 {
     // todo
-    jvm_abort("retrieveDirectives");
+    JVM_PANIC("retrieveDirectives");
 }
 
 #undef PD

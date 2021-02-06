@@ -3,7 +3,7 @@
 
 #include "../metadata/class.h"
 #include "../metadata/method.h"
-#include "../util/bytecode_reader.h"
+#include "../classfile/bytecode_reader.h"
 
 class Method;
 

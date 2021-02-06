@@ -111,7 +111,7 @@ static jobject resolve(jobject self/*MemberName*/, jclass caller)
      return resolveMemberName(self, caller != nullptr ? caller->jvm_mirror : nullptr);
 
 
-//    jvm_abort("resolve");
+//    JVM_PANIC("resolve");
 
 //    // todo
 //    // private Class<?> clazz;       // class in which the method is defined
@@ -160,7 +160,7 @@ static jobject resolve(jobject self/*MemberName*/, jclass caller)
 //                auto ptypes = arr->get<Array *>(1);
 //                descriptor = toMethodDescriptor(findMethodType(rtype, ptypes));
 //            } else {
-//                jvm_abort("never go here.");
+//                JVM_PANIC("never go here.");
 //            }
 //            assert(descriptor != nullptr);
 //
@@ -177,13 +177,13 @@ static jobject resolve(jobject self/*MemberName*/, jclass caller)
 //            //     flags |= __method_flags(m);
 //            //     self->setIntField("flags", "I", flags);
 //            // } else {
-//            //     jvm_abort("not support!");
+//            //     JVM_PANIC("not support!");
 //            // }
 //
 //            return self;
 //        }
 //        case IS_CONSTRUCTOR: {
-//            jvm_abort("IS_CONSTRUCTOR.");
+//            JVM_PANIC("IS_CONSTRUCTOR.");
 //            break;
 //        }
 //        case IS_FIELD: {
@@ -205,10 +205,10 @@ static jobject resolve(jobject self/*MemberName*/, jclass caller)
 //            return self;
 //        }
 //        default:
-//            jvm_abort("never go here.");
+//            JVM_PANIC("never go here.");
 //    }
 //
-//    jvm_abort("not support!");
+//    JVM_PANIC("not support!");
 }
 
 // static native int getMembers(Class<?> defc, String matchName, String matchSig,
@@ -223,19 +223,19 @@ static jint getMembers(jclass defc, jstring match_name, jstring match_sig,
 
     if (match_name != nullptr) {
         auto x = match_name->toUtf8();
-        jvm_abort("unimplemented");
+        JVM_PANIC("unimplemented");
     }
 
     if (match_sig != nullptr) {
         auto x = match_sig->toUtf8();
-        jvm_abort("unimplemented");
+        JVM_PANIC("unimplemented");
     }
 
     if(match_flags & IS_FIELD)
-        jvm_abort("unimplemented");
+        JVM_PANIC("unimplemented");
 
     if(!local)
-        jvm_abort("unimplemented");
+        JVM_PANIC("unimplemented");
 
     if(match_flags & (IS_METHOD | IS_CONSTRUCTOR)) {
         int count = 0;
@@ -273,7 +273,7 @@ static jint getMembers(jclass defc, jstring match_name, jstring match_sig,
     }
 
 
-    jvm_abort("unimplemented");
+    JVM_PANIC("unimplemented");
 }
 
 // static native long objectFieldOffset(MemberName self);  // e.g., returns vmindex
@@ -299,13 +299,13 @@ static jlong objectFieldOffset(jobject self)
 // static native long staticFieldOffset(MemberName self);  // e.g., returns vmindex
 static jlong staticFieldOffset(jobject self)
 {
-    jvm_abort("staticFieldOffset");
+    JVM_PANIC("staticFieldOffset");
 }
 
 // static native Object staticFieldBase(MemberName self);  // e.g., returns clazz
 static jobject staticFieldBase(jobject self)
 {
-    jvm_abort("staticFieldBase");
+    JVM_PANIC("staticFieldBase");
 }
 
 // static native Object getMemberVMInfo(MemberName self);  // returns {vmindex,vmtarget}
@@ -320,19 +320,19 @@ static jobject getMemberVMInfo(jobject self)
         long vmindex = (Long) ((Object[])vminfo)[0];
         Object vmtarget = ((Object[])vminfo)[1];
      */
-    jvm_abort("getMemberVMInfo");
+    JVM_PANIC("getMemberVMInfo");
 }
 
 // static native void setCallSiteTargetNormal(CallSite site, MethodHandle target);
 static void setCallSiteTargetNormal(jobject site, jobject target)
 {
-    jvm_abort("setCallSiteTargetNormal");
+    JVM_PANIC("setCallSiteTargetNormal");
 }
 
 // static native void setCallSiteTargetVolatile(CallSite site, MethodHandle target);
 static void setCallSiteTargetVolatile(jobject site, jobject target)
 {
-    jvm_abort("setCallSiteTargetVolatile");
+    JVM_PANIC("setCallSiteTargetVolatile");
 }
 
 #undef MM

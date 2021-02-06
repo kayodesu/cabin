@@ -84,7 +84,7 @@ int numElementsInMethodDescriptor(const char *method_descriptor)
     const char *e = strchr(method_descriptor, ')');
     if (e == nullptr) {
         // todo error
-        jvm_abort("error");
+        JVM_PANIC("error");
     }
     return numElementsInDescriptor(b, e);
 }
@@ -101,7 +101,7 @@ int numElementsInMethodDescriptor(const char *method_descriptor)
 static Array *convertDesc2ClassObjectArray(char *b, char *e, jref loader)
 {
     int num = numElementsInDescriptor(b, e);
-    Array *types = loadArrayClass(S(array_java_lang_Class))->allocArray(num);
+    Array *types = newClassArray(num);
 
     for (int i = 0; b < e; i++) {
         Object *co = convertDescElement2ClassObject(b, e, loader);

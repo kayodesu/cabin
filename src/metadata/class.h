@@ -11,7 +11,7 @@
 #include "constant_pool.h"
 #include "../objects/class_loader.h"
 #include "../objects/object.h"
-#include "../util/bytecode_reader.h"
+#include "../classfile/bytecode_reader.h"
 #include "../classfile/attributes.h"
 #include "../classfile/constants.h"
 #include "../heap/heap.h"
@@ -245,12 +245,12 @@ public:
     bool isArrayClass() const;
 
     /*
-      * 是否是基本类型的数组（当然是一维的）。
-      * 基本类型
-      * bool, byte, char, short, int, float, long, double
-      * 分别对应的数组类型为
-      * [Z,   [B,   [C,   [S,    [I,  [F,    [J,   [D
-      */
+     * 是否是基本类型的数组（当然是一维的）。
+     * 基本类型
+     * bool, byte, char, short, int, float, long, double
+     * 分别对应的数组类型为
+     * [Z,   [B,   [C,   [S,    [I,  [F,    [J,   [D
+     */
     bool isPrimArrayClass() const;
 
     bool isBooleanArrayClass() const  { return strcmp(class_name, "[Z") == 0; }

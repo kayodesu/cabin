@@ -6,7 +6,7 @@
 static void defineModule0(jobject module, jbool isOpen, jstring version, jstring location, jobjectArray pns)
 {
     // todo
-    jvm_abort("not implement");
+    JVM_PANIC("not implement");
 }
 
 // JVM_AddReadsModule
@@ -14,7 +14,7 @@ static void defineModule0(jobject module, jbool isOpen, jstring version, jstring
 static void addReads0(jobject from, jobject to)
 {
     // todo
-    jvm_abort("not implement");
+    JVM_PANIC("not implement");
 }
 
 // JVM_AddModuleExports
@@ -22,7 +22,7 @@ static void addReads0(jobject from, jobject to)
 static void addExports0(jobject from, jstring pn, jobject to)
 {
     // todo
-    jvm_abort("not implement");
+    JVM_PANIC("not implement");
 }
 
 // JVM_AddModuleExportsToAll
@@ -30,7 +30,7 @@ static void addExports0(jobject from, jstring pn, jobject to)
 static void addExportsToAll0(jobject from, jstring pn)
 {
     // todo
-    jvm_abort("not implement");
+    JVM_PANIC("not implement");
 }
 
 // JVM_AddModuleExportsToAllUnnamed
@@ -38,7 +38,7 @@ static void addExportsToAll0(jobject from, jstring pn)
 static void addExportsToAllUnnamed0(jobject from, jstring pn)
 {
     // todo
-    jvm_abort("not implement");
+    JVM_PANIC("not implement");
 }
 
 #undef _M

@@ -8,6 +8,10 @@ using namespace utf8;
 Field::Field(Class *c, BytecodeReader &r)
 {
     assert(c != nullptr);
+
+    id = 0;
+    memset(&static_value, 0, sizeof(static_value));
+
     clazz = c;
     ConstantPool &cp = c->cp;
 

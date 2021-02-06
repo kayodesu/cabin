@@ -422,7 +422,7 @@ Class::Class(Object *loader, u1 *bytecode, size_t len): loader(loader), bytecode
                 break;
             }
             default:
-                Thread::signalException(S(java_lang_ClassFormatError), MSG("bad constant tag: %d\n", tag));
+                SIGNAL_EXCEPTION(S(java_lang_ClassFormatError), "bad constant tag: %d\n", tag);
                 return;
         }
     }
@@ -704,7 +704,7 @@ Field *Class::getDeclaredInstField(int id, bool ensureExist)
 
     if (ensureExist) {
         // not find, but ensure exist, so...
-        Thread::signalException(S(java_lang_NoSuchFieldError), NEW_MSG("%s, id = %d.", class_name, id));
+        SIGNAL_EXCEPTION(S(java_lang_NoSuchFieldError), "%s, id = %d.", class_name, id);
     }
 
     // not find
@@ -715,7 +715,7 @@ void Class::injectInstField(const utf8_t *name, const utf8_t *descriptor)
 {
     assert(name != nullptr && descriptor != nullptr);
     if (state != LOADED) {
-        jvm_abort("error"); // todo 只能在loade之后 inject Field
+        JVM_PANIC("error"); // todo 只能在loade之后 inject Field
     }
 
     int access_flags = JVM_ACC_PRIVATE | JVM_ACC_SYNTHETIC;
@@ -738,7 +738,7 @@ Method *Class::getDeclaredMethod(const utf8_t *name, const utf8_t *descriptor, b
 
     if (ensureExist) {
         // not find, but ensure exist, so...
-        Thread::signalException(S(java_lang_NoSuchMethodError), NEW_MSG("%s~%s~%s\n", class_name, name, descriptor));
+        SIGNAL_EXCEPTION(S(java_lang_NoSuchMethodError), "%s~%s~%s\n", class_name, name, descriptor);
     }
 
     // not find
@@ -754,7 +754,7 @@ Method *Class::getDeclaredStaticMethod(const utf8_t *name, const utf8_t *descrip
 
     if (ensureExist) {
         // not find, but ensure exist, so...
-        Thread::signalException(S(java_lang_NoSuchMethodError), NEW_MSG("%s~%s~%s\n", class_name, name, descriptor));
+        SIGNAL_EXCEPTION(S(java_lang_NoSuchMethodError), "%s~%s~%s\n", class_name, name, descriptor);
     }
 
     // not find
@@ -770,7 +770,7 @@ Method *Class::getDeclaredInstMethod(const utf8_t *name, const utf8_t *descripto
 
     if (ensureExist) {
         // not find, but ensure exist, so...
-        Thread::signalException(S(java_lang_NoSuchMethodError), NEW_MSG("%s~%s~%s\n", class_name, name, descriptor));
+        SIGNAL_EXCEPTION(S(java_lang_NoSuchMethodError), "%s~%s~%s\n", class_name, name, descriptor);
     }
 
     // not find

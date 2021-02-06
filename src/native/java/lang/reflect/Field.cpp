@@ -3,7 +3,7 @@
 // private native byte[] getTypeAnnotationBytes0();
 static jbyteArray getTypeAnnotationBytes0(jobject _this)
 {
-    jvm_abort("getTypeAnnotationBytes0"); // todo
+    JVM_PANIC("getTypeAnnotationBytes0"); // todo
 }
 
 static JNINativeMethod methods[] = {

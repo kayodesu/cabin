@@ -276,7 +276,7 @@ void initMemberName(jref member_name, jref target)
 //        INST_DATA(mname, Class*, mem_name_clazz_offset) = decl_class;
 //        INST_DATA(mname, int, mem_name_flags_offset) = flags;
 //        INST_DATA(mname, MethodBlock*, mem_name_vmtarget_offset) = mb;
-        jvm_abort("constructor_reflect_class");
+        JVM_PANIC("constructor_reflect_class");
         return;
     }
 
@@ -309,10 +309,10 @@ void initMemberName(jref member_name, jref target)
 //        INST_DATA(mname, Class*, mem_name_clazz_offset) = decl_class;
 //        INST_DATA(mname, int, mem_name_flags_offset) = flags;
 //        INST_DATA(mname, FieldBlock*, mem_name_vmtarget_offset) = fb;
-        jvm_abort("field_reflect_class");
+        JVM_PANIC("field_reflect_class");
         return;
     }
-    jvm_abort("initMemberName: unimplemented target"); // todo
+    JVM_PANIC("initMemberName: unimplemented target"); // todo
     Thread::signalException(S(java_lang_InternalError), "initMemberName: unimplemented target");
 }
 
@@ -320,7 +320,7 @@ void expandMemberName(jref member_name)
 {
     assert(member_name != nullptr);
 
-    jvm_abort("expandMemberName");
+    JVM_PANIC("expandMemberName");
 }
 
 //static int polymorphicNameID(Class *clazz, const char *name) {
@@ -353,14 +353,14 @@ Object *resolveMemberName(jref member_name, Class *caller)
     jint flags = member_name->getIntField(mn_flags_field);
 
     if(clazz == nullptr || name_str == nullptr || type == nullptr) {
-        jvm_abort("resolveMemberName"); // todo
+        JVM_PANIC("resolveMemberName"); // todo
         Thread::signalException(S(java_lang_IllegalArgumentException), nullptr);
         return nullptr;
     }
 
     const utf8_t *name = save(name_str->toUtf8());
     if (name == S(class_init)) {
-        jvm_abort("11111111111"); // todo
+        JVM_PANIC("11111111111"); // todo
     }
 
     jstrref sig_str = getRef(execJavaFunc(mn_getSignature_method, { member_name }));
@@ -377,13 +377,13 @@ Object *resolveMemberName(jref member_name, Class *caller)
 
                 // todo
                 m = clazz->getDeclaredPolymorphicSignatureMethod(name); 
-                // jvm_abort("not implement"); // todo
+                // JVM_PANIC("not implement"); // todo
             }
             if (m == nullptr) {
                 // todo
                 Thread::signalException(S(java_lang_NoSuchMethodError), "resolve member name, METHOD");
                 return nullptr;
-//                jvm_abort("error");
+//                JVM_PANIC("error");
             }
 
             flags |= methodFlags(m);
@@ -396,7 +396,7 @@ Object *resolveMemberName(jref member_name, Class *caller)
                 // todo
                 Thread::signalException(S(java_lang_NoSuchMethodError), "resolve member name, CONSTRUCTOR");
                 return nullptr;
-//                jvm_abort("error");
+//                JVM_PANIC("error");
             }
 
             flags |= methodFlags(m);
@@ -409,7 +409,7 @@ Object *resolveMemberName(jref member_name, Class *caller)
                 // todo
                 Thread::signalException(S(java_lang_NoSuchFieldError), "resolve member name, FIELD");
                 return nullptr;
-//                jvm_abort("error");
+//                JVM_PANIC("error");
             }
 
             flags |= f->access_flags;

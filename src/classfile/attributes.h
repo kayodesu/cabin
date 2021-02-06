@@ -4,7 +4,7 @@
 #include <vector>
 #include "../cabin.h"
 #include "../slot.h"
-#include "../util/bytecode_reader.h"
+#include "bytecode_reader.h"
 
 class ConstantPool;
 struct ElementValuePair;

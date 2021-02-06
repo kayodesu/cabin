@@ -7,7 +7,7 @@
 // private static native void initIDs();
 static void initIDs()
 {
-//    jvm_abort("error\n");
+//    JVM_PANIC("error\n");
     // todo
 }
 
@@ -35,7 +35,7 @@ static void open0(jobject _this, jstring name, jboolean append)
  */
 static void write(jobject _this, jint b, jboolean append)
 {
-    jvm_abort("error\n"); // todo
+    JVM_PANIC("error\n"); // todo
 }
 
 

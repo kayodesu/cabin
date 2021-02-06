@@ -21,7 +21,7 @@ static jobject get(jobject array, jint index)
 
     Array *arr = (Array *) array;    
     if (index < 0 || index >= arr->arr_len) {
-        Thread::signalException(S(java_lang_ArrayIndexOutOfBoundsException), MSG("%d", index));
+        SIGNAL_EXCEPTION(S(java_lang_ArrayIndexOutOfBoundsException), "%d", index);
         return nullptr;
     }
 
@@ -62,7 +62,7 @@ static void set(jobject array, jint index, jobject value)
 
     Array *arr = (Array *) array;    
     if (index < 0 || index >= arr->arr_len) {
-        Thread::signalException(S(java_lang_ArrayIndexOutOfBoundsException), MSG("%d", index));
+        SIGNAL_EXCEPTION(S(java_lang_ArrayIndexOutOfBoundsException), "%d", index);
         return;
     }
 
@@ -139,13 +139,14 @@ static jint getLength(jobject array)
         return -1;
     }
 
-    Array *arr = (Array *) array;
+    auto arr = dynamic_cast<Array *>(array);
+    assert(arr != nullptr);
     return arr->arr_len;
 }
 
 // private static native Object newArray(Class<?> componentType, int length)
 //                  throws NegativeArraySizeException;
-static jobject newArray(jclass componentType, jint length)
+static jobject newArray_(jclass componentType, jint length)
 {
     if (componentType == nullptr) {
         Thread::signalException(S(java_lang_NullPointerException));
@@ -163,7 +164,7 @@ static JNINativeMethod methods[] = {
         { "get", _OBJ "I)" OBJ, (void *) get },
         { "set", _OBJ "ILjava/lang/Object;)V", (void *) set },
         { "getLength", _OBJ ")I", (void *) getLength },
-        { "newArray", _CLS "I)" OBJ, (void *) newArray },
+        { "newArray", _CLS "I)" OBJ, (void *) newArray_ },
 };
 
 void java_lang_reflect_Array_registerNatives()

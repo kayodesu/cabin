@@ -7,7 +7,7 @@
  */
 static void beforeHalt()
 {
-    jvm_abort("beforeHalt");
+    JVM_PANIC("beforeHalt");
 }
 
 /*
@@ -19,7 +19,7 @@ static void beforeHalt()
  */
 static void halt0(jint status)
 {
-    jvm_abort("halt0");
+    JVM_PANIC("halt0");
 }
 
 static JNINativeMethod methods[] = {

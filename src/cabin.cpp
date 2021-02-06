@@ -13,6 +13,7 @@
 #include "heap/heap.h"
 #include "platform/sysinfo.h"
 #include "objects/mh.h"
+#include "classpath/classpath.h"
 
 using namespace std;
 using namespace std::filesystem;
@@ -27,11 +28,6 @@ using namespace utf8;
 Heap *g_heap;
 
 bool g_jdk_version_9_and_upper;
-
-vector<string> g_jre_lib_jars;
-vector<string> g_jre_ext_jars;
-
-vector<string> g_jdk_modules;
 
 vector<pair<const utf8_t *, const utf8_t *>> g_properties;
 
@@ -48,34 +44,6 @@ static void *gcLoop(void *arg)
     return nullptr;
 }
 
-static void findFilesBySuffix(const char *__path, const char *suffix, vector<std::string> &result)
-{
-    path curr_path(__path);
-    if (!exists(curr_path)) {
-        // todo error
-        return;
-    }
-
-    directory_entry entry(curr_path);
-    if (entry.status().type() != file_type::directory) {
-        // todo error
-        return;
-    }
-
-    directory_iterator files(curr_path);
-    for (auto& f: files) {
-        if (f.is_regular_file()) {
-            char abspath[PATH_MAX];
-            // sprintf 和 snprintf 会自动在加上字符串结束符'\0'
-            sprintf(abspath, "%s/%s", __path, f.path().filename().string().c_str()); // 绝对路径
-
-            char *tmp = strrchr(abspath, '.');
-            if (tmp != nullptr && strcmp(++tmp, suffix) == 0)
-                result.emplace_back(abspath);
-        }
-    }
-}
-
 static char main_class_name[FILENAME_MAX] = { 0 };
 static char *main_func_args[METHOD_PARAMETERS_MAX_COUNT];
 static int main_func_args_count = 0;
@@ -84,9 +52,6 @@ string g_java_home;
 
 u2 g_classfile_major_version = 0;
 u2 g_classfile_manor_version = 0;
-
-static char bootstrap_classpath[PATH_MAX] = { 0 };
-char classpath[PATH_MAX] = { 0 };
 
 static void parseCommandLine(int argc, char *argv[])
 {
@@ -98,14 +63,14 @@ static void parseCommandLine(int argc, char *argv[])
             const char *name = argv[i];
             if (strcmp(name, "-bcp") == 0 or strcmp(name, "-bootclasspath") == 0) { // parse Bootstrap Class Path
                 if (++i >= argc) {
-                    jvm_abort("缺少参数：%s\n", name);
+                    JVM_PANIC("缺少参数：%s\n", name);
                 }
-                strcpy(bootstrap_classpath, argv[i]);
+                setBootstrapClasspath(argv[i]);
             } else if (strcmp(name, "-cp") == 0 or strcmp(name, "-classpath") == 0) { // parse Class Path
                 if (++i >= argc) {
-                    jvm_abort("缺少参数：%s\n", name);
+                    JVM_PANIC("缺少参数：%s\n", name);
                 }
-                strcpy(classpath, argv[i]);
+                setMainClasspath(argv[i]);
             } else if (strcmp(name, "-help") == 0 or strcmp(name, "-?") == 0) {
                 showUsage(vm_name);
                 exit(0);
@@ -159,7 +124,7 @@ void initProperties()
     sprintf(class_version, "%d.%d",
             JVM_MUST_SUPPORT_CLASSFILE_MAJOR_VERSION, JVM_MUST_SUPPORT_CLASSFILE_MINOR_VERSION);
     g_properties.emplace_back("java.class.version", class_version);
-    g_properties.emplace_back("java.class.path", classpath);
+    g_properties.emplace_back("java.class.path", getMainClasspath());
     g_properties.emplace_back("os.name", osName());
     g_properties.emplace_back("os.arch", osArch());
     g_properties.emplace_back("os.version",  ""); // todo
@@ -179,31 +144,19 @@ static void initHeap()
 {
     g_heap = new Heap;
     if (g_heap == nullptr) {
-        jvm_abort("init Heap failed"); // todo
+        JVM_PANIC("init Heap failed"); // todo
     }
 }
 
-void initJNI();
-
-void initJVM(int argc, char *argv[])
+// Access JAVA_HOME/release file to get the version of JDK
+static void readJDKVersion()
 {
-    parseCommandLine(argc, argv);
-
-    char *home = getenv("JAVA_HOME");
-    if (home == nullptr) {
-        jvm_abort("java_lang_InternalError, %s\n", "no java lib"); // todo
-    }
-    g_java_home = home;
-
-    g_java_home = R"(C:\Program Files\Java\jre1.8.0_221)"; // todo for testing ...............................
-
-    /* Access JAVA_HOME/release file to get the version of JDK */
     ifstream ifs(g_java_home + "/release");
     if(!ifs.is_open()){
-        jvm_abort("打开文件失败" ); // todo
+        JVM_PANIC("打开文件失败" ); // todo
     }
     string line;
-    while(getline(ifs, line)){
+    while(getline(ifs, line)) {
         // JAVA_VERSION="x.x.x_xxx" // jdk8及其以下的jdk, JAVA_VERSION="1.8.0_221"
         // JAVA_VERSION="xx.xx.xx"  // jdk9及其以上的jdk, JAVA_VERSION="11.0.1"
 
@@ -237,78 +190,29 @@ void initJVM(int argc, char *argv[])
     }
     ifs.close();
     if (g_classfile_major_version > JVM_MUST_SUPPORT_CLASSFILE_MAJOR_VERSION
-            || g_classfile_manor_version > JVM_MUST_SUPPORT_CLASSFILE_MINOR_VERSION) {
-        jvm_abort("不支持的jdk版本"); // todo
+        || g_classfile_manor_version > JVM_MUST_SUPPORT_CLASSFILE_MINOR_VERSION) {
+        JVM_PANIC("不支持的jdk版本"); // todo
     }
+}
 
-    if (g_jdk_version_9_and_upper) { // jdk9 开始使用模块
-        findFilesBySuffix((g_java_home + "/jmods").c_str(), "jmod", g_jdk_modules);
+void initJNI();
 
-        // 第0个位置放java.base.jmod，因为java.base.jmod常用，所以放第0个位置首先搜索。
-        for (auto iter = g_jdk_modules.begin(); iter != g_jdk_modules.end(); iter++) {
-            auto i = iter->rfind('\\');
-            auto j = iter->rfind('/');
-            if ((i != iter->npos && iter->compare(i + 1, 6, "java.base.jmod") == 0)
-                || (j != iter->npos && iter->compare(j + 1, 6, "java.base.jmod") == 0)) {
-                std::swap(*(g_jdk_modules.begin()), *iter);
-                break;
-            }
-        }
-    } else {
-        char extension_classpath[PATH_MAX] = { 0 };
-//    char user_classpath[PATH_MAX] = { 0 };
+void initJVM(int argc, char *argv[])
+{
+    parseCommandLine(argc, argv);
 
-        // parse bootstrap classpath
-        if (bootstrap_classpath[0] == 0) { // empty
-            strcpy(bootstrap_classpath, g_java_home.c_str());
-            strcat(bootstrap_classpath, "/lib");
-        }
-
-        findFilesBySuffix(bootstrap_classpath, "jar", g_jre_lib_jars);
-
-        // 第0个位置放rt.jar，因为rt.jar常用，所以放第0个位置首先搜索。
-        for (auto iter = g_jre_lib_jars.begin(); iter != g_jre_lib_jars.end(); iter++) {
-            auto i = iter->rfind('\\');
-            auto j = iter->rfind('/');
-            if ((i != iter->npos && iter->compare(i + 1, 6, "rt.jar") == 0)
-                || (j != iter->npos && iter->compare(j + 1, 6, "rt.jar") == 0)) {
-                std::swap(*(g_jre_lib_jars.begin()), *iter);
-                break;
-            }
-        }
-
-        // parse extension classpath
-        if (extension_classpath[0] == 0) {  // empty
-            strcpy(extension_classpath, bootstrap_classpath);
-            strcat(extension_classpath, "/ext");   
-        }
-
-        findFilesBySuffix(extension_classpath, "jar", g_jre_ext_jars);
+    char *home = getenv("JAVA_HOME");
+    if (home == nullptr) {
+        JVM_PANIC("java_lang_InternalError, %s\n", "no java lib"); // todo
     }
+    g_java_home = home;
 
-    if (classpath[0] == 0) {  // empty
-        char *cp = getenv("CLASSPATH");
-        if (cp != nullptr) {
-            strcpy(classpath, cp);
-        } else {
-           // todo error. no CLASSPATH！
-        }
-    }
-//    else {
-//        const char *delim = ";"; // 各个path以分号分隔
-//        char *path = strtok(user_classpath, delim);
-//        while (path != nullptr) {
-//            const char *suffix = strrchr(path, '.');
-//            if (suffix != nullptr && strcmp(suffix, ".jar") == 0) { // jar file
-//                userJars.emplace_back(path);
-//            } else { // directory
-//                userDirs.emplace_back(path);
-//            }
-//            path = strtok(nullptr, delim);
-//        }
-//    }
+    g_java_home = R"(C:\Program Files\Java\jre1.8.0_221)"; // todo for testing ...............................
+
+    readJDKVersion();
 
     /* order is important */
+    initClasspath();
     initSymbol();
     initHeap();
     initProperties();
@@ -324,7 +228,7 @@ void initJVM(int argc, char *argv[])
         vm = loadBootClass("jdk/internal/misc/VM");
     }
     if (vm == nullptr) {
-        jvm_abort("xxx/misc/VM is null\n");  // todo throw exception
+        JVM_PANIC("xxx/misc/VM is null\n");  // todo throw exception
         return;
     }
     // VM类的 "initialize~()V" 方法需调用执行
@@ -415,7 +319,6 @@ static void showVersionAndCopyright()
     //   printf("Boot Class Path: %s\n", classlibDefaultBootClassPath());  // todo
 }
 
-
 /*
  * 测试模块开关。
  * 最多只能有一个开启，需要测试哪个模块开启哪个开关。
@@ -470,7 +373,7 @@ int main(int argc, char* argv[])
     TRACE("begin to execute main function.\n");
 
     // Create the String array holding the command line args
-    Array *args = loadArrayClass(S(array_java_lang_String))->allocArray(main_func_args_count);
+    Array *args = newStringArray(main_func_args_count);
     for (int i = 0; i < main_func_args_count; i++) {
         args->setRef(i, newString(main_func_args[i]));
     }

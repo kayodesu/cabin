@@ -78,7 +78,7 @@ u2 Method::calArgsSlotsCount(const utf8_t *descriptor, bool isStatic)
     const char *b = strchr(descriptor, '(');
     const char *e = strchr(descriptor, ')');
     if (b == nullptr || e == nullptr) {
-        jvm_abort("error. %s\n", descriptor);
+        JVM_PANIC("error. %s\n", descriptor);
     }
 
     while (++b < e) {
@@ -90,7 +90,7 @@ u2 Method::calArgsSlotsCount(const utf8_t *descriptor, bool isStatic)
             count++;
             b = strchr(b, ';');
             if (b == nullptr) {
-                jvm_abort("error. %s\n", descriptor);
+                JVM_PANIC("error. %s\n", descriptor);
             }
         } else if (*b == '[') { // array reference
             count++;
@@ -99,7 +99,7 @@ u2 Method::calArgsSlotsCount(const utf8_t *descriptor, bool isStatic)
             if (*b == 'L') {
                 b = strchr(b, ';');
                 if (b == nullptr) {
-                    jvm_abort("error. %s\n", descriptor);
+                    JVM_PANIC("error. %s\n", descriptor);
                 }
             }
         }

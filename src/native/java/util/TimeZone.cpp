@@ -8,7 +8,7 @@ jstring getSystemTimeZoneID(jstring java_home)
         // NullPointerException todo
     }
     // todo
-    jvm_abort("getSystemTimeZoneID");
+    JVM_PANIC("getSystemTimeZoneID");
 }
 
 /*
@@ -19,7 +19,7 @@ jstring getSystemTimeZoneID(jstring java_home)
 jstring getSystemGMTOffsetID()
 {
     // todo
-    jvm_abort("getSystemGMTOffsetID");
+    JVM_PANIC("getSystemGMTOffsetID");
 }
 
 static JNINativeMethod methods[] = {

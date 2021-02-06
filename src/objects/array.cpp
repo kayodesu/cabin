@@ -1,5 +1,4 @@
 #include "array.h"
-#include "../metadata/class.h"
 #include "prims.h"
 #include "../runtime/vm_thread.h"
 
@@ -113,7 +112,7 @@ Array *Array::clone() const
 
     // todo mutex 怎么处理
 
-    Array *clone = (Array *) p;
+    auto clone = (Array *) p;
     clone->data = (slot_t *) (clone + 1);
     return clone;
 }
@@ -125,7 +124,7 @@ string Array::toString() const
     return s;
 }
 
-string arrClassName2EleClassName(const utf8_t *arr_class_name)
+string arrClassName2eleClassName(const utf8_t *arr_class_name)
 {
     assert(arr_class_name != nullptr);
     assert(arr_class_name[0] == '['); // must be array class name
@@ -142,7 +141,7 @@ string arrClassName2EleClassName(const utf8_t *arr_class_name)
     assert(*ele_name == 'L');
     ele_name++; // jump 'L'
 
-    int last = strlen(ele_name) - 1;
+    size_t last = strlen(ele_name) - 1;
     assert(last > 0);
     assert(ele_name[last] == ';');
 

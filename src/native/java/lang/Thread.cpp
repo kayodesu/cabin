@@ -132,14 +132,14 @@ static jint countStackFrames(jobject _this)
 // public static native boolean holdsLock(Object obj);
 static jboolean holdsLock(jobject obj)
 {
-    jvm_abort("holdsLock"); // todo
+    JVM_PANIC("holdsLock"); // todo
 }
 
 // private native static StackTraceElement[][] dumpThreads(Thread[] threads);
 static jobjectArray dumpThreads(jobjectArray threads)
 {
     size_t len = threads->size();
-    Array *result = loadArrayClass("[[java/lang/StackTraceElement")->allocArray(len);
+    Array *result = newArray("[[java/lang/StackTraceElement", len);
 
     for (size_t i = 0; i < len; i++) {
         auto jThread = threads->get<jobject>(i);
@@ -155,7 +155,7 @@ static jobjectArray dumpThreads(jobjectArray threads)
 static jobjectArray getThreads()
 {
     size_t size = g_all_threads.size();
-    Array *threads = loadArrayClass(S(array_java_lang_Thread))->allocArray(size);
+    Array *threads = newArray(S(array_java_lang_Thread), size);
 
     for (size_t i = 0; i < size; i++) {
         threads->setRef(i, g_all_threads[i]->tobj);
@@ -167,31 +167,31 @@ static jobjectArray getThreads()
 // private native void stop0(Object o);
 static void stop0(jobject _this, jobject o)
 {
-    jvm_abort("stop0"); // todo
+    JVM_PANIC("stop0"); // todo
 }
 
 // private native void suspend0();
 static void suspend0(jobject _this)
 {
-    jvm_abort("suspend0"); // todo
+    JVM_PANIC("suspend0"); // todo
 }
 
 // private native void resume0();
 static void resume0(jobject _this)
 {
-    jvm_abort("resume0"); // todo
+    JVM_PANIC("resume0"); // todo
 }
 
 // private static native void clearInterruptEvent();
 static void clearInterruptEvent()
 {
-    jvm_abort("clearInterruptEvent"); // todo
+    JVM_PANIC("clearInterruptEvent"); // todo
 }
 
 // private native void setNativeName(String name);
 static void setNativeName(jobject _this, jstring name)
 {
-    jvm_abort("setNativeName"); // todo
+    JVM_PANIC("setNativeName"); // todo
 }
 
 static JNINativeMethod methods[] = {

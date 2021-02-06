@@ -29,7 +29,7 @@ static jobject invoke0(jobject method, jobject o, jobjectArray os)
     string desc = unparseMethodDescriptor(ptypes, rtype);
     Method *m = c->lookupMethod(name->toUtf8(), desc.c_str());
     if (m == nullptr) {
-        jvm_abort("error"); // todo
+        JVM_PANIC("error"); // todo
     }
 
     slot_t *result = execJavaFunc(m, o, os);
@@ -59,7 +59,7 @@ static jobject invoke0(jobject method, jobject o, jobjectArray os)
     case Method::RET_REFERENCE:
         return getRef(result);
     default:
-        jvm_abort("never go here\n"); // todo
+        JVM_PANIC("never go here\n"); // todo
     }
 }
 

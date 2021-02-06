@@ -92,7 +92,7 @@ static jstring initClassName(jclass _this)
  */
 static jstring getSimpleBinaryName0(jclass _this)
 {
-    jvm_abort("not implement");
+    JVM_PANIC("not implement");
 }
 
 /**
@@ -317,7 +317,7 @@ static jclass getSuperclass(jclass _this)
 static jobjectArray getInterfaces0(jclass _this)
 {
     Class *c = _this->jvm_mirror;
-    auto interfaces = loadArrayClass(S(array_java_lang_Class))->allocArray(c->interfaces.size());
+    auto interfaces = newClassArray(c->interfaces.size());
     for (size_t i = 0; i < c->interfaces.size(); i++) {
         assert(c->interfaces[i] != nullptr);
         interfaces->setRef(i, c->interfaces[i]->java_mirror);
@@ -389,7 +389,7 @@ static jint getModifiers(jclass _this)
  */
 static jobjectArray getSigners(jclass _this)
 {
-    jvm_abort("getSigners"); // todo
+    JVM_PANIC("getSigners"); // todo
 }
 
 
@@ -400,7 +400,7 @@ static jobjectArray getSigners(jclass _this)
  */
 static void setSigners(jclass _this, jobjectArray signers)
 {
-    jvm_abort("setSigners"); // todo
+    JVM_PANIC("setSigners"); // todo
 }
 
 // private native Object[] getEnclosingMethod0();
@@ -411,7 +411,7 @@ static jobjectArray getEnclosingMethod0(jclass _this)
         return nullptr;
     }
 
-    auto result = loadArrayClass(S(array_java_lang_Object))->allocArray(3);
+    auto result = newObjectArray(3);
     result->setRef(0, c->enclosing.clazz->java_mirror);
     result->setRef(1, c->enclosing.name);
     result->setRef(2, c->enclosing.descriptor);
@@ -426,7 +426,7 @@ static jobjectArray getEnclosingMethod0(jclass _this)
 static jobject getProtectionDomain0(jclass _this)
 {
     return nullptr;
-    jvm_abort("getProtectionDomain0");
+    JVM_PANIC("getProtectionDomain0");
 }
 
 // Generic signature handling
@@ -443,13 +443,13 @@ static jstring getGenericSignature0(jclass _this)
 //native byte[] getRawAnnotations();
 static jbyteArray getRawAnnotations(jclass _this)
 {
-    jvm_abort("getRawAnnotations");
+    JVM_PANIC("getRawAnnotations");
 }
 
 // native byte[] getRawTypeAnnotations();
 static jbyteArray getRawTypeAnnotations(jclass _this)
 {
-    jvm_abort("getRawTypeAnnotations");
+    JVM_PANIC("getRawTypeAnnotations");
 }
 
 // native ConstantPool getConstantPool();
@@ -465,10 +465,10 @@ static jobject getConstantPool(jclass _this)
 static jobjectArray getDeclaredFields0(jclass _this, jboolean public_only)
 {
     Class *cls = _this->jvm_mirror;
-    jint field_count = public_only ? cls->public_fields_count : cls->fields.size();
+    jint count = public_only ? cls->public_fields_count : cls->fields.size();
 
     Class *field_class = loadBootClass(S(java_lang_reflect_Field));
-    auto field_array = field_class->arrayClass()->allocArray(field_count);
+    auto field_array = field_class->arrayClass()->allocArray(count);
 
     /*
      * Field(Class<?> declaringClass, String name, Class<?> type,
@@ -477,7 +477,7 @@ static jobjectArray getDeclaredFields0(jclass _this, jboolean public_only)
     Method *constructor = field_class->getConstructor(_CLS STR CLS "II" STR "[B)V");
 
     // invoke constructor of class java/lang/reflect/Field
-    for (int i = 0; i < field_count; i++) {
+    for (int i = 0; i < count; i++) {
         Object *o = field_class->allocObject();
         field_array->setRef(i, o);
 
@@ -512,7 +512,7 @@ static jobjectArray getDeclaredFields0(jclass _this, jboolean public_only)
 static jobjectArray getDeclaredMethods0(jclass _this, jboolean public_only)
 {
     Class *cls = _this->jvm_mirror;
-    jint method_count = public_only ? cls->public_methods_count : cls->methods.size();
+    jint count = public_only ? cls->public_methods_count : cls->methods.size();
 
     Class *method_class = loadBootClass(S(java_lang_reflect_Method));
 
@@ -524,7 +524,7 @@ static jobjectArray getDeclaredMethods0(jclass _this, jboolean public_only)
     Method *constructor = method_class->getConstructor(_CLS STR "[" CLS CLS "[" CLS "II" STR "[B[B[B)V");
 
     vector<jref> methods;
-    for (int i = 0; i < method_count; i++) {
+    for (int i = 0; i < count; i++) {
         Method *method = cls->methods[i];
         if (method->isClassInit() || method->isObjectInit()) {
             continue;
@@ -563,10 +563,10 @@ static jobjectArray getDeclaredConstructors0(jclass _this, jboolean public_only)
    Class *cls = _this->jvm_mirror;
 
     std::vector<Method *> constructors = cls->getConstructors(public_only);
-    int constructor_count = constructors.size();
+    int count = constructors.size();
 
     Class *constructor_class = loadBootClass("java/lang/reflect/Constructor");
-    auto constructor_array = constructor_class->arrayClass()->allocArray(constructor_count);
+    auto constructor_array = constructor_class->arrayClass()->allocArray(count);
 
     /*
      * Constructor(Class<T> declaringClass, Class<?>[] parameterTypes,
@@ -576,7 +576,7 @@ static jobjectArray getDeclaredConstructors0(jclass _this, jboolean public_only)
     Method *constructor_constructor = constructor_class->getConstructor(_CLS "[" CLS "[" CLS "II" STR "[B[B)V");
 
     // invoke constructor of class java/lang/reflect/Constructor
-    for (int i = 0; i < constructor_count; i++) {
+    for (int i = 0; i < count; i++) {
         auto constructor = constructors[i];
         Object *o = constructor_class->allocObject();
         constructor_array->setRef(i, o);
@@ -606,7 +606,7 @@ static jobjectArray getDeclaredConstructors0(jclass _this, jboolean public_only)
  */
 static jobjectArray getDeclaredClasses0(jclass _this)
 {
-    jvm_abort("getDeclaredClasses0");
+    JVM_PANIC("getDeclaredClasses0");
 }
 
 /**
@@ -653,25 +653,25 @@ static jclass getDeclaringClass0(jclass _this)
 // private native RecordComponent[] getRecordComponents0();
 static jobjectArray getRecordComponents0(jclass _this)
 {
-    jvm_abort("getRecordComponents0");
+    JVM_PANIC("getRecordComponents0");
 }
 
 // private native boolean isRecord0();
 static jbool isRecord0(jclass _this)
 {
-    jvm_abort("isRecord0");
+    JVM_PANIC("isRecord0");
 }
 
 // private native Class<?> getNestHost0();
 static jclass getNestHost0(jclass _this)
 {
-    jvm_abort("getNestHost0");
+    JVM_PANIC("getNestHost0");
 }
 
 // private native Class<?>[] getNestMembers0();
 static jobjectArray getNestMembers0(jclass _this)
 {
-    jvm_abort("getNestMembers0");
+    JVM_PANIC("getNestMembers0");
 }
 
 static JNINativeMethod methods[] = {

@@ -4,49 +4,49 @@
 static jobjectArray getAll()
 {
     // todo
-    jvm_abort("not implement");
+    JVM_PANIC("not implement");
 }
 
 // private static native NetworkInterface getByName0(String name) throws SocketException;
 static jobject getByName0(jstring name)
 {
     // todo
-    jvm_abort("not implement");
+    JVM_PANIC("not implement");
 }
 
 // private static native NetworkInterface getByIndex0(int index) throws SocketException;
 static jobject getByIndex0(jint index)
 {
     // todo
-    jvm_abort("not implement");
+    JVM_PANIC("not implement");
 }
 
 // private static native NetworkInterface getByInetAddress0(InetAddress addr) throws SocketException;
 static jobject getByInetAddress0(jobject addr)
 {
     // todo
-    jvm_abort("not implement");
+    JVM_PANIC("not implement");
 }
 
 // private static native boolean isUp0(String name, int ind) throws SocketException;
 static jbool isUp0(jstring name, jint ind)
 {
     // todo
-    jvm_abort("not implement");
+    JVM_PANIC("not implement");
 }
 
 // private static native boolean isLoopback0(String name, int ind) throws SocketException;
 static jbool isLoopback0(jstring name, jint ind)
 {
     // todo
-    jvm_abort("not implement");
+    JVM_PANIC("not implement");
 }
 
 // private static native boolean supportsMulticast0(String name, int ind) throws SocketException;
 static jbool supportsMulticast0(jstring name, jint ind)
 {
     // todo
-    jvm_abort("not implement");
+    JVM_PANIC("not implement");
 }
 
 
@@ -54,28 +54,28 @@ static jbool supportsMulticast0(jstring name, jint ind)
 static jbool isP2P0(jstring name, jint ind)
 {
     // todo
-    jvm_abort("not implement");
+    JVM_PANIC("not implement");
 }
 
 // private static native byte[] getMacAddr0(byte[] inAddr, String name, int ind) throws SocketException;
 static jbyteArray getMacAddr0(jbyteArray inAddr, jstring name, jint ind)
 {
     // todo
-    jvm_abort("not implement");
+    JVM_PANIC("not implement");
 }
 
 // private static native int getMTU0(String name, int ind) throws SocketException;
 static jint getMTU0(jstring name, jint ind)
 {
     // todo
-    jvm_abort("not implement");
+    JVM_PANIC("not implement");
 }
 
 // private static native void init();
 static void init()
 {
     // todo
-    jvm_abort("not implement");
+    JVM_PANIC("not implement");
 }
 
 static JNINativeMethod methods[] = {

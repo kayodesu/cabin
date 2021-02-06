@@ -3,23 +3,23 @@
 // public static native String getJdkSpecialVersion()
 static jstring getJdkSpecialVersion()
 {
-    jvm_abort("getJdkSpecialVersion"); // todo
+    JVM_PANIC("getJdkSpecialVersion"); // todo
 }
 
 // public static native String getJvmSpecialVersion()
 static jstring getJvmSpecialVersion()
 {
-    jvm_abort("getJvmSpecialVersion"); // todo
+    JVM_PANIC("getJvmSpecialVersion"); // todo
 }
 
 static void getJdkVersionInfo()
 {
-    jvm_abort("getJdkVersionInfo"); // todo
+    JVM_PANIC("getJdkVersionInfo"); // todo
 }
 
 static jboolean getJvmVersionInfo()
 {
-    jvm_abort("getJvmVersionInfo"); // todo
+    JVM_PANIC("getJvmVersionInfo"); // todo
 }
 
 static JNINativeMethod methods[] = {

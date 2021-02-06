@@ -23,6 +23,7 @@ void initClassLoader();
 
 /*
  * 加载 JDK 类库中的类，不包括Array Class.
+ * xxx/xxx/xxx
  */
 Class *loadBootClass(const utf8_t *name);
 

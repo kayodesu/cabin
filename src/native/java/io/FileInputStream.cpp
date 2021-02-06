@@ -5,7 +5,7 @@
 // private static native void initIDs();
 static void initIDs()
 {
-//    jvm_abort("error\n");
+//    JVM_PANIC("error\n");
     // todo
 }
 
@@ -81,7 +81,7 @@ static jint readBytes(jobject _this, jbyteArray b, jint off, jint len)
  */
 static jlong skip0(jobject _this, jlong n)
 {
-    jvm_abort("\n"); // todo
+    JVM_PANIC("\n"); // todo
 }
 
 /**
@@ -105,7 +105,7 @@ private native int available0() throws IOException;
  */
 static jint available0(jobject _this)
 {
-    jvm_abort("\n"); // todo
+    JVM_PANIC("\n"); // todo
 }
 
 /*

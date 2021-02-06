@@ -98,13 +98,13 @@ const slot_t *primObjUnbox(const Object *box)
 
     Class *c = box->clazz;
     if (!c->isPrimWrapperClass()) {
-        jvm_abort("error"); // todo
+        JVM_PANIC("error"); // todo
     }
 
     // value 的描述符就是基本类型的类名。比如，private final boolean value;
     Field *f = c->lookupField(S(value), getPrimDescriptor(c->class_name));
     if (f == nullptr) {
-        jvm_abort("error, %s, %s\n", S(value), c->class_name); // todo
+        JVM_PANIC("error, %s, %s\n", S(value), c->class_name); // todo
     }
     return box->data + f->id;
 }

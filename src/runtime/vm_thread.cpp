@@ -128,7 +128,7 @@ Thread *Thread::from(Object *tobj0)
 
 Thread *Thread::from(jlong threadId)
 {
-    jvm_abort("ffffffffffffffffffffffff"); // todo
+    JVM_PANIC("ffffffffffffffffffffffff"); // todo
 
     for (Thread *t : g_all_threads) {
         // private long tid; // Thread ID
@@ -137,7 +137,7 @@ Thread *Thread::from(jlong threadId)
             return t;
     }
 
-    TRACE(NEW_MSG("invaild: %lld\n", threadId)); // todo 无效的 threadId
+    // todo 无效的 threadId
     return nullptr;
 }
 
@@ -178,7 +178,7 @@ Frame *Thread::allocFrame(Method *m, bool vm_invoke)
     if (mem + size - (intptr_t) vm_stack > VM_STACK_SIZE) {
 //        thread_throw(new StackOverflowError);
         // todo 栈已经溢出无法执行程序了。不要抛异常了，无法执行了。
-        jvm_abort("StackOverflowError");
+        JVM_PANIC("StackOverflowError");
     }
 
     auto lvars = (slot_t *)(mem);
@@ -217,7 +217,7 @@ vector<Frame *> Thread::getStackFrames()
 jref Thread::to_java_lang_management_ThreadInfo(jbool locked_monitors, jbool locked_synchronizers, jint max_depth)
 {
     // todo
-//    jvm_abort("to_java_lang_management_ThreadInfo\n");
+//    JVM_PANIC("to_java_lang_management_ThreadInfo\n");
 //    return nullptr;
 
     // private volatile String name;
@@ -248,7 +248,7 @@ Array *Thread::dump(int max_depth)
     // public StackTraceElement(String declaringClass, String methodName, String fileName, int lineNumber);
     Method *constructor = c->getConstructor("(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V");
 
-    Array *arr = loadArrayClass(S(array_java_lang_StackTraceElement))->allocArray(size);
+    Array *arr = newArray(S(array_java_lang_StackTraceElement), size);
     for (size_t i = 0; i < size; i++) {
         Frame *f = vec[i];
         jref o = c->allocObject();
@@ -269,7 +269,7 @@ void Thread::setException(Object *exp)
     assert(exp != nullptr);
 
     if (getException() != nullptr) {
-        jvm_abort("还有未处理的异常！"); // todo
+        JVM_PANIC("还有未处理的异常！"); // todo
     }
 
     getCurrentThread()->exception = exp;
@@ -290,7 +290,7 @@ void Thread::clearException()
     getCurrentThread()->exception = nullptr;
 }
 
-jref Thread::signalException(const char *excep_name, const char *message)
+void Thread::signalException(const char *excep_class_name, const char *message)
 {
     // if(VM_initing) {
     //     fprintf(stderr, "Exception occurred while VM initialising.\n");
@@ -301,9 +301,9 @@ jref Thread::signalException(const char *excep_name, const char *message)
     //     exit(1);
     // }
 
-    assert(excep_name != nullptr);
+    assert(excep_class_name != nullptr);
 
-    Class *ec = loadBootClass(excep_name);
+    Class *ec = loadBootClass(excep_class_name);
     assert(ec != nullptr); // todo
 
     initClass(ec);
@@ -315,7 +315,6 @@ jref Thread::signalException(const char *excep_name, const char *message)
     }
 
     setException(exp);
-    return exp;
 }
 
 void Thread::printStackTrace()

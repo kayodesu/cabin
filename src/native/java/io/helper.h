@@ -21,7 +21,7 @@ static inline void __openFile(jobject _this, jstring name, const char *mode)
 
     FILE *file = fopen(utf8_name, mode);
     if (file == nullptr) {
-        Thread::signalException(S(java_io_FileNotFoundException), MSG("%s (can't find)", utf8_name));
+        SIGNAL_EXCEPTION(S(java_io_FileNotFoundException), "%s (can't find)", utf8_name);
         return;
     }
 

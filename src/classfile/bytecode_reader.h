@@ -4,7 +4,7 @@
 #include <cassert>
 #include <cstring>
 #include "../cabin.h"
-#include "convert.h"
+#include "../util/convert.h"
 
 class BytecodeReader {
     u1 *bytecode = nullptr;

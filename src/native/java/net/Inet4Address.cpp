@@ -5,7 +5,7 @@
 static void init()
 {
     // todo
-    jvm_abort("not implement");
+    JVM_PANIC("not implement");
 }
 
 static JNINativeMethod methods[] = {

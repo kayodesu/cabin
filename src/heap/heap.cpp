@@ -87,7 +87,7 @@ over:
         return p;
     }
 
-    jvm_abort("java_lang_OutOfMemoryError"); // todo 堆可以扩张
+    JVM_PANIC("java_lang_OutOfMemoryError"); // todo 堆可以扩张
 }
 
 void Heap::back(address p, size_t len)

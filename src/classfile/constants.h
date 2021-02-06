@@ -456,11 +456,11 @@ enum {
     JVM_OPC_impdep1             = 254,
     JVM_OPC_impdep2             = 255,
     JVM_OPC_invokenative        = JVM_OPC_impdep1,
+    JVM_OPC_MAX                 = 255
 };
 
-/* Opcode length initializer, use with something like:
- *   unsigned char opcode_length[JVM_OPC_MAX+1] = JVM_OPCODE_LENGTH_INITIALIZER;
- */
+// Opcode length initializer, use with something like:
+//   unsigned char opcode_length[JVM_OPC_MAX+1] = JVM_OPCODE_LENGTH_INITIALIZER;
 #define JVM_OPCODE_LENGTH_INITIALIZER { \
    1,   /* nop */                       \
    1,   /* aconst_null */               \

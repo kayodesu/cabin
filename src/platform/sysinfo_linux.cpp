@@ -12,7 +12,7 @@ int processorNumber()
 
 int pageSize()
 {
-    jvm_abort("pageSize");
+    JVM_PANIC("pageSize");
 }
 
 const char *osName()
@@ -24,7 +24,7 @@ const char *osName()
 
 const char *osArch()
 {
-    jvm_abort("osArch");
+    JVM_PANIC("osArch");
 }
 
 const char *getFileSeparator()
@@ -44,7 +44,7 @@ const char *getLineSeparator()
 
 string getTimeZone()
 {
-    jvm_abort("getTimeZone");
+    JVM_PANIC("getTimeZone");
 }
 
 #endif

@@ -158,7 +158,7 @@ unicode_t *utf8::toUnicode(const utf8_t *utf8, jsize utf8_len, unicode_t *buf)
         buf = new unicode_t[utf8_len + 1];
     }
 
-    jvm_abort("not implement.");  //  todo
+    JVM_PANIC("not implement.");  //  todo
 }
 
 // 将此unicode转化为utf8时，有多少字节

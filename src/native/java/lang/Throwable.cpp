@@ -46,7 +46,7 @@ static jobject fillInStackTrace(jobject _this, jint dummy)
         }
     }
 
-    auto backtrace = loadArrayClass(S(array_java_lang_Object))->allocArray(num);
+    auto backtrace = newObjectArray(num);
     auto trace = (Object **) backtrace->data;
 
     Class *c = loadBootClass(S(java_lang_StackTraceElement));

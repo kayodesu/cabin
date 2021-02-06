@@ -9,7 +9,7 @@
 static void initIDs()
 {
     // todo
-//    jvm_abort("error\n");
+//    JVM_PANIC("error\n");
 }
 
 /*
@@ -53,7 +53,7 @@ static jlong set(jobject _this, jint d)
  */
 static void sync(jobject _this)
 {
-    jvm_abort("error\n"); // todo
+    JVM_PANIC("error\n"); // todo
 }
 
 static JNINativeMethod methods[] = {

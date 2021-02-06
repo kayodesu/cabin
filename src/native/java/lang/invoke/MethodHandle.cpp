@@ -35,10 +35,10 @@ static jobject invokeExact(jobject _this, ...)
 
     if (equals(_this->clazz->class_name, "java/lang/invoke/BoundMethodHandle$Species_L")) {
         // final Object argL0;
-        jvm_abort("invokeExactxxxxxxxxxxxxxxxxxxxx");
+        JVM_PANIC("invokeExactxxxxxxxxxxxxxxxxxxxx");
     }
 
-    jvm_abort("invokeExact");
+    JVM_PANIC("invokeExact");
 }
 
 /**
@@ -133,7 +133,7 @@ static jobject invoke(jobject _this, ...)
 // final native @PolymorphicSignature Object invokeBasic(Object... args) throws Throwable;
 static jobject invokeBasic(jobject _this, ...)
 {
-    jvm_abort("invokeBasic");
+    JVM_PANIC("invokeBasic");
 }
 
 /**
@@ -146,7 +146,7 @@ static jobject invokeBasic(jobject _this, ...)
 // static native @PolymorphicSignature Object linkToVirtual(Object... args) throws Throwable;
 static jobject linkToVirtual(jobjectArray args)
 {
-    jvm_abort("linkToVirtual");
+    JVM_PANIC("linkToVirtual");
 }
 
 /**
@@ -159,7 +159,7 @@ static jobject linkToVirtual(jobjectArray args)
 // static native @PolymorphicSignature Object linkToStatic(Object... args) throws Throwable;
 static jobject linkToStatic(jobjectArray args)
 {
-    jvm_abort("linkToStatic");
+    JVM_PANIC("linkToStatic");
 }
 
 /**
@@ -172,7 +172,7 @@ static jobject linkToStatic(jobjectArray args)
 // static native @PolymorphicSignature Object linkToSpecial(Object... args) throws Throwable;
 static jobject linkToSpecial(jobjectArray args)
 {
-    jvm_abort("linkToSpecial");
+    JVM_PANIC("linkToSpecial");
 }
 
 /**
@@ -185,7 +185,7 @@ static jobject linkToSpecial(jobjectArray args)
 // static native @PolymorphicSignature Object linkToInterface(Object... args) throws Throwable;
 static jobject linkToInterface(jobjectArray args)
 {
-    jvm_abort("linkToInterface");
+    JVM_PANIC("linkToInterface");
 }
 
 #undef T

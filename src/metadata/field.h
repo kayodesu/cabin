@@ -49,6 +49,7 @@ public:
 public:
     Field(Class *c, BytecodeReader &r);
 
+private:
     Field(Class *clazz, const utf8_t *name, const utf8_t *descriptor, int access_flags)
             : clazz(clazz), name(name), descriptor(descriptor), access_flags(access_flags)
     {
@@ -56,25 +57,33 @@ public:
         assert(name != nullptr);
         assert(descriptor != nullptr);
         category_two = (descriptor[0] == 'J' || descriptor[0]== 'D');
+
+        if (isStatic()) {
+            memset(&static_value, 0, sizeof(static_value));
+        } else {
+            id = 0; // todo id 应该怎么设置？？
+        }
     }
 
+public:
     ClsObj *getType();
 
-    bool isPrim() const;
+    [[nodiscard]] bool isPrim() const;
 
-    std::string toString() const;
+    [[nodiscard]] std::string toString() const;
     friend std::ostream &operator <<(std::ostream &os, const Field &field);
 
-    bool isPublic() const    { return accIsPublic(access_flags); }
-    bool isProtected() const { return accIsProtected(access_flags); }
-    bool isPrivate() const   { return accIsPrivate(access_flags); }
-    bool isStatic() const    { return accIsStatic(access_flags); }
-    bool isFinal() const     { return accIsFinal(access_flags); }
-    bool isTransient() const { return accIsTransient(access_flags); }
-    bool isVolatile() const  { return accIsVolatile(access_flags); }
+    [[nodiscard]] bool isPublic() const    { return accIsPublic(access_flags); }
+    [[nodiscard]] bool isProtected() const { return accIsProtected(access_flags); }
+    [[nodiscard]] bool isPrivate() const   { return accIsPrivate(access_flags); }
+    [[nodiscard]] bool isStatic() const    { return accIsStatic(access_flags); }
+    [[nodiscard]] bool isFinal() const     { return accIsFinal(access_flags); }
+    [[nodiscard]] bool isTransient() const { return accIsTransient(access_flags); }
+    [[nodiscard]] bool isVolatile() const  { return accIsVolatile(access_flags); }
 
     void setSynthetic() { accSetSynthetic(access_flags); }
-};
 
+    friend class Class;
+};
 
 #endif //CABIN_FIELD_H
