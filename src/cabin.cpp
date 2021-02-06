@@ -333,10 +333,11 @@ static void showVersionAndCopyright()
 #define TEST_SYSTEM_INFO       0
 #define TEST_METHOD_TYPE       0
 #define TEST_METHOD_DESCRIPTOR 0
+#define TEST_INJECT_FIELD      0
 
 #if !(TEST_SLOT || TEST_CLASS_LOADER || TEST_LOAD_CLASS \
         || TEST_CLONE_OBJECT || TEST_PROPERTIES || TEST_SYSTEM_INFO \
-        || TEST_METHOD_TYPE || TEST_METHOD_DESCRIPTOR)
+        || TEST_METHOD_TYPE || TEST_METHOD_DESCRIPTOR || TEST_INJECT_FIELD)
 int main(int argc, char* argv[])
 {
     time_t time1;
@@ -658,5 +659,44 @@ int main(int argc, char *argv[])
         if (strcmp(d, desc.c_str()) != 0)
             throw runtime_error("error");
     }
+}
+#endif
+
+#if (TEST_INJECT_FIELD)
+static void inject(const char *class_name)
+{
+    cout << "--------- begin ----------" << endl;
+
+    Class *c = loadBootClass(class_name);
+    cout << c->toString().c_str() << endl;
+
+    // 因为 injectInstField 只能在loaded之后进行，
+    // 所以这里为了测试强制设置一下。
+    auto state = c->state;
+    c->state = Class::LOADED;
+    c->injectInstField("inject1", "C");
+    c->injectInstField("inject2", "J");
+    c->injectInstField("inject3", "I");
+    c->state = state;
+    cout << c->toString().c_str();
+
+    cout << "---------  end  ----------" << endl;
+}
+
+int main(int argc, char *argv[])
+{
+    initJVM(argc, argv);
+
+    try {
+        inject("java/lang/Object");
+        inject("java/lang/Class");
+
+        // 第二次注入 java/lang/Object
+        inject("java/lang/Object");
+    } catch (runtime_error &e) {
+        cout << e.what();
+    }
+
+    return 0;
 }
 #endif

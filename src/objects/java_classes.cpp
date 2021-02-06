@@ -1,6 +1,7 @@
 #include "java_classes.h"
 #include "../metadata/class.h"
 
+using namespace std;
 using namespace utf8;
 
 void checkInjectedFields(Class *c)
@@ -8,8 +9,12 @@ void checkInjectedFields(Class *c)
     assert(c != nullptr);
 
     if (equals(c->class_name, S(java_lang_invoke_MemberName))) {
-        c->injectInstField("vmindex", S(I));
-        c->injectInstField("vmtarget", S(sig_java_lang_Object));
+        try {
+            c->injectInstField("vmindex", S(I));
+            c->injectInstField("vmtarget", S(sig_java_lang_Object));
+        } catch (runtime_error &e) {
+            JVM_PANIC(e.what());
+        }
     }
 }
 

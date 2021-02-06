@@ -628,27 +628,6 @@ void Class::generateClassObject()
 
 Field *Class::lookupField(const utf8_t *name, const utf8_t *descriptor)
 {
-//    for (u2 i = 0; i < field_count; i++) {
-//        Field *f = fields + i;
-//        if (utf8::equals(f->name, name) && utf8::equals(f->descriptor, descriptor))
-//            return f;
-//    }
-//
-//    // todo 在父类中查找
-//    Field *field;
-//    if (super_class != nullptr) {
-//        if ((field = super_class->lookupField(name, descriptor)) != nullptr)
-//            return field;
-//    }
-//
-//    // todo 在父接口中查找
-//    for (auto c : interfaces) {
-//        if ((field = c->lookupField(name, descriptor)) != nullptr)
-//            return field;
-//    }
-//
-//    return nullptr;
-
     Field *f;
     Class *clazz = this;
     do {
@@ -714,9 +693,30 @@ Field *Class::getDeclaredInstField(int id, bool ensureExist)
 void Class::injectInstField(const utf8_t *name, const utf8_t *descriptor)
 {
     assert(name != nullptr && descriptor != nullptr);
+
     if (state != LOADED) {
-        JVM_PANIC("error"); // todo 只能在loade之后 inject Field
+        // todo 只能在loaded之后 inject Field
+        throw runtime_error("state: " + to_string(state));
     }
+
+    // 首先要确定class中不存在和要注入的field同名的field
+
+    for (Field *f : fields) {
+        if (utf8::equals(f->name, name)) {
+            throw runtime_error(name);
+        }
+    }
+
+    for (Class *c = this->super_class; c != nullptr; c = c->super_class) {
+        for (Field *f : c->fields) {
+            // 在父类查找时只查子类可以看见的field，即非private field
+            if (!f->isPrivate() && utf8::equals(f->name, name)) {
+                throw runtime_error(name);
+            }
+        }
+    }
+
+    // todo 在接口及其父接口中查找
 
     int access_flags = JVM_ACC_PRIVATE | JVM_ACC_SYNTHETIC;
     auto f = new Field(this, name, descriptor, access_flags);
@@ -974,9 +974,24 @@ Class *Class::arrayClass() const
 
 string Class::toString() const
 {
-    string s = "class: ";
-    s += class_name;
-    return s;
+    ostringstream oss;
+    oss << "class: " << class_name << endl;
+
+    oss << "  declared static fields: " << endl;
+    for (Field *f : fields) {
+        if (f->isStatic()) {
+            oss << "    " << f->name << " | " << f->descriptor << endl;
+        }
+    }
+
+    oss << "  declared instance fields: " << endl;
+    for (Field *f : fields) {
+        if (!f->isStatic()) {
+            oss << "    " << f->name << " | " << f->descriptor << " | " << f->id << endl;
+        }
+    }
+
+    return oss.str();
 }
 
 int Class::dim() const

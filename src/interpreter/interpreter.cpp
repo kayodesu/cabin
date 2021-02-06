@@ -1366,7 +1366,7 @@ opc_new: {
     initClass(c);
 
     if (c->isInterface() || c->isAbstract()) {
-        THROW_EXCEPTION(S(java_lang_InstantiationException), c->toString().c_str());
+        THROW_EXCEPTION(S(java_lang_InstantiationException), c->class_name);
     }
 
     // jref o = newObject(c);

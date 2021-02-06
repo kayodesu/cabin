@@ -26,6 +26,7 @@ public:
     bool category_two;
 
     union {
+        // Present if static field,
         // static value 必须初始化清零
         union {
             jbool z;
@@ -40,6 +41,7 @@ public:
             slot_t data[2];
         } static_value = {};
 
+        // Present if instance field
         int id;
     };
 
