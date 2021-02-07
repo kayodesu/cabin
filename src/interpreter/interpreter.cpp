@@ -324,13 +324,13 @@ opc_ldc:
 opc_ldc_w:
     index = reader->readu2();
 _ldc: {
-    u1 type = cp->type(index);
+    u1 type = cp->getType(index);
     switch (type) {
         case JVM_CONSTANT_Integer:
-            frame->pushi(cp->_int(index));
+            frame->pushi(cp->getInt(index));
             break;
         case JVM_CONSTANT_Float:
-            frame->pushf(cp->_float(index));
+            frame->pushf(cp->getFloat(index));
             break;
         case JVM_CONSTANT_String:
         case JVM_CONSTANT_ResolvedString:
@@ -348,14 +348,14 @@ _ldc: {
 }
 opc_ldc2_w: {
     index = reader->readu2();
-    u1 type = cp->type(index);
+    u1 type = cp->getType(index);
     switch (type) {
         case JVM_CONSTANT_Long:
-            frame->pushl(cp->_long(index));
+            frame->pushl(cp->getLong(index));
             break;
         case JVM_CONSTANT_Double:
-         //    printvm("=====    %f\n", cp->_double(index));
-            frame->pushd(cp->_double(index));
+         //    printvm("=====    %f\n", cp->getDouble(index));
+            frame->pushd(cp->getDouble(index));
             break;
         default:
             THROW_EXCEPTION(S(java_lang_UnknownError), "unknown type: %d", type);

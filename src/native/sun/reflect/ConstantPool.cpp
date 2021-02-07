@@ -5,28 +5,28 @@
 // private native int getSize0(Object constantPoolOop);
 static jint getSize0(jobject _this, jobject constantPoolOop)
 {
-    ConstantPool *cp = (ConstantPool *) constantPoolOop;
-    return cp->size;
+    auto cp = (ConstantPool *) constantPoolOop;
+    return cp->getSize();
 }
 
 // private native Class getClassAt0(Object constantPoolOop, int i);
 static jclass getClassAt0(jobject _this, jobject constantPoolOop, jint i)
 {
-    ConstantPool *cp = (ConstantPool *) constantPoolOop;
+    auto cp = (ConstantPool *) constantPoolOop;
     return cp->resolveClass((u2)i)->java_mirror;
 }
 
 // private native long getLongAt0(Object constantPoolOop, int i);
 static jlong getLongAt0(jobject _this, jobject constantPoolOop, jint i)
 {
-    ConstantPool *cp = (ConstantPool *) constantPoolOop;
-    return cp->_long((u2)i);
+    auto cp = (ConstantPool *) constantPoolOop;
+    return cp->getLong((u2) i);
 }
 
 // private native String getUTF8At0(Object constantPoolOop, int i);
 static jstring getUTF8At0(jobject _this, jobject constantPoolOop, jint i)
 {
-    ConstantPool *cp = (ConstantPool *) constantPoolOop;
+    auto cp = (ConstantPool *) constantPoolOop;
     return cp->resolveString(i);
 }
 

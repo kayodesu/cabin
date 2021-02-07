@@ -1,11 +1,6 @@
-/*
- * Author: Yo Ka
- */
-
 #include "constant_pool.h"
 #include "class.h"
 #include "method.h"
-#include "field.h"
 #include "../objects/mh.h"
 #include "../interpreter/interpreter.h"
 
@@ -17,15 +12,15 @@ Class *ConstantPool::resolveClass(u2 i)
 {
     lock_guard<recursive_mutex> lock(mutex);
     assert(0 < i && i < size);
-    assert(_type[i] == JVM_CONSTANT_Class or _type[i] == JVM_CONSTANT_ResolvedClass);
+    assert(type[i] == JVM_CONSTANT_Class or type[i] == JVM_CONSTANT_ResolvedClass);
 
-    if (_type[i] == JVM_CONSTANT_ResolvedClass) {
-        return (Class *) _info[i];
+    if (type[i] == JVM_CONSTANT_ResolvedClass) {
+        return (Class *) info[i];
     }
 
     Class *c = loadClass(clazz->loader, className(i));
-    type(i, JVM_CONSTANT_ResolvedClass);
-    info(i, (slot_t) c);
+    setType(i, JVM_CONSTANT_ResolvedClass);
+    setInfo(i, (slot_t) c);
 
     return c;
 }
@@ -34,10 +29,10 @@ Method *ConstantPool::resolveMethod(u2 i)
 {
     lock_guard<recursive_mutex> lock(mutex);
     assert(0 < i && i < size);
-    assert(_type[i] == JVM_CONSTANT_Methodref || _type[i] == JVM_CONSTANT_ResolvedMethod);
+    assert(type[i] == JVM_CONSTANT_Methodref || type[i] == JVM_CONSTANT_ResolvedMethod);
 
-    if (_type[i] == JVM_CONSTANT_ResolvedMethod) {
-        return (Method *) _info[i];
+    if (type[i] == JVM_CONSTANT_ResolvedMethod) {
+        return (Method *) info[i];
     }
 
     Class *c = resolveClass(methodClassIndex(i));
@@ -47,8 +42,8 @@ Method *ConstantPool::resolveMethod(u2 i)
         m = c->getDeclaredPolymorphicSignatureMethod(name);
     }
 
-    type(i, JVM_CONSTANT_ResolvedMethod);
-    info(i, (slot_t) m);
+    setType(i, JVM_CONSTANT_ResolvedMethod);
+    setInfo(i, (slot_t) m);
     return m;
 }
 
@@ -56,18 +51,18 @@ Method* ConstantPool::resolveInterfaceMethod(u2 i)
 {
     lock_guard<recursive_mutex> lock(mutex);
     assert(0 < i && i < size);
-    assert(_type[i] == JVM_CONSTANT_InterfaceMethodref
-        || _type[i] == JVM_CONSTANT_ResolvedInterfaceMethod);
+    assert(type[i] == JVM_CONSTANT_InterfaceMethodref
+           || type[i] == JVM_CONSTANT_ResolvedInterfaceMethod);
 
-    if (_type[i] == JVM_CONSTANT_ResolvedInterfaceMethod) {
-        return (Method *) _info[i];
+    if (type[i] == JVM_CONSTANT_ResolvedInterfaceMethod) {
+        return (Method *) info[i];
     }
 
     Class *c = resolveClass(interfaceMethodClassIndex(i));
     Method *m = c->lookupMethod(interfaceMethodName(i), interfaceMethodType(i));
 
-    type(i, JVM_CONSTANT_ResolvedInterfaceMethod);
-    info(i, (slot_t) m);
+    setType(i, JVM_CONSTANT_ResolvedInterfaceMethod);
+    setInfo(i, (slot_t) m);
 
     return m;
 }
@@ -77,9 +72,9 @@ Method *ConstantPool::resolveMethodOrInterfaceMethod(u2 i)
     lock_guard<recursive_mutex> lock(mutex);
     assert(0 < i && i < size);
 
-    if (_type[i] == JVM_CONSTANT_Methodref || _type[i] == JVM_CONSTANT_ResolvedMethod)
+    if (type[i] == JVM_CONSTANT_Methodref || type[i] == JVM_CONSTANT_ResolvedMethod)
         return resolveMethod(i);
-    if (_type[i] == JVM_CONSTANT_InterfaceMethodref || _type[i] == JVM_CONSTANT_ResolvedInterfaceMethod)
+    if (type[i] == JVM_CONSTANT_InterfaceMethodref || type[i] == JVM_CONSTANT_ResolvedInterfaceMethod)
         return resolveInterfaceMethod(i);
 
     JVM_PANIC("never go here");
@@ -89,17 +84,17 @@ Field *ConstantPool::resolveField(u2 i)
 {
     lock_guard<recursive_mutex> lock(mutex);
     assert(0 < i && i < size);
-    assert(_type[i] == JVM_CONSTANT_Fieldref or _type[i] == JVM_CONSTANT_ResolvedField);
+    assert(type[i] == JVM_CONSTANT_Fieldref or type[i] == JVM_CONSTANT_ResolvedField);
 
-    if (_type[i] == JVM_CONSTANT_ResolvedField) {
-        return (Field *) _info[i];
+    if (type[i] == JVM_CONSTANT_ResolvedField) {
+        return (Field *) info[i];
     }
 
     Class *c = resolveClass(fieldClassIndex(i));
     Field *f = c->lookupField(fieldName(i), fieldType(i));
 
-    type(i, JVM_CONSTANT_ResolvedField);
-    info(i, (slot_t) f);
+    setType(i, JVM_CONSTANT_ResolvedField);
+    setInfo(i, (slot_t) f);
 
     return f;
 }
@@ -108,17 +103,17 @@ Object *ConstantPool::resolveString(u2 i)
 {
     lock_guard<recursive_mutex> lock(mutex);
     assert(0 < i && i < size);
-    assert(_type[i] == JVM_CONSTANT_String or _type[i] == JVM_CONSTANT_ResolvedString);
+    assert(type[i] == JVM_CONSTANT_String or type[i] == JVM_CONSTANT_ResolvedString);
 
-    if (_type[i] == JVM_CONSTANT_ResolvedString) {
-        return (Object *) _info[i];
+    if (type[i] == JVM_CONSTANT_ResolvedString) {
+        return (Object *) info[i];
     }
 
     const utf8_t *str = string(i);
     Object *so = g_string_class->intern(str);
 
-    type(i, JVM_CONSTANT_ResolvedString);
-    info(i, (slot_t) so);
+    setType(i, JVM_CONSTANT_ResolvedString);
+    setInfo(i, (slot_t) so);
     return so;
 }
 
@@ -126,7 +121,7 @@ Object *ConstantPool::resolveMethodType(u2 i)
 {
     lock_guard<recursive_mutex> lock(mutex);
     assert(0 < i && i < size);
-    assert(_type[i] == JVM_CONSTANT_MethodType);
+    assert(type[i] == JVM_CONSTANT_MethodType);
     return findMethodType(methodTypeDescriptor(i), clazz->loader);
 }
 
@@ -134,7 +129,7 @@ Object *ConstantPool::resolveMethodHandle(u2 i)
 {
     lock_guard<recursive_mutex> lock(mutex);
     assert(0 < i && i < size);
-    assert(_type[i] == JVM_CONSTANT_MethodHandle);
+    assert(type[i] == JVM_CONSTANT_MethodHandle);
 
     auto caller = getCaller();
 

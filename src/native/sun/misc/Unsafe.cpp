@@ -4,7 +4,6 @@
 #include "../../../platform/sysinfo.h"
 #include "../../../objects/object.h"
 #include "../../../objects/array.h"
-#include "../../../util/endianness.h"
 #include "../../../runtime/frame.h"
 #include "../../jni_internal.h"
 
@@ -765,10 +764,10 @@ static jclass defineAnonymousClass(jobject _this,
     for (int i = 0; i < cp_patches_len; i++) {
         jobject o = cp_patches->get<jobject>(i);
         if (o != nullptr) {
-            u1 type = c->cp.type(i);
+            u1 type = c->cp.getType(i);
             if (type == JVM_CONSTANT_String) {
-                c->cp.info(i, (slot_t) o);
-                c->cp.type(i, JVM_CONSTANT_ResolvedString);
+                c->cp.setInfo(i, (slot_t) o);
+                c->cp.setType(i, JVM_CONSTANT_ResolvedString);
             } else {
                 JVM_PANIC("defineAnonymousClass: unimplemented patch type"); // todo
             }

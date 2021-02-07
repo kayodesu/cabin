@@ -41,19 +41,6 @@ Object *Object::clone() const
     return clone;
 }
 
-//void Object::setFieldValue(Field *f, slot_t v)
-//{
-//    assert(f != nullptr);
-//    assert(!f->isStatic());
-//
-//    if (!f->category_two) {
-//        data[f->id] = v;
-//    } else { // categoryTwo
-//        data[f->id] = 0; // 高字节清零
-//        data[f->id + 1] = v; // 低字节存值
-//    }
-//}
-
 void Object::setFieldValue(Field *f, const slot_t *value)
 {
     assert(f != nullptr && !f->isStatic() && value != nullptr);
@@ -69,7 +56,6 @@ void Object::setFieldValue(int id, jref value)
     Field *f = clazz->getDeclaredInstField(id);
 
     if (value == jnull) {
-//        RSLOT(data + id) = jnull;
         setRefField(f, jnull);
     } else if (f->isPrim()) {
         const slot_t *unbox = value->unbox();
@@ -78,7 +64,6 @@ void Object::setFieldValue(int id, jref value)
             data[id+1] = *++unbox;
     } else {
         setRefField(f, jnull);
-//        RSLOT(data + id) = jnull;
     }
 }
 
@@ -112,6 +97,11 @@ bool Object::isClassObject() const
     return clazz == g_class_class;
 }
 
+bool Object::isStringObject() const
+{
+    return clazz == g_string_class;
+}
+
 string Object::toString() const
 {
     ostringstream os;
@@ -123,7 +113,7 @@ static utf8_t *string2utf8(jstrref so)
 {
     assert(so != nullptr);
     assert(g_string_class != nullptr);
-    assert(so->clazz == g_string_class);
+    assert(so->isStringObject());
 
     if (g_jdk_version_9_and_upper) {
         // byte[] value;
@@ -142,6 +132,7 @@ static utf8_t *string2utf8(jstrref so)
 
 utf8_t *Object::toUtf8() const
 {
+    assert(isStringObject());
     return string2utf8((jstrref) this);
 }
 
@@ -150,15 +141,15 @@ static Object *newString_jdk_8_and_under(const utf8_t *str)
     assert(g_string_class != nullptr && str != nullptr);
 
     initClass(g_string_class);
-    auto strobj = g_string_class->allocObject();
+    auto so = g_string_class->allocObject();
     auto len = length(str);
 
     // set java/lang/String 的 value 变量赋值
     Array *value = newArray(S(array_C), len); // [C
     toUnicode(str, (unicode_t *) (value->data));
-    strobj->setRefField(S(value), S(array_C), value);
+    so->setRefField(S(value), S(array_C), value);
 
-    return strobj;
+    return so;
 }
 
 static Object *newString_jdk_9_and_upper(const utf8_t *str)
@@ -168,22 +159,22 @@ static Object *newString_jdk_9_and_upper(const utf8_t *str)
     initClass(g_string_class);
     assert(is_jtrue(g_string_class->lookupField("COMPACT_STRINGS", "Z")->static_value.z));
 
-    auto strobj = g_string_class->allocObject();
+    auto so = g_string_class->allocObject();
     auto len = length(str);
 
     // set java/lang/String 的 value 变量赋值
     // private final byte[] value;
     Array *value = newArray(S(array_B), len); // [B
     memcpy(value->data, str, len);
-    strobj->setRefField(S(value), S(array_B), value);
+    so->setRefField(S(value), S(array_B), value);
 
     // set java/lang/String 的 coder 变量赋值
     // private final byte coder;
     // 可取一下两值之一：
     // @Native static final byte LATIN1 = 0;
     // @Native static final byte UTF16  = 1;
-    strobj->setByteField(S(coder), "B", 0);
-    return strobj;
+    so->setByteField(S(coder), "B", 0);
+    return so;
 }
 
 jstrref newString(const utf8_t *str)
@@ -197,8 +188,10 @@ jstrref newString(const utf8_t *str)
 
 jstrref newString(const unicode_t *str, jsize len)
 {
-    // todo
-    JVM_PANIC("not implement.");
+    utf8_t *utf8 = unicode::toUtf8(str, len);
+    jstrref so = newString(utf8);
+    delete[] utf8;
+    return so;
 }
 
 bool StringEquals::operator()(jstrref x, jstrref y) const

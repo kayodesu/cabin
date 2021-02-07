@@ -15,8 +15,6 @@ using namespace slot;
 
 /*
  * 基本类型的名称，描述符，等等
- *
- * Author: Yo Ka
  */
 static const struct {
     const utf8_t *class_name;
@@ -146,7 +144,6 @@ jref shortBox(jshort x)
     Method *m = c->getDeclaredStaticMethod(S(valueOf), "(S)Ljava/lang/Short;");
     return getRef(execJavaFunc(m, {islot(x)}));
 }
-
 
 jref intBox(jint x)
 {

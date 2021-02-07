@@ -18,7 +18,7 @@ Method::ExceptionTable::ExceptionTable(Class *clazz, BytecodeReader &r)
         catch_type = nullptr;
     } else {
         catch_type = new CatchType;
-        if (clazz->cp.type(index) == JVM_CONSTANT_ResolvedClass) {
+        if (clazz->cp.getType(index) == JVM_CONSTANT_ResolvedClass) {
             catch_type->resolved = true;
             catch_type->u.clazz = clazz->cp.resolveClass(index);
         } else {

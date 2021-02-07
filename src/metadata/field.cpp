@@ -42,21 +42,21 @@ Field::Field(Class *c, BytecodeReader &r)
             if (isStatic()) {
                 utf8_t d = *descriptor;
                 if (d == 'Z') {
-                    static_value.z = jint2jbool(cp._int(index));
+                    static_value.z = jint2jbool(cp.getInt(index));
                 } else if (d == 'B') {
-                    static_value.b = jint2jbyte(cp._int(index));
+                    static_value.b = jint2jbyte(cp.getInt(index));
                 } else if (d == 'C') {
-                    static_value.c = jint2jchar(cp._int(index));
+                    static_value.c = jint2jchar(cp.getInt(index));
                 } else if (d == 'S') {
-                    static_value.s = jint2jshort(cp._int(index));
+                    static_value.s = jint2jshort(cp.getInt(index));
                 } else if (d == 'I') {
-                    static_value.i = cp._int(index);
+                    static_value.i = cp.getInt(index);
                 } else if (d == 'J') {
-                    static_value.j = cp._long(index);
+                    static_value.j = cp.getLong(index);
                 } else if (d == 'F') {
-                    static_value.f = cp._float(index);
+                    static_value.f = cp.getFloat(index);
                 } else if (d == 'D') {
-                    static_value.d = cp._double(index);
+                    static_value.d = cp.getDouble(index);
                 } else if(equals(descriptor, S(sig_java_lang_String))) {
                     static_value.r = cp.resolveString(index);
                 }

@@ -1,5 +1,5 @@
-#ifndef JVM_JTHREAD_H
-#define JVM_JTHREAD_H
+#ifndef CABIN_THREAD_H
+#define CABIN_THREAD_H
 
 #include <vector>
 #include <thread>
@@ -86,12 +86,6 @@ class Thread {
     friend Thread *initMainThread();
     friend void createVMThread(void *(*start)(void *), const utf8_t *thread_name);
 
-    friend Object *exceptionOccured();
-    friend void signalException(const char *excep_name, const char *message);
-    friend void setException(Object *exp);
-    friend void clearException();
-    friend void printStackTrace();
-
 public:
     Object *tobj = nullptr; // 所关联的 Object of java.lang.Thread
     std::thread::id tid;    // 所关联的 local thread 对应的id
@@ -168,4 +162,4 @@ void createCustomerThread(Object *jThread);
 
 Thread *getCurrentThread();
 
-#endif //JVM_JTHREAD_H
+#endif //CABIN_THREAD_H

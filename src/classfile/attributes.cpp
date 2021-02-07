@@ -83,7 +83,7 @@ slot_t *BootstrapMethod::resolveArgs(ConstantPool *cp, slot_t *result)
 {
     assert(result != nullptr);
     for (u2 i : bootstrap_arguments) {
-        switch (cp->type(i)) {
+        switch (cp->getType(i)) {
             case JVM_CONSTANT_String:
 //                RSLOT(result) = cp->resolveString(i);
                 setRef(result, cp->resolveString(i));
@@ -95,23 +95,23 @@ slot_t *BootstrapMethod::resolveArgs(ConstantPool *cp, slot_t *result)
                 result++;
                 break;
             case JVM_CONSTANT_Integer:
-//                ISLOT(result) = cp->_int(i);
-                setInt(result, cp->_int(i));
+//                ISLOT(result) = cp->getInt(i);
+                setInt(result, cp->getInt(i));
                 result++;
                 break;
             case JVM_CONSTANT_Float:
-//                FSLOT(result) = cp->_float(i);
-                setFloat(result, cp->_float(i));
+//                FSLOT(result) = cp->getFloat(i);
+                setFloat(result, cp->getFloat(i));
                 result++;
                 break;
             case JVM_CONSTANT_Long:
-//                LSLOT(result) = cp->_long(i);
-                setLong(result, cp->_long(i));
+//                LSLOT(result) = cp->getLong(i);
+                setLong(result, cp->getLong(i));
                 result += 2;
                 break;
             case JVM_CONSTANT_Double:
-//                DSLOT(result) = cp->_double(i);
-                setDouble(result, cp->_double(i));
+//                DSLOT(result) = cp->getDouble(i);
+                setDouble(result, cp->getDouble(i));
                 result += 2;
                 break;
             case JVM_CONSTANT_MethodHandle:

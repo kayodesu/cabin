@@ -10,7 +10,6 @@
 #include "../runtime/vm_thread.h"
 #include "class.h"
 #include "method.h"
-#include "field.h"
 #include "../objects/array.h"
 #include "../interpreter/interpreter.h"
 #include "../objects/prims.h"
@@ -61,16 +60,15 @@ void Class::parseAttribute(BytecodeReader &r)
                 source_file_name = cp.utf8(source_file_index);
             }
         } else if (S(EnclosingMethod) == attr_name) {
-            u2 classIndex = r.readu2(); // 指向 CONSTANT_Class_info
-            u2 methodIndex = r.readu2(); // 指向 CONSTANT_NameAndType_info
+            u2 class_index = r.readu2(); // 指向 CONSTANT_Class_info
+            u2 method_index = r.readu2(); // 指向 CONSTANT_NameAndType_info
 
-            if (classIndex > 0) {
-                // enclosing.clazz = loadClass(loader, cp.className(classIndex));
-                enclosing.clazz = cp.resolveClass(classIndex);
+            if (class_index > 0) {
+                enclosing.clazz = cp.resolveClass(class_index);
 
-                if (methodIndex > 0) {
-                    enclosing.name = newString(cp.nameOfNameAndType(methodIndex));
-                    enclosing.descriptor = newString(cp.typeOfNameAndType(methodIndex));
+                if (method_index > 0) {
+                    enclosing.name = newString(cp.nameOfNameAndType(method_index));
+                    enclosing.descriptor = newString(cp.typeOfNameAndType(method_index));
                 }
             }
         } else if (S(BootstrapMethods) == attr_name) {
@@ -104,8 +102,7 @@ void Class::parseAttribute(BytecodeReader &r)
         } else if (S(ModuleMainClass) == attr_name) {
             module_main_class = cp.className(r.readu2());
         } else if (S(NestHost) == attr_name) {
-//            utf8_t *name = cp.className(r.readu2());
-            nest_host = cp.resolveClass(r.reads2());//loadClass(loader, name);
+            nest_host = cp.resolveClass(r.reads2());
         } else if (S(NestMembers) == attr_name) {
             u2 num = r.readu2();
             for (u2 j = 0; j < num; j++) {
@@ -355,14 +352,14 @@ Class::Class(Object *loader, u1 *bytecode, size_t len): loader(loader), bytecode
     new (&cp) ConstantPool(this, r.readu2());
     for (u2 i = 1; i < cp.size; i++) {
         u1 tag = r.readu1();
-        cp.type(i, tag);
+        cp.setType(i, tag);
         switch (tag) {
             case JVM_CONSTANT_Class:
             case JVM_CONSTANT_String:
             case JVM_CONSTANT_MethodType:
             case JVM_CONSTANT_Module:
             case JVM_CONSTANT_Package:
-                cp.info(i, r.readu2());
+                cp.setInfo(i, r.readu2());
                 break;
             case JVM_CONSTANT_NameAndType:
             case JVM_CONSTANT_Fieldref:
@@ -372,33 +369,33 @@ Class::Class(Object *loader, u1 *bytecode, size_t len): loader(loader), bytecode
             case JVM_CONSTANT_InvokeDynamic: {
                 slot_t index1 = r.readu2();
                 slot_t index2 = r.readu2();
-                cp.info(i, (index2 << 16) + index1);
+                cp.setInfo(i, (index2 << 16) + index1);
                 break;
             }
             case JVM_CONSTANT_Integer: {
                 u1 bytes[4];
                 r.readBytes(bytes, 4);
-                cp._int(i, bytes_to_int32(bytes));
+                cp.setInt(i, bytes_to_int32(bytes));
                 break;
             }
             case JVM_CONSTANT_Float: {
                 u1 bytes[4];
                 r.readBytes(bytes, 4);
-                cp._float(i, bytes_to_float(bytes));
+                cp.setFloat(i, bytes_to_float(bytes));
                 break;
             }
             case JVM_CONSTANT_Long: {
                 u1 bytes[8];
                 r.readBytes(bytes, 8);
-                cp._long(i, bytes_to_int64(bytes));
-                cp.type(++i, JVM_CONSTANT_Placeholder);
+                cp.setLong(i, bytes_to_int64(bytes));
+                cp.setType(++i, JVM_CONSTANT_Placeholder);
                 break;
             }
             case JVM_CONSTANT_Double: {
                 u1 bytes[8];
                 r.readBytes(bytes, 8);
-                cp._double(i, bytes_to_double(bytes));
-                cp.type(++i, JVM_CONSTANT_Placeholder);
+                cp.setDouble(i, bytes_to_double(bytes));
+                cp.setType(++i, JVM_CONSTANT_Placeholder);
                 break;
             }
             case JVM_CONSTANT_Utf8: {
@@ -412,13 +409,13 @@ Class::Class(Object *loader, u1 *bytecode, size_t len): loader(loader), bytecode
                     utf8 = strdup(buf);
                     utf8 = save(utf8);
                 }
-                cp.info(i, (slot_t) utf8);
+                cp.setInfo(i, (slot_t) utf8);
                 break;
             }
             case JVM_CONSTANT_MethodHandle: {
                 slot_t index1 = r.readu1(); // 这里确实是 readu1, reference_kind
                 slot_t index2 = r.readu2(); // reference_index
-                cp.info(i, (index2 << 16) + index1);
+                cp.setInfo(i, (index2 << 16) + index1);
                 break;
             }
             default:
@@ -718,8 +715,8 @@ void Class::injectInstField(const utf8_t *name, const utf8_t *descriptor)
 
     // todo 在接口及其父接口中查找
 
-    int access_flags = JVM_ACC_PRIVATE | JVM_ACC_SYNTHETIC;
-    auto f = new Field(this, name, descriptor, access_flags);
+    int flags = JVM_ACC_PRIVATE | JVM_ACC_SYNTHETIC;
+    auto f = new Field(this, name, descriptor, flags);
     fields.push_back(f);
 
     f->id = inst_fields_count;
@@ -842,18 +839,7 @@ Method *Class::lookupMethod(const char *name, const char *descriptor)
         return method;
     }
 
-//    // todo 在父类中查找
-//    if (super_class != nullptr) {
-//        if ((method = super_class->lookupMethod(name, descriptor)) != nullptr)
-//            return method;
-//    }
-//
-//    // todo 在父接口中查找
-//    for (auto c : interfaces) {
-//        if ((method = c->lookupMethod(name, descriptor)) != nullptr)
-//            return method;
-//    }
-
+    // todo 是否应该禁止查找父类的私有方法，因为子类看不见父类的私有方法
     Class *super = super_class;
     while (super != nullptr) {
         if ((method = super->getDeclaredMethod(name, descriptor, false)) != nullptr)

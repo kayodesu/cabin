@@ -5,7 +5,6 @@
 #include <unordered_map>
 #include <minizip/unzip.h>
 #include "class_loader.h"
-#include "../symbol.h"
 #include "../metadata/class.h"
 #include "array.h"
 #include "../interpreter/interpreter.h"

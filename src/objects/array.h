@@ -11,7 +11,7 @@ class Array: public Object {
     Array(Class *ac, jint dim, const jint lens[]);
 
 public:
-    jsize arr_len;     // present only if array Object
+    jsize arr_len;
 
     [[nodiscard]] bool isArrayObject() const override { return true; }
     [[nodiscard]] bool isPrimArray() const;

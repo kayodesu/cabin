@@ -51,6 +51,7 @@ public:
 
     virtual bool isArrayObject() const;
     virtual bool isClassObject() const;
+    virtual bool isStringObject() const;
     virtual Object *clone() const;
 
 #define setTField(T, t) \

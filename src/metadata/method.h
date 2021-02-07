@@ -85,13 +85,13 @@ public:
     }
 
     // is <clinit>?
-    bool isClassInit() const 
+    [[nodiscard]] bool isClassInit() const
     {
         return strcmp(name, "<clinit>") == 0;
     }
 
     // is <init>?
-    bool isObjectInit() const 
+    [[nodiscard]] bool isObjectInit() const
     {
         return strcmp(name, "<init>") == 0;
     }
@@ -137,7 +137,6 @@ public:
 
     void setSynthetic() { accSetSynthetic(access_flags); }
 
-
 private:
     /*
      * 异常处理表
@@ -173,6 +172,5 @@ public:
         }
     }
 };
-
 
 #endif //CABIN_METHOD_H
