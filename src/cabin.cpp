@@ -328,6 +328,7 @@ static void showVersionAndCopyright()
 #define TEST_SLOT              0
 #define TEST_CLASS_LOADER      0
 #define TEST_LOAD_CLASS        0
+#define TEST_NEW_ARRAY         0
 #define TEST_CLONE_OBJECT      0
 #define TEST_PROPERTIES        0
 #define TEST_SYSTEM_INFO       0
@@ -335,7 +336,7 @@ static void showVersionAndCopyright()
 #define TEST_METHOD_DESCRIPTOR 0
 #define TEST_INJECT_FIELD      0
 
-#if !(TEST_SLOT || TEST_CLASS_LOADER || TEST_LOAD_CLASS \
+#if !(TEST_SLOT || TEST_CLASS_LOADER || TEST_LOAD_CLASS || TEST_NEW_ARRAY \
         || TEST_CLONE_OBJECT || TEST_PROPERTIES || TEST_SYSTEM_INFO \
         || TEST_METHOD_TYPE || TEST_METHOD_DESCRIPTOR || TEST_INJECT_FIELD)
 int main(int argc, char* argv[])
@@ -470,6 +471,122 @@ int main(int argc, char *argv[])
 //    printBootLoadedClasses();
     printClass(loadBootClass("boolean"));
     printClass(loadClass(getSystemClassLoader(), "HelloWorld"));
+}
+#endif
+
+#if (TEST_NEW_ARRAY)
+void initIntArray(Array *arr, jint dim, const jint *lens)
+{
+    if (dim <= 0)
+        return;
+
+    jint arr_len = lens[0];
+
+    if (dim == 1) {
+        for (jint i = 0; i < arr_len; i++)
+            arr->setInt(i, i+1);
+        return;
+    }
+
+    for (jint i = 0; i < arr_len; i++) {
+        initIntArray(arr->get<Array *>(i), dim - 1, lens + 1);
+    }
+}
+
+void printIntArray(Array *arr, jint dim, const jint *lens)
+{
+    if (dim <= 0)
+        return;
+
+    jint arr_len = lens[0];
+
+    if (dim == 1) {
+        for (jint i = 0; i < arr_len; i++) {
+            printf("%d, ", arr->get<jint>(i));
+        }
+        printf("\n");
+        return;
+    }
+
+    for (jint i = 0; i < arr_len; i++) {
+        printIntArray(arr->get<Array *>(i), dim - 1, lens + 1);
+    }
+}
+
+void test1()
+{
+    printf("test1\n");
+    static const int ARR_LEN = 8;
+
+    Array *arr = newArray("[I", ARR_LEN);
+    initIntArray(arr, 1, &ARR_LEN);
+    printIntArray(arr, 1, &ARR_LEN);
+}
+
+void test2()
+{
+    printf("test2\n");
+
+    Class *ac = loadArrayClass("[[I");
+    jint dim = 2;
+    jint lens[] = { 3, 5 };
+    Array *arr = ac->allocMultiArray(dim, lens);
+
+    initIntArray(arr, dim, lens);
+    printIntArray(arr, dim, lens);
+}
+
+void test3()
+{
+    printf("test3\n");
+
+    Class *ac = loadArrayClass("[[[I");
+    jint dim = 3;
+    jint lens[] = { 2, 3, 4 };
+    Array *arr = ac->allocMultiArray(dim, lens);
+
+    initIntArray(arr, dim, lens);
+    printIntArray(arr, dim, lens);
+    printf("\n");
+}
+
+void test4()
+{
+    printf("test4\n");
+
+    Class *ac = loadArrayClass("[[[[I");
+    jint dim = 4;
+    jint lens[] = { 2, 3, 4, 20 };
+    Array *arr = ac->allocMultiArray(dim, lens);
+
+    initIntArray(arr, dim, lens);
+    printIntArray(arr, dim, lens);
+    printf("\n");
+}
+
+void test7()
+{
+    printf("test4\n");
+
+    Class *ac = loadArrayClass("[[[[[[[I");
+    jint dim = 7;
+    jint lens[] = { 2, 3, 4, 5, 6, 7, 8 };
+    Array *arr = ac->allocMultiArray(dim, lens);
+
+    initIntArray(arr, dim, lens);
+    printIntArray(arr, dim, lens);
+    printf("\n");
+}
+
+int main(int argc, char *argv[])
+{
+    initJVM(argc, argv);
+
+    test1();
+    test2();
+    test3();
+    test4();
+    test7();
 }
 #endif
 
