@@ -29,7 +29,6 @@ Array::Array(Class *ac, jint dim, const jint lens[]): Object(ac)
 
     for (int d = 1; d < dim; d++) {
         for (int i = 0; i < arr_len; i++) {
-//            setRef(i, newMultiArray(ac->componentClass(), dim - 1, lens + 1));
             setRef(i, ac->componentClass()->allocMultiArray(dim - 1, lens + 1));
         }
     }

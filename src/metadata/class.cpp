@@ -1,7 +1,3 @@
-/*
- * Author: Yo Ka
- */
-
 #include <vector>
 #include <algorithm>
 #include <sstream>
@@ -20,7 +16,6 @@
 using namespace std;
 using namespace utf8;
 using namespace method_handles;
-
 
 void Class::calcFieldsId()
 {
@@ -490,7 +485,7 @@ Class::Class(Object *loader, u1 *bytecode, size_t len): loader(loader), bytecode
 }
 
 Class::Class(const char *class_name)
-        : class_name(dup(class_name)), /* 形参className可能非持久，复制一份 */
+        : class_name(dup(class_name)), /* 形参class_name可能非持久，复制一份 */
           access_flags(JVM_ACC_PUBLIC), inited(true),
           loader(nullptr), super_class(g_object_class)
 {
@@ -511,7 +506,7 @@ Class::Class(const char *class_name)
 }
 
 Class::Class(Object *loader, const char *class_name)
-        : class_name(dup(class_name)), /* 形参className可能非持久，复制一份 */
+        : class_name(dup(class_name)), /* 形参class_name可能非持久，复制一份 */
           access_flags(JVM_ACC_PUBLIC), inited(true),
           loader(loader), super_class(g_object_class)
 {
