@@ -1,7 +1,7 @@
 #include "../../jni_internal.h"
 
 // private static native NetworkInterface[] getAll() throws SocketException;
-static jobjectArray getAll()
+static jobject getAll()
 {
     // todo
     JVM_PANIC("not implement");
@@ -58,7 +58,7 @@ static jbool isP2P0(jstring name, jint ind)
 }
 
 // private static native byte[] getMacAddr0(byte[] inAddr, String name, int ind) throws SocketException;
-static jbyteArray getMacAddr0(jbyteArray inAddr, jstring name, jint ind)
+static jobject getMacAddr0(jobject inAddr, jstring name, jint ind)
 {
     // todo
     JVM_PANIC("not implement");
@@ -80,17 +80,17 @@ static void init()
 
 static JNINativeMethod methods[] = {
     JNINativeMethod_registerNatives,
-    { "getAll", "()[Ljava/net/NetworkInterface;", (void *) getAll },
-    { "getByName0", _STR_ "Ljava/net/NetworkInterface;", (void *) getByName0 },
-    { "getByIndex0", "(I)Ljava/net/NetworkInterface;", (void *) getByIndex0 },
-    { "getByInetAddress0", "(Ljava/net/InetAddress;)Ljava/net/NetworkInterface;", (void *) getByInetAddress0 },
-    { "isUp0", "(Ljava/lang/String;I)Z", (void *) isUp0 },
-    { "isLoopback0", "(Ljava/lang/String;I)Z", (void *) isLoopback0 },
-    { "supportsMulticast0", "(Ljava/lang/String;I)Z", (void *) supportsMulticast0 },
-    { "isP2P0", "(Ljava/lang/String;I)Z", (void *) isP2P0 },
-    { "getMacAddr0", "([BLjava/lang/String;I)[B", (void *) getMacAddr0 },
-    { "getMTU0", "(Ljava/lang/String;I)I", (void *) getMTU0 },
-    { "init", "()V", (void *) init },
+    { "getAll", "()[Ljava/net/NetworkInterface;", TA(getAll) },
+    { "getByName0", _STR_ "Ljava/net/NetworkInterface;", TA(getByName0) },
+    { "getByIndex0", "(I)Ljava/net/NetworkInterface;", TA(getByIndex0) },
+    { "getByInetAddress0", "(Ljava/net/InetAddress;)Ljava/net/NetworkInterface;", TA(getByInetAddress0) },
+    { "isUp0", "(Ljava/lang/String;I)Z", TA(isUp0) },
+    { "isLoopback0", "(Ljava/lang/String;I)Z", TA(isLoopback0) },
+    { "supportsMulticast0", "(Ljava/lang/String;I)Z", TA(supportsMulticast0) },
+    { "isP2P0", "(Ljava/lang/String;I)Z", TA(isP2P0) },
+    { "getMacAddr0", "([BLjava/lang/String;I)[B", TA(getMacAddr0) },
+    { "getMTU0", "(Ljava/lang/String;I)I", TA(getMTU0) },
+    { "init", "()V", TA(init) },
 };
 
 void java_net_NetworkInterface_registerNatives()

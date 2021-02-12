@@ -50,9 +50,9 @@ static jint getClassAccessFlags(jclass type)
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "getCallerClass", "()Ljava/lang/Class;", (void *) getCallerClass },
-        { "getCallerClass", "(I)Ljava/lang/Class;", (void *) getCallerClass0 },
-        { "getClassAccessFlags", "(Ljava/lang/Class;)I", (void *) getClassAccessFlags },
+        { "getCallerClass", "()Ljava/lang/Class;", TA(getCallerClass) },
+        { "getCallerClass", "(I)Ljava/lang/Class;", TA(getCallerClass0) },
+        { "getClassAccessFlags", "(Ljava/lang/Class;)I", TA(getClassAccessFlags) },
 };
 
 void sun_reflect_Reflection_registerNatives()

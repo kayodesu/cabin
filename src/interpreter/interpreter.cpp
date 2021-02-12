@@ -1,6 +1,5 @@
 #include <iostream>
 #include <cmath>
-#include <ffi.h>
 #include "../cabin.h"
 #include "interpreter.h"
 #include "../objects/mh.h"
@@ -1690,159 +1689,141 @@ slot_t *execJavaFunc(Method *m, jref _this, Array *args)
     return execJavaFunc(m, real_args);
 }
 
-static inline void apply(void *func, int argc,
-                         ffi_type *rtype, ffi_type **arg_types,
-                         void *rvalue, void **arg_values)
-{
-    ffi_cif cif;
-    ffi_prep_cif(&cif, FFI_DEFAULT_ABI, argc, rtype, arg_types);
-    ffi_call(&cif, (void (*)())func, rvalue, arg_values);
-}
-
 static void callJNIMethod(Frame *frame)
 {
     assert(frame != nullptr && frame->method != nullptr);
     assert(frame->method->isNative() && frame->method->native_method != nullptr);
+    assert(frame->method->native_method->func != nullptr);
 
-    Method *m = frame->method;
-    int arg_count_max = m->arg_slot_count + (m->isStatic() ? 1 /* jclsref */ : 0);
-
-    ffi_type *arg_types[arg_count_max];
-    void *arg_values[arg_count_max];
-
-    // 准备参数
-    int argc = 0;
     const slot_t *lvars = frame->lvars;
-    if (!m->isStatic()) {
-        arg_types[argc] = &ffi_type_pointer;
-        arg_values[argc] = (void *) lvars; // this
-        lvars++;
-        argc++;
+    const type_info &type = frame->method->native_method->type;
+    void *func = frame->method->native_method->func;
+
+#undef B
+#undef Z
+#undef I
+#undef F
+#undef R
+#undef L
+#undef D
+
+#define B(name) jbyte name = getByte(lvars++);
+#define Z(name) jbool name = getBool(lvars++);
+#define I(name) jint name = getInt(lvars++);
+#define F(name) jfloat name = getFloat(lvars++);
+#define R(name) jref name = getRef(lvars++);
+#define L(name) jlong name = getLong(lvars); lvars += 2;
+#define D(name) jdouble name = getDouble(lvars); lvars += 2;
+
+#define INVOKE_0(func_type, push_func) \
+    if (type == typeid(func_type)) { \
+        push_func(((func_type) func)()); \
+        return; \
     }
 
-    const char *p = m->descriptor;
-    assert(*p == JVM_SIGNATURE_FUNC);
-    p++; // skip start (
-
-    for (; *p != JVM_SIGNATURE_ENDFUNC; lvars++, p++, argc++) {
-        switch (*p) {
-            case JVM_SIGNATURE_BOOLEAN:
-            case JVM_SIGNATURE_BYTE: {
-//                jbyte b = jint2jbyte(ISLOT(lvars));
-                jbyte b = getByte(lvars);
-                *(jbyte *)lvars = b;
-                arg_types[argc] = &ffi_type_sint8;
-                arg_values[argc] = (void *) lvars;
-                break;
-            }
-            case JVM_SIGNATURE_CHAR: {
-//                jchar c = jint2jchar(ISLOT(lvars));
-                jchar c = getChar(lvars);
-                *(jchar *)lvars = c;
-                arg_types[argc] = &ffi_type_uint16;
-                arg_values[argc] = (void *) lvars;
-                break;
-            }
-            case JVM_SIGNATURE_SHORT: {
-//                jshort s = jint2jshort(ISLOT(lvars));
-                jshort s = getShort(lvars);
-                *(jshort *)lvars = s;
-                arg_types[argc] = &ffi_type_sint16;
-                arg_values[argc] = (void *) lvars;
-                break;
-            }
-            case JVM_SIGNATURE_INT:
-                arg_types[argc] = &ffi_type_sint32;
-                arg_values[argc] = (void *) lvars;
-                break;
-            case JVM_SIGNATURE_FLOAT:
-                arg_types[argc] = &ffi_type_float;
-                arg_values[argc] = (void *) lvars;
-                break;
-            case JVM_SIGNATURE_LONG:
-                arg_types[argc] = &ffi_type_sint64;
-                arg_values[argc] = (void *) lvars;
-                lvars++;
-                break;
-            case JVM_SIGNATURE_DOUBLE:
-                arg_types[argc] = &ffi_type_double;
-                arg_values[argc] = (void *) lvars;
-                lvars++;
-                break;
-            case JVM_SIGNATURE_ARRAY:
-                while (*++p == JVM_SIGNATURE_ARRAY);
-                if (*p != JVM_SIGNATURE_CLASS) { // 基本类型的数组
-                    goto __ref;
-                }
-            case JVM_SIGNATURE_CLASS:
-                while(*++p != JVM_SIGNATURE_ENDCLASS);
-            __ref:
-                arg_types[argc] = &ffi_type_pointer;
-                arg_values[argc] = (void *) lvars;
-                break;
-            default:
-                // todo error
-                break;
-        }
+#define INVOKE_1(func_type, arg, push_func) \
+    if (type == typeid(func_type)) { \
+        arg(a) \
+        push_func(((func_type) func)(a)); \
+        return; \
     }
 
-    switch (m->ret_type) {
-        case Method::RET_VOID:
-            apply(m->native_method, argc, &ffi_type_void, arg_types, nullptr, arg_values);
-            break;
-        case Method::RET_BYTE:
-        case Method::RET_BOOL: {
-            jbyte ret_value;
-            apply(m->native_method, argc, &ffi_type_sint8, arg_types, &ret_value, arg_values);
-            frame->pushi(ret_value);
-            break;
-        }
-        case Method::RET_CHAR: {
-            jchar ret_value;
-            apply(m->native_method, argc, &ffi_type_uint16, arg_types, &ret_value, arg_values);
-            frame->pushi(ret_value);
-            break;
-        }
-        case Method::RET_SHORT: {
-            jshort ret_value;
-            apply(m->native_method, argc, &ffi_type_sint16, arg_types, &ret_value, arg_values);
-            frame->pushi(ret_value);
-            break;
-        }
-        case Method::RET_INT: {
-            jint ret_value;
-            apply(m->native_method, argc, &ffi_type_sint32, arg_types, &ret_value, arg_values);
-            frame->pushi(ret_value);
-            break;
-        }
-        case Method::RET_FLOAT: {
-            jfloat ret_value;
-            apply(m->native_method, argc, &ffi_type_float, arg_types, &ret_value, arg_values);
-            frame->pushf(ret_value);
-            break;
-        }
-        case Method::RET_LONG: {
-            jlong ret_value;
-            apply(m->native_method, argc, &ffi_type_sint64, arg_types, &ret_value, arg_values);
-            frame->pushl(ret_value);
-            break;
-        }
-        case Method::RET_DOUBLE: {
-            jdouble ret_value;
-            apply(m->native_method, argc, &ffi_type_double, arg_types, &ret_value, arg_values);
-            frame->pushd(ret_value);
-            break;
-        }
-        case Method::RET_REFERENCE: {
-            jref ret_value;
-            apply(m->native_method, argc, &ffi_type_pointer, arg_types, &ret_value, arg_values);
-            // printvm("ret_value: %p\n", ret_value);
-            frame->pushr(ret_value);
-            break;
-        }
-        default:
-            // todo error
-            JVM_PANIC("never go here");
-            break;
+#define INVOKE_2(func_type, arg1, arg2, push_func) \
+    if (type == typeid(func_type)) { \
+        arg1(a) arg2(b) \
+        push_func(((func_type) func)(a, b)); \
+        return; \
     }
+
+#define INVOKE_3(func_type, arg1, arg2, arg3, push_func) \
+    if (type == typeid(func_type)) { \
+        arg1(a) arg2(b) arg3(c) \
+        push_func(((func_type) func)(a, b, c)); \
+        return; \
+    }
+
+#define INVOKE_4(func_type, arg1, arg2, arg3, arg4, push_func) \
+    if (type == typeid(func_type)) { \
+        arg1(a) arg2(b) arg3(c) arg4(d) \
+        push_func(((func_type) func)(a, b, c, d)); \
+        return; \
+    }
+
+#define INVOKE_5(func_type, arg1, arg2, arg3, arg4, arg5, push_func) \
+    if (type == typeid(func_type)) { \
+        arg1(a) arg2(b) arg3(c) arg4(d) arg5(e) \
+        push_func(((func_type) func)(a, b, c, d, e)); \
+        return; \
+    }
+
+    INVOKE_0(void(*)(), )
+    INVOKE_0(jbool(*)(), frame->pushi)
+    INVOKE_0(jint(*)(), frame->pushi)
+    INVOKE_0(jref(*)(), frame->pushr)
+    INVOKE_0(jlong(*)(), frame->pushl)
+
+    INVOKE_1(void(*)(jint), I, )
+    INVOKE_1(void(*)(jref), R, )
+    INVOKE_1(void(*)(jlong), L, )
+    INVOKE_1(jref(*)(jbool), Z, frame->pushr)
+    INVOKE_1(jlong(*)(jint), I, frame->pushl)
+    INVOKE_1(jlong(*)(jdouble), D, frame->pushl)
+    INVOKE_1(jdouble(*)(jlong), L, frame->pushd)
+    INVOKE_1(jlong(*)(jlong), L, frame->pushl)
+    INVOKE_1(jbyte(*)(jlong), L, frame->pushi)
+    INVOKE_1(jint(*)(jfloat), F, frame->pushi)
+    INVOKE_1(jref(*)(jref), R, frame->pushr)
+    INVOKE_1(jbool(*)(jref), R, frame->pushi)
+    INVOKE_1(jint(*)(jref), R, frame->pushi)
+    INVOKE_1(jlong(*)(jref), R, frame->pushl)
+
+    INVOKE_2(void(*)(jlong, jlong), L, L, )
+    INVOKE_2(void(*)(jref, jbool), R, Z, )
+    INVOKE_2(void(*)(jref, jint), R, I, )
+    INVOKE_2(void(*)(jref, jref), R, R, )
+    INVOKE_2(void(*)(jref, jlong), R, L, )
+    INVOKE_2(jlong(*)(jint, jlong), I, L, frame->pushl)
+    INVOKE_2(jref(*)(jref, jint), R, I, frame->pushr)
+    INVOKE_2(jlong(*)(jref, jint), R, I, frame->pushl)
+    INVOKE_2(jbool(*)(jref, jbool), R, Z, frame->pushi)
+    INVOKE_2(jbool(*)(jref, jref), R, R, frame->pushi)
+    INVOKE_2(jint(*)(jref, jref), R, R, frame->pushi)
+    INVOKE_2(jlong(*)(jref, jref), R, R, frame->pushl)
+    INVOKE_2(jbyte(*)(jref, jlong), R, L, frame->pushi)
+    INVOKE_2(jint(*)(jref, jlong), R, L, frame->pushi)
+    INVOKE_2(jref(*)(jref, jlong), R, L, frame->pushr)
+    INVOKE_2(jlong(*)(jref, jlong), R, L, frame->pushl)
+    INVOKE_2(jref(*)(jref, jbool), R, Z, frame->pushr)
+    INVOKE_2(jref(*)(jref, jref), R, R, frame->pushr)
+
+    INVOKE_3(void(*)(jref, jint, jref), R, I, R, )
+    INVOKE_3(void(*)(jref, jlong, jlong), R, L, L, )
+    INVOKE_3(void(*)(jref, jref, jbool), R, R, Z, )
+    INVOKE_3(jbool(*)(jref, jref, jref), R, R, R, frame->pushi)
+    INVOKE_3(jref(*)(jref, jref, jlong), R, R, L, frame->pushr)
+    INVOKE_3(jint(*)(jref, jref, jlong), R, R, L, frame->pushi)
+
+    INVOKE_4(void(*)(jref, jint, jint, jbool), R, I, I, Z, )
+    INVOKE_4(jbool(*)(jref, jlong, jint, jint), R, L, I, I, frame->pushi)
+    INVOKE_4(jint(*)(jref, jref, jint, jint), R, R, I, I, frame->pushi)
+    INVOKE_4(jbool(*)(jref, jlong, jlong, jlong), R, L, L, L, frame->pushi)
+    INVOKE_4(jbool(*)(jref, jlong, jref, jref), R, L, R, R, frame->pushi)
+    INVOKE_4(jref(*)(jref, jbool, jref, jref), R, Z, R, R, frame->pushr)
+
+    INVOKE_5(void(*)(jref, jref, jint, jint, jbool), R, R, I, I, Z, )
+    INVOKE_5(void(*)(jref, jint, jref, jint, jint), R, I, R, I, I, )
+    INVOKE_5(jbool(*)(jref, jref, jlong, jlong, jlong), R, R, L, L, L, frame->pushi)
+    INVOKE_5(jbool(*)(jref, jref, jlong, jref, jref), R, R, L, R, R, frame->pushi)
+    INVOKE_5(jref(*)(jref, jref, jint, jint, jlong), R, R, I, I, L, frame->pushr)
+    INVOKE_5(jbool(*)(jref, jref, jlong, jint, jint), R, R, L, I, I, frame->pushi)
+
+    if (type == typeid(jref(*)(jref, jref, jref, jint, jint, jref, jref))) {
+        R(a) R(b) R(c) I(d) I(e) R(f) R(g)
+        jref ret = ((jref(*)(jref, jref, jref, jint, jint, jref, jref)) func)(a, b, c, d, e, f, g);
+        frame->pushr(ret);
+        return;
+    }
+
+    cout << frame->method->toString().c_str() << endl; ///////////////////////////////////////////////////////
+    JVM_PANIC("未实现的方法类型"); // todo
 }

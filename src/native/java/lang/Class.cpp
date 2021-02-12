@@ -314,7 +314,7 @@ static jclass getSuperclass(jclass _this)
  * @return an array of interfaces implemented by this class.
  */
 //private native Class<?>[] getInterfaces0();
-static jobjectArray getInterfaces0(jclass _this)
+static jobject getInterfaces0(jclass _this)
 {
     Class *c = _this->jvm_mirror;
     auto interfaces = newClassArray(c->interfaces.size());
@@ -387,7 +387,7 @@ static jint getModifiers(jclass _this)
  *
  * public native Object[] getSigners();
  */
-static jobjectArray getSigners(jclass _this)
+static jobject getSigners(jclass _this)
 {
     JVM_PANIC("getSigners"); // todo
 }
@@ -398,13 +398,13 @@ static jobjectArray getSigners(jclass _this)
  * 
  * native void setSigners(Object[] signers);
  */
-static void setSigners(jclass _this, jobjectArray signers)
+static void setSigners(jclass _this, jobject signers)
 {
     JVM_PANIC("setSigners"); // todo
 }
 
 // private native Object[] getEnclosingMethod0();
-static jobjectArray getEnclosingMethod0(jclass _this)
+static jobject getEnclosingMethod0(jclass _this)
 {
     Class *c = _this->jvm_mirror;
     if (c->enclosing.clazz == nullptr) {
@@ -441,13 +441,13 @@ static jstring getGenericSignature0(jclass _this)
 
 // Annotations handling
 //native byte[] getRawAnnotations();
-static jbyteArray getRawAnnotations(jclass _this)
+static jobject getRawAnnotations(jclass _this)
 {
     JVM_PANIC("getRawAnnotations");
 }
 
 // native byte[] getRawTypeAnnotations();
-static jbyteArray getRawTypeAnnotations(jclass _this)
+static jobject getRawTypeAnnotations(jclass _this)
 {
     JVM_PANIC("getRawTypeAnnotations");
 }
@@ -462,7 +462,7 @@ static jobject getConstantPool(jclass _this)
 }
 
 // private native Field[] getDeclaredFields0(boolean publicOnly);
-static jobjectArray getDeclaredFields0(jclass _this, jboolean public_only)
+static jobject getDeclaredFields0(jclass _this, jboolean public_only)
 {
     Class *cls = _this->jvm_mirror;
     jint count = public_only ? cls->public_fields_count : cls->fields.size();
@@ -509,7 +509,7 @@ static jobjectArray getDeclaredFields0(jclass _this, jboolean public_only)
  *
  * private native Method[] getDeclaredMethods0(boolean publicOnly);
  */
-static jobjectArray getDeclaredMethods0(jclass _this, jboolean public_only)
+static jobject getDeclaredMethods0(jclass _this, jboolean public_only)
 {
     Class *cls = _this->jvm_mirror;
     jint count = public_only ? cls->public_methods_count : cls->methods.size();
@@ -558,7 +558,7 @@ static jobjectArray getDeclaredMethods0(jclass _this, jboolean public_only)
 }
 
 // private native Constructor<T>[] getDeclaredConstructors0(boolean publicOnly);
-static jobjectArray getDeclaredConstructors0(jclass _this, jboolean public_only)
+static jobject getDeclaredConstructors0(jclass _this, jboolean public_only)
 {
    Class *cls = _this->jvm_mirror;
 
@@ -604,7 +604,7 @@ static jobjectArray getDeclaredConstructors0(jclass _this, jboolean public_only)
  *
  * private native Class<?>[] getDeclaredClasses0();
  */
-static jobjectArray getDeclaredClasses0(jclass _this)
+static jobject getDeclaredClasses0(jclass _this)
 {
     JVM_PANIC("getDeclaredClasses0");
 }
@@ -651,7 +651,7 @@ static jclass getDeclaringClass0(jclass _this)
 }
 
 // private native RecordComponent[] getRecordComponents0();
-static jobjectArray getRecordComponents0(jclass _this)
+static jobject getRecordComponents0(jclass _this)
 {
     JVM_PANIC("getRecordComponents0");
 }
@@ -669,51 +669,51 @@ static jclass getNestHost0(jclass _this)
 }
 
 // private native Class<?>[] getNestMembers0();
-static jobjectArray getNestMembers0(jclass _this)
+static jobject getNestMembers0(jclass _this)
 {
     JVM_PANIC("getNestMembers0");
 }
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "getPrimitiveClass", _STR_ CLS, (void *) getPrimitiveClass },
-        { "getName0", __STR, (void *) getName0 },
-        { "initClassName", __STR, (void *) initClassName },
-        { "getSimpleBinaryName0", __STR, (void *) getSimpleBinaryName0 },
-        { "forName0", _STR "ZLjava/lang/ClassLoader;" CLS_ CLS, (void *) forName0 },
-        { "desiredAssertionStatus0", _CLS_ "Z", (void *) desiredAssertionStatus0 },
+        { "getPrimitiveClass", _STR_ CLS, TA(getPrimitiveClass) },
+        { "getName0", __STR, TA(getName0) },
+        { "initClassName", __STR, TA(initClassName) },
+        { "getSimpleBinaryName0", __STR, TA(getSimpleBinaryName0) },
+        { "forName0", _STR "ZLjava/lang/ClassLoader;" CLS_ CLS, TA(forName0) },
+        { "desiredAssertionStatus0", _CLS_ "Z", TA(desiredAssertionStatus0) },
 
-        { "isInstance", _OBJ_ "Z", (void *) isInstance },
-        { "isAssignableFrom", _CLS_ "Z", (void *) isAssignableFrom },
-        { "isInterface", "()Z", (void *) isInterface },
-        { "isArray", "()Z", (void *) isArray },
-        { "isPrimitive", "()Z", (void *) isPrimitive },
+        { "isInstance", _OBJ_ "Z", TA(isInstance) },
+        { "isAssignableFrom", _CLS_ "Z", TA(isAssignableFrom) },
+        { "isInterface", "()Z", TA(isInterface) },
+        { "isArray", "()Z", TA(isArray) },
+        { "isPrimitive", "()Z", TA(isPrimitive) },
 
-        { "getSuperclass", __CLS, (void *) getSuperclass },
-        { "getInterfaces0", "()[Ljava/lang/Class;", (void *) getInterfaces0 },
-        { "getComponentType", __CLS, (void *) getComponentType },
-        { "getModifiers", "()I", (void *) getModifiers },
-        { "getEnclosingMethod0", "()[Ljava/lang/Object;", (void *) getEnclosingMethod0 },
-        { "getDeclaringClass0", __CLS, (void *) getDeclaringClass0 },
-        { "getGenericSignature0", __STR, (void *) getGenericSignature0 },
-        { "getProtectionDomain0", "()Ljava/security/ProtectionDomain;", (void *) getProtectionDomain0 },
-        { "getConstantPool", "()Lsun/reflect/ConstantPool;", (void *) getConstantPool },
+        { "getSuperclass", __CLS, TA(getSuperclass) },
+        { "getInterfaces0", "()[Ljava/lang/Class;", TA(getInterfaces0) },
+        { "getComponentType", __CLS, TA(getComponentType) },
+        { "getModifiers", "()I", TA(getModifiers) },
+        { "getEnclosingMethod0", "()[Ljava/lang/Object;", TA(getEnclosingMethod0) },
+        { "getDeclaringClass0", __CLS, TA(getDeclaringClass0) },
+        { "getGenericSignature0", __STR, TA(getGenericSignature0) },
+        { "getProtectionDomain0", "()Ljava/security/ProtectionDomain;", TA(getProtectionDomain0) },
+        { "getConstantPool", "()Lsun/reflect/ConstantPool;", TA(getConstantPool) },
 
-        { "getSigners", "()[Ljava/lang/Object;", (void *) getSigners },
-        { "setSigners", "([Ljava/lang/Object;)V", (void *) setSigners },
+        { "getSigners", "()[Ljava/lang/Object;", TA(getSigners) },
+        { "setSigners", "([Ljava/lang/Object;)V", TA(setSigners) },
 
-        { "getRawAnnotations", "()[B", (void *) getRawAnnotations },
-        { "getRawTypeAnnotations", "()[B", (void *) getRawTypeAnnotations },
+        { "getRawAnnotations", "()[B", TA(getRawAnnotations) },
+        { "getRawTypeAnnotations", "()[B", TA(getRawTypeAnnotations) },
 
-        { "getDeclaredFields0", "(Z)[Ljava/lang/reflect/Field;", (void *) getDeclaredFields0 },
-        { "getDeclaredMethods0", "(Z)[Ljava/lang/reflect/Method;", (void *) getDeclaredMethods0 },
-        { "getDeclaredConstructors0", "(Z)[Ljava/lang/reflect/Constructor;", (void *) getDeclaredConstructors0 },
-        { "getDeclaredClasses0", "()[Ljava/lang/Class;", (void *) getDeclaredClasses0 },
+        { "getDeclaredFields0", "(Z)[Ljava/lang/reflect/Field;", TA(getDeclaredFields0) },
+        { "getDeclaredMethods0", "(Z)[Ljava/lang/reflect/Method;", TA(getDeclaredMethods0) },
+        { "getDeclaredConstructors0", "(Z)[Ljava/lang/reflect/Constructor;", TA(getDeclaredConstructors0) },
+        { "getDeclaredClasses0", "()[Ljava/lang/Class;", TA(getDeclaredClasses0) },
 
-        { "getRecordComponents0", "()[Ljava/lang/reflect/RecordComponent;", (void *) getRecordComponents0 },
-        { "isRecord0", "()Z", (void *) isRecord0 },
-        { "getNestHost0", __CLS, (void *) getNestHost0 },
-        { "getNestMembers0", "()[Ljava/lang/Class;", (void *) getNestMembers0 },
+        { "getRecordComponents0", "()[Ljava/lang/reflect/RecordComponent;", TA(getRecordComponents0) },
+        { "isRecord0", "()Z", TA(isRecord0) },
+        { "getNestHost0", __CLS, TA(getNestHost0) },
+        { "getNestMembers0", "()[Ljava/lang/Class;", TA(getNestMembers0) },
 };
 
 void java_lang_Class_registerNatives()

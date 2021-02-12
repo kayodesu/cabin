@@ -117,7 +117,7 @@ static jboolean createFileExclusively(jobject _this, jstring path)
 }
 
 // public native String[] list(File f);
-static jobjectArray list(jobject _this, jobject f)
+static jobject list(jobject _this, jobject f)
 {
     JVM_PANIC("list");
 }
@@ -177,25 +177,25 @@ static jint getNameMax0(jobject _this, jstring path)
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "initIDs", "()V", (void *) initIDs },
-        { "getDriveDirectory", "(I)" STR, (void *) getDriveDirectory },
-        { "canonicalize0", _STR_ STR, (void *) canonicalize0 },
-        { "canonicalizeWithPrefix0", _STR STR_ STR, (void *) canonicalizeWithPrefix0 },
-        { "getBooleanAttributes", "(Ljava/io/File;)I", (void *) getBooleanAttributes },
-        { "checkAccess", "(Ljava/io/File;I)Z", (void *) checkAccess },
-        { "getLastModifiedTime", "(Ljava/io/File;)J", (void *) getLastModifiedTime },
-        { "getLength", "(Ljava/io/File;)J", (void *) getLength },
-        { "setPermission", "(Ljava/io/File;IZZ)Z", (void *) setPermission },
-        { "createFileExclusively", _STR_ "Z", (void *) createFileExclusively },
-        { "list", "(Ljava/io/File;)[" STR, (void *) list },
-        { "createDirectory", "(Ljava/io/File;)Z", (void *) createDirectory },
-        { "setLastModifiedTime", "(Ljava/io/File;J)Z", (void *) setLastModifiedTime },
-        { "setReadOnly", "(Ljava/io/File;)Z", (void *) setReadOnly },
-        { "delete0", "(Ljava/io/File;)Z", (void *) delete0 },
-        { "rename0", "(Ljava/io/File;Ljava/io/File;)Z", (void *) rename0 },
-        { "listRoots0", "()I", (void *) listRoots0 },
-        { "getSpace0", "(Ljava/io/File;I)J", (void *) getSpace0 },
-        { "getNameMax0", _STR_ "I", (void *) getNameMax0 },
+        { "initIDs", "()V", TA(initIDs) },
+        { "getDriveDirectory", "(I)" STR, TA(getDriveDirectory) },
+        { "canonicalize0", _STR_ STR, TA(canonicalize0) },
+        { "canonicalizeWithPrefix0", _STR STR_ STR, TA(canonicalizeWithPrefix0) },
+        { "getBooleanAttributes", "(Ljava/io/File;)I", TA(getBooleanAttributes) },
+        { "checkAccess", "(Ljava/io/File;I)Z", TA(checkAccess) },
+        { "getLastModifiedTime", "(Ljava/io/File;)J", TA(getLastModifiedTime) },
+        { "getLength", "(Ljava/io/File;)J", TA(getLength) },
+        { "setPermission", "(Ljava/io/File;IZZ)Z", TA(setPermission) },
+        { "createFileExclusively", _STR_ "Z", TA(createFileExclusively) },
+        { "list", "(Ljava/io/File;)[" STR, TA(list) },
+        { "createDirectory", "(Ljava/io/File;)Z", TA(createDirectory) },
+        { "setLastModifiedTime", "(Ljava/io/File;J)Z", TA(setLastModifiedTime) },
+        { "setReadOnly", "(Ljava/io/File;)Z", TA(setReadOnly) },
+        { "delete0", "(Ljava/io/File;)Z", TA(delete0) },
+        { "rename0", "(Ljava/io/File;Ljava/io/File;)Z", TA(rename0) },
+        { "listRoots0", "()I", TA(listRoots0) },
+        { "getSpace0", "(Ljava/io/File;I)J", TA(getSpace0) },
+        { "getNameMax0", _STR_ "I", TA(getNameMax0) },
 };
 
 void java_io_WinNTFileSystem_registerNatives()

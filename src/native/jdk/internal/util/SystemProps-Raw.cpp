@@ -15,9 +15,9 @@
  * Signature: ()[Ljava/lang/String;
  */
 // private static native String[] vmProperties();
-static jobjectArray vmProperties()
+static jobject vmProperties()
 {
-    jobjectArray prop_array = newStringArray(g_properties.size()*2);
+    Array *prop_array = newStringArray(g_properties.size()*2);
     int i = 0;
     for (auto p: g_properties) {
         prop_array->setRef(i++, newString(p.first));
@@ -39,7 +39,7 @@ static jobjectArray vmProperties()
  * Signature: ()[Ljava/lang/String;
  */
 // private static native String[] platformProperties();
-static jobjectArray platformProperties()
+static jobject platformProperties()
 {
     // from class jdk/internal/util/SystemProps$Raw
     static const int _display_country_NDX = 0;
@@ -83,7 +83,7 @@ static jobjectArray platformProperties()
     static const int _user_name_NDX = 1 + _user_home_NDX;
     static const int FIXED_LENGTH = 1 + _user_name_NDX;
 
-    jobjectArray prop_array = newStringArray(FIXED_LENGTH);
+    Array *prop_array = newStringArray(FIXED_LENGTH);
     // todo 具体赋值
 
     for (int i = 0; i < FIXED_LENGTH; i++) {
@@ -94,8 +94,8 @@ static jobjectArray platformProperties()
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "vmProperties", "()[Ljava/lang/String;", (void *) vmProperties },
-        { "platformProperties", "()[Ljava/lang/String;", (void *) platformProperties },
+        { "vmProperties", "()[Ljava/lang/String;", TA(vmProperties) },
+        { "platformProperties", "()[Ljava/lang/String;", TA(platformProperties) },
 };
 
 

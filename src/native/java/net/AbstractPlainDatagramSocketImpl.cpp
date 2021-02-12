@@ -9,7 +9,7 @@ static jbool isReusePortAvailable0()
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "isReusePortAvailable0", "()Z", (void *) isReusePortAvailable0 },
+        { "isReusePortAvailable0", "()Z", TA(isReusePortAvailable0) },
 };
 
 void java_net_AbstractPlainDatagramSocketImpl_registerNatives()

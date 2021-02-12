@@ -3,7 +3,7 @@
 // JVM_DefineModule
 // private static native void defineModule0(
 //                  Module module, boolean isOpen, String version, String location, String[] pns);
-static void defineModule0(jobject module, jbool isOpen, jstring version, jstring location, jobjectArray pns)
+static void defineModule0(jobject module, jbool isOpen, jstring version, jstring location, jobject pns)
 {
     // todo
     JVM_PANIC("not implement");
@@ -46,11 +46,11 @@ static void addExportsToAllUnnamed0(jobject from, jstring pn)
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "defineModule0", _M "Z" STR STR "[" STR_ "V", (void *) defineModule0 },
-        { "addReads0", _M "Ljava/lang/Module;)V", (void *) addReads0 },
-        { "addExports0", _M STR "Ljava/lang/Module;)V", (void *) addExports0 },
-        { "addExportsToAll0", _M STR_ "V", (void *) addExportsToAll0 },
-        { "addExportsToAllUnnamed0", _M STR_ "V", (void *) addExportsToAllUnnamed0 },
+        { "defineModule0", _M "Z" STR STR "[" STR_ "V", TA(defineModule0) },
+        { "addReads0", _M "Ljava/lang/Module;)V", TA(addReads0) },
+        { "addExports0", _M STR "Ljava/lang/Module;)V", TA(addExports0) },
+        { "addExportsToAll0", _M STR_ "V", TA(addExportsToAll0) },
+        { "addExportsToAllUnnamed0", _M STR_ "V", TA(addExportsToAllUnnamed0) },
 };
 
 #undef _M

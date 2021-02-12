@@ -10,7 +10,7 @@ static jstring intern(jstring _this)
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "intern", "()Ljava/lang/String;", (void *) intern },
+        { "intern", "()Ljava/lang/String;", TA(intern) },
 };
 
 void java_lang_String_registerNatives()

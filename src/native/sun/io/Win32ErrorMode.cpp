@@ -8,7 +8,7 @@ static jlong setErrorMode(jlong l)
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "setErrorMode", "(J)J", (void *) setErrorMode },
+        { "setErrorMode", "(J)J", TA(setErrorMode) },
 };
 
 void sun_io_Win32ErrorMode_registerNatives()

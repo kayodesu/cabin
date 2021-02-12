@@ -10,7 +10,7 @@ static void init()
 
 static JNINativeMethod methods[] = {
     JNINativeMethod_registerNatives,
-    { "init", "()V", (void *) init },
+    { "init", "()V", TA(init) },
 };
 
 void java_net_Inet4Address_registerNatives()

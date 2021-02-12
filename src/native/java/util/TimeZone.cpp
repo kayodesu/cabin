@@ -24,8 +24,8 @@ jstring getSystemGMTOffsetID()
 
 static JNINativeMethod methods[] = {
     JNINativeMethod_registerNatives,
-    {"getSystemTimeZoneID", _STR_ STR, (void *)getSystemTimeZoneID},
-    {"getSystemGMTOffsetID", __STR, (void *)getSystemGMTOffsetID},
+    {"getSystemTimeZoneID", _STR_ STR, TA(getSystemTimeZoneID) },
+    {"getSystemGMTOffsetID", __STR, TA(getSystemGMTOffsetID) },
 };
 
 void java_util_TimeZone_registerNatives()

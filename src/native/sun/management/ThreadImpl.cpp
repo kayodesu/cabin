@@ -10,12 +10,12 @@
  *                      long[] ids, boolean lockedMonitors, boolean lockedSynchronizers, int maxDepth);
  *
  */
-static jobjectArray dumpThreads0(jlongArray ids, jboolean lockedMonitors, jboolean lockedSynchronizers, jint maxDepth)
+static jobject dumpThreads0(jobject _ids, jboolean lockedMonitors, jboolean lockedSynchronizers, jint maxDepth)
 {
-    jobjectArray thread_infos;
+    Array *thread_infos;
 
     Class *ac = loadArrayClass("[Ljava/lang/management/ThreadInfo;");
-    if (ids == jnull) { // dump all threads
+    if (_ids == jnull) { // dump all threads
         int len = g_all_threads.size();
         thread_infos = ac->allocArray(len);
 
@@ -25,6 +25,8 @@ static jobjectArray dumpThreads0(jlongArray ids, jboolean lockedMonitors, jboole
             thread_infos->setRef(i, thread_info);
         }
     } else {
+        auto ids = dynamic_cast<Array *>(_ids);
+        assert(ids != nullptr);
         thread_infos = ac->allocArray(ids->arr_len);
 
         for (int i = 0; i < ids->arr_len; i++) {
@@ -41,7 +43,7 @@ static jobjectArray dumpThreads0(jlongArray ids, jboolean lockedMonitors, jboole
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "dumpThreads0", "([JZZ)[Ljava/lang/management/ThreadInfo;", (void *) dumpThreads0 },
+        { "dumpThreads0", "([JZZ)[Ljava/lang/management/ThreadInfo;", TA(dumpThreads0) },
 };
 
 void sun_management_ThreadImpl_registerNatives()

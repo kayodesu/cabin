@@ -20,9 +20,9 @@ static void raise0(jint i)
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "findSignal", _STR_ "I", (void *) findSignal },
-        { "handle0", "(IJ)J", (void *) handle0 },
-        { "raise0", "(I)V", (void *) raise0 },
+        { "findSignal", _STR_ "I", TA(findSignal) },
+        { "handle0", "(IJ)J", TA(handle0) },
+        { "raise0", "(I)V", TA(raise0) },
 };
 
 void sun_misc_Signal_registerNatives()

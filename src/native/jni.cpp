@@ -90,7 +90,7 @@ void registerNatives(const char *class_name, JNINativeMethod *methods, int metho
     native_methods.emplace_back(class_name, methods, methods_count);
 }
 
-void *findNativeMethod(const char *class_name, const char *method_name, const char *method_descriptor)
+JNINativeMethod *findNativeMethod(const char *class_name, const char *method_name, const char *method_descriptor)
 {
     assert(class_name != nullptr && method_name != nullptr);
 
@@ -99,7 +99,7 @@ void *findNativeMethod(const char *class_name, const char *method_name, const ch
             JNINativeMethod *methods = get<1>(t);
             for (int i = 0; i < get<2>(t); i++) {
                 if (equals(methods[i].name, method_name) && equals(methods[i].descriptor, method_descriptor)) {
-                    return methods[i].func;
+                    return methods + i;
                 }
             }
             return nullptr; // not find

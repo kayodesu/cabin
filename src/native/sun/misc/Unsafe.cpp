@@ -83,7 +83,8 @@ static jboolean compareAndSwapObject(jobject _this, jobject o, jlong offset, job
 {
     jobject *old;
     if (o->isArrayObject()) {
-        Array *ao = dynamic_cast<Array *>(o);  // todo
+        auto ao = dynamic_cast<Array *>(o);  // todo
+        assert(ao != nullptr);
         old = (jobject *)(ao->index(offset));
     } else {
         assert(0 <= offset && offset < o->clazz->inst_fields_count);
@@ -104,8 +105,8 @@ static jobject allocateInstance(jobject _this, jclass type)
 
 // public native Class defineClass(String name, byte[] b, int off, int len,
 //                                  ClassLoader loader, ProtectionDomain protectionDomain)
-static jclass __defineClass(jobject _this, jstring name, 
-                jbyteArray b, jint off, jint len, jobject loader, jobject protectionDomain)
+static jclass __defineClass(jobject _this, jstring name,
+                            jobject b, jint off, jint len, jobject loader, jobject protectionDomain)
 {
     JVM_PANIC("defineClass");
 }
@@ -713,7 +714,7 @@ static void copyMemory(jobject _this,
 *         if the load average is unobtainable.
 */
 // public native int getLoadAverage(double[] loadavg, int nelems);
-static jint getLoadAverage(jobject _this, jdoubleArray loadavg, jint nelems)
+static jint getLoadAverage(jobject _this, jobject loadavg, jint nelems)
 {
     JVM_PANIC("getLoadAverage"); // todo
 }
@@ -752,17 +753,19 @@ static jint _pageSize(jobject _this)
   * @cpPatches where non-null entries exist, they replace corresponding CP entries in data
   */
 // public native Class defineAnonymousClass(Class hostClass, byte[] data, Object[] cpPatches);
-static jclass defineAnonymousClass(jobject _this, 
-                    jclass host_class, jbyteArray data, jobjectArray cp_patches)
+static jclass defineAnonymousClass(jobject _this, jclass host_class, jobject data, jobject _cp_patches)
 {
     assert(host_class != nullptr && data != nullptr);
-    Class *c = defineClass(host_class->jvm_mirror->loader, (u1 *) data->data, data->arr_len);
+    assert(data->isArrayObject() && _cp_patches->isArrayObject());
+    auto cp_patches = dynamic_cast<Array *>(_cp_patches);
+
+    Class *c = defineClass(host_class->jvm_mirror->loader, (u1 *) data->data, ((Array *)data)->arr_len);
     if (c == nullptr)
         return nullptr; // todo
 
     int cp_patches_len = cp_patches == nullptr ? 0 : cp_patches->arr_len;
     for (int i = 0; i < cp_patches_len; i++) {
-        jobject o = cp_patches->get<jobject>(i);
+        auto o = cp_patches->get<jobject>(i);
         if (o != nullptr) {
             u1 type = c->cp.getType(i);
             if (type == JVM_CONSTANT_String) {
@@ -838,107 +841,107 @@ static void fullFence(jobject _this)
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "park", "(ZJ)V", (void *) park },
-        { "unpark", _OBJ_ "V", (void *) unpark },
+        { "park", "(ZJ)V", TA(park) },
+        { "unpark", _OBJ_ "V", TA(unpark) },
 
         // compare and swap
-        { "compareAndSwapInt", _OBJ "JII)Z", (void *) compareAndSwapInt },
-        { "compareAndSwapLong", _OBJ "JJJ)Z", (void *) compareAndSwapLong },
-        { "compareAndSwapObject", _OBJ "J" OBJ OBJ_ "Z", (void *) compareAndSwapObject },
+        { "compareAndSwapInt", _OBJ "JII)Z", TA(compareAndSwapInt) },
+        { "compareAndSwapLong", _OBJ "JJJ)Z", TA(compareAndSwapLong) },
+        { "compareAndSwapObject", _OBJ "J" OBJ OBJ_ "Z", TA(compareAndSwapObject) },
 
         // class
-        { "allocateInstance", _CLS_ OBJ, (void *) allocateInstance },
-        { "defineClass", _STR "[BII" CLD "Ljava/security/ProtectionDomain;)" CLS, (void *) __defineClass },
-        { "ensureClassInitialized", _CLS_ "V", (void *) ensureClassInitialized },
-        { "staticFieldOffset", "(Ljava/lang/reflect/Field;)J", (void *) staticFieldOffset },
-        { "staticFieldBase", "(Ljava/lang/reflect/Field;)" OBJ, (void *) staticFieldBase },
+        { "allocateInstance", _CLS_ OBJ, TA(allocateInstance) },
+        { "defineClass", _STR "[BII" CLD "Ljava/security/ProtectionDomain;)" CLS, TA(__defineClass) },
+        { "ensureClassInitialized", _CLS_ "V", TA(ensureClassInitialized) },
+        { "staticFieldOffset", "(Ljava/lang/reflect/Field;)J", TA(staticFieldOffset) },
+        { "staticFieldBase", "(Ljava/lang/reflect/Field;)" OBJ, TA(staticFieldBase) },
 
         // Object
-        { "arrayBaseOffset", _CLS_"I", (void *) arrayBaseOffset },
-        { "arrayIndexScale", _CLS_"I", (void *) arrayIndexScale },
-        { "objectFieldOffset", "(Ljava/lang/reflect/Field;)J", (void *) objectFieldOffset },
-        { "objectFieldOffset0", "(Ljava/lang/reflect/Field;)J", (void *) objectFieldOffset },
-        { "objectFieldOffset1", _CLS STR_ "J", (void *) objectFieldOffset1 },
+        { "arrayBaseOffset", _CLS_"I", TA(arrayBaseOffset) },
+        { "arrayIndexScale", _CLS_"I", TA(arrayIndexScale) },
+        { "objectFieldOffset", "(Ljava/lang/reflect/Field;)J", TA(objectFieldOffset) },
+        { "objectFieldOffset0", "(Ljava/lang/reflect/Field;)J", TA(objectFieldOffset) },
+        { "objectFieldOffset1", _CLS STR_ "J", TA(objectFieldOffset1) },
 
-        { "getBoolean", _OBJ "J)Z", (void *) obj_getBoolean },
-        { "putBoolean", _OBJ "JZ)V", (void *) obj_putBoolean },
-        { "getByte", _OBJ "J)B", (void *) obj_getByte },
-        { "putByte", _OBJ "JB)V", (void *) obj_putByte },
-        { "getChar", _OBJ "J)C", (void *) obj_getChar },
-        { "putChar", _OBJ "JC)V", (void *) obj_putChar },
-        { "getShort", _OBJ "J)S", (void *) obj_getShort },
-        { "putShort", _OBJ "JS)V", (void *) obj_putShort },
-        { "getInt", _OBJ "J)I", (void *) obj_getInt },
-        { "putInt", _OBJ "JI)V", (void *) obj_putInt },
-        { "getLong", _OBJ "J)J", (void *) obj_getLong },
-        { "putLong", _OBJ "JJ)V", (void *) obj_putLong },
-        { "getFloat", _OBJ "J)F", (void *) obj_getFloat },
-        { "putFloat", _OBJ "JF)V", (void *) obj_putFloat },
-        { "getDouble", _OBJ "J)D", (void *) obj_getDouble },
-        { "putDouble", _OBJ "JD)V", (void *) obj_putDouble },
-        { "getObject", _OBJ "J)" OBJ, (void *) obj_getObject },
-        { "putObject", _OBJ "J" OBJ_ "V", (void *) obj_putObject },
-        { "getObjectVolatile", _OBJ "J)" OBJ, (void *) getObjectVolatile },
-        { "putObjectVolatile", _OBJ "J" OBJ_ "V", (void *) putObjectVolatile },
-        { "getOrderedObject", _OBJ "J)" OBJ, (void *) getOrderedObject },
-        { "putOrderedObject", _OBJ "J" OBJ_ "V", (void *) putOrderedObject },
-        { "putOrderedInt", _OBJ "JI)V", (void *) putOrderedInt },
-        { "putOrderedLong", _OBJ "JJ)V", (void *) putOrderedLong },
+        { "getBoolean", _OBJ "J)Z", TA(obj_getBoolean) },
+        { "putBoolean", _OBJ "JZ)V", TA(obj_putBoolean) },
+        { "getByte", _OBJ "J)B", TA(obj_getByte) },
+        { "putByte", _OBJ "JB)V", TA(obj_putByte) },
+        { "getChar", _OBJ "J)C", TA(obj_getChar) },
+        { "putChar", _OBJ "JC)V", TA(obj_putChar) },
+        { "getShort", _OBJ "J)S", TA(obj_getShort) },
+        { "putShort", _OBJ "JS)V", TA(obj_putShort) },
+        { "getInt", _OBJ "J)I", TA(obj_getInt) },
+        { "putInt", _OBJ "JI)V", TA(obj_putInt) },
+        { "getLong", _OBJ "J)J", TA(obj_getLong) },
+        { "putLong", _OBJ "JJ)V", TA(obj_putLong) },
+        { "getFloat", _OBJ "J)F", TA(obj_getFloat) },
+        { "putFloat", _OBJ "JF)V", TA(obj_putFloat) },
+        { "getDouble", _OBJ "J)D", TA(obj_getDouble) },
+        { "putDouble", _OBJ "JD)V", TA(obj_putDouble) },
+        { "getObject", _OBJ "J)" OBJ, TA(obj_getObject) },
+        { "putObject", _OBJ "J" OBJ_ "V", TA(obj_putObject) },
+        { "getObjectVolatile", _OBJ "J)" OBJ, TA(getObjectVolatile) },
+        { "putObjectVolatile", _OBJ "J" OBJ_ "V", TA(putObjectVolatile) },
+        { "getOrderedObject", _OBJ "J)" OBJ, TA(getOrderedObject) },
+        { "putOrderedObject", _OBJ "J" OBJ_ "V", TA(putOrderedObject) },
+        { "putOrderedInt", _OBJ "JI)V", TA(putOrderedInt) },
+        { "putOrderedLong", _OBJ "JJ)V", TA(putOrderedLong) },
 
-        { "putIntVolatile", _OBJ "JI)V", (void *) putIntVolatile },
-        { "putBooleanVolatile", _OBJ "JZ)V", (void *) putBooleanVolatile },
-        { "putByteVolatile", _OBJ "JB)V", (void *) putByteVolatile },
-        { "putShortVolatile", _OBJ "JS)V", (void *) putShortVolatile },
-        { "putCharVolatile", _OBJ "JC)V", (void *) putCharVolatile },
-        { "putLongVolatile", _OBJ "JJ)V", (void *) putLongVolatile },
-        { "putFloatVolatile", _OBJ "JF)V", (void *) putFloatVolatile },
-        { "putDoubleVolatile", _OBJ "JD)V", (void *) putDoubleVolatile },
+        { "putIntVolatile", _OBJ "JI)V", TA(putIntVolatile) },
+        { "putBooleanVolatile", _OBJ "JZ)V", TA(putBooleanVolatile) },
+        { "putByteVolatile", _OBJ "JB)V", TA(putByteVolatile) },
+        { "putShortVolatile", _OBJ "JS)V", TA(putShortVolatile) },
+        { "putCharVolatile", _OBJ "JC)V", TA(putCharVolatile) },
+        { "putLongVolatile", _OBJ "JJ)V", TA(putLongVolatile) },
+        { "putFloatVolatile", _OBJ "JF)V", TA(putFloatVolatile) },
+        { "putDoubleVolatile", _OBJ "JD)V", TA(putDoubleVolatile) },
 
-        { "getCharVolatile", _OBJ "J)C", (void *) getCharVolatile },
-        { "getIntVolatile", _OBJ "J)I", (void *) getIntVolatile },
-        { "getBooleanVolatile", _OBJ "J)Z", (void *) getBooleanVolatile },
-        { "getByteVolatile", _OBJ "J)B", (void *) getByteVolatile },
-        { "getShortVolatile", _OBJ "J)S", (void *) getShortVolatile },
-        { "getLongVolatile", _OBJ "J)J", (void *) getLongVolatile },
-        { "getFloatVolatile", _OBJ "J)F", (void *) getFloatVolatile },
-        { "getDoubleVolatile", _OBJ "J)D", (void *) getDoubleVolatile },
+        { "getCharVolatile", _OBJ "J)C", TA(getCharVolatile) },
+        { "getIntVolatile", _OBJ "J)I", TA(getIntVolatile) },
+        { "getBooleanVolatile", _OBJ "J)Z", TA(getBooleanVolatile) },
+        { "getByteVolatile", _OBJ "J)B", TA(getByteVolatile) },
+        { "getShortVolatile", _OBJ "J)S", TA(getShortVolatile) },
+        { "getLongVolatile", _OBJ "J)J", TA(getLongVolatile) },
+        { "getFloatVolatile", _OBJ "J)F", TA(getFloatVolatile) },
+        { "getDoubleVolatile", _OBJ "J)D", TA(getDoubleVolatile) },
 
         // unsafe memory
-        { "allocateMemory", "(J)J", (void *) allocateMemory },
-        { "reallocateMemory", "(JJ)J", (void *) reallocateMemory },
-        { "setMemory", _OBJ "JJB)V", (void *) setMemory },
-        { "copyMemory", _OBJ "JLjava/lang/Object;JJ)V", (void *) copyMemory },
-        { "freeMemory", "(J)V", (void *) freeMemory },
-        { "addressSize", "()I", (void *) addressSize },
-        { "putAddress", "(JJ)V", (void *) putAddress },
-        { "getAddress", "(J)J", (void *) getAddress },
-        { "putByte", "(JB)V", (void *) putByte },
-        { "getByte", "(J)B", (void *) getByte },
-        { "putShort", "(JS)V", (void *) putShort },
-        { "getShort", "(J)S", (void *) getShort },
-        { "putChar", "(JC)V", (void *) putChar },
-        { "getChar", "(J)C", (void *) getChar },
-        { "putInt", "(JI)V", (void *) putInt },
-        { "getInt", "(J)I", (void *) getInt },
-        { "putLong", "(JJ)V", (void *) putLong },
-        { "getLong", "(J)J", (void *) getLong },
-        { "putFloat", "(JF)V", (void *) putFloat },
-        { "getFloat", "(J)F", (void *) getFloat },
-        { "putDouble", "(JD)V", (void *) putDouble },
-        { "getDouble", "(J)D", (void *) getDouble },
+        { "allocateMemory", "(J)J", TA(allocateMemory) },
+        { "reallocateMemory", "(JJ)J", TA(reallocateMemory) },
+        { "setMemory", _OBJ "JJB)V", TA(setMemory) },
+        { "copyMemory", _OBJ "JLjava/lang/Object;JJ)V", TA(copyMemory) },
+        { "freeMemory", "(J)V", TA(freeMemory) },
+        { "addressSize", "()I", TA(addressSize) },
+        { "putAddress", "(JJ)V", TA(putAddress) },
+        { "getAddress", "(J)J", TA(getAddress) },
+        { "putByte", "(JB)V", TA(putByte) },
+        { "getByte", "(J)B", TA(getByte) },
+        { "putShort", "(JS)V", TA(putShort) },
+        { "getShort", "(J)S", TA(getShort) },
+        { "putChar", "(JC)V", TA(putChar) },
+        { "getChar", "(J)C", TA(getChar) },
+        { "putInt", "(JI)V", TA(putInt) },
+        { "getInt", "(J)I", TA(getInt) },
+        { "putLong", "(JJ)V", TA(putLong) },
+        { "getLong", "(J)J", TA(getLong) },
+        { "putFloat", "(JF)V", TA(putFloat) },
+        { "getFloat", "(J)F", TA(getFloat) },
+        { "putDouble", "(JD)V", TA(putDouble) },
+        { "getDouble", "(J)D", TA(getDouble) },
 
-        { "shouldBeInitialized", _CLS_ "Z", (void *) shouldBeInitialized },
-        { "getLoadAverage", "([DI)I", (void *) getLoadAverage },
-        { "pageSize", "()I", (void *) _pageSize },
-        { "defineAnonymousClass", _CLS "[B[" OBJ_ CLS, (void *) defineAnonymousClass },
-        { "monitorEnter", _OBJ_ "V", (void *) monitorEnter },
-        { "monitorExit", _OBJ_ "V", (void *) monitorExit },
-        { "tryMonitorEnter", _OBJ_ "Z", (void *) tryMonitorEnter },
-        { "throwException", "(Ljava/lang/Throwable;)V", (void *) throwException },
+        { "shouldBeInitialized", _CLS_ "Z", TA(shouldBeInitialized) },
+        { "getLoadAverage", "([DI)I", TA(getLoadAverage) },
+        { "pageSize", "()I", TA(_pageSize) },
+        { "defineAnonymousClass", _CLS "[B[" OBJ_ CLS, TA(defineAnonymousClass) },
+        { "monitorEnter", _OBJ_ "V", TA(monitorEnter) },
+        { "monitorExit", _OBJ_ "V", TA(monitorExit) },
+        { "tryMonitorEnter", _OBJ_ "Z", TA(tryMonitorEnter) },
+        { "throwException", "(Ljava/lang/Throwable;)V", TA(throwException) },
 
-        { "loadFence", "()V", (void *) loadFence },
-        { "storeFence", "()V", (void *) storeFence },
-        { "fullFence", "()V", (void *) fullFence },
+        { "loadFence", "()V", TA(loadFence) },
+        { "storeFence", "()V", TA(storeFence) },
+        { "fullFence", "()V", TA(fullFence) },
 };
 
 void sun_misc_Unsafe_registerNatives()

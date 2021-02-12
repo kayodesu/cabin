@@ -17,7 +17,7 @@ static jboolean VMSupportsCS8()
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "VMSupportsCS8", "()Z", (void *) VMSupportsCS8 },
+        { "VMSupportsCS8", "()Z", TA(VMSupportsCS8) },
 };
 
 void java_util_concurrent_atomic_AtomicLong_registerNatives()

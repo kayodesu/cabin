@@ -29,10 +29,10 @@ static void unload(jobject _this, jstring name, jboolean isBuiltin)
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "find", "(Ljava/lang/String;)J", (void *) find },
-        { "find", "(Ljava/lang/String;)J", (void *) find },
-        { "load", "(Ljava/lang/String;Z)V", (void *) load },
-        { "unload", "(Ljava/lang/String;Z)V", (void *) unload }
+        { "find", "(Ljava/lang/String;)J", TA(find) },
+        { "find", "(Ljava/lang/String;)J", TA(find) },
+        { "load", "(Ljava/lang/String;Z)V", TA(load) },
+        { "unload", "(Ljava/lang/String;Z)V", TA(unload) },
 };
 
 void java_lang_ClassLoader$NativeLibrary_registerNatives()

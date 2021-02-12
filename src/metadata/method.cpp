@@ -161,7 +161,7 @@ void Method::parseCodeAttr(BytecodeReader &r)
     }
 }
 
-void *findNativeMethod(const char *class_name, const char *method_name, const char *method_type);
+JNINativeMethod *findNativeMethod(const char *class_name, const char *method_name, const char *method_type);
 
 Method::Method(Class *c, BytecodeReader &r)
 {

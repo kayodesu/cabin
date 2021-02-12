@@ -5,16 +5,18 @@
 using namespace utf8;
 
 // private native Class<?> defineClass0(String name, byte[] b, int off, int len, ProtectionDomain pd);
-static jclass defineClass0(jobject _this, jstring name, jbyteArray b, jint off, jint len, jobject pd)
+static jclass defineClass0(jobject _this, jstring name, jobject b, jint off, jint len, jobject pd)
 {
-    return defineClass(_this, name, b, off, len, pd)->java_mirror;
+    assert(b->isArrayObject());
+    return defineClass(_this, name, (Array *) b, off, len, pd)->java_mirror;
 }
 
 // private native Class<?> defineClass1(String name, byte[] b, int off, int len, ProtectionDomain pd, String source);
 static jclass defineClass1(jobject _this, jstring name,
-                        jbyteArray b, jint off, jint len, jobject pd, jstring source)
+                           jobject b, jint off, jint len, jobject pd, jstring source)
 {
-    return defineClass(_this, name, b, off, len, pd, source)->java_mirror;
+    assert(b->isArrayObject());
+    return defineClass(_this, name, (Array *) b, off, len, pd, source)->java_mirror;
 }
 
 // private native Class<?> defineClass2(String name,
@@ -79,14 +81,14 @@ static void retrieveDirectives()
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "defineClass0", "(" STR "[BII" PD ")" CLS, (void *) defineClass0 },
-        { "defineClass1", "(" STR "[BII" PD STR ")" CLS, (void *) defineClass1 },
-        { "defineClass2", "(" STR "Ljava/nio/ByteBuffer;II" PD STR ")" CLS, (void *) defineClass2 },
-        { "resolveClass0", "(Ljava/lang/Class;)V", (void *) resolveClass0 },
-        { "findBootstrapClass", _STR_ CLS, (void *) findBootstrapClass },
-        { "findLoadedClass0", _STR_ CLS, (void *) findLoadedClass0 },
-        { "findBuiltinLib", _STR_ STR, (void *) findBuiltinLib },
-        { "retrieveDirectives", "()Ljava/lang/AssertionStatusDirectives;", (void *) retrieveDirectives },
+        { "defineClass0", "(" STR "[BII" PD ")" CLS, TA(defineClass0) },
+        { "defineClass1", "(" STR "[BII" PD STR ")" CLS, TA(defineClass1) },
+        { "defineClass2", "(" STR "Ljava/nio/ByteBuffer;II" PD STR ")" CLS, TA(defineClass2) },
+        { "resolveClass0", "(Ljava/lang/Class;)V", TA(resolveClass0) },
+        { "findBootstrapClass", _STR_ CLS, TA(findBootstrapClass) },
+        { "findLoadedClass0", _STR_ CLS, TA(findLoadedClass0) },
+        { "findBuiltinLib", _STR_ STR, TA(findBuiltinLib) },
+        { "retrieveDirectives", "()Ljava/lang/AssertionStatusDirectives;", TA(retrieveDirectives) },
 };
 
 #undef PD

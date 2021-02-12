@@ -64,14 +64,14 @@ static void traceMethodCalls(jobject _this, jboolean on)
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "availableProcessors", "()I", (void *) availableProcessors },
-        { "freeMemory", "()J", (void *) freeMemory },
-        { "totalMemory", "()J", (void *) totalMemory },
-        { "maxMemory", "()J", (void *) maxMemory },
-        { "gc", "()V", (void *) gc },
-        { "runFinalization0", "()V", (void *) runFinalization0 },
-        { "traceInstructions", "(Z)V", (void *) traceInstructions },
-        { "traceMethodCalls", "(Z)V", (void *) traceMethodCalls },
+        { "availableProcessors", "()I", TA(availableProcessors) },
+        { "freeMemory", "()J", TA(freeMemory) },
+        { "totalMemory", "()J", TA(totalMemory) },
+        { "maxMemory", "()J", TA(maxMemory) },
+        { "gc", "()V", TA(gc) },
+        { "runFinalization0", "()V", TA(runFinalization0) },
+        { "traceInstructions", "(Z)V", TA(traceInstructions) },
+        { "traceMethodCalls", "(Z)V", TA(traceMethodCalls) },
 };
 
 void java_lang_Runtime_registerNatives()

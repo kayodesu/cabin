@@ -32,7 +32,7 @@ static jobject createLong(jobject _this, jstring name, jint variability, jint un
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "createLong", "(Ljava/lang/String;IIJ)Ljava/nio/ByteBuffer;", (void *) createLong },
+        { "createLong", "(Ljava/lang/String;IIJ)Ljava/nio/ByteBuffer;", TA(createLong) },
 };
 
 void sun_misc_Perf_registerNatives()

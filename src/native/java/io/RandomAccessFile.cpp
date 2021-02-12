@@ -28,7 +28,7 @@ static void close0(jobject _this)
 }
 
 // private native void writeBytes(byte b[], int off, int len) throws IOException;
-static void writeBytes(jobject _this, jbyteArray b, jint off, jint len)
+static void writeBytes(jobject _this, jobject b, jint off, jint len)
 {
     JVM_PANIC("writeBytes");
 }
@@ -40,7 +40,7 @@ static void write0(jobject _this, jint b)
 }
 
 // private native int readBytes(byte b[], int off, int len) throws IOException;
-static void readBytes(jobject _this, jbyteArray b, jint off, jint len)
+static void readBytes(jobject _this, jobject b, jint off, jint len)
 {
     JVM_PANIC("readBytes");
 }
@@ -77,16 +77,16 @@ static void setLength(jobject _this, jlong newLength)
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "open0", "(Ljava/lang/String;I)V", (void *) open0 },
-        { "close0", "()V", (void *) close0 },
-        { "writeBytes", "([BII)V", (void *) writeBytes },
-        { "write0", "(I)V", (void *) write0 },
-        { "readBytes", "([BII)I", (void *) readBytes },
-        { "read", "()I", (void *) read },
-        { "seek0", "(J)V", (void *) seek0 },
-        { "getFilePointer", "()J", (void *) getFilePointer },
-        { "length", "()J", (void *) length },
-        { "setLength", "(J)V", (void *) setLength },
+        { "open0", "(Ljava/lang/String;I)V", TA(open0) },
+        { "close0", "()V", TA(close0) },
+        { "writeBytes", "([BII)V", TA(writeBytes) },
+        { "write0", "(I)V", TA(write0) },
+        { "readBytes", "([BII)I", TA(readBytes) },
+        { "read", "()I", TA(read) },
+        { "seek0", "(J)V", TA(seek0) },
+        { "getFilePointer", "()J", TA(getFilePointer) },
+        { "length", "()J", TA(length) },
+        { "setLength", "(J)V", TA(setLength) },
 };
 
 void java_io_RandomAccessFile_registerNatives()

@@ -15,8 +15,8 @@ static jdouble longBitsToDouble(jlong value)
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "doubleToRawLongBits", "(D)J", (void *) doubleToRawLongBits },
-        { "longBitsToDouble", "(J)D", (void *) longBitsToDouble }
+        { "doubleToRawLongBits", "(D)J", TA(doubleToRawLongBits) },
+        { "longBitsToDouble", "(J)D", TA(longBitsToDouble) },
 };
 
 void java_lang_Double_registerNatives()

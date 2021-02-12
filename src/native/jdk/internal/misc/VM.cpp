@@ -32,8 +32,8 @@ static jobject latestUserDefinedLoader()
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "initialize", "()V", (void *) initialize },
-        { "latestUserDefinedLoader", "()Ljava/lang/ClassLoader;", (void *) latestUserDefinedLoader },
+        { "initialize", "()V", TA(initialize) },
+        { "latestUserDefinedLoader", "()Ljava/lang/ClassLoader;", TA(latestUserDefinedLoader) },
 };
 
 void jdk_internal_misc_VM_registerNatives()

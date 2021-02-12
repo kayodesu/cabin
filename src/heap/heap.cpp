@@ -87,6 +87,7 @@ over:
         return p;
     }
 
+//    throw "java_lang_OutOfMemoryError";
     JVM_PANIC("java_lang_OutOfMemoryError"); // todo 堆可以扩张
 }
 

@@ -5,6 +5,7 @@
 #include "../classfile/attributes.h"
 #include "../util/encoding.h"
 #include "../classfile/constants.h"
+#include "../native/jni.h"
 
 class Object;
 class Array;
@@ -40,7 +41,7 @@ public:
     u1 *code = nullptr;
     size_t code_len = 0;
 
-    void *native_method = nullptr; // present only if native
+    JNINativeMethod *native_method = nullptr; // present only if native
     RetType ret_type = RET_INVALID;
 
     std::vector<MethodParameter> parameters;

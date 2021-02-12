@@ -15,8 +15,8 @@ static jfloat intBitsToFloat(jint value)
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "floatToRawIntBits", "(F)I", (void *) floatToRawIntBits},
-        { "intBitsToFloat", "(I)F", (void *) intBitsToFloat }
+        { "floatToRawIntBits", "(F)I", TA(floatToRawIntBits) },
+        { "intBitsToFloat", "(I)F", TA(intBitsToFloat) },
 };
 
 void java_lang_Float_registerNatives()

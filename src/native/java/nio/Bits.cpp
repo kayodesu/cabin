@@ -39,12 +39,12 @@ static void copyToLongArray(jobject _this, jlong srcAddr, jobject dst, jlong dst
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "copyFromShortArray", "(Ljava/lang/Object;JJJ)V", (void *) copyFromShortArray },
-        { "copyToShortArray", "(JLjava/lang/Object;JJ)V", (void *) copyToShortArray },
-        { "copyFromIntArray", "(Ljava/lang/Object;JJJ)V", (void *) copyFromIntArray },
-        { "copyToIntArray", "(JLjava/lang/Object;JJ)V", (void *) copyToIntArray },
-        { "copyFromLongArray", "(Ljava/lang/Object;JJJ)V", (void *) copyFromLongArray },
-        { "copyToLongArray", "(JLjava/lang/Object;JJ)V", (void *) copyToLongArray },
+        { "copyFromShortArray", "(Ljava/lang/Object;JJJ)V", TA(copyFromShortArray) },
+        { "copyToShortArray", "(JLjava/lang/Object;JJ)V", TA(copyToShortArray) },
+        { "copyFromIntArray", "(Ljava/lang/Object;JJJ)V", TA(copyFromIntArray) },
+        { "copyToIntArray", "(JLjava/lang/Object;JJ)V", TA(copyToIntArray) },
+        { "copyFromLongArray", "(Ljava/lang/Object;JJJ)V", TA(copyFromLongArray) },
+        { "copyToLongArray", "(JLjava/lang/Object;JJ)V", TA(copyToLongArray) },
 };
 
 void java_nio_Bits_registerNatives()

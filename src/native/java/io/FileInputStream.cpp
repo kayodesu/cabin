@@ -45,7 +45,7 @@ static jint read0(jobject _this)
  *
  * private native int readBytes(byte b[], int off, int len) throws IOException;
  */
-static jint readBytes(jobject _this, jbyteArray b, jint off, jint len)
+static jint readBytes(jobject _this, jobject b, jint off, jint len)
 {
     FILE *file = __getFileHandle(_this);
     auto data = (jbyte *) b->data;
@@ -118,13 +118,13 @@ static void close0(jobject _this)
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "initIDs", "()V", (void *) initIDs },
-        { "open0", "(Ljava/lang/String;)V", (void *) open0 },
-        { "read0", "()I", (void *) read0 },
-        { "readBytes", "([BII)I", (void *) readBytes },
-        { "skip0", "(J)J", (void *) skip0 },
-        { "available0", "()I", (void *) available0 },
-        { "close0", "()V", (void *) close0 },
+        { "initIDs", "()V", TA(initIDs) },
+        { "open0", "(Ljava/lang/String;)V", TA(open0) },
+        { "read0", "()I", TA(read0) },
+        { "readBytes", "([BII)I", TA(readBytes) },
+        { "skip0", "(J)J", TA(skip0) },
+        { "available0", "()I", TA(available0) },
+        { "close0", "()V", TA(close0) },
 };
 
 void java_io_FileInputStream_registerNatives()

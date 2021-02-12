@@ -99,9 +99,9 @@ static jint getStackTraceDepth(jobject _this)
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "fillInStackTrace", "(I)Ljava/lang/Throwable;", (void *) fillInStackTrace },
-        { "getStackTraceElement", "(I)Ljava/lang/StackTraceElement;", (void *) getStackTraceElement },
-        { "getStackTraceDepth", "()I", (void *) getStackTraceDepth },
+        { "fillInStackTrace", "(I)Ljava/lang/Throwable;", TA(fillInStackTrace) },
+        { "getStackTraceElement", "(I)Ljava/lang/StackTraceElement;", TA(getStackTraceElement) },
+        { "getStackTraceDepth", "()I", TA(getStackTraceDepth) },
 };
 
 void java_lang_Throwable_registerNatives()

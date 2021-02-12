@@ -161,10 +161,10 @@ static jobject newArray_(jclass componentType, jint length)
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "get", _OBJ "I)" OBJ, (void *) get },
-        { "set", _OBJ "ILjava/lang/Object;)V", (void *) set },
-        { "getLength", _OBJ ")I", (void *) getLength },
-        { "newArray", _CLS "I)" OBJ, (void *) newArray_ },
+        { "get", _OBJ "I)" OBJ, TA(get) },
+        { "set", _OBJ "ILjava/lang/Object;)V", TA(set) },
+        { "getLength", _OBJ ")I", TA(getLength) },
+        { "newArray", _CLS "I)" OBJ, TA(newArray_) },
 };
 
 void java_lang_reflect_Array_registerNatives()

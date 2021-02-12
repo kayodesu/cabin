@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.9)
 project(cabin)
 
 set(CMAKE_C_FLAGS "-std=c11 -m64 -Wall")
-set(CMAKE_CXX_FLAGS "-std=c++17 -m64 -Wall -lz -lminizip -llibffi") # lz: link zlip
+set(CMAKE_CXX_FLAGS "-std=c++17 -m64 -Wall -lz -lminizip") # lz: link zlip,  -llibffi
 
 add_executable(cabin
         src/cabin.cpp src/platform/sysinfo_win.cpp src/platform/sysinfo_linux.cpp
@@ -43,8 +43,8 @@ add_executable(cabin
         src/metadata/method.cpp src/metadata/field.cpp src/metadata/constant_pool.cpp src/native/jni.cpp
         src/objects/array.cpp
         src/objects/class_loader.cpp src/objects/prims.cpp src/objects/mh.cpp
-        src/objects/object.cpp src/metadata/class.cpp src/objects/java_classes.cpp src/slot.cpp src/classpath/classpath.cpp src/classpath/classpath.h)
+        src/objects/object.cpp src/metadata/class.cpp src/objects/java_classes.cpp src/slot.cpp src/classpath/classpath.cpp src/classpath/classpath.h src/native/jni.h)
 
 target_link_libraries(cabin libz)
 target_link_libraries(cabin libminizip)
-target_link_libraries(cabin libffi)
+#target_link_libraries(cabin libffi)

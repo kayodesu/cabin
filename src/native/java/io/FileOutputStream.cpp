@@ -48,7 +48,7 @@ static void write(jobject _this, jint b, jboolean append)
  * @exception IOException If an I/O error has occurred.
  */
 // private native void writeBytes(byte b[], int off, int len, boolean append) throws IOException;
-static void writeBytes(jobject _this, jbyteArray b, jint off, jint len, jboolean append)
+static void writeBytes(jobject _this, jobject b, jint off, jint len, jboolean append)
 {
     auto data = (jbyte *) b->data;
 
@@ -89,11 +89,11 @@ static void close0(jobject _this)
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "writeBytes", "([BIIZ)V", (void *) writeBytes },
-        { "initIDs", "()V", (void *) initIDs },
-        { "open0", "(Ljava/lang/String;Z)V", (void *) open0 },
-        { "write", "(IZ)V", (void *) write },
-        { "close0", "()V", (void *) close0 },
+        { "writeBytes", "([BIIZ)V", TA(writeBytes) },
+        { "initIDs", "()V", TA(initIDs) },
+        { "open0", "(Ljava/lang/String;Z)V", TA(open0) },
+        { "write", "(IZ)V", TA(write) },
+        { "close0", "()V", TA(close0) },
 };
 
 void java_io_FileOutputStream_registerNatives()

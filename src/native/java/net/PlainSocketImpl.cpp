@@ -69,14 +69,14 @@ static void listen0(jint fd, jint backlog)
 
 static JNINativeMethod methods[] = {
     JNINativeMethod_registerNatives,
-    { "initIDs", "()V", (void *) initIDs },
-    { "socket0", "(Z)I", (void *) socket0 },
-    { "bind0", "(ILjava/net/InetAddress;IZ)V", (void *) bind0 },
-    { "connect0", "(ILjava/net/InetAddress;I)I", (void *) connect0 },
-    { "waitForConnect", "(II)V", (void *) waitForConnect },
-    { "localPort0", "(I)I", (void *) localPort0 },
-    { "localAddress", "(ILjava/net/)VInetAddressContainer;", (void *) localAddress },
-    { "listen0", "(II)V", (void *) listen0 },
+    { "initIDs", "()V", TA(initIDs) },
+    { "socket0", "(Z)I", TA(socket0) },
+    { "bind0", "(ILjava/net/InetAddress;IZ)V", TA(bind0) },
+    { "connect0", "(ILjava/net/InetAddress;I)I", TA(connect0) },
+    { "waitForConnect", "(II)V", TA(waitForConnect) },
+    { "localPort0", "(I)I", TA(localPort0) },
+    { "localAddress", "(ILjava/net/)VInetAddressContainer;", TA(localAddress) },
+    { "listen0", "(II)V", TA(listen0) },
 };
 
 void java_net_PlainSocketImpl_registerNatives()

@@ -214,8 +214,10 @@ static jobject resolve(jobject self/*MemberName*/, jclass caller)
 // static native int getMembers(Class<?> defc, String matchName, String matchSig,
 //                              int matchFlags, Class<?> caller, int skip, MemberName[] results);
 static jint getMembers(jclass defc, jstring match_name, jstring match_sig, 
-                        jint match_flags, jclass caller, jint skip, jobjectArray results)
+                        jint match_flags, jclass caller, jint skip, jobject _results)
 {
+    assert(_results->isArrayObject());
+    auto results = dynamic_cast<Array *>(_results);
     int search_super = (match_flags & SEARCH_SUPERCLASSES) != 0;
     int search_intf = (match_flags & SEARCH_INTERFACES) != 0;
     int local = !(search_super || search_intf);
@@ -348,25 +350,25 @@ static JNINativeMethod methods[] = {
 
     // MemberName support
 
-    {"init", "(" MM OBJ_ "V", (void *)init},
-    {"expand", _MM_ "V", (void *)expand},
-    {"resolve", "(" MM CLS_ MM, (void *)resolve},
-    {"getMembers", _CLS STR STR "I" CLS "I[" MM ")I", (void *)getMembers},
+    {"init", "(" MM OBJ_ "V", TA(init) },
+    {"expand", _MM_ "V", TA(expand) },
+    {"resolve", "(" MM CLS_ MM, TA(resolve) },
+    {"getMembers", _CLS STR STR "I" CLS "I[" MM ")I", TA(getMembers) },
 
     // Field layout queries parallel to sun.misc.Unsafe:
 
-    {"objectFieldOffset", _MM_ "J", (void *)objectFieldOffset},
-    {"staticFieldOffset", _MM_ "J", (void *)staticFieldOffset},
-    {"staticFieldBase", _MM_ OBJ, (void *)staticFieldBase},
-    {"getMemberVMInfo", _MM_ OBJ, (void *)getMemberVMInfo},
+    {"objectFieldOffset", _MM_ "J", TA(objectFieldOffset) },
+    {"staticFieldOffset", _MM_ "J", TA(staticFieldOffset) },
+    {"staticFieldBase", _MM_ OBJ, TA(staticFieldBase) },
+    {"getMemberVMInfo", _MM_ OBJ, TA(getMemberVMInfo) },
 
     // MethodHandle support
-    {"getConstant", "(I)I", (void *)getConstant},
+    {"getConstant", "(I)I", TA(getConstant) },
 
     // CallSite support
     /* Tell the JVM that we need to change the target of a CallSite. */
-    {"setCallSiteTargetNormal", T, (void *)setCallSiteTargetNormal},
-    {"setCallSiteTargetVolatile", T, (void *)setCallSiteTargetVolatile},
+    {"setCallSiteTargetNormal", T, TA(setCallSiteTargetNormal) },
+    {"setCallSiteTargetVolatile", T, TA(setCallSiteTargetVolatile) },
 };
 
 #undef MM

@@ -9,7 +9,7 @@ static jbool isIPv6Supported()
 
 static JNINativeMethod methods[] = {
     JNINativeMethod_registerNatives,
-    { "isIPv6Supported", "()Z", (void *) isIPv6Supported },
+    { "isIPv6Supported", "()Z", TA(isIPv6Supported) },
 };
 
 void java_net_InetAddressImplFactory_registerNatives()

@@ -100,7 +100,7 @@ static jboolean isAlive(jobject _this)
  * @see        ThreadGroup#getMaxPriority()
  */
 // private native void setPriority0(int newPriority);
-static void setPriority0(jobject _this, jint newPriority)
+static void setPriority0(jobject _this, jint new_priority)
 {
     // todo
 //    struct slot priority = islot(new_priority);
@@ -136,8 +136,11 @@ static jboolean holdsLock(jobject obj)
 }
 
 // private native static StackTraceElement[][] dumpThreads(Thread[] threads);
-static jobjectArray dumpThreads(jobjectArray threads)
+static jobject dumpThreads(jobject _threads)
 {
+    assert(_threads->isArrayObject());
+    auto threads = dynamic_cast<Array *>(_threads);
+
     size_t len = threads->size();
     Array *result = newArray("[[java/lang/StackTraceElement", len);
 
@@ -152,7 +155,7 @@ static jobjectArray dumpThreads(jobjectArray threads)
 }
 
 // private native static Thread[] getThreads();
-static jobjectArray getThreads()
+static jobject getThreads()
 {
     size_t size = g_all_threads.size();
     Array *threads = newArray(S(array_java_lang_Thread), size);
@@ -196,23 +199,23 @@ static void setNativeName(jobject _this, jstring name)
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "currentThread", "()Ljava/lang/Thread;", (void *) currentThread },
-        { "yield", "()V", (void *) yield },
-        { "sleep", "(J)V", (void *) sleep },
-        { "interrupt0", "()V", (void *) interrupt0 },
-        { "isInterrupted", "(Z)Z", (void *) isInterrupted },
-        { "isAlive", "()Z", (void *) isAlive },
-        { "start0", "()V", (void *) start0 },
-        { "countStackFrames", "()I", (void *) countStackFrames },
-        { "holdsLock", "(Ljava/lang/Object;)Z", (void *) holdsLock },
-        { "dumpThreads", "([Ljava/lang/Thread;)[[Ljava/lang/StackTraceElement;", (void *) dumpThreads },
-        { "getThreads", "()[Ljava/lang/Thread;", (void *) getThreads },
-        { "setPriority0", "(I)V", (void *) setPriority0 },
-        { "stop0", "(Ljava/lang/Object;)V", (void *) stop0 },
-        { "suspend0", "()V", (void *) suspend0 },
-        { "resume0", "()V", (void *) resume0 },
-        { "clearInterruptEvent", "()V", (void *) clearInterruptEvent },
-        { "setNativeName", "(Ljava/lang/String;)V", (void *) setNativeName },
+        { "currentThread", "()Ljava/lang/Thread;", TA(currentThread) },
+        { "yield", "()V", TA(yield) },
+        { "sleep", "(J)V", TA(sleep) },
+        { "interrupt0", "()V", TA(interrupt0) },
+        { "isInterrupted", "(Z)Z", TA(isInterrupted) },
+        { "isAlive", "()Z", TA(isAlive) },
+        { "start0", "()V", TA(start0) },
+        { "countStackFrames", "()I", TA(countStackFrames) },
+        { "holdsLock", "(Ljava/lang/Object;)Z", TA(holdsLock) },
+        { "dumpThreads", "([Ljava/lang/Thread;)[[Ljava/lang/StackTraceElement;", TA(dumpThreads) },
+        { "getThreads", "()[Ljava/lang/Thread;", TA(getThreads) },
+        { "setPriority0", "(I)V", TA(setPriority0) },
+        { "stop0", "(Ljava/lang/Object;)V", TA(stop0) },
+        { "suspend0", "()V", TA(suspend0) },
+        { "resume0", "()V", TA(resume0) },
+        { "clearInterruptEvent", "()V", TA(clearInterruptEvent) },
+        { "setNativeName", "(Ljava/lang/String;)V", TA(setNativeName) },
 };
 
 void java_lang_Thread_registerNatives()

@@ -65,7 +65,7 @@ static jint getProcessId(jobject _this)
 }
 
 // public native String[] getVmArguments0();
-static jobjectArray getVmArguments0(jobject _this)
+static jobject getVmArguments0(jobject _this)
 {
     JVM_PANIC("zzz"); // todo
 }
@@ -121,25 +121,25 @@ static jint getDaemonThreadCount(jobject _this)
 
 static JNINativeMethod methods[] = {
     JNINativeMethod_registerNatives,
-    {"getVersion0", "()Ljava/lang/String;", (void *)getVersion0},
-    {"initOptionalSupportFields", "()V", (void *)initOptionalSupportFields},
-    {"isThreadContentionMonitoringEnabled", "()Z", (void *)isThreadContentionMonitoringEnabled},
-    {"isThreadCpuTimeEnabled", "()Z", (void *)isThreadCpuTimeEnabled},
-    {"isThreadAllocatedMemoryEnabled", "()Z", (void *)isThreadAllocatedMemoryEnabled},
-    {"getTotalClassCount", "()J", (void *)getTotalClassCount},
-    {"getUnloadedClassCount", "()J", (void *)getUnloadedClassCount},
-    {"getVerboseClass", "()Z", (void *)getVerboseClass},
-    {"getVerboseGC", "()Z", (void *)getVerboseGC},
-    {"getProcessId", "()I", (void *)getProcessId},
-    {"getVmArguments0", "()[java/lang/String;", (void *)getVmArguments0},
-    {"getStartupTime", "()J", (void *)getStartupTime},
-    {"getUptime0", "()J", (void *)getUptime0},
-    {"getAvailableProcessors", "()I", (void *)getAvailableProcessors},
-    {"getTotalCompileTime", "()J", (void *)getTotalCompileTime},
-    {"getTotalThreadCount", "()J", (void *)getTotalThreadCount},
-    {"getLiveThreadCount", "()I", (void *)getLiveThreadCount},
-    {"getPeakThreadCount", "()I", (void *)getPeakThreadCount},
-    {"getDaemonThreadCount", "()I", (void *)getDaemonThreadCount},
+    {"getVersion0", "()Ljava/lang/String;", TA(getVersion0) },
+    {"initOptionalSupportFields", "()V", TA(initOptionalSupportFields) },
+    {"isThreadContentionMonitoringEnabled", "()Z", TA(isThreadContentionMonitoringEnabled) },
+    {"isThreadCpuTimeEnabled", "()Z", TA(isThreadCpuTimeEnabled) },
+    {"isThreadAllocatedMemoryEnabled", "()Z", TA(isThreadAllocatedMemoryEnabled) },
+    {"getTotalClassCount", "()J", TA(getTotalClassCount) },
+    {"getUnloadedClassCount", "()J", TA(getUnloadedClassCount) },
+    {"getVerboseClass", "()Z", TA(getVerboseClass) },
+    {"getVerboseGC", "()Z", TA(getVerboseGC) },
+    {"getProcessId", "()I", TA(getProcessId) },
+    {"getVmArguments0", "()[java/lang/String;", TA(getVmArguments0) },
+    {"getStartupTime", "()J", TA(getStartupTime) },
+    {"getUptime0", "()J", TA(getUptime0) },
+    {"getAvailableProcessors", "()I", TA(getAvailableProcessors) },
+    {"getTotalCompileTime", "()J", TA(getTotalCompileTime) },
+    {"getTotalThreadCount", "()J", TA(getTotalThreadCount) },
+    {"getLiveThreadCount", "()I", TA(getLiveThreadCount) },
+    {"getPeakThreadCount", "()I", TA(getPeakThreadCount) },
+    {"getDaemonThreadCount", "()I", TA(getDaemonThreadCount) },
 };
 
 void sun_management_VMManagementImpl_registerNatives()

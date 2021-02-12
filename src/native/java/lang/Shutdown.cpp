@@ -24,8 +24,8 @@ static void halt0(jint status)
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "beforeHalt", "()V", (void *) beforeHalt },
-        { "halt0", "(I)V", (void *) halt0 },
+        { "beforeHalt", "()V", TA(beforeHalt) },
+        { "halt0", "(I)V", TA(halt0) },
 };
 
 void java_lang_Shutdown_registerNatives()

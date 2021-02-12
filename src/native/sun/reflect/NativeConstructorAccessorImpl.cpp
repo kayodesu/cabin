@@ -64,7 +64,7 @@ using namespace std;
  * private static native Object newInstance0(Constructor<?> c, Object[] args)
  * throws InstantiationException, IllegalArgumentException, InvocationTargetException;
  */
-static jobject newInstance0(jobject c, jobjectArray args)
+static jobject newInstance0(jobject c, jobject args)
 {
     /*
      * @args array of objects to be passed as arguments to
@@ -90,7 +90,8 @@ static jobject newInstance0(jobject c, jobjectArray args)
         auto parameter_types = c->getRefField<Array>(S(parameterTypes), S(array_java_lang_Class));
         Method *constructor = clazz->getConstructor(parameter_types);
         assert(constructor != nullptr);
-        execJavaFunc(constructor, obj, args);
+        assert(args->isArrayObject());
+        execJavaFunc(constructor, obj, (Array *) args);
     }
 
     return obj;
@@ -98,7 +99,7 @@ static jobject newInstance0(jobject c, jobjectArray args)
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "newInstance0", "(Ljava/lang/reflect/Constructor;[" OBJ_ OBJ, (void *) newInstance0 },
+        { "newInstance0", "(Ljava/lang/reflect/Constructor;[" OBJ_ OBJ, TA(newInstance0) },
 };
 
 void sun_reflect_NativeConstructorAccessorImpl_registerNatives()

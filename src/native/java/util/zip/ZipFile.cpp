@@ -68,7 +68,7 @@ void freeEntry(jlong jzfile, jlong jzentry)
 }
 
 // private static native long getEntry(long jzfile, byte[] name, boolean addSlash);
-jlong getEntry(jlong jzfile, jbyteArray name, jboolean addSlash)
+jlong getEntry(jlong jzfile, jobject name, jboolean addSlash)
 {
     // todo
     /*
@@ -88,7 +88,7 @@ jlong getEntry(jlong jzfile, jbyteArray name, jboolean addSlash)
 }
 
 // private static native byte[] getEntryBytes(long jzentry, int type);
-jbyteArray getEntryBytes(jlong jzentry, jint type)
+jobject getEntryBytes(jlong jzentry, jint type)
 {
     JVM_PANIC("getEntryBytes");
 // todo
@@ -225,7 +225,7 @@ jint getEntryMethod(jlong jzentry)
 }
 
 // private static native int read(long jzfile, long jzentry, long pos, byte[] b, int off, int len);
-jint __read(jlong jzfile, jlong jzentry, jlong pos, jbyteArray b, jint off, jint len)
+jint __read(jlong jzfile, jlong jzentry, jlong pos, jobject b, jint off, jint len)
 {
     JVM_PANIC("read");
 /*
@@ -249,21 +249,21 @@ jint __read(jlong jzfile, jlong jzentry, jlong pos, jbyteArray b, jint off, jint
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "initIDs", "()V", (void *) initIDs },
-        { "open", "(Ljava/lang/String;IJZ)J", (void *) __open },
-        { "startsWithLOC", "(J)Z", (void *) startsWithLOC },
-        { "getTotal", "(J)I", (void *) getTotal },
-        { "getNextEntry", "(JI)J", (void *) getNextEntry },
-        { "freeEntry", "(JJ)V", (void *) freeEntry },
-        { "getEntry", "(J[BZ)J", (void *) getEntry },
-        { "getEntryBytes", "(JI)[B", (void *) getEntryBytes },
-        { "getEntryFlag", "(J)I", (void *) getEntryFlag },
-        { "getEntryTime", "(J)J", (void *) getEntryTime },
-        { "getEntryCrc", "(J)J", (void *) getEntryCrc },
-        { "getEntrySize", "(J)J", (void *) getEntrySize },
-        { "getEntryCSize", "(J)J", (void *) getEntryCSize },
-        { "getEntryMethod", "(J)I", (void *) getEntryMethod },
-        { "read", "((JJJ[BII)I", (void *) __read },
+        { "initIDs", "()V", TA(initIDs) },
+        { "open", "(Ljava/lang/String;IJZ)J", TA(__open) },
+        { "startsWithLOC", "(J)Z", TA(startsWithLOC) },
+        { "getTotal", "(J)I", TA(getTotal) },
+        { "getNextEntry", "(JI)J", TA(getNextEntry) },
+        { "freeEntry", "(JJ)V", TA(freeEntry) },
+        { "getEntry", "(J[BZ)J", TA(getEntry) },
+        { "getEntryBytes", "(JI)[B", TA(getEntryBytes) },
+        { "getEntryFlag", "(J)I", TA(getEntryFlag) },
+        { "getEntryTime", "(J)J", TA(getEntryTime) },
+        { "getEntryCrc", "(J)J", TA(getEntryCrc) },
+        { "getEntrySize", "(J)J", TA(getEntrySize) },
+        { "getEntryCSize", "(J)J", TA(getEntryCSize) },
+        { "getEntryMethod", "(J)I", TA(getEntryMethod) },
+        { "read", "((JJJ[BII)I", TA(__read) },
 };
 
 void java_util_zip_ZipFile_registerNatives()

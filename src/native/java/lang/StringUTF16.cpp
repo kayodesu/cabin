@@ -9,7 +9,7 @@ static jbool _isBigEndian()
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "isBigEndian", "()B", (void *) _isBigEndian },
+        { "isBigEndian", "()B", TA(_isBigEndian) },
 };
 
 void java_lang_StringUTF16_registerNatives()

@@ -45,12 +45,12 @@ static void wait(jobject _this, jlong timeout)
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "hashCode", "()I", (void *) hashCode },
-        { "getClass", __CLS, (void *) getClass },
-        { "clone", __OBJ, (void *) clone },
-        { "notifyAll", "()V", (void *) notifyAll },
-        { "notify", "()V", (void *) notify },
-        { "wait", "(J)V", (void *) wait },
+        { "hashCode", "()I", TA(hashCode) },
+        { "getClass", __CLS, TA(getClass) },
+        { "clone", __OBJ, TA(clone) },
+        { "notifyAll", "()V", TA(notifyAll) },
+        { "notify", "()V", TA(notify) },
+        { "wait", "(J)V", TA(wait) },
 };
 
 void java_lang_Object_registerNatives()

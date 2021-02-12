@@ -58,9 +58,9 @@ static void sync(jobject _this)
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "initIDs", "()V", (void *) initIDs },
-        { "set", "(I)J", (void *) set },
-        { "sync", "()V", (void *) sync },
+        { "initIDs", "()V", TA(initIDs) },
+        { "set", "(I)J", TA(set) },
+        { "sync", "()V", TA(sync) },
 };
 
 void java_io_FileDescriptor_registerNatives()

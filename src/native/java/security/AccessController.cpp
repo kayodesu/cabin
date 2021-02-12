@@ -67,12 +67,12 @@ static jobject getInheritedAccessControlContext()
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "getStackAccessControlContext", "()" ACC, (void *) getStackAccessControlContext },
-        { "getInheritedAccessControlContext", "()" ACC, (void *) getInheritedAccessControlContext },
-        { "doPrivileged", "(Ljava/security/PrivilegedAction;)" OBJ, (void *) doPrivileged },
-        { "doPrivileged", "(Ljava/security/PrivilegedAction;" ACC ")" OBJ, (void *) doPrivileged1 },
-        { "doPrivileged", "(Ljava/security/PrivilegedExceptionAction;)" OBJ, (void *) doPrivileged2 },
-        { "doPrivileged", "(Ljava/security/PrivilegedExceptionAction;" ACC ")" OBJ, (void *) doPrivileged3 },
+        { "getStackAccessControlContext", "()" ACC, TA(getStackAccessControlContext) },
+        { "getInheritedAccessControlContext", "()" ACC, TA(getInheritedAccessControlContext) },
+        { "doPrivileged", "(Ljava/security/PrivilegedAction;)" OBJ, TA(doPrivileged) },
+        { "doPrivileged", "(Ljava/security/PrivilegedAction;" ACC ")" OBJ, TA(doPrivileged1) },
+        { "doPrivileged", "(Ljava/security/PrivilegedExceptionAction;)" OBJ, TA(doPrivileged2) },
+        { "doPrivileged", "(Ljava/security/PrivilegedExceptionAction;" ACC ")" OBJ, TA(doPrivileged3) },
 };
 
 #undef ACC

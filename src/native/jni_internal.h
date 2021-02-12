@@ -2,27 +2,11 @@
 #define CABIN_JNI_INTERNAL_H
 
 #include "../cabin.h"
+#include "jni.h"
 
-/*
- * NOTICE:
- * 不能再native函数中用throw抛异常，libffi不能处理这种情况，
- * 会导致jvm假死（不会崩溃退出，进程还在，但不工作，CUP利用率近乎零）。
- */
-
-typedef Object*      jobject;
-typedef Object*      jclass;
-typedef jobject      jthrowable;
-typedef jobject      jstring;
-typedef Array*       jarray;
-typedef jarray       jbooleanArray;
-typedef jarray       jbyteArray;
-typedef jarray       jcharArray;
-typedef jarray       jshortArray;
-typedef jarray       jintArray;
-typedef jarray       jlongArray;
-typedef jarray       jfloatArray;
-typedef jarray       jdoubleArray;
-typedef jarray       jobjectArray;
+typedef Object* jobject;
+typedef Object* jclass;
+typedef jobject jstring;
 
 #define OBJ   "Ljava/lang/Object;"
 #define _OBJ  "(Ljava/lang/Object;"
@@ -44,13 +28,11 @@ typedef jarray       jobjectArray;
 
 #define ARRAY_LENGTH(arr) (sizeof(arr)/sizeof(*arr))
 
-#define JNINativeMethod_registerNatives { "registerNatives", "()V", (void *) (void(*)()) [](){} }
+#define JNINativeMethod_registerNatives { "registerNatives", "()V", typeid(void(*)()), (void *) (void(*)()) [](){} }
 
-struct JNINativeMethod {
-    const char *name;
-    const char *descriptor;
-    void *func;
-};
+// Type and Address
+#undef TA
+#define TA(method_name) typeid(&method_name), (void *) method_name
 
 /*
  * 要保证每个 class name 只会注册一次，

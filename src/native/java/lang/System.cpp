@@ -112,17 +112,17 @@ static jlong currentTimeMillis()
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "mapLibraryName", _STR_ STR, (void *) mapLibraryName },
-        { "arraycopy", _OBJ "ILjava/lang/Object;II)V", (void *) arraycopy },
-        { "identityHashCode", _OBJ_ "I", (void *) identityHashCode },
-        { "initProperties", "(Ljava/util/Properties;)Ljava/util/Properties;", (void *) initProperties },
+        { "mapLibraryName", _STR_ STR, TA(mapLibraryName) },
+        { "arraycopy", _OBJ "ILjava/lang/Object;II)V", TA(arraycopy) },
+        { "identityHashCode", _OBJ_ "I", TA(identityHashCode) },
+        { "initProperties", "(Ljava/util/Properties;)Ljava/util/Properties;", TA(initProperties) },
 
-        { "setIn0", "(Ljava/io/InputStream;)V", (void *) setIn0 },
-        { "setOut0", "(Ljava/io/PrintStream;)V", (void *) setOut0 },
-        { "setErr0", "(Ljava/io/PrintStream;)V", (void *) setErr0 },
+        { "setIn0", "(Ljava/io/InputStream;)V", TA(setIn0) },
+        { "setOut0", "(Ljava/io/PrintStream;)V", TA(setOut0) },
+        { "setErr0", "(Ljava/io/PrintStream;)V", TA(setErr0) },
 
-        { "nanoTime", "()J", (void *) nanoTime },
-        { "currentTimeMillis", "()J", (void *) currentTimeMillis },
+        { "nanoTime", "()J", TA(nanoTime) },
+        { "currentTimeMillis", "()J", TA(currentTimeMillis) },
 };
 
 

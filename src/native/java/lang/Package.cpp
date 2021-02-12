@@ -16,7 +16,7 @@ static jstring getSystemPackage0(jstring name)
 }
 
 // private static native String[] getSystemPackages0();
-static jobjectArray getSystemPackages0()
+static jobject getSystemPackages0()
 {
     utf8_set &packages = getBootPackages();
     auto size = packages.size();
@@ -32,8 +32,8 @@ static jobjectArray getSystemPackages0()
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "getSystemPackage0", _STR_ STR, (void *) getSystemPackage0},
-        { "getSystemPackages0", "()[" STR, (void *) getSystemPackages0 }
+        { "getSystemPackage0", _STR_ STR, TA(getSystemPackage0) },
+        { "getSystemPackages0", "()[" STR, TA(getSystemPackages0) },
 };
 
 void java_lang_Package_registerNatives()

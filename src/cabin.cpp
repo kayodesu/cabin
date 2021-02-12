@@ -195,8 +195,6 @@ static void readJDKVersion()
     }
 }
 
-void initJNI();
-
 void initJVM(int argc, char *argv[])
 {
     parseCommandLine(argc, argv);
@@ -336,11 +334,26 @@ static void showVersionAndCopyright()
 #define TEST_METHOD_DESCRIPTOR 0
 #define TEST_INJECT_FIELD      0
 
+//class A {};
+//class B: A{};
+//
+//typedef A *pa;
+//typedef B *pb;
+//typedef pb pc;
+//
+//int func(pa a){return 0;}
+//int func2(pb b){return 0;}
+//int func3(pc b){return 0;}
+
 #if !(TEST_SLOT || TEST_CLASS_LOADER || TEST_LOAD_CLASS || TEST_NEW_ARRAY \
         || TEST_CLONE_OBJECT || TEST_PROPERTIES || TEST_SYSTEM_INFO \
         || TEST_METHOD_TYPE || TEST_METHOD_DESCRIPTOR || TEST_INJECT_FIELD)
 int main(int argc, char* argv[])
 {
+//    cout << typeid(&func).name() << endl;
+//    cout << typeid(&func2).name() << endl;
+//    cout << typeid(&func3).name() << endl;
+
     time_t time1;
     time(&time1);
 
@@ -571,8 +584,8 @@ void test7()
     Class *ac = loadArrayClass("[[[[[[[I");
     jint dim = 7;
     jint lens[] = { 2, 3, 4, 5, 6, 7, 8 };
-    Array *arr = ac->allocMultiArray(dim, lens);
 
+    Array *arr = ac->allocMultiArray(dim, lens);
     initIntArray(arr, dim, lens);
     printIntArray(arr, dim, lens);
     printf("\n");

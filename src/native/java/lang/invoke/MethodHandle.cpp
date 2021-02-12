@@ -144,7 +144,7 @@ static jobject invokeBasic(jobject _this, ...)
  * @return the signature-polymorphic result, statically represented using {@code Object}
  */
 // static native @PolymorphicSignature Object linkToVirtual(Object... args) throws Throwable;
-static jobject linkToVirtual(jobjectArray args)
+static jobject linkToVirtual(jobject args)
 {
     JVM_PANIC("linkToVirtual");
 }
@@ -157,7 +157,7 @@ static jobject linkToVirtual(jobjectArray args)
  * @return the signature-polymorphic result, statically represented using {@code Object}
  */
 // static native @PolymorphicSignature Object linkToStatic(Object... args) throws Throwable;
-static jobject linkToStatic(jobjectArray args)
+static jobject linkToStatic(jobject args)
 {
     JVM_PANIC("linkToStatic");
 }
@@ -170,7 +170,7 @@ static jobject linkToStatic(jobjectArray args)
  * @return the signature-polymorphic result, statically represented using {@code Object}
  */
 // static native @PolymorphicSignature Object linkToSpecial(Object... args) throws Throwable;
-static jobject linkToSpecial(jobjectArray args)
+static jobject linkToSpecial(jobject args)
 {
     JVM_PANIC("linkToSpecial");
 }
@@ -183,7 +183,7 @@ static jobject linkToSpecial(jobjectArray args)
  * @return the signature-polymorphic result, statically represented using {@code Object}
  */
 // static native @PolymorphicSignature Object linkToInterface(Object... args) throws Throwable;
-static jobject linkToInterface(jobjectArray args)
+static jobject linkToInterface(jobject args)
 {
     JVM_PANIC("linkToInterface");
 }
@@ -193,13 +193,13 @@ static jobject linkToInterface(jobjectArray args)
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "invokeExact",     T, (void *) invokeExact },
-        { "invoke",          T, (void *) invoke },
-        { "invokeBasic",     T, (void *) invokeBasic },
-        { "linkToVirtual",   T, (void *) linkToVirtual },
-        { "linkToStatic",    T, (void *) linkToStatic },
-        { "linkToSpecial",   T, (void *) linkToSpecial },
-        { "linkToInterface", T, (void *) linkToInterface },
+        { "invokeExact",     T, TA(invokeExact) },
+        { "invoke",          T, TA(invoke) },
+        { "invokeBasic",     T, TA(invokeBasic) },
+        { "linkToVirtual",   T, TA(linkToVirtual) },
+        { "linkToStatic",    T, TA(linkToStatic) },
+        { "linkToSpecial",   T, TA(linkToSpecial) },
+        { "linkToInterface", T, TA(linkToInterface) },
 };
 #undef T
 

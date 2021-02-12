@@ -12,9 +12,11 @@ using namespace std;
 using namespace slot;
 
 // private static native Object invoke0(Method method, Object o, Object[] os);
-static jobject invoke0(jobject method, jobject o, jobjectArray os)
+static jobject invoke0(jobject method, jobject o, jobject _os)
 {
     assert(method != nullptr);
+    assert(_os->isArrayObject());
+    auto os = dynamic_cast<Array *>(_os);
     // If method is static, o is nullptr.
 
     // private Class<?>   clazz;
@@ -65,7 +67,7 @@ static jobject invoke0(jobject method, jobject o, jobjectArray os)
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "invoke0", "(Ljava/lang/reflect/Method;" OBJ "[" OBJ_ OBJ, (void *) invoke0 },
+        { "invoke0", "(Ljava/lang/reflect/Method;" OBJ "[" OBJ_ OBJ, TA(invoke0) },
 };
 
 void sun_reflect_NativeMethodAccessorImpl_registerNatives()
