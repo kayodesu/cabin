@@ -10,7 +10,6 @@ An experimental JVM written in C++.
 * jre8 lib
 * zlib 1.2.11
 * minizip 1.2.0
-* libffi 3.3
 
 ## Features  
 - [x] Java arithmetic, flow control, object-oriented programming(virtual method, inherit, etc.)  
