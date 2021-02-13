@@ -1,6 +1,7 @@
 #include "array.h"
 #include "prims.h"
 #include "../runtime/vm_thread.h"
+#include "../exception.h"
 
 using namespace std;
 
@@ -81,8 +82,7 @@ void Array::copy(Array *dst, jint dst_pos, const Array *src, jint src_pos, jint 
      * 如果两者都是引用数组，则可以拷贝，否则两者必须是相同类型的基本类型数组
      */
     if (src->clazz->getEleSize() != dst->clazz->getEleSize()) {
-        Thread::signalException(S(java_lang_ArrayStoreException));
-        return;
+        throw java_lang_ArrayStoreException();
     }
 
     if (src_pos < 0
@@ -90,8 +90,7 @@ void Array::copy(Array *dst, jint dst_pos, const Array *src, jint src_pos, jint 
         || len < 0
         || src_pos + len > src->arr_len
         || dst_pos + len > dst->arr_len) {
-        Thread::signalException(S(java_lang_ArrayIndexOutOfBoundsException));
-        return;
+        throw java_lang_ArrayIndexOutOfBoundsException();
     }
 
     memcpy(dst->index(dst_pos), src->index(src_pos), src->clazz->getEleSize() * len);

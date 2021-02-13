@@ -1,7 +1,7 @@
 #include "../../../symbol.h"
 #include "../../jni_internal.h"
 #include "../../../metadata/class.h"
-#include "../../../runtime/vm_thread.h"
+#include "../../../exception.h"
 
 // public native int hashCode();
 static jint hashCode(jobject _this)
@@ -13,8 +13,7 @@ static jint hashCode(jobject _this)
 static jobject clone(jobject _this)
 {
     if (!_this->clazz->isSubclassOf(loadBootClass(S(java_lang_Cloneable)))) {
-        Thread::signalException(S(java_lang_CloneNotSupportedException));
-        return jnull;
+        throw java_lang_CloneNotSupportedException();
     }
     return _this->clone();
 }

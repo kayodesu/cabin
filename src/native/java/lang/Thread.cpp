@@ -5,6 +5,7 @@
 #include "../../../runtime/vm_thread.h"
 #include "../../../runtime/frame.h"
 #include "../../../interpreter/interpreter.h"
+#include "../../../exception.h"
 
 using namespace std;
 
@@ -29,8 +30,7 @@ static void yield()
 static void sleep(jlong millis)
 {
     if (millis <= 0) {
-        Thread::signalException(S(java_lang_IllegalArgumentException));
-        return;
+        throw java_lang_IllegalArgumentException();
     }
     if (millis == 0)
         return;

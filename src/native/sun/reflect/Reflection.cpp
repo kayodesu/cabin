@@ -4,6 +4,7 @@
 #include "../../../runtime/frame.h"
 #include "../../../runtime/vm_thread.h"
 #include "../../../metadata/class.h"
+#include "../../../exception.h"
 
 using namespace std;
 
@@ -11,7 +12,7 @@ using namespace std;
 static jclass getCallerClass0(jint level)
 {
     if (level < 0) {
-        Thread::signalException(S(java_lang_IllegalArgumentException), to_string(level).c_str());
+        throw java_lang_IllegalArgumentException(to_string(level));
     }
 
     auto frame = (Frame *) getCurrentThread()->getTopFrame();

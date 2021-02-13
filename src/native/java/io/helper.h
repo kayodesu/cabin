@@ -3,6 +3,7 @@
 #include "../../../cabin.h"
 #include "../../../objects/object.h"
 #include "../../../runtime/vm_thread.h"
+#include "../../../exception.h"
 
 /*
  * 一些帮助函数，只用于本目录下的文件。
@@ -21,7 +22,7 @@ static inline void __openFile(jobject _this, jstring name, const char *mode)
 
     FILE *file = fopen(utf8_name, mode);
     if (file == nullptr) {
-        SIGNAL_EXCEPTION(S(java_io_FileNotFoundException), "%s (can't find)", utf8_name);
+        throw java_io_FileNotFoundException(std::string(utf8_name) + " (can't find)");
         return;
     }
 
@@ -45,7 +46,6 @@ static inline void __closeFile(jobject _this)
 {
     FILE *file = __getFileHandle(_this);
     if (fclose(file) != 0) {
-        Thread::signalException(S(java_io_IOException));
-        return;
+        throw java_io_IOException();
     }
 }

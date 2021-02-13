@@ -12,6 +12,7 @@
 #include "../objects/mh.h"
 #include "../classfile/constants.h"
 #include "descriptor.h"
+#include "../exception.h"
 
 using namespace std;
 using namespace utf8;
@@ -322,8 +323,7 @@ Class::Class(Object *loader, u1 *bytecode, size_t len): loader(loader), bytecode
 
     auto magic = r.readu4();
     if (magic != 0xcafebabe) {
-        Thread::signalException(S(java_lang_ClassFormatError), "bad magic");
-        return;
+        throw java_lang_ClassFormatError("bad magic");
     }
 
     r.readu2(); // minor_version
@@ -414,8 +414,7 @@ Class::Class(Object *loader, u1 *bytecode, size_t len): loader(loader), bytecode
                 break;
             }
             default:
-                SIGNAL_EXCEPTION(S(java_lang_ClassFormatError), "bad constant tag: %d\n", tag);
-                return;
+                throw java_lang_ClassFormatError("bad constant tag: " + to_string(tag));
         }
     }
 
@@ -428,7 +427,7 @@ Class::Class(Object *loader, u1 *bytecode, size_t len): loader(loader), bytecode
         this->super_class = nullptr;
     } else {
         if (utf8::equals(class_name, S(java_lang_Object))) {
-            Thread::signalException(S(java_lang_ClassFormatError), "Object has super");
+            throw java_lang_ClassFormatError("Object has super");
             return;
         }
         this->super_class = cp.resolveClass(_super_class);
@@ -641,8 +640,7 @@ Field *Class::lookupStaticField(const utf8_t *name, const utf8_t *descriptor)
 {
     Field *field = lookupField(name, descriptor);
     if (field != nullptr && !field->isStatic()) {
-        Thread::signalException(S(java_lang_IncompatibleClassChangeError));
-        return nullptr;
+        throw java_lang_IncompatibleClassChangeError();
     }
     return field;
 }
@@ -651,8 +649,7 @@ Field *Class::lookupInstField(const utf8_t *name, const utf8_t *descriptor)
 {
     Field* field = lookupField(name, descriptor);
     if (field != nullptr && field->isStatic()) {
-        Thread::signalException(S(java_lang_IncompatibleClassChangeError));
-        return nullptr;
+        throw java_lang_IncompatibleClassChangeError();
     }
     return field;
 }
@@ -674,8 +671,8 @@ Field *Class::getDeclaredInstField(int id, bool ensureExist)
     }
 
     if (ensureExist) {
-        // not find, but ensure exist, so...
-        SIGNAL_EXCEPTION(S(java_lang_NoSuchFieldError), "%s, id = %d.", class_name, id);
+        // not find, but ensure exist
+        throw java_lang_NoSuchFieldError(string(class_name) + ", id = " + to_string(id));
     }
 
     // not find
@@ -734,8 +731,8 @@ Method *Class::getDeclaredMethod(const utf8_t *name, const utf8_t *descriptor, b
     }
 
     if (ensureExist) {
-        // not find, but ensure exist, so...
-        SIGNAL_EXCEPTION(S(java_lang_NoSuchMethodError), "%s~%s~%s\n", class_name, name, descriptor);
+        // not find, but ensure exist
+        throw java_lang_NoSuchMethodError(string(class_name) + '~' + name + '~' + descriptor);
     }
 
     // not find
@@ -750,8 +747,8 @@ Method *Class::getDeclaredStaticMethod(const utf8_t *name, const utf8_t *descrip
     }
 
     if (ensureExist) {
-        // not find, but ensure exist, so...
-        SIGNAL_EXCEPTION(S(java_lang_NoSuchMethodError), "%s~%s~%s\n", class_name, name, descriptor);
+        // not find, but ensure exist
+        throw java_lang_NoSuchMethodError(string(class_name) + '~' + name + '~' + descriptor);
     }
 
     // not find
@@ -766,8 +763,10 @@ Method *Class::getDeclaredInstMethod(const utf8_t *name, const utf8_t *descripto
     }
 
     if (ensureExist) {
-        // not find, but ensure exist, so...
-        SIGNAL_EXCEPTION(S(java_lang_NoSuchMethodError), "%s~%s~%s\n", class_name, name, descriptor);
+        // not find, but ensure exist
+        stringstream ss;
+        ss << class_name << '~' << name << '~' << descriptor;
+        throw java_lang_NoSuchMethodError(ss.str());
     }
 
     // not find
@@ -855,8 +854,7 @@ Method *Class::lookupStaticMethod(const char *name, const char *descriptor)
 {
     Method *m = lookupMethod(name, descriptor);
     if (m != nullptr && !m->isStatic()) {
-        Thread::signalException(S(java_lang_IncompatibleClassChangeError));
-        return nullptr;
+        throw java_lang_IncompatibleClassChangeError();
     }
     return m;
 }
@@ -866,8 +864,7 @@ Method *Class::lookupInstMethod(const char *name, const char *descriptor)
     Method *m = lookupMethod(name, descriptor);
     // todo m == nullptr
     if (m != nullptr && m->isStatic()) {
-        Thread::signalException(S(java_lang_IncompatibleClassChangeError));
-        return nullptr;
+        throw java_lang_IncompatibleClassChangeError();
     }
     return m;
 }
@@ -1043,8 +1040,7 @@ Class *Class::componentClass()
     int last = strlen(comp_name) - 1;
     assert(last > 0);
     if (comp_name[last] != ';') {
-        Thread::signalException(S(java_lang_UnknownError));
-        return nullptr;
+        throw java_lang_UnknownError();
     } else {
         char buf[last + 1];
         strncpy(buf, comp_name, (size_t) last);

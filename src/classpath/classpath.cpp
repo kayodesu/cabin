@@ -5,6 +5,7 @@
 #include <minizip/unzip.h>
 #include "classpath.h"
 #include "../runtime/vm_thread.h"
+#include "../exception.h"
 
 using namespace std;
 using namespace std::filesystem;
@@ -161,16 +162,12 @@ static optional<pair<u1 *, size_t>> readClass(const char *path,
 {
     unzFile module_file = unzOpen64(path);
     if (module_file == nullptr) {
-        SIGNAL_EXCEPTION(S(java_io_IOException), "unzOpen64 failed: %s\n", path);
-        Thread::printStackTrace();
-        JVM_EXIT
+        throw java_io_IOException(string("unzOpen64 failed: ") + path);
     }
 
     if (unzGoToFirstFile(module_file) != UNZ_OK) {
         unzClose(module_file);
-        SIGNAL_EXCEPTION(S(java_io_IOException), "unzGoToFirstFile failed: %s\n", path);
-        Thread::printStackTrace();
-        JVM_EXIT
+        throw java_io_IOException(string("unzGoToFirstFile failed: ") + path);
     }
 
     char buf[strlen(class_name) + 32]; // big enough
@@ -197,9 +194,7 @@ static optional<pair<u1 *, size_t>> readClass(const char *path,
     // find out!
     if (unzOpenCurrentFile(module_file) != UNZ_OK) {
         unzClose(module_file);
-        SIGNAL_EXCEPTION(S(java_io_IOException), "unzOpenCurrentFile failed: %s\n", path);
-        Thread::printStackTrace();
-        JVM_EXIT
+        throw java_io_IOException(string("unzOpenCurrentFile failed: ") + path);
     }
 
     unz_file_info64 file_info{ };
@@ -210,9 +205,7 @@ static optional<pair<u1 *, size_t>> readClass(const char *path,
     unzCloseCurrentFile(module_file);
     unzClose(module_file);
     if (size != (int) file_info.uncompressed_size) {
-        SIGNAL_EXCEPTION(S(java_io_IOException), "unzReadCurrentFile failed: %s\n", path);
-        Thread::printStackTrace();
-        JVM_EXIT
+        throw java_io_IOException(string("unzReadCurrentFile failed: ") + path);
     }
     return make_pair(bytecode, file_info.uncompressed_size);
 }

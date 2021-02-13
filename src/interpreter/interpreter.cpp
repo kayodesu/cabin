@@ -10,6 +10,7 @@
 #include "../runtime/vm_thread.h"
 #include "../runtime/frame.h"
 #include "../objects/array.h"
+#include "../exception.h"
 
 using namespace std;
 using namespace utf8;
@@ -117,7 +118,7 @@ static bool checkcast(Class *s, Class *t);
 /*
  * 执行当前线程栈顶的frame
  */
-static slot_t *exec()
+static slot_t *exec(jref &excep)
 {    
     static void *handlers[] = {
         &&opc_nop, 
@@ -227,19 +228,16 @@ static slot_t *exec()
 
     jref _this = frame->method->isStatic() ? (jref) clazz : getRef(lvars);
 
-#define THROW_EXCEPTION(exception_name, ...) \
-do { \
-    SIGNAL_EXCEPTION(exception_name, __VA_ARGS__); \
-    jref eo = Thread::getException(); \
-    Thread::clearException(); \
-    frame->pushr(eo); \
-    goto opc_athrow; \
-} while(false)
+    if (excep != nullptr) {
+        frame->pushr(excep);
+        excep = nullptr;
+        goto opc_athrow;
+    }
 
 #define NULL_POINTER_CHECK(ref) \
 do { \
     if (ref == nullptr) \
-        THROW_EXCEPTION(S(java_lang_NullPointerException), "null pointer"); \
+        throw java_lang_NullPointerException(); \
 } while(false)
 
 #define CHANGE_FRAME(new_frame) \
@@ -340,7 +338,7 @@ _ldc: {
             frame->pushr(cp->resolveClass(index)->java_mirror);
             break;
         default:
-            THROW_EXCEPTION(S(java_lang_UnknownError), "unknown type: %d", type);
+            throw java_lang_UnknownError("unknown type: " + to_string(type));
             break;
     }
     DISPATCH
@@ -357,7 +355,7 @@ opc_ldc2_w: {
             frame->pushd(cp->getDouble(index));
             break;
         default:
-            THROW_EXCEPTION(S(java_lang_UnknownError), "unknown type: %d", type);
+            throw java_lang_UnknownError("unknown type: " + to_string(type));
             break;
     }
     DISPATCH
@@ -425,7 +423,7 @@ opc_dload_3:
     auto arr = (Array *) frame->popr(); \
     NULL_POINTER_CHECK(arr); \
     if (!arr->checkBounds(index)) \
-       THROW_EXCEPTION(S(java_lang_ArrayIndexOutOfBoundsException), "index is %d", index);
+       throw java_lang_ArrayIndexOutOfBoundsException("index is " + to_string(index));
 
 opc_iaload: {
     GET_AND_CHECK_ARRAY
@@ -678,7 +676,7 @@ opc_dmul:
 #define ZERO_DIVISOR_CHECK(value) \
 do { \
     if (value == 0) \
-        THROW_EXCEPTION(S(java_lang_ArithmeticException), "division by zero"); \
+        throw java_lang_ArithmeticException("division by zero"); \
 } while(false)
 
 opc_idiv:
@@ -922,9 +920,9 @@ opc_goto: {
 // 在Java 6之前，Oracle的Java编译器使用 jsr, jsr_w 和 ret 指令来实现 finally 子句。
 // 从Java 6开始，已经不再使用这些指令
 opc_jsr:
-    THROW_EXCEPTION(S(java_lang_InternalError), "jsr doesn't support after jdk 6.");
+    throw java_lang_InternalError("jsr doesn't support after jdk 6.");
 opc_ret:
-    THROW_EXCEPTION(S(java_lang_InternalError), "ret doesn't support after jdk 6.");
+    throw java_lang_InternalError("ret doesn't support after jdk 6.");
 
 opc_tableswitch: {
     // todo 指令说明  好像是实现 switch 语句
@@ -1032,7 +1030,7 @@ opc_getstatic: {
     index = reader->readu2();
     Field *field = cp->resolveField(index);
     if (!field->isStatic()) {
-        THROW_EXCEPTION(S(java_lang_IncompatibleClassChangeError), field->toString().c_str());
+        throw java_lang_IncompatibleClassChangeError(field->toString());
     }
 
     initClass(field->clazz);
@@ -1047,7 +1045,7 @@ opc_putstatic: {
     index = reader->readu2();
     Field *field = cp->resolveField(index);
     if (!field->isStatic()) {
-        THROW_EXCEPTION(S(java_lang_IncompatibleClassChangeError), field->toString().c_str());
+        throw java_lang_IncompatibleClassChangeError(field->toString());
     }
 
     initClass(field->clazz);
@@ -1066,7 +1064,7 @@ opc_getfield: {
     index = reader->readu2();
     Field *field = cp->resolveField(index);
     if (field->isStatic()) {
-        THROW_EXCEPTION(S(java_lang_IncompatibleClassChangeError), field->toString().c_str());
+        throw java_lang_IncompatibleClassChangeError(field->toString());
     }
 
     jref obj = frame->popr();
@@ -1082,13 +1080,13 @@ opc_putfield: {
     index = reader->readu2();
     Field *field = cp->resolveField(index);
     if (field->isStatic()) {
-        THROW_EXCEPTION(S(java_lang_IncompatibleClassChangeError), field->toString().c_str());
+        throw java_lang_IncompatibleClassChangeError(field->toString());
     }
 
     // 如果是final字段，则只能在构造函数中初始化，否则抛出java.lang.IllegalAccessError。
     if (field->isFinal()) {
         if (!clazz->equals(field->clazz) || !equals(frame->method->name, S(object_init))) {
-            THROW_EXCEPTION(S(java_lang_IllegalAccessError), field->toString().c_str());
+            throw java_lang_IllegalAccessError(field->toString());
         }
     }
 
@@ -1124,7 +1122,7 @@ opc_invokevirtual: {
     }
 
     if (m->isStatic()) {
-        THROW_EXCEPTION(S(java_lang_IncompatibleClassChangeError), m->toString().c_str());
+        throw java_lang_IncompatibleClassChangeError(m->toString());
     }
 
     frame->ostack -= m->arg_slot_count;
@@ -1164,10 +1162,10 @@ opc_invokespecial: {
     }
 
     if (m->isAbstract()) {
-        THROW_EXCEPTION(S(java_lang_AbstractMethodError), m->toString().c_str());
+        throw java_lang_AbstractMethodError(m->toString());
     }
     if (m->isStatic()) {
-        THROW_EXCEPTION(S(java_lang_IncompatibleClassChangeError), m->toString().c_str());
+        throw java_lang_IncompatibleClassChangeError(m->toString());
     }
 
     frame->ostack -= m->arg_slot_count;
@@ -1183,10 +1181,10 @@ opc_invokestatic: {
     index = reader->readu2();
     Method *m = cp->resolveMethodOrInterfaceMethod(index);
     if (m->isAbstract()) {
-        THROW_EXCEPTION(S(java_lang_AbstractMethodError), m->toString().c_str());
+        throw java_lang_AbstractMethodError(m->toString());
     }
     if (!m->isStatic()) {
-        THROW_EXCEPTION(S(java_lang_IncompatibleClassChangeError), m->toString().c_str());
+        throw java_lang_IncompatibleClassChangeError(m->toString());
     }
 
     initClass(m->clazz);
@@ -1225,11 +1223,11 @@ opc_invokeinterface: {
     // assert(resolved_method == obj->clazz->lookupMethod(m->name, m->descriptor));
     resolved_method = obj->clazz->lookupMethod(m->name, m->descriptor);
     if (resolved_method->isAbstract()) {
-        THROW_EXCEPTION(S(java_lang_AbstractMethodError), resolved_method->toString().c_str());
+        throw java_lang_AbstractMethodError(resolved_method->toString());
     }
 
     if (!resolved_method->isPublic()) {
-        THROW_EXCEPTION(S(java_lang_IllegalAccessError), resolved_method->toString().c_str());
+        throw java_lang_IllegalAccessError(resolved_method->toString());
     }
 
     goto _invoke_method;
@@ -1272,12 +1270,12 @@ opc_invokedynamic: {
             setRef(args + 1, newString(invoked_name));
             setRef(args + 2, invoked_type);
             bm.resolveArgs(&cp, args + 3);
-            if (Thread::checkExceptionOccurred()) {
-                jref eo = Thread::getException();
-                Thread::clearException();
-                frame->pushr(eo);
-                goto opc_athrow;
-            }
+//            if (Thread::checkExceptionOccurred()) {  todo
+//                jref eo = Thread::getException();
+//                Thread::clearException();
+//                frame->pushr(eo);
+//                goto opc_athrow;
+//            }
             auto call_set = getRef(execJavaFunc(bootstrap_method, args));
 
             // public abstract MethodHandle dynamicInvoker()
@@ -1320,14 +1318,16 @@ opc_invokenative: {
 
     assert(frame->method->native_method != nullptr);
 
+
     callJNIMethod(frame);
-    if (Thread::checkExceptionOccurred()) {
-        TRACE("native method throw a exception\n");
-        jref eo = Thread::getException();
-        Thread::clearException();
-        frame->pushr(eo);
-        goto opc_athrow;
-    }
+
+//    if (Thread::checkExceptionOccurred()) {
+//        TRACE("native method throw a exception\n");
+//        jref eo = Thread::getException();
+//        Thread::clearException();
+//        frame->pushr(eo);
+//        goto opc_athrow;
+//    }
 
 //    if (frame->method->isSynchronized()) {
 //        _this->unlock();
@@ -1365,7 +1365,8 @@ opc_new: {
     initClass(c);
 
     if (c->isInterface() || c->isAbstract()) {
-        THROW_EXCEPTION(S(java_lang_InstantiationException), c->class_name);
+        throw java_lang_InstantiationException(c->class_name);
+//        THROW_EXCEPTION(S(java_lang_InstantiationException), c->class_name);
     }
 
     // jref o = newObject(c);
@@ -1380,7 +1381,8 @@ opc_newarray: {
     // 包括 boolean[], byte[], char[], short[], int[], long[], float[] 和 double[] 8种。
     jint arr_len = frame->popi();
     if (arr_len < 0) {
-        THROW_EXCEPTION(S(java_lang_NegativeArraySizeException), "len is %d", arr_len);
+        throw java_lang_NegativeArraySizeException("len is " + to_string(arr_len));
+//        THROW_EXCEPTION(S(java_lang_NegativeArraySizeException), "len is %d", arr_len);
     }
 
     auto arr_type = reader->readu1();
@@ -1392,7 +1394,8 @@ opc_anewarray: {
     // 创建一维引用类型数组
     jint arr_len = frame->popi();
     if (arr_len < 0) {
-        THROW_EXCEPTION(S(java_lang_NegativeArraySizeException), "len is %d", arr_len);
+        throw java_lang_NegativeArraySizeException("len is " + to_string(arr_len));
+//        THROW_EXCEPTION(S(java_lang_NegativeArraySizeException), "len is %d", arr_len);
     }
 
     index = reader->readu2();
@@ -1407,15 +1410,17 @@ opc_multianewarray: {
 
     u1 dim = reader->readu1(); // 多维数组的维度
     if (dim < 1) { // 必须大于或等于1
-        THROW_EXCEPTION(S(java_lang_UnknownError),
-                        "The dimensions must be greater than or equal to 1.");
+        throw java_lang_UnknownError("The dimensions must be greater than or equal to 1.");
+//        THROW_EXCEPTION(S(java_lang_UnknownError),
+//                        "The dimensions must be greater than or equal to 1.");
     }
 
     jint lens[dim];
     for (int i = dim - 1; i >= 0; i--) {
         lens[i] = frame->popi();
         if (lens[i] < 0) {
-            THROW_EXCEPTION(S(java_lang_NegativeArraySizeException), "len is %d", lens[i]);
+            throw java_lang_NegativeArraySizeException("len is %d" + to_string(lens[i]));
+//            THROW_EXCEPTION(S(java_lang_NegativeArraySizeException), "len is %d", lens[i]);
         }
     }
     frame->pushr(ac->allocMultiArray(dim, lens));
@@ -1425,7 +1430,8 @@ opc_arraylength: {
     Object *o = frame->popr();
     NULL_POINTER_CHECK(o);
     if (!o->isArrayObject()) {
-        THROW_EXCEPTION(S(java_lang_UnknownError), "not a array");
+        throw java_lang_UnknownError("not a array");
+//        THROW_EXCEPTION(S(java_lang_UnknownError), "not a array");
     }
     
     frame->pushi(((Array *) o)->arr_len);
@@ -1434,10 +1440,15 @@ opc_arraylength: {
 opc_athrow: {
     jref eo = frame->popr(); // exception object
     if (eo == jnull) {
-        Thread::signalException(S(java_lang_NullPointerException));
-        eo = Thread::getException();
-        assert(eo != nullptr);
-        Thread::clearException();
+        // 异常对象有可能为空
+        // 比如下面的Java代码:
+        // try {
+        //     Exception x = null;
+        //     throw x;
+        // } catch (NullPointerException e) {
+        //     e.printStackTrace();
+        // }
+        throw java_lang_NullPointerException();
     }
 
     // 遍历虚拟机栈找到可以处理此异常的方法
@@ -1461,8 +1472,7 @@ opc_athrow: {
 
         if (frame->vm_invoke) {
             // frame 由虚拟机调用，将异常交由虚拟机处理
-            Thread::setException(eo);
-            return nullptr;
+            throw UncaughtException(eo);
         }
 
         // frame 无法处理异常，弹出
@@ -1470,8 +1480,7 @@ opc_athrow: {
 
         if (frame->prev == nullptr) {
             // 虚拟机栈已空，还是无法处理异常，交由虚拟机处理
-            Thread::setException(eo);
-            return nullptr;
+            throw UncaughtException(eo);
         }
 
         TRACE("athrow: pop frame: %s\n", frame->toString().c_str());
@@ -1488,8 +1497,9 @@ opc_checkcast: {
     if (obj != jnull) {
         Class *c = cp->resolveClass(index);
         if (!checkcast(obj->clazz, c)) {
-            THROW_EXCEPTION(S(java_lang_ClassCastException),
-                            "class %s cannot be cast to %s", obj->clazz->class_name, c->class_name);
+            throw java_lang_ClassCastException(string(obj->clazz->class_name) + " cannot be cast to " + c->class_name);
+//            THROW_EXCEPTION(S(java_lang_ClassCastException),
+//                            "class %s cannot be cast to %s", obj->clazz->class_name, c->class_name);
         }
     }
     DISPATCH
@@ -1537,7 +1547,8 @@ opc_wide:
         case JVM_OPC_ret:    goto opc_ret;
         case JVM_OPC_iinc:   goto _wide_iinc;
         default:
-            THROW_EXCEPTION(S(java_lang_UnknownError), "never goes here.");
+            throw java_lang_UnknownError("never goes here.");
+//            THROW_EXCEPTION(S(java_lang_UnknownError), "never goes here.");
     }  
 opc_ifnull: {
     s2 offset = reader->reads2();
@@ -1554,13 +1565,13 @@ opc_ifnonnull: {
     DISPATCH
 }
 opc_goto_w:
-    THROW_EXCEPTION(S(java_lang_InternalError), "goto_w doesn't support");
+    throw java_lang_InternalError("goto_w doesn't support");
     DISPATCH
-opc_jsr_w: 
-    THROW_EXCEPTION(S(java_lang_InternalError), "jsr_w doesn't support after jdk 6.");
+opc_jsr_w:
+    throw java_lang_InternalError("jsr_w doesn't support after jdk 6.");
     DISPATCH
-opc_breakpoint:  
-    THROW_EXCEPTION(S(java_lang_InternalError), "breakpoint doesn't support in this jvm.");
+opc_breakpoint:
+    throw java_lang_InternalError("breakpoint doesn't support in this jvm.");
     DISPATCH
 opc_impdep2:
     JVM_PANIC("This instruction isn't used.\n"); // todo
@@ -1609,13 +1620,22 @@ slot_t *execJavaFunc(Method *method, const slot_t *args)
         frame->lvars[i] = args[i];
     }
 
-    slot_t *result = exec();
-    if (Thread::checkExceptionOccurred()) {
-        Thread::printStackTrace();
-        JVM_EXIT // todo
-    }
+    jref excep = nullptr;
 
-    return result;
+    while (true) {
+        try {
+            slot_t *result = exec(excep);
+            return result;
+        } catch (JavaException &e) {
+            excep = e.getExcep();
+        } catch (UncaughtException &e) {
+            printStackTrace(e.java_excep);
+            JVM_EXIT // todo
+//        throw e;
+        } catch (...) {
+            JVM_PANIC(""); // todo
+        }
+    }
 }
 
 slot_t *execJavaFunc(Method *method, initializer_list<slot_t> args)
@@ -1824,6 +1844,6 @@ static void callJNIMethod(Frame *frame)
         return;
     }
 
-    cout << frame->method->toString().c_str() << endl; ///////////////////////////////////////////////////////
-    JVM_PANIC("未实现的方法类型"); // todo
+    JVM_PANIC(frame->method->toString().c_str());
+//    throw java_lang_VirtualMachineError(string("未实现的方法类型: ") + frame->method->toString());
 }

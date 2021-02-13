@@ -6,6 +6,7 @@
 #include "../runtime/vm_thread.h"
 #include "../metadata/class.h"
 #include "constants.h"
+#include "../exception.h"
 
 using namespace std;
 using namespace slot;
@@ -51,8 +52,7 @@ void ElementValue::read(BytecodeReader &r)
             }
             break;
         default:
-            JVM_PANIC("unknown tag: %d\n", tag); // todo
-            SIGNAL_EXCEPTION(S(java_lang_UnknownError), "unknown tag: %d\n", tag);
+            throw java_lang_UnknownError("unknown tag: "+ to_string(tag));
     }
 }
 

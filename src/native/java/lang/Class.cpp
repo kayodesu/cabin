@@ -7,6 +7,7 @@
 #include "../../../runtime/frame.h"
 #include "../../../runtime/vm_thread.h"
 #include "../../jni_internal.h"
+#include "../../../exception.h"
 
 using namespace std;
 using namespace utf8;
@@ -24,13 +25,11 @@ static jclass forName0(jstring name, jboolean initialize, jobject loader, jclass
 
     Class *c = loadClass(loader, dot2SlashDup(utf8_name));
     if (c == nullptr) {
-        Thread::signalException(S(java_lang_ClassNotFoundException));
-        return nullptr;
+        throw java_lang_ClassNotFoundException();
     }
     if (initialize) {
         initClass(c);
     }
-
     return c->java_mirror;
 }
 
@@ -212,7 +211,7 @@ static jboolean isInstance(jclass _this, jobject obj)
 static jboolean isAssignableFrom(jclass _this, jclass cls)
 {
     if (cls == nullptr) {
-        Thread::signalException(S(java_lang_NullPointerException));
+        throw java_lang_NullPointerException();
         return false;
     }
 

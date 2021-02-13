@@ -174,8 +174,9 @@ extern const char *symbol_values[];
     action(java_lang_Error, "java/lang/Error"), \
     action(java_lang_UnknownError, "java/lang/UnknownError"), \
     action(java_lang_LinkageError, "java/lang/LinkageError"), \
-    action(java_lang_InternalError, "java/lang/InternalError"), \
-    action(java_lang_ClassFormatError, "java/lang/ClassFormatError"), \
+    action(java_lang_InternalError, "java/lang/InternalError"),     \
+    action(java_lang_ClassFormatError, "java/lang/ClassFormatError"),   \
+    action(java_lang_VirtualMachineError, "java/lang/VirtualMachineError"), \
     action(java_lang_OutOfMemoryError, "java/lang/OutOfMemoryError"), \
     action(java_lang_NoSuchFieldError, "java/lang/NoSuchFieldError"), \
     action(java_lang_NoSuchMethodError, "java/lang/NoSuchMethodError"), \

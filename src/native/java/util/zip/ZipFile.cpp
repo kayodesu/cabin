@@ -4,6 +4,7 @@
 #include "../../../../cabin.h"
 #include "../../../../objects/object.h"
 #include "../../../../runtime/vm_thread.h"
+#include "../../../../exception.h"
 
 // private static native void initIDs();
 void initIDs()
@@ -19,8 +20,7 @@ jlong __open(jstring name, jint mode, jlong lastModified, jboolean usemmap)
     // todo 其他几个参数怎么搞？？
     unzFile jzfile = unzOpen64(utf8);
     if (jzfile == nullptr) {
-        Thread::signalException(S(java_io_IOException), utf8);
-        return 0;
+        throw java_io_IOException(utf8);
     }
 
     return (jlong) (jzfile);

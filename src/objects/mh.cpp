@@ -7,6 +7,7 @@
 #include "../interpreter/interpreter.h"
 #include "../metadata/descriptor.h"
 #include "../runtime/vm_thread.h"
+#include "../exception.h"
 
 using namespace std;
 using namespace slot;
@@ -54,9 +55,6 @@ jref findMethodType(const utf8_t *desc, jref loader)
     assert(desc != nullptr);
 
     pair<Array *, ClsObj *> p = parseMethodDescriptor(desc, loader);
-    if (Thread::checkExceptionOccurred())
-        return nullptr;
-
     return findMethodType(p.second, p.first);
 }
 
@@ -313,7 +311,7 @@ void initMemberName(jref member_name, jref target)
         return;
     }
     JVM_PANIC("initMemberName: unimplemented target"); // todo
-    Thread::signalException(S(java_lang_InternalError), "initMemberName: unimplemented target");
+    throw java_lang_InternalError("initMemberName: unimplemented target");
 }
 
 void expandMemberName(jref member_name)
@@ -354,8 +352,7 @@ Object *resolveMemberName(jref member_name, Class *caller)
 
     if(clazz == nullptr || name_str == nullptr || type == nullptr) {
         JVM_PANIC("resolveMemberName"); // todo
-        Thread::signalException(S(java_lang_IllegalArgumentException), nullptr);
-        return nullptr;
+        throw java_lang_IllegalArgumentException();
     }
 
     const utf8_t *name = save(name_str->toUtf8());
@@ -381,8 +378,7 @@ Object *resolveMemberName(jref member_name, Class *caller)
             }
             if (m == nullptr) {
                 // todo
-                Thread::signalException(S(java_lang_NoSuchMethodError), "resolve member name, METHOD");
-                return nullptr;
+                throw java_lang_NoSuchMethodError("resolve member name, METHOD");
 //                JVM_PANIC("error");
             }
 
@@ -394,8 +390,7 @@ Object *resolveMemberName(jref member_name, Class *caller)
             Method *m = clazz->lookupMethod(name, sig);
             if (m == nullptr) {
                 // todo
-                Thread::signalException(S(java_lang_NoSuchMethodError), "resolve member name, CONSTRUCTOR");
-                return nullptr;
+                throw java_lang_NoSuchMethodError("resolve member name, CONSTRUCTOR");
 //                JVM_PANIC("error");
             }
 
@@ -407,7 +402,7 @@ Object *resolveMemberName(jref member_name, Class *caller)
             Field *f = clazz->lookupField(name, sig);
             if (f == nullptr) {
                 // todo
-                Thread::signalException(S(java_lang_NoSuchFieldError), "resolve member name, FIELD");
+                throw java_lang_NoSuchFieldError("resolve member name, FIELD");
                 return nullptr;
 //                JVM_PANIC("error");
             }
@@ -417,7 +412,7 @@ Object *resolveMemberName(jref member_name, Class *caller)
             return member_name;
         }
         default:
-            Thread::signalException(S(java_lang_LinkageError), "resolve member name");; // todo
+            throw java_lang_LinkageError("resolve member name");; // todo
     }
 
     return nullptr;;

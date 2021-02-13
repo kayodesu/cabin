@@ -43,7 +43,7 @@ add_executable(cabin
         src/metadata/method.cpp src/metadata/field.cpp src/metadata/constant_pool.cpp src/native/jni.cpp
         src/objects/array.cpp
         src/objects/class_loader.cpp src/objects/prims.cpp src/objects/mh.cpp
-        src/objects/object.cpp src/metadata/class.cpp src/objects/java_classes.cpp src/slot.cpp src/classpath/classpath.cpp src/classpath/classpath.h src/native/jni.h)
+        src/objects/object.cpp src/metadata/class.cpp src/objects/java_classes.cpp src/slot.cpp src/classpath/classpath.cpp src/classpath/classpath.h src/native/jni.h src/exception.cpp src/exception.h)
 
 target_link_libraries(cabin libz)
 target_link_libraries(cabin libminizip)

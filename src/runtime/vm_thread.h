@@ -134,25 +134,11 @@ public:
 
 private:
     jref exception = nullptr;
-public:
-    static void signalException(const char *excep_class_name, const char *message = nullptr);
-    static void setException(Object *exp);
-    static jref getException();
-    static bool checkExceptionOccurred();
-    static void clearException();
-    static void printStackTrace();
 
     //friend Monitor;
 };
 
 extern Thread *g_main_thread;
-
-#define SIGNAL_EXCEPTION(excep_class_name, ...) \
-do { \
-    char msg[EXCEPTION_MSG_MAX_LEN] = { 0 }; \
-    snprintf(msg, EXCEPTION_MSG_MAX_LEN, __VA_ARGS__); \
-    Thread::signalException(excep_class_name, msg); \
-} while(false)
 
 Thread *initMainThread();
 

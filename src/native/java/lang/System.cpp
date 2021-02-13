@@ -7,6 +7,7 @@
 #include "../../../runtime/frame.h"
 #include "../../../runtime/vm_thread.h"
 #include "../../../metadata/class.h"
+#include "../../../exception.h"
 
 using namespace std;
 using namespace chrono;
@@ -26,8 +27,7 @@ using namespace chrono;
 static jstring mapLibraryName(jstring libname)
 {
     if (libname == nullptr) {
-        Thread::signalException(S(java_lang_NullPointerException));
-        return jnull;
+        throw java_lang_NullPointerException();
     }
 
     const char *name = libname->toUtf8();

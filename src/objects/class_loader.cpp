@@ -12,6 +12,7 @@
 #include "prims.h"
 #include "java_classes.h"
 #include "../classpath/classpath.h"
+#include "../exception.h"
 
 using namespace std;
 using namespace utf8;
@@ -119,8 +120,7 @@ Class *loadTypeArrayClass(ArrayType type)
         case JVM_AT_INT:     arr_class_name = S(array_I); break;
         case JVM_AT_LONG:    arr_class_name = S(array_J); break;
         default:
-            SIGNAL_EXCEPTION(S(java_lang_UnknownError), "Invalid array type: %d\n", type);
-            return nullptr;
+            throw java_lang_UnknownError("Invalid array type: " + to_string(type));
     }
 
     return loadArrayClass(arr_class_name);

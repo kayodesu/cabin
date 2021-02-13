@@ -5,6 +5,7 @@
 #include "../objects/prims.h"
 #include "../objects/array.h"
 #include "../runtime/vm_thread.h"
+#include "../exception.h"
 
 using namespace std;
 
@@ -56,8 +57,7 @@ static Object *convertDescElement2ClassObject(char *&b, char *e, jref loader)
     }
 
 error:
-    Thread::signalException(S(java_lang_UnknownError), nullptr); // todo
-    return nullptr;
+    throw java_lang_UnknownError(); // todo
 }
 
 int numElementsInDescriptor(const char *b, const char *e)
@@ -105,9 +105,6 @@ static Array *convertDesc2ClassObjectArray(char *b, char *e, jref loader)
 
     for (int i = 0; b < e; i++) {
         Object *co = convertDescElement2ClassObject(b, e, loader);
-        if (Thread::checkExceptionOccurred())
-            return nullptr;
-
         assert(i < num);
         types->setRef(i, co);
     }
@@ -121,8 +118,7 @@ pair<Array *, ClsObj *> parseMethodDescriptor(const char *desc, jref loader)
 
     char *e = strchr(desc, ')');
     if (e == nullptr || *desc != '(') {
-        Thread::signalException(S(java_lang_UnknownError), nullptr); // todo
-        return make_pair(nullptr, nullptr);
+        throw java_lang_UnknownError(); // todo
     }
 
     Array *ptypes = convertDesc2ClassObjectArray((char *) (desc + 1), e, loader);

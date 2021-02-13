@@ -3,26 +3,25 @@
 #include "../../../../objects/prims.h"
 #include "../../../../metadata/class.h"
 #include "../../../../runtime/vm_thread.h"
+#include "../../../../exception.h"
 
+using namespace std;
 using namespace utf8;
 
 // public static native Object get(Object array, int index)
 //              throws IllegalArgumentException, ArrayIndexOutOfBoundsException;
-static jobject get(jobject array, jint index)
+static jobject _get(jobject array, jint index)
 {
     if (array == nullptr) {
-        Thread::signalException(S(java_lang_NullPointerException));
-        return nullptr;
+        throw java_lang_NullPointerException();
     }
-    if (array->clazz->class_name[0] != '[') {
-        Thread::signalException(S(java_lang_IllegalArgumentException), "Argument is not an array");
-        return nullptr;
+    if (array->isArrayObject()) {
+        throw java_lang_IllegalArgumentException("Argument is not an array");
     }
 
-    Array *arr = (Array *) array;    
+    auto arr = (Array *) array;
     if (index < 0 || index >= arr->arr_len) {
-        SIGNAL_EXCEPTION(S(java_lang_ArrayIndexOutOfBoundsException), "%d", index);
-        return nullptr;
+        throw java_lang_ArrayIndexOutOfBoundsException(to_string(index));
     }
 
     switch (arr->clazz->class_name[1]) {
@@ -50,74 +49,70 @@ static jobject get(jobject array, jint index)
 // public static native void set(Object array, int index, Object value)
 //               throws IllegalArgumentException, ArrayIndexOutOfBoundsException;
 static void set(jobject array, jint index, jobject value)
-{    
+{
     if (array == nullptr) {
-        Thread::signalException(S(java_lang_NullPointerException));
-        return;
+        throw java_lang_NullPointerException();
     }
-    if (array->clazz->class_name[0] != '[') {
-        Thread::signalException(S(java_lang_IllegalArgumentException), "Argument is not an array");
-        return;
+    if (array->isArrayObject()) {
+        throw java_lang_IllegalArgumentException("Argument is not an array");
     }
 
-    Array *arr = (Array *) array;    
+    auto arr = (Array *) array;
     if (index < 0 || index >= arr->arr_len) {
-        SIGNAL_EXCEPTION(S(java_lang_ArrayIndexOutOfBoundsException), "%d", index);
-        return;
+        throw java_lang_ArrayIndexOutOfBoundsException(to_string(index));
     }
 
     if (arr->isPrimArray() && value == nullptr) {
         // 基本类型的数组无法设空值
-        Thread::signalException(S(java_lang_IllegalArgumentException), nullptr);
-        return;
+        throw java_lang_IllegalArgumentException();
     }
 
     switch (arr->clazz->class_name[1]) {
     case 'Z': // boolean[]
-        if (!equals(value->clazz->class_name, S(java_lang_Boolean))) 
-            Thread::signalException(S(java_lang_IllegalArgumentException), "argument type mismatch");
+        if (!equals(value->clazz->class_name, S(java_lang_Boolean)))
+            throw java_lang_IllegalArgumentException("argument type mismatch");
         else
             arr->setBoolean(index, slot::getBool(value->unbox()));
         return;
     case 'B': // byte[]
-        if (!equals(value->clazz->class_name, S(java_lang_Byte))) 
-            Thread::signalException(S(java_lang_IllegalArgumentException), "argument type mismatch");
+        if (!equals(value->clazz->class_name, S(java_lang_Byte)))
+            throw java_lang_IllegalArgumentException("argument type mismatch");
         else
             arr->setByte(index, slot::getByte(value->unbox()));
         return;
     case 'C': // char[]
-        if (!equals(value->clazz->class_name, S(java_lang_Character))) 
-            Thread::signalException(S(java_lang_IllegalArgumentException), "argument type mismatch");
+        if (!equals(value->clazz->class_name, S(java_lang_Character)))
+            throw java_lang_IllegalArgumentException("argument type mismatch");
         else
             arr->setChar(index, slot::getChar(value->unbox()));
         return;
     case 'S': // short[]
-        if (!equals(value->clazz->class_name, S(java_lang_Short))) 
-            Thread::signalException(S(java_lang_IllegalArgumentException), "argument type mismatch");
+        if (!equals(value->clazz->class_name, S(java_lang_Short)))
+            throw java_lang_IllegalArgumentException("argument type mismatch");
         else
             arr->setShort(index, slot::getShort(value->unbox()));
         return;
     case 'I': // int[]
-        if (!equals(value->clazz->class_name, S(java_lang_Integer))) 
-            Thread::signalException(S(java_lang_IllegalArgumentException), "argument type mismatch");
+        if (!equals(value->clazz->class_name, S(java_lang_Integer)))
+            throw java_lang_IllegalArgumentException("argument type mismatch");
         else
             arr->setInt(index, slot::getInt(value->unbox()));
         return;    
     case 'J': // long[]
-        if (!equals(value->clazz->class_name, S(java_lang_Long))) 
-            Thread::signalException(S(java_lang_IllegalArgumentException), "argument type mismatch");
+        if (!equals(value->clazz->class_name, S(java_lang_Long)))
+            throw java_lang_IllegalArgumentException("argument type mismatch");
         else
             arr->setLong(index, slot::getLong(value->unbox()));
         return;    
     case 'F': // float[]
-        if (!equals(value->clazz->class_name, S(java_lang_Float))) 
-            Thread::signalException(S(java_lang_IllegalArgumentException), "argument type mismatch");
+        if (!equals(value->clazz->class_name, S(java_lang_Float)))
+            throw java_lang_IllegalArgumentException("argument type mismatch");
         else
             arr->setFloat(index, slot::getFloat(value->unbox()));
         return;    
     case 'D': // double[]
-        if (!equals(value->clazz->class_name, S(java_lang_Double))) 
-            Thread::signalException(S(java_lang_IllegalArgumentException), "argument type mismatch");
+        if (!equals(value->clazz->class_name, S(java_lang_Double)))
+            throw java_lang_IllegalArgumentException("argument type mismatch");
         else
             arr->setDouble(index, slot::getDouble(value->unbox()));
         return;    
@@ -131,12 +126,10 @@ static void set(jobject array, jint index, jobject value)
 static jint getLength(jobject array)
 {
     if (array == nullptr) {
-        Thread::signalException(S(java_lang_NullPointerException));
-        return -1;
+        throw java_lang_NullPointerException();
     }
-    if (array->clazz->class_name[0] != '[') {
-        Thread::signalException(S(java_lang_IllegalArgumentException), "Argument is not an array");
-        return -1;
+    if (array->isArrayObject()) {
+        throw java_lang_IllegalArgumentException("Argument is not an array");
     }
 
     auto arr = dynamic_cast<Array *>(array);
@@ -146,22 +139,20 @@ static jint getLength(jobject array)
 
 // private static native Object newArray(Class<?> componentType, int length)
 //                  throws NegativeArraySizeException;
-static jobject newArray_(jclass componentType, jint length)
+static jobject newArray_(jclass component_type, jint length)
 {
-    if (componentType == nullptr) {
-        Thread::signalException(S(java_lang_NullPointerException));
-        return nullptr;
+    if (component_type == nullptr) {
+        throw java_lang_NullPointerException();
     }
     if (length < 0) {
-        Thread::signalException(S(java_lang_NegativeArraySizeException));
-        return nullptr;
+        throw java_lang_NegativeArraySizeException();
     }
-    return componentType->jvm_mirror->arrayClass()->allocArray(length);
+    return component_type->jvm_mirror->arrayClass()->allocArray(length);
 }
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "get", _OBJ "I)" OBJ, TA(get) },
+        { "get", _OBJ "I)" OBJ, TA(_get) },
         { "set", _OBJ "ILjava/lang/Object;)V", TA(set) },
         { "getLength", _OBJ ")I", TA(getLength) },
         { "newArray", _CLS "I)" OBJ, TA(newArray_) },
