@@ -23,23 +23,6 @@ public:
 
     void *index(jint index0) const;
 
-    // set prim type value
-    // template <typename T>
-    // void set(jint index0, T data)
-    // {
-    //     if(!((typeid(T) == typeid(jbyte)) 
-    //             || (typeid(T) == typeid(jbool)) 
-    //             || (typeid(T) == typeid(jchar)) 
-    //             || (typeid(T) == typeid(jshort)) 
-    //             || (typeid(T) == typeid(jint)) 
-    //             || (typeid(T) == typeid(jlong)) 
-    //             || (typeid(T) == typeid(jfloat))
-    //             || (typeid(T) == typeid(jdouble)))) {
-    //         printf("--- %s\n", typeid(T).name());
-    //             }
-    //     *(T *) index(index0) = data;
-    // }
-
 #define setT(jtype, Type)                      \
     void set##Type(jint i, jtype v)            \
     {                                          \
