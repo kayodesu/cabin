@@ -913,7 +913,7 @@ opc_if_icmple:
 
 opc_goto: {
     s2 offset = reader->reads2();
-    reader->skip(offset - 3);  // minus instruction length
+    reader->skip(offset - opcode_len[JVM_OPC_goto]);
     DISPATCH
 }
 
@@ -1366,7 +1366,6 @@ opc_new: {
 
     if (c->isInterface() || c->isAbstract()) {
         throw java_lang_InstantiationException(c->class_name);
-//        THROW_EXCEPTION(S(java_lang_InstantiationException), c->class_name);
     }
 
     // jref o = newObject(c);
@@ -1382,7 +1381,6 @@ opc_newarray: {
     jint arr_len = frame->popi();
     if (arr_len < 0) {
         throw java_lang_NegativeArraySizeException("len is " + to_string(arr_len));
-//        THROW_EXCEPTION(S(java_lang_NegativeArraySizeException), "len is %d", arr_len);
     }
 
     auto arr_type = reader->readu1();
@@ -1395,7 +1393,6 @@ opc_anewarray: {
     jint arr_len = frame->popi();
     if (arr_len < 0) {
         throw java_lang_NegativeArraySizeException("len is " + to_string(arr_len));
-//        THROW_EXCEPTION(S(java_lang_NegativeArraySizeException), "len is %d", arr_len);
     }
 
     index = reader->readu2();
@@ -1411,8 +1408,6 @@ opc_multianewarray: {
     u1 dim = reader->readu1(); // 多维数组的维度
     if (dim < 1) { // 必须大于或等于1
         throw java_lang_UnknownError("The dimensions must be greater than or equal to 1.");
-//        THROW_EXCEPTION(S(java_lang_UnknownError),
-//                        "The dimensions must be greater than or equal to 1.");
     }
 
     jint lens[dim];
@@ -1420,7 +1415,6 @@ opc_multianewarray: {
         lens[i] = frame->popi();
         if (lens[i] < 0) {
             throw java_lang_NegativeArraySizeException("len is %d" + to_string(lens[i]));
-//            THROW_EXCEPTION(S(java_lang_NegativeArraySizeException), "len is %d", lens[i]);
         }
     }
     frame->pushr(ac->allocMultiArray(dim, lens));
@@ -1431,7 +1425,6 @@ opc_arraylength: {
     NULL_POINTER_CHECK(o);
     if (!o->isArrayObject()) {
         throw java_lang_UnknownError("not a array");
-//        THROW_EXCEPTION(S(java_lang_UnknownError), "not a array");
     }
     
     frame->pushi(((Array *) o)->arr_len);
@@ -1497,9 +1490,8 @@ opc_checkcast: {
     if (obj != jnull) {
         Class *c = cp->resolveClass(index);
         if (!checkcast(obj->clazz, c)) {
-            throw java_lang_ClassCastException(string(obj->clazz->class_name) + " cannot be cast to " + c->class_name);
-//            THROW_EXCEPTION(S(java_lang_ClassCastException),
-//                            "class %s cannot be cast to %s", obj->clazz->class_name, c->class_name);
+            throw java_lang_ClassCastException(
+                    string(obj->clazz->class_name) + " cannot be cast to " + c->class_name);
         }
     }
     DISPATCH
@@ -1548,7 +1540,6 @@ opc_wide:
         case JVM_OPC_iinc:   goto _wide_iinc;
         default:
             throw java_lang_UnknownError("never goes here.");
-//            THROW_EXCEPTION(S(java_lang_UnknownError), "never goes here.");
     }  
 opc_ifnull: {
     s2 offset = reader->reads2();
@@ -1560,7 +1551,7 @@ opc_ifnull: {
 opc_ifnonnull: {
     s2 offset = reader->reads2();
     if (frame->popr() != jnull) {
-        reader->skip(offset - 3); // minus instruction length
+        reader->skip(offset - opcode_len[JVM_OPC_ifnonnull]);
     }
     DISPATCH
 }
@@ -1574,10 +1565,10 @@ opc_breakpoint:
     throw java_lang_InternalError("breakpoint doesn't support in this jvm.");
     DISPATCH
 opc_impdep2:
-    JVM_PANIC("This instruction isn't used.\n"); // todo
+    throw java_lang_InternalError("opc_impdep2 isn't used.");
     DISPATCH            
 opc_unused:
-    JVM_PANIC("This instruction isn't used. %d(0x%x)\n", opcode, opcode); // todo
+    throw java_lang_InternalError("This instruction isn't used. " + to_string(opcode));
     DISPATCH    
 }
 
@@ -1631,7 +1622,6 @@ slot_t *execJavaFunc(Method *method, const slot_t *args)
         } catch (UncaughtException &e) {
             printStackTrace(e.java_excep);
             JVM_EXIT // todo
-//        throw e;
         } catch (...) {
             JVM_PANIC(""); // todo
         }
@@ -1669,8 +1659,8 @@ slot_t *execJavaFunc(Method *method, std::initializer_list<jref> args)
 slot_t *execJavaFunc(Method *m, jref _this, Array *args)
 {
     assert(m != nullptr);
-    // If m is static, _this is nullptr.
 
+    // If m is static, _this is nullptr.
     if (args == nullptr) {
         if (_this != nullptr)
             return execJavaFunc(m, {_this});
