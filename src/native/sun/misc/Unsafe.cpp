@@ -738,31 +738,32 @@ static jint _pageSize(jobject _this)
 }
 
 /**
-  * Define a class but do not make it known to the class loader or system dictionary.
-  * 
-  * For each CP entry, the corresponding CP patch must either be null or have
-  * the a format that matches its tag:
-  * 1. Integer, Long, Float, Double: the corresponding wrapper object type from java.lang
-  * 2. Utf8: a string (must have suitable syntax if used as signature or name)
-  * 3. Class: any java.lang.Class object
-  * 4. String: any object (not just a java.lang.String)
-  * 5. InterfaceMethodRef: (NYI) a method handle to invoke on that call site's arguments
-  * 
-  * @hostClass context for linkage, access control, protection domain, and class loader
-  * @data      bytes of a class file
-  * @cpPatches where non-null entries exist, they replace corresponding CP entries in data
-  */
+ * Define a class but do not make it known to the class loader or system dictionary.
+ *
+ * For each CP entry, the corresponding CP patch must either be null or have
+ * the a format that matches its tag:
+ * 1. Integer, Long, Float, Double: the corresponding wrapper object type from java.lang
+ * 2. Utf8: a string (must have suitable syntax if used as signature or name)
+ * 3. Class: any java.lang.Class object
+ * 4. String: any object (not just a java.lang.String)
+ * 5. InterfaceMethodRef: (NYI) a method handle to invoke on that call site's arguments
+ *
+ * @hostClass context for linkage, access control, protection domain, and class loader
+ * @data      bytes of a class file
+ * @cpPatches where non-null entries exist, they replace corresponding CP entries in data
+ */
 // public native Class defineAnonymousClass(Class hostClass, byte[] data, Object[] cpPatches);
 static jclass defineAnonymousClass(jobject _this, jclass host_class, jobject data, jobject _cp_patches)
 {
-    assert(host_class != nullptr && data != nullptr);
-    assert(data->isArrayObject() && _cp_patches->isArrayObject());
-    auto cp_patches = dynamic_cast<Array *>(_cp_patches);
+    assert(host_class != nullptr);
+    assert(data != nullptr && data->isArrayObject());
+    assert(_cp_patches == nullptr || _cp_patches->isArrayObject());
 
     Class *c = defineClass(host_class->jvm_mirror->loader, (u1 *) data->data, ((Array *)data)->arr_len);
     if (c == nullptr)
         return nullptr; // todo
 
+    auto cp_patches = dynamic_cast<Array *>(_cp_patches);
     int cp_patches_len = cp_patches == nullptr ? 0 : cp_patches->arr_len;
     for (int i = 0; i < cp_patches_len; i++) {
         auto o = cp_patches->get<jobject>(i);

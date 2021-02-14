@@ -1,4 +1,5 @@
 #include <cstdarg>
+#include <iostream>
 #include "../../../jni_internal.h"
 #include "../../../../cabin.h"
 #include "../../../../runtime/frame.h"
@@ -28,8 +29,10 @@ using namespace utf8;
  * @throws Throwable anything thrown by the underlying method propagates unchanged through the method handle call
  */
 // public final native @PolymorphicSignature Object invokeExact(Object... args) throws Throwable;
-static jobject invokeExact(jobject _this, ...)
+static jobject invokeExact(const slot_t *args)
 {
+    assert(args != nullptr);
+    jref _this = getRef(args);
     assert(_this != nullptr);
     // _this is a object of subclass of java.lang.invoke.MethodHandle
 
@@ -77,14 +80,33 @@ static jobject invokeExact(jobject _this, ...)
  * @throws Throwable anything thrown by the underlying method propagates unchanged through the method handle call
  */
 // public final native @PolymorphicSignature Object invoke(Object... args) throws Throwable;
-static jobject invoke(jobject _this, ...)
+static jobject invoke(const slot_t *args)
 {
+    assert(args != nullptr);
+    jref _this = getRef(args);
     assert(_this != nullptr);
     // _this is a object of subclass of java.lang.invoke.MethodHandle
 
+    // final LambdaForm form;
+    jref form = _this->getRefField("form", "Ljava/lang/invoke/LambdaForm;");
+    assert(form != nullptr);
+
+    // MemberName vmentry;
+    jref vmentry = form->getRefField("vmentry", "Ljava/lang/invoke/MemberName;");
+    assert(vmentry != nullptr);
+
+    //@Injected JVM_Method* vmtarget;
+    auto vmtarget = (Method *) (void *) vmentry->getRefField("vmtarget", S(sig_java_lang_Object));
+    assert(vmtarget != nullptr);
+
+    slot_t *slot = execJavaFunc(vmtarget, args);
+    return getRef(slot);
+
+#if 0
     // MemberName internalMemberName();
     Method *m = _this->clazz->lookupInstMethod("internalMemberName", "()Ljava/lang/invoke/MemberName;");
     jref member_name = getRef(execJavaFunc(m, {_this}));
+    assert(member_name != nullptr);
     // private Class<?> clazz;       // class in which the method is defined
     // private String   name;        // may be null if not yet materialized
     // private Object   type;        // may be null if not yet materialized
@@ -96,22 +118,58 @@ static jobject invoke(jobject _this, ...)
     jref method_type = getRef(execJavaFunc(m, {member_name}));
     string desc = unparseMethodDescriptor(method_type);
     // todo 判断desc，如果有基本类型参数，则参数值要进行unbox。
-    
-    int num = numElementsInMethodDescriptor(desc.c_str());
-    slot_t args[num];
 
-    va_list ap;
-    va_start(ap, _this);
-    for (int i = 0; i < num; i++) {
-        Object *o = va_arg(ap, Object *);
-        args[i] = rslot(o);
-    }
-    va_end(ap);
+//    int num = numElementsInMethodDescriptor(desc.c_str());
+//    slot_t args[num];
+//
+//    va_list ap;
+//    va_start(ap, _this);
+//    for (int i = 0; i < num; i++) {
+//        Object *o = va_arg(ap, Object *);
+//        args[i] = rslot(o);
+//    }
+//    va_end(ap);
 
     m = c->lookupMethod(name, desc.c_str());
     slot_t *slot = execJavaFunc(m, args);
     return getRef(slot);
+#endif
 }
+//static jobject invoke(jobject _this, ...)
+//{
+//    assert(_this != nullptr);
+//    // _this is a object of subclass of java.lang.invoke.MethodHandle
+//
+//    // MemberName internalMemberName();
+//    Method *m = _this->clazz->lookupInstMethod("internalMemberName", "()Ljava/lang/invoke/MemberName;");
+//    jref member_name = getRef(execJavaFunc(m, {_this}));
+//    // private Class<?> clazz;       // class in which the method is defined
+//    // private String   name;        // may be null if not yet materialized
+//    // private Object   type;        // may be null if not yet materialized
+//    Class *c = member_name->getRefField<ClsObj>(S(clazz), S(sig_java_lang_Class))->jvm_mirror;
+//    auto name = member_name->getRefField(S(name), S(sig_java_lang_String))->toUtf8();
+//
+//    // public MethodType getInvocationType()
+//    m = member_name->clazz->lookupInstMethod("getInvocationType", "()Ljava/lang/invoke/MethodType;");
+//    jref method_type = getRef(execJavaFunc(m, {member_name}));
+//    string desc = unparseMethodDescriptor(method_type);
+//    // todo 判断desc，如果有基本类型参数，则参数值要进行unbox。
+//
+//    int num = numElementsInMethodDescriptor(desc.c_str());
+//    slot_t args[num];
+//
+//    va_list ap;
+//    va_start(ap, _this);
+//    for (int i = 0; i < num; i++) {
+//        Object *o = va_arg(ap, Object *);
+//        args[i] = rslot(o);
+//    }
+//    va_end(ap);
+//
+//    m = c->lookupMethod(name, desc.c_str());
+//    slot_t *slot = execJavaFunc(m, args);
+//    return getRef(slot);
+//}
 
 /**
  * Private method for trusted invocation of a method handle respecting simplified signatures.
@@ -131,9 +189,27 @@ static jobject invoke(jobject _this, ...)
  * @return the signature-polymorphic result, statically represented using {@code Object}
  */
 // final native @PolymorphicSignature Object invokeBasic(Object... args) throws Throwable;
-static jobject invokeBasic(jobject _this, ...)
+static jobject invokeBasic(const slot_t *args)
 {
-    JVM_PANIC("invokeBasic");
+    assert(args != nullptr);
+    jref _this = getRef(args);
+    assert(_this != nullptr);
+    // _this is a object of subclass of java.lang.invoke.MethodHandle
+
+    // final LambdaForm form;
+    jref form = _this->getRefField("form", "Ljava/lang/invoke/LambdaForm;");
+    assert(form != nullptr);
+
+    // MemberName vmentry;
+    jref vmentry = form->getRefField("vmentry", "Ljava/lang/invoke/MemberName;");
+    assert(vmentry != nullptr);
+
+    //@Injected JVM_Method* vmtarget;
+    auto vmtarget = (Method *) (void *) vmentry->getRefField("vmtarget", S(sig_java_lang_Object));
+    assert(vmtarget != nullptr);
+
+    slot_t *slot = execJavaFunc(vmtarget, args);
+    return getRef(slot);
 }
 
 /**

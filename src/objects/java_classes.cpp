@@ -13,7 +13,7 @@ void checkInjectedFields(Class *c)
             c->injectInstField("vmindex", S(I));
             c->injectInstField("vmtarget", S(sig_java_lang_Object));
         } catch (runtime_error &e) {
-            JVM_PANIC(e.what());
+            JVM_PANIC(e.what()); // todo
         }
     }
 }

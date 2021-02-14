@@ -1,3 +1,4 @@
+#include <iostream>
 #include "../symbol.h"
 #include "../slot.h"
 #include "mh.h"
@@ -22,6 +23,7 @@ static Field *mn_clazz_field;
 static Field *mn_name_field;
 static Field *mn_type_field;
 static Field *mn_flags_field;
+static Field *mn_vmtarget_field;
 static Method *mn_getSignature_method;
 
 void initMethodHandle()
@@ -39,14 +41,17 @@ void initMethodHandle()
     mn_type_field = c->getDeclaredField(S(type), S(sig_java_lang_Object));
     // private int flags;
     mn_flags_field = c->getDeclaredField(S(flags), S(I));
+    // private int flags;
+    mn_vmtarget_field = c->getDeclaredField("vmtarget", S(sig_java_lang_Object));
     // public String getSignature();
     mn_getSignature_method = c->getDeclaredInstMethod("getSignature", S(___java_lang_String));
 
     if (constructor_reflect_class == nullptr || method_reflect_class == nullptr
         || field_reflect_class == nullptr || member_name_class == nullptr
         || mn_clazz_field == nullptr || mn_name_field == nullptr || mn_type_field == nullptr
-        || mn_flags_field == nullptr || mn_getSignature_method == nullptr) {
-        throw new runtime_error("initMethodHandle"); // todo
+        || mn_flags_field == nullptr || mn_vmtarget_field == nullptr
+        || mn_getSignature_method == nullptr) {
+        throw runtime_error("initMethodHandle"); // todo
     }
 }
 
@@ -229,6 +234,7 @@ void initMemberName(jref member_name, jref target)
 
         member_name->setRefField(mn_clazz_field, decl_class->java_mirror);
         member_name->setIntField(mn_flags_field, flags);
+        member_name->setRefField(mn_vmtarget_field, (jref) (void *) m);
         return;
 
 //        int slot = INST_DATA(target, int, mthd_slot_offset);
@@ -384,6 +390,12 @@ Object *resolveMemberName(jref member_name, Class *caller)
 
             flags |= methodFlags(m);
             member_name->setIntField(mn_flags_field, flags);
+
+            auto aa = clazz->class_name;
+            auto bb = name;
+            auto cc = sig;
+
+            member_name->setRefField(mn_vmtarget_field, (jref) (void *) m);
             return member_name;
         }
         case IS_CONSTRUCTOR: {
@@ -396,6 +408,7 @@ Object *resolveMemberName(jref member_name, Class *caller)
 
             flags |= methodFlags(m);
             member_name->setIntField(mn_flags_field, flags);
+            member_name->setRefField(mn_vmtarget_field, (jref) (void *) m);
             return member_name;
         }
         case IS_FIELD: {
@@ -409,6 +422,7 @@ Object *resolveMemberName(jref member_name, Class *caller)
 
             flags |= f->access_flags;
             member_name->setIntField(mn_flags_field, flags);
+            member_name->setRefField(mn_vmtarget_field, (jref) (void *) f);
             return member_name;
         }
         default:

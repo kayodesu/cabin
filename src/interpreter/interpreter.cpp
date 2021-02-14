@@ -1709,11 +1709,25 @@ static void callJNIMethod(Frame *frame)
     const type_info &type = frame->method->native_method->type;
     void *func = frame->method->native_method->func;
 
+    // 应对 java/lang/invoke/MethodHandle.java 中的 native methods.
+    // 比如：
+    // public final native @PolymorphicSignature Object invoke(Object... args) throws Throwable;
+    if (frame->method->isSignaturePolymorphic()
+            && !frame->method->isStatic()
+            && type == typeid(jref(*)(const slot_t *))) {
+//        jref _this = getRef(lvars++);
+//        jref ret = ((jref(*)(jref, const slot_t *)) func)(_this, lvars);
+        jref ret = ((jref(*)(const slot_t *)) func)(lvars);
+        frame->pushr(ret);
+        return;
+    }
+
 #undef B
 #undef Z
 #undef I
 #undef F
 #undef R
+//#undef A
 #undef L
 #undef D
 
@@ -1722,6 +1736,7 @@ static void callJNIMethod(Frame *frame)
 #define I(name) jint name = getInt(lvars++);
 #define F(name) jfloat name = getFloat(lvars++);
 #define R(name) jref name = getRef(lvars++);
+//#define A(name) jarrref name = (jarrref) getRef(lvars++);
 #define L(name) jlong name = getLong(lvars); lvars += 2;
 #define D(name) jdouble name = getDouble(lvars); lvars += 2;
 
@@ -1766,6 +1781,13 @@ static void callJNIMethod(Frame *frame)
         return; \
     }
 
+#define INVOKE_7(func_type, arg1, arg2, arg3, arg4, arg5, arg6, arg7, push_func) \
+    if (type == typeid(func_type)) { \
+        arg1(a) arg2(b) arg3(c) arg4(d) arg5(e) arg6(f) arg7(g) \
+        push_func(((func_type) func)(a, b, c, d, e, f, g)); \
+        return; \
+    }
+
     INVOKE_0(void(*)(), )
     INVOKE_0(jbool(*)(), frame->pushi)
     INVOKE_0(jint(*)(), frame->pushi)
@@ -1776,6 +1798,7 @@ static void callJNIMethod(Frame *frame)
     INVOKE_1(void(*)(jref), R, )
     INVOKE_1(void(*)(jlong), L, )
     INVOKE_1(jref(*)(jbool), Z, frame->pushr)
+    INVOKE_1(jint(*)(jint), I, frame->pushi)
     INVOKE_1(jlong(*)(jint), I, frame->pushl)
     INVOKE_1(jlong(*)(jdouble), D, frame->pushl)
     INVOKE_1(jdouble(*)(jlong), L, frame->pushd)
@@ -1805,6 +1828,7 @@ static void callJNIMethod(Frame *frame)
     INVOKE_2(jlong(*)(jref, jlong), R, L, frame->pushl)
     INVOKE_2(jref(*)(jref, jbool), R, Z, frame->pushr)
     INVOKE_2(jref(*)(jref, jref), R, R, frame->pushr)
+//    INVOKE_2(jref(*)(jref, jarrref), R, A, frame->pushr)
 
     INVOKE_3(void(*)(jref, jint, jref), R, I, R, )
     INVOKE_3(void(*)(jref, jlong, jlong), R, L, L, )
@@ -1814,11 +1838,13 @@ static void callJNIMethod(Frame *frame)
     INVOKE_3(jint(*)(jref, jref, jlong), R, R, L, frame->pushi)
 
     INVOKE_4(void(*)(jref, jint, jint, jbool), R, I, I, Z, )
+    INVOKE_4(void(*)(jref, jref, jlong, jref), R, R, L, R, )
     INVOKE_4(jbool(*)(jref, jlong, jint, jint), R, L, I, I, frame->pushi)
     INVOKE_4(jint(*)(jref, jref, jint, jint), R, R, I, I, frame->pushi)
     INVOKE_4(jbool(*)(jref, jlong, jlong, jlong), R, L, L, L, frame->pushi)
     INVOKE_4(jbool(*)(jref, jlong, jref, jref), R, L, R, R, frame->pushi)
     INVOKE_4(jref(*)(jref, jbool, jref, jref), R, Z, R, R, frame->pushr)
+    INVOKE_4(jref(*)(jref, jref, jref, jref), R, R, R, R, frame->pushr)
 
     INVOKE_5(void(*)(jref, jref, jint, jint, jbool), R, R, I, I, Z, )
     INVOKE_5(void(*)(jref, jint, jref, jint, jint), R, I, R, I, I, )
@@ -1827,13 +1853,11 @@ static void callJNIMethod(Frame *frame)
     INVOKE_5(jref(*)(jref, jref, jint, jint, jlong), R, R, I, I, L, frame->pushr)
     INVOKE_5(jbool(*)(jref, jref, jlong, jint, jint), R, R, L, I, I, frame->pushi)
 
-    if (type == typeid(jref(*)(jref, jref, jref, jint, jint, jref, jref))) {
-        R(a) R(b) R(c) I(d) I(e) R(f) R(g)
-        jref ret = ((jref(*)(jref, jref, jref, jint, jint, jref, jref)) func)(a, b, c, d, e, f, g);
-        frame->pushr(ret);
-        return;
-    }
+    INVOKE_7(jref(*)(jref, jref, jref, jint, jint, jref, jref),
+             R, R, R, I, I, R, R, frame->pushr)
+    INVOKE_7(jint(*)(jref, jref, jref, jint, jref, jint, jref),
+             R, R, R, I, R, I, R, frame->pushi)
 
-    JVM_PANIC(frame->method->toString().c_str());
+    JVM_PANIC((frame->method->toString() + ", " + frame->method->native_method->type.name()).c_str());
 //    throw java_lang_VirtualMachineError(string("未实现的方法类型: ") + frame->method->toString());
 }

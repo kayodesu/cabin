@@ -344,6 +344,7 @@ static void showVersionAndCopyright()
 //int func(pa a){return 0;}
 //int func2(pb b){return 0;}
 //int func3(pc b){return 0;}
+//int func4(int, ...) {return 0;}
 
 #if !(TEST_SLOT || TEST_CLASS_LOADER || TEST_LOAD_CLASS || TEST_NEW_ARRAY \
         || TEST_CLONE_OBJECT || TEST_PROPERTIES || TEST_SYSTEM_INFO \
@@ -353,6 +354,12 @@ int main(int argc, char* argv[])
 //    cout << typeid(&func).name() << endl;
 //    cout << typeid(&func2).name() << endl;
 //    cout << typeid(&func3).name() << endl;
+
+//    int (*k)(int, ...) = &func4;
+//    cout << typeid(int (*)(int, ...)).name() << endl;
+//    cout << typeid(k).name() << endl;
+//    cout << typeid(&func4).name() << endl;
+//    return 0;
 
     time_t time1;
     time(&time1);
