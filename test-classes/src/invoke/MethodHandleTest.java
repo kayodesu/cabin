@@ -5,7 +5,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 
 /**
- * Status: Fail
+ * Status: Pass
  */
 public class MethodHandleTest {
     

@@ -1,7 +1,7 @@
 package lambda;
 
 /**
- * Status: Fail
+ * Status: Pass
  */
 public class LambdaTest {
     public static void main(String[] args) {
