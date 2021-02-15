@@ -39,16 +39,12 @@ static jobject invoke0(jobject method, jobject o, jobject _os)
     case Method::RET_VOID:
         return voidBox();
     case Method::RET_BYTE:
-//        return byteBox(jint2jbyte(ISLOT(result)));
         return byteBox(getByte(result));
     case Method::RET_BOOL:
-//        return boolBox(jint2jbool(ISLOT(result)));
         return boolBox(getBool(result));
     case Method::RET_CHAR:
-//        return charBox(jint2jchar(ISLOT(result)));
         return charBox(getChar(result));
     case Method::RET_SHORT:
-//        return shortBox(jint2jshort(ISLOT(result)));
         return shortBox(getShort(result));
     case Method::RET_INT:
         return intBox(getInt(result));
