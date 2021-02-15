@@ -859,7 +859,9 @@ static JNINativeMethod methods[] = {
 
         // Object
         { "arrayBaseOffset", _CLS_"I", TA(arrayBaseOffset) },
+        { "arrayBaseOffset0", _CLS_"I", TA(arrayBaseOffset) },
         { "arrayIndexScale", _CLS_"I", TA(arrayIndexScale) },
+        { "arrayIndexScale0", _CLS_"I", TA(arrayIndexScale) },
         { "objectFieldOffset", "(Ljava/lang/reflect/Field;)J", TA(objectFieldOffset) },
         { "objectFieldOffset0", "(Ljava/lang/reflect/Field;)J", TA(objectFieldOffset) },
         { "objectFieldOffset1", _CLS STR_ "J", TA(objectFieldOffset1) },

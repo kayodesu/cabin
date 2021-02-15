@@ -79,6 +79,7 @@ void initJNI()
     R(java_util_zip_ZipFile_registerNatives);
 
     R(jdk_internal_misc_VM_registerNatives);
+    R(jdk_internal_util_SystemProps$Raw_registerNatives);
 #undef R
 }
 
