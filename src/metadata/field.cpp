@@ -84,7 +84,8 @@ ClsObj *Field::getType()
 {
     if (type == nullptr) {
         if (*descriptor == '[') { // array
-            type = loadClass(clazz->loader, descriptor)->java_mirror;
+            type = loadArrayClass(descriptor)->java_mirror;
+//            type = loadClass(clazz->loader, descriptor)->java_mirror;
         } else if (*descriptor == 'L') { // non array Object
             utf8_t buf[strlen(descriptor)];
             buf[strlen(strcpy(buf, descriptor + 1)) - 1] = 0; // don't include the first 'L' and the last ';'

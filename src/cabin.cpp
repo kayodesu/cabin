@@ -155,17 +155,19 @@ static void readJDKVersion()
     if(!ifs.is_open()){
         JVM_PANIC("打开文件失败" ); // todo
     }
+
     string line;
+    const char *begin = R"(JAVA_VERSION=")";
     while(getline(ifs, line)) {
         // JAVA_VERSION="x.x.x_xxx" // jdk8及其以下的jdk, JAVA_VERSION="1.8.0_221"
-        // JAVA_VERSION="xx.xx.xx"  // jdk9及其以上的jdk, JAVA_VERSION="11.0.1"
+        // JAVA_VERSION="xx.xx.xx"  // jdk9及其以上的jdk, JAVA_VERSION="11.0.1", JAVA_VERSION="15"
 
         // JDK版本与class file版本对应关系
         // JDK 1.1 = 45，JDK 1.2 = 46, ... 以此类推。
-        const char *begin = R"(JAVA_VERSION=")";
         size_t pos = line.find(begin);
         if (pos != string::npos) {
             pos += strlen(begin);
+
             size_t underline;
             if ((underline = line.find_first_of('_', pos)) != string::npos) {
                 // jdk8及其以下的jdk
@@ -180,10 +182,19 @@ static void readJDKVersion()
                 // jdk9及其以上的jdk
                 g_jdk_version_9_and_upper = true;
                 size_t t = line.find_first_of('.', pos);
-                g_classfile_major_version = stoi(line.substr(pos, t - pos)) - 1 + 45;
-                pos = ++t; // jump '.'
-                t = line.find_first_of('.', pos);
-                g_classfile_manor_version = stoi(line.substr(pos, t - pos));
+                if (t == string::npos) {
+                    g_classfile_major_version = stoi(line.substr(pos)) - 1 + 45;
+                    g_classfile_manor_version = 0;
+                } else {
+                    g_classfile_major_version = stoi(line.substr(pos, t - pos)) - 1 + 45;
+                    pos = t + 1; // jump '.'
+                    t = line.find_first_of('.', pos);
+                    if (t == string::npos) {
+                        g_classfile_manor_version = stoi(line.substr(pos));
+                    } else {
+                        g_classfile_manor_version = stoi(line.substr(pos, t - pos));
+                    }
+                }
             }
             break;
         }
@@ -334,33 +345,11 @@ static void showVersionAndCopyright()
 #define TEST_METHOD_DESCRIPTOR 0
 #define TEST_INJECT_FIELD      0
 
-//class A {};
-//class B: A{};
-//
-//typedef A *pa;
-//typedef B *pb;
-//typedef pb pc;
-//
-//int func(pa a){return 0;}
-//int func2(pb b){return 0;}
-//int func3(pc b){return 0;}
-//int func4(int, ...) {return 0;}
-
 #if !(TEST_SLOT || TEST_CLASS_LOADER || TEST_LOAD_CLASS || TEST_NEW_ARRAY \
         || TEST_CLONE_OBJECT || TEST_PROPERTIES || TEST_SYSTEM_INFO \
         || TEST_METHOD_TYPE || TEST_METHOD_DESCRIPTOR || TEST_INJECT_FIELD)
 int main(int argc, char* argv[])
 {
-//    cout << typeid(&func).name() << endl;
-//    cout << typeid(&func2).name() << endl;
-//    cout << typeid(&func3).name() << endl;
-
-//    int (*k)(int, ...) = &func4;
-//    cout << typeid(int (*)(int, ...)).name() << endl;
-//    cout << typeid(k).name() << endl;
-//    cout << typeid(&func4).name() << endl;
-//    return 0;
-
     time_t time1;
     time(&time1);
 

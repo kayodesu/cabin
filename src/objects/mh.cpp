@@ -74,6 +74,21 @@ jref findMethodType(ClsObj *rtype, Array *ptypes)
     return getRef(execJavaFunc(m, { rtype, ptypes }));
 }
 
+jref linkMethodHandleConstant(Class *caller_class, int ref_kind,
+                              Class *defining_class, const char *name, Object *type)
+{
+    jref name_str = newString(name);
+    Class *mhn = loadBootClass(S(java_lang_invoke_MethodHandleNatives));
+    // static MethodHandle linkMethodHandleConstant(Class<?> callerClass, int refKind,
+    //                                                 Class<?> defc, String name, Object type)
+    Method *m = mhn->getDeclaredStaticMethod("linkMethodHandleConstant",
+        "(Ljava/lang/Class;ILjava/lang/Class;Ljava/lang/String;Ljava/lang/Object;)"
+                    "Ljava/lang/invoke/MethodHandle;");
+    return getRef(execJavaFunc(m,
+                               { rslot(caller_class->java_mirror), islot(ref_kind),
+                                 rslot(defining_class->java_mirror), rslot(name_str), rslot(type) }));
+}
+
 //Array *method_type::parameterTypes(jref methodType)
 //{
 //    assert(methodType != nullptr);

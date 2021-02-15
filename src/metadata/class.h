@@ -325,7 +325,7 @@ public:
 private:
     // A pool of strings, initially empty, is maintained privately by the String class.
     std::unordered_set<Object *, StringHash, StringEquals> *str_pool = nullptr;
-    std::mutex str_pool_mutex;
+    std::recursive_mutex str_pool_mutex;
 public:
     void buildStrPool();
     jstrref intern(const utf8_t *str);

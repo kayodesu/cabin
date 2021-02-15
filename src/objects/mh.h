@@ -15,6 +15,9 @@ void initMethodHandle();
 jref findMethodType(const utf8_t *desc, jref loader);
 jref findMethodType(ClsObj *rtype, Array *ptypes);
 
+jref linkMethodHandleConstant(Class *caller_class, int ref_kind,
+                              Class *defining_class, const char *name, Object *type);
+
 // java/lang/invoke/MemberName 类的便利操作函数
 namespace member_name {
     /*

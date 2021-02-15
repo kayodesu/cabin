@@ -61,7 +61,8 @@ Thread *initMainThread()
     // Creates an empty Thread group that is not in any Thread group.
     // This method is used to create the system Thread group.
     initClass(thread_group_class);
-    execJavaFunc(thread_group_class->getConstructor(S(___V)), {g_sys_thread_group});
+    Method *constructor = thread_group_class->getConstructor(S(___V));
+    execJavaFunc(constructor, {g_sys_thread_group});
 
     g_main_thread->setThreadGroupAndName(g_sys_thread_group, MAIN_THREAD_NAME);
     saveCurrentThread(g_main_thread);

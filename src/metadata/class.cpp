@@ -103,7 +103,7 @@ void Class::parseAttribute(BytecodeReader &r)
             u2 num = r.readu2();
             for (u2 j = 0; j < num; j++) {
                 utf8_t *name = cp.className(r.readu2());
-                printvm("%s\n", name);
+                printvm("unknown NestMembers: %s\n", name);
                 // todo 不要在这里 loadClass，有死循环的问题。
                 // 比如java.lang.invoke.TypeDescriptor和其NestMember：java.lang.invoke.TypeDescriptor$OfField
 //                nest_members.push_back(loadClass(loader, name));
@@ -1086,14 +1086,15 @@ jstrref Class::intern(const utf8_t *str)
 
 jstrref Class::intern(jstrref so) 
 {
+    scoped_lock lock(str_pool_mutex);
     assert(so != nullptr);
     assert(this == g_string_class);
     assert(so->clazz == g_string_class);
 
-    scoped_lock lock(str_pool_mutex);
-
     // return either the newly inserted element
     // or the equivalent element already in the set
     Object *interned = *(str_pool->insert(so).first);
+
+    str_pool_mutex.unlock();
     return interned;
 }
