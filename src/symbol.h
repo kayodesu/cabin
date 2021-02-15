@@ -43,9 +43,12 @@ extern const char *symbol_values[];
     action(value, "value"), \
     action(create, "create"), \
     action(daemon, "daemon"), \
-    action(thread, "thread"), \
+    action(thread, "thread"),\
+    action(form, "form"), \
     action(vmData, "vmData"), \
     action(vmdata, "vmdata"), \
+    action(vmtarget, "vmtarget"), \
+    action(vmentry, "vmentry"), \
     action(offset, "offset"), \
     action(valueOf, "valueOf"), \
     action(enqueue, "enqueue"), \
