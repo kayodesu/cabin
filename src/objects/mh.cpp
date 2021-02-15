@@ -428,8 +428,6 @@ Object *resolveMemberName(jref member_name, Class *caller)
         default:
             throw java_lang_LinkageError("resolve member name");; // todo
     }
-
-    return nullptr;;
 }
 
 /* ----------------------------------------------------------------------------------------- */

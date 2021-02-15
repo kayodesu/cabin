@@ -1,4 +1,3 @@
-#include <cstdarg>
 #include <iostream>
 #include "../../../jni_internal.h"
 #include "../../../../cabin.h"
@@ -36,12 +35,20 @@ static jobject invokeExact(const slot_t *args)
     assert(_this != nullptr);
     // _this is a object of subclass of java.lang.invoke.MethodHandle
 
-    if (equals(_this->clazz->class_name, "java/lang/invoke/BoundMethodHandle$Species_L")) {
-        // final Object argL0;
-        JVM_PANIC("invokeExactxxxxxxxxxxxxxxxxxxxx");
-    }
+    // final LambdaForm form;
+    jref form = _this->getRefField(S(form), "Ljava/lang/invoke/LambdaForm;");
+    assert(form != nullptr);
 
-    JVM_PANIC("invokeExact");
+    // MemberName vmentry;
+    jref entry = form->getRefField(S(vmentry), "Ljava/lang/invoke/MemberName;");
+    assert(entry != nullptr);
+
+    //@Injected JVM_Method* vmtarget;
+    auto target = (Method *) (void *) entry->getRefField(S(vmtarget), S(sig_java_lang_Object));
+    assert(target != nullptr);
+
+    slot_t *slot = execJavaFunc(target, args);
+    return getRef(slot);
 }
 
 /**
@@ -88,18 +95,18 @@ static jobject invoke(const slot_t *args)
     // _this is a object of subclass of java.lang.invoke.MethodHandle
 
     // final LambdaForm form;
-    jref form = _this->getRefField("form", "Ljava/lang/invoke/LambdaForm;");
+    jref form = _this->getRefField(S(form), "Ljava/lang/invoke/LambdaForm;");
     assert(form != nullptr);
 
     // MemberName vmentry;
-    jref vmentry = form->getRefField("vmentry", "Ljava/lang/invoke/MemberName;");
-    assert(vmentry != nullptr);
+    jref entry = form->getRefField(S(vmentry), "Ljava/lang/invoke/MemberName;");
+    assert(entry != nullptr);
 
     //@Injected JVM_Method* vmtarget;
-    auto vmtarget = (Method *) (void *) vmentry->getRefField("vmtarget", S(sig_java_lang_Object));
-    assert(vmtarget != nullptr);
+    auto target = (Method *) (void *) entry->getRefField(S(vmtarget), S(sig_java_lang_Object));
+    assert(target != nullptr);
 
-    slot_t *slot = execJavaFunc(vmtarget, args);
+    slot_t *slot = execJavaFunc(target, args);
     return getRef(slot);
 
 #if 0
@@ -197,18 +204,18 @@ static jobject invokeBasic(const slot_t *args)
     // _this is a object of subclass of java.lang.invoke.MethodHandle
 
     // final LambdaForm form;
-    jref form = _this->getRefField("form", "Ljava/lang/invoke/LambdaForm;");
+    jref form = _this->getRefField(S(form), "Ljava/lang/invoke/LambdaForm;");
     assert(form != nullptr);
 
     // MemberName vmentry;
-    jref vmentry = form->getRefField("vmentry", "Ljava/lang/invoke/MemberName;");
-    assert(vmentry != nullptr);
+    jref entry = form->getRefField(S(vmentry), "Ljava/lang/invoke/MemberName;");
+    assert(entry != nullptr);
 
     //@Injected JVM_Method* vmtarget;
-    auto vmtarget = (Method *) (void *) vmentry->getRefField("vmtarget", S(sig_java_lang_Object));
-    assert(vmtarget != nullptr);
+    auto target = (Method *) (void *) entry->getRefField(S(vmtarget), S(sig_java_lang_Object));
+    assert(target != nullptr);
 
-    slot_t *slot = execJavaFunc(vmtarget, args);
+    slot_t *slot = execJavaFunc(target, args);
     return getRef(slot);
 }
 
@@ -220,7 +227,7 @@ static jobject invokeBasic(const slot_t *args)
  * @return the signature-polymorphic result, statically represented using {@code Object}
  */
 // static native @PolymorphicSignature Object linkToVirtual(Object... args) throws Throwable;
-static jobject linkToVirtual(jobject args)
+static jobject linkToVirtual(u2 args_slots_count, const slot_t *args)
 {
     JVM_PANIC("linkToVirtual");
 }
@@ -233,9 +240,14 @@ static jobject linkToVirtual(jobject args)
  * @return the signature-polymorphic result, statically represented using {@code Object}
  */
 // static native @PolymorphicSignature Object linkToStatic(Object... args) throws Throwable;
-static jobject linkToStatic(jobject args)
+static jobject linkToStatic(u2 args_slots_count, const slot_t *args)
 {
-    JVM_PANIC("linkToStatic");
+    Object *member_name = getRef(args + args_slots_count - 1);
+    auto target = (Method *) (void *) member_name->getRefField(S(vmtarget), S(sig_java_lang_Object));
+    assert(target != nullptr);
+
+    slot_t *slot = execJavaFunc(target, args);
+    return getRef(slot);
 }
 
 /**
@@ -246,7 +258,7 @@ static jobject linkToStatic(jobject args)
  * @return the signature-polymorphic result, statically represented using {@code Object}
  */
 // static native @PolymorphicSignature Object linkToSpecial(Object... args) throws Throwable;
-static jobject linkToSpecial(jobject args)
+static jobject linkToSpecial(u2 args_slots_count, const slot_t *args)
 {
     JVM_PANIC("linkToSpecial");
 }

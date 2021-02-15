@@ -1235,32 +1235,30 @@ opc_invokeinterface: {
 opc_invokedynamic: {
     printvm("invokedynamic\n"); /////////////////////////////////////////////////////////////////////////////////
 
-    ConstantPool &cp = clazz->cp;
-
-    u2 index = reader->readu2(); // point to JVM_CONSTANT_InvokeDynamic_info
+    u2 i = reader->readu2(); // point to JVM_CONSTANT_InvokeDynamic_info
     reader->readu1(); // this byte must always be zero.
     reader->readu1(); // this byte must always be zero.
 
-    const utf8_t *invoked_name = cp.invokeDynamicMethodName(index); // "run"
-    const utf8_t *invoked_descriptor = cp.invokeDynamicMethodType(index); // "()Ljava/lang/Runnable;"
+    const utf8_t *invoked_name = cp->invokeDynamicMethodName(i); // "run"
+    const utf8_t *invoked_descriptor = cp->invokeDynamicMethodType(i); // "()Ljava/lang/Runnable;"
 
     jref invoked_type = findMethodType(invoked_descriptor, clazz->loader); // "java/lang/invoke/MethodType"
     jref caller = getCaller(); // "java/lang/invoke/MethodHandles$Lookup"
 
-    BootstrapMethod &bm = clazz->bootstrap_methods.at(cp.invokeDynamicBootstrapMethodIndex(index));
-    u2 ref_kind = cp.methodHandleReferenceKind(bm.bootstrap_method_ref); // 6
-    u2 ref_index = cp.methodHandleReferenceIndex(bm.bootstrap_method_ref); // 40
+    BootstrapMethod &bm = clazz->bootstrap_methods.at(cp->invokeDynamicBootstrapMethodIndex(i));
+    u2 ref_kind = cp->methodHandleReferenceKind(bm.bootstrap_method_ref); // 6
+    u2 ref_index = cp->methodHandleReferenceIndex(bm.bootstrap_method_ref); // 40
 
     switch (ref_kind) {
         case JVM_REF_invokeStatic: {
-            const utf8_t *class_name = cp.methodClassName(ref_index); // "java/lang/invoke/LambdaMetafactory"
+            const utf8_t *class_name = cp->methodClassName(ref_index); // "java/lang/invoke/LambdaMetafactory"
             Class *bootstrap_class = loadClass(clazz->loader, class_name);
 
             // bootstrap method is static,  todo 对不对
             // 前三个参数固定为 MethodHandles.Lookup caller, String invokedName, MethodType invokedType todo 对不对
             // 后续的参数由 ref->argc and ref->args 决定
             Method *bootstrap_method = bootstrap_class->getDeclaredStaticMethod(
-                                    cp.methodName(ref_index), cp.methodType(ref_index));
+                                    cp->methodName(ref_index), cp->methodType(ref_index));
             // name: "metafactory"
             // type: "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallS"...
             
@@ -1269,13 +1267,7 @@ opc_invokedynamic: {
             setRef(args, caller);
             setRef(args + 1, newString(invoked_name));
             setRef(args + 2, invoked_type);
-            bm.resolveArgs(&cp, args + 3);
-//            if (Thread::checkExceptionOccurred()) {  todo
-//                jref eo = Thread::getException();
-//                Thread::clearException();
-//                frame->pushr(eo);
-//                goto opc_athrow;
-//            }
+            bm.resolveArgs(cp, args + 3);
             auto call_set = getRef(execJavaFunc(bootstrap_method, args));
 
             // public abstract MethodHandle dynamicInvoker()
@@ -1284,17 +1276,17 @@ opc_invokedynamic: {
 
             // public final Object invokeExact(Object... args) throws Throwable
             Method *invokeExact = exact_method_handle->clazz->lookupInstMethod(
-                                        "invokeExact", "([Ljava/lang/Object;)Ljava/lang/Object;");
+                                        S(invokeExact), "([Ljava/lang/Object;)Ljava/lang/Object;");
             assert(invokeExact->isVarargs());
-            int slot_count = Method::calArgsSlotsCount(invoked_descriptor, false);
-            slot_t _args[slot_count];
+            int slots_count = Method::calArgsSlotsCount(invoked_descriptor, false);
+            slot_t _args[slots_count];
             setRef(_args, exact_method_handle);
-            slot_count--; // 减去"this"
-            frame->ostack -= slot_count; // pop all args
-            memcpy(_args + 1, frame->ostack, slot_count * sizeof(slot_t));
+            slots_count--; // 减去"this"
+            frame->ostack -= slots_count; // pop all args
+            memcpy(_args + 1, frame->ostack, slots_count * sizeof(slot_t));
             // invoke exact method, invokedynamic completely execute over.
-            execJavaFunc(invokeExact, _args);
-
+            slot_t *ret = execJavaFunc(invokeExact, _args);
+            frame->pushr(getRef(ret));
             break;
         }
         case JVM_REF_newInvokeSpecial:
@@ -1304,8 +1296,6 @@ opc_invokedynamic: {
             JVM_PANIC("never goes here"); // todo
             break;
     }
-    JVM_PANIC("never goes here"); // todo
-
     DISPATCH
 }
 opc_invokenative: {
@@ -1709,15 +1699,24 @@ static void callJNIMethod(Frame *frame)
     const type_info &type = frame->method->native_method->type;
     void *func = frame->method->native_method->func;
 
-    // 应对 java/lang/invoke/MethodHandle.java 中的 native methods.
+    // 应对 java/lang/invoke/MethodHandle.java 中的 invoke* native methods.
     // 比如：
     // public final native @PolymorphicSignature Object invoke(Object... args) throws Throwable;
     if (frame->method->isSignaturePolymorphic()
             && !frame->method->isStatic()
             && type == typeid(jref(*)(const slot_t *))) {
-//        jref _this = getRef(lvars++);
-//        jref ret = ((jref(*)(jref, const slot_t *)) func)(_this, lvars);
         jref ret = ((jref(*)(const slot_t *)) func)(lvars);
+        frame->pushr(ret);
+        return;
+    }
+
+    // 应对 java/lang/invoke/MethodHandle.java 中的 linkTo* native methods.
+    // 比如：
+    // static native @PolymorphicSignature Object linkToStatic(Object... args) throws Throwable;
+    if (frame->method->isSignaturePolymorphic()
+        && frame->method->isStatic()
+        && type == typeid(jref(*)(u2, const slot_t *))) {
+        jref ret = ((jref(*)(u2, const slot_t *)) func)(frame->method->arg_slot_count, lvars);
         frame->pushr(ret);
         return;
     }
