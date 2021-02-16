@@ -726,45 +726,54 @@ opc_dneg:
 opc_ishl: {
     // 与0x1f是因为低5位表示位移距离，位移距离实际上被限制在0到31之间。
     jint shift = frame->popi() & 0x1f;
-    jint ivalue = frame->popi();
-    frame->pushi(ivalue << shift);
+    assert(0 <= shift && shift <= 31);
+    jint x = frame->popi();
+    frame->pushi(x << shift);
     DISPATCH
 }
 opc_lshl: {
     // 与0x3f是因为低6位表示位移距离，位移距离实际上被限制在0到63之间。
     jint shift = frame->popi() & 0x3f;
-    jlong lvalue = frame->popl();
-    frame->pushl(lvalue << shift);
+    assert(0 <= shift && shift <= 63);
+    jlong x = frame->popl();
+    frame->pushl(x << shift);
     DISPATCH
 }
 opc_ishr: {
-    // 逻辑右移 shift logical right
-    // 无符号右移。无论是正数还是负数，高位通通补0。
-    // 对应于Java中的 >>>
-    jint shift = frame->popi() & 0x1f;
-    jint ivalue = frame->popi();
-    frame->pushi((~(((jint)1) >> shift)) & (ivalue >> shift));
-    DISPATCH
-}
-opc_lshr: {
-    jint shift = frame->popi() & 0x3f;
-    jlong lvalue = frame->popl();
-    frame->pushl((~(((jlong)1) >> shift)) & (lvalue >> shift));
-    DISPATCH
-}
-opc_iushr: {
     // 算术右移 shift arithmetic right
     // 带符号右移。正数右移高位补0，负数右移高位补1。
     // 对应于Java中的 >>
     jint shift = frame->popi() & 0x1f;
-    jint ivalue = frame->popi();
-    frame->pushi(ivalue >> shift);
+    assert(0 <= shift && shift <= 31);
+    jint x = frame->popi();
+    frame->pushi(x >> shift);
+    DISPATCH
+}
+opc_lshr: {
+    jint shift = frame->popi() & 0x3f;
+    assert(0 <= shift && shift <= 63);
+    jlong x = frame->popl();
+    frame->pushl(x >> shift);
+    DISPATCH
+}
+opc_iushr: {
+    // 逻辑右移 shift logical right
+    // 无符号右移。无论是正数还是负数，高位通通补0。
+    // 对应于Java中的 >>>
+    // https://stackoverflow.com/questions/5253194/implementing-logical-right-shift-in-c/
+    jint shift = frame->popi() & 0x1f;
+    assert(0 <= shift && shift <= 31);
+    jint x = frame->popi();
+    int size = sizeof(jint) * 8 - 1; // bits count
+    frame->pushi((x >> shift) & ~(((((jint)1) << size) >> shift) << 1));
     DISPATCH
 }
 opc_lushr: {
     jint shift = frame->popi() & 0x3f;
-    jlong lvalue = frame->popl();
-    frame->pushl(lvalue >> shift);
+    assert(0 <= shift && shift <= 63);
+    jlong x = frame->popl();
+    int size = sizeof(jlong) * 8 - 1; // bits count
+    frame->pushl((x >> shift) & ~(((((jlong)1) << size) >> shift) << 1));
     DISPATCH
 }
 opc_iand:
