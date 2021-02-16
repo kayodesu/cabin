@@ -334,6 +334,7 @@ static void showVersionAndCopyright()
  * 全部关闭表示关闭测试，运行JVM。
  */
 
+#define TEST_CONVERT           0
 #define TEST_SLOT              0
 #define TEST_CLASS_LOADER      0
 #define TEST_LOAD_CLASS        0
@@ -345,7 +346,7 @@ static void showVersionAndCopyright()
 #define TEST_METHOD_DESCRIPTOR 0
 #define TEST_INJECT_FIELD      0
 
-#if !(TEST_SLOT || TEST_CLASS_LOADER || TEST_LOAD_CLASS || TEST_NEW_ARRAY \
+#if !(TEST_CONVERT || TEST_SLOT || TEST_CLASS_LOADER || TEST_LOAD_CLASS || TEST_NEW_ARRAY \
         || TEST_CLONE_OBJECT || TEST_PROPERTIES || TEST_SYSTEM_INFO \
         || TEST_METHOD_TYPE || TEST_METHOD_DESCRIPTOR || TEST_INJECT_FIELD)
 int main(int argc, char* argv[])
@@ -399,6 +400,63 @@ int main(int argc, char* argv[])
     time(&time2);
 
     printf("run jvm: %lds\n", ((long)(time2)) - ((long)(time1)));
+    return 0;
+}
+#endif
+
+#if (TEST_CONVERT)
+static void testConvertDouble(jdouble d)
+{
+    jlong l = double_to_raw_long_bits(d);
+    jdouble d1 = long_bits_to_double(l);
+    cout << l << ", ";
+    printf("%s, %20.20f\n", (d == d1) ? "true" : "false", d1);
+}
+
+static void testDouble2String(jdouble d)
+{
+    // public static String valueOf(double d);
+    Class *c = loadBootClass("java/lang/String");
+    Method *m = c->lookupStaticMethod("valueOf", "(D)Ljava/lang/String;");
+    slot_t args[2];
+    slot::setDouble(args, d);
+    jstrref s = slot::getRef(execJavaFunc(m, args));
+    cout << s->toUtf8() << endl;
+}
+
+static void testFloat2String(jfloat f)
+{
+    // public static String valueOf(float f);
+    Class *c = loadBootClass("java/lang/String");
+    Method *m = c->lookupStaticMethod("valueOf", "(F)Ljava/lang/String;");
+    jstrref s = slot::getRef(execJavaFunc(m, {slot::fslot(f)}));
+    cout << s->toUtf8() << endl;
+}
+
+int main(int argc, char *argv[])
+{
+    initJVM(argc, argv);
+
+    jdouble d = 1.1;
+    testConvertDouble(d);
+    testDouble2String(d);
+
+    cout << "---" << endl;
+
+    d = 4349790087343.9483948938493;
+    testConvertDouble(d);
+    testDouble2String(d);
+
+    cout << "---" << endl;
+
+    jfloat f = 1.1f;
+    testFloat2String(f);
+
+    cout << "---" << endl;
+
+    f = 123.456f;
+    testFloat2String(f);
+
     return 0;
 }
 #endif
