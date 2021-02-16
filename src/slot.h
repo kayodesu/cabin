@@ -25,7 +25,6 @@ namespace slot {
     slot_t islot(jint v);
     slot_t fslot(jfloat v);
     slot_t rslot(jref v);
-    slot_t dslot(jdouble v);
 
     /* setter */
 

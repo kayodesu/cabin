@@ -16,6 +16,7 @@ public class DoubleTest {
     
     public static void main(String[] args) {
         DoubleTest tl = new DoubleTest(4349790087343.9483948938493);
+        System.out.println(tl.get() == 4349790087343.9483948938493);
         System.out.println(tl.get());
     }
 }

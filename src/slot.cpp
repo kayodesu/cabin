@@ -27,13 +27,6 @@ slot_t slot::rslot(jref v)
     return s;
 }
 
-slot_t slot::dslot(jdouble v)
-{
-    slot_t s;
-    setDouble(&s, v);
-    return s;
-}
-
 void slot::setInt(slot_t *slots, jint v)       
 {
     assert(slots != nullptr); 

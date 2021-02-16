@@ -1,7 +1,7 @@
 package primary;
 
 /**
- * Status: Fail
+ * Status: Pass
  */
 public class LongTest {
     private long value;

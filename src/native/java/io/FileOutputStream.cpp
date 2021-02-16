@@ -55,6 +55,7 @@ static void writeBytes(jobject _this, jobject b, jint off, jint len, jboolean ap
     // todo 这里默认输出到了控制台，是不对的
     // todo 应该根据_this来选择输出位置
     char *chars = (char *) (data + off);
+//    auto sss = bytes_to_double(reinterpret_cast<const uint8_t *>(chars));
     for (jint i = 0; i < len; i++) {
         printf("%c", chars[i]);
     }
