@@ -351,7 +351,7 @@ opc_ldc2_w: {
             frame->pushl(cp->getLong(index));
             break;
         case JVM_CONSTANT_Double:
-         //    printvm("=====    %f\n", cp->getDouble(index));
+//             printvm("=====    %f\n", cp->getDouble(index));
             frame->pushd(cp->getDouble(index));
             break;
         default:
@@ -683,19 +683,19 @@ opc_idiv:
     ZERO_DIVISOR_CHECK(getInt(frame->ostack - 1));
     BINARY_OP(jint, i, /);
 opc_ldiv:
-    ZERO_DIVISOR_CHECK(getLong(frame->ostack - 1));
+    ZERO_DIVISOR_CHECK(getLong(frame->ostack - 2));
     BINARY_OP(jlong, l, /);
 opc_fdiv:
     ZERO_DIVISOR_CHECK(getFloat(frame->ostack - 1));
     BINARY_OP(jfloat, f, /);
 opc_ddiv:
-    ZERO_DIVISOR_CHECK(getDouble(frame->ostack - 1));
+    ZERO_DIVISOR_CHECK(getDouble(frame->ostack - 2));
     BINARY_OP(jdouble, d, /);
 opc_irem: 
     ZERO_DIVISOR_CHECK(getInt(frame->ostack - 1));
     BINARY_OP(jint, i, %);
 opc_lrem:
-    ZERO_DIVISOR_CHECK(getLong(frame->ostack - 1));
+    ZERO_DIVISOR_CHECK(getLong(frame->ostack - 2));
     BINARY_OP(jlong, l, %);
 #undef ZERO_DIVISOR_CHECK
 
@@ -739,6 +739,8 @@ opc_lshl: {
 }
 opc_ishr: {
     // 逻辑右移 shift logical right
+    // 无符号右移。无论是正数还是负数，高位通通补0。
+    // 对应于Java中的 >>>
     jint shift = frame->popi() & 0x1f;
     jint ivalue = frame->popi();
     frame->pushi((~(((jint)1) >> shift)) & (ivalue >> shift));
@@ -752,6 +754,8 @@ opc_lshr: {
 }
 opc_iushr: {
     // 算术右移 shift arithmetic right
+    // 带符号右移。正数右移高位补0，负数右移高位补1。
+    // 对应于Java中的 >>
     jint shift = frame->popi() & 0x1f;
     jint ivalue = frame->popi();
     frame->pushi(ivalue >> shift);
@@ -776,6 +780,7 @@ opc_ixor:
 opc_lxor:
     BINARY_OP(jlong, l, ^);
 #undef BINARY_OP
+
 opc_iinc: 
     index = reader->readu1();
 //    ISLOT(lvars + index) = ISLOT(lvars + index) + reader->reads1();
