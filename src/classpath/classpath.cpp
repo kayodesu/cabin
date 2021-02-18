@@ -57,17 +57,17 @@ static void findFilesBySuffix(const char *path0, const char *suffix, vector<std:
 }
 
 static char bootstrap_classpath[PATH_MAX] = { 0 };
-static char main_classpath[PATH_MAX] = { 0 };
+static char classpath[PATH_MAX] = { 0 };
 
-void setMainClasspath(const char *cp)
+void setClasspath(const char *cp)
 {
     assert(cp != nullptr);
-    strcpy(main_classpath, cp);
+    strcpy(classpath, cp);
 }
 
-const char *getMainClasspath()
+const char *getClasspath()
 {
-    return main_classpath;
+    return classpath;
 }
 
 void setBootstrapClasspath(const char *bcp)
@@ -80,7 +80,7 @@ void initClasspath()
 {
     assert(!g_java_home.empty());
 
-    if (g_jdk_version_9_and_upper) { // jdk9 开始使用模块
+    if (IS_GDK9_PLUS) { // jdk9 开始使用模块
         findFilesBySuffix((g_java_home + "/jmods").c_str(), "jmod", g_jdk_modules);
 
         // 第0个位置放java.base.jmod，因为java.base.jmod常用，所以放第0个位置首先搜索。
@@ -125,10 +125,10 @@ void initClasspath()
         findFilesBySuffix(extension_classpath, "jar", jre_ext_jars);
     }
 
-    if (main_classpath[0] == 0) {  // empty
+    if (classpath[0] == 0) {  // empty
         char *cp = getenv("CLASSPATH");
         if (cp != nullptr) {
-            strcpy(main_classpath, cp);
+            strcpy(classpath, cp);
         } else {
             // todo error. no CLASSPATH！
             JVM_PANIC("error. no CLASSPATH！");
@@ -216,7 +216,7 @@ optional<pair<u1 *, size_t>> readBootClass(const utf8_t *class_name)
 //    assert(isSlashName(class_name));
     assert(class_name[0] != '['); // don't load array class
 
-    if (g_jdk_version_9_and_upper) {
+    if (IS_GDK9_PLUS) {
         for (auto &mod : g_jdk_modules) {
             auto content = readClass(mod.c_str(), class_name, IN_MODULE);
             if (content.has_value()) { // find out

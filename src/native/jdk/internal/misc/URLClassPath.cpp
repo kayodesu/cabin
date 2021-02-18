@@ -1,4 +1,4 @@
-#include "../../jni_internal.h"
+#include "../../../jni_internal.h"
 
 // private static native URL[] getLookupCacheURLs(ClassLoader var0);
 static jobject getLookupCacheURLs(jobject var0)

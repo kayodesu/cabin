@@ -792,12 +792,10 @@ opc_lxor:
 
 opc_iinc: 
     index = reader->readu1();
-//    ISLOT(lvars + index) = ISLOT(lvars + index) + reader->reads1();
-    setInt(lvars + index, getInt(lvars + index) + reader->reads1()); // todo reads1??
+    setInt(lvars + index, getInt(lvars + index) + reader->reads1()); 
     DISPATCH
 _wide_iinc:  
-//    ISLOT(lvars + index) = ISLOT(lvars + index) + reader->readu2();
-    setInt(lvars + index, getInt(lvars + index) + reader->readu2()); // todo readu2??
+    setInt(lvars + index, getInt(lvars + index) + reader->reads2()); 
     DISPATCH
 opc_i2l:
     frame->pushl(frame->popi());
@@ -939,7 +937,7 @@ opc_ret:
     throw java_lang_InternalError("ret doesn't support after jdk 6.");
 
 opc_tableswitch: {
-    // todo 指令说明  好像是实现 switch 语句
+    // 实现当各个case值跨度比较小时的 switch 语句
     size_t saved_pc = reader->pc - 1; // save the pc before 'tableswitch' instruction
     reader->align4();
 
@@ -973,7 +971,7 @@ opc_tableswitch: {
     DISPATCH
 }
 opc_lookupswitch: {
-    // todo 指令说明  好像是实现 switch 语句
+    // 实现当各个case值跨度比较大时的 switch 语句
     size_t saved_pc = reader->pc - 1; // save the pc before 'lookupswitch' instruction
     reader->align4();
 
@@ -1253,19 +1251,19 @@ opc_invokedynamic: {
     reader->readu1(); // this byte must always be zero.
     reader->readu1(); // this byte must always be zero.
 
-    const utf8_t *invoked_name = cp->invokeDynamicMethodName(i); // "run"
-    const utf8_t *invoked_descriptor = cp->invokeDynamicMethodType(i); // "()Ljava/lang/Runnable;"
+    const utf8_t *invoked_name = cp->invokeDynamicMethodName(i);
+    const utf8_t *invoked_descriptor = cp->invokeDynamicMethodType(i);
 
     jref invoked_type = findMethodType(invoked_descriptor, clazz->loader); // "java/lang/invoke/MethodType"
     jref caller = getCaller(); // "java/lang/invoke/MethodHandles$Lookup"
 
     BootstrapMethod &bm = clazz->bootstrap_methods.at(cp->invokeDynamicBootstrapMethodIndex(i));
-    u2 ref_kind = cp->methodHandleReferenceKind(bm.bootstrap_method_ref); // 6
-    u2 ref_index = cp->methodHandleReferenceIndex(bm.bootstrap_method_ref); // 40
+    u2 ref_kind = cp->methodHandleReferenceKind(bm.bootstrap_method_ref);
+    u2 ref_index = cp->methodHandleReferenceIndex(bm.bootstrap_method_ref);
 
     switch (ref_kind) {
         case JVM_REF_invokeStatic: {
-            const utf8_t *class_name = cp->methodClassName(ref_index); // "java/lang/invoke/LambdaMetafactory"
+            const utf8_t *class_name = cp->methodClassName(ref_index);
             Class *bootstrap_class = loadClass(clazz->loader, class_name);
 
             // bootstrap method is static,  todo 对不对
@@ -1812,6 +1810,7 @@ static void callJNIMethod(Frame *frame)
     INVOKE_1(void(*)(jlong), L, )
     INVOKE_1(jref(*)(jbool), Z, frame->pushr)
     INVOKE_1(jint(*)(jint), I, frame->pushi)
+    INVOKE_1(jbool(*)(jint), I, frame->pushi)
     INVOKE_1(jlong(*)(jint), I, frame->pushl)
     INVOKE_1(jlong(*)(jdouble), D, frame->pushl)
     INVOKE_1(jdouble(*)(jlong), L, frame->pushd)
@@ -1848,6 +1847,7 @@ static void callJNIMethod(Frame *frame)
     INVOKE_3(void(*)(jref, jref, jbool), R, R, Z, )
     INVOKE_3(jref(*)(jref, jref, jref), R, R, R, frame->pushr)
     INVOKE_3(jbool(*)(jref, jref, jref), R, R, R, frame->pushi)
+    INVOKE_3(jlong(*)(jref, jref, jref), R, R, R, frame->pushl)
     INVOKE_3(jref(*)(jref, jref, jlong), R, R, L, frame->pushr)
     INVOKE_3(jint(*)(jref, jref, jlong), R, R, L, frame->pushi)
 

@@ -6,8 +6,8 @@
 
 void setBootstrapClasspath(const char *bcp);
 
-void setMainClasspath(const char *cp);
-const char *getMainClasspath();
+void setClasspath(const char *cp);
+const char *getClasspath();
 
 void initClasspath();
 

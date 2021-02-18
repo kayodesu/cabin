@@ -27,6 +27,8 @@ void initJNI()
     R(java_lang_Runtime_registerNatives);
     R(java_lang_Shutdown_registerNatives);
     R(java_lang_Module_registerNatives);
+    R(java_lang_StackTraceElement_registerNatives);
+    R(java_lang_NullPointerException_registerNatives);
     R(java_lang_ClassLoader_registerNatives);
     R(java_lang_ClassLoader$NativeLibrary_registerNatives);
 
@@ -78,7 +80,6 @@ void initJNI()
     R(java_util_concurrent_atomic_AtomicLong_registerNatives);
     R(java_util_zip_ZipFile_registerNatives);
 
-    R(jdk_internal_misc_VM_registerNatives);
     R(jdk_internal_util_SystemProps$Raw_registerNatives);
 #undef R
 }

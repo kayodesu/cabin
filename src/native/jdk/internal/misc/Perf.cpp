@@ -1,8 +1,8 @@
-#include "../../jni_internal.h"
-#include "../../../slot.h"
-#include "../../../metadata/class.h"
-#include "../../../runtime/frame.h"
-#include "../../../interpreter/interpreter.h"
+#include "../../../jni_internal.h"
+#include "../../../../slot.h"
+#include "../../../../metadata/class.h"
+#include "../../../../runtime/frame.h"
+#include "../../../../interpreter/interpreter.h"
 
 // public native ByteBuffer createLong(String name, int variability, int units, long value);
 static jobject createLong(jobject _this, jstring name, jint variability, jint units, jlong value)

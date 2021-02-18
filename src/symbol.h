@@ -75,6 +75,7 @@ extern const char *symbol_values[];
     action(newLibraryUnloader, "newLibraryUnloader"), \
     action(contextClassLoader, "contextClassLoader"), \
     action(getSystemClassLoader, "getSystemClassLoader"), \
+    action(getPlatformClassLoader, "getPlatformClassLoader"), \
     action(registerNatives, "registerNatives"), \
     \
     /* Constant pool attribute names */\
@@ -150,7 +151,7 @@ extern const char *symbol_values[];
     action(java_io_Serializable, "java/io/Serializable"), \
     action(java_lang_VMThrowable, "java/lang/VMThrowable"), \
     action(java_lang_ThreadGroup, "java/lang/ThreadGroup"), \
-    action(java_lang_ClassLoader, "java/lang/ClassLoader"), \
+    action(java_lang_ClassLoader, "java/lang/ClassLoader"),   \
     action(java_lang_reflect_Field, "java/lang/reflect/Field"), \
     action(java_lang_invoke_MethodHandle, "java/lang/invoke/MethodHandle"), \
     action(java_lang_invoke_MemberName, "java/lang/invoke/MemberName"), \

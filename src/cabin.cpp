@@ -27,8 +27,6 @@ using namespace utf8;
 
 Heap *g_heap;
 
-bool g_jdk_version_9_and_upper;
-
 vector<pair<const utf8_t *, const utf8_t *>> g_properties;
 
 Object *g_sys_thread_group;
@@ -53,6 +51,9 @@ string g_java_home;
 u2 g_classfile_major_version = 0;
 u2 g_classfile_manor_version = 0;
 
+Object *g_app_class_loader;
+Object *g_platform_class_loader;
+
 static void parseCommandLine(int argc, char *argv[])
 {
     // 可执行程序的名字为 argv[0]
@@ -70,7 +71,7 @@ static void parseCommandLine(int argc, char *argv[])
                 if (++i >= argc) {
                     JVM_PANIC("缺少参数：%s\n", name);
                 }
-                setMainClasspath(argv[i]);
+                setClasspath(argv[i]);
             } else if (strcmp(name, "-help") == 0 or strcmp(name, "-?") == 0) {
                 showUsage(vm_name);
                 exit(0);
@@ -124,7 +125,7 @@ void initProperties()
     sprintf(class_version, "%d.%d",
             JVM_MUST_SUPPORT_CLASSFILE_MAJOR_VERSION, JVM_MUST_SUPPORT_CLASSFILE_MINOR_VERSION);
     g_properties.emplace_back("java.class.version", class_version);
-    g_properties.emplace_back("java.class.path", getMainClasspath());
+    g_properties.emplace_back("java.class.path", getClasspath());
     g_properties.emplace_back("os.name", osName());
     g_properties.emplace_back("os.arch", osArch());
     g_properties.emplace_back("os.version",  ""); // todo
@@ -147,6 +148,9 @@ static void initHeap()
         JVM_PANIC("init Heap failed"); // todo
     }
 }
+
+// JDK major version to classfile major version
+#define CLASSFILE_VERSION(jdk_version) (jdk_version -1 + 45)
 
 // Access JAVA_HOME/release file to get the version of JDK
 static void readJDKVersion()
@@ -171,22 +175,20 @@ static void readJDKVersion()
             size_t underline;
             if ((underline = line.find_first_of('_', pos)) != string::npos) {
                 // jdk8及其以下的jdk
-                g_jdk_version_9_and_upper = false;
                 assert(line[pos] == '1');
                 assert(line[pos+1] == '.');
                 pos += 2; // jump "1."
-                g_classfile_major_version = stoi(line.substr(pos, 1)) - 1 + 45;
+                g_classfile_major_version = CLASSFILE_VERSION(stoi(line.substr(pos, 1)));
                 pos += 2; // jump "x."
                 g_classfile_manor_version = stoi(line.substr(pos, underline - pos));
             } else {
                 // jdk9及其以上的jdk
-                g_jdk_version_9_and_upper = true;
                 size_t t = line.find_first_of('.', pos);
                 if (t == string::npos) {
-                    g_classfile_major_version = stoi(line.substr(pos)) - 1 + 45;
+                    g_classfile_major_version = CLASSFILE_VERSION(stoi(line.substr(pos)));
                     g_classfile_manor_version = 0;
                 } else {
-                    g_classfile_major_version = stoi(line.substr(pos, t - pos)) - 1 + 45;
+                    g_classfile_major_version = CLASSFILE_VERSION(stoi(line.substr(pos, t - pos)));
                     pos = t + 1; // jump '.'
                     t = line.find_first_of('.', pos);
                     if (t == string::npos) {
@@ -216,7 +218,9 @@ void initJVM(int argc, char *argv[])
     }
     g_java_home = home;
 
-    g_java_home = R"(C:\Program Files\Java\jre1.8.0_221)"; // todo for testing ...............................
+//    g_java_home = R"(C:\Program Files\Java\jre1.8.0_221)"; // todo for testing ...........
+//    g_java_home = R"(C:\Program Files\Java\jdk-11.0.1)"; // todo for testing .............
+//    g_java_home = R"(C:\Program Files\Java\jdk-15)"; // todo for testing .................
 
     readJDKVersion();
 
@@ -232,10 +236,13 @@ void initJVM(int argc, char *argv[])
 
     TRACE("init main thread over\n");
     // 先加载 sun.mis.VM or jdk.internal.misc.VM 类，然后执行其类初始化方法
-    Class *vm = loadBootClass("sun/misc/VM");
-    if (vm == nullptr) {
+    Class *vm = nullptr;
+    if (IS_GDK9_PLUS) {
         vm = loadBootClass("jdk/internal/misc/VM");
+    } else {
+        vm = loadBootClass("sun/misc/VM");
     }
+
     if (vm == nullptr) {
         JVM_PANIC("xxx/misc/VM is null\n");  // todo throw exception
         return;
@@ -244,15 +251,17 @@ void initJVM(int argc, char *argv[])
     // 在VM类的类初始化方法中调用了 "initialize" 方法。
     initClass(vm);
 
-    g_system_class_loader = getSystemClassLoader();
-    assert(g_system_class_loader != nullptr);
+    if (IS_GDK9_PLUS) {
+        g_platform_class_loader = getPlatformClassLoader();
+        assert(g_platform_class_loader != nullptr);
+    }
+    g_app_class_loader = getAppClassLoader();
+    assert(g_app_class_loader != nullptr);
 
     // Main Thread Set ContextClassLoader
     g_main_thread->tobj->setRefField(S(contextClassLoader),
-                                     S(sig_java_lang_ClassLoader), g_system_class_loader);
+                                     S(sig_java_lang_ClassLoader), g_app_class_loader);
 }
-
-Object *g_system_class_loader;
 
 static void showUsage(const char *name)
 {
@@ -361,7 +370,7 @@ int main(int argc, char* argv[])
         JVM_PANIC("no input file\n");
     }
 
-    Class *main_class = loadClass(g_system_class_loader, dot2Slash(main_class_name));
+    Class *main_class = loadClass(g_app_class_loader, dot2Slash(main_class_name));
     if (main_class == nullptr) {
         JVM_PANIC("main_class == nullptr"); // todo
     }
@@ -515,7 +524,7 @@ int main(int argc, char *argv[])
     printAllClassLoaders();
     cout << "---------------" << endl;
 
-    Object *scl = getSystemClassLoader();
+    Object *scl = getAppClassLoader();
     loadClass(scl, "HelloWorld");
 
     printAllClassLoaders();
@@ -834,7 +843,7 @@ int main(int argc, char *argv[])
 
     for (auto &d : method_descriptors) {
         cout << "--------------- " << endl << d << endl;
-        jref mt = findMethodType(d, g_system_class_loader);
+        jref mt = findMethodType(d, g_app_class_loader);
         printMT(mt);
 
         string desc = unparseMethodDescriptor(mt);

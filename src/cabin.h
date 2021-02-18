@@ -107,12 +107,14 @@ extern Heap *g_heap;
 class ClassLoader;
 class Thread;
 
-extern bool g_jdk_version_9_and_upper;
-
 extern std::string g_java_home;
 
 extern u2 g_classfile_major_version;
 extern u2 g_classfile_manor_version;
+
+#define GDK8_CLASSFILE_MAJOR_VERSION 52
+
+#define IS_GDK9_PLUS (g_classfile_major_version > GDK8_CLASSFILE_MAJOR_VERSION)
 
 // The system Thread group.
 extern Object *g_sys_thread_group;
@@ -120,7 +122,8 @@ extern Object *g_sys_thread_group;
 // todo 所有线程
 extern std::vector<Thread *> g_all_threads;
 
-extern Object *g_system_class_loader;
+extern Object *g_app_class_loader;
+extern Object *g_platform_class_loader;
 
 extern std::vector<std::pair<const utf8_t *, const utf8_t *>> g_properties;
 

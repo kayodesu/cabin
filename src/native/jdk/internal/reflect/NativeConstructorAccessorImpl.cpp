@@ -1,8 +1,8 @@
 #include <sstream>
-#include "../../jni_internal.h"
-#include "../../../runtime/frame.h"
-#include "../../../objects/array.h"
-#include "../../../interpreter/interpreter.h"
+#include "../../../jni_internal.h"
+#include "../../../../runtime/frame.h"
+#include "../../../../objects/array.h"
+#include "../../../../interpreter/interpreter.h"
 
 using namespace std;
 

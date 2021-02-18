@@ -103,7 +103,7 @@ void Class::parseAttribute(BytecodeReader &r)
             u2 num = r.readu2();
             for (u2 j = 0; j < num; j++) {
                 utf8_t *name = cp.className(r.readu2());
-                printvm("unknown NestMembers: %s\n", name);
+                nest_members.emplace_back(false, name);
                 // todo 不要在这里 loadClass，有死循环的问题。
                 // 比如java.lang.invoke.TypeDescriptor和其NestMember：java.lang.invoke.TypeDescriptor$OfField
 //                nest_members.push_back(loadClass(loader, name));
@@ -119,7 +119,7 @@ void Class::parseAttribute(BytecodeReader &r)
     if (nest_host == nullptr)
         nest_host = this;
     if (nest_members.empty())
-        nest_members.push_back(this);
+        nest_members.emplace_back(true, this);
 }
 
 void Class::createVtable()
@@ -328,18 +328,8 @@ Class::Class(Object *loader, u1 *bytecode, size_t len): loader(loader), bytecode
 
     r.readu2(); // minor_version
     auto major_version = r.readu2();
-    /*
-     * Class版本号和Java版本对应关系
-     * JDK 1.8 = 52
-     * JDK 1.7 = 51
-     * JDK 1.6 = 50
-     * JDK 1.5 = 49
-     * JDK 1.4 = 48
-     * JDK 1.3 = 47
-     * JDK 1.2 = 46
-     * JDK 1.1 = 45
-     */
-    if (major_version != 52) {
+
+    if (major_version != g_classfile_major_version) {
 //        thread_throw(new ClassFormatError("bad class version")); // todo
     }
 
@@ -478,6 +468,24 @@ Class::Class(Object *loader, u1 *bytecode, size_t len): loader(loader), bytecode
 
     if (g_class_class != nullptr) {
         generateClassObject();
+
+        // todo module != nullptr
+
+        if (IS_GDK9_PLUS && module == nullptr && loader != nullptr) {
+            assert(loader != nullptr);
+            // 对于unnamed module的处理
+            // public final Module getUnnamedModule();
+            Method *m = loader->clazz->lookupInstMethod("getUnnamedModule", "()Ljava/lang/Module;");
+            jref mo = slot::getRef(execJavaFunc(m, {slot::rslot(loader)}));
+
+            // set by VM
+            // private transient Module module;
+//            Field *f = java_mirror->clazz->lookupInstField("module", "Ljava/lang/Module;");
+            java_mirror->setRefField("module", "Ljava/lang/Module;", mo);
+        }
+
+//        jref mmm = java_mirror->getRefField("module", "Ljava/lang/Module;");
+//        printvm("%s, %p\n", class_name, mmm);
     }
 
     state = LOADED;
@@ -636,6 +644,19 @@ Field *Class::lookupField(const utf8_t *name, const utf8_t *descriptor)
     return nullptr;
 }
 
+Field *Class::lookupInstField(int id)
+{
+    Field *f = nullptr;
+    Class *clazz = this;
+    do {
+        if ((f = clazz->getDeclaredInstField(id, false)) != nullptr)
+            return f;
+        clazz = clazz->super_class;
+    } while (clazz != nullptr);
+
+    throw java_lang_NoSuchFieldError(string(class_name) + ", id = " + to_string(id));
+}
+
 Field *Class::lookupStaticField(const utf8_t *name, const utf8_t *descriptor)
 {
     Field *field = lookupField(name, descriptor);
@@ -652,6 +673,15 @@ Field *Class::lookupInstField(const utf8_t *name, const utf8_t *descriptor)
         throw java_lang_IncompatibleClassChangeError();
     }
     return field;
+}
+
+Field *Class::getDeclaredField(const char *name) const
+{
+    for (Field *f: fields) {
+        if (utf8::equals(f->name, name))
+            return f;
+    }
+    return nullptr;
 }
 
 Field *Class::getDeclaredField(const char *name, const char *descriptor) const

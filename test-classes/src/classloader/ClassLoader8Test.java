@@ -8,7 +8,7 @@ import java.net.URLClassLoader;
 /**
  * Status: Pass
  */
-public class ClassLoaderTest {
+public class ClassLoader8Test {
 
     private static void printLoaderChain(ClassLoader loader) {
         System.out.println("------");
@@ -24,6 +24,6 @@ public class ClassLoaderTest {
     public static void main(String[] args) throws MalformedURLException {
         printLoaderChain(Object.class.getClassLoader());
         printLoaderChain(new URLClassLoader(new URL[]{ new File("d:/").toURI().toURL() }));
-        printLoaderChain(ClassLoaderTest.class.getClassLoader());
+        printLoaderChain(ClassLoader8Test.class.getClassLoader());
     }
 }

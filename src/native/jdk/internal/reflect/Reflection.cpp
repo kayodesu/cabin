@@ -1,10 +1,10 @@
-#include "../../jni_internal.h"
-#include "../../../objects/object.h"
-#include "../../../cabin.h"
-#include "../../../runtime/frame.h"
-#include "../../../runtime/vm_thread.h"
-#include "../../../metadata/class.h"
-#include "../../../exception.h"
+#include "../../../jni_internal.h"
+#include "../../../../objects/object.h"
+#include "../../../../cabin.h"
+#include "../../../../runtime/frame.h"
+#include "../../../../runtime/vm_thread.h"
+#include "../../../../metadata/class.h"
+#include "../../../../exception.h"
 
 using namespace std;
 
@@ -58,5 +58,9 @@ static JNINativeMethod methods[] = {
 
 void sun_reflect_Reflection_registerNatives()
 {
-    registerNatives("sun/reflect/Reflection", methods, ARRAY_LENGTH(methods));
+    if (IS_GDK9_PLUS) {
+        registerNatives("jdk/internal/reflect/Reflection", methods, ARRAY_LENGTH(methods));
+    } else {
+        registerNatives("sun/reflect/Reflection", methods, ARRAY_LENGTH(methods));
+    }
 }

@@ -1,4 +1,4 @@
-#include "../../jni_internal.h"
+#include "../../../jni_internal.h"
 
 // static
 static jlong setErrorMode(jlong l)

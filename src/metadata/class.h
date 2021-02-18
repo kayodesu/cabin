@@ -61,7 +61,9 @@ public:
     std::unordered_set<Class *> indep_interfaces; // independent interfaces
 
     Class *nest_host = nullptr;
-    std::vector<Class *> nest_members;
+    // if nest members is loaded, pair.first is 'true', pair.second is 'Class *'
+    // else pair.first is 'false', pair.second is 'utf8_t *class_name'
+    std::vector<std::pair<bool, void *>> nest_members;
 
     /*
      * 本类中定义的所有方法（不包括继承而来的）
@@ -200,10 +202,12 @@ public:
 
     Field *lookupField(const char *name, const char *descriptor);
     Field *lookupStaticField(const char *name, const char *descriptor);
+    Field *lookupInstField(int id);
     Field *lookupInstField(const char *name, const char *descriptor);
 
     void injectInstField(const utf8_t *name, const utf8_t *descriptor);
 
+    Field *getDeclaredField(const char *name) const;
     Field *getDeclaredField(const char *name, const char *descriptor) const;
     Field *getDeclaredInstField(int id, bool ensureExist = true);
 
@@ -334,7 +338,7 @@ public:
     /*---------------------- for java.lang.Class class ----------------------*/
     // set by VM
     // private transient Module module;
-    jref modulexxxxxxx = nullptr;// set by VM  todo
+//    jref module = nullptr;// set by VM  todo
 
     /* 将 ClassLoader 模块的函数定为友元，Class的构造函数只允许 ClassLoader 模块访问 */
 

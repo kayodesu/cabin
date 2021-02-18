@@ -11,6 +11,20 @@ static jclass defineClass0(jobject _this, jstring name, jobject b, jint off, jin
     return defineClass(_this, name, (Array *) b, off, len, pd)->java_mirror;
 }
 
+//  static native Class<?> defineClass0(ClassLoader loader,
+//                                        Class<?> lookup,
+//                                        String name,
+//                                        byte[] b, int off, int len,
+//                                        ProtectionDomain pd,
+//                                        boolean initialize,
+//                                        int flags,
+//                                        Object classData);
+static jclass static_defineClass0(jobject loader, jstring name, jobject b, jint off, jint len, jobject pd)
+{
+    assert(b->isArrayObject());
+    return defineClass(loader, name, (Array *) b, off, len, pd)->java_mirror;
+}
+
 // private native Class<?> defineClass1(String name, byte[] b, int off, int len, ProtectionDomain pd, String source);
 static jclass defineClass1(jobject _this, jstring name,
                            jobject b, jint off, jint len, jobject pd, jstring source)
@@ -19,10 +33,29 @@ static jclass defineClass1(jobject _this, jstring name,
     return defineClass(_this, name, (Array *) b, off, len, pd, source)->java_mirror;
 }
 
+// static native Class<?> defineClass1(ClassLoader loader, String name, byte[] b, int off, int len,
+//                                        ProtectionDomain pd, String source);
+static jclass static_defineClass1(jobject loader, jstring name,
+                           jobject b, jint off, jint len, jobject pd, jstring source)
+{
+    assert(b->isArrayObject());
+    return defineClass(loader, name, (Array *) b, off, len, pd, source)->java_mirror;
+}
+
 // private native Class<?> defineClass2(String name,
 //                              java.nio.ByteBuffer b, int off, int len, ProtectionDomain pd, String source);
 static jclass defineClass2(jobject _this, 
                 jstring name, jobject b, jint off, jint len, jobject pd, jstring source)
+{
+    // todo
+    JVM_PANIC("defineClass2");
+}
+
+// static native Class<?> defineClass2(ClassLoader loader, String name, java.nio.ByteBuffer b,
+//                                        int off, int len, ProtectionDomain pd,
+//                                        String source);
+static jclass static_defineClass2(jobject loader,
+                           jstring name, jobject b, jint off, jint len, jobject pd, jstring source)
 {
     // todo
     JVM_PANIC("defineClass2");
@@ -79,7 +112,7 @@ static void retrieveDirectives()
 #undef PD
 #define PD "Ljava/security/ProtectionDomain;"
 
-static JNINativeMethod methods[] = {
+static JNINativeMethod methods8_minus[] = {
         JNINativeMethod_registerNatives,
         { "defineClass0", "(" STR "[BII" PD ")" CLS, TA(defineClass0) },
         { "defineClass1", "(" STR "[BII" PD STR ")" CLS, TA(defineClass1) },
@@ -91,10 +124,25 @@ static JNINativeMethod methods[] = {
         { "retrieveDirectives", "()Ljava/lang/AssertionStatusDirectives;", TA(retrieveDirectives) },
 };
 
+static JNINativeMethod methods9_plus[] = {
+        JNINativeMethod_registerNatives,
+        { "defineClass0", "(Ljava/lang/ClassLoader;" STR "[BII" PD ")" CLS, TA(static_defineClass0) },
+        { "defineClass1", "(Ljava/lang/ClassLoader;" STR "[BII" PD STR ")" CLS, TA(static_defineClass1) },
+        { "defineClass2", "(Ljava/lang/ClassLoader;" STR "Ljava/nio/ByteBuffer;II" PD STR ")" CLS, TA(static_defineClass2) },
+        { "resolveClass0", "(Ljava/lang/Class;)V", TA(resolveClass0) },
+        { "findBootstrapClass", _STR_ CLS, TA(findBootstrapClass) },
+        { "findLoadedClass0", _STR_ CLS, TA(findLoadedClass0) },
+        { "findBuiltinLib", _STR_ STR, TA(findBuiltinLib) },
+};
+
 #undef PD
 
 void java_lang_ClassLoader_registerNatives()
 {
-    registerNatives("java/lang/ClassLoader", methods, ARRAY_LENGTH(methods));
+    if (IS_GDK9_PLUS) {
+        registerNatives("java/lang/ClassLoader", methods9_plus, ARRAY_LENGTH(methods9_plus));
+    } else {
+        registerNatives("java/lang/ClassLoader", methods8_minus, ARRAY_LENGTH(methods8_minus));
+    }
 }
 

@@ -200,7 +200,10 @@ Class *defineClass(jref class_loader, jref name,
                    Array *bytecode, jint off, jint len, jref protection_domain, jref source)
 {
     auto data = (u1 *) bytecode->data;
-    return defineClass(class_loader, data + off, len);
+    Class *c = defineClass(class_loader, data + off, len);
+    // c->class_name和name是否相同 todo
+//    printvm("class_name: %s\n", c->class_name);
+    return c;
 }
 
 Class *initClass(Class *c)
@@ -224,13 +227,27 @@ Class *linkClass(Class *c)
     return c;
 }
 
-Object *getSystemClassLoader()
+Object *getPlatformClassLoader()
 {
-    Class *scl = loadBootClass(S(java_lang_ClassLoader));
-    assert(scl != nullptr);
+    if (!IS_GDK9_PLUS) {
+        JVM_PANIC("Platform ClassLoader only exist after jdk9"); // todo
+    }
+
+    Class *c = loadBootClass(S(java_lang_ClassLoader));
+    assert(c != nullptr);
+
+    // public static ClassLoader getPlatformClassLoader();
+    Method *get = c->getDeclaredStaticMethod(S(getPlatformClassLoader), S(___java_lang_ClassLoader));
+    return slot::getRef(execJavaFunc(get));
+}
+
+Object *getAppClassLoader()
+{
+    Class *c = loadBootClass(S(java_lang_ClassLoader));
+    assert(c != nullptr);
 
     // public static ClassLoader getSystemClassLoader();
-    Method *get = scl->getDeclaredStaticMethod(S(getSystemClassLoader), S(___java_lang_ClassLoader));
+    Method *get = c->getDeclaredStaticMethod(S(getSystemClassLoader), S(___java_lang_ClassLoader));
     return slot::getRef(execJavaFunc(get));
 }
 

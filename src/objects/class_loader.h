@@ -16,7 +16,6 @@ extern Class *g_object_class;
 extern Class *g_class_class;
 extern Class *g_string_class;
 
-
 void initClassLoader();
 
 #define BOOT_CLASS_LOADER ((jref) nullptr)
@@ -33,7 +32,7 @@ static inline Class *loadArrayClass(const utf8_t *arr_class_name)
 {
     assert(arr_class_name != nullptr);
     assert(arr_class_name[0] == '['); // must be array class name
-    return loadArrayClass(g_system_class_loader, arr_class_name);
+    return loadArrayClass(g_app_class_loader, arr_class_name);
 };
 
 Class *loadTypeArrayClass(ArrayType type);
@@ -53,6 +52,7 @@ utf8_set &getBootPackages();
  *    - array classes: [Ljava/lang/Object; ...
  */
 Class *loadClass(Object *class_loader, const utf8_t *name);
+Class *loadClass9(const utf8_t *name);
 Class *findLoadedClass(Object *class_loader, const utf8_t *name);
 
 Class *defineClass(jref class_loader, u1 *bytecode, size_t len);
@@ -64,6 +64,8 @@ Class *initClass(Class *c);
 
 Class *linkClass(Class *c);
 
+Object *getPlatformClassLoader();
+
 /*
  * 返回 System Class Loader(sun/misc/Launcher$AppClassLoader) to loader user classes.
  *
@@ -74,7 +76,7 @@ Class *linkClass(Class *c);
  *             java/net/URLClassLoader
  *                 sun/misc/Launcher$AppClassLoader
  */
-Object *getSystemClassLoader();
+Object *getAppClassLoader();
 
 /* some methods for testing */
 

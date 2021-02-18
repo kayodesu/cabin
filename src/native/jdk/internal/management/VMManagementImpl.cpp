@@ -1,6 +1,6 @@
-#include "../../jni_internal.h"
-#include "../../../runtime/frame.h"
-#include "../../../objects/object.h"
+#include "../../../jni_internal.h"
+#include "../../../../runtime/frame.h"
+#include "../../../../objects/object.h"
 
 // private native static String getVersion0();
 static jstring getVersion0()

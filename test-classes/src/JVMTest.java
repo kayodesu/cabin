@@ -21,7 +21,7 @@ public class JVMTest{
 	//ICONST_0
 	//PUTSTATIC
 	static boolean initialized=false;
-	
+
 	//<clinit>()V
 	static{
 		//BIPUSH
@@ -38,7 +38,7 @@ public class JVMTest{
 		jumpstest();
 
 		//check default values
-		if(sz!=false) failed(39);	
+		if(sz!=false) failed(39);
 		if(sb!=0) failed(40);
 		if(si!=0) failed(41);
 		if(sc!=0) failed(42);
@@ -115,7 +115,7 @@ public class JVMTest{
 
 		if(value!=true)value=true;
 		else failed(85);
-		
+
 		////////////////////
 		int v0=0;
 		int v1=1;
@@ -163,7 +163,7 @@ public class JVMTest{
 	}
 	public static void acmptest(){
 		Object o0=new Object();
-		Object o1=new Object();	
+		Object o1=new Object();
 		Object o=o0;
 		if(o==o0) o=o1;
 		else failed(137);
@@ -226,7 +226,7 @@ public class JVMTest{
 		}
 	}
 	private static int counter=0;
-	
+
 	public static void testThreads(){
 		final int thread_count=128;
 		final int iterations=128;
@@ -310,7 +310,7 @@ public class JVMTest{
 		if(sj!=-42L)failed(278);
 		sj=42L;
 		if(sj!=42L)failed(280);
-		
+
 		if(sd!=-42.5)failed(282);
 		sd=42.5;
 		if(sd!=42.5)failed(284);
@@ -345,7 +345,7 @@ public class JVMTest{
 		if(j!=-42L)failed(313);
 		j=42L;
 		if(j!=42L)failed(315);
-		
+
 		if(d!=-42.5)failed(317);
 		d=42.5;
 		if(d!=42.5)failed(319);
@@ -432,22 +432,22 @@ public class JVMTest{
 	public static void fcmpl(){
 		float f=1.5f;
 		if(f!=1.5f)
-			failed(403);	
+			failed(403);
 	}
 	public static void fcmpg(){
 		float f=1.1f;
 		if(f<0.9f)
-			failed(408);	
+			failed(408);
 	}
 	public static void dcmpl(){
 		double d=1.5;
 		if(d!=1.5)
-			failed(413);	
+			failed(413);
 	}
 	public static void dcmpg(){
 		double d=1.1;
 		if(d<0.9)
-			failed(418);	
+			failed(418);
 	}
 
 
@@ -674,7 +674,7 @@ public class JVMTest{
 		human=(Human)a;
 		if(null instanceof Object)
 			failed(622);
-	
+
 	}
 
 	Object entrySet=null;
@@ -708,7 +708,7 @@ public class JVMTest{
 			int[] tab=new int[10];
 			int hd=10;
 			if ((tab[0] = hd) != 0)
-					hd=1;	
+					hd=1;
 			if(hd!=1)
 				failed(659);
 
@@ -716,7 +716,7 @@ public class JVMTest{
 			for(int i=1;i<128;++i){
 				tab[0]=0;
 				if ((tab[0] = hd) != 0)
-					hd=i;	
+					hd=i;
 				if(hd!=i)
 					failed(667);
 			}
@@ -727,7 +727,7 @@ public class JVMTest{
 			long[] tab=new long[10];
 			long hd=10L;
 			if ((tab[0] = hd) != 0L)
-					hd=1L;	
+					hd=1L;
 
 			if(hd!=1L)
 				failed(679);
@@ -736,7 +736,7 @@ public class JVMTest{
 			for(long i=1;i<128L;++i){
 				tab[0]=0L;
 				if ((tab[0] = hd) != 0L)
-					hd=i;	
+					hd=i;
 				if(hd!=i)
 					failed(687);
 			}
@@ -1181,7 +1181,7 @@ public class JVMTest{
 		i2=5;
 		if((i2/2)!=2)
 			failed(1127);
-		
+
 
 		float f2=f+42;
 		if(f2!=f+42)failed(1131);
@@ -1258,7 +1258,7 @@ public class JVMTest{
 		testClasses();
 		testExceptions();
 		testSwitch();
-		
+
 		String str="test_string";
 		if(str.length()!=11)
 			failed(1208);
@@ -1287,7 +1287,7 @@ public class JVMTest{
 				}
 			}
 		}
-		
+
 		if(ackermann(3L,5L)!=253)
 				failed(1233);
 
@@ -1355,7 +1355,7 @@ public class JVMTest{
 	public static void iincNegative(){
 		int counter=0;
 		for(int i=100;i>0;--i){
-			counter++;	
+			counter++;
 		}
 		if(counter!=100)
 			failed(1302);
@@ -1613,7 +1613,7 @@ public class JVMTest{
 		if(darr.length!=42)
 			failed(1555);
 
-	
+
 		long[] jarr=new long[42];
 		jarr[17]=43L;
 		if(jarr[17]!=43L)failed(1560);
@@ -1798,7 +1798,7 @@ public class JVMTest{
 			throw null;
 		}
 		catch(NullPointerException e){
-			ok=true;	
+			ok=true;
 		}
 		if(!ok)
 			failed(1745);
@@ -2216,7 +2216,7 @@ if(_i256!=256)
 		darr[17]=43.5;
 		if(darr[17]!=43.5)failed(2158);
 
-	
+
 		long[] jarr=new long[42];
 		jarr[17]=43L;
 		if(jarr[17]!=43L)failed(2163);
@@ -10284,7 +10284,7 @@ if(_i256!=256)
 		}
 		catch(java.lang.UnsatisfiedLinkError e)
     {
-		
+
 		}
 		System.out.println(linenumber);
 		throw new RuntimeException();

@@ -56,11 +56,49 @@ static void sync(jobject _this)
     JVM_PANIC("error\n"); // todo
 }
 
+/**
+ * On Windows return the handle for the standard streams.
+ *
+ * private static native long getHandle(int d);
+ */
+static jlong getHandle(jint d)
+{
+    // todo
+    return 123;
+    JVM_PANIC("error\n"); // todo
+}
+
+/**
+ * Returns true, if the file was opened for appending.
+ *
+ * private static native boolean getAppend(int fd);
+ */
+static jbool getAppend(jint fd)
+{
+    // todo
+    return jfalse;
+    JVM_PANIC("error\n"); // todo
+}
+
+/*
+ * Close the raw file descriptor or handle, if it has not already been closed
+ * and set the fd and handle to -1.
+ *
+ * private native void close0() throws IOException;
+ */
+static void close0()
+{
+    // todo ..
+}
+
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
         { "initIDs", "()V", TA(initIDs) },
         { "set", "(I)J", TA(set) },
         { "sync", "()V", TA(sync) },
+        { "getHandle", "(I)J", TA(getHandle) },
+        { "getAppend", "(I)Z", TA(getAppend) },
+        { "close0", "()V", TA(close0) },
 };
 
 void java_io_FileDescriptor_registerNatives()

@@ -53,7 +53,7 @@ void Object::setFieldValue(Field *f, const slot_t *value)
 
 void Object::setFieldValue(int id, jref value)
 {
-    Field *f = clazz->getDeclaredInstField(id);
+    Field *f = clazz->lookupInstField(id);
 
     if (value == jnull) {
         setRefField(f, jnull);
@@ -115,7 +115,7 @@ static utf8_t *string2utf8(jstrref so)
     assert(g_string_class != nullptr);
     assert(so->isStringObject());
 
-    if (g_jdk_version_9_and_upper) {
+    if (IS_GDK9_PLUS) {
         // byte[] value;
         auto value = so->getRefField<Array>(S(value), S(array_B));
         static_assert(sizeof(utf8_t) == sizeof(jbyte), ""); // todo
@@ -179,7 +179,7 @@ static Object *newString_jdk_9_and_upper(const utf8_t *str)
 
 jstrref newString(const utf8_t *str)
 {
-    if (g_jdk_version_9_and_upper) {
+    if (IS_GDK9_PLUS) {
         return newString_jdk_9_and_upper(str);
     } else {
         return newString_jdk_8_and_under(str);

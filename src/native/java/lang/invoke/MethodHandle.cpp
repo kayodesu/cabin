@@ -34,18 +34,10 @@ static jobject invokeExact(const slot_t *args)
     jref _this = getRef(args);
     assert(_this != nullptr);
     // _this is a object of subclass of java.lang.invoke.MethodHandle
-
-    // final LambdaForm form;
+;
     jref form = _this->getRefField(S(form), "Ljava/lang/invoke/LambdaForm;");
-    assert(form != nullptr);
-
-    // MemberName vmentry;
     jref entry = form->getRefField(S(vmentry), "Ljava/lang/invoke/MemberName;");
-    assert(entry != nullptr);
-
-    //@Injected JVM_Method* vmtarget;
     auto target = (Method *) (void *) entry->getRefField(S(vmtarget), S(sig_java_lang_Object));
-    assert(target != nullptr);
 
     slot_t *slot = execJavaFunc(target, args);
     return getRef(slot);
@@ -94,17 +86,9 @@ static jobject invoke(const slot_t *args)
     assert(_this != nullptr);
     // _this is a object of subclass of java.lang.invoke.MethodHandle
 
-    // final LambdaForm form;
     jref form = _this->getRefField(S(form), "Ljava/lang/invoke/LambdaForm;");
-    assert(form != nullptr);
-
-    // MemberName vmentry;
     jref entry = form->getRefField(S(vmentry), "Ljava/lang/invoke/MemberName;");
-    assert(entry != nullptr);
-
-    //@Injected JVM_Method* vmtarget;
     auto target = (Method *) (void *) entry->getRefField(S(vmtarget), S(sig_java_lang_Object));
-    assert(target != nullptr);
 
     slot_t *slot = execJavaFunc(target, args);
     return getRef(slot);
@@ -203,17 +187,9 @@ static jobject invokeBasic(const slot_t *args)
     assert(_this != nullptr);
     // _this is a object of subclass of java.lang.invoke.MethodHandle
 
-    // final LambdaForm form;
     jref form = _this->getRefField(S(form), "Ljava/lang/invoke/LambdaForm;");
-    assert(form != nullptr);
-
-    // MemberName vmentry;
     jref entry = form->getRefField(S(vmentry), "Ljava/lang/invoke/MemberName;");
-    assert(entry != nullptr);
-
-    //@Injected JVM_Method* vmtarget;
     auto target = (Method *) (void *) entry->getRefField(S(vmtarget), S(sig_java_lang_Object));
-    assert(target != nullptr);
 
     slot_t *slot = execJavaFunc(target, args);
     return getRef(slot);

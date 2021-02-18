@@ -78,6 +78,13 @@ static jobject fillInStackTrace(jobject _this, jint dummy)
      */
     _this->setRefField(S(backtrace), S(sig_java_lang_Object), backtrace);
 
+    /*
+     * The JVM code sets the depth of the backtrace for later retrieval
+     * todo test on jdk15
+     * private transient int depth;
+     */
+    _this->setIntField("depth", S(I), backtrace->arr_len);
+
     return _this;
 }
 

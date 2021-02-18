@@ -2,14 +2,14 @@
 #include "../../../util/endianness.h"
 
 // private static native boolean isBigEndian();
-static jbool _isBigEndian()
+static jbool isBigEndian0()
 {
     return isBigEndian() ? jtrue : jfalse;
 }
 
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
-        { "isBigEndian", "()B", TA(_isBigEndian) },
+        { "isBigEndian", "()Z", TA(isBigEndian0) },
 };
 
 void java_lang_StringUTF16_registerNatives()

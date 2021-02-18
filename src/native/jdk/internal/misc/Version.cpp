@@ -1,4 +1,4 @@
-#include "../../jni_internal.h"
+#include "../../../jni_internal.h"
 
 // public static native String getJdkSpecialVersion()
 static jstring getJdkSpecialVersion()
