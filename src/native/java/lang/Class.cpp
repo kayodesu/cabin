@@ -469,30 +469,50 @@ static jobject getDeclaredFields0(jclass _this, jboolean public_only)
     Class *field_class = loadBootClass(S(java_lang_reflect_Field));
     auto field_array = field_class->arrayClass()->allocArray(count);
 
-    /*
-     * Field(Class<?> declaringClass, String name, Class<?> type,
-     *      int modifiers, int slot, String signature, byte[] annotations)
-     */
-    Method *constructor = field_class->getConstructor(_CLS STR CLS "II" STR "[B)V");
+    Method *constructor;
+    if (!IS_JDK9_PLUS) {        
+        //  Field(Class<?> declaringClass, String name, Class<?> type,
+        //     int modifiers, int slot, String signature, byte[] annotations)
+        constructor = field_class->getConstructor(_CLS STR CLS "II" STR "[B)V");
+    } else {
+        // Field(Class<?> declaringClass, String name, Class<?> type, int modifiers,
+        //     boolean trustedFinal, int slot, String signature, byte[] annotations)
+        constructor = field_class->getConstructor(_CLS STR CLS "IZI" STR "[B)V");
+    }
 
     // invoke constructor of class java/lang/reflect/Field
     for (int i = 0; i < count; i++) {
         Object *o = field_class->allocObject();
         field_array->setRef(i, o);
 
-        execJavaFunc(constructor, {
-                rslot(o), // this
-                rslot(_this), // declaring class
-                // name must be interned.
-                // 参见 java/lang/reflect/Field 的说明
-                rslot(g_string_class->intern(cls->fields[i]->name)), // name
-                rslot(cls->fields[i]->getType()), // type
-                islot(cls->fields[i]->access_flags), /* modifiers todo */
-                islot(cls->fields[i]->id), /* slot   todo */
-//                islot(i), /* slot   todo */
-                rslot(cls->fields[i]->signature != nullptr ? newString(cls->fields[i]->signature) : jnull), /* signature  todo */
-                rslot(jnull), /* annotations  todo */
-        });
+        if (!IS_JDK9_PLUS) {
+            execJavaFunc(constructor, {
+                    rslot(o), // this
+                    rslot(_this), // declaring class
+                    // name must be interned.
+                    // 参见 java/lang/reflect/Field 的说明
+                    rslot(g_string_class->intern(cls->fields[i]->name)), // name
+                    rslot(cls->fields[i]->getType()), // type
+                    islot(cls->fields[i]->access_flags), /* modifiers todo */
+                    islot(cls->fields[i]->id), /* slot   todo */
+                    rslot(cls->fields[i]->signature != nullptr ? newString(cls->fields[i]->signature) : jnull), /* signature  todo */
+                    rslot(jnull), /* annotations  todo */
+            });
+        } else {
+            execJavaFunc(constructor, {
+                    rslot(o), // this
+                    rslot(_this), // declaring class
+                    // name must be interned.
+                    // 参见 java/lang/reflect/Field 的说明
+                    rslot(g_string_class->intern(cls->fields[i]->name)), // name
+                    rslot(cls->fields[i]->getType()), // type
+                    islot(cls->fields[i]->access_flags), /* modifiers todo */
+                    islot(cls->fields[i]->isFinal() ? jtrue : jfalse), // todo trustedFinal
+                    islot(cls->fields[i]->id), /* slot   todo */
+                    rslot(cls->fields[i]->signature != nullptr ? newString(cls->fields[i]->signature) : jnull), /* signature  todo */
+                    rslot(jnull), /* annotations  todo */
+            });
+        }
     }
     
     return field_array;
@@ -673,6 +693,22 @@ static jobject getNestMembers0(jclass _this)
     JVM_PANIC("getNestMembers0");
 }
 
+/**
+ * Returns {@code true} if and only if the underlying class is a hidden class.
+ *
+ * @return {@code true} if and only if this class is a hidden class.
+ *
+ * @since 15
+ * @see MethodHandles.Lookup#defineHiddenClass
+ * 
+ * @HotSpotIntrinsicCandidate
+ * public native boolean isHidden();
+ */
+static jboolean isHidden(jclass _this)
+{
+    return false; // todo
+}     
+
 static JNINativeMethod methods[] = {
         JNINativeMethod_registerNatives,
         { "getPrimitiveClass", _STR_ CLS, TA(getPrimitiveClass) },
@@ -713,6 +749,7 @@ static JNINativeMethod methods[] = {
         { "isRecord0", "()Z", TA(isRecord0) },
         { "getNestHost0", __CLS, TA(getNestHost0) },
         { "getNestMembers0", "()[Ljava/lang/Class;", TA(getNestMembers0) },
+        { "isHidden", "()Z", TA(isHidden) },
 };
 
 void java_lang_Class_registerNatives()

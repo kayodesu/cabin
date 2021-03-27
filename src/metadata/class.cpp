@@ -22,7 +22,7 @@ void Class::calcFieldsId()
 {
     int ins_id = 0;
     if (super_class != nullptr) {
-        ins_id = super_class->inst_fields_count; // todo 父类的私有变量是不是也算在了里面，不过问题不大，浪费点空间吧了
+        ins_id = super_class->inst_fields_count;
     }
 
     for (Field *f: fields) {
@@ -471,7 +471,7 @@ Class::Class(Object *loader, u1 *bytecode, size_t len): loader(loader), bytecode
 
         // todo module != nullptr
 
-        if (IS_GDK9_PLUS && module == nullptr && loader != nullptr) {
+        if (IS_JDK9_PLUS && module == nullptr && loader != nullptr) {
             assert(loader != nullptr);
             // 对于unnamed module的处理
             // public final Module getUnnamedModule();
@@ -565,9 +565,10 @@ void Class::clinit()
     // 可能调用putstatic等函数也会触发<clinit>的调用造成死循环。
     inited = true;
 
-    Method *method = getDeclaredMethod(S(class_init), S(___V), false);
-    if (method != nullptr) { // 有的类没有<clinit>方法
-        execJavaFunc(method);
+    try {
+        execJavaFunc(getDeclaredMethod(S(class_init), S(___V)));
+    } catch (java_lang_NoSuchMethodError &e) {
+        // 有的类没有<clinit>方法
     }
 
     inited = true;
@@ -646,11 +647,14 @@ Field *Class::lookupField(const utf8_t *name, const utf8_t *descriptor)
 
 Field *Class::lookupInstField(int id)
 {
-    Field *f = nullptr;
+    // Field *f = nullptr;
     Class *clazz = this;
     do {
-        if ((f = clazz->getDeclaredInstField(id, false)) != nullptr)
-            return f;
+        try {
+            return clazz->getDeclaredInstField(id);
+        } catch (java_lang_NoSuchFieldError &e) { 
+            // not found
+        }
         clazz = clazz->super_class;
     } while (clazz != nullptr);
 
@@ -693,20 +697,14 @@ Field *Class::getDeclaredField(const char *name, const char *descriptor) const
     return nullptr;
 }
 
-Field *Class::getDeclaredInstField(int id, bool ensureExist)
+Field *Class::getDeclaredInstField(int id)
 {
     for (Field *f: fields) {
         if (!f->isStatic() && f->id == id)
             return f;
     }
 
-    if (ensureExist) {
-        // not find, but ensure exist
-        throw java_lang_NoSuchFieldError(string(class_name) + ", id = " + to_string(id));
-    }
-
-    // not find
-    return nullptr;
+    throw java_lang_NoSuchFieldError(string(class_name) + ", id = " + to_string(id));
 }
 
 void Class::injectInstField(const utf8_t *name, const utf8_t *descriptor)
@@ -748,7 +746,7 @@ void Class::injectInstField(const utf8_t *name, const utf8_t *descriptor)
         inst_fields_count++;
 }
 
-Method *Class::getDeclaredMethod(const utf8_t *name, const utf8_t *descriptor, bool ensureExist)
+Method *Class::getDeclaredMethod(const utf8_t *name, const utf8_t *descriptor)
 {
     for (auto m : methods) {
         // if (m->isSignaturePolymorphic()) {
@@ -760,47 +758,27 @@ Method *Class::getDeclaredMethod(const utf8_t *name, const utf8_t *descriptor, b
             return m;
     }
 
-    if (ensureExist) {
-        // not find, but ensure exist
-        throw java_lang_NoSuchMethodError(string(class_name) + '~' + name + '~' + descriptor);
-    }
-
-    // not find
-    return nullptr;
+    throw java_lang_NoSuchMethodError(string(class_name) + '~' + name + '~' + descriptor);
 }
 
-Method *Class::getDeclaredStaticMethod(const utf8_t *name, const utf8_t *descriptor, bool ensureExist)
+Method *Class::getDeclaredStaticMethod(const utf8_t *name, const utf8_t *descriptor)
 {
     for (auto m : methods) {
         if (m->isStatic() && utf8::equals(m->name, name) && utf8::equals(m->descriptor, descriptor))
             return m;
     }
 
-    if (ensureExist) {
-        // not find, but ensure exist
-        throw java_lang_NoSuchMethodError(string(class_name) + '~' + name + '~' + descriptor);
-    }
-
-    // not find
-    return nullptr;
+    throw java_lang_NoSuchMethodError(string(class_name) + '~' + name + '~' + descriptor);
 }
 
-Method *Class::getDeclaredInstMethod(const utf8_t *name, const utf8_t *descriptor, bool ensureExist)
+Method *Class::getDeclaredInstMethod(const utf8_t *name, const utf8_t *descriptor)
 {
     for (auto m : methods) {
         if (!m->isStatic() && utf8::equals(m->name, name) && utf8::equals(m->descriptor, descriptor))
             return m;
     }
 
-    if (ensureExist) {
-        // not find, but ensure exist
-        stringstream ss;
-        ss << class_name << '~' << name << '~' << descriptor;
-        throw java_lang_NoSuchMethodError(ss.str());
-    }
-
-    // not find
-    return nullptr;
+    throw java_lang_NoSuchMethodError(string(class_name) + '~' + name + '~' + descriptor);
 }
 
 Method *Class::getDeclaredPolymorphicSignatureMethod(const utf8_t *name)
@@ -856,6 +834,7 @@ vector<Method *> Class::getConstructors(bool public_only)
     return getDeclaredMethods(S(object_init), public_only);
 }
 
+#if 0
 Method *Class::lookupMethod(const char *name, const char *descriptor)
 {
     Method *method = getDeclaredMethod(name, descriptor, false);
@@ -879,6 +858,34 @@ Method *Class::lookupMethod(const char *name, const char *descriptor)
 
     return nullptr;
 }
+#endif
+
+#if 1
+Method *Class::lookupMethod(const char *name, const char *descriptor)
+{
+    try {
+        return getDeclaredMethod(name, descriptor);
+    } catch (java_lang_NoSuchMethodError &e) { }
+
+    // todo 是否应该禁止查找父类的私有方法，因为子类看不见父类的私有方法
+    Class *super = super_class;
+    while (super != nullptr) {
+        try {
+            return super->getDeclaredMethod(name, descriptor);
+        } catch (java_lang_NoSuchMethodError &e) { }
+        super = super->super_class;
+    }
+
+    Method *method;
+    for (Class *c: indep_interfaces) {
+        // 在接口 c 及其父接口中查找
+        if ((method = c->lookupMethod(name, descriptor)) != nullptr)
+            return method;
+    }
+
+    return nullptr;
+}
+#endif
 
 Method *Class::lookupStaticMethod(const char *name, const char *descriptor)
 {

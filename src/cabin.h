@@ -112,9 +112,9 @@ extern std::string g_java_home;
 extern u2 g_classfile_major_version;
 extern u2 g_classfile_manor_version;
 
-#define GDK8_CLASSFILE_MAJOR_VERSION 52
+#define JDK8_CLASSFILE_MAJOR_VERSION 52
 
-#define IS_GDK9_PLUS (g_classfile_major_version > GDK8_CLASSFILE_MAJOR_VERSION)
+#define IS_JDK9_PLUS (g_classfile_major_version > JDK8_CLASSFILE_MAJOR_VERSION)
 
 // The system Thread group.
 extern Object *g_sys_thread_group;

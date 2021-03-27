@@ -80,7 +80,7 @@ void initClasspath()
 {
     assert(!g_java_home.empty());
 
-    if (IS_GDK9_PLUS) { // jdk9 开始使用模块
+    if (IS_JDK9_PLUS) { // jdk9 开始使用模块
         findFilesBySuffix((g_java_home + "/jmods").c_str(), "jmod", g_jdk_modules);
 
         // 第0个位置放java.base.jmod，因为java.base.jmod常用，所以放第0个位置首先搜索。
@@ -216,7 +216,7 @@ optional<pair<u1 *, size_t>> readBootClass(const utf8_t *class_name)
 //    assert(isSlashName(class_name));
     assert(class_name[0] != '['); // don't load array class
 
-    if (IS_GDK9_PLUS) {
+    if (IS_JDK9_PLUS) {
         for (auto &mod : g_jdk_modules) {
             auto content = readClass(mod.c_str(), class_name, IN_MODULE);
             if (content.has_value()) { // find out

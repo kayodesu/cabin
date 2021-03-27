@@ -128,7 +128,7 @@ static jint getLength(jobject array)
     if (array == nullptr) {
         throw java_lang_NullPointerException();
     }
-    if (array->isArrayObject()) {
+    if (!array->isArrayObject()) {
         throw java_lang_IllegalArgumentException("Argument is not an array");
     }
 

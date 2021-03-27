@@ -188,6 +188,7 @@ Class *loadClass(Object *class_loader, const utf8_t *name)
     assert(co != nullptr && co->jvm_mirror != nullptr);
     c = co->jvm_mirror;
     addClassToClassLoader(class_loader, c);
+    // initClass(c); /////////// todo /////////////////////////////////////////
     return c;
 }
 
@@ -229,7 +230,7 @@ Class *linkClass(Class *c)
 
 Object *getPlatformClassLoader()
 {
-    if (!IS_GDK9_PLUS) {
+    if (!IS_JDK9_PLUS) {
         JVM_PANIC("Platform ClassLoader only exist after jdk9"); // todo
     }
 

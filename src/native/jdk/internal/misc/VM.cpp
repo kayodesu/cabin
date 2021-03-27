@@ -13,7 +13,7 @@ static void initialize()
     Class *sys = loadBootClass(S(java_lang_System));
     initClass(sys);
 
-    if (IS_GDK9_PLUS) {
+    if (IS_JDK9_PLUS) {
         Method *m = sys->lookupStaticMethod("initPhase1", S(___V));
         assert(m != nullptr);
         execJavaFunc(m);
@@ -70,7 +70,7 @@ static JNINativeMethod methods[] = {
 
 void sun_misc_VM_registerNatives()
 {
-    if (IS_GDK9_PLUS) {
+    if (IS_JDK9_PLUS) {
         registerNatives("jdk/internal/misc/VM", methods, ARRAY_LENGTH(methods));
     } else {
         registerNatives("sun/misc/VM", methods, ARRAY_LENGTH(methods));

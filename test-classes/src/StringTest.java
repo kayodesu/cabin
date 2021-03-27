@@ -1,11 +1,8 @@
-package string;
 
-/**
- * Status: Pass
- */
 public class StringTest {
-    
-    public static void main(String[] args) {
+
+    @Utils.TestMethod(pass = false)
+    public static void test() {
         String s1 = new String("abc1");
         System.out.println(s1);
         String s2 = "abc1";
@@ -26,6 +23,23 @@ public class StringTest {
         } else {
             System.out.println("false");
         }
+    }
+
+    @Utils.TestMethod(pass = false)
+    public static void testIntern() {
+        String s = "ABC";
+
+        String a = new String("ABC");
+        String b = new String("ABC");
+        System.out.println((a != b) ? "Pass":"Fail");
+
+        String interned = a.intern();
+        System.out.println((interned == s)  ? "Pass":"Fail");
+        System.out.println((interned == b.intern())  ? "Pass":"Fail");
+    }
+
+    public static void main(String[] args) {
+        Utils.invokeAllTestMethods(StringTest.class);
     }
 
 }

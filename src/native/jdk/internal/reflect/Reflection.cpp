@@ -58,7 +58,7 @@ static JNINativeMethod methods[] = {
 
 void sun_reflect_Reflection_registerNatives()
 {
-    if (IS_GDK9_PLUS) {
+    if (IS_JDK9_PLUS) {
         registerNatives("jdk/internal/reflect/Reflection", methods, ARRAY_LENGTH(methods));
     } else {
         registerNatives("sun/reflect/Reflection", methods, ARRAY_LENGTH(methods));

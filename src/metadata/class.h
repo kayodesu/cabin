@@ -209,7 +209,7 @@ public:
 
     Field *getDeclaredField(const char *name) const;
     Field *getDeclaredField(const char *name, const char *descriptor) const;
-    Field *getDeclaredInstField(int id, bool ensureExist = true);
+    Field *getDeclaredInstField(int id);
 
     Method *lookupMethod(const char *name, const char *descriptor);
     Method *lookupStaticMethod(const char *name, const char *descriptor);
@@ -218,9 +218,9 @@ public:
     /*
      * get在本类中定义的类，不包括继承的。
      */
-    Method *getDeclaredMethod(const utf8_t *name, const utf8_t *descriptor, bool ensureExist = true);
-    Method *getDeclaredStaticMethod(const utf8_t *name, const utf8_t *descriptor, bool ensureExist = true);
-    Method *getDeclaredInstMethod(const utf8_t *name, const utf8_t *descriptor, bool ensureExist = true);
+    Method *getDeclaredMethod(const utf8_t *name, const utf8_t *descriptor);
+    Method *getDeclaredStaticMethod(const utf8_t *name, const utf8_t *descriptor);
+    Method *getDeclaredInstMethod(const utf8_t *name, const utf8_t *descriptor);
     Method *getDeclaredPolymorphicSignatureMethod(const utf8_t *name);
 
     std::vector<Method *> getDeclaredMethods(const utf8_t *name, bool public_only);

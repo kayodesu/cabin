@@ -106,7 +106,7 @@ static void expand(jobject self)
  *
  * static native MemberName resolve(MemberName self, Class<?> caller) throws LinkageError, ClassNotFoundException;
  */
-static jobject resolve(jobject self/*MemberName*/, jclass caller)
+static jobject resolve8(jobject self/*MemberName*/, jclass caller)
 {
      return resolveMemberName(self, caller != nullptr ? caller->jvm_mirror : nullptr);
 
@@ -209,6 +209,16 @@ static jobject resolve(jobject self/*MemberName*/, jclass caller)
 //    }
 //
 //    JVM_PANIC("not support!");
+}
+
+/*
+ * static native MemberName resolve(MemberName self, Class<?> caller,
+ *           boolean speculativeResolve) throws LinkageError, ClassNotFoundException;
+ */
+static jobject resolve9(jobject self/*MemberName*/, jclass caller, jboolean speculative_resolve)
+{
+    // todo speculative_resolve
+    return resolveMemberName(self, caller != nullptr ? caller->jvm_mirror : nullptr);
 }
 
 // static native int getMembers(Class<?> defc, String matchName, String matchSig,
@@ -345,14 +355,40 @@ static void setCallSiteTargetVolatile(jobject site, jobject target)
 #define _MM_ "(Ljava/lang/invoke/MemberName;)"
 #define T "(Ljava/lang/invoke/CallSite;Ljava/lang/invoke/MethodHandle)V"
 
-static JNINativeMethod methods[] = {
+static JNINativeMethod methods8[] = {
     JNINativeMethod_registerNatives,
 
     // MemberName support
 
     {"init", "(" MM OBJ_ "V", TA(init) },
     {"expand", _MM_ "V", TA(expand) },
-    {"resolve", "(" MM CLS_ MM, TA(resolve) },
+    {"resolve", "(" MM CLS_ MM, TA(resolve8) },
+    {"getMembers", _CLS STR STR "I" CLS "I[" MM ")I", TA(getMembers) },
+
+    // Field layout queries parallel to sun.misc.Unsafe:
+
+    {"objectFieldOffset", _MM_ "J", TA(objectFieldOffset) },
+    {"staticFieldOffset", _MM_ "J", TA(staticFieldOffset) },
+    {"staticFieldBase", _MM_ OBJ, TA(staticFieldBase) },
+    {"getMemberVMInfo", _MM_ OBJ, TA(getMemberVMInfo) },
+
+    // MethodHandle support
+    {"getConstant", "(I)I", TA(getConstant) },
+
+    // CallSite support
+    /* Tell the JVM that we need to change the target of a CallSite. */
+    {"setCallSiteTargetNormal", T, TA(setCallSiteTargetNormal) },
+    {"setCallSiteTargetVolatile", T, TA(setCallSiteTargetVolatile) },
+};
+
+static JNINativeMethod methods9[] = {
+    JNINativeMethod_registerNatives,
+
+    // MemberName support
+
+    {"init", "(" MM OBJ_ "V", TA(init) },
+    {"expand", _MM_ "V", TA(expand) },
+    {"resolve", "(" MM CLS "Z)" MM, TA(resolve9) },
     {"getMembers", _CLS STR STR "I" CLS "I[" MM ")I", TA(getMembers) },
 
     // Field layout queries parallel to sun.misc.Unsafe:
@@ -377,5 +413,9 @@ static JNINativeMethod methods[] = {
 
 void java_lang_invoke_MethodHandleNatives_registerNatives()
 {
-    registerNatives("java/lang/invoke/MethodHandleNatives", methods, ARRAY_LENGTH(methods));
+    if (!IS_JDK9_PLUS) {
+        registerNatives("java/lang/invoke/MethodHandleNatives", methods8, ARRAY_LENGTH(methods8));
+    } else {
+        registerNatives("java/lang/invoke/MethodHandleNatives", methods9, ARRAY_LENGTH(methods9));
+    }
 }

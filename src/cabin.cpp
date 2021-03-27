@@ -237,7 +237,7 @@ void initJVM(int argc, char *argv[])
     TRACE("init main thread over\n");
     // 先加载 sun.mis.VM or jdk.internal.misc.VM 类，然后执行其类初始化方法
     Class *vm = nullptr;
-    if (IS_GDK9_PLUS) {
+    if (IS_JDK9_PLUS) {
         vm = loadBootClass("jdk/internal/misc/VM");
     } else {
         vm = loadBootClass("sun/misc/VM");
@@ -251,7 +251,7 @@ void initJVM(int argc, char *argv[])
     // 在VM类的类初始化方法中调用了 "initialize" 方法。
     initClass(vm);
 
-    if (IS_GDK9_PLUS) {
+    if (IS_JDK9_PLUS) {
         g_platform_class_loader = getPlatformClassLoader();
         assert(g_platform_class_loader != nullptr);
     }

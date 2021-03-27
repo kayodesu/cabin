@@ -1,5 +1,3 @@
-//import sun.misc.FloatingDecimal;
-
 /**
  * Status: Fail
  */
@@ -14,6 +12,10 @@ public class PrintTest {
         System.out.println(122.445F);
         System.out.println(122.445);
         System.out.println(6685785855.285412805887); // 6.685785855285413E9
+
+        String a = "a";
+        String b = "b";
+        System.out.println(a + b + "c");
 
         System.out.printf("%d, %f\n", 435, 959495.64646);
     }

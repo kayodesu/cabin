@@ -139,7 +139,7 @@ static JNINativeMethod methods9_plus[] = {
 
 void java_lang_ClassLoader_registerNatives()
 {
-    if (IS_GDK9_PLUS) {
+    if (IS_JDK9_PLUS) {
         registerNatives("java/lang/ClassLoader", methods9_plus, ARRAY_LENGTH(methods9_plus));
     } else {
         registerNatives("java/lang/ClassLoader", methods8_minus, ARRAY_LENGTH(methods8_minus));

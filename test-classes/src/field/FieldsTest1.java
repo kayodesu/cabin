@@ -3,39 +3,30 @@ package field;
 /**
  * Status: Pass
  */
-public class FieldsTest {
+public class FieldsTest1 {
     
     static class Sup {
-        static int x;
-        int a;
+        private int a;
+
+        public void setA(int a) {
+            this.a = a;
+        }
+
+        public int getA() {
+            return a;
+        }
     }
     
     static class Sub extends Sup {
-        static int y;
-        int b;
+        int a;
     }
 
-    public void staticFields() {
-        int z = Sub.x + Sub.y;
-        z += 100;
-        Sub.y = z;
-        Sub.x = z;
-        System.out.println((Sub.x == 100 && Sub.y == 100) ? "Pass" : "Fail");
-    }
-
-    public void instanceFields() {
-        Sub sub = new Sub();
-        int c = sub.a + sub.b;
-        c += 100;
-        sub.a = c;
-        sub.b = c;
-        System.out.println((sub.a == 100 && sub.b == 100) ? "Pass" : "Fail");
-    }
-    
     public static void main(String[] args) {
-        FieldsTest ft = new FieldsTest();
-        ft.instanceFields();
-        ft.staticFields();
+        Sub sub = new Sub();
+        sub.setA(1);
+        sub.a = 2;
+        System.out.println(sub.getA());
+        System.out.println(sub.a);
     }
     
 }

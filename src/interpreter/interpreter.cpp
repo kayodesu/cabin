@@ -1421,7 +1421,7 @@ opc_multianewarray: {
     }
     frame->pushr(ac->allocMultiArray(dim, lens));
     DISPATCH
-}           
+}
 opc_arraylength: {
     Object *o = frame->popr();
     NULL_POINTER_CHECK(o);
@@ -1845,6 +1845,7 @@ static void callJNIMethod(Frame *frame)
     INVOKE_3(void(*)(jref, jint, jref), R, I, R, )
     INVOKE_3(void(*)(jref, jlong, jlong), R, L, L, )
     INVOKE_3(void(*)(jref, jref, jbool), R, R, Z, )
+    INVOKE_3(jref(*)(jref, jref, jbool), R, R, Z, frame->pushr)
     INVOKE_3(jref(*)(jref, jref, jref), R, R, R, frame->pushr)
     INVOKE_3(jbool(*)(jref, jref, jref), R, R, R, frame->pushi)
     INVOKE_3(jlong(*)(jref, jref, jref), R, R, R, frame->pushl)
