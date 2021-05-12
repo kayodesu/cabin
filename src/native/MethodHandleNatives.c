@@ -1,0 +1,423 @@
+#include "jni_internal.h"
+#include "../cabin.h"
+#include "../runtime/frame.h"
+#include "../metadata/class.h"
+#include "../metadata/field.h"
+#include "../metadata/method.h"
+#include "../objects/mh.h"
+#include "../objects/object.h"
+#include "../interpreter/interpreter.h"
+
+
+/*
+ * Fetch MH-related JVM parameter.
+ * which=0 retrieves MethodHandlePushLimit
+ * which=1 retrieves stack slot push size (in address units)
+ * 
+ * static native int getConstant(int which);
+ */
+static jint getConstant(jint which)
+{
+    // todo 啥意思
+    // if (which == 4)
+    //     return 1;
+    // else
+        return 0;
+}
+
+/* Method flags */
+
+#define MB_LAMBDA_HIDDEN        1
+#define MB_LAMBDA_COMPILED      2
+#define MB_CALLER_SENSITIVE     4
+#define MB_DEFAULT_CONFLICT     8
+
+
+#define IS_METHOD        0x010000
+#define IS_CONSTRUCTOR   0x020000
+#define IS_FIELD         0x040000
+#define IS_TYPE          0x080000
+#define CALLER_SENSITIVE 0x100000
+
+#define SEARCH_SUPERCLASSES 0x100000
+#define SEARCH_INTERFACES   0x200000
+
+#define ALL_KINDS (IS_METHOD | IS_CONSTRUCTOR | IS_FIELD | IS_TYPE)
+                
+#define REFERENCE_KIND_SHIFT 24
+#define REFERENCE_KIND_MASK  (0xf000000 >> REFERENCE_KIND_SHIFT)
+
+static int __method_flags(Method *m) 
+{
+    assert(m != NULL);
+
+    int flags = m->access_flags;
+
+    if(m->access_flags & MB_CALLER_SENSITIVE)
+        flags |= CALLER_SENSITIVE;
+
+    return flags;
+}
+
+// static native void init(MemberName self, Object ref);
+static void init(jref self, jref ref)
+{
+    initMemberName(self, ref);
+}
+/*
+func getMNFlags(method *heap.Method) int32 {
+	flags := int32(method.AccessFlags)
+	if method.IsStatic() {
+		flags |= MN_IS_METHOD | (references.RefInvokeStatic << MN_REFERENCE_KIND_SHIFT)
+	} else if method.IsConstructor() {
+		flags |= MN_IS_CONSTRUCTOR | (references.RefInvokeSpecial << MN_REFERENCE_KIND_SHIFT)
+	} else {
+		flags |= MN_IS_METHOD | (references.RefInvokeSpecial << MN_REFERENCE_KIND_SHIFT)
+	}
+	return flags
+}
+*/
+
+// static native void expand(MemberName self);
+static void expand(jref self)
+{
+    expandMemberName(self);
+}
+
+/*
+ * todo 说明这函数是干嘛的。。。。。。。。。
+ * // There are 4 entities in play here:
+//   * LC: lookupClass
+//   * REFC: symbolic reference class (MN.clazz before resolution);
+//   * DEFC: resolved method holder (MN.clazz after resolution);
+//   * PTYPES: parameter types (MN.type)
+//
+// What we care about when resolving a MemberName is consistency between DEFC and PTYPES.
+// We do type alias (TA) checks on DEFC to ensure that. DEFC is not known until the JVM
+// finishes the resolution, so do TA checks right after MHN.resolve() is over.
+//
+// All parameters passed by a caller are checked against MH type (PTYPES) on every invocation,
+// so it is safe to call a MH from any context.
+//
+// REFC view on PTYPES doesn't matter, since it is used only as a starting point for resolution and doesn't
+// participate in method selection.
+ *
+ * static native MemberName resolve(MemberName self, Class<?> caller) throws LinkageError, ClassNotFoundException;
+ */
+static jref resolve8(jref self/*MemberName*/, jclsref caller)
+{
+     return resolveMemberName(self, caller != NULL ? caller->jvm_mirror : NULL);
+
+
+//    JVM_PANIC("resolve");
+
+//    // todo
+//    // private Class<?> clazz;       // class in which the method is defined
+//    // private String   name;        // may be null if not yet materialized
+//    // private Object   type;        // may be null if not yet materialized
+//    // private int      flags;       // modifier bits; see reflect.Modifier
+//    // private Object   resolution;  // if null, this guy is resolved
+//    auto clazz = self->getRefField<ClassObject>("clazz", "Ljava/lang/Class;")->jvm_mirror;
+//    auto name = self->getRefField("name", "Ljava/lang/String;");
+//    // type maybe a String or an Object[] or a MethodType
+//    // Object[]: (Class<?>) Object[0] is return type
+//    //           (Class<?>[]) Object[1] is parameter types
+//    auto type = self->getRefField("type", "Ljava/lang/Object;");
+//    jint flags = self->getIntField("flags", "I");
+//    auto resolution = self->getRefField("resolution", "Ljava/lang/Object;");
+//
+//    Method *m = self->clazz->lookupInstMethod("getSignature", "()Ljava/lang/String;");
+//    jref sig = RSLOT(execJavaFunc(m, {self}));
+//
+//    auto refKind = getRefKind(self);
+//    switch (flags & ALL_KINDS) {
+//        case IS_METHOD: {
+//            Object *descriptor = NULL;
+//
+//            // TODO "java/lang/invoke/MethodHandle" 及其子类暂时特殊处理，因为取到的type一直是错的，我也不知道为什么？？？？
+//            if (equals(clazz->class_name, "java/lang/invoke/MethodHandle") &&
+//                    (equals(name->toUtf8(), "invoke")
+//                    || equals(name->toUtf8(), "invokeBasic")
+//                    || equals(name->toUtf8(), "invokeExact")
+//                    || equals(name->toUtf8(), "invokeWithArguments")
+//                    || equals(name->toUtf8(), "linkToSpecial")
+//                    || equals(name->toUtf8(), "linkToStatic")
+//                    || equals(name->toUtf8(), "linkToVirtual")
+//                    || equals(name->toUtf8(), "linkToInterface"))) {
+//                descriptor = newString("([Ljava/lang/Object;)Ljava/lang/Object;");
+//            } else if (equals(clazz->class_name, "java/lang/invoke/BoundMethodHandle$Species_L") && equals(name->toUtf8(), "make")) {
+//                descriptor = newString("(Ljava/lang/invoke/MethodType;Ljava/lang/invoke/LambdaForm;Ljava/lang/Object;)Ljava/lang/invoke/BoundMethodHandle;");
+//            } else if (equals(type->clazz->class_name, S(java_lang_String))) {
+//                descriptor = type;
+//            } else if (equals(type->clazz->class_name, "java/lang/invoke/MethodType")) {
+//                descriptor = toMethodDescriptor(type);
+//            } else if (type->isArrayObject()) {
+//                auto arr = (Array *) (type);
+//
+//                auto rtype = arr->get<ClassObject *>(0);
+//                auto ptypes = arr->get<Array *>(1);
+//                descriptor = toMethodDescriptor(findMethodType(rtype, ptypes));
+//            } else {
+//                JVM_PANIC("never go here.");
+//            }
+//            assert(descriptor != NULL);
+//
+//            // printf("resolve: self(%p), %s, %s, %s\n", self, name->toUtf8(), descriptor->toUtf8(), sig->toUtf8()); /////////////////////////////////
+//
+//            m = clazz->lookupMethod(name->toUtf8(), descriptor->toUtf8());
+//            if (m == NULL) {
+//                int xxxx = 2;
+//            }
+//            flags |= __method_flags(m);
+//            self->setIntField("flags", "I", flags);
+//            // if (refKind == JVM_REF_invokeStatic) {
+//            //     m = clazz->getDeclaredStaticMethod(name->toUtf8(), descriptor->toUtf8());
+//            //     flags |= __method_flags(m);
+//            //     self->setIntField("flags", "I", flags);
+//            // } else {
+//            //     JVM_PANIC("not support!");
+//            // }
+//
+//            return self;
+//        }
+//        case IS_CONSTRUCTOR: {
+//            JVM_PANIC("IS_CONSTRUCTOR.");
+//            break;
+//        }
+//        case IS_FIELD: {
+//            #if 0
+//                        FieldBlock *fb;
+//
+//            fb = lookupField(clazz, name_sym, type_sym);
+//            if(fb == NULL)
+//                goto throw_excep;
+//
+//            flags |= fb->access_flags;
+//            INST_DATA(mname, int, mem_name_flags_offset) = flags;
+//            INST_DATA(mname, FieldBlock*, mem_name_vmtarget_offset) = fb;
+//            break;
+//            #endif
+//            Field *f = clazz->lookupField(name->toUtf8(), sig->toUtf8());
+//            flags |= f->access_flags;
+//            self->setIntField("flags", "I", flags);
+//            return self;
+//        }
+//        default:
+//            JVM_PANIC("never go here.");
+//    }
+//
+//    JVM_PANIC("not support!");
+}
+
+/*
+ * static native MemberName resolve(MemberName self, Class<?> caller,
+ *           boolean speculativeResolve) throws LinkageError, ClassNotFoundException;
+ */
+static jref resolve9(jref self/*MemberName*/, jclsref caller, jboolean speculative_resolve)
+{
+    // todo speculative_resolve
+    return resolveMemberName(self, caller != NULL ? caller->jvm_mirror : NULL);
+}
+
+// static native int getMembers(Class<?> defc, String matchName, String matchSig,
+//                              int matchFlags, Class<?> caller, int skip, MemberName[] results);
+static jint getMembers(jclsref defc, jstrref match_name, jstrref match_sig,
+                       jint match_flags, jclsref caller, jint skip, jref _results)
+{
+    assert(is_array_object(_results));
+    jarrref results = (jarrref)(_results);
+    int search_super = (match_flags & SEARCH_SUPERCLASSES) != 0;
+    int search_intf = (match_flags & SEARCH_INTERFACES) != 0;
+    int local = !(search_super || search_intf);
+//    char *name_sym = NULL;
+//    char *sig_sym = NULL;
+
+    if (match_name != NULL) {
+        // utf8_t *x = string_to_utf8(match_name);
+        JVM_PANIC("unimplemented");
+    }
+
+    if (match_sig != NULL) {
+        // utf8_t *x = string_to_utf8(match_sig);
+        JVM_PANIC("unimplemented");
+    }
+
+    if(match_flags & IS_FIELD)
+        JVM_PANIC("unimplemented");
+
+    if(!local)
+        JVM_PANIC("unimplemented");
+
+    if(match_flags & (IS_METHOD | IS_CONSTRUCTOR)) {
+        int count = 0;
+
+        for (u2 i = 0; i < defc->jvm_mirror->methods_count; i++) {
+            Method *m = defc->jvm_mirror->methods + i;
+            if(m->name == SYMBOL(class_init))
+                continue;
+            if(m->name == SYMBOL(object_init))
+                continue;
+            if(skip-- > 0)
+                continue;
+
+            if(count < results->arr_len) {
+                Object *member_name = array_get(jref, results, count);
+                count++;
+                int flags = __method_flags(m) | IS_METHOD;
+
+                flags |= (ACC_IS_STATIC(m->access_flags) ? JVM_REF_invokeStatic : JVM_REF_invokeVirtual) << REFERENCE_KIND_SHIFT;
+
+                set_int_field(member_name, "flags", flags);
+                set_ref_field(member_name, "clazz", "Ljava/lang/Class;", m->clazz->java_mirror);
+                set_ref_field(member_name, "name", "Ljava/lang/String;", intern_string(alloc_string(m->name)));
+                set_ref_field(member_name, "type", "Ljava/lang/Object;", alloc_string(m->descriptor));
+                // INST_DATA(mname, int, mem_name_flags_offset) = flags;
+                // INST_DATA(mname, Class*, mem_name_clazz_offset) = mb->class;
+                // INST_DATA(mname, Object*, mem_name_name_offset) =
+                //                 findInternedString(createString(mb->name));
+                // INST_DATA(mname, Object*, mem_name_type_offset) =
+                //                 createString(mb->type);
+                // INST_DATA(mname, MethodBlock*, mem_name_vmtarget_offset) = mb;
+            }
+        }
+
+        return count;
+    }
+
+
+    JVM_PANIC("unimplemented");
+}
+
+// static native long objectFieldOffset(MemberName self);  // e.g., returns vmindex
+static jlong objectFieldOffset(jref self)
+{
+    // private Class<?> clazz;       // class in which the method is defined
+    // private String   name;        // may be null if not yet materialized
+    // private Object   type;        // may be null if not yet materialized
+    Class *clazz = get_ref_field(self, "clazz", "Ljava/lang/Class;")->jvm_mirror;
+    jstrref name = get_ref_field(self, "name", "Ljava/lang/String;");
+    // type maybe a String or an Object[] or a MethodType
+    // Object[]: (Class<?>) Object[0] is return type
+    //           (Class<?>[]) Object[1] is parameter types
+    jref type = get_ref_field(self, "type", "Ljava/lang/Object;");
+
+    Method *m = lookup_inst_method(self->clazz, "getSignature", "()Ljava/lang/String;");
+    jref sig = slot_get_ref(exec_java_func1(m, self));
+
+    Field *f = lookup_field(clazz, string_to_utf8(name), string_to_utf8(sig));
+    return f->id;
+}
+
+// static native long staticFieldOffset(MemberName self);  // e.g., returns vmindex
+static jlong staticFieldOffset(jref self)
+{
+    JVM_PANIC("staticFieldOffset");
+}
+
+// static native Object staticFieldBase(MemberName self);  // e.g., returns clazz
+static jref staticFieldBase(jref self)
+{
+    JVM_PANIC("staticFieldBase");
+}
+
+// static native Object getMemberVMInfo(MemberName self);  // returns {vmindex,vmtarget}
+static jref getMemberVMInfo(jref self)
+{
+    /*
+     * return Object[2];
+     *
+     * 使用实例：
+     *  Object vminfo = MethodHandleNatives.getMemberVMInfo(this); // this is a MemberName
+        assert(vminfo instanceof Object[]);
+        long vmindex = (Long) ((Object[])vminfo)[0];
+        Object vmtarget = ((Object[])vminfo)[1];
+     */
+    JVM_PANIC("getMemberVMInfo");
+}
+
+// static native void setCallSiteTargetNormal(CallSite site, MethodHandle target);
+static void setCallSiteTargetNormal(jref site, jref target)
+{
+    JVM_PANIC("setCallSiteTargetNormal");
+}
+
+// static native void setCallSiteTargetVolatile(CallSite site, MethodHandle target);
+static void setCallSiteTargetVolatile(jref site, jref target)
+{
+    JVM_PANIC("setCallSiteTargetVolatile");
+}
+
+#undef MM
+#undef _MM_
+#undef T
+
+#define MM "Ljava/lang/invoke/MemberName;"
+#define _MM_ "(Ljava/lang/invoke/MemberName;)"
+#define T "(Ljava/lang/invoke/CallSite;Ljava/lang/invoke/MethodHandle)V"
+
+static JNINativeMethod methods8[] = {
+    JNINativeMethod_registerNatives,
+
+    // MemberName support
+
+    {"init", "(" MM OBJ_ "V", init },
+    {"expand", _MM_ "V", expand },
+    {"resolve", "(" MM CLS_ MM, resolve8 },
+    {"getMembers", _CLS STR STR "I" CLS "I[" MM ")I", getMembers },
+
+    // Field layout queries parallel to sun.misc.Unsafe:
+
+    {"objectFieldOffset", _MM_ "J", objectFieldOffset },
+    {"staticFieldOffset", _MM_ "J", staticFieldOffset },
+    {"staticFieldBase", _MM_ OBJ, staticFieldBase },
+    {"getMemberVMInfo", _MM_ OBJ, getMemberVMInfo },
+
+    // MethodHandle support
+    {"getConstant", "(I)I", getConstant },
+
+    // CallSite support
+    /* Tell the JVM that we need to change the target of a CallSite. */
+    {"setCallSiteTargetNormal", T, setCallSiteTargetNormal },
+    {"setCallSiteTargetVolatile", T, setCallSiteTargetVolatile },
+        { NULL }
+};
+
+static JNINativeMethod methods9[] = {
+    JNINativeMethod_registerNatives,
+
+    // MemberName support
+
+    {"init", "(" MM OBJ_ "V", init },
+    {"expand", _MM_ "V", expand },
+    {"resolve", "(" MM CLS "Z)" MM, resolve9 },
+    {"getMembers", _CLS STR STR "I" CLS "I[" MM ")I", getMembers },
+
+    // Field layout queries parallel to sun.misc.Unsafe:
+
+    {"objectFieldOffset", _MM_ "J", objectFieldOffset },
+    {"staticFieldOffset", _MM_ "J", staticFieldOffset },
+    {"staticFieldBase", _MM_ OBJ, staticFieldBase },
+    {"getMemberVMInfo", _MM_ OBJ, getMemberVMInfo },
+
+    // MethodHandle support
+    {"getConstant", "(I)I", getConstant },
+
+    // CallSite support
+    /* Tell the JVM that we need to change the target of a CallSite. */
+    {"setCallSiteTargetNormal", T, setCallSiteTargetNormal },
+    {"setCallSiteTargetVolatile", T, setCallSiteTargetVolatile },
+        { NULL }
+};
+
+#undef MM
+#undef _MM_
+#undef T
+
+void java_lang_invoke_MethodHandleNatives_registerNatives()
+{
+    if (!IS_JDK9_PLUS) {
+        register_natives("java/lang/invoke/MethodHandleNatives", methods8);
+    } else {
+        register_natives("java/lang/invoke/MethodHandleNatives", methods9);
+    }
+}

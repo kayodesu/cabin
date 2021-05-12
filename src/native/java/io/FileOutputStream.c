@@ -1,0 +1,102 @@
+#include "../../jni_internal.h"
+#include "../../../symbol.h"
+#include "helper.h"
+
+
+// private static native void initIDs();
+static void initIDs()
+{
+//    JVM_PANIC("error\n");
+    // todo
+}
+
+/*
+ * Opens a file, with the specified name, for overwriting or appending.
+ *
+ * private native void open0(String name, boolean append) throws FileNotFoundException;
+ */
+static void open0(jobject _this, jstring name, jboolean append)
+{
+    if (append)
+        __openFile(_this, name, "ab");
+    else
+        __openFile(_this, name, "wb");
+}
+
+/**
+ * Writes the specified byte to this file output stream.
+ *
+ * @param   b   the byte to be written.
+ * @param   append   {@code true} if the write operation first
+ *     advances the position to the end of file
+ *
+ * private native void write(int b, boolean append) throws IOException;
+ */
+static void write(jobject _this, jint b, jboolean append)
+{
+    JVM_PANIC("error\n"); // todo
+}
+
+
+/**
+ * Writes a sub array as a sequence of bytes.
+ * @param b the data to be written
+ * @param off the start offset in the data
+ * @param len the number of bytes that are written
+ * @param append {@code true} to first advance the position to the end of file
+ * @exception IOException If an I/O error has occurred.
+ */
+// private native void writeBytes(byte b[], int off, int len, boolean append) throws IOException;
+static void writeBytes(jobject _this, jobject b, jint off, jint len, jboolean append)
+{
+    auto data = (jbyte *) b->data;
+
+    // todo 这里默认输出到了控制台，是不对的
+    // todo 应该根据_this来选择输出位置
+    char *chars = (char *) (data + off);
+//    auto sss = bytes_to_double(reinterpret_cast<const uint8_t *>(chars));
+    for (jint i = 0; i < len; i++) {
+        printf("%c", chars[i]);
+    }
+    fflush(stdout);  // todo
+
+    /*
+    fdObj := fosObj.GetFieldValue("fd~Ljava/io/FileDescriptor;").(*heap.Object)
+	if fdObj.Extra() == nil {
+		goFd := fdObj.GetFieldValue("fd", "I").(int32)
+		switch goFd {
+		case 0:
+			fdObj.SetExtra(os.Stdin)
+		case 1:
+			fdObj.SetExtra(os.Stdout)
+		case 2:
+			fdObj.SetExtra(os.Stderr)
+		}
+	}
+	goFile := fdObj.Extra().(*os.File)
+
+	goBytes := byteArrObj.GoBytes()
+	goBytes = goBytes[offset : offset+length]
+	goFile.Write(goBytes)
+     */
+}
+
+// private native void close0() throws IOException;
+static void close0(jobject _this)
+{
+    __closeFile(_this);
+}
+
+static JNINativeMethod methods[] = {
+        JNINativeMethod_registerNatives,
+        { "writeBytes", "([BIIZ)V", TA(writeBytes) },
+        { "initIDs", "()V", TA(initIDs) },
+        { "open0", "(Ljava/lang/String;Z)V", TA(open0) },
+        { "write", "(IZ)V", TA(write) },
+        { "close0", "()V", TA(close0) },
+};
+
+void java_io_FileOutputStream_registerNatives()
+{
+    registerNatives("java/io/FileOutputStream", methods, ARRAY_LENGTH(methods));
+}

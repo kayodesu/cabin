@@ -1,0 +1,276 @@
+#include "descriptor.h"
+#include "../util/encoding.h"
+#include "../util/dynstr.h"
+
+
+// @b0: include
+// @e：exclude
+// eg. Ljava/lang/String;
+static Object *convert_desc_element_to_class_object(char **b0, const char *e, jref loader)
+{
+    assert(b0 != NULL && *b0 != NULL && e != NULL && *b0 <= e);
+    char *b = *b0;
+
+    if (*b == 'L') { // reference
+        char *t = strchr(b, ';');
+        if (t == NULL || t >= e) {
+            goto error;
+        }
+
+        b++; // jump 'L'
+        int len = t - b + 1;
+        char class_name[len];
+        for (int i = 0; i < len; i++) {
+            class_name[i] = b[i];
+        }
+        class_name[len - 1] = 0;
+        Class *c = load_class(loader, class_name);
+
+        *b0 = t + 1;
+        return c->java_mirror;
+    }
+
+    if (*b == '[') { // array reference, 描述符形如 [B 或 [[Ljava/lang/String; 的形式
+        char *t = b;
+        while (*(++t) == '[');
+        if (!is_prim_descriptor(*t)) {
+            t = strchr(t, ';');
+            if (t == NULL || t >= e) {
+                goto error;
+            }
+        }
+
+        t++;
+        int len = t - b + 1;
+        char class_name[len];
+        for (int i = 0; i < len; i++) {
+            class_name[i] = t[i];
+        }
+        class_name[len - 1] = 0;
+        Class *c = loadArrayClass(loader, class_name);
+        *b0 = t;
+        return c->java_mirror;
+    }
+
+    if (is_prim_descriptor(*b)) { // prim type
+        const char *class_name = get_prim_class_name(*b);
+        (*b0)++;
+        return load_boot_class(class_name)->java_mirror;
+    }
+
+error:
+    raise_exception(S(java_lang_UnknownError), NULL); // todo msg
+    return NULL;
+    // throw java_lang_UnknownError(); // todo
+}
+
+// @b: include
+// @e：exclude
+// eg. I[BLjava/lang/String;ZZ, return 5.
+static int numElementsInDescriptor(const char *b, const char *e)
+{
+    assert(b != NULL && e != NULL);
+
+    int no_params;
+    b--;
+    for(no_params = 0; ++b < e; no_params++) {
+        if(*b == '[')
+            while(*++b == '[');
+        if(*b == 'L')
+            while(*++b != ';');
+    }
+
+    return no_params;
+}
+
+int numElementsInMethodDescriptor(const char *method_descriptor)
+{
+    assert(method_descriptor != NULL && method_descriptor[0] == '(');
+
+    const char *b = method_descriptor + 1; // jump '('
+    const char *e = strchr(method_descriptor, ')');
+    if (e == NULL) {
+        // todo error
+        JVM_PANIC("error");
+    }
+    return numElementsInDescriptor(b, e);
+}
+
+//int numElementsInDescriptor(const char *descriptor)
+//{
+//    assert(descriptor != NULL);
+//    return numElementsInDescriptor(descriptor, descriptor + strlen(descriptor));
+//}
+
+// @b: include
+// @e：exclude
+// eg. I[BLjava/lang/String;ZZ
+static jarrref convertDesc2ClassObjectArray(char *b, char *e, jref loader)
+{
+    int num = numElementsInDescriptor(b, e);
+    jarrref types = alloc_class_array(num);
+
+    for (int i = 0; b < e; i++) {
+        Object *co = convert_desc_element_to_class_object(&b, e, loader);
+        assert(i < num);
+        array_set_ref(types, i, co);
+    }
+
+    return types;
+}
+
+// pair<jarrref, ClsObj *> parseMethodDescriptor(const char *desc, jref loader)
+// {
+//     assert(desc != NULL);
+
+//     char *e = strchr(desc, ')');
+//     if (e == NULL || *desc != '(') {
+//         throw java_lang_UnknownError(); // todo
+//     }
+
+//     jarrref ptypes = convertDesc2ClassObjectArray((char *) (desc + 1), e, loader);
+//     e++; // jump ')'
+//     ClsObj *rtype = convert_desc_element_to_class_object(e, e + strlen(e), loader);
+//     return make_pair(ptypes, rtype);
+// }
+
+bool parse_method_descriptor(const char *desc, jref loader, jarrref *ptypes, jref *rtype)
+{
+    assert(desc != NULL);
+
+    char *e = strchr(desc, ')');
+    if (e == NULL || *desc != '(') {
+        raise_exception(S(java_lang_UnknownError), NULL); // todo msg
+        // throw java_lang_UnknownError(); // todo
+        return false;
+    }
+
+    if (ptypes != NULL) {
+        *ptypes = convertDesc2ClassObjectArray((char *) (desc + 1), e, loader);
+    }
+
+    e++; // jump ')'
+
+    if (rtype != NULL) {
+        *rtype = convert_desc_element_to_class_object(&e, e + strlen(e), loader);
+    }
+
+    return true;
+}
+
+#if 0
+static string convertTypeToDesc(Class *type)
+{
+    assert(type != NULL);
+
+    if (is_prim_class(type)) {
+        return getPrimDescriptorByClassName(type->class_name);
+    }
+
+    if (is_array_class(type)) {
+        return type->class_name;
+    }
+
+    // 普通类
+    ostringstream oss;
+    oss << 'L';
+    oss << type->class_name;
+    oss << ';';
+    return oss.str();
+}
+
+string unparseMethodDescriptor(jarrref ptypes /*Class *[]*/, ClsObj *rtype)
+{
+    ostringstream oss;
+
+    if (ptypes == NULL) { // no argument
+        oss << "()";
+    } else {
+        oss << "(";
+        for (int i = 0; i < ptypes->arr_len; i++) {
+            auto co = array_get(ClsObj *, ptypes, i);
+            assert(co != NULL);
+            oss << convertTypeToDesc(co->jvm_mirror);        
+        }
+        oss << ")";
+    }
+
+    if (rtype == NULL) { // no return value
+        oss << "V";
+    } else {
+        oss << convertTypeToDesc(rtype->jvm_mirror);
+    }
+
+    return oss.str();
+}
+
+string unparseMethodDescriptor(jref method_type)
+{
+    assert(method_type != NULL);
+
+    // private final Class<?>[] ptypes;
+    auto ptypes = get_ref_field(method_type, "ptypes", S(array_java_lang_Class));
+    // private final Class<?> rtype;
+    auto rtype = get_ref_field(method_type, "rtype", S(sig_java_lang_Class));
+
+    return unparseMethodDescriptor(ptypes, rtype);
+}
+
+#endif
+
+static void convert_type_to_desc(Class *type, DynStr *desc)
+{
+    assert(type != NULL);
+
+    if (is_prim_class(type)) {
+        dynstr_concat(desc, get_prim_descriptor_by_class_name(type->class_name));
+    } else if (is_array_class(type)) {
+        dynstr_concat(desc, type->class_name);
+    } else {
+        // 普通类
+        dynstr_concat(desc, "L");
+        dynstr_concat(desc, type->class_name);
+        dynstr_concat(desc, ";");
+    }
+}
+
+char *unparse_method_descriptor(jarrref ptypes /*Class *[]*/, jclsref rtype)
+{
+    DynStr desc;
+    dynstr_init(&desc);
+
+    if (ptypes == NULL) { // no argument
+        dynstr_copy(&desc, "()");
+    } else {
+        dynstr_copy(&desc, "(");
+
+        for (int i = 0; i < ptypes->arr_len; i++) {
+            jclsref co = array_get(jclsref, ptypes, i);
+            assert(co != NULL);
+            convert_type_to_desc(co->jvm_mirror, &desc);
+            // oss << convertTypeToDesc(co->jvm_mirror);        
+        }
+
+        dynstr_concat(&desc, ")");
+    }
+
+    if (rtype == NULL) { // no return value
+        dynstr_concat(&desc, "V");
+    } else {
+        convert_type_to_desc(rtype->jvm_mirror, &desc);
+    }
+
+    return desc.buf;
+}
+
+char *unparse_method_descriptor0(jref method_type)
+{
+    assert(method_type != NULL);
+
+    // private final Class<?>[] ptypes;
+    jarrref ptypes = get_ref_field(method_type, "ptypes", S(array_java_lang_Class));
+    // private final Class<?> rtype;
+    jref rtype = get_ref_field(method_type, "rtype", S(sig_java_lang_Class));
+
+    return unparse_method_descriptor(ptypes, rtype);
+}
