@@ -1,95 +1,13 @@
 #include <math.h>
 #include <setjmp.h>
 #include "cabin.h"
-#include "classfile/attributes.h"
+#include "attributes.h"
 #include "util/encoding.h"
 #include "jni.h"
 
 
-// the mapping of instructions's code and name
-static const char *instruction_names[] = {
-        "nop",
-
-        // Constants [0x01 ... 0x14]
-        "aconst_null",
-        "iconst_m1", "iconst_0", "iconst_1", "iconst_2", "iconst_3", "iconst_4", "iconst_5",
-        "lconst_0", "lconst_1",
-        "fconst_0", "fconst_1", "fconst_2",
-        "dconst_0", "dconst_1",
-        "bipush", "sipush",
-        "ldc", "ldc_w", "ldc2_w",
-
-        // Loads [0x15 ... 0x35]
-        "iload", "lload", "fload", "dload", "aload",
-        "iload_0", "iload_1", "iload_2", "iload_3",
-        "lload_0", "lload_1", "lload_2", "lload_3",
-        "fload_0", "fload_1", "fload_2", "fload_3",
-        "dload_0", "dload_1", "dload_2", "dload_3",
-        "aload_0", "aload_1", "aload_2", "aload_3",
-        "iaload", "laload", "faload", "daload", "aaload", "baload", "caload", "saload",
-
-        // Stores [0x36 ... 0x56]
-        "istore", "lstore", "fstore", "dstore", "astore",
-        "istore_0", "istore_1", "istore_2", "istore_3",
-        "lstore_0", "lstore_1", "lstore_2", "lstore_3",
-        "fstore_0", "fstore_1", "fstore_2", "fstore_3",
-        "dstore_0", "dstore_1", "dstore_2", "dstore_3",
-        "astore_0", "astore_1", "astore_2", "astore_3",
-        "iastore", "lastore", "fastore", "dastore", "aastore", "bastore", "castore", "sastore",
-
-        // Stack [0x57 ... 0x5f]
-        "pop", "pop2", "dup", "dup_x1", "dup_x2", "dup2", "dup2_x1", "dup2_x2", "swap",
-
-        // Math [0x60 ... 0x84]
-        "iadd", "ladd", "fadd", "dadd",
-        "isub", "lsub", "fsub", "dsub",
-        "imul", "lmul", "fmul", "dmul",
-        "idiv", "ldiv", "fdiv", "ddiv",
-        "irem", "lrem", "frem", "drem",
-        "ineg", "lneg", "fneg", "dneg",
-        "ishl", "lshl", "ishr", "lshr", "iushr", "lushr",
-        "iand", "land", "ior", "lor", "ixor", "lxor", "iinc",
-
-        // Conversions [0x85 ... 0x93]
-        "i2l", "i2f", "i2d",
-        "l2i", "l2f", "l2d",
-        "f2i", "f2l", "f2d",
-        "d2i", "d2l", "d2f",
-        "i2b", "i2c", "i2s",
-
-        // Comparisons [0x94 ... 0xa6]
-        "lcmp", "fcmpl", "fcmpg", "dcmpl", "dcmpg",
-        "ifeq", "ifne", "iflt", "ifge", "ifgt", "ifle",
-        "if_icmpeq", "if_icmpne", "if_icmplt", "if_icmpge", "if_icmpgt", "if_icmple",
-        "if_acmpeq", "if_acmpne",
-
-        // Control [0xa7 ... 0xb1]
-        "goto", "jsr", "ret", "tableswitch", "lookupswitch",
-        "ireturn", "lreturn", "freturn", "dreturn","areturn", "return",
-
-        // References [0xb2 ... 0xc3]
-        "getstatic", "putstatic", "getfield", "putfield",
-        "invokevirtual", "invokespecial", "invokestatic", "invokeinterface", "invokedynamic",
-        "new", "newarray", "anewarray", "arraylength",
-        "athrow", "checkcast", "instanceof", "monitorenter", "monitorexit",
-
-        // Extended [0xc4 ... 0xc9]
-        "wide", "multianewarray", "ifnull", "ifnonnull", "goto_w", "jsr_w",
-
-        // Reserved [0xca ... 0xff]
-#undef U
-#define U "unused"
-        "breakpoint",
-        U, U, U, U, U, // [0xcb ... 0xcf]
-        U, U, U, U, U, U, U, U, // [0xd0 ... 0xd7]
-        U, U, U, U, U, U, U, U, // [0xd8 ... 0xdf]
-        U, U, U, U, U, U, U, U, // [0xe0 ... 0xe7]
-        U, U, U, U, U, U, U, U, // [0xe8 ... 0xef]
-        U, U, U, U, U, U, U, U, // [0xf0 ... 0xf7]
-        U, U, U, U, U, U, // [0xf8 ... 0xfd]
-        "invokenative", "impdep2"
-#undef U        
-};
+// the mapping of instructions' code and name
+static const char *instruction_names[] = JVM_OPCODE_NAME_INITIALIZER;
 
 #define PRINT_OPCODE VERBOSE("%d(0x%x), %s, pc = %d\n", \
                         opcode, opcode, instruction_names[opcode], (int)frame->reader.pc);
@@ -98,9 +16,6 @@ static unsigned char opcode_len[JVM_OPC_MAX+1] = JVM_OPCODE_LENGTH_INITIALIZER;
 
 static void call_jni_method(Frame *frame);
 static bool checkcast(Class *s, Class *t);
-
-#undef TRACE
-#define TRACE(...)
 
 /*
  * 执行当前线程栈顶的frame
@@ -200,12 +115,10 @@ static slot_t *exec(jref *excep)
     };
 
     Thread *thread = get_current_thread();
-
     Frame *frame = thread->top_frame;
     TRACE("executing frame: %s", get_frame_info(frame));
 
     Method *resolved_method = NULL;
-    
     int index;
 
     BytecodeReader *reader = &frame->reader;
@@ -214,7 +127,7 @@ static slot_t *exec(jref *excep)
     // slot_t *ostack = frame->ostack;
     slot_t *lvars = frame->lvars;
 
-    jref _this = ACC_IS_STATIC(frame->method->access_flags) ? (jref) clazz : slot_get_ref(lvars);
+    jref _this = IS_STATIC(frame->method) ? (jref) clazz : slot_get_ref(lvars);
     
     int result = setjmp(thread->jmpbuf);
     if (result != 0) {
@@ -247,7 +160,7 @@ do { \
     cp = &frame->method->clazz->cp; \
     /*ostack = frame->ostack; */                                     \
     lvars = frame->lvars; \
-    _this = ACC_IS_STATIC(frame->method->access_flags) ? (jref) clazz : slot_get_ref(lvars); \
+    _this = IS_STATIC(frame->method) ? (jref) clazz : slot_get_ref(lvars); \
     TRACE("executing frame: %s", get_frame_info(frame)); \
 } while(false)
 
@@ -420,7 +333,7 @@ opc_dload_3:
     
 #define GET_AND_CHECK_ARRAY \
     index = ostack_popi(frame); \
-    jarrref arr = ostack_popr(frame); \
+    jarrRef arr = ostack_popr(frame); \
     NULL_POINTER_CHECK(arr); \
     if (!array_check_bounds(arr, index)) \
         raise_exception(S(java_lang_ArrayIndexOutOfBoundsException), NULL); /* todo msg */       
@@ -1038,7 +951,7 @@ _method_return: {
     frame->ostack -= ret_value_slot_count;
     slot_t *ret_value = frame->ostack;
     if (frame->vm_invoke || invoke_frame == NULL) {
-        if (ACC_IS_SYNCHRONIZED(frame->method->access_flags)) {
+        if (IS_SYNCHRONIZED(frame->method)) {
 //                        _this->unlock();
         }
         return ret_value;
@@ -1047,7 +960,7 @@ _method_return: {
     for (int i = 0; i < ret_value_slot_count; i++) {
         *invoke_frame->ostack++ = *ret_value++;
     }
-    if (ACC_IS_SYNCHRONIZED(frame->method->access_flags)) {
+    if (IS_SYNCHRONIZED(frame->method)) {
 //                    _this->unlock();
     }
     CHANGE_FRAME(invoke_frame);
@@ -1056,7 +969,7 @@ _method_return: {
 opc_getstatic: {
     index = bcr_readu2(reader);
     Field *field = resolve_field(cp, index);
-    if (!ACC_IS_STATIC(field->access_flags)) {
+    if (!IS_STATIC(field)) {
         // throw java_lang_IncompatibleClassChangeError(get_field_info(field));
         raise_exception(S(java_lang_IncompatibleClassChangeError), get_field_info(field));  
     }
@@ -1072,7 +985,7 @@ opc_getstatic: {
 opc_putstatic: {
     index = bcr_readu2(reader);
     Field *field = resolve_field(cp, index);
-    if (!ACC_IS_STATIC(field->access_flags)) {
+    if (!IS_STATIC(field)) {
         // throw java_lang_IncompatibleClassChangeError(get_field_info(field));
         raise_exception(S(java_lang_IncompatibleClassChangeError), get_field_info(field));  
     }
@@ -1096,7 +1009,7 @@ opc_putstatic: {
 opc_getfield: {
     index = bcr_readu2(reader);
     Field *field = resolve_field(cp, index);
-    if (ACC_IS_STATIC(field->access_flags)) {
+    if (IS_STATIC(field)) {
         // throw java_lang_IncompatibleClassChangeError(get_field_info(field));
         raise_exception(S(java_lang_IncompatibleClassChangeError), get_field_info(field));  
     }
@@ -1113,13 +1026,13 @@ opc_getfield: {
 opc_putfield: {
     index = bcr_readu2(reader);
     Field *field = resolve_field(cp, index);
-    if (ACC_IS_STATIC(field->access_flags)) {
+    if (IS_STATIC(field)) {
         // throw java_lang_IncompatibleClassChangeError(get_field_info(field));
         raise_exception(S(java_lang_IncompatibleClassChangeError), get_field_info(field));  
     }
 
     // 如果是final字段，则只能在构造函数中初始化，否则抛出java.lang.IllegalAccessError。
-    if (ACC_IS_FINAL(field->access_flags)) {
+    if (IS_FINAL(field)) {
         if (!class_equals(clazz, field->clazz) || !utf8_equals(frame->method->name, S(object_init))) {
             // throw java_lang_IllegalAccessError(get_field_info(field));
             raise_exception(S(java_lang_IllegalAccessError), get_field_info(field));   
@@ -1149,7 +1062,7 @@ opc_invokevirtual: {
     }
 
     if (is_signature_polymorphic(m)) {
-        assert(ACC_IS_NATIVE(m->access_flags));
+        assert(IS_NATIVE(m));
 //        frame->ostack -= m->arg_slot_count;
         u2 arg_slots_count = cal_method_args_slots_count(m->descriptor, true);
         frame->ostack -= arg_slots_count;
@@ -1158,7 +1071,7 @@ opc_invokevirtual: {
         goto _invoke_method;
     }
 
-    if (ACC_IS_STATIC(m->access_flags)) {
+    if (IS_STATIC(m)) {
         // throw java_lang_IncompatibleClassChangeError(get_method_info(m));
         raise_exception(S(java_lang_IncompatibleClassChangeError), get_method_info(m));  
     }
@@ -1167,7 +1080,7 @@ opc_invokevirtual: {
     jref obj = slot_get_ref(frame->ostack);
     NULL_POINTER_CHECK(obj);
 
-    if (ACC_IS_PRIVATE(m->access_flags)) {
+    if (IS_PRIVATE(m)) {
         resolved_method = m;
     } else {
         // assert(m->vtable_index >= 0);
@@ -1194,18 +1107,18 @@ opc_invokespecial: {
      * 需要一个额外的过程查找最终要调用的方法；否则前面从方法符号引用中解析出来的方法就是要调用的方法。
      * todo 详细说明
      */
-    if (ACC_IS_SUPER(m->clazz->access_flags)
-        && !ACC_IS_PRIVATE(m->access_flags)   
+    if (IS_SUPER(m->clazz)
+        && !IS_PRIVATE(m)
         && is_subclass_of(clazz, m->clazz) // todo
         && !utf8_equals(m->name, S(object_init))) {
         m = lookup_method(clazz->super_class, m->name, m->descriptor);
     }
 
-    if (ACC_IS_ABSTRACT(m->access_flags)) {
+    if (IS_ABSTRACT(m)) {
         // throw java_lang_AbstractMethodError(get_method_info(m));
         raise_exception(S(java_lang_AbstractMethodError), get_method_info(m));  
     }
-    if (ACC_IS_STATIC(m->access_flags)) {
+    if (IS_STATIC(m)) {
         // throw java_lang_IncompatibleClassChangeError(get_method_info(m));
         raise_exception(S(java_lang_IncompatibleClassChangeError), get_method_info(m));  
     }
@@ -1223,11 +1136,11 @@ opc_invokestatic: {
     // 如果类还没有被初始化，会触发类的初始化。
     index = bcr_readu2(reader);
     Method *m = resolve_method_or_interface_method(cp, index);
-    if (ACC_IS_ABSTRACT(m->access_flags)) {
+    if (IS_ABSTRACT(m)) {
         // throw java_lang_AbstractMethodError(get_method_info(m));
         raise_exception(S(java_lang_AbstractMethodError), get_method_info(m));  
     }
-    if (!ACC_IS_STATIC(m->access_flags)) {
+    if (!IS_STATIC(m)) {
         // throw java_lang_IncompatibleClassChangeError(get_method_info(m));
         raise_exception(S(java_lang_IncompatibleClassChangeError), get_method_info(m));  
     }
@@ -1260,7 +1173,7 @@ opc_invokeinterface: {
     bcr_readu1(reader);
 
     Method *m = resolve_interface_method(cp, index);
-    assert(ACC_IS_INTERFACE(m->clazz->access_flags));
+    assert(IS_INTERFACE(m->clazz));
 
     /* todo 本地方法 */
 
@@ -1273,12 +1186,12 @@ opc_invokeinterface: {
     // assert(resolved_method != NULL);
     // assert(resolved_method == obj->clazz->lookupMethod(m->name, m->descriptor));
     resolved_method = lookup_method(obj->clazz, m->name, m->descriptor);
-    if (ACC_IS_ABSTRACT(resolved_method->access_flags)) {
+    if (IS_ABSTRACT(resolved_method)) {
         // throw java_lang_AbstractMethodError(get_method_info(resolved_method));
         raise_exception(S(java_lang_AbstractMethodError), get_method_info(resolved_method));  
     }
 
-    if (!ACC_IS_PUBLIC(resolved_method->access_flags)) {
+    if (!IS_PUBLIC(resolved_method)) {
         // throw java_lang_IllegalAccessError(get_method_info(resolved_method));
         raise_exception(S(java_lang_IllegalAccessError), get_method_info(resolved_method));   
     }
@@ -1331,7 +1244,7 @@ opc_invokedynamic: {
             // public final Object invokeExact(Object... args) throws Throwable
             Method *invokeExact = lookup_inst_method(exact_method_handle->clazz,
                                         S(invokeExact), "([Ljava/lang/Object;)Ljava/lang/Object;");
-            assert(ACC_IS_VARARGS(invokeExact->access_flags));
+            assert(IS_VARARGS(invokeExact));
             int slots_count = cal_method_args_slots_count(invoked_descriptor, false);
             slot_t _args[slots_count];
             slot_set_ref(_args, exact_method_handle);
@@ -1385,7 +1298,7 @@ opc_invokenative: {
 //
 //    new_frame->lvars = frame->ostack; // todo 什么意思？？？？？？？？
 //    CHANGE_FRAME(new_frame)
-//    if (ACC_IS_SYNCHRONIZED(resolved_method->access_flags)) {
+//    if (IS_SYNCHRONIZED(resolved_method)) {
 ////        _this->unlock(); // todo why unlock 而不是 lock ................................................
 //    }
 //    goto opc_invokenative;
@@ -1397,7 +1310,7 @@ _invoke_method: {
 
     new_frame->lvars = frame->ostack; // todo 什么意思？？？？？？？？
     CHANGE_FRAME(new_frame);
-    if (ACC_IS_SYNCHRONIZED(resolved_method->access_flags)) {
+    if (IS_SYNCHRONIZED(resolved_method)) {
 //        _this->unlock(); // todo why unlock 而不是 lock ................................................
     }
     DISPATCH
@@ -1408,7 +1321,7 @@ opc_new: {
     Class *c = resolve_class(cp, bcr_readu2(reader));
     init_class(c);
 
-    if (ACC_IS_INTERFACE(c->access_flags) || ACC_IS_ABSTRACT(c->access_flags)) { 
+    if (IS_INTERFACE(c) || IS_ABSTRACT(c)) {
         // throw java_lang_InstantiationException(c->class_name);
         raise_exception(S(java_lang_InstantiationException), c->class_name);  
     }
@@ -1645,7 +1558,7 @@ static bool checkcast(Class *s, Class *t)
             return false;
         return is_subclass_of(s, t);
     } else { // s is array type
-        if (ACC_IS_INTERFACE(t->access_flags)) {
+        if (IS_INTERFACE(t)) {
             // 数组实现了两个接口，看看t是不是其中之一。
             return is_subclass_of(s, t);
         } else if (is_array_class(t)) { // s and t are both array type
@@ -1734,23 +1647,23 @@ slot_t *exec_java_func(Method *method, const slot_t *args)
 //     return exec_java_func(method, slots);
 // }
 
-slot_t *exec_java_func0(Method *m, jref _this, jarrref args)
+slot_t *exec_java_func0(Method *m, jref _this, jarrRef args)
 {
     assert(m != NULL);
 
     // If m is static, _this is NULL.
     if (args == NULL) {
         if (_this != NULL) {
-            assert(!ACC_IS_STATIC(m->access_flags));
+            assert(!IS_STATIC(m));
             return exec_java_func1(m, _this);
         } else {
-            assert(ACC_IS_STATIC(m->access_flags));
+            assert(IS_STATIC(m));
             return exec_java_func(m, NULL);
         } 
     }
 
     // Class[]
-    jarrref types = get_parameter_types(m);
+    jarrRef types = get_parameter_types(m);
     assert(types != NULL);
     assert(types->arr_len == args->arr_len);
 
@@ -1758,12 +1671,12 @@ slot_t *exec_java_func0(Method *m, jref _this, jarrref args)
     slot_t *real_args = vm_malloc(sizeof(slot_t) * (2 * types->arr_len + 1));
     int k = 0;
     if (_this != NULL) {
-        assert(!ACC_IS_STATIC(m->access_flags));
+        assert(!IS_STATIC(m));
         slot_set_ref(real_args, _this);
         k++;
     }
     for (int i = 0; i < types->arr_len; i++) {
-        Class *c = array_get(jclsref, types, i)->jvm_mirror;
+        Class *c = array_get(jclsRef, types, i)->jvm_mirror;
         jref o = array_get(jref, args, i);
 
         if (is_prim_class(c)) {
@@ -1814,46 +1727,32 @@ JNINativeMethod *find_native_method(const char *class_name, const char *method_n
 static void call_jni_method(Frame *frame)
 {
     assert(frame != NULL && frame->method != NULL);
-    assert(ACC_IS_NATIVE(frame->method->access_flags));
-    // assert(frame->method->native_method->fnPtr != NULL);
+    Method *m = frame->method;
+    assert(IS_NATIVE(m));
 
     const slot_t *lvars = frame->lvars;
-    // void *func = frame->method->native_method->fnPtr;
-    // assert(func != NULL);
 
     JNIEnv *env = get_jni_env(); 
-    bool is_static = ACC_IS_STATIC(frame->method->access_flags);
-    jclsRef cls = frame->method->clazz->java_mirror;
+    bool is_static = IS_STATIC(m);
+    jclsRef cls = m->clazz->java_mirror;
 
-    // void *func = find_from_java_dll(frame->method);
-    // if (func == NULL) {
-    //     JNINativeMethod *m = find_native_method(frame->method->clazz->class_name, frame->method->name, frame->method->descriptor);
-    //     // todo
-    //     if (m == NULL) {
-    //         println("not find: %s, %s", frame->method->clazz->class_name, frame->method->name);
-    //         JVM_PANIC("xxxxxxxxxxxxxxxx");
-    //     }
-    //     func = m->fnPtr;
-    // }
+     void *func = find_from_java_dll(m);
+     if (func == NULL) {
+         JNINativeMethod *native = find_native_method(m->clazz->class_name, m->name, m->descriptor);
+         if (native == NULL) {
+             JVM_PANIC("Don't find native method: %s, %s, %s, %s",
+                       m->clazz->class_name, m->name, m->descriptor, m->native_simple_descriptor);
+         }
+         func = native->fnPtr;
+     }
 
-    void *func;
-    JNINativeMethod *m = find_native_method(frame->method->clazz->class_name, frame->method->name, frame->method->descriptor);
-    if (m != NULL) 
-        func = m->fnPtr;
-    else
-        func = find_from_java_dll(frame->method);
-
-    if (func == NULL) {
-        println("%s, %s, %s, %s", frame->method->clazz->class_name, frame->method->name, frame->method->descriptor, frame->method->native_simple_descriptor);
-        JVM_PANIC("not found");
-    }
     assert(func != NULL);
 
     // 应对 java/lang/invoke/MethodHandle.java 中的 invoke* native methods.
     // 比如：
     // public final native @PolymorphicSignature Object invoke(Object... args) throws Throwable;
     // if (is_signature_polymorphic(frame->method)
-    //         && !ACC_IS_STATIC(frame->method->access_flags)
+    //         && !IS_STATIC(frame->method)
     //         && type == typeid(jref(*)(const slot_t *))) {
     //     jref ret = ((jref(*)(const slot_t *)) func)(lvars);
     //     ostack_pushr(frame, ret);
@@ -1864,7 +1763,7 @@ static void call_jni_method(Frame *frame)
     // // 比如：
     // // static native @PolymorphicSignature Object linkToStatic(Object... args) throws Throwable;
     // if (is_signature_polymorphic(frame->method)
-    //     && ACC_IS_STATIC(frame->method->access_flags)
+    //     && IS_STATIC(frame->method)
     //     && type == typeid(jref(*)(u2, const slot_t *))) {
     //     jref ret = ((jref(*)(u2, const slot_t *)) func)(frame->method->arg_slot_count, lvars);
     //     ostack_pushr(frame, ret);

@@ -16,7 +16,7 @@ public class FileNotFoundTest {
         try {
             FileInputStream fis = new FileInputStream("a/b/foo.txt");
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            e.print_stack_trace();
         }
     }
     

@@ -1,4 +1,4 @@
-#include "../util/encoding.h"
+#include "util/encoding.h"
 
 static PHS boot_packages;
 
@@ -197,7 +197,7 @@ Class *load_class(Object *class_loader, const utf8_t *name)
     utf8_t *dot_name = slash_to_dot_dup(name);
     slot_t *slot = exec_java_func2(m, class_loader, alloc_string(dot_name));
     assert(slot != NULL);
-    jclsref co = slot_get_ref(slot);
+    jclsRef co = slot_get_ref(slot);
     assert(co != NULL && co->jvm_mirror != NULL);
     c = co->jvm_mirror;
     addClassToClassLoader(class_loader, c);
@@ -211,7 +211,7 @@ Class *load_class(Object *class_loader, const utf8_t *name)
 // }
 
 Class *define_class1(jref class_loader, jref name,
-                   jarrref bytecode, jint off, jint len, jref protection_domain, jref source)
+                     jarrRef bytecode, jint off, jint len, jref protection_domain, jref source)
 {
     u1 *data = (u1 *) bytecode->data;
     Class *c = define_class(class_loader, data + off, len);

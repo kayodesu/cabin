@@ -1,25 +1,23 @@
 #ifndef CABIN_DYNSTR_H
 #define CABIN_DYNSTR_H
 
+#include <stdint.h>
+
 /*
  * dynamic string
  */
 
-typedef struct dynstr DynStr;
+typedef struct dynstr {
+    char *buf; 
+    size_t buf_len;
+} DynStr;
 
-struct dynstr {
-    // 用于记录buf数组中使用的字节的数目
-    // 和dynstr存储的字符串的长度相等
-    int len;
+void dynstr_init(DynStr *);
+void dynstr_release(DynStr *);
 
-    // 用于记录buf数组中没有使用的字节的数目
-    int free;
+DynStr *dynstr_copy(DynStr *, const char *);
+DynStr *dynstr_concat(DynStr *, const char *);
 
-    // 字节数组，用于储存字符串
-    char buf[];   //buf的大小等于len+free+1，其中多余的1个字节是用来存储’\0’的。
-};
-
-DynStr *dynstr_create();
-
+DynStr *dynstr_printf(DynStr *, const char * format, ...);
 
 #endif //CABIN_DYNSTR_H

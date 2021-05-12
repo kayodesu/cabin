@@ -11,6 +11,7 @@ static const union { char c[4]; unsigned long l; } endian_test = { { 'l', '?', '
 // Endianness(字节顺序)
 #define ENDIANNESS ((char) endian_test.l)
 
+#if 0
 static inline jbyte swapEndian(jbyte x)
 {
     return x;
@@ -86,15 +87,19 @@ static inline jdouble swapEndian(jdouble x)
     return t2.d;
 }
 
-static inline bool isBigEndian()
-{
-    return ENDIANNESS == 'b';
-}
-
 template <typename T>
 static inline T changeToBigEndian(T x)
 {
     return ENDIANNESS == 'b' ? x : swapEndian(x);
 }
+
+#endif
+
+
+static inline bool is_big_endian()
+{
+    return ENDIANNESS == 'b';
+}
+
 
 #endif //CABIN_ENDIANNESS_H

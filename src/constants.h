@@ -26,28 +26,28 @@
 #define JVM_ACC_MODULE        0x8000  // class             , 表示class文件描述的是一个模块
 #define JVM_ACC_MANDATED      0x8000
 
-#define ACC_IS_PUBLIC(access_flags)       (((access_flags) & JVM_ACC_PUBLIC)       != 0)
-#define ACC_IS_PRIVATE(access_flags)      (((access_flags) & JVM_ACC_PRIVATE)      != 0)
-#define ACC_IS_PROTECTED(access_flags)    (((access_flags) & JVM_ACC_PROTECTED)    != 0)
-#define ACC_IS_STATIC(access_flags)       (((access_flags) & JVM_ACC_STATIC)       != 0)
-#define ACC_IS_FINAL(access_flags)        (((access_flags) & JVM_ACC_FINAL)        != 0)
-#define ACC_IS_SUPER(access_flags)        (((access_flags) & JVM_ACC_SUPER)        != 0)
-#define ACC_IS_SYNCHRONIZED(access_flags) (((access_flags) & JVM_ACC_SYNCHRONIZED) != 0)
-#define ACC_IS_VOLATILE(access_flags)     (((access_flags) & JVM_ACC_VOLATILE)     != 0)
-#define ACC_IS_BRIDGE(access_flags)       (((access_flags) & JVM_ACC_BRIDGE)       != 0)
-#define ACC_IS_TRANSIENT(access_flags)    (((access_flags) & JVM_ACC_TRANSIENT)    != 0)
-#define ACC_IS_VARARGS(access_flags)      (((access_flags) & JVM_ACC_VARARGS)      != 0)
-#define ACC_IS_NATIVE(access_flags)       (((access_flags) & JVM_ACC_NATIVE)       != 0)
-#define ACC_IS_INTERFACE(access_flags)    (((access_flags) & JVM_ACC_INTERFACE)    != 0)
-#define ACC_IS_ABSTRACT(access_flags)     (((access_flags) & JVM_ACC_ABSTRACT)     != 0)
-#define ACC_IS_STRICT(access_flags)       (((access_flags) & JVM_ACC_STRICT)       != 0)
-#define ACC_IS_SYNTHETIC(access_flags)    (((access_flags) & JVM_ACC_SYNTHETIC)    != 0)
-#define ACC_IS_ANNOTATION(access_flags)   (((access_flags) & JVM_ACC_ANNOTATION)   != 0)
-#define ACC_IS_ENUM(access_flags)         (((access_flags) & JVM_ACC_ENUM)         != 0)
-#define ACC_IS_MODULE(access_flags)       (((access_flags) & JVM_ACC_MODULE)       != 0)
-#define ACC_IS_MANDATED(access_flags)     (((access_flags) & JVM_ACC_MANDATED)     != 0)
+#define IS_PUBLIC(_p_)       ((((_p_)->access_flags) & JVM_ACC_PUBLIC)       != 0)
+#define IS_PRIVATE(_p_)      ((((_p_)->access_flags) & JVM_ACC_PRIVATE)      != 0)
+#define IS_PROTECTED(_p_)    ((((_p_)->access_flags) & JVM_ACC_PROTECTED)    != 0)
+#define IS_STATIC(_p_)       ((((_p_)->access_flags) & JVM_ACC_STATIC)       != 0)
+#define IS_FINAL(_p_)        ((((_p_)->access_flags) & JVM_ACC_FINAL)        != 0)
+#define IS_SUPER(_p_)        ((((_p_)->access_flags) & JVM_ACC_SUPER)        != 0)
+#define IS_SYNCHRONIZED(_p_) ((((_p_)->access_flags) & JVM_ACC_SYNCHRONIZED) != 0)
+#define IS_VOLATILE(_p_)     ((((_p_)->access_flags) & JVM_ACC_VOLATILE)     != 0)
+#define IS_BRIDGE(_p_)       ((((_p_)->access_flags) & JVM_ACC_BRIDGE)       != 0)
+#define IS_TRANSIENT(_p_)    ((((_p_)->access_flags) & JVM_ACC_TRANSIENT)    != 0)
+#define IS_VARARGS(_p_)      ((((_p_)->access_flags) & JVM_ACC_VARARGS)      != 0)
+#define IS_NATIVE(_p_)       ((((_p_)->access_flags) & JVM_ACC_NATIVE)       != 0)
+#define IS_INTERFACE(_p_)    ((((_p_)->access_flags) & JVM_ACC_INTERFACE)    != 0)
+#define IS_ABSTRACT(_p_)     ((((_p_)->access_flags) & JVM_ACC_ABSTRACT)     != 0)
+#define IS_STRICT(_p_)       ((((_p_)->access_flags) & JVM_ACC_STRICT)       != 0)
+#define IS_SYNTHETIC(_p_)    ((((_p_)->access_flags) & JVM_ACC_SYNTHETIC)    != 0)
+#define IS_ANNOTATION(_p_)   ((((_p_)->access_flags) & JVM_ACC_ANNOTATION)   != 0)
+#define IS_ENUM(_p_)         ((((_p_)->access_flags) & JVM_ACC_ENUM)         != 0)
+#define IS_MODULE(_p_)       ((((_p_)->access_flags) & JVM_ACC_MODULE)       != 0)
+#define IS_MANDATED(_p_)     ((((_p_)->access_flags) & JVM_ACC_MANDATED)     != 0)
 
-#define ACC_SET_SYNTHETIC(access_flags)   ((access_flags) |= JVM_ACC_SYNTHETIC)
+#define SET_SYNTHETIC(_p_)   (((_p_)->access_flags) |= JVM_ACC_SYNTHETIC)
 
 
 #define JVM_ACC_PUBLIC_BIT        0
@@ -662,6 +662,86 @@ enum {
    3,   /* ifnonnull */                 \
    5,   /* goto_w */                    \
    5    /* jsr_w */                     \
+}
+
+#define JVM_OPCODE_NAME_INITIALIZER { \
+        "nop", \
+ \
+        /* Constants [0x01 ... 0x14] */ \
+        "aconst_null", \
+        "iconst_m1", "iconst_0", "iconst_1", "iconst_2", "iconst_3", "iconst_4", "iconst_5", \
+        "lconst_0", "lconst_1", \
+        "fconst_0", "fconst_1", "fconst_2", \
+        "dconst_0", "dconst_1", \
+        "bipush", "sipush", \
+        "ldc", "ldc_w", "ldc2_w", \
+ \
+        /* Loads [0x15 ... 0x35] */ \
+        "iload", "lload", "fload", "dload", "aload", \
+        "iload_0", "iload_1", "iload_2", "iload_3", \
+        "lload_0", "lload_1", "lload_2", "lload_3", \
+        "fload_0", "fload_1", "fload_2", "fload_3", \
+        "dload_0", "dload_1", "dload_2", "dload_3", \
+        "aload_0", "aload_1", "aload_2", "aload_3", \
+        "iaload", "laload", "faload", "daload", "aaload", "baload", "caload", "saload", \
+ \
+        /* Stores [0x36 ... 0x56] */ \
+        "istore", "lstore", "fstore", "dstore", "astore", \
+        "istore_0", "istore_1", "istore_2", "istore_3", \
+        "lstore_0", "lstore_1", "lstore_2", "lstore_3", \
+        "fstore_0", "fstore_1", "fstore_2", "fstore_3", \
+        "dstore_0", "dstore_1", "dstore_2", "dstore_3", \
+        "astore_0", "astore_1", "astore_2", "astore_3", \
+        "iastore", "lastore", "fastore", "dastore", "aastore", "bastore", "castore", "sastore", \
+ \
+        /* Stack [0x57 ... 0x5f] */ \
+        "pop", "pop2", "dup", "dup_x1", "dup_x2", "dup2", "dup2_x1", "dup2_x2", "swap", \
+ \
+        /* Math [0x60 ... 0x84] */ \
+        "iadd", "ladd", "fadd", "dadd", \
+        "isub", "lsub", "fsub", "dsub", \
+        "imul", "lmul", "fmul", "dmul", \
+        "idiv", "ldiv", "fdiv", "ddiv", \
+        "irem", "lrem", "frem", "drem", \
+        "ineg", "lneg", "fneg", "dneg", \
+        "ishl", "lshl", "ishr", "lshr", "iushr", "lushr", \
+        "iand", "land", "ior", "lor", "ixor", "lxor", "iinc", \
+ \
+        /* Conversions [0x85 ... 0x93] */ \
+        "i2l", "i2f", "i2d", \
+        "l2i", "l2f", "l2d", \
+        "f2i", "f2l", "f2d", \
+        "d2i", "d2l", "d2f", \
+        "i2b", "i2c", "i2s", \
+ \
+        /* Comparisons [0x94 ... 0xa6] */ \
+        "lcmp", "fcmpl", "fcmpg", "dcmpl", "dcmpg", \
+        "ifeq", "ifne", "iflt", "ifge", "ifgt", "ifle", \
+        "if_icmpeq", "if_icmpne", "if_icmplt", "if_icmpge", "if_icmpgt", "if_icmple", \
+        "if_acmpeq", "if_acmpne", \
+ \
+        /* Control [0xa7 ... 0xb1] */ \
+        "goto", "jsr", "ret", "tableswitch", "lookupswitch", \
+        "ireturn", "lreturn", "freturn", "dreturn","areturn", "return", \
+ \
+        /* References [0xb2 ... 0xc3] */ \
+        "getstatic", "putstatic", "getfield", "putfield", \
+        "invokevirtual", "invokespecial", "invokestatic", "invokeinterface", "invokedynamic", \
+        "new", "newarray", "anewarray", "arraylength", \
+        "athrow", "checkcast", "instanceof", "monitorenter", "monitorexit", \
+ \
+        /* Extended [0xc4 ... 0xc9] */ \
+        "wide", "multianewarray", "ifnull", "ifnonnull", "goto_w", "jsr_w", \
+ \
+        /* Reserved [0xca ... 0xff] */ \
+        "breakpoint", \
+        "unused", "unused", "unused", "unused", "unused", "unused", "unused", "unused", \
+        "unused", "unused", "unused", "unused", "unused", "unused", "unused", "unused", \
+        "unused", "unused", "unused", "unused", "unused", "unused", "unused", "unused", \
+        "unused", "unused", "unused", "unused", "unused", "unused", "unused", "unused", \
+        "unused", "unused", "unused", "unused", "unused", "unused", "unused", "unused", \
+        "unused", "unused", "unused", "unused", "unused", "unused", "unused", "unused", \
+        "unused", "unused", "unused", "invokenative", "impdep2" \
 }
 
 #endif // CABIN_CONSTANTS_H

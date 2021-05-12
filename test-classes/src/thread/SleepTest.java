@@ -7,7 +7,7 @@ public class SleepTest {
         try {
             Thread.sleep(100);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            e.print_stack_trace();
         }
         long afterSleep = System.currentTimeMillis();
       //  assertTrue(afterSleep - beforeSleep >= 100);

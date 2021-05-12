@@ -1,11 +1,10 @@
 #include <assert.h>
-#include "../cabin.h"
-#include "../util/encoding.h"
-#include "descriptor.h"
-#include "../util/convert.h"
-#include "../util/dynstr.h"
-#include "../classfile/constants.h"
-#include "../classfile/attributes.h"
+#include "cabin.h"
+#include "util/encoding.h"
+#include "util/convert.h"
+#include "util/dynstr.h"
+#include "constants.h"
+#include "attributes.h"
 
 
 // 计算字段的个数，同时给它们编号
@@ -27,7 +26,7 @@ static void calc_fields_id(Class *c)
     // }
     for (int i = 0; i < c->fields_count; i++) {
         Field *f = c->fields + i;
-        if (!ACC_IS_STATIC(f->access_flags)) {
+        if (!IS_STATIC(f)) {
             f->id = ins_id++;
             if (f->category_two)
                 ins_id++;
@@ -49,7 +48,7 @@ static void parse_attribute(Class *c, BytecodeReader *r)
         if (S(Signature) == attr_name) {
             c->signature = cp_utf8(&c->cp, bcr_readu2(r));
         } else if (S(Synthetic) == attr_name) {
-            ACC_SET_SYNTHETIC(c->access_flags);
+            SET_SYNTHETIC(c);
         } else if (S(Deprecated) == attr_name) {
             c->deprecated = true;
         } else if (S(SourceFile) == attr_name) {
@@ -501,16 +500,8 @@ Class *define_class(jref class_loader, u1 *bytecode, size_t len)
     c->methods_count = bcr_readu2(&r);
     if (c->methods_count > 0) {
         c->methods = vm_malloc(c->methods_count * sizeof(Method));
-        // methods.resize(methods_count);
-        // auto last_method = methods_count - 1;
         for (u2 i = 0; i <c-> methods_count; i++) {
             init_method(c->methods + i, c, &r);
-            // auto m = new Method(this, &r);
-            // // 保证所有的 public methods 放在前面
-            // if (ACC_IS_PUBLIC(m->access_flags))
-            //     methods[public_methods_count++] = m;
-            // else
-            //     methods[last_method--] = m;
         }
     }
 
@@ -548,11 +539,6 @@ Class *define_class(jref class_loader, u1 *bytecode, size_t len)
     return c;
 }
 
-// Class::Class(const char *class_name)
-//         : class_name(utf8_dup(class_name)), /* 形参class_name可能非持久，复制一份 */
-//           access_flags(JVM_ACC_PUBLIC), inited(true),
-//           loader(NULL), super_class(g_object_class)
-
 // 创建 primitive class，这两种类型的类由虚拟机直接生成。
 Class *define_prim_type_class(const char *class_name)
 {
@@ -585,11 +571,6 @@ Class *define_prim_type_class(const char *class_name)
     c->state = CLASS_LOADED;
     return c;
 }
-
-// Class::Class(Object *loader, const char *class_name)
-//         : class_name(utf8_dup(class_name)), /* 形参class_name可能非持久，复制一份 */
-//           access_flags(JVM_ACC_PUBLIC), inited(true),
-//           loader(loader), super_class(g_object_class)
 
 // 创建 array class，由虚拟机直接生成。
 Class *define_array_class(Object *loader, const char *class_name)
@@ -726,7 +707,7 @@ Field *lookup_inst_field(Class *c, int id)
 Field *lookup_static_field(Class *c, const utf8_t *name, const utf8_t *descriptor)
 {
     Field *field = lookup_field(c, name, descriptor);
-    if (field != NULL && !ACC_IS_STATIC(field->access_flags)) {
+    if (field != NULL && !IS_STATIC(field)) {
         // throw java_lang_IncompatibleClassChangeError();
         raise_exception(S(java_lang_IncompatibleClassChangeError), NULL); // todo msg  
     }
@@ -736,7 +717,7 @@ Field *lookup_static_field(Class *c, const utf8_t *name, const utf8_t *descripto
 Field *lookup_inst_field0(Class *c, const utf8_t *name, const utf8_t *descriptor)
 {
     Field* field = lookup_field(c, name, descriptor);
-    if (field != NULL && ACC_IS_STATIC(field->access_flags)) {
+    if (field != NULL && IS_STATIC(field)) {
         // throw java_lang_IncompatibleClassChangeError();
         raise_exception(S(java_lang_IncompatibleClassChangeError), NULL); // todo msg  
     }
@@ -764,7 +745,7 @@ Field *get_declared_field0(const Class *c, const char *name, const char *descrip
 static Field *get_declared_inst_field_noexcept(const Class *c, int id)
 {
     for (u2 i = 0; i < c->fields_count; i++) {
-        if (!ACC_IS_STATIC(c->fields[i].access_flags) && c->fields[i].id == id)
+        if (!IS_STATIC(c->fields + i) && c->fields[i].id == id)
             return c->fields + i;
     }
 
@@ -774,7 +755,7 @@ static Field *get_declared_inst_field_noexcept(const Class *c, int id)
 Field *get_declared_inst_field(const Class *c, int id)
 {
     // for (u2 i = 0; i < c->fields_count; i++) {
-    //     if (!ACC_IS_STATIC(c->fields[i].access_flags) && c->fields[i].id == id)
+    //     if (!IS_STATIC(c->fields + i) && c->fields[i].id == id)
     //         return c->fields + i;
     // }
     Field *f = get_declared_inst_field_noexcept(c, id);
@@ -808,7 +789,7 @@ bool inject_inst_field(Class *c, const utf8_t *name, const utf8_t *descriptor)
     for (Class *clazz = c->super_class; clazz != NULL; clazz = clazz->super_class) {
         for (u2 i = 0; i < clazz->fields_count; i++) {
             // 在父类查找时只查子类可以看见的field，即非private field
-            if (!ACC_IS_PRIVATE(clazz->fields[i].access_flags) && utf8_equals(clazz->fields[i].name, name)) {
+            if (!IS_PRIVATE(clazz->fields + i) && utf8_equals(clazz->fields[i].name, name)) {
                 // throw runtime_error(name); // todo
                 return false;
             }
@@ -876,7 +857,7 @@ Method *get_declared_static_method(Class *c, const utf8_t *name, const utf8_t *d
 {
     for (u2 i = 0; i < c->methods_count; i++) {
         Method *m = c->methods + i;
-        if (ACC_IS_STATIC(m->access_flags) && utf8_equals(m->name, name) && utf8_equals(m->descriptor, descriptor))
+        if (IS_STATIC(m) && utf8_equals(m->name, name) && utf8_equals(m->descriptor, descriptor))
             return m;
     }
 
@@ -889,7 +870,7 @@ Method *get_declared_inst_method(Class *c, const utf8_t *name, const utf8_t *des
 {
     for (u2 i = 0; i < c->methods_count; i++) {
         Method *m = c->methods + i;
-        if (!ACC_IS_STATIC(m->access_flags) && utf8_equals(m->name, name) && utf8_equals(m->descriptor, descriptor))
+        if (!IS_STATIC(m) && utf8_equals(m->name, name) && utf8_equals(m->descriptor, descriptor))
             return m;
     }
 
@@ -918,7 +899,7 @@ Method *get_declared_poly_method(Class *c, const utf8_t *name)
 
 //     for (u2 i = 0; i < c->methods_count; i++) {
 //         Method *m = c->methods + i;
-//         if ((!public_only || ACC_IS_PUBLIC(m->access_flags)) && (utf8_equals(m->name, name)))
+//         if ((!public_only || IS_PUBLIC(m)) && (utf8_equals(m->name, name)))
 //             declaredMethods.push_back(m);
 //     }
 
@@ -934,7 +915,7 @@ Method **get_declared_methods(Class *c, const utf8_t *name, bool public_only, in
 
     for (u2 i = 0; i < c->methods_count; i++) {
         Method *m = c->methods + i;
-        if ((!public_only || ACC_IS_PUBLIC(m->access_flags)) && (utf8_equals(m->name, name)))
+        if ((!public_only || IS_PUBLIC(m)) && (utf8_equals(m->name, name)))
             declared_methods[*count++] = m;
     }
 
@@ -946,7 +927,7 @@ Method *get_constructor(Class *c, const utf8_t *descriptor)
     return get_declared_method(c, S(object_init), descriptor);
 }
 
-Method *get_constructor0(Class *c, jarrref parameter_types)
+Method *get_constructor0(Class *c, jarrRef parameter_types)
 {
     assert(parameter_types != NULL);
 
@@ -1042,7 +1023,7 @@ Method *lookup_method(Class *c, const char *name, const char *descriptor)
 Method *lookup_static_method(Class *c, const char *name, const char *descriptor)
 {
     Method *m = lookup_method(c, name, descriptor);
-    if (m != NULL && !ACC_IS_STATIC(m->access_flags)) {
+    if (m != NULL && !IS_STATIC(m)) {
         // throw java_lang_IncompatibleClassChangeError();
         raise_exception(S(java_lang_IncompatibleClassChangeError), NULL); // todo msg  
     }
@@ -1053,7 +1034,7 @@ Method *lookup_inst_method(Class *c, const char *name, const char *descriptor)
 {
     Method *m = lookup_method(c, name, descriptor);
     // todo m == NULL
-    if (m != NULL && ACC_IS_STATIC(m->access_flags)) {
+    if (m != NULL && IS_STATIC(m)) {
         // throw java_lang_IncompatibleClassChangeError();
         raise_exception(S(java_lang_IncompatibleClassChangeError), NULL); // todo msg  
     }
@@ -1155,7 +1136,7 @@ char *get_class_info(const Class *c)
     dynstr_concat(&ds, "  declared static fields: \n");
     for (u2 i = 0; i < c->fields_count; i++) {
         Field *f = c->fields + i;
-        if (ACC_IS_STATIC(f->access_flags)) {
+        if (IS_STATIC(f)) {
             dynstr_printf(&ds, "    %s | %s\n", f->name, f->descriptor);
         }
     }
@@ -1163,7 +1144,7 @@ char *get_class_info(const Class *c)
     dynstr_concat(&ds, "  declared instance fields: \n");
     for (u2 i = 0; i < c->fields_count; i++) {
         Field *f = c->fields + i;
-        if (!ACC_IS_STATIC(f->access_flags)) {
+        if (!IS_STATIC(f)) {
             dynstr_printf(&ds, "    %s | %s | %d\n", f->name, f->descriptor, f->id);
         }
     }
@@ -1272,7 +1253,7 @@ Class *element_class(Class *c)
     }
 }
 
-jstrref intern_string(jstrref s)
+jstrRef intern_string(jstrRef s)
 {
     // scoped_lock lock(str_pool_mutex);
     pthread_mutex_lock(&g_string_class->string.str_pool_mutex);

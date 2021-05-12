@@ -1,6 +1,6 @@
-#include "../symbol.h"
-#include "../util/dynstr.h"
-#include "../util/encoding.h"
+#include "symbol.h"
+#include "util/dynstr.h"
+#include "util/encoding.h"
 
 
 static inline void init(Object *o, Class *c)
@@ -148,7 +148,7 @@ Object *clone_object(const Object *o)
 
 void set_field_value0(Object *o, Field *f, const slot_t *value)
 {
-    assert(o != NULL && f != NULL && !ACC_IS_STATIC(f->access_flags) && value != NULL);
+    assert(o != NULL && f != NULL && !IS_STATIC(f) && value != NULL);
 
     o->data[f->id] = value[0];
     if (f->category_two) {
@@ -218,19 +218,19 @@ const char *get_object_info(const Object *o)
 }
 
 
-bool array_check_bounds(const jarrref a, jint index)
+bool array_check_bounds(const jarrRef a, jint index)
 {
     return 0 <= index && index < a->arr_len;
 }
 
-void *array_index(const jarrref a, jint index0)
+void *array_index(const jarrRef a, jint index0)
 {
     assert(0 <= index0 && index0 < a->arr_len);
     return ((u1 *) (a->data)) + get_ele_size(a->clazz)*index0;
 }
 
 #define ARRAY_SET(jtype, type) \
-    void array_set_##type(jarrref a, jint i, jtype v) \
+    void array_set_##type(jarrRef a, jint i, jtype v) \
     { \
         assert(a != NULL); \
         assert(is_##type##_array_class(a->clazz)); \
@@ -249,7 +249,7 @@ ARRAY_SET(jdouble, double)
 
 #undef ARRAY_SET
 
-void array_set_ref(jarrref a, int i, jref value)
+void array_set_ref(jarrRef a, int i, jref value)
 {
     assert(a != NULL);
     assert(0 <= i && i < a->arr_len);
@@ -268,7 +268,7 @@ void array_set_ref(jarrref a, int i, jref value)
     }
 }
 
-void array_copy(jarrref dst, jint dst_pos, const jarrref src, jint src_pos, jint len)
+void array_copy(jarrRef dst, jint dst_pos, const jarrRef src, jint src_pos, jint len)
 {
     assert(src != NULL);
     assert(is_array_object(src));
@@ -344,7 +344,7 @@ utf8_t *string_to_utf8(jstrRef so)
     assert(is_string_object(so));
     
     // byte[] value;
-    jarrref value = get_ref_field(so, S(value), S(array_B));
+    jarrRef value = get_ref_field(so, S(value), S(array_B));
     
     jbyte code = get_byte_field(so, S(coder));
     if (code == STRING_CODE_LATIN1) {
@@ -368,7 +368,7 @@ unicode_t *string_to_unicode(jstrRef so)
     assert(is_string_object(so));
     
     // byte[] value;
-    jarrref value = get_ref_field(so, S(value), S(array_B));
+    jarrRef value = get_ref_field(so, S(value), S(array_B));
 
     jbyte code = get_byte_field(so, S(coder));
     if (code == STRING_CODE_LATIN1) {
@@ -385,19 +385,19 @@ unicode_t *string_to_unicode(jstrRef so)
     JVM_PANIC("never go here"); // todo
 }
 
-jstrref alloc_string(const utf8_t *str)
+jstrRef alloc_string(const utf8_t *str)
 {
     assert(g_string_class != NULL && str != NULL);
 
     init_class(g_string_class);
     assert(lookup_field(g_string_class, "COMPACT_STRINGS", "Z")->static_value.z);
 
-    jstrref so = alloc_object(g_string_class);
+    jstrRef so = alloc_object(g_string_class);
     size_t len = utf8_length(str);
 
     // set java/lang/String 的 value 变量赋值
     // private final byte[] value;
-    jarrref value = alloc_array0(S(array_B), len); // [B
+    jarrRef value = alloc_array0(S(array_B), len); // [B
     memcpy(value->data, str, len);
     set_ref_field(so, S(value), S(array_B), value);
 
@@ -405,16 +405,16 @@ jstrref alloc_string(const utf8_t *str)
     return so;
 }
 
-jstrref alloc_string0(const unicode_t *str, jsize len)
+jstrRef alloc_string0(const unicode_t *str, jsize len)
 {
     assert(str != NULL && len >= 0);
     utf8_t *utf8 = unicode_to_utf8(str, len);
-    jstrref so = alloc_string(utf8);
+    jstrRef so = alloc_string(utf8);
     //delete[] utf8; todo
     return so;
 }
 
-bool string_equals(jstrref x, jstrref y) 
+bool string_equals(jstrRef x, jstrRef y)
 {
     assert(x != NULL && y != NULL);
     assert(is_string_object(x) && is_string_object(y));
@@ -424,7 +424,7 @@ bool string_equals(jstrref x, jstrref y)
     return slot_get_bool(exec_java_func2(equals, x, y)) != jfalse;
 }
 
-size_t string_hash(jstrref x) 
+size_t string_hash(jstrRef x)
 {
     assert(x != NULL && is_string_object(x));
 

@@ -21,7 +21,7 @@ char *get_frame_info(const Frame *f)
     char *info_buf = vm_malloc(sizeof(char) * INFO_MSG_MAX_LEN);
     Method *m = f->method;
     int n = snprintf(info_buf, INFO_MSG_MAX_LEN - 1, "(%p)%s%s~%s~%s, pc = %zu",
-                    f, ACC_IS_NATIVE(m->access_flags) ? "(native)" : "", 
+                    f, IS_NATIVE(m) ? "(native)" : "",
                     m->clazz->class_name, m->name, m->descriptor, f->reader.pc);
     if (n == -1) {
         return NULL; // todo error

@@ -172,21 +172,21 @@ COMPARE_AND_SWAP(Object, jref)
 /*************************************    class    ************************************/
 /** Allocate an instance but do not run any constructor. Initializes the class if it has not yet been. */
 // public native Object allocateInstance(Class<?> type) throws InstantiationException;
-static jref allocateInstance(JNIEnv *env, jref _this, jclsref type)
+static jref allocateInstance(JNIEnv *env, jref _this, jclsRef type)
 {
     JVM_PANIC("allocateInstance");
 }
 
 // public native Class defineClass(String name, byte[] b, int off, int len,
 //                                  ClassLoader loader, ProtectionDomain protectionDomain)
-static jclsref defineClass(JNIEnv *env, jref _this, jstrref name,
-                             jref b, jint off, jint len, jref loader, jref protectionDomain)
+static jclsRef defineClass(JNIEnv *env, jref _this, jstrRef name,
+                           jref b, jint off, jint len, jref loader, jref protectionDomain)
 {
     JVM_PANIC("define_class");
 }
 
 // public native void ensureClassInitialized(Class<?> c);
-static void ensureClassInitialized(JNIEnv *env, jref _this, jclsref c)
+static void ensureClassInitialized(JNIEnv *env, jref _this, jclsRef c)
 {
     init_class(c->jvm_mirror);
 //    c->clinit(); // todo 是不是这样搞？
@@ -214,20 +214,20 @@ static jlong staticFieldOffset(JNIEnv *env, jref _this, jref f)
 static jref staticFieldBase(JNIEnv *env, jref _this, jref f)
 {
     // private Class<?> clazz;
-    jclsref co = get_ref_field(f, "clazz", "Ljava/lang/Class;");
+    jclsRef co = get_ref_field(f, "clazz", "Ljava/lang/Class;");
     return co;
 }
 
 /*************************************    object    ************************************/
 
 // public native int arrayBaseOffset(Class<?> type)
-static jint arrayBaseOffset(JNIEnv *env, jref _this, jclsref type)
+static jint arrayBaseOffset(JNIEnv *env, jref _this, jclsRef type)
 {
     return 0; // todo
 }
 
 // public native int arrayIndexScale(Class<?> type)
-static jint arrayIndexScale(JNIEnv *env, jref _this, jclsref type)
+static jint arrayIndexScale(JNIEnv *env, jref _this, jclsRef type)
 {
     return 1; // todo
 }
@@ -240,7 +240,7 @@ static jlong objectFieldOffset(JNIEnv *env, jref _this, jref field)
 }
 
 // private native long objectFieldOffset1(Class<?> c, String name);
-static jlong objectFieldOffset1(JNIEnv *env, jref _this, jclsref c, jstrref name)
+static jlong objectFieldOffset1(JNIEnv *env, jref _this, jclsRef c, jstrRef name)
 {
     Field *f = get_declared_field(c->jvm_mirror, string_to_utf8(name));
     return f->id;
@@ -500,7 +500,7 @@ static jint getLoadAverage(JNIEnv *env, jref _this, jref loadavg, jint nelems)
 }
 
 // (Ljava/lang/Class;)Z
-static jboolean shouldBeInitialized(JNIEnv *env, jref _this, jclsref c)
+static jboolean shouldBeInitialized(JNIEnv *env, jref _this, jclsRef c)
 {
     // todo
     return c->jvm_mirror->state >= CLASS_INITED ? jtrue : jfalse;
@@ -522,7 +522,7 @@ static jboolean shouldBeInitialized(JNIEnv *env, jref _this, jclsref c)
  * @cpPatches where non-null entries exist, they replace corresponding CP entries in data
  */
 // public native Class defineAnonymousClass(Class hostClass, byte[] data, Object[] cpPatches);
-static jclsref defineAnonymousClass(JNIEnv *env, jref _this, jclsref host_class, jref data, jref cp_patches)
+static jclsRef defineAnonymousClass(JNIEnv *env, jref _this, jclsRef host_class, jref data, jref cp_patches)
 {
     assert(host_class != NULL);
     assert(data != NULL && is_array_object(data));
@@ -1013,7 +1013,7 @@ static void MHN_expand(jref self)
  * static native MemberName resolve(MemberName self, Class<?> caller, int lookupMode,
             boolean speculativeResolve) throws LinkageError, ClassNotFoundException;
  */
-static jref MHN_resolve(jref self/*MemberName*/, jclsref caller, int lookupMode, jboolean speculativeResolve)
+static jref MHN_resolve(jref self/*MemberName*/, jclsRef caller, int lookupMode, jboolean speculativeResolve)
 {
     // todo speculative_resolve
     return resolveMemberName(self, caller != NULL ? caller->jvm_mirror : NULL);
@@ -1021,11 +1021,11 @@ static jref MHN_resolve(jref self/*MemberName*/, jclsref caller, int lookupMode,
 
 // static native int getMembers(Class<?> defc, String matchName, String matchSig,
 //                              int matchFlags, Class<?> caller, int skip, MemberName[] results);
-static jint MHN_getMembers(jclsref defc, jstrref match_name, jstrref match_sig,
-                       jint match_flags, jclsref caller, jint skip, jref _results)
+static jint MHN_getMembers(jclsRef defc, jstrRef match_name, jstrRef match_sig,
+                           jint match_flags, jclsRef caller, jint skip, jref _results)
 {
     assert(is_array_object(_results));
-    jarrref results = (jarrref)(_results);
+    jarrRef results = (jarrRef)(_results);
     int search_super = (match_flags & SEARCH_SUPERCLASSES) != 0;
     int search_intf = (match_flags & SEARCH_INTERFACES) != 0;
     int local = !(search_super || search_intf);
@@ -1065,7 +1065,7 @@ static jint MHN_getMembers(jclsref defc, jstrref match_name, jstrref match_sig,
                 count++;
                 int flags = __method_flags(m) | IS_METHOD;
 
-                flags |= (ACC_IS_STATIC(m->access_flags) ? JVM_REF_invokeStatic : JVM_REF_invokeVirtual) << REFERENCE_KIND_SHIFT;
+                flags |= (IS_STATIC(m) ? JVM_REF_invokeStatic : JVM_REF_invokeVirtual) << REFERENCE_KIND_SHIFT;
 
                 set_int_field(member_name, "flags", flags);
                 set_ref_field(member_name, "clazz", "Ljava/lang/Class;", m->clazz->java_mirror);
@@ -1095,7 +1095,7 @@ static jlong MHN_objectFieldOffset(jref self)
     // private String   name;        // may be null if not yet materialized
     // private Object   type;        // may be null if not yet materialized
     Class *clazz = get_ref_field(self, "clazz", "Ljava/lang/Class;")->jvm_mirror;
-    jstrref name = get_ref_field(self, "name", "Ljava/lang/String;");
+    jstrRef name = get_ref_field(self, "name", "Ljava/lang/String;");
     // type maybe a String or an Object[] or a MethodType
     // Object[]: (Class<?>) Object[0] is return type
     //           (Class<?>[]) Object[1] is parameter types

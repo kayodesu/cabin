@@ -1,5 +1,5 @@
 #include <assert.h>
-#include "../cabin.h"
+#include "cabin.h"
 
 
 void cp_init(ConstantPool *cp, Class *clazz, u2 size)

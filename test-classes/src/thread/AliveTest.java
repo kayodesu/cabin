@@ -10,7 +10,7 @@ public class AliveTest {
                 try {
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {
-                    e.printStackTrace(System.err);
+                    e.print_stack_trace(System.err);
                 }
             }
             

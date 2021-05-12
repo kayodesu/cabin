@@ -1,4 +1,4 @@
-#include "../util/encoding.h"
+#include "util/encoding.h"
 
 /*
  * 基本类型的名称，描述符，等等

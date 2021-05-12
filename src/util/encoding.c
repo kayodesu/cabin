@@ -1,12 +1,10 @@
 #include <assert.h>
 #include <string.h>
-// #include <unordered_set>
 #include <pthread.h>
 #include "encoding.h"
 #include "../cabin.h"
 #include "hash.h"
 
-// static unordered_set<const utf8_t *, Utf8Hash, Utf8Comparator> utf8Set;
 static PHS utf8_set;
 
 static pthread_rwlock_t lock = PTHREAD_RWLOCK_INITIALIZER;
@@ -164,12 +162,12 @@ utf8_t *slash_to_dot_dup(const utf8_t *utf8)
     return slash_to_dot(utf8_dup(utf8));
 }
 
-unicode_t *utf8_to_unicode(const utf8_t *utf8, unicode_t *buf)
+unicode_t *utf8_to_unicode(const utf8_t *utf8, size_t len)
 {
     assert(utf8 != NULL);
-    if (buf == NULL) {
-        buf = vm_malloc(sizeof(unicode_t) * (utf8_length(utf8) + 1));
-    }
+
+    unicode_t *buf = vm_malloc(sizeof(unicode_t) * (len + 1));
+    buf[len] = 0;
 
     unicode_t *tmp = buf;
     while (*utf8) {
@@ -178,6 +176,7 @@ unicode_t *utf8_to_unicode(const utf8_t *utf8, unicode_t *buf)
         utf8 += utf8_char_count;
     }
 
+    assert(buf[len] == 0);
     return buf;
 }
 
@@ -209,7 +208,7 @@ utf8_t *unicode_to_utf8(const unicode_t *unicode, size_t len)
 {
     assert(unicode != NULL);
 
-    utf8_t *utf8 = (utf8_t *)vm_malloc(sizeof(utf8_t) * (utf8ByteCount(unicode, len) + 1)); //new utf8_t[utf8ByteCount(unicode, len) + 1];
+    utf8_t *utf8 = vm_malloc(sizeof(utf8_t) * (utf8ByteCount(unicode, len) + 1)); 
     utf8_t *p = utf8;
 
     for(; len > 0; len--) {

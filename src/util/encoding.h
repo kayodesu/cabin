@@ -1,9 +1,9 @@
 #ifndef CABIN_ENCODING_H
 #define CABIN_ENCODING_H
 
-#include <cstdint>
-#include <cstddef>
-#include <cassert>
+#include <stdint.h>
+#include <stddef.h>
+#include <assert.h>
 #include "../cabin.h"
 
 /*
@@ -16,48 +16,44 @@
  * todo java.lang.String 内部是用utf16表示的，和Unicode有什么区别？？
  */
 
-namespace utf8 {
-    // save a utf8 string to pool.
-    const utf8_t *save(const utf8_t *utf8);
+void init_utf8_pool();
 
-    // get utf8 from pool, return null if not exist.
-    const utf8_t *find(const utf8_t *utf8);
+// save a utf8 string to pool.
+// 如不存在，返回新插入的值
+// 如果已存在，则返回池中的值。
+const utf8_t *save_utf8(const utf8_t *utf8);
 
-    size_t hash(const utf8_t *utf8);
+// get utf8 from pool, return null if not exist.
+const utf8_t *find_utf8(const utf8_t *utf8);
 
-    size_t length(const utf8_t *utf8);
+size_t utf8_hash(const utf8_t *utf8);
+size_t utf8_length(const utf8_t *utf8);
+bool utf8_equals(const utf8_t *p1, const utf8_t *p2);
+utf8_t *utf8_dup(const utf8_t *utf8);
 
-    bool equals(const utf8_t *p1, const utf8_t *p2);
+utf8_t *dot_to_slash(utf8_t *utf8);
+utf8_t *dot_to_slash_dup(const utf8_t *utf8);
 
-    utf8_t *dup(const utf8_t *utf8);
+utf8_t *slash_to_dot(utf8_t *utf8);
+utf8_t *slash_to_dot_dup(const utf8_t *utf8);
 
-    utf8_t *dot2Slash(utf8_t *utf8);
-    utf8_t *dot2SlashDup(const utf8_t *utf8);
+// 不会在buf后面添加字符串结束符'\u0000'
+unicode_t *utf8_to_unicode(const utf8_t *utf8, size_t len);
 
-    utf8_t *slash2Dot(utf8_t *utf8);
-    utf8_t *slash2DotDup(const utf8_t *utf8);
+// 由调用者 delete[] utf8 string
+utf8_t *unicode_to_utf8(const unicode_t *unicode, size_t len);
 
-    // 不会在buf后面添加字符串结束符'\u0000'
-    unicode_t *toUnicode(const utf8_t *utf8, unicode_t *buf = nullptr);
-    unicode_t *toUnicode(const utf8_t *utf8, jsize utf8_len, unicode_t *buf = nullptr);
+// struct Utf8Hash {
+//         size_t operator()(const utf8_t *utf8) const {
+//             return utf8_hash(utf8);
+//         }
+//     };
 
-    struct Hash {
-        size_t operator()(const utf8_t *utf8) const {
-            return hash(utf8);
-        }
-    };
-
-    struct Comparator {
-        bool operator()(const utf8_t *s1, const utf8_t *s2) const {
-            assert(s1 != nullptr && s2 != nullptr);
-            return equals(s1, s2);
-        }
-    };
-}
-
-namespace unicode {
-    // 由调用者 delete[] utf8 string
-    utf8_t *toUtf8(const unicode_t *unicode, size_t len);
-}
+// struct Utf8Comparator {
+//     bool operator()(const utf8_t *s1, const utf8_t *s2) const {
+//         assert(s1 != NULL && s2 != NULL);
+//         return utf8_equals(s1, s2);
+//     }
+// };
 
 #endif //CABIN_ENCODING_H

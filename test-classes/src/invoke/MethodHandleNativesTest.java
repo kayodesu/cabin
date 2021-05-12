@@ -12,7 +12,7 @@ public class MethodHandleNativesTest {
         try {
             new MethodHandleNativesTest().getConstant();
         } catch (Exception e) {
-            e.printStackTrace();
+            e.print_stack_trace();
         }
     }
 

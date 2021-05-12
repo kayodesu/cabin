@@ -1,8 +1,7 @@
-#include "descriptor.h"
-#include "../cabin.h"
-#include "../classfile/attributes.h"
-#include "../jni.h"
-#include "../util/encoding.h"
+#include "cabin.h"
+#include "attributes.h"
+#include "jni.h"
+#include "util/encoding.h"
 
 
 typedef struct exception_table ExceptionTable;
@@ -33,15 +32,15 @@ void exception_table_init(ExceptionTable *et, Class *clazz, BytecodeReader *r)
     }
 }
 
-jarrref get_parameter_types(const Method *m)
+jarrRef get_parameter_types(const Method *m)
 {
     assert(m != NULL);
-    jarrref ptypes;
+    jarrRef ptypes;
     parse_method_descriptor(m->descriptor, m->clazz->loader, &ptypes, NULL);
     return ptypes;
 }
 
-jclsref get_return_type(const Method *m)
+jclsRef get_return_type(const Method *m)
 {
     assert(m != NULL);
     jref rtype;
@@ -49,7 +48,7 @@ jclsref get_return_type(const Method *m)
     return rtype;
 }
 
-jarrref get_exception_types(const Method *m)
+jarrRef get_exception_types(const Method *m)
 {
     assert(m != NULL);
 
@@ -68,7 +67,7 @@ jarrref get_exception_types(const Method *m)
     }
 
     Class *ac = load_class(m->clazz->loader, S(array_java_lang_Class));
-    jarrref exception_types = alloc_array(ac, count);
+    jarrRef exception_types = alloc_array(ac, count);
     for (int i = 0; i < count; i++)
         array_set_ref(exception_types, i, types[i]->java_mirror);
 
@@ -172,7 +171,7 @@ static void parse_code_attr(Method *m, BytecodeReader *r)
 
 static void init_native_method(Method *m)
 {
-    assert(m != NULL && ACC_IS_NATIVE(m->access_flags));
+    assert(m != NULL && IS_NATIVE(m));
 
     // 本地方法帧的操作数栈至少要能容纳返回值，
     // 4 slots are big enough.
@@ -208,7 +207,7 @@ static void init_native_method(Method *m)
     utf8_t desc[len];
     memset(desc, 0, sizeof(*desc) * len);
     int i = 0;
-    if (!ACC_IS_STATIC(m->access_flags)) {
+    if (!IS_STATIC(m)) {
         desc[i++] = 'R';  // this
     }
 
@@ -274,7 +273,7 @@ static void init_native_method(Method *m)
     if (m->native_simple_descriptor == desc) {
         // utf8 pool 中不存在，error。
         // todo error
-        println("%s, %s, %s, %d, ", m->clazz->class_name, m->name, m->native_simple_descriptor, ACC_IS_STATIC(m->access_flags));
+        println("%s, %s, %s, %d, ", m->clazz->class_name, m->name, m->native_simple_descriptor, IS_STATIC(m));
         JVM_PANIC(m->descriptor);
     }
 
@@ -297,7 +296,7 @@ void init_method(Method *m, Class *c, BytecodeReader *r)
     m->itable_index = m->vtable_index = -1;
 
     // note: 构造函数（<init>方法）是非static的，也会传递this reference  todo
-    m->arg_slot_count = cal_method_args_slots_count(m->descriptor, ACC_IS_STATIC(m->access_flags));
+    m->arg_slot_count = cal_method_args_slots_count(m->descriptor, IS_STATIC(m));
 
     // parse method's attributes
     for (int i = 0; i < attr_count; i++) {
@@ -309,7 +308,7 @@ void init_method(Method *m, Class *c, BytecodeReader *r)
         } else if (S(Deprecated) == attr_name) {
             m->deprecated = true;
         } else if (S(Synthetic) == attr_name) {
-            ACC_SET_SYNTHETIC(m->access_flags);
+            SET_SYNTHETIC(m);
         } else if (S(Signature) == attr_name) {
             m->signature = cp_utf8(cp, bcr_readu2(r));
         } else if (S(MethodParameters) == attr_name) {
@@ -383,7 +382,7 @@ void init_method(Method *m, Class *c, BytecodeReader *r)
         JVM_PANIC(m->descriptor);
     }
 
-    if (ACC_IS_NATIVE(m->access_flags)) {
+    if (IS_NATIVE(m)) {
         init_native_method(m);
         // // 本地方法帧的操作数栈至少要能容纳返回值，
         // // 4 slots are big enough.
@@ -417,7 +416,7 @@ void init_method(Method *m, Class *c, BytecodeReader *r)
 jint get_line_number(const Method *m, int pc) 
 {
     // native函数没有字节码
-    if (ACC_IS_NATIVE(m->access_flags)) {
+    if (IS_NATIVE(m)) {
         return -2;
     }
 
@@ -461,15 +460,15 @@ bool is_signature_polymorphic(const Method *m)
     if (!b)
         return false;
 
-    jarrref ptypes = get_parameter_types(m); // Class<?>[]
+    jarrRef ptypes = get_parameter_types(m); // Class<?>[]
     if (ptypes->arr_len != 1)
         return false;
 
-    jclsref ptype = array_get(jclsref, ptypes, 0);
+    jclsRef ptype = array_get(jclsRef, ptypes, 0);
     if (!utf8_equals(ptype->jvm_mirror->class_name, S(array_java_lang_Object))) 
         return false;
 
-    if (!(ACC_IS_VARARGS(m->access_flags) && ACC_IS_NATIVE(m->access_flags)))
+    if (!(IS_VARARGS(m) && IS_NATIVE(m)))
         return false;
 
     return true;
@@ -478,7 +477,7 @@ bool is_signature_polymorphic(const Method *m)
 void release_method(Method *m)
 {
     // todo
-    // if (ACC_IS_NATIVE(this->access_flags)) {
+    // if (IS_NATIVE(m)) {
     //     delete[] code;
     // }
     // for (auto &t : exception_tables) {
@@ -490,7 +489,7 @@ char *get_method_info(const Method *m)
 {
     char *info = vm_calloc(sizeof(char) * INFO_MSG_MAX_LEN);
     snprintf(info, INFO_MSG_MAX_LEN - 1, "method%s: %s~%s~%s",
-                ACC_IS_NATIVE(m->access_flags) ? "(native)" : "",
+                IS_NATIVE(m) ? "(native)" : "",
                 m->clazz->class_name, m->name, m->descriptor);
     return info;
 }

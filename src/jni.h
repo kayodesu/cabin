@@ -60,8 +60,6 @@ typedef struct jni_native_method {
     void *fnPtr;
 } JNINativeMethod;
 
-void init_jni();
-
 typedef union jvalue {
     jboolean z;
     jbyte    b;
@@ -404,6 +402,25 @@ struct JNINativeInterface_ {
     jobject (JNICALL *GetModule)(JNIEnv* env, jclass clazz);
 };
 
+typedef struct JavaVMOption {
+    char *optionString;
+    void *extraInfo;
+} JavaVMOption;
+
+typedef struct JavaVMInitArgs {
+    jint version;
+
+    jint nOptions;
+    JavaVMOption *options;
+    jboolean ignoreUnrecognized;
+} JavaVMInitArgs;
+
+typedef struct JavaVMAttachArgs {
+    jint version;
+
+    char *name;
+    jobject group;
+} JavaVMAttachArgs;
 
 struct _JNIInvokeInterface {
     void *reserved0;
@@ -416,5 +433,16 @@ struct _JNIInvokeInterface {
     jint (*GetEnv)(JavaVM *vm, void **penv, jint version);
     jint (*AttachCurrentThreadAsDaemon)(JavaVM *vm, void **penv, void *args);
 };
+
+jint JNICALL JNI_GetDefaultJavaVMInitArgs(void *args);
+
+jint JNICALL JNI_CreateJavaVM(JavaVM **pvm, void **penv, void *args);
+
+jint JNICALL JNI_GetCreatedJavaVMs(JavaVM **, jsize, jsize *);
+
+/* Defined by native libraries. */
+// jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved);
+
+// void JNICALL JNI_OnUnload(JavaVM *vm, void *reserved);
 
 #endif //CABIN_JNI_H

@@ -1,6 +1,6 @@
-#include "../symbol.h"
-#include "../cabin.h"
-#include "../util/encoding.h"
+#include "symbol.h"
+#include "cabin.h"
+#include "util/encoding.h"
 
 
 static Class *constructor_reflect_class;
@@ -45,7 +45,7 @@ void init_method_handle()
     }
 }
 
-jref findMethodType0(jarrref ptypes, jclsref rtype)
+jref findMethodType0(jarrRef ptypes, jclsRef rtype)
 {
     assert(ptypes != NULL && rtype != NULL);
 
@@ -60,7 +60,7 @@ jref findMethodType(const utf8_t *desc, jref loader)
 {
     assert(desc != NULL);
 
-    jarrref ptypes;
+    jarrRef ptypes;
     jref rtype;
     parse_method_descriptor(desc, loader, &ptypes, &rtype);
     return findMethodType0(ptypes, rtype);
@@ -90,14 +90,14 @@ jref linkMethodHandleConstant(Class *caller_class, int ref_kind,
 //    return ptypes;
 //}
 
-//jstrref method_type::toMethodDescriptor(jref methodType)
+//jstrRef method_type::toMethodDescriptor(jref methodType)
 //{
 //    assert(methodType != NULL);
 //
 //    Class *mt = loadBootClass("java/lang/invoke/MethodType");
 //    // public String toMethodDescriptorString();
 //    Method *m = mt->getDeclaredInstMethod("toMethodDescriptorString", "()Ljava/lang/String;");
-//    return (jstrref) RSLOT(execJavaFunc(m, {methodType}));
+//    return (jstrRef) RSLOT(execJavaFunc(m, {methodType}));
 //}
 
 /* ----------------------------------------------------------------------------------------- */
@@ -233,9 +233,9 @@ void initMemberName(jref member_name, jref target)
         int flags = methodFlags(m) | IS_METHOD;
 
         int ref_kind;
-        if (ACC_IS_STATIC(m->access_flags)) {
+        if (IS_STATIC(m)) {
             ref_kind = JVM_REF_invokeStatic;
-        } else if (ACC_IS_INTERFACE(decl_class->access_flags)) {
+        } else if (IS_INTERFACE(decl_class)) {
             ref_kind = JVM_REF_invokeInterface;
         } else {
             ref_kind = JVM_REF_invokeVirtual;
@@ -363,7 +363,7 @@ Object *resolveMemberName(jref member_name, Class *caller)
 {
     assert(member_name != NULL);
 
-    jstrref name_str = get_ref_field0(member_name, mn_name_field);
+    jstrRef name_str = get_ref_field0(member_name, mn_name_field);
     Class *clazz = get_ref_field0(member_name, mn_clazz_field)->jvm_mirror;
     jref type = get_ref_field0(member_name, mn_type_field);
     jint flags = get_int_field0(member_name, mn_flags_field);
@@ -379,7 +379,7 @@ Object *resolveMemberName(jref member_name, Class *caller)
         JVM_PANIC("11111111111"); // todo
     }
 
-    jstrref sig_str = slot_get_ref(exec_java_func1(mn_getSignature_method, member_name));
+    jstrRef sig_str = slot_get_ref(exec_java_func1(mn_getSignature_method, member_name));
     const utf8_t *sig = string_to_utf8(sig_str);
 
 //    auto xx = toMethodDescriptor(type)->toUtf8();

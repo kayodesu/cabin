@@ -1,14 +1,7 @@
-#include "objects/object.h"
-#include "interpreter/interpreter.h"
-#include "runtime/vm_thread.h"
-#include "runtime/frame.h"
+#include "util/encoding.h"
+#include "cabin.h"
 #include "jni.h"
 
-#if TRACE_JNI
-#define TRACE PRINT_TRACE
-#else
-#define TRACE(...)
-#endif
 
 #define JVM_MIRROR(_jclass) ((jclsRef) _jclass)->jvm_mirror
 
@@ -39,24 +32,24 @@ static void deleteJNIWeakGlobalRef(Object *ref)
     JVM_PANIC("not implement.");
 }
 
-static slot_t *execJavaV(Method *m, jref this, va_list args)
+static slot_t *execJavaV(Method *m, jobject _this, va_list args)
 {
+    jref this = (jref) _this;
     // Class[]
-    jarrref types = get_parameter_types(m);
-    assert(types != NULL);
+    jarrRef types = get_parameter_types(m);
     jsize args_count = types->arr_len;
     
     // 因为有 category two 的存在，result 的长度最大为 types_len * 2 + this_obj
     slot_t *real_args = vm_malloc(sizeof(slot_t)*(2*args_count + 1));
     int k = 0;
     if (this != NULL) {
-        assert(!ACC_IS_STATIC(m->access_flags));
+        assert(!IS_STATIC(m));
         slot_set_ref(real_args, this);
         k++;
     }
 
     for (int i = 0; i < args_count; i++, k++) {
-        Class *c = array_get(jclsref, types, i)->jvm_mirror;
+        Class *c = array_get(jclsRef, types, i)->jvm_mirror;
 
         if (is_boolean_class(c)) {
             slot_set_bool(real_args + k, va_arg(args, jboolean));
@@ -82,24 +75,24 @@ static slot_t *execJavaV(Method *m, jref this, va_list args)
     return exec_java_func(m, real_args);
 }
 
-static slot_t *execJavaA(Method *m, jref this, const jvalue *args)
+static slot_t *execJavaA(Method *m, jobject _this, const jvalue *args)
 {
+    jref this = (jref) _this;
     // Class[]
-    jarrref types = get_parameter_types(m);
-    assert(types != NULL);
+    jarrRef types = get_parameter_types(m);
     jsize args_count = types->arr_len;
     
     // 因为有 category two 的存在，result 的长度最大为 types_len * 2 + this_obj
     slot_t *real_args = vm_malloc(sizeof(slot_t)*(2*args_count + 1));
     int k = 0;
     if (this != NULL) {
-        assert(!ACC_IS_STATIC(m->access_flags));
+        assert(!IS_STATIC(m));
         slot_set_ref(real_args, this);
         k++;
     }
 
     for (int i = 0; i < args_count; i++, k++) {
-        Class *c = array_get(jclsref, types, i)->jvm_mirror;
+        Class *c = array_get(jclsRef, types, i)->jvm_mirror;
 
         if (is_boolean_class(c)) {
             slot_set_bool(real_args + k, args[i].z);
@@ -118,7 +111,7 @@ static slot_t *execJavaA(Method *m, jref this, const jvalue *args)
         } else if (is_double_class(c)) { // category_two
             slot_set_double(real_args + k++, args[i].d);
         } else {
-            slot_set_ref(real_args + k, args[i].l);
+            slot_set_ref(real_args + k, (jref) args[i].l);
         }
     }
 
@@ -157,7 +150,12 @@ jclass JNICALL Cabin_FindClass(JNIEnv *env, const char *name)
     // jref loader = ((Frame *) (*env)->functions->reserved3)->method->clazz->loader;
     // Class *c = loadClass(loader, name);
     // return to_jclass(c);
-   JVM_PANIC("not implement.");  // todo
+
+    // todo
+    Class *c = load_class(NULL, name); // todo clasloader
+    return c->java_mirror;
+
+    //    JVM_PANIC("not implement.");  // todo
 }
 
 jmethodID JNICALL Cabin_FromReflectedMethod(JNIEnv *env, jobject method)
@@ -188,23 +186,24 @@ jobject JNICALL Cabin_ToReflectedMethod(JNIEnv *env, jclass cls, jmethodID metho
  */
 jclass JNICALL Cabin_GetSuperclass(JNIEnv *env, jclass sub)
 {
-    // jclsref c = (jclsref) sub;
+    // jclsRef c = (jclsRef) sub;
     // return c->jvm_mirror->super_class;
 
-    Class *c = ((jclsref) sub)->jvm_mirror;
-    if (ACC_IS_INTERFACE(c->access_flags) || is_prim_class(c) || is_void_class(c))
+    Class *c = ((jclsRef) sub)->jvm_mirror;
+    if (IS_INTERFACE(c) || is_prim_class(c) || is_void_class(c))
         return NULL;
     if (c->super_class == NULL)
         return NULL;
-    return c->super_class->java_mirror;
+    return (jclass) c->super_class->java_mirror;
 
     // return (jclass) addJNILocalRef(c->jvm_mirror->super_class);
 }
 
+// 查看 static jboolean Class::isAssignableFrom(JNIEnv *env, jclsRef this, jclsRef cls);
 jboolean JNICALL Cabin_IsAssignableFrom(JNIEnv *env, jclass sub, jclass sup)
 {
     // todo
-    JVM_PANIC("not implement.");
+    return is_subclass_of(JVM_MIRROR(sub), JVM_MIRROR(sup));
 }
 
 jobject JNICALL Cabin_ToReflectedField(JNIEnv *env, jclass cls, jfieldID fieldID, jboolean isStatic)
@@ -234,7 +233,10 @@ jint JNICALL Cabin_ThrowNew(JNIEnv *env, jclass clazz, const char *msg)
 jthrowable JNICALL Cabin_ExceptionOccurred(JNIEnv *env)
 {
     // todo
-    JVM_PANIC("not implement.");
+
+    return NULL;
+
+    // JVM_PANIC("not implement.");
 }
 
 void JNICALL Cabin_ExceptionDescribe(JNIEnv *env)
@@ -270,9 +272,9 @@ jobject JNICALL Cabin_PopLocalFrame(JNIEnv *env, jobject result)
 jobject JNICALL Cabin_NewGlobalRef(JNIEnv *env, jobject gref)
 {
     // todo
-    JVM_PANIC("not implement.");
+    // JVM_PANIC("not implement.");
     // assert(env != NULL && gref != NULL);
-    // return addJNIGlobalRef(to_object_ref(gref));
+    return addJNIGlobalRef(gref); // todo
 }
 
 void JNICALL Cabin_DeleteGlobalRef(JNIEnv *env, jobject gref)
@@ -289,7 +291,10 @@ void JNICALL Cabin_DeleteLocalRef(JNIEnv *env, jobject obj)
 {
     // assert(env != NULL && obj != NULL);
     // deleteJNILocalRef(to_object_ref(obj));
-    JVM_PANIC("not implement.");
+
+    // todo
+
+    // JVM_PANIC("not implement.");
 }
 
 jboolean JNICALL Cabin_IsSameObject(JNIEnv *env, jobject obj1, jobject obj2)
@@ -310,7 +315,11 @@ jint JNICALL Cabin_EnsureLocalCapacity(JNIEnv *env, jint capacity)
 {
     // todo
     assert(env != NULL);
-    JVM_PANIC("not implement.");
+
+    // todo 此函数干啥的？？？
+    return capacity; 
+    // JVM_PANIC("not implement.");
+
 }
 
 jobject JNICALL Cabin_AllocObject(JNIEnv *env, jclass clazz)
@@ -551,123 +560,61 @@ jfieldID JNICALL Cabin_GetFieldID(JNIEnv *env, jclass clazz, const char *name, c
     if (f == NULL) {
         // todo java_lang_NoSuchFieldError
     }
-    return f;
+    return (jfieldID) f;
 }
 
 jobject JNICALL Cabin_GetObjectField(JNIEnv *env, jobject obj, jfieldID fieldID)
 {
-    // Object *o = to_object_ref(obj);
-    // Field *f = to_field(fieldID);
     // return addJNILocalRef(o->getRefField(f));
 
-    return get_ref_field0((jref) obj, (Field *) fieldID);
+    return (jobject) get_ref_field0((jref) obj, (Field *) fieldID);
 }
 
-jboolean JNICALL Cabin_GetBooleanField(JNIEnv *env, jobject obj, jfieldID fieldID)
-{
-    return get_bool_field0((jref) obj, (Field *) fieldID);
+#define GET_AND_SET_FIELD(Type, jtype, type, t) \
+jtype JNICALL Cabin_Get##Type##Field(JNIEnv *env, jobject obj, jfieldID fieldID) \
+{ \
+    return get_##type##_field0((jref) obj, (Field *) fieldID); \
+} \
+\
+void JNICALL Cabin_Set##Type##Field(JNIEnv *env, jobject obj, jfieldID fieldID, jtype val) \
+{ \
+    set_##type##_field0((jref) obj, (Field *) fieldID, val); \
+} \
+\
+jtype JNICALL Cabin_GetStatic##Type##Field(JNIEnv *env, jclass clazz, jfieldID fieldID) \
+{ \
+    return ((Field *) fieldID)->static_value.t; \
+} \
+\
+void JNICALL Cabin_SetStatic##Type##Field(JNIEnv *env, jclass clazz, jfieldID fieldID, jtype value) \
+{ \
+    ((Field *) fieldID)->static_value.t = value; \
 }
 
-jbyte JNICALL Cabin_GetByteField(JNIEnv *env, jobject obj, jfieldID fieldID)
-{
-    return get_byte_field0((jref) obj, (Field *) fieldID);
-}
+GET_AND_SET_FIELD(Boolean, jboolean, bool, z)
+GET_AND_SET_FIELD(Byte, jbyte, byte, b)
+GET_AND_SET_FIELD(Char, jchar, char, c)
+GET_AND_SET_FIELD(Short, jshort, short, s)
+GET_AND_SET_FIELD(Int, jint, int, i)
+GET_AND_SET_FIELD(Long, jlong, long, j)
+GET_AND_SET_FIELD(Float, jfloat, float, f)
+GET_AND_SET_FIELD(Double, jdouble, double, d)
 
-jchar JNICALL Cabin_GetCharField(JNIEnv *env, jobject obj, jfieldID fieldID)
-{
-    return get_char_field0((jref) obj, (Field *) fieldID);
-}
-
-jshort JNICALL Cabin_GetShortField(JNIEnv *env, jobject obj, jfieldID fieldID)
-{
-    return get_short_field0((jref) obj, (Field *) fieldID);
-}
-
-jint JNICALL Cabin_GetIntField(JNIEnv *env, jobject obj, jfieldID fieldID)
-{
-    return get_int_field0((jref) obj, (Field *) fieldID);
-}
-
-jlong JNICALL Cabin_GetLongField(JNIEnv *env, jobject obj, jfieldID fieldID)
-{
-    return get_long_field0((jref) obj, (Field *) fieldID);
-}
-
-jfloat JNICALL Cabin_GetFloatField(JNIEnv *env, jobject obj, jfieldID fieldID)
-{
-    return get_float_field0((jref) obj, (Field *) fieldID);
-}
-
-jdouble JNICALL Cabin_GetDoubleField(JNIEnv *env, jobject obj, jfieldID fieldID)
-{
-    return get_double_field0((jref) obj, (Field *) fieldID);
-}
+#undef GET_AND_SET_FIELD
 
 void JNICALL Cabin_SetObjectField(JNIEnv *env, jobject obj, jfieldID fieldID, jobject val)
 {
-//     Object *o = to_object_ref(obj);
-//     Field *f = to_field(fieldID);
-//     o->setRefField(f, to_object_ref(val));
-// //    setInstFieldValue(obj, fieldID, to_object_ref(val));
-    set_ref_field0((jref) obj, (Field *) fieldID, val);
-}
-
-void JNICALL Cabin_SetBooleanField(JNIEnv *env, jobject obj, jfieldID fieldID, jboolean val)
-{
-    set_bool_field0((jref) obj, (Field *) fieldID, val);
-}
-
-void JNICALL Cabin_SetByteField(JNIEnv *env, jobject obj, jfieldID fieldID, jbyte val)
-{
-    set_byte_field0((jref) obj, (Field *) fieldID, val);
-}
-
-void JNICALL Cabin_SetCharField(JNIEnv *env, jobject obj, jfieldID fieldID, jchar val)
-{
-    set_char_field0((jref) obj, (Field *) fieldID, val);
-}
-
-void JNICALL Cabin_SetShortField(JNIEnv *env, jobject obj, jfieldID fieldID, jshort val)
-{
-    set_short_field0((jref) obj, (Field *) fieldID, val);
-}
-
-void JNICALL Cabin_SetIntField(JNIEnv *env, jobject obj, jfieldID fieldID, jint val)
-{
-    set_int_field0((jref) obj, (Field *) fieldID, val);
-}
-
-void JNICALL Cabin_SetLongField(JNIEnv *env, jobject obj, jfieldID fieldID, jlong val)
-{
-    set_long_field0((jref) obj, (Field *) fieldID, val);
-}
-
-void JNICALL Cabin_SetFloatField(JNIEnv *env, jobject obj, jfieldID fieldID, jfloat val)
-{
-    set_float_field0((jref) obj, (Field *) fieldID, val);
-}
-
-void JNICALL Cabin_SetDoubleField(JNIEnv *env, jobject obj, jfieldID fieldID, jdouble val)
-{
-    set_double_field0((jref) obj, (Field *) fieldID, val);
+    set_ref_field0((jref) obj, (Field *) fieldID, (jref) val);
 }
 
 jmethodID JNICALL Cabin_GetStaticMethodID(JNIEnv *env, jclass clazz, const char *name, const char *sig)
 {
-    // assert(env != NULL && clazz != NULL && name != NULL && sig != NULL);
-
-    // Class *c = to_object_ref<Class>(clazz);
-    // Method *m = c->lookupStaticMethod(name, sig);
-    // return to_jmethodID(m);
-
-    return lookup_static_method(JVM_MIRROR(clazz), name, sig);
+    return (jmethodID) lookup_static_method(JVM_MIRROR(clazz), name, sig);
 }
 
 jfieldID JNICALL Cabin_GetStaticFieldID(JNIEnv *env, jclass clazz, const char *name, const char *sig)
 {
-    // assert(env != NULL && clazz != NULL && name != NULL && sig != NULL);
-    // return getFieldID(env, clazz, name, sig, true);
-    JVM_PANIC("Cabin_GetStaticFieldID");
+    return (jfieldID) lookup_static_field(JVM_MIRROR(clazz), name, sig);
 }
 
 jobject JNICALL Cabin_GetStaticObjectField(JNIEnv *env, jclass clazz, jfieldID fieldID)
@@ -675,124 +622,33 @@ jobject JNICALL Cabin_GetStaticObjectField(JNIEnv *env, jclass clazz, jfieldID f
     // assert(env != NULL && clazz != NULL && fieldID != NULL);
     // return addJNILocalRef(to_field(fieldID)->staticValue.r);
 
-    return ((Field *) fieldID)->static_value.r;
-}
-
-jboolean JNICALL Cabin_GetStaticBooleanField(JNIEnv *env, jclass clazz, jfieldID fieldID)
-{
-    return ((Field *) fieldID)->static_value.z;
-}
-
-jbyte JNICALL Cabin_GetStaticByteField(JNIEnv *env, jclass clazz, jfieldID fieldID)
-{
-    return ((Field *) fieldID)->static_value.b;
-}
-
-jchar JNICALL Cabin_GetStaticCharField(JNIEnv *env, jclass clazz, jfieldID fieldID)
-{
-    return ((Field *) fieldID)->static_value.c;
-}
-
-jshort JNICALL Cabin_GetStaticShortField(JNIEnv *env, jclass clazz, jfieldID fieldID)
-{
-    return ((Field *) fieldID)->static_value.s;
-}
-
-jint JNICALL Cabin_GetStaticIntField(JNIEnv *env, jclass clazz, jfieldID fieldID)
-{
-    return ((Field *) fieldID)->static_value.i;
-}
-
-jlong JNICALL Cabin_GetStaticLongField(JNIEnv *env, jclass clazz, jfieldID fieldID)
-{
-    return ((Field *) fieldID)->static_value.j;
-}
-
-jfloat JNICALL Cabin_GetStaticFloatField(JNIEnv *env, jclass clazz, jfieldID fieldID)
-{
-    return ((Field *) fieldID)->static_value.f;
-}
-
-jdouble JNICALL Cabin_GetStaticDoubleField(JNIEnv *env, jclass clazz, jfieldID fieldID)
-{
-    return ((Field *) fieldID)->static_value.d;
+    return (jobject) (((Field *) fieldID)->static_value.r);
 }
 
 void JNICALL Cabin_SetStaticObjectField(JNIEnv *env, jclass clazz, jfieldID fieldID, jobject value)
 {
-    ((Field *) fieldID)->static_value.r = value;
-}
-
-void JNICALL Cabin_SetStaticBooleanField(JNIEnv *env, jclass clazz, jfieldID fieldID, jboolean value)
-{
-    ((Field *) fieldID)->static_value.z = value;
-}
-
-void JNICALL Cabin_SetStaticByteField(JNIEnv *env, jclass clazz, jfieldID fieldID, jbyte value)
-{
-    ((Field *) fieldID)->static_value.b = value;
-}
-
-void JNICALL Cabin_SetStaticCharField(JNIEnv *env, jclass clazz, jfieldID fieldID, jchar value)
-{
-    ((Field *) fieldID)->static_value.c = value;
-}
-
-void JNICALL Cabin_SetStaticShortField(JNIEnv *env, jclass clazz, jfieldID fieldID, jshort value)
-{
-    ((Field *) fieldID)->static_value.s = value;
-}
-
-void JNICALL Cabin_SetStaticIntField(JNIEnv *env, jclass clazz, jfieldID fieldID, jint value)
-{
-    ((Field *) fieldID)->static_value.i = value;
-}
-
-void JNICALL Cabin_SetStaticLongField(JNIEnv *env, jclass clazz, jfieldID fieldID, jlong value)
-{
-    ((Field *) fieldID)->static_value.j = value;
-}
-
-void JNICALL Cabin_SetStaticFloatField(JNIEnv *env, jclass clazz, jfieldID fieldID, jfloat value)
-{
-    ((Field *) fieldID)->static_value.f = value;
-}
-
-void JNICALL Cabin_SetStaticDoubleField(JNIEnv *env, jclass clazz, jfieldID fieldID, jdouble value)
-{
-    ((Field *) fieldID)->static_value.d = value;
+    ((Field *) fieldID)->static_value.r = (jref) value;
 }
 
 jstring JNICALL Cabin_NewString(JNIEnv *env, const jchar *unicode, jsize len)
 {
-    jstrref str = alloc_string0(unicode, len);
+    jstrRef str = alloc_string0(unicode, len);
     return addJNILocalRef(str);
 }
 
 jsize JNICALL Cabin_GetStringLength(JNIEnv *env, jstring str)
 {
-    return get_string_length((jstrref) str);
+    return get_string_length((jstrRef) str);
 }
 
 const jchar *JNICALL Cabin_GetStringChars(JNIEnv *env, jstring str, jboolean *isCopy)
 {
-    // jstrref so = to_object_ref(str);
-    // if (g_jdk_version_9_and_upper) {
-    //     // byte[] value;
-    //     auto value = so->getRefField<Array>(S(value), S(array_B));
-    //     if (isCopy != NULL)
-    //         *isCopy = JNI_TRUE;
-    //     return utf8::toUnicode((utf8_t *) value->data, value->len);
-    // } else {
-    //     // char[] value;
-    //     auto value = so->getRefField<Array>(S(value), S(array_C));
-    //     addJNIGlobalRef(so); /* Pin the reference */
-    //     if (isCopy != NULL)
-    //         *isCopy = JNI_FALSE;
-    //     return (jchar *) value->data;
-    // }
+    // // addJNIGlobalRef(so); /* Pin the reference */
+    if (isCopy != NULL)
+        *isCopy = JNI_TRUE;
 
-    JVM_PANIC("not implement."); // todo
+    unicode_t *u = string_to_unicode((jstrRef)str); 
+    return u;
 }
 
 void JNICALL Cabin_ReleaseStringChars(JNIEnv *env, jstring str, const jchar *chars)
@@ -803,39 +659,30 @@ void JNICALL Cabin_ReleaseStringChars(JNIEnv *env, jstring str, const jchar *cha
     //     deleteJNIGlobalRef(to_object_ref(str)); /* Unpin the reference */
     // }
 
-    JVM_PANIC("not implement."); // todo
+    // todo
+
+    // JVM_PANIC("not implement."); // todo
 }
 
 jstring JNICALL Cabin_NewStringUTF(JNIEnv *env, const char *utf)
 {
-    jstrref str = alloc_string(utf);
+    jstrRef str = alloc_string(utf);
     return addJNILocalRef(str);
 }
 
 jsize JNICALL Cabin_GetStringUTFLength(JNIEnv *env, jstring str)
 {
-    return get_string_uft_length((jstrref) str);
+    return get_string_uft_length((jstrRef) str);
 }
 
 const char* JNICALL Cabin_GetStringUTFChars(JNIEnv *env, jstring str, jboolean *isCopy)
 {
-    // jstrref so = to_object_ref(str);
-    // if (g_jdk_version_9_and_upper) {
-    //     // byte[] value;
-    //     auto value = so->getRefField<Array>(S(value), S(array_B));
-    //     addJNIGlobalRef(so); /* Pin the reference */
-    //     if (isCopy != NULL)
-    //         *isCopy = JNI_FALSE;
-    //     return (char *) value->data;
-    // } else {
-    //     // char[] value;
-    //     auto value = so->getRefField<Array>(S(value), S(array_C));
-    //     if (isCopy != NULL)
-    //         *isCopy = JNI_TRUE;
-    //     return unicode::toUtf8((unicode_t *) value->data, value->len);
-    // }
+//    // addJNIGlobalRef(so); /* Pin the reference */
+    if (isCopy != NULL)
+        *isCopy = JNI_TRUE;
 
-    JVM_PANIC("not implement."); // todo
+    utf8_t *u = string_to_utf8((jstrRef)str);
+    return u;
 }
 
 void JNICALL Cabin_ReleaseStringUTFChars(JNIEnv *env, jstring str, const char *chars)
@@ -846,12 +693,14 @@ void JNICALL Cabin_ReleaseStringUTFChars(JNIEnv *env, jstring str, const char *c
     //     delete[] chars;
     // }
 
-    JVM_PANIC("not implement."); // todo
+    // todo
+
+    // JVM_PANIC("not implement."); // todo
 }
 
 jsize JNICALL Cabin_GetArrayLength(JNIEnv *env, jarray arr)
 {
-    jref array = arr;
+    jarrRef array = (jarrRef) arr;
     return array->arr_len;
 }
 
@@ -860,15 +709,8 @@ jobjectArray JNICALL Cabin_NewObjectArray(JNIEnv *env, jsize len, jclass element
     if (len < 0) {
         // todo java_lang_NegativeArraySizeException
     }
-
-    // Array *arr = newArray(to_object_ref<Class>(elementClass)->arrayClass(), len);
-    // if (init != NULL) {
-    //     jref o = to_object_ref(init);
-    //     for (int i = 0; i < len; ++i) {
-    //         arr->set(i, o);
-    //     }
-    // }
-    jarrref arr = alloc_array(array_class(JVM_MIRROR(elementClass)), len);
+    
+    jarrRef arr = alloc_array(array_class(JVM_MIRROR(elementClass)), len);
     if (init != NULL) {
         for (int i = 0; i < len; ++i) {
             array_set_ref(arr, i, (jref) init);
@@ -880,22 +722,22 @@ jobjectArray JNICALL Cabin_NewObjectArray(JNIEnv *env, jsize len, jclass element
 
 jobject JNICALL Cabin_GetObjectArrayElement(JNIEnv *env, jobjectArray array, jsize index)
 {
-    jarrref ao = (jarrref) array;
+    jarrRef ao = (jarrRef) array;
     if (index <= 0 || index >= ao->arr_len) {
         // todo error
     }
 
-    return array_get(jref, ao, index);
+    return (jobject) array_get(jref, ao, index);
 }
 
 void JNICALL Cabin_SetObjectArrayElement(JNIEnv *env, jobjectArray array, jsize index, jobject val)
 {
-    jarrref ao = (jarrref) array;
+    jarrRef ao = (jarrRef) array;
     if (index <= 0 || index >= ao->arr_len) {
         // todo error
     }
 
-    array_set_ref(ao, index, val);
+    array_set_ref(ao, index, (jref) val);
 }
 
 #define NewTypeArray(Type, className) \
@@ -953,25 +795,15 @@ releaseTypeArrayElements(Long, jlong)
 releaseTypeArrayElements(Float, jfloat)
 releaseTypeArrayElements(Double, jdouble)
 
-#define getTypeArrayRegion(Type, raw_type) \
+#define GET_AND_SET_TYPE_ARRAY_REGION(Type, raw_type) \
 void JNICALL Cabin_Get##Type##ArrayRegion(JNIEnv *env, jarray array, jsize start, jsize len, raw_type *buf) \
 { \
     jarrRef arr = (jarrRef) array; \
     assert(start + len <= arr->arr_len); \
     assert(get_ele_size(arr->clazz) == sizeof(raw_type)); \
     memcpy(buf, array_index(arr, start), len*sizeof(raw_type)); \
-}
-
-getTypeArrayRegion(Byte, jbyte)
-getTypeArrayRegion(Boolean, jboolean)
-getTypeArrayRegion(Char, jchar)
-getTypeArrayRegion(Short, jshort)
-getTypeArrayRegion(Int, jint)
-getTypeArrayRegion(Long, jlong)
-getTypeArrayRegion(Float, jfloat)
-getTypeArrayRegion(Double, jdouble)
-
-#define setTypeArrayRegion(Type, raw_type) \
+} \
+\
 void JNICALL Cabin_Set##Type##ArrayRegion(JNIEnv *env, jarray array, jsize start, jsize len, const raw_type *buf) \
 { \
     jarrRef arr = (jarrRef) array; \
@@ -980,14 +812,16 @@ void JNICALL Cabin_Set##Type##ArrayRegion(JNIEnv *env, jarray array, jsize start
     memcpy(array_index(arr, start), buf, len*sizeof(raw_type)); \
 }
 
-setTypeArrayRegion(Byte, jbyte)
-setTypeArrayRegion(Boolean, jboolean)
-setTypeArrayRegion(Char, jchar)
-setTypeArrayRegion(Short, jshort)
-setTypeArrayRegion(Int, jint)
-setTypeArrayRegion(Long, jlong)
-setTypeArrayRegion(Float, jfloat)
-setTypeArrayRegion(Double, jdouble)
+GET_AND_SET_TYPE_ARRAY_REGION(Byte, jbyte)
+GET_AND_SET_TYPE_ARRAY_REGION(Boolean, jboolean)
+GET_AND_SET_TYPE_ARRAY_REGION(Char, jchar)
+GET_AND_SET_TYPE_ARRAY_REGION(Short, jshort)
+GET_AND_SET_TYPE_ARRAY_REGION(Int, jint)
+GET_AND_SET_TYPE_ARRAY_REGION(Long, jlong)
+GET_AND_SET_TYPE_ARRAY_REGION(Float, jfloat)
+GET_AND_SET_TYPE_ARRAY_REGION(Double, jdouble)
+
+#undef GET_AND_SET_TYPE_ARRAY_REGION
 
 jint JNICALL Cabin_RegisterNatives(JNIEnv *env, jclass clazz, const JNINativeMethod *methods, jint nMethods)
 {
@@ -1003,7 +837,8 @@ jint JNICALL Cabin_RegisterNatives(JNIEnv *env, jclass clazz, const JNINativeMet
     //     JVM_PANIC("not implement.");
     // }
 
-    JVM_PANIC("not implement."); // todo
+    Class *c = ((jclsRef) clazz)->jvm_mirror;
+    register_natives(c->class_name, methods, nMethods);
     return JNI_OK;
 }
 
@@ -1046,12 +881,26 @@ void JNICALL Cabin_GetStringRegion(JNIEnv *env, jstring str, jsize start, jsize 
 
 void JNICALL Cabin_GetStringUTFRegion(JNIEnv *env, jstring str, jsize start, jsize len, char *buf)
 {
-    JVM_PANIC("not implement."); // todo
+    jstrRef so = (jstrRef)str;
+    // private final byte coder;
+    // 可取一下两值之一：
+    // @Native static final byte LATIN1 = 0;
+    // @Native static final byte UTF16  = 1;
+    jbyte code = get_byte_field(so, S(coder));
+    if (code == 1) {
+        JVM_PANIC("not implement."); // todo
+    } else {
+        // private final byte[] value;
+        jarrRef value = get_ref_field(so, S(value), S(array_B));
+        char *s = (char *) value->data;
+        strncpy(buf, s + start, len);
+        buf[len] = 0;
+    }
 }
 
 void* JNICALL Cabin_GetPrimitiveArrayCritical(JNIEnv *env, jarray array, jboolean *isCopy)
 {
-    jarrref arr = array;
+    jarrRef arr = (jarrRef) array;
 
     if(isCopy != NULL)
         *isCopy = JNI_FALSE;
@@ -1483,17 +1332,54 @@ const static struct _JNIInvokeInterface Cabin_JNIInvokeInterface = {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void init_native();
+void init_jvm(JavaVMInitArgs *);
 
-void init_jni()
+jint JNICALL JNI_CreateJavaVM(JavaVM **pvm, void **penv, void *args) 
 {
-    jni_env = &Cabin_JNINativeInterface;
     java_vm = &Cabin_JNIInvokeInterface;
+    jni_env = &Cabin_JNINativeInterface;
 
-    init_native();
+    *pvm = &java_vm;
+    *penv = &jni_env;
+
+    JavaVMInitArgs *vm_init_args = (JavaVMInitArgs *) args;
+    InitArgs init_args;
+
+    init_jvm(vm_init_args);
+    return JNI_OK;
 }
 
-JNIEnv *get_jni_interface()
+jint JNICALL JNI_GetDefaultJavaVMInitArgs(void *args) 
+{
+    JavaVMInitArgs *vm_init_args = (JavaVMInitArgs*) args;
+
+    // if(!isSupportedJNIVersion(vm_args->version))
+    //     return JNI_EVERSION;
+
+    return JNI_OK;
+}
+
+jint JNICALL JNI_GetCreatedJavaVMs(JavaVM **buff, jsize buff_len, jsize *num)
+ {
+    if(buff_len > 0) {
+        *buff = &java_vm;
+        *num = 1;
+        return JNI_OK;
+    }
+    return JNI_ERR;
+}
+
+// jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)
+// {
+
+// }
+
+// void JNICALL JNI_OnUnload(JavaVM *vm, void *reserved)
+// {
+
+// }
+
+JNIEnv *get_jni_env()
 {
     return &jni_env;
 }

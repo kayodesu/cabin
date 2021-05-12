@@ -1,5 +1,6 @@
-#include "../cabin.h"
-#include "../classfile/attributes.h"
+#include "cabin.h"
+#include "attributes.h"
+#include "util/encoding.h"
 
 void init_field(Field *f, Class *c, BytecodeReader *r)
 {
@@ -16,7 +17,7 @@ void init_field(Field *f, Class *c, BytecodeReader *r)
     f->deprecated = false;
     f->signature = NULL;
 
-    if (ACC_IS_STATIC(f->access_flags)) {
+    if (IS_STATIC(f)) {
         memset(&f->static_value, 0, sizeof(f->static_value));
     } else {
         f->id = -1;
@@ -38,7 +39,7 @@ void init_field(Field *f, Class *c, BytecodeReader *r)
              * 非静态字段包含了ConstantValue属性，那么这个属性必须被虚拟机所忽略。
              */
             u2 index = bcr_readu2(r);
-            if (ACC_IS_STATIC(f->access_flags)) {
+            if (IS_STATIC(f)) {
                 utf8_t d = *f->descriptor;
                 if (d == 'Z') {
                     f->static_value.z = JINT_TO_JBOOL(cp_get_int(cp, index));
@@ -61,7 +62,7 @@ void init_field(Field *f, Class *c, BytecodeReader *r)
                 }
             }
         } else if (S(Synthetic) == attr_name) {
-            ACC_SET_SYNTHETIC(f->access_flags);
+            SET_SYNTHETIC(f);
         } else if (S(Signature) == attr_name) {
             f->signature = cp_utf8(cp, bcr_readu2(r));
         } else if (S(RuntimeVisibleAnnotations) == attr_name) {
@@ -90,14 +91,14 @@ void init_field0(Field *f, Class *c, const utf8_t *name, const utf8_t *descripto
     f->deprecated = false;
     f->signature = NULL;
 
-    if (ACC_IS_STATIC(f->access_flags)) {
+    if (IS_STATIC(f)) {
         memset(&f->static_value, 0, sizeof(f->static_value));
     } else {
         f->id = -1;
     }
 }
 
-jclsref get_field_type(Field *f)
+jclsRef get_field_type(Field *f)
 {
     if (*f->descriptor == '[') { // array
         return loadArrayClass0(f->descriptor)->java_mirror;

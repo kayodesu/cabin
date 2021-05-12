@@ -6,20 +6,13 @@ static char *mangle_class_and_method_name(Method *m)
 {
     assert(m != NULL);
 
-    char *class_name = m->clazz->class_name;
+    const char *class_name = m->clazz->class_name;
     int len = strlen(class_name) + strlen(m->name) + 16;
     char *mangled = vm_malloc(len*sizeof(char));
-    // sprintf(mangled, "Java_%s_%s", class_name, m->name);
-
-    // // 将类名之间的'/'替换为'_'
-    // for (char *t = mangled; *t != 0; t++)
-    //     if (*t == '/')
-    //         *t = '_';
-
     strcpy(mangled, "Java_");
 
     int i = strlen("Java_");
-    for (char *t = class_name; *t != 0; t++) {
+    for (const char *t = class_name; *t != 0; t++) {
         if (*t == '/') {
              // 将类名之间的'/'替换为'_'
             mangled[i++] = '_';
@@ -43,9 +36,9 @@ static char *mangle_class_and_method_name(Method *m)
 
     mangled[i++] = '_';
     mangled[i] = 0;
+
     // todo 判断mangled空间够不够存放m->name
     strcat(mangled, m->name);
-
     return mangled;
 }
 
@@ -54,24 +47,22 @@ static HMODULE libjava;
 
 void *find_from_java_dll(Method *m)
 {
-    assert(m != NULL && ACC_IS_NATIVE(m->access_flags));
+    assert(m != NULL && IS_NATIVE(m));
 
     char *mangled = mangle_class_and_method_name(m);
-    
-
-    // exec_java_func2(find_native, NULL, alloc_string("registerNatives"));
-
-
     return GetProcAddress(libjava, mangled);
-
-//    printvm("%s, %p\n", mangled, p);
 }
 
 void init_dll()
 {
-    libjava = LoadLibrary("C:\\Program Files\\Java\\jdk-16\\bin\\java.dll");
- //   DWORD e = GetLastError();
- //   printvm("%p\n", java_dll);
+    char java_dll_path[PATH_MAX];
+    strcpy(java_dll_path, g_java_home);
+    strcat(java_dll_path, "/bin/java.dll");
+    libjava = LoadLibrary(java_dll_path);
+    if (libjava == NULL) {
+        DWORD e = GetLastError();
+        JVM_PANIC("%ld", e); // todo
+    }
     
     Class *ldr_class = load_boot_class(S(java_lang_ClassLoader));
     if(ldr_class != NULL) {

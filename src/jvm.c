@@ -2,23 +2,11 @@
 #include <time.h>
 #include "cabin.h"
 #include "jni.h"
-#include "heap/heap.h"
+#include "heap.h"
 #include "symbol.h"
 #include "util/hash.h"
-#include "objects/class_loader.h"
-#include "objects/object.h"
-#include "metadata/class.h"
-#include "runtime/frame.h"
-#include "runtime/vm_thread.h"
-#include "interpreter/interpreter.h"
-#include "native/jni_internal.h"
+#include "util/encoding.h"
 
-
-#if TRACE_JNI
-#define TRACE PRINT_TRACE
-#else
-#define TRACE(...)
-#endif
 
 #define JVM_MIRROR(_jclass) ((jclsRef) _jclass)->jvm_mirror
 
@@ -59,6 +47,14 @@ JVM_GetInterfaceVersion(void)
     return JVM_INTERFACE_VERSION;
 }
 
+#define JNI_THROW_BY_NAME(_env, _excep_class_name, msg) \
+    (*(_env))->ThrowNew(_env, (jclass) load_boot_class(_excep_class_name), msg)
+
+#define JNI_THROW_NPE(_env, msg) JNI_THROW_BY_NAME(_env, S(java_lang_NullPointerException), msg)
+
+#define JNI_THROW_IllegalArgumentException(_env, msg) \
+    JNI_THROW_BY_NAME(_env, S(java_lang_IllegalArgumentException), msg)
+
 /*************************************************************************
  PART 1: Functions for Native Libraries
  ************************************************************************/
@@ -69,7 +65,7 @@ JNIEXPORT jint JNICALL
 JVM_IHashCode(JNIEnv *env, jobject obj)
 {
     TRACE("JVM_IHashCode(env=%p, obj=%p)", env, obj);
-    return (jint)(intptr_t)obj; // todo
+    return (jint)(intptr_t)obj; // todo 实现错误。改成当前的时间如何。
 }
 
 JNIEXPORT void JNICALL
@@ -97,12 +93,11 @@ JNIEXPORT jobject JNICALL
 JVM_Clone(JNIEnv *env, jobject _obj)
 {
     TRACE("JVM_Clone(env=%p, obj=%p)", env, _obj);
-    jref obj = _obj;
+    jref obj = (jref) _obj;
     if (!is_subclass_of(obj->clazz, load_boot_class(S(java_lang_Cloneable)))) {
-        raise_exception(S(java_lang_CloneNotSupportedException), NULL); // todo msg   
-        // throw java_lang_CloneNotSupportedException();
+        JNI_THROW_BY_NAME(env, S(java_lang_CloneNotSupportedException), NULL); // todo msg
     }
-    return clone_object(obj);
+    return (jobject) clone_object(obj);
 }
 
 /*
@@ -112,8 +107,8 @@ JNIEXPORT jstring JNICALL
 JVM_InternString(JNIEnv *env, jstring str)
 {
     TRACE("JVM_InternString(env=%p, str=%p)", env, str);
-    assert(g_string_class == ((jstrref) str)->clazz);
-    return intern_string(str);
+    assert(g_string_class == ((jstrRef) str)->clazz);
+    return (jstring) intern_string((jstrRef) str);
 }
 
 /*
@@ -158,21 +153,33 @@ JVM_ArrayCopy(JNIEnv *env, jclass ignored, jobject _src, jint src_pos,
     TRACE("JVM_ArrayCopy(env=%p, ignored=%p, src=%p, src_pos=%d, dst=%p, dst_pos=%d, length=%d)", 
                     env, ignored, _src, src_pos, _dst, dst_pos, length);
 
-    jarrRef dst = _dst;
-    jarrRef src = _src;
+    jarrRef dst = (jarrRef) _dst;
+    jarrRef src = (jarrRef) _src;
     assert(is_array_object(dst));
     assert(is_array_object(src));
     array_copy(dst, dst_pos, src, src_pos, length);
 }
 
 /*
- * Return an array of all properties as alternating name and value pairs.
+ * Gather the VM and command line properties and return as a String[].
+ * The array indices are alternating key/value pairs
+ * supplied by the VM including those defined on the command line
+ * using -Dkey=value that may override the platform defined value.
+ *
+ * Note: The platform encoding must have been set.
  */
 JNIEXPORT jobjectArray JNICALL
 JVM_GetProperties(JNIEnv *env)
 {
     TRACE("JVM_GetProperties(env=%p)", env);
-    JVM_PANIC("unimplemented"); // todo
+
+    jarrRef prop_array = alloc_string_array(g_properties_count*2);
+    int j = 0;
+    for (int i = 0; i < g_properties_count; i++) {
+        array_set_ref(prop_array, j++, alloc_string(g_properties[i].name));
+        array_set_ref(prop_array, j++, alloc_string(g_properties[i].value));
+    }
+    return (jobjectArray) prop_array;
 }
 
 // JNIEXPORT jobject JNICALL
@@ -314,7 +321,7 @@ JNIEXPORT jint JNICALL
 JVM_ActiveProcessorCount(void)
 {
     TRACE("JVM_ActiveProcessorCount()");
-    return (jint) processor_number();
+    return processor_number();
 }
 
 JNIEXPORT jboolean JNICALL
@@ -328,6 +335,13 @@ JNIEXPORT void * JNICALL
 JVM_LoadLibrary(const char *name)
 {
     TRACE("JVM_LoadLibrary(name=%s)", name);
+    JVM_PANIC("unimplemented"); // todo
+}
+
+JNIEXPORT void * JNICALL
+JVM_LogLambdaFormInvoker(JNIEnv* env, jstring line)
+{
+    TRACE("JVM_LogLambdaFormInvoker()");
     JVM_PANIC("unimplemented"); // todo
 }
 
@@ -349,7 +363,7 @@ JNIEXPORT jboolean JNICALL
 JVM_IsSupportedJNIVersion(jint version)
 {
     TRACE("JVM_IsSupportedJNIVersion(version=%d)", version);
-    JVM_PANIC("unimplemented"); // todo
+    return JVM_INTERFACE_VERSION == version;
 }
 
 JNIEXPORT jobjectArray JNICALL
@@ -363,7 +377,11 @@ JNIEXPORT void JNICALL
 JVM_InitializeFromArchive(JNIEnv* env, jclass cls)
 {
     TRACE("JVM_InitializeFromArchive(env=%p, cls=%p)", env, cls);
-    JVM_PANIC("unimplemented"); // todo
+    // JVM_PANIC("unimplemented"); // todo
+
+    // todo 这个函数是干嘛的？？？？？
+    Class *c = JVM_MIRROR(cls);
+    // todo
 }
 
 JNIEXPORT void JNICALL
@@ -393,6 +411,14 @@ JVM_LookupLambdaProxyClassFromArchive(JNIEnv* env, jclass caller,
 }
 
 JNIEXPORT jboolean JNICALL
+JVM_IsCDSDumpingEnabled(JNIEnv* env)
+{
+    TRACE("JVM_IsCDSDumpingEnabled(env=%p)", env); 
+    // JVM_PANIC("unimplemented"); // todo
+    return false; // todo 这个函数是干嘛的？？？？？
+}
+
+JNIEXPORT jboolean JNICALL
 JVM_IsDynamicDumpingEnabled(JNIEnv* env)
 {
     TRACE("JVM_IsDynamicDumpingEnabled(env=%p)", env); 
@@ -403,14 +429,25 @@ JNIEXPORT jboolean JNICALL
 JVM_IsSharingEnabled(JNIEnv* env)
 {
     TRACE("JVM_IsSharingEnabled(env=%p)", env); 
-    JVM_PANIC("unimplemented"); // todo
+    // JVM_PANIC("unimplemented"); // todo
+    return false; // todo 这个函数是干嘛的？？？？？
+}
+
+JNIEXPORT jboolean JNICALL
+JVM_IsDumpingClassList(JNIEnv* env)
+{
+    TRACE("JVM_IsDumpingClassList(env=%p)", env); 
+
+    // JVM_PANIC("unimplemented"); // todo
+    return false; // todo 这个函数是干嘛的？？？？？
 }
 
 JNIEXPORT jlong JNICALL
 JVM_GetRandomSeedForDumping()
 {
     TRACE("JVM_GetRandomSeedForDumping()"); 
-    JVM_PANIC("unimplemented"); // todo
+    // JVM_PANIC("unimplemented"); // todo
+    return 100; // todo 这个函数是干嘛的？？？？？
 }
 
 // /*
@@ -431,7 +468,7 @@ JVM_FillInStackTrace(JNIEnv *env, jobject _throwable)
 {
     TRACE("JVM_FillInStackTrace(env=%p, throwable=%p)", env, _throwable);
 
-    jref throwable = _throwable;
+    jref throwable = (jref) _throwable;
     Thread *thread = get_current_thread();
 
     Frame *frame = thread->top_frame;
@@ -466,7 +503,7 @@ JVM_FillInStackTrace(JNIEnv *env, jobject _throwable)
         }
     }
 
-    jarrref backtrace = alloc_object_array(num);
+    jarrRef backtrace = alloc_object_array(num);
     Object **trace = (Object **) backtrace->data;
 
     Class *c = load_boot_class(S(java_lang_StackTraceElement));
@@ -478,11 +515,11 @@ JVM_FillInStackTrace(JNIEnv *env, jobject _throwable)
         // public StackTraceElement(String declaringClass, String methodName, String fileName, int lineNumber)
         // may be should call <init>, but 直接赋值 is also ok. todo
 
-        jstrref file_name = f->method->clazz->source_file_name != NULL 
+        jstrRef file_name = f->method->clazz->source_file_name != NULL
                         ? alloc_string(f->method->clazz->source_file_name) 
                         : NULL;
-        jstrref class_name = alloc_string(f->method->clazz->class_name);
-        jstrref method_name = alloc_string(f->method->name);
+        jstrRef class_name = alloc_string(f->method->clazz->class_name);
+        jstrRef method_name = alloc_string(f->method->name);
         jint line_number = get_line_number(f->method, f->reader.pc - 1); // todo why 减1？ 减去opcode的长度
 
         set_ref_field(o, "fileName", "Ljava/lang/String;", file_name);
@@ -507,8 +544,6 @@ JVM_FillInStackTrace(JNIEnv *env, jobject _throwable)
      * private transient int depth;
      */
     set_int_field(throwable, "depth", backtrace->arr_len);
-
-    return throwable;
 }
 
 // JNIEXPORT jint JNICALL
@@ -538,8 +573,8 @@ JNIEXPORT void JNICALL
 JVM_InitStackTraceElementArray(JNIEnv *env, jobjectArray _elements, jobject throwable)
 {
     TRACE("JVM_InitStackTraceElementArray(env=%p, elements=%p, throwable=%p)", env, _elements, throwable);
-    jarrRef elements = _elements;
-    jref x = throwable;
+    jarrRef elements = (jarrRef) _elements;
+    jref x = (jref) throwable;
 
     jref backtrace = get_ref_field(x, S(backtrace), S(sig_java_lang_Object));
     if (!is_array_object(backtrace)) {
@@ -674,7 +709,7 @@ JNIEXPORT void JNICALL
 JVM_StartThread(JNIEnv *env, jobject thread)
 {
     TRACE("JVM_StartThread(env=%p, thread=%p)", env, thread);
-        // createCustomerThread(_this);
+    // createCustomerThread(_this);
 
     pthread_t th; 
     if (pthread_create(&th, NULL, threadRunFunc, thread) != 0) {
@@ -758,8 +793,7 @@ JVM_Sleep(JNIEnv *env, jclass threadClass, jlong millis)
 {
     TRACE("JVM_Sleep(env=%p, thread=%p, millis=%ld)", env, threadClass, millis);
     if (millis <= 0) {
-        // throw java_lang_IllegalArgumentException();
-        raise_exception(S(java_lang_IllegalArgumentException), NULL);  // todo msg
+        JNI_THROW_IllegalArgumentException(env, NULL); // todo msg
     }
     if (millis == 0)
         return;
@@ -777,14 +811,14 @@ JNIEXPORT jobject JNICALL
 JVM_CurrentThread(JNIEnv *env, jclass threadClass)
 {
     TRACE("JVM_CurrentThread(env=%p, threadClass=%p)", env, threadClass);
-    return get_current_thread()->tobj;
+    return (jobject) get_current_thread()->tobj;
 }
 
 JNIEXPORT jint JNICALL
 JVM_CountStackFrames(JNIEnv *env, jobject thread)
 {
     TRACE("JVM_CountStackFrames(env=%p, thread=%p)", env, thread);
-    return count_stack_frames(thread_from_tobj(thread));
+    return count_stack_frames(thread_from_tobj((jref) thread));
 }
 
 // inform VM of interrupt
@@ -792,7 +826,7 @@ JNIEXPORT void JNICALL
 JVM_Interrupt(JNIEnv *env, jobject thread)
 {
     TRACE("JVM_Interrupt(env=%p, thread=%p)", env, thread);
-    Thread *t = thread_from_tobj(thread);
+    Thread *t = thread_from_tobj((jref) thread);
     t->interrupted = true;
 }
 
@@ -837,7 +871,7 @@ JVM_GetAllThreads(JNIEnv *env, jclass dummy)
         array_set_ref(threads, i, g_all_threads[i]->tobj);
     }
 
-    return threads;
+    return (jobjectArray) threads;
 }
 
 JNIEXPORT void JNICALL
@@ -852,7 +886,6 @@ JNIEXPORT jobjectArray JNICALL
 JVM_DumpThreads(JNIEnv *env, jclass threadClass, jobjectArray _threads)
 {
     TRACE("JVM_DumpThreads(env=%p, threadClass=%p, threads=%p)", env, threadClass, _threads);
-
     jarrRef threads = (jarrRef) (_threads);
     assert(is_array_object(threads));
 
@@ -866,7 +899,7 @@ JVM_DumpThreads(JNIEnv *env, jclass threadClass, jobjectArray _threads)
         array_set_ref(result, i, arr);
     }
 
-    return result;
+    return (jobjectArray) result;
 }
 
 /*
@@ -883,6 +916,14 @@ JVM_DumpThreads(JNIEnv *env, jclass threadClass, jobjectArray _threads)
 // JVM_CurrentClassLoader(JNIEnv *env)
 // {
 //     TRACE("JVM_CurrentClassLoader(env=%p)", env);
+//     JVM_PANIC("unimplemented"); // todo
+// }
+
+// JNIEXPORT jobjectArray JNICALL
+// JVM_EnqueueOperation(JNIEnv *env)
+// {
+//     // ------------- todo 参数和返回值都不对 --------------------------------------------------------------------------------- --------------------------------------------------------------------------------
+//     TRACE("JVM_EnqueueOperation(env=%p)", env);
 //     JVM_PANIC("unimplemented"); // todo
 // }
 
@@ -914,13 +955,13 @@ JNIEXPORT jstring JNICALL
 JVM_GetSystemPackage(JNIEnv *env, jstring name)
 {
     TRACE("JVM_GetSystemPackage(env=%p, name=%p)", env, name);
-    const char *utf8_name = string_to_utf8(name);
+    const char *utf8_name = string_to_utf8((jstrRef) name);
 
     const char *pkg = get_boot_package(utf8_name);
     if (pkg == NULL) {
         return NULL;
     } else {
-        return alloc_string(pkg);
+        return (jstring) alloc_string(pkg);
     }
 }
 
@@ -931,13 +972,13 @@ JVM_GetSystemPackages(JNIEnv *env)
     PHS *packages = get_boot_packages();
     int size = phs_size(packages);
     
-    jarrref ao = alloc_string_array(size);
+    jarrRef ao = alloc_string_array(size);
     Object **p = (Object **) ao->data;
     PHS_TRAVERSAL(packages, const char *, pkg, {
         *p++ = alloc_string(pkg);
     });
 
-    return ao;
+    return (jobjectArray) ao;
 }
 
 /*
@@ -961,6 +1002,40 @@ JNIEXPORT void JNICALL
 JVM_WaitForReferencePendingList(JNIEnv *env)
 {
     TRACE("JVM_WaitForReferencePendingList(env=%p)", env);
+    JVM_PANIC("unimplemented"); // todo
+}
+
+JNIEXPORT jboolean JNICALL
+JVM_ReferenceRefersTo(JNIEnv *env, jobject _ref, jobject _o)
+{
+    TRACE("JVM_ReferenceRefersTo(env=%p, ref=%p, o=%p)", env, _ref, _o);
+
+    jref ref = (jref) _ref;
+    jref o = (jref) _o;
+
+    // todo
+    return true;
+
+    // JVM_PANIC("unimplemented"); // todo
+}
+
+JNIEXPORT void JNICALL
+JVM_ReferenceClear(JNIEnv *env, jobject ref)
+{
+    TRACE("JVM_ReferenceClear(env=%p)", env); // todo
+
+    // todo
+
+    // JVM_PANIC("unimplemented"); // todo
+}
+
+/*
+ * java.lang.ref.PhantomReference
+ */
+JNIEXPORT jboolean JNICALL
+JVM_PhantomReferenceRefersTo(JNIEnv *env, jobject ref, jobject o)
+{
+    TRACE("JVM_PhantomReferenceRefersTo(env=%p)", env); // todo
     JVM_PANIC("unimplemented"); // todo
 }
 
@@ -1008,17 +1083,13 @@ JNIEXPORT jint JNICALL
 JVM_GetArrayLength(JNIEnv *env, jobject arr)
 {
     TRACE("JVM_GetArrayLength(env=%p, array=%p)", env, arr);
-    jref array = arr;
+    jref array = (jref) arr;
     if (array == NULL) {
-        // throw java_lang_NullPointerException();
-        raise_exception(S(java_lang_NullPointerException), NULL);
+        JNI_THROW_NPE(env, NULL);
     }
     if (!is_array_object(array)) {
-        // throw java_lang_IllegalArgumentException("Argument is not an array");
-        raise_exception(S(java_lang_IllegalArgumentException), "Argument is not an array");
+        JNI_THROW_IllegalArgumentException(env, "Argument is not an array");
     }
-
-    assert(array != NULL);
     return array->arr_len;
 }
 
@@ -1027,40 +1098,37 @@ JVM_GetArrayElement(JNIEnv *env, jobject arr, jint index)
 {
     TRACE("JVM_GetArrayElement(env=%p, arr=%p, index=%d)", env, arr, index);
 
-    jarrRef array = arr;
+    jarrRef array = (jarrRef) arr;
     if (array == NULL) {
-        // throw java_lang_NullPointerException();
-        raise_exception(S(java_lang_NullPointerException), NULL);
+        JNI_THROW_NPE(env, NULL);
     }
     if (!is_array_object(array)) {
-        // throw java_lang_IllegalArgumentException("Argument is not an array");
-        raise_exception(S(java_lang_IllegalArgumentException), "Argument is not an array");   
+        JNI_THROW_IllegalArgumentException(env, "Argument is not an array");
     }
 
     if (index < 0 || index >= array->arr_len) {
-        // throw java_lang_ArrayIndexOutOfBoundsException(to_string(index));
-        raise_exception(S(java_lang_ArrayIndexOutOfBoundsException), NULL); // todo msg
+        JNI_THROW_BY_NAME(env, S(java_lang_ArrayIndexOutOfBoundsException), NULL); // todo msg
     }
 
     switch (array->clazz->class_name[1]) {
     case 'Z': // boolean[]
-        return boolBox(array_get(jboolean, array, index));
+        return (jobject) boolBox(array_get(jboolean, array, index));
     case 'B': // byte[]
-        return byteBox(array_get(jbyte, array, index));
+        return (jobject) byteBox(array_get(jbyte, array, index));
     case 'C': // char[]
-        return charBox(array_get(jchar, array, index));
+        return (jobject) charBox(array_get(jchar, array, index));
     case 'S': // short[]
-        return shortBox(array_get(jshort, array, index));
+        return (jobject) shortBox(array_get(jshort, array, index));
     case 'I': // int[]
-        return intBox(array_get(jint, array, index));
+        return (jobject) intBox(array_get(jint, array, index));
     case 'J': // long[]
-        return longBox(array_get(jlong, array, index));
+        return (jobject) longBox(array_get(jlong, array, index));
     case 'F': // float[]
-        return floatBox(array_get(jfloat, array, index));
+        return (jobject) floatBox(array_get(jfloat, array, index));
     case 'D': // double[]
-        return doubleBox(array_get(jdouble, array, index));
+        return (jobject) doubleBox(array_get(jdouble, array, index));
     default:  // reference array
-        return array_get(jref, array, index);
+        return (jobject) array_get(jref, array, index);
     }
 }
 
@@ -1078,91 +1146,78 @@ JNIEXPORT void JNICALL
 JVM_SetArrayElement(JNIEnv *env, jobject arr, jint index, jobject val)
 {
     TRACE("JVM_SetArrayElement(env=%p, arr=%p, index=%d, val=%p)", env, arr, index, val);
-
-    jarrRef array = arr;
-    jref value = val;
+    jarrRef array = (jarrRef) arr;
+    jref value = (jref) val;
 
     if (array == NULL) {
-        // throw java_lang_NullPointerException();
-        raise_exception(S(java_lang_NullPointerException), NULL);
+        JNI_THROW_NPE(env, NULL);
     }
     if (!is_array_object(array)) {
-        // throw java_lang_IllegalArgumentException("Argument is not an array");
-        raise_exception(S(java_lang_IllegalArgumentException), "Argument is not an array");
+        JNI_THROW_IllegalArgumentException(env, "Argument is not an array");
     }
 
     if (index < 0 || index >= array->arr_len) {
-        // throw java_lang_ArrayIndexOutOfBoundsException(to_string(index));
-        raise_exception(S(java_lang_ArrayIndexOutOfBoundsException), NULL); // todo msg
+        JNI_THROW_BY_NAME(env, S(java_lang_ArrayIndexOutOfBoundsException), NULL); // todo msg
     }
 
     if (is_prim_array(array) && value == NULL) {
         // 基本类型的数组无法设空值
-        // throw java_lang_IllegalArgumentException();
-        raise_exception(S(java_lang_IllegalArgumentException), NULL); // todo msg
+        JNI_THROW_IllegalArgumentException(env, NULL); // todo msg
     }
 
     switch (array->clazz->class_name[1]) {
     case 'Z': // boolean[]
         if (!utf8_equals(value->clazz->class_name, S(java_lang_Boolean))) {
-            // throw java_lang_IllegalArgumentException("argument type mismatch");
-            raise_exception(S(java_lang_IllegalArgumentException), "argument type mismatch");   
+            JNI_THROW_IllegalArgumentException(env, "argument type mismatch");
         } else {
             array_set_boolean(array, index, slot_get_bool(prim_wrapper_obj_unbox(value)));
         }
         return;
     case 'B': // byte[]
         if (!utf8_equals(value->clazz->class_name, S(java_lang_Byte))) {
-            // throw java_lang_IllegalArgumentException("argument type mismatch");
-            raise_exception(S(java_lang_IllegalArgumentException), "argument type mismatch");   
+            JNI_THROW_IllegalArgumentException(env, "argument type mismatch");
         } else {
             array_set_byte(array, index, slot_get_byte(prim_wrapper_obj_unbox(value)));
         }
         return;
     case 'C': // char[]
         if (!utf8_equals(value->clazz->class_name, S(java_lang_Character))) {
-            // throw java_lang_IllegalArgumentException("argument type mismatch");
-            raise_exception(S(java_lang_IllegalArgumentException), "argument type mismatch");   
+            JNI_THROW_IllegalArgumentException(env, "argument type mismatch");
         } else {
             array_set_char(array, index, slot_get_char(prim_wrapper_obj_unbox(value)));
         } 
         return;
     case 'S': // short[]
         if (!utf8_equals(value->clazz->class_name, S(java_lang_Short))) {
-            // throw java_lang_IllegalArgumentException("argument type mismatch");
-            raise_exception(S(java_lang_IllegalArgumentException), "argument type mismatch");   
+            JNI_THROW_IllegalArgumentException(env, "argument type mismatch");
         } else {
             array_set_short(array, index, slot_get_short(prim_wrapper_obj_unbox(value)));
         } 
         return;
     case 'I': // int[]
         if (!utf8_equals(value->clazz->class_name, S(java_lang_Integer))) {
-            // throw java_lang_IllegalArgumentException("argument type mismatch");
-            raise_exception(S(java_lang_IllegalArgumentException), "argument type mismatch");   
+            JNI_THROW_IllegalArgumentException(env, "argument type mismatch");
         } else {
             array_set_int(array, index, slot_get_int(prim_wrapper_obj_unbox(value)));
         } 
         return;    
     case 'J': // long[]
         if (!utf8_equals(value->clazz->class_name, S(java_lang_Long))) {
-            // throw java_lang_IllegalArgumentException("argument type mismatch");
-            raise_exception(S(java_lang_IllegalArgumentException), "argument type mismatch");   
+            JNI_THROW_IllegalArgumentException(env, "argument type mismatch");
         } else {
             array_set_long(array, index, slot_get_long(prim_wrapper_obj_unbox(value)));
         } 
         return;    
     case 'F': // float[]
         if (!utf8_equals(value->clazz->class_name, S(java_lang_Float))) {
-            // throw java_lang_IllegalArgumentException("argument type mismatch");
-            raise_exception(S(java_lang_IllegalArgumentException), "argument type mismatch");   
+            JNI_THROW_IllegalArgumentException(env, "argument type mismatch");
         } else {
             array_set_float(array, index, slot_get_float(prim_wrapper_obj_unbox(value)));
         } 
         return;    
     case 'D': // double[]
         if (!utf8_equals(value->clazz->class_name, S(java_lang_Double))) {
-            // throw java_lang_IllegalArgumentException("argument type mismatch");
-            raise_exception(S(java_lang_IllegalArgumentException), "argument type mismatch");   
+            JNI_THROW_IllegalArgumentException(env, "argument type mismatch");
         } else {
             array_set_double(array, index, slot_get_double(prim_wrapper_obj_unbox(value)));
         } 
@@ -1186,25 +1241,23 @@ JVM_NewArray(JNIEnv *env, jclass _eltClass, jint length)
 {
     TRACE("JVM_NewArray(env=%p, eltClass=%p, length=%d)", env, _eltClass, length);
 
-    jclsref eltClass = _eltClass;
+    jclsRef eltClass = (jclsRef) _eltClass;
     if (eltClass == NULL) {
-        // throw java_lang_NullPointerException("component type is null");
-        raise_exception(S(java_lang_NullPointerException), "component type is null");
+        JNI_THROW_NPE(env, "component type is null");
         return NULL;
     }
     if (length < 0) {
-        // throw java_lang_NegativeArraySizeException();
-        raise_exception(S(java_lang_NegativeArraySizeException), NULL);  // todo msg
+        JNI_THROW_BY_NAME(env, S(java_lang_NegativeArraySizeException), NULL);  // todo msg
         return NULL;
     }
-    return alloc_array(array_class(eltClass->jvm_mirror), length);
+    return (jobject) alloc_array(array_class(eltClass->jvm_mirror), length);
 }
 
 JNIEXPORT jobject JNICALL
 JVM_NewMultiArray(JNIEnv *env, jclass _eltClass, jintArray dim)
 {
     TRACE("JVM_NewMultiArray(env=%p, eltClass=%p, length=%p)", env, _eltClass, dim);
-    jclsref eltClass = _eltClass;
+    jclsRef eltClass = (jclsRef) _eltClass;
     JVM_PANIC("unimplemented"); // todo
 }
 
@@ -1236,8 +1289,8 @@ JVM_GetCallerClass(JNIEnv *env)
     Frame *top2 = top1->prev;
     assert(top2 != NULL);
 
-    jclass o = top2->method->clazz->java_mirror;
-    return o;
+    jclsRef o = top2->method->clazz->java_mirror;
+    return (jclass) o;
 }
 
 
@@ -1281,7 +1334,7 @@ JVM_FindPrimitiveClass(JNIEnv *env, const char *utf)
 {
     TRACE("JVM_FindPrimitiveClass(env=%p, utf=%s)", env, utf);
     // 这里的 class name 是诸如 "int, float" 之类的 primitive type
-    return load_boot_class(utf)->java_mirror;
+    return (jclass) load_boot_class(utf)->java_mirror;
 }
 
 // /*
@@ -1314,8 +1367,10 @@ JNIEXPORT jclass JNICALL
 JVM_FindClassFromBootLoader(JNIEnv *env, const char *name)
 {
     TRACE("JVM_FindClassFromBootLoader(env=%p, name=%s)", env, name);
+    if (name == NULL)
+        return NULL;
     Class *c = load_boot_class(name);
-    return c != NULL ? c->java_mirror : NULL;
+    return c != NULL ? (jclass) c->java_mirror : NULL;
 }
 
 /*
@@ -1332,7 +1387,20 @@ JVM_FindClassFromCaller(JNIEnv *env, const char *name, jboolean init,
                         jobject loader, jclass caller)
 {
     TRACE("JVM_FindClassFromCaller(env=%p)", env); // todo
-    JVM_PANIC("unimplemented"); // todo
+
+    // println("class name: %s", name);
+
+    // todo
+    Class *c = load_class(loader, name);
+    if (c == NULL) {
+        // todo ClassNotFoundException
+        JVM_PANIC("unimplemented"); // todo
+        // (*env)->ThrowNew(env, )
+    }
+
+    return c->java_mirror;
+
+    // JVM_PANIC("unimplemented"); // todo
 }
 
 /*
@@ -1351,9 +1419,11 @@ JNIEXPORT jclass JNICALL
 JVM_FindLoadedClass(JNIEnv *env, jobject loader, jstring name)
 {
     TRACE("JVM_FindLoadedClass(env=%p, loader=%p, name=%p)", env, loader, name);
-    utf8_t *slash_name = dot_to_slash_dup(string_to_utf8(name));
-    Class *c = find_loaded_class(loader, slash_name);
-    return c != NULL ? c->java_mirror : NULL;
+    if (name == NULL)
+        return NULL;
+    utf8_t *slash_name = dot_to_slash_dup(string_to_utf8((jstrRef) name));
+    Class *c = find_loaded_class((jref) loader, slash_name);
+    return c != NULL ? (jclass) c->java_mirror : NULL;
 }
 
 /* Define a class */
@@ -1363,10 +1433,10 @@ JVM_DefineClass(JNIEnv *env, const char *name, jobject loader, const jbyte *buf,
     TRACE("JVM_DefineClass(env=%p, name=%s, loader=%p, buf=%p, len=%d, pd=%p)", 
                     env, name, loader, buf, len, pd);
 
-    Class *c = define_class(loader, buf, len);
+    Class *c = define_class((jref) loader, (u1 *) buf, len);
     // c->class_name和name是否相同 todo
 //    printvm("class_name: %s\n", c->class_name);
-    return c->java_mirror;
+    return (jclass) c->java_mirror;
 }
 
 /* Define a class with a source (added in JDK1.5) */
@@ -1378,12 +1448,13 @@ JVM_DefineClassWithSource(JNIEnv *env, const char *name, jobject loader,
     TRACE("JVM_DefineClassWithSource(env=%p, name=%s, loader=%p, buf=%p, len=%d, pd=%p, source=%s)", 
                     env, name, loader, buf, len, pd, source);
 
-    Class *c = define_class(loader, buf, len);
+    Class *c = define_class((jref) loader, (u1 *) buf, len);
     
     // c->class_name和name是否相同 todo
 //    printvm("class_name: %s\n", c->class_name);
     // todo 判断 source 与 c->source_file_name 是否相同
-    return c->java_mirror;
+
+    return (jclass) c->java_mirror;
 }                         
 
 // /* Define a class with a source with conditional verification (added HSX 14)
@@ -1451,7 +1522,10 @@ JNIEXPORT void JNICALL
 JVM_SetBootLoaderUnnamedModule(JNIEnv *env, jobject module)
 {
     TRACE("JVM_SetBootLoaderUnnamedModule(env=%p, module=%p)", env, module);
-    JVM_PANIC("unimplemented"); // todo
+
+    // todo
+
+    // JVM_PANIC("unimplemented"); // todo
 }
 
 /*
@@ -1559,7 +1633,7 @@ JVM_InitClassName(JNIEnv *env, jclass cls)
 
     jstrRef class_name = alloc_string(slash_to_dot_dup(JVM_MIRROR(cls)->class_name));
     set_ref_field((jclsRef) cls, "name", "Ljava/lang/String;", class_name);
-    return class_name;
+    return (jstring) class_name;
 }
 
 /**
@@ -1612,13 +1686,13 @@ JVM_GetClassInterfaces(JNIEnv *env, jclass cls)
     TRACE("JVM_GetClassInterfaces(env=%p, cls=%p)", env, cls);
 
     Class *c = JVM_MIRROR(cls);
-    jobjectArray interfaces = alloc_class_array(c->interfaces_count);
+    jarrRef interfaces = alloc_class_array(c->interfaces_count);
     for (u2 i = 0; i < c->interfaces_count; i++) {
         assert(c->interfaces[i] != NULL);
         array_set_ref(interfaces, i, c->interfaces[i]->java_mirror);
     }
 
-    return interfaces;
+    return (jobjectArray) interfaces;
 }
 
 // JNIEXPORT jobject JNICALL
@@ -1632,7 +1706,7 @@ JNIEXPORT jboolean JNICALL
 JVM_IsInterface(JNIEnv *env, jclass cls)
 {
     TRACE("JVM_IsInterface(env=%p, cls=%p)", env, cls);
-    return ACC_IS_INTERFACE(JVM_MIRROR(cls)->access_flags) ? JNI_TRUE : JNI_FALSE;
+    return IS_INTERFACE(JVM_MIRROR(cls)) ? JNI_TRUE : JNI_FALSE;
 }
 
 /*
@@ -1671,14 +1745,14 @@ JNIEXPORT jboolean JNICALL
 JVM_IsArrayClass(JNIEnv *env, jclass cls)
 {
     TRACE("JVM_IsArrayClass(env=%p, cls=%p)", env, cls);
-    return is_array_class(((jclsref) cls)->jvm_mirror) ? JNI_TRUE : JNI_FALSE;  // todo
+    return is_array_class(JVM_MIRROR(cls)) ? JNI_TRUE : JNI_FALSE;  // todo
 }
 
 JNIEXPORT jboolean JNICALL
 JVM_IsPrimitiveClass(JNIEnv *env, jclass cls)
 {
     TRACE("JVM_IsPrimitiveClass(env=%p, cls=%p)", env, cls);
-    return is_prim_class(((jclsref) cls)->jvm_mirror) ? JNI_TRUE : JNI_FALSE;
+    return is_prim_class(JVM_MIRROR(cls)) ? JNI_TRUE : JNI_FALSE;
 }
 
 /**
@@ -1710,7 +1784,7 @@ JVM_IsHiddenClass(JNIEnv *env, jclass cls)
 // JVM_GetComponentType(JNIEnv *env, jclass cls)
 // {
 //     TRACE("JVM_GetComponentType(env=%p, cls=%p)", env, cls);
-//     Class *c = ((jclsref) cls)->jvm_mirror;
+//     Class *c = ((jclsRef) cls)->jvm_mirror;
 //     if (is_array_class(c)) {
 //         return component_class(c)->java_mirror;
 //     } else {
@@ -1762,7 +1836,7 @@ JNIEXPORT jclass JNICALL
 JVM_GetDeclaringClass(JNIEnv *env, jclass of_class)
 {
     TRACE("JVM_GetDeclaringClass(env=%p, of_class=%p)", env, of_class);
-    Class *c = ((jclsref) of_class)->jvm_mirror;
+    Class *c = JVM_MIRROR(of_class);
     if (is_array_class(c)) {
         return NULL;
     }
@@ -1777,7 +1851,7 @@ JVM_GetDeclaringClass(JNIEnv *env, jclass of_class)
     *last_dollar = 0;
     c = load_class(c->loader, buf);
     assert(c != NULL);
-    return c->java_mirror;
+    return (jclass) c->java_mirror;
 }
 
 /*
@@ -1801,7 +1875,7 @@ JVM_GetClassSignature(JNIEnv *env, jclass cls)
     TRACE("JVM_GetClassSignature(env=%p, cls=%p)", env, cls);
     Class *c = JVM_MIRROR(cls);
     if (c->signature != NULL)
-        return alloc_string(c->signature);
+        return (jstring) alloc_string(c->signature);
     return NULL;
 }
 
@@ -1889,7 +1963,7 @@ JVM_GetClassDeclaredMethods(JNIEnv *env, jclass _ofClass, jboolean publicOnly)
 {
     TRACE("JVM_GetClassDeclaredMethods(env=%p, ofClass=%p, publicOnly=%d)", env, _ofClass, publicOnly);
 
-    jclsRef ofClass = _ofClass;
+    jclsRef ofClass = (jclsRef) _ofClass;
     Class *cls = ofClass->jvm_mirror;
     // jint count = public_only ? cls->public_methods_count : cls->methods.size();
 
@@ -1900,14 +1974,14 @@ JVM_GetClassDeclaredMethods(JNIEnv *env, jclass _ofClass, jboolean publicOnly)
      *      Class<?>[] checkedExceptions, int modifiers, int slot, String signature,
      *      byte[] annotations, byte[] parameterAnnotations, byte[] annotationDefault)
      */
-    Method *constructor = get_constructor(method_class, _CLS STR "[" CLS CLS "[" CLS "II" STR "[B[B[B)V");
+    Method *constructor = get_constructor(method_class, "(Ljava/lang/Class;" "Ljava/lang/String;" "[" "Ljava/lang/Class;" "Ljava/lang/Class;" "[" "Ljava/lang/Class;" "II" "Ljava/lang/String;" "[B[B[B)V");
 
     u2 count = 0;
     Object *objects[cls->methods_count];
 
     for (int i = 0; i < cls->methods_count; i++) {
         Method *method = cls->methods + i;
-        if (publicOnly && !ACC_IS_PUBLIC(method->access_flags))
+        if (publicOnly && !IS_PUBLIC(method))
             continue;
         if ((strcmp(method->name, "<clinit>") == 0) || (strcmp(method->name, "<init>") == 0))
             continue;
@@ -1939,7 +2013,7 @@ JVM_GetClassDeclaredMethods(JNIEnv *env, jclass _ofClass, jboolean publicOnly)
     for (size_t i = 0; i < count; i++) {
         array_set_ref(method_array, i, objects[i]);
     }
-    return method_array;
+    return (jobjectArray) method_array;
 }
 
 JNIEXPORT jobjectArray JNICALL
@@ -1947,7 +2021,7 @@ JVM_GetClassDeclaredFields(JNIEnv *env, jclass _ofClass, jboolean publicOnly)
 {
     TRACE("JVM_GetClassDeclaredFields(env=%p, ofClass=%p, publicOnly=%d)", env, _ofClass, publicOnly);
     
-    jclsRef ofClass = _ofClass;
+    jclsRef ofClass = (jclsRef) _ofClass;
     Class *cls = ofClass->jvm_mirror;
     // jint count = public_only ? cls->public_fields_count : cls->fields.size();
 
@@ -1955,15 +2029,9 @@ JVM_GetClassDeclaredFields(JNIEnv *env, jclass _ofClass, jboolean publicOnly)
     // auto field_array = field_class->arrayClass()->allocArray(count);
 
     Method *constructor;
-    if (!IS_JDK9_PLUS) {        
-        //  Field(Class<?> declaringClass, String name, Class<?> type,
-        //     int modifiers, int slot, String signature, byte[] annotations)
-        constructor = get_constructor(field_class, _CLS STR CLS "II" STR "[B)V");
-    } else {
-        // Field(Class<?> declaringClass, String name, Class<?> type, int modifiers,
-        //     boolean trustedFinal, int slot, String signature, byte[] annotations)
-        constructor = get_constructor(field_class, _CLS STR CLS "IZI" STR "[B)V");
-    }
+    // Field(Class<?> declaringClass, String name, Class<?> type, int modifiers,
+    //     boolean trustedFinal, int slot, String signature, byte[] annotations)
+    constructor = get_constructor(field_class, "(Ljava/lang/Class;" "Ljava/lang/String;" "Ljava/lang/Class;" "IZI" "Ljava/lang/String;" "[B)V");
 
     u2 count = 0;
     Object *objects[cls->fields_count];
@@ -1971,48 +2039,33 @@ JVM_GetClassDeclaredFields(JNIEnv *env, jclass _ofClass, jboolean publicOnly)
     // invoke constructor of class java/lang/reflect/Field
     for (int i = 0; i < cls->fields_count; i++) {
         Field *f = cls->fields + i;
-        if (publicOnly && !ACC_IS_PUBLIC(f->access_flags))
+        if (publicOnly && !IS_PUBLIC(f))
             continue;
 
         Object *o = alloc_object(field_class);
         objects[count++] = o;
         // field_array->setRef(i, o);
 
-        if (!IS_JDK9_PLUS) {
-            exec_java_func(constructor, (slot_t []) {
-                    rslot(o), // this
-                    rslot(ofClass), // declaring class
-                    // name must be interned.
-                    // 参见 java/lang/reflect/Field 的说明
-                    rslot(intern_string(alloc_string(f->name))), // name
-                    rslot(get_field_type(f)), // type
-                    islot(f->access_flags), /* modifiers todo */
-                    islot(f->id), /* slot   todo */
-                    rslot(f->signature != NULL ? alloc_string(f->signature) : NULL), /* signature  todo */
-                    rslot(NULL), /* annotations  todo */
-            });
-        } else {
-            exec_java_func(constructor, (slot_t []) {
-                    rslot(o), // this
-                    rslot(ofClass), // declaring class
-                    // name must be interned.
-                    // 参见 java/lang/reflect/Field 的说明
-                    rslot(intern_string(alloc_string(f->name))), // name
-                    rslot(get_field_type(f)), // type
-                    islot(f->access_flags), /* modifiers todo */
-                    islot(ACC_IS_FINAL(f->access_flags) ? jtrue : jfalse), // todo trusted Final
-                    islot(f->id), /* slot   todo */
-                    rslot(f->signature != NULL ? alloc_string(f->signature) : NULL), /* signature  todo */
-                    rslot(NULL), /* annotations  todo */
-            });
-        }
+        exec_java_func(constructor, (slot_t []) {
+                rslot(o), // this
+                rslot(ofClass), // declaring class
+                // name must be interned.
+                // 参见 java/lang/reflect/Field 的说明
+                rslot(intern_string(alloc_string(f->name))), // name
+                rslot(get_field_type(f)), // type
+                islot(f->access_flags), /* modifiers todo */
+                islot(IS_FINAL(f) ? jtrue : jfalse), // todo trusted Final
+                islot(f->id), /* slot   todo */
+                rslot(f->signature != NULL ? alloc_string(f->signature) : NULL), /* signature  todo */
+                rslot(NULL), /* annotations  todo */
+        });
     }
 
-    jarrref field_array = alloc_array(array_class(field_class), count);
+    jarrRef field_array = alloc_array(array_class(field_class), count);
     for (u2 i = 0; i < count; i++)
         array_set_ref(field_array, i, objects[i]);
 
-    return field_array;
+    return (jobjectArray) field_array;
 }
 
 JNIEXPORT jobjectArray JNICALL
@@ -2020,7 +2073,7 @@ JVM_GetClassDeclaredConstructors(JNIEnv *env, jclass _ofClass, jboolean publicOn
 {
     TRACE("JVM_GetClassDeclaredConstructors(env=%p, ofClass=%p, publicOnly=%d)", env, _ofClass, publicOnly);
     
-    jclsRef ofClass = _ofClass;
+    jclsRef ofClass = (jclsRef) _ofClass;
     Class *cls = ofClass->jvm_mirror;
 
     // std::vector<Method *> constructors = get_constructors(cls, public_only);
@@ -2029,14 +2082,14 @@ JVM_GetClassDeclaredConstructors(JNIEnv *env, jclass _ofClass, jboolean publicOn
     Method **constructors = get_constructors(cls, publicOnly, &count);
 
    Class *constructor_class = load_boot_class("java/lang/reflect/Constructor");
-   jarrref constructor_array = alloc_array(array_class(constructor_class), count);
+   jarrRef constructor_array = alloc_array(array_class(constructor_class), count);
 
    /*
      * Constructor(Class<T> declaringClass, Class<?>[] parameterTypes,
      *      Class<?>[] checkedExceptions, int modifiers, int slot,
      *      String signature, byte[] annotations, byte[] parameterAnnotations)
      */
-   Method *constructor_constructor = get_constructor(constructor_class, _CLS "[" CLS "[" CLS "II" STR "[B[B)V");
+   Method *constructor_constructor = get_constructor(constructor_class, "(Ljava/lang/Class;" "[" "Ljava/lang/Class;" "[" "Ljava/lang/Class;" "II" "Ljava/lang/String;" "[B[B)V");
 
    // invoke constructor of class java/lang/reflect/Constructor
    for (int i = 0; i < count; i++)
@@ -2059,7 +2112,7 @@ JVM_GetClassDeclaredConstructors(JNIEnv *env, jclass _ofClass, jboolean publicOn
     }
 
     free(constructors);
-    return constructor_array;
+    return (jobjectArray) constructor_array;
 }
 
 /* Differs from JVM_GetClassModifiers in treatment of inner classes.
@@ -2131,9 +2184,9 @@ JNIEXPORT jobject JNICALL
 JVM_InvokeMethod(JNIEnv *env, jobject _method, jobject obj, jobjectArray args0)
 {
     TRACE("JVM_InvokeMethod(env=%p, method=%p, obj=%p, args0=%p)", env, _method, obj, args0);
-    jref method = _method;
-    jref o = obj;
-    jarrRef os = args0;
+    jref method = (jref) _method;
+    jref o = (jref) obj;
+    jarrRef os = (jarrRef) args0;
 
     // If method is static, o is NULL.
 
@@ -2142,7 +2195,7 @@ JVM_InvokeMethod(JNIEnv *env, jobject _method, jobject obj, jobjectArray args0)
     // private Class<?>   returnType;
     // private Class<?>[] parameterTypes;
     Class *c = get_ref_field(method, S(clazz), S(sig_java_lang_Class))->jvm_mirror;
-    jstrref name = get_ref_field(method, S(name), S(sig_java_lang_String));
+    jstrRef name = get_ref_field(method, S(name), S(sig_java_lang_String));
     jref rtype = get_ref_field(method, S(returnType), S(sig_java_lang_Class));
     jref ptypes = get_ref_field(method, S(parameterTypes), S(array_java_lang_Class));
 
@@ -2155,25 +2208,25 @@ JVM_InvokeMethod(JNIEnv *env, jobject _method, jobject obj, jobjectArray args0)
     slot_t *result = exec_java_func0(m, o, os);
     switch (m->ret_type) {
     case RET_VOID:
-        return voidBox();
+        return (jobject) voidBox();
     case RET_BYTE:
-        return byteBox(slot_get_byte(result));
+        return (jobject) byteBox(slot_get_byte(result));
     case RET_BOOL:
-        return boolBox(slot_get_bool(result));
+        return (jobject) boolBox(slot_get_bool(result));
     case RET_CHAR:
-        return charBox(slot_get_char(result));
+        return (jobject) charBox(slot_get_char(result));
     case RET_SHORT:
-        return shortBox(slot_get_short(result));
+        return (jobject) shortBox(slot_get_short(result));
     case RET_INT:
-        return intBox(slot_get_int(result));
+        return (jobject) intBox(slot_get_int(result));
     case RET_FLOAT:
-        return floatBox(slot_get_float(result));
+        return (jobject) floatBox(slot_get_float(result));
     case RET_LONG:
-        return longBox(slot_get_long(result));
+        return (jobject) longBox(slot_get_long(result));
     case RET_DOUBLE:
-        return doubleBox(slot_get_double(result));
+        return (jobject) doubleBox(slot_get_double(result));
     case RET_REFERENCE:
-        return slot_get_ref(result);
+        return (jobject) slot_get_ref(result);
     default:
         JVM_PANIC("never go here\n"); // todo
     }
@@ -2199,28 +2252,28 @@ JVM_GetClassConstantPool(JNIEnv *env, jclass cls)
     TRACE("JVM_GetClassConstantPool(env=%p, cls=%p)", env, cls);
     Class *c = load_boot_class("sun/reflect/ConstantPool");
     jref cp = alloc_object(c);
-    set_ref_field(cp, "constantPoolOop", "Ljava/lang/Object;", (jref) &(((jclsref) cls)->jvm_mirror->cp)); 
-    return cp;
+    set_ref_field(cp, "constantPoolOop", "Ljava/lang/Object;", (jref) &(((jclsRef) cls)->jvm_mirror->cp));
+    return (jobject) cp;
 }
 
-JNIEXPORT jint JNICALL JVM_ConstantPoolGetSize
-(JNIEnv *env, jobject obj, jobject unused)
+JNIEXPORT jint JNICALL 
+JVM_ConstantPoolGetSize(JNIEnv *env, jobject obj, jobject unused)
 {
     TRACE("JVM_ConstantPoolGetSize(env=%p, obj=%p)", env, obj);
     ConstantPool *cp = (ConstantPool *) obj;
     return cp->size;
 }
 
-JNIEXPORT jclass JNICALL JVM_ConstantPoolGetClassAt
-(JNIEnv *env, jobject obj, jobject unused, jint index)
+JNIEXPORT jclass JNICALL 
+JVM_ConstantPoolGetClassAt(JNIEnv *env, jobject obj, jobject unused, jint index)
 {
     TRACE("JVM_ConstantPoolGetClassAt(env=%p, obj=%p, index=%d)", env, obj, index);
     ConstantPool *cp = (ConstantPool *) obj;
-    return resolve_class(cp, (u2) index)->java_mirror;
+    return (jclass) (resolve_class(cp, (u2) index)->java_mirror);
 }
 
-JNIEXPORT jclass JNICALL JVM_ConstantPoolGetClassAtIfLoaded
-(JNIEnv *env, jobject obj, jobject unused, jint index)
+JNIEXPORT jclass JNICALL 
+JVM_ConstantPoolGetClassAtIfLoaded(JNIEnv *env, jobject obj, jobject unused, jint index)
 {
     TRACE("JVM_ConstantPoolGetClassAtIfLoaded(env=%p, obj=%p, index=%d)", env, obj, index);
     ConstantPool *cp = (ConstantPool *) obj;
@@ -2229,11 +2282,17 @@ JNIEXPORT jclass JNICALL JVM_ConstantPoolGetClassAtIfLoaded
     JVM_PANIC("unimplemented"); // todo
 }
 
-JNIEXPORT jint JNICALL JVM_ConstantPoolGetClassRefIndexAt
-(JNIEnv *env, jobject obj, jobject unused, jint index);
+JNIEXPORT jint JNICALL 
+JVM_ConstantPoolGetClassRefIndexAt(JNIEnv *env, jobject obj, jobject unused, jint index)
+{
+    TRACE("JVM_ConstantPoolGetClassRefIndexAt(env=%p, obj=%p, index=%d)", env, obj, index);
+    ConstantPool *cp = (ConstantPool *) obj;
 
-JNIEXPORT jobject JNICALL JVM_ConstantPoolGetMethodAt
-(JNIEnv *env, jobject obj, jobject unused, jint index)
+    JVM_PANIC("unimplemented"); // todo
+}
+
+JNIEXPORT jobject JNICALL 
+JVM_ConstantPoolGetMethodAt(JNIEnv *env, jobject obj, jobject unused, jint index)
 {
     TRACE("JVM_ConstantPoolGetMethodAt(env=%p, obj=%p, index=%d)", env, obj, index);
     ConstantPool *cp = (ConstantPool *) obj;
@@ -2250,8 +2309,8 @@ JNIEXPORT jobject JNICALL JVM_ConstantPoolGetMethodAtIfLoaded
     JVM_PANIC("unimplemented"); // todo
 }
 
-JNIEXPORT jobject JNICALL JVM_ConstantPoolGetFieldAt
-(JNIEnv *env, jobject obj, jobject unused, jint index)
+JNIEXPORT jobject JNICALL
+JVM_ConstantPoolGetFieldAt(JNIEnv *env, jobject obj, jobject unused, jint index)
 {
     TRACE("JVM_ConstantPoolGetFieldAt(env=%p, obj=%p, index=%d)", env, obj, index);
     ConstantPool *cp = (ConstantPool *) obj;
@@ -2259,8 +2318,8 @@ JNIEXPORT jobject JNICALL JVM_ConstantPoolGetFieldAt
     JVM_PANIC("unimplemented"); // todo
 }
 
-JNIEXPORT jobject JNICALL JVM_ConstantPoolGetFieldAtIfLoaded
-(JNIEnv *env, jobject obj, jobject unused, jint index)
+JNIEXPORT jobject JNICALL 
+JVM_ConstantPoolGetFieldAtIfLoaded(JNIEnv *env, jobject obj, jobject unused, jint index)
 {
     TRACE("JVM_ConstantPoolGetFieldAtIfLoaded(env=%p, obj=%p, index=%d)", env, obj, index);
     ConstantPool *cp = (ConstantPool *) obj;
@@ -2268,8 +2327,8 @@ JNIEXPORT jobject JNICALL JVM_ConstantPoolGetFieldAtIfLoaded
     JVM_PANIC("unimplemented"); // todo
 }
 
-JNIEXPORT jobjectArray JNICALL JVM_ConstantPoolGetMemberRefInfoAt
-(JNIEnv *env, jobject obj, jobject unused, jint index)
+JNIEXPORT jobjectArray JNICALL 
+JVM_ConstantPoolGetMemberRefInfoAt(JNIEnv *env, jobject obj, jobject unused, jint index)
 {
     TRACE("JVM_ConstantPoolGetMemberRefInfoAt(env=%p, obj=%p, index=%d)", env, obj, index);
     ConstantPool *cp = (ConstantPool *) obj;
@@ -2277,63 +2336,75 @@ JNIEXPORT jobjectArray JNICALL JVM_ConstantPoolGetMemberRefInfoAt
     JVM_PANIC("unimplemented"); // todo
 }
 
-JNIEXPORT jint JNICALL JVM_ConstantPoolGetNameAndTypeRefIndexAt
-(JNIEnv *env, jobject obj, jobject unused, jint index);
+JNIEXPORT jint JNICALL 
+JVM_ConstantPoolGetNameAndTypeRefIndexAt(JNIEnv *env, jobject obj, jobject unused, jint index)
+{
+    TRACE("JVM_ConstantPoolGetNameAndTypeRefIndexAt(env=%p, obj=%p, index=%d)", env, obj, index);
+    JVM_PANIC("unimplemented"); // todo
+}
 
-JNIEXPORT jobjectArray JNICALL JVM_ConstantPoolGetNameAndTypeRefInfoAt
-(JNIEnv *env, jobject obj, jobject unused, jint index);
+JNIEXPORT jobjectArray JNICALL
+JVM_ConstantPoolGetNameAndTypeRefInfoAt(JNIEnv *env, jobject obj, jobject unused, jint index)
+{
+    TRACE("JVM_ConstantPoolGetNameAndTypeRefInfoAt(env=%p, obj=%p, index=%d)", env, obj, index);
+    JVM_PANIC("unimplemented"); // todo
+}
 
-JNIEXPORT jint JNICALL JVM_ConstantPoolGetIntAt
-(JNIEnv *env, jobject obj, jobject unused, jint index)
+JNIEXPORT jint JNICALL 
+JVM_ConstantPoolGetIntAt(JNIEnv *env, jobject obj, jobject unused, jint index)
 {
     TRACE("JVM_ConstantPoolGetIntAt(env=%p, obj=%p, index=%d)", env, obj, index);
     ConstantPool *cp = (ConstantPool *) obj;
     return cp_get_int(cp, (u2) index);
 }
 
-JNIEXPORT jlong JNICALL JVM_ConstantPoolGetLongAt
-(JNIEnv *env, jobject obj, jobject unused, jint index)
+JNIEXPORT jlong JNICALL 
+JVM_ConstantPoolGetLongAt(JNIEnv *env, jobject obj, jobject unused, jint index)
 {
     TRACE("JVM_ConstantPoolGetLongAt(env=%p, obj=%p, index=%d)", env, obj, index);
     ConstantPool *cp = (ConstantPool *) obj;
     return cp_get_long(cp, (u2) index);
 }
 
-JNIEXPORT jfloat JNICALL JVM_ConstantPoolGetFloatAt
-(JNIEnv *env, jobject obj, jobject unused, jint index)
+JNIEXPORT jfloat JNICALL 
+JVM_ConstantPoolGetFloatAt(JNIEnv *env, jobject obj, jobject unused, jint index)
 {
     TRACE("JVM_ConstantPoolGetFloatAt(env=%p, obj=%p, index=%d)", env, obj, index);
     ConstantPool *cp = (ConstantPool *) obj;
     return cp_get_float(cp, (u2) index);
 }
 
-JNIEXPORT jdouble JNICALL JVM_ConstantPoolGetDoubleAt
-(JNIEnv *env, jobject obj, jobject unused, jint index)
+JNIEXPORT jdouble JNICALL 
+JVM_ConstantPoolGetDoubleAt(JNIEnv *env, jobject obj, jobject unused, jint index)
 {
     TRACE("JVM_ConstantPoolGetDoubleAt(env=%p, obj=%p, index=%d)", env, obj, index);
     ConstantPool *cp = (ConstantPool *) obj;
     return cp_get_double(cp, (u2) index);
 }
 
-JNIEXPORT jstring JNICALL JVM_ConstantPoolGetStringAt
-(JNIEnv *env, jobject obj, jobject unused, jint index)
+JNIEXPORT jstring JNICALL 
+JVM_ConstantPoolGetStringAt(JNIEnv *env, jobject obj, jobject unused, jint index)
 {
     TRACE("JVM_ConstantPoolGetStringAt(env=%p, obj=%p, index=%d)", env, obj, index);
     ConstantPool *cp = (ConstantPool *) obj;
-    return resolve_string(cp, index);
+    return (jstring) resolve_string(cp, index);
 }
 
-JNIEXPORT jstring JNICALL JVM_ConstantPoolGetUTF8At
-(JNIEnv *env, jobject obj, jobject unused, jint index)
+JNIEXPORT jstring JNICALL 
+JVM_ConstantPoolGetUTF8At(JNIEnv *env, jobject obj, jobject unused, jint index)
 {
     TRACE("JVM_ConstantPoolGetUTF8At(env=%p, obj=%p, index=%d)", env, obj, index);
     ConstantPool *cp = (ConstantPool *) obj;
     utf8_t *utf8 = cp_utf8(cp, index);
-    return alloc_string(utf8);
+    return (jstring) alloc_string(utf8);
 }
 
-JNIEXPORT jbyte JNICALL JVM_ConstantPoolGetTagAt
-(JNIEnv *env, jobject unused, jobject jcpool, jint index);
+JNIEXPORT jbyte JNICALL 
+JVM_ConstantPoolGetTagAt(JNIEnv *env, jobject unused, jobject jcpool, jint index)
+{
+    TRACE("JVM_ConstantPoolGetTagAt()"); // todo
+    JVM_PANIC("unimplemented"); // todo
+}
 
 /*
  * Parameter reflection
@@ -2393,7 +2464,11 @@ JNIEXPORT void * JNICALL
 JVM_RegisterSignal(jint sig, void *handler)
 {
     TRACE("JVM_RegisterSignal(sig=%d, handler=%p)", sig, handler);
-    JVM_PANIC("unimplemented"); // todo
+
+    // todo
+    return handler;
+
+    // JVM_PANIC("unimplemented"); // todo
 }
 
 JNIEXPORT jboolean JNICALL
@@ -2418,7 +2493,11 @@ JNIEXPORT jboolean JNICALL
 JVM_DesiredAssertionStatus(JNIEnv *env, jclass unused, jclass cls)
 {
     TRACE("JVM_DesiredAssertionStatus(env=%p, cls=%p)", env, cls);
-    JVM_PANIC("unimplemented"); // todo
+
+    // JVM_PANIC("unimplemented"); // todo
+
+    // todo 本vm不讨论断言。desiredAssertionStatus0（）方法把false推入操作数栈顶
+    return false;
 }
 
 /*
@@ -2622,7 +2701,7 @@ JVM_GetMethodIxExceptionIndexes(JNIEnv *env, jclass cb, jint method_index, unsig
 JNIEXPORT jint JNICALL
 JVM_GetMethodIxExceptionsCount(JNIEnv *env, jclass cb, jint method_index)
 {
-    TRACE("JVM_GetMethodIxExceptionsCount(env=%p, cb=%p, method_index=%d)"
+    TRACE("JVM_GetMethodIxExceptionsCount(env=%p, cb=%p, method_index=%d)",
                                             env, cb, method_index);
     JVM_PANIC("unimplemented"); // todo
 }
@@ -2648,7 +2727,7 @@ JVM_GetMethodIxByteCode(JNIEnv *env, jclass cb, jint method_index, unsigned char
 JNIEXPORT jint JNICALL
 JVM_GetMethodIxByteCodeLength(JNIEnv *env, jclass cb, jint method_index)
 {
-    TRACE("JVM_GetMethodIxByteCodeLength(env=%p, cb=%p, method_index=%d)"
+    TRACE("JVM_GetMethodIxByteCodeLength(env=%p, cb=%p, method_index=%d)",
                                             env, cb, method_index);
     JVM_PANIC("unimplemented"); // todo
 }
@@ -2673,7 +2752,7 @@ JNIEXPORT void JNICALL
 JVM_GetMethodIxExceptionTableEntry(JNIEnv *env, jclass cb, jint method_index,
                                    jint entry_index, JVM_ExceptionTableEntryType *entry)
 {
-    TRACE("JVM_GetMethodIxExceptionTableEntry(env=%p, cb=%p, method_index=%d, entry_index=%d, entry=%p)"
+    TRACE("JVM_GetMethodIxExceptionTableEntry(env=%p, cb=%p, method_index=%d, entry_index=%d, entry=%p)",
                                             env, cb, method_index, entry_index, entry);
     JVM_PANIC("unimplemented"); // todo
 }
@@ -2685,7 +2764,7 @@ JVM_GetMethodIxExceptionTableEntry(JNIEnv *env, jclass cb, jint method_index,
 JNIEXPORT jint JNICALL
 JVM_GetMethodIxExceptionTableLength(JNIEnv *env, jclass cb, int index)
 {
-    TRACE("JVM_GetMethodIxExceptionTableLength(env=%p, cb=%p, index=%d)" env, cb, index);
+    TRACE("JVM_GetMethodIxExceptionTableLength(env=%p, cb=%p, index=%d)", env, cb, index);
     JVM_PANIC("unimplemented"); // todo
 }
 
@@ -2696,7 +2775,7 @@ JVM_GetMethodIxExceptionTableLength(JNIEnv *env, jclass cb, int index)
 JNIEXPORT jint JNICALL
 JVM_GetFieldIxModifiers(JNIEnv *env, jclass cb, int index)
 {
-    TRACE("JVM_GetFieldIxModifiers(env=%p, cb=%p, index=%d)" env, cb, index);
+    TRACE("JVM_GetFieldIxModifiers(env=%p, cb=%p, index=%d)", env, cb, index);
     JVM_PANIC("unimplemented"); // todo
 }
 
@@ -2707,7 +2786,7 @@ JVM_GetFieldIxModifiers(JNIEnv *env, jclass cb, int index)
 JNIEXPORT jint JNICALL
 JVM_GetMethodIxModifiers(JNIEnv *env, jclass cb, int index)
 {
-    TRACE("JVM_GetMethodIxModifiers(env=%p, cb=%p, index=%d)" env, cb, index);
+    TRACE("JVM_GetMethodIxModifiers(env=%p, cb=%p, index=%d)", env, cb, index);
     JVM_PANIC("unimplemented"); // todo
 }
 
@@ -2718,7 +2797,7 @@ JVM_GetMethodIxModifiers(JNIEnv *env, jclass cb, int index)
 JNIEXPORT jint JNICALL
 JVM_GetMethodIxLocalsCount(JNIEnv *env, jclass cb, int index)
 {
-    TRACE("JVM_GetMethodIxLocalsCount(env=%p, cb=%p, index=%d)" env, cb, index);
+    TRACE("JVM_GetMethodIxLocalsCount(env=%p, cb=%p, index=%d)", env, cb, index);
     JVM_PANIC("unimplemented"); // todo
 }
 
@@ -2729,7 +2808,7 @@ JVM_GetMethodIxLocalsCount(JNIEnv *env, jclass cb, int index)
 JNIEXPORT jint JNICALL
 JVM_GetMethodIxArgsSize(JNIEnv *env, jclass cb, int index)
 {
-    TRACE("JVM_GetMethodIxArgsSize(env=%p, cb=%p, index=%d)" env, cb, index);
+    TRACE("JVM_GetMethodIxArgsSize(env=%p, cb=%p, index=%d)", env, cb, index);
     JVM_PANIC("unimplemented"); // todo
 }
 
@@ -2740,7 +2819,7 @@ JVM_GetMethodIxArgsSize(JNIEnv *env, jclass cb, int index)
 JNIEXPORT jint JNICALL
 JVM_GetMethodIxMaxStack(JNIEnv *env, jclass cb, int index)
 {
-    TRACE("JVM_GetMethodIxMaxStack(env=%p, cb=%p, index=%d)" env, cb, index);
+    TRACE("JVM_GetMethodIxMaxStack(env=%p, cb=%p, index=%d)", env, cb, index);
     JVM_PANIC("unimplemented"); // todo
 }
 
@@ -2751,7 +2830,7 @@ JVM_GetMethodIxMaxStack(JNIEnv *env, jclass cb, int index)
 JNIEXPORT jboolean JNICALL
 JVM_IsConstructorIx(JNIEnv *env, jclass cb, int index)
 {
-    TRACE("JVM_IsConstructorIx(env=%p, cb=%p, index=%d)" env, cb, index);
+    TRACE("JVM_IsConstructorIx(env=%p, cb=%p, index=%d)", env, cb, index);
     JVM_PANIC("unimplemented"); // todo
 }
 
@@ -2762,7 +2841,7 @@ JVM_IsConstructorIx(JNIEnv *env, jclass cb, int index)
 JNIEXPORT jboolean JNICALL
 JVM_IsVMGeneratedMethodIx(JNIEnv *env, jclass cb, int index)
 {
-    TRACE("JVM_IsVMGeneratedMethodIx(env=%p, cb=%p, index=%d)" env, cb, index);
+    TRACE("JVM_IsVMGeneratedMethodIx(env=%p, cb=%p, index=%d)", env, cb, index);
     JVM_PANIC("unimplemented"); // todo
 }
 
@@ -2776,7 +2855,7 @@ JVM_IsVMGeneratedMethodIx(JNIEnv *env, jclass cb, int index)
 JNIEXPORT const char * JNICALL
 JVM_GetMethodIxNameUTF(JNIEnv *env, jclass cb, jint index)
 {
-    TRACE("JVM_GetMethodIxNameUTF(env=%p, cb=%p, index=%d)" env, cb, index);
+    TRACE("JVM_GetMethodIxNameUTF(env=%p, cb=%p, index=%d)", env, cb, index);
     JVM_PANIC("unimplemented"); // todo
 }
 
@@ -2790,7 +2869,7 @@ JVM_GetMethodIxNameUTF(JNIEnv *env, jclass cb, jint index)
 JNIEXPORT const char * JNICALL
 JVM_GetMethodIxSignatureUTF(JNIEnv *env, jclass cb, jint index)
 {
-    TRACE("JVM_GetMethodIxSignatureUTF(env=%p, cb=%p, index=%d)" env, cb, index);
+    TRACE("JVM_GetMethodIxSignatureUTF(env=%p, cb=%p, index=%d)", env, cb, index);
     JVM_PANIC("unimplemented"); // todo
 }
 
@@ -2807,7 +2886,7 @@ JVM_GetMethodIxSignatureUTF(JNIEnv *env, jclass cb, jint index)
 JNIEXPORT const char * JNICALL
 JVM_GetCPFieldNameUTF(JNIEnv *env, jclass cb, jint index)
 {
-    TRACE("JVM_GetCPFieldNameUTF(env=%p, cb=%p, index=%d)" env, cb, index);
+    TRACE("JVM_GetCPFieldNameUTF(env=%p, cb=%p, index=%d)", env, cb, index);
     JVM_PANIC("unimplemented"); // todo
 }
 
@@ -2824,7 +2903,7 @@ JVM_GetCPFieldNameUTF(JNIEnv *env, jclass cb, jint index)
 JNIEXPORT const char * JNICALL
 JVM_GetCPMethodNameUTF(JNIEnv *env, jclass cb, jint index)
 {
-    TRACE("JVM_GetCPMethodNameUTF(env=%p, cb=%p, index=%d)" env, cb, index);
+    TRACE("JVM_GetCPMethodNameUTF(env=%p, cb=%p, index=%d)", env, cb, index);
     JVM_PANIC("unimplemented"); // todo
 }
 
@@ -2841,7 +2920,7 @@ JVM_GetCPMethodNameUTF(JNIEnv *env, jclass cb, jint index)
 JNIEXPORT const char * JNICALL
 JVM_GetCPMethodSignatureUTF(JNIEnv *env, jclass cb, jint index)
 {
-    TRACE("JVM_GetCPMethodSignatureUTF(env=%p, cb=%p, index=%d)" env, cb, index);
+    TRACE("JVM_GetCPMethodSignatureUTF(env=%p, cb=%p, index=%d)", env, cb, index);
     JVM_PANIC("unimplemented"); // todo
 }
 
@@ -2858,7 +2937,7 @@ JVM_GetCPMethodSignatureUTF(JNIEnv *env, jclass cb, jint index)
 JNIEXPORT const char * JNICALL
 JVM_GetCPFieldSignatureUTF(JNIEnv *env, jclass cb, jint index)
 {
-    TRACE("JVM_GetCPFieldSignatureUTF(env=%p, cb=%p, index=%d)" env, cb, index);
+    TRACE("JVM_GetCPFieldSignatureUTF(env=%p, cb=%p, index=%d)", env, cb, index);
     JVM_PANIC("unimplemented"); // todo
 }
 
@@ -2874,7 +2953,7 @@ JVM_GetCPFieldSignatureUTF(JNIEnv *env, jclass cb, jint index)
 JNIEXPORT const char * JNICALL
 JVM_GetCPClassNameUTF(JNIEnv *env, jclass cb, jint index)
 {
-    TRACE("JVM_GetCPClassNameUTF(env=%p, cb=%p, index=%d)" env, cb, index);
+    TRACE("JVM_GetCPClassNameUTF(env=%p, cb=%p, index=%d)", env, cb, index);
     JVM_PANIC("unimplemented"); // todo
 }
 
@@ -2892,7 +2971,7 @@ JVM_GetCPClassNameUTF(JNIEnv *env, jclass cb, jint index)
 JNIEXPORT const char * JNICALL
 JVM_GetCPFieldClassNameUTF(JNIEnv *env, jclass cb, jint index)
 {
-    TRACE("JVM_GetCPFieldClassNameUTF(env=%p, cb=%p, index=%d)" env, cb, index);
+    TRACE("JVM_GetCPFieldClassNameUTF(env=%p, cb=%p, index=%d)", env, cb, index);
     JVM_PANIC("unimplemented"); // todo
 }
 
@@ -2911,7 +2990,7 @@ JVM_GetCPFieldClassNameUTF(JNIEnv *env, jclass cb, jint index)
 JNIEXPORT const char * JNICALL
 JVM_GetCPMethodClassNameUTF(JNIEnv *env, jclass cb, jint index)
 {
-    TRACE("JVM_GetCPMethodClassNameUTF(env=%p, cb=%p, index=%d)" env, cb, index);
+    TRACE("JVM_GetCPMethodClassNameUTF(env=%p, cb=%p, index=%d)", env, cb, index);
     JVM_PANIC("unimplemented"); // todo
 }
 
@@ -2927,7 +3006,7 @@ JVM_GetCPMethodClassNameUTF(JNIEnv *env, jclass cb, jint index)
 JNIEXPORT jint JNICALL
 JVM_GetCPFieldModifiers(JNIEnv *env, jclass cb, int index, jclass calledClass)
 {
-    TRACE("JVM_GetCPFieldModifiers(env=%p, cb=%p, index=%d, calledClass=%p)" 
+    TRACE("JVM_GetCPFieldModifiers(env=%p, cb=%p, index=%d, calledClass=%p)", 
                                     env, cb, index, calledClass);
     JVM_PANIC("unimplemented"); // todo
 }
@@ -2941,7 +3020,7 @@ JVM_GetCPFieldModifiers(JNIEnv *env, jclass cb, int index, jclass calledClass)
 JNIEXPORT jint JNICALL
 JVM_GetCPMethodModifiers(JNIEnv *env, jclass cb, int index, jclass calledClass)
 {
-    TRACE("JVM_GetCPMethodModifiers(env=%p, cb=%p, index=%d, calledClass=%p)" 
+    TRACE("JVM_GetCPMethodModifiers(env=%p, cb=%p, index=%d, calledClass=%p)",
                                     env, cb, index, calledClass);
     JVM_PANIC("unimplemented"); // todo
 }
@@ -2952,7 +3031,7 @@ JVM_GetCPMethodModifiers(JNIEnv *env, jclass cb, int index, jclass calledClass)
 JNIEXPORT void JNICALL
 JVM_ReleaseUTF(const char *utf)
 {
-    TRACE("JVM_ReleaseUTF(utf=%s)" utf);
+    TRACE("JVM_ReleaseUTF(utf=%s)", utf);
     JVM_PANIC("unimplemented"); // todo
 }
 
@@ -2960,7 +3039,11 @@ JVM_ReleaseUTF(const char *utf)
  * Compare if two classes are in the same package.
  */
 JNIEXPORT jboolean JNICALL
-JVM_IsSameClassPackage(JNIEnv *env, jclass class1, jclass class2);
+JVM_IsSameClassPackage(JNIEnv *env, jclass class1, jclass class2)
+{
+    TRACE("JVM_IsSameClassPackage(env=%p, class1=%p, class2=%p)", env, class1, class2);
+    JVM_PANIC("unimplemented"); // todo
+}
 
 
 // /*
@@ -3071,7 +3154,11 @@ typedef struct {
  * the given pathname string in place.
  */
 JNIEXPORT char * JNICALL
-JVM_NativePath(char *);
+JVM_NativePath(char *p)
+{
+    TRACE("JVM_NativePath(p=%p)", p);
+    JVM_PANIC("unimplemented"); // todo
+}
 
 /*
  * The standard printing functions supported by the Java VM. (Should they
@@ -3088,35 +3175,71 @@ JVM_NativePath(char *);
  *   all platforms. */
 
 JNIEXPORT int
-jio_vsnprintf(char *str, size_t count, const char *fmt, va_list args);
+jio_vsnprintf(char *str, size_t count, const char *fmt, va_list args)
+{
+    TRACE("jio_vsnprintf()"); // todo
+    JVM_PANIC("unimplemented"); // todo
+}
 
 JNIEXPORT int
-jio_snprintf(char *str, size_t count, const char *fmt, ...);
+jio_snprintf(char *str, size_t count, const char *fmt, ...)
+{
+    TRACE("jio_snprintf()"); // todo
+    JVM_PANIC("unimplemented"); // todo
+}
 
 JNIEXPORT int
-jio_fprintf(FILE *, const char *fmt, ...);
+jio_fprintf(FILE *f, const char *fmt, ...)
+{
+    TRACE("jio_fprintf()"); // todo
+    JVM_PANIC("unimplemented"); // todo
+}
 
 JNIEXPORT int
-jio_vfprintf(FILE *, const char *fmt, va_list args);
+jio_vfprintf(FILE *f, const char *fmt, va_list args)
+{
+    TRACE("jio_vfprintf()"); // todo
+    JVM_PANIC("unimplemented"); // todo
+}
 
 
 JNIEXPORT void * JNICALL
-JVM_RawMonitorCreate(void);
+JVM_RawMonitorCreate(void)
+{
+    TRACE("JVM_RawMonitorCreate()");  
+    JVM_PANIC("unimplemented"); // todo
+}
 
 JNIEXPORT void JNICALL
-JVM_RawMonitorDestroy(void *mon);
+JVM_RawMonitorDestroy(void *mon)
+{
+    TRACE("JVM_RawMonitorDestroy(mon=%p)", mon);  
+    JVM_PANIC("unimplemented"); // todo
+}
 
 JNIEXPORT jint JNICALL
-JVM_RawMonitorEnter(void *mon);
+JVM_RawMonitorEnter(void *mon)
+{
+    TRACE("JVM_RawMonitorEnter(mon=%p)", mon);  
+    JVM_PANIC("unimplemented"); // todo
+}
 
 JNIEXPORT void JNICALL
-JVM_RawMonitorExit(void *mon);
+JVM_RawMonitorExit(void *mon)
+{
+    TRACE("JVM_RawMonitorExit(mon=%p)", mon);  
+    JVM_PANIC("unimplemented"); // todo
+}
 
 /*
  * java.lang.management support
  */
 JNIEXPORT void* JNICALL
-JVM_GetManagement(jint version);
+JVM_GetManagement(jint version)
+{
+    TRACE("JVM_GetManagement(version=%d)", version);  
+    JVM_PANIC("unimplemented"); // todo
+}
 
 /*
  * com.sun.tools.attach.VirtualMachine support
@@ -3124,10 +3247,26 @@ JVM_GetManagement(jint version);
  * Initialize the agent properties with the properties maintained in the VM.
  */
 JNIEXPORT jobject JNICALL
-JVM_InitAgentProperties(JNIEnv *env, jobject agent_props);
+JVM_InitAgentProperties(JNIEnv *env, jobject agent_props)
+{
+    TRACE("JVM_InitAgentProperties(env=%p, agent_props=%p)", env, agent_props);  
+    JVM_PANIC("unimplemented"); // todo
+}
 
 JNIEXPORT jstring JNICALL
-JVM_GetTemporaryDirectory(JNIEnv *env);
+JVM_GetTemporaryDirectory(JNIEnv *env)
+{
+    TRACE("JVM_GetTemporaryDirectory(env=%p)", env);
+    JVM_PANIC("unimplemented"); // todo
+}
+
+JNIEXPORT jstring JNICALL
+JVM_GetThreadInterruptEvent(JNIEnv *env)
+{// ------- todo 参数和返回值都不对 --------------------------------------------------------------------------------------------
+    TRACE("JVM_GetThreadInterruptEvent(env=%p)", env);
+    JVM_PANIC("unimplemented"); // todo
+}
+
 
 /* Generics reflection support.
  *
@@ -3143,36 +3282,6 @@ JVM_GetTemporaryDirectory(JNIEnv *env);
 JNIEXPORT jobjectArray JNICALL
 JVM_GetEnclosingMethodInfo(JNIEnv* env, jclass ofClass)
 {
-    TRACE("JVM_GetEnclosingMethodInfo(env=%p, ofClass=%p)", env, ofClass); // todo
+    TRACE("JVM_GetEnclosingMethodInfo(env=%p, ofClass=%p)", env, ofClass);  
     JVM_PANIC("unimplemented"); // todo
 }
-
-/*
- * This structure is used by the launcher to get the default thread
- * stack size from the VM using JNI_GetDefaultJavaVMInitArgs() with a
- * version of 1.1.  As it is not supported otherwise, it has been removed
- * from jni.h
- */
-typedef struct JDK1_1InitArgs {
-    jint version;
-
-    char **properties;
-    jint checkSource;
-    jint nativeStackSize;
-    jint javaStackSize;
-    jint minHeapSize;
-    jint maxHeapSize;
-    jint verifyMode;
-    char *classpath;
-
-    jint (JNICALL *vfprintf)(FILE *fp, const char *format, va_list args);
-    void (JNICALL *exit)(jint code);
-    void (JNICALL *abort)(void);
-
-    jint enableClassGC;
-    jint enableVerboseGC;
-    jint disableAsyncGC;
-    jint verbose;
-    jboolean debugging;
-    jint debugPort;
-} JDK1_1InitArgs;

@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <string.h>
 #include "heap.h"
-#include "../cabin.h"
+#include "cabin.h"
 
 typedef struct heap_node Node;
 

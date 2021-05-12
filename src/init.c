@@ -2,7 +2,7 @@
 #include <windows.h>
 #include "cabin.h"
 #include "util/encoding.h"
-#include "heap/heap.h"
+#include "heap.h"
 #include "jni.h"
 #include "util/endianness.h"
 
@@ -165,64 +165,6 @@ static void read_jdk_version()
     }
 }
 
-#if 0
-//static void read_jdk_version()
-//{
-//    string java_home = g_java_home;
-//    ifstream ifs(java_home + "/release");
-//    if(!ifs.is_open()){
-//        JVM_PANIC("打开文件失败" ); // todo
-//    }
-//
-//    string line;
-//    const char *begin = R"(JAVA_VERSION=")";
-//    while(getline(ifs, line)) {
-//        // JAVA_VERSION="x.x.x_xxx" // jdk8及其以下的jdk, JAVA_VERSION="1.8.0_221"
-//        // JAVA_VERSION="xx.xx.xx"  // jdk9及其以上的jdk, JAVA_VERSION="11.0.1", JAVA_VERSION="15"
-//
-//        // JDK版本与class file版本对应关系
-//        // JDK 1.1 = 45，JDK 1.2 = 46, ... 以此类推。
-//        size_t pos = line.find(begin);
-//        if (pos != string::npos) {
-//            pos += strlen(begin);
-//
-//            size_t underline;
-//            if ((underline = line.find_first_of('_', pos)) != string::npos) {
-//                // jdk8及其以下的jdk
-//                assert(line[pos] == '1');
-//                assert(line[pos+1] == '.');
-//                pos += 2; // jump "1."
-//                g_classfile_major_version = CLASSFILE_VERSION(stoi(line.substr(pos, 1)));
-//                pos += 2; // jump "x."
-//                g_classfile_manor_version = stoi(line.substr(pos, underline - pos));
-//            } else {
-//                // jdk9及其以上的jdk
-//                size_t t = line.find_first_of('.', pos);
-//                if (t == string::npos) {
-//                    g_classfile_major_version = CLASSFILE_VERSION(stoi(line.substr(pos)));
-//                    g_classfile_manor_version = 0;
-//                } else {
-//                    g_classfile_major_version = CLASSFILE_VERSION(stoi(line.substr(pos, t - pos)));
-//                    pos = t + 1; // jump '.'
-//                    t = line.find_first_of('.', pos);
-//                    if (t == string::npos) {
-//                        g_classfile_manor_version = stoi(line.substr(pos));
-//                    } else {
-//                        g_classfile_manor_version = stoi(line.substr(pos, t - pos));
-//                    }
-//                }
-//            }
-//            break;
-//        }
-//    }
-//    ifs.close();
-//    if (g_classfile_major_version > JVM_MUST_SUPPORT_CLASSFILE_MAJOR_VERSION
-//        || g_classfile_manor_version > JVM_MUST_SUPPORT_CLASSFILE_MINOR_VERSION) {
-//        JVM_PANIC("不支持的jdk版本"); // todo
-//    }
-//}
-#endif
-
 pthread_mutexattr_t g_pthread_mutexattr_recursive;
 
 void init_jvm(JavaVMInitArgs *vm_init_args)
@@ -284,8 +226,7 @@ void init_jvm(JavaVMInitArgs *vm_init_args)
     assert(m != NULL);
     exec_java_func(m, NULL);
 
-    //   todo
-    printvm("initPhase2 is not implement\n");
+    //   todo "initPhase2 is not implement
 //    m = sys->lookupStaticMethod("initPhase2", "(ZZ)I");
 //    assert(m != NULL);
 //    jint ret = slot::getInt(execJavaFunc(m, {slot::islot(1), slot::islot(1)}));

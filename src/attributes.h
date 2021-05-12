@@ -1,7 +1,7 @@
 #ifndef CABIN_ATTRIBUTE_H
 #define CABIN_ATTRIBUTE_H
 
-#include "../cabin.h"
+#include "cabin.h"
 
 struct constant_pool;
 struct element_value_pair;

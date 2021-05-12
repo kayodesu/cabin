@@ -207,7 +207,7 @@ jref to_java_lang_management_ThreadInfo(const Thread *thrd, jbool locked_monitor
 //    return NULL;
 
     // private volatile String name;
-    jstrref name = get_ref_field(thrd->tobj, "name", "Ljava/lang/String;");
+    jstrRef name = get_ref_field(thrd->tobj, "name", "Ljava/lang/String;");
     // private long tid;
     jlong tid = get_long_field(thrd->tobj, "tid");
 
@@ -222,7 +222,7 @@ jref to_java_lang_management_ThreadInfo(const Thread *thrd, jbool locked_monitor
     return thread_info;
 }
 
-jarrref dump_thread(const Thread *thrd, int max_depth)
+jarrRef dump_thread(const Thread *thrd, int max_depth)
 {
     assert(thrd != NULL);
 
@@ -235,7 +235,7 @@ jarrref dump_thread(const Thread *thrd, int max_depth)
     // public StackTraceElement(String declaringClass, String methodName, String fileName, int lineNumber);
     Method *constructor = get_constructor(c, "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V");
 
-    jarrref arr = alloc_array0(S(array_java_lang_StackTraceElement), count);
+    jarrRef arr = alloc_array0(S(array_java_lang_StackTraceElement), count);
     size_t i = count - 1;
     for (Frame *f = thrd->top_frame; f != NULL && i >= 0; f = f->prev, i--) {
         jref o = alloc_object(c);
@@ -251,7 +251,7 @@ jarrref dump_thread(const Thread *thrd, int max_depth)
     return arr;
 }
 
-// jarrref Thread::dump(int max_depth)
+// jarrRef Thread::dump(int max_depth)
 // {
 //     vector<Frame *> vec = getStackFrames();
 //     size_t size = vec.size();
@@ -263,7 +263,7 @@ jarrref dump_thread(const Thread *thrd, int max_depth)
 //     // public StackTraceElement(String declaringClass, String methodName, String fileName, int lineNumber);
 //     Method *constructor = get_constructor(c, "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V");
 
-//     jarrref arr = alloc_array0(S(array_java_lang_StackTraceElement), size);
+//     jarrRef arr = alloc_array0(S(array_java_lang_StackTraceElement), size);
 //     for (size_t i = 0; i < size; i++) {
 //         Frame *f = vec[i];
 //         jref o = alloc_object(c);

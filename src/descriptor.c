@@ -1,6 +1,5 @@
-#include "descriptor.h"
-#include "../util/encoding.h"
-#include "../util/dynstr.h"
+#include "util/encoding.h"
+#include "util/dynstr.h"
 
 
 // @b0: include
@@ -67,7 +66,7 @@ error:
 // @b: include
 // @e：exclude
 // eg. I[BLjava/lang/String;ZZ, return 5.
-static int numElementsInDescriptor(const char *b, const char *e)
+static int num_elements_in_descriptor(const char *b, const char *e)
 {
     assert(b != NULL && e != NULL);
 
@@ -83,7 +82,7 @@ static int numElementsInDescriptor(const char *b, const char *e)
     return no_params;
 }
 
-int numElementsInMethodDescriptor(const char *method_descriptor)
+int num_elements_in_method_descriptor(const char *method_descriptor)
 {
     assert(method_descriptor != NULL && method_descriptor[0] == '(');
 
@@ -93,7 +92,7 @@ int numElementsInMethodDescriptor(const char *method_descriptor)
         // todo error
         JVM_PANIC("error");
     }
-    return numElementsInDescriptor(b, e);
+    return num_elements_in_descriptor(b, e);
 }
 
 //int numElementsInDescriptor(const char *descriptor)
@@ -105,10 +104,10 @@ int numElementsInMethodDescriptor(const char *method_descriptor)
 // @b: include
 // @e：exclude
 // eg. I[BLjava/lang/String;ZZ
-static jarrref convertDesc2ClassObjectArray(char *b, char *e, jref loader)
+static jarrRef convertDesc2ClassObjectArray(char *b, char *e, jref loader)
 {
-    int num = numElementsInDescriptor(b, e);
-    jarrref types = alloc_class_array(num);
+    int num = num_elements_in_descriptor(b, e);
+    jarrRef types = alloc_class_array(num);
 
     for (int i = 0; b < e; i++) {
         Object *co = convert_desc_element_to_class_object(&b, e, loader);
@@ -119,22 +118,7 @@ static jarrref convertDesc2ClassObjectArray(char *b, char *e, jref loader)
     return types;
 }
 
-// pair<jarrref, ClsObj *> parseMethodDescriptor(const char *desc, jref loader)
-// {
-//     assert(desc != NULL);
-
-//     char *e = strchr(desc, ')');
-//     if (e == NULL || *desc != '(') {
-//         throw java_lang_UnknownError(); // todo
-//     }
-
-//     jarrref ptypes = convertDesc2ClassObjectArray((char *) (desc + 1), e, loader);
-//     e++; // jump ')'
-//     ClsObj *rtype = convert_desc_element_to_class_object(e, e + strlen(e), loader);
-//     return make_pair(ptypes, rtype);
-// }
-
-bool parse_method_descriptor(const char *desc, jref loader, jarrref *ptypes, jref *rtype)
+bool parse_method_descriptor(const char *desc, jref loader, jarrRef *ptypes, jref *rtype)
 {
     assert(desc != NULL);
 
@@ -158,66 +142,6 @@ bool parse_method_descriptor(const char *desc, jref loader, jarrref *ptypes, jre
     return true;
 }
 
-#if 0
-static string convertTypeToDesc(Class *type)
-{
-    assert(type != NULL);
-
-    if (is_prim_class(type)) {
-        return getPrimDescriptorByClassName(type->class_name);
-    }
-
-    if (is_array_class(type)) {
-        return type->class_name;
-    }
-
-    // 普通类
-    ostringstream oss;
-    oss << 'L';
-    oss << type->class_name;
-    oss << ';';
-    return oss.str();
-}
-
-string unparseMethodDescriptor(jarrref ptypes /*Class *[]*/, ClsObj *rtype)
-{
-    ostringstream oss;
-
-    if (ptypes == NULL) { // no argument
-        oss << "()";
-    } else {
-        oss << "(";
-        for (int i = 0; i < ptypes->arr_len; i++) {
-            auto co = array_get(ClsObj *, ptypes, i);
-            assert(co != NULL);
-            oss << convertTypeToDesc(co->jvm_mirror);        
-        }
-        oss << ")";
-    }
-
-    if (rtype == NULL) { // no return value
-        oss << "V";
-    } else {
-        oss << convertTypeToDesc(rtype->jvm_mirror);
-    }
-
-    return oss.str();
-}
-
-string unparseMethodDescriptor(jref method_type)
-{
-    assert(method_type != NULL);
-
-    // private final Class<?>[] ptypes;
-    auto ptypes = get_ref_field(method_type, "ptypes", S(array_java_lang_Class));
-    // private final Class<?> rtype;
-    auto rtype = get_ref_field(method_type, "rtype", S(sig_java_lang_Class));
-
-    return unparseMethodDescriptor(ptypes, rtype);
-}
-
-#endif
-
 static void convert_type_to_desc(Class *type, DynStr *desc)
 {
     assert(type != NULL);
@@ -234,7 +158,7 @@ static void convert_type_to_desc(Class *type, DynStr *desc)
     }
 }
 
-char *unparse_method_descriptor(jarrref ptypes /*Class *[]*/, jclsref rtype)
+char *unparse_method_descriptor(jarrRef ptypes /*Class *[]*/, jclsRef rtype)
 {
     DynStr desc;
     dynstr_init(&desc);
@@ -245,7 +169,7 @@ char *unparse_method_descriptor(jarrref ptypes /*Class *[]*/, jclsref rtype)
         dynstr_copy(&desc, "(");
 
         for (int i = 0; i < ptypes->arr_len; i++) {
-            jclsref co = array_get(jclsref, ptypes, i);
+            jclsRef co = array_get(jclsRef, ptypes, i);
             assert(co != NULL);
             convert_type_to_desc(co->jvm_mirror, &desc);
             // oss << convertTypeToDesc(co->jvm_mirror);        
@@ -268,7 +192,7 @@ char *unparse_method_descriptor0(jref method_type)
     assert(method_type != NULL);
 
     // private final Class<?>[] ptypes;
-    jarrref ptypes = get_ref_field(method_type, "ptypes", S(array_java_lang_Class));
+    jarrRef ptypes = get_ref_field(method_type, "ptypes", S(array_java_lang_Class));
     // private final Class<?> rtype;
     jref rtype = get_ref_field(method_type, "rtype", S(sig_java_lang_Class));
 

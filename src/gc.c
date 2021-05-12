@@ -1,8 +1,8 @@
 #include <assert.h>
-#include "../cabin.h"
+#include "cabin.h"
 #include "heap.h"
-#include "../cabin.h"
-#include "../util/encoding.h"
+#include "cabin.h"
+#include "util/encoding.h"
 
 /*
  * 分析一个可达的对象
@@ -12,7 +12,7 @@ static void analysis_reachable_object(jref obj)
     assert (obj != NULL);
 
     if (is_ref_array_class(obj->clazz)) {
-        jarrref arr = obj;
+        jarrRef arr = obj;
         assert(arr != NULL);
         for (int i = 0; i < arr->arr_len; i++) {
             jref o = array_get(jref, arr, i);
