@@ -96,7 +96,7 @@ public class InstructionExTest {
             int x = 0;
             int y = 1 % x;
         } catch (ArithmeticException e) {
-            e.print_stack_trace();
+            e.printStackTrace();
         }
     }
     

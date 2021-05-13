@@ -876,26 +876,47 @@ jint JNICALL Cabin_GetJavaVM(JNIEnv *env, JavaVM **vm)
 
 void JNICALL Cabin_GetStringRegion(JNIEnv *env, jstring str, jsize start, jsize len, jchar *buf)
 {
-    JVM_PANIC("not implement."); // todo
+    // jstrRef so = (jstrRef)str;
+    // // private final byte coder;
+    // // 可取一下两值之一：
+    // // @Native static final byte LATIN1 = 0;
+    // // @Native static final byte UTF16  = 1;
+    // jbyte code = get_byte_field(so, S(coder));
+    // if (code == 1) {
+    //     // private final byte[] value;
+    //     jarrRef value = get_ref_field(so, S(value), S(array_B));
+    //     jchar *s = (jchar *) value->data;
+    //     strncpy(buf, s + start, len);
+    // } else {
+    //     unicode_t *u = string_to_unicode(so);
+    //     memcpy(buf, u + start, len * sizeof(unicode_t));
+    // }
+    
+    unicode_t *u = string_to_unicode((jstrRef) str);
+    memcpy(buf, u + start, len * sizeof(unicode_t));
+    buf[len] = 0;
 }
 
 void JNICALL Cabin_GetStringUTFRegion(JNIEnv *env, jstring str, jsize start, jsize len, char *buf)
-{
-    jstrRef so = (jstrRef)str;
-    // private final byte coder;
-    // 可取一下两值之一：
-    // @Native static final byte LATIN1 = 0;
-    // @Native static final byte UTF16  = 1;
-    jbyte code = get_byte_field(so, S(coder));
-    if (code == 1) {
-        JVM_PANIC("not implement."); // todo
-    } else {
-        // private final byte[] value;
-        jarrRef value = get_ref_field(so, S(value), S(array_B));
-        char *s = (char *) value->data;
-        strncpy(buf, s + start, len);
-        buf[len] = 0;
-    }
+{    
+    // // private final byte coder;
+    // // 可取一下两值之一：
+    // // @Native static final byte LATIN1 = 0;
+    // // @Native static final byte UTF16  = 1;
+    // jbyte code = get_byte_field(so, S(coder));
+    // if (code == 1) {
+    //     utf8_t *u = string_to_utf8(so);
+    //     strncpy(buf, u + start, len);
+    // } else {
+    //     // private final byte[] value;
+    //     jarrRef value = get_ref_field(so, S(value), S(array_B));
+    //     char *s = (char *) value->data;
+    //     strncpy(buf, s + start, len);
+    // }
+
+    utf8_t *u = string_to_utf8((jstrRef) str);
+    strncpy(buf, u + start, len);
+    buf[len] = 0;
 }
 
 void* JNICALL Cabin_GetPrimitiveArrayCritical(JNIEnv *env, jarray array, jboolean *isCopy)

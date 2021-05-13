@@ -1774,174 +1774,192 @@ static void call_jni_method(Frame *frame)
 
 #undef B
 #undef Z
+#undef C
+#undef _S
 #undef I
 #undef F
 #undef R
 #undef J
 #undef D
 
-#define B(name) jbyte name = slot_get_byte(lvars++);
-#define Z(name) jbool name = slot_get_bool(lvars++);
-#define I(name) jint name = slot_get_int(lvars++);
-#define F(name) jfloat name = slot_get_float(lvars++);
-#define R(name) jref name = slot_get_ref(lvars++);
-#define J(name) jlong name = slot_get_long(lvars); lvars += 2;
+#define B(name) jbyte name   = slot_get_byte(lvars++);
+#define Z(name) jbool name   = slot_get_bool(lvars++);
+#define C(name) jchar name   = slot_get_char(lvars++);
+#define _S(name) jshort name  = slot_get_short(lvars++);
+#define I(name) jint name    = slot_get_int(lvars++);
+#define F(name) jfloat name  = slot_get_float(lvars++);
+#define R(name) jref name    = slot_get_ref(lvars++);
+#define J(name) jlong name   = slot_get_long(lvars); lvars += 2;
 #define D(name) jdouble name = slot_get_double(lvars); lvars += 2;
 
 #define PUSH_NOTHING(a, b) (b)
 
-#define INVOKE_0(_desc, func_type, push_func) \
+#define INVOKE_0(_desc, return_type, push_func) \
     if (desc == (_desc)) {                      \
         if (is_static)    \
-            push_func(frame, ((func_type) func)(env, cls)); \
+            push_func(frame, ((return_type (*)()) func)(env, cls)); \
         else \
-            push_func(frame, ((func_type) func)(env)); \
+            push_func(frame, ((return_type (*)()) func)(env)); \
         return; \
     }    
 
-#define INVOKE_1(_desc, func_type, arg, push_func) \
+#define INVOKE_1(_desc, return_type, arg, push_func) \
     if (desc == (_desc)) { \
         arg(a) \
         if (is_static)    \
-            push_func(frame, ((func_type) func)(env, cls, a)); \
+            push_func(frame, ((return_type (*)()) func)(env, cls, a)); \
         else \
-            push_func(frame, ((func_type) func)(env, a)); \
+            push_func(frame, ((return_type (*)()) func)(env, a)); \
         return; \
     }
 
-#define INVOKE_2(_desc, func_type, arg1, arg2, push_func) \
+#define INVOKE_2(_desc, return_type, arg1, arg2, push_func) \
     if (desc == (_desc)) { \
         arg1(a) arg2(b) \
         if (is_static)    \
-            push_func(frame, ((func_type) func)(env, cls, a, b)); \
+            push_func(frame, ((return_type (*)()) func)(env, cls, a, b)); \
         else \
-            push_func(frame, ((func_type) func)(env, a, b)); \
+            push_func(frame, ((return_type (*)()) func)(env, a, b)); \
         return; \
     }
 
-#define INVOKE_3(_desc, func_type, arg1, arg2, arg3, push_func) \
+#define INVOKE_3(_desc, return_type, arg1, arg2, arg3, push_func) \
     if (desc == (_desc)) { \
         arg1(a) arg2(b) arg3(c) \
         if (is_static)    \
-            push_func(frame, ((func_type) func)(env, cls, a, b, c)); \
+            push_func(frame, ((return_type (*)()) func)(env, cls, a, b, c)); \
         else \
-            push_func(frame, ((func_type) func)(env, a, b, c)); \
+            push_func(frame, ((return_type (*)()) func)(env, a, b, c)); \
         return; \
     }
 
-#define INVOKE_4(_desc, func_type, arg1, arg2, arg3, arg4, push_func) \
+#define INVOKE_4(_desc, return_type, arg1, arg2, arg3, arg4, push_func) \
     if (desc == (_desc)) { \
         arg1(a) arg2(b) arg3(c) arg4(d) \
         if (is_static)    \
-            push_func(frame, ((func_type) func)(env, cls, a, b, c, d)); \
+            push_func(frame, ((return_type (*)()) func)(env, cls, a, b, c, d)); \
         else \
-            push_func(frame, ((func_type) func)(env, a, b, c, d)); \
+            push_func(frame, ((return_type (*)()) func)(env, a, b, c, d)); \
         return; \
     }
 
-#define INVOKE_5(_desc, func_type, arg1, arg2, arg3, arg4, arg5, push_func) \
+#define INVOKE_5(_desc, return_type, arg1, arg2, arg3, arg4, arg5, push_func) \
     if (desc == (_desc)) { \
         arg1(a) arg2(b) arg3(c) arg4(d) arg5(e) \
         if (is_static)    \
-            push_func(frame, ((func_type) func)(env, cls, a, b, c, d, e)); \
+            push_func(frame, ((return_type (*)()) func)(env, cls, a, b, c, d, e)); \
         else \
-            push_func(frame, ((func_type) func)(env, a, b, c, d, e)); \
+            push_func(frame, ((return_type (*)()) func)(env, a, b, c, d, e)); \
         return; \
     }
 
-#define INVOKE_7(_desc, func_type, arg1, arg2, arg3, arg4, arg5, arg6, arg7, push_func) \
+#define INVOKE_7(_desc, return_type, arg1, arg2, arg3, arg4, arg5, arg6, arg7, push_func) \
     if (desc == (_desc)) { \
         arg1(a) arg2(b) arg3(c) arg4(d) arg5(e) arg6(f) arg7(g) \
         if (is_static)    \
-            push_func(frame, ((func_type) func)(env, cls, a, b, c, d, e, f, g)); \
+            push_func(frame, ((return_type (*)()) func)(env, cls, a, b, c, d, e, f, g)); \
         else \
-            push_func(frame, ((func_type) func)(env, a, b, c, d, e, f, g)); \
+            push_func(frame, ((return_type (*)()) func)(env, a, b, c, d, e, f, g)); \
         return; \
     }
 
-#define INVOKE_8(_desc, func_type, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, push_func) \
+#define INVOKE_8(_desc, return_type, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, push_func) \
     if (desc == (_desc)) { \
         arg1(a) arg2(b) arg3(c) arg4(d) arg5(e) arg6(f) arg7(g) arg8(h)\
         if (is_static)    \
-            push_func(frame, ((func_type) func)(env, cls, a, b, c, d, e, f, g, h)); \
+            push_func(frame, ((return_type (*)()) func)(env, cls, a, b, c, d, e, f, g, h)); \
         else \
-            push_func(frame, ((func_type) func)(env, a, b, c, d, e, f, g, h)); \
+            push_func(frame, ((return_type (*)()) func)(env, a, b, c, d, e, f, g, h)); \
         return; \
     }    
 
-    INVOKE_0(S(V_V), void(*)(),  PUSH_NOTHING)
-    INVOKE_0(S(V_Z), jbool(*)(), ostack_pushi)
-    INVOKE_0(S(V_I), jint(*)(),  ostack_pushi)
-    INVOKE_0(S(V_R), jref(*)(),  ostack_pushr)
-    INVOKE_0(S(V_J), jlong(*)(), ostack_pushl)
+    INVOKE_0(S(V_V), void,  PUSH_NOTHING)
+    INVOKE_0(S(V_Z), jbool, ostack_pushi)
+    INVOKE_0(S(V_I), jint,  ostack_pushi)
+    INVOKE_0(S(V_R), jref,  ostack_pushr)
+    INVOKE_0(S(V_J), jlong, ostack_pushl)
 
-    INVOKE_1(S(I_V), void(*)(),    I, PUSH_NOTHING)
-    INVOKE_1(S(R_V), void(*)(),    R, PUSH_NOTHING)
-    INVOKE_1(S(J_V), void(*)(),    J, PUSH_NOTHING)
-    INVOKE_1(S(Z_R), jref(*)(),    Z, ostack_pushr)
-    INVOKE_1(S(I_I), jint(*)(),    I, ostack_pushi)
-    INVOKE_1(S(I_Z), jbool(*)(),   I, ostack_pushi)
-    INVOKE_1(S(I_J), jlong(*)(),   I, ostack_pushl)
-    INVOKE_1(S(D_J), jlong(*)(),   D, ostack_pushl)
-    INVOKE_1(S(J_D), jdouble(*)(), J, ostack_pushd)
-    INVOKE_1(S(J_J), jlong(*)(),   J, ostack_pushl)
-    INVOKE_1(S(J_B), jbyte(*)(),   J, ostack_pushi)
-    INVOKE_1(S(F_I), jint(*)(),    F, ostack_pushi)
-    INVOKE_1(S(R_R), jref(*)(),    R, ostack_pushr)
-    INVOKE_1(S(R_Z), jbool(*)(),   R, ostack_pushi)
-    INVOKE_1(S(R_I), jint(*)(),    R, ostack_pushi)
-    INVOKE_1(S(R_J), jlong(*)(),   R, ostack_pushl)
+    INVOKE_1(S(I_V), void,    I, PUSH_NOTHING)
+    INVOKE_1(S(R_V), void,    R, PUSH_NOTHING)
+    INVOKE_1(S(J_V), void,    J, PUSH_NOTHING)
+    INVOKE_1(S(Z_R), jref,    Z, ostack_pushr)
+    INVOKE_1(S(I_I), jint,    I, ostack_pushi)
+    INVOKE_1(S(I_Z), jbool,   I, ostack_pushi)
+    INVOKE_1(S(I_J), jlong,   I, ostack_pushl)
+    INVOKE_1(S(D_J), jlong,   D, ostack_pushl)
+    INVOKE_1(S(J_D), jdouble, J, ostack_pushd)
+    INVOKE_1(S(J_J), jlong,   J, ostack_pushl)
+    INVOKE_1(S(J_B), jbyte,   J, ostack_pushi)
+    INVOKE_1(S(F_I), jint,    F, ostack_pushi)
+    INVOKE_1(S(R_R), jref,    R, ostack_pushr)
+    INVOKE_1(S(R_Z), jbool,   R, ostack_pushi)
+    INVOKE_1(S(R_I), jint,    R, ostack_pushi)
+    INVOKE_1(S(R_J), jlong,   R, ostack_pushl)
 
-    INVOKE_2(S(JJ_V), void(*)(), J, J, PUSH_NOTHING)
-    INVOKE_2(S(RZ_V), void(*)(), R, Z, PUSH_NOTHING)
-    INVOKE_2(S(RI_V), void(*)(), R, I, PUSH_NOTHING)
-    INVOKE_2(S(RR_V), void(*)(), R, R, PUSH_NOTHING)
-    INVOKE_2(S(RJ_V), void(*)(), R, J, PUSH_NOTHING)
-    INVOKE_2(S(IJ_J), jlong(*)(), I, J, ostack_pushl)
-    INVOKE_2(S(IR_I), jint(*)(), I, R, ostack_pushi)
-    INVOKE_2(S(RI_R), jref(*)(), R, I, ostack_pushr)
-    INVOKE_2(S(RI_J), jlong(*)(), R, I, ostack_pushl)
-    INVOKE_2(S(RZ_Z), jbool(*)(), R, Z, ostack_pushi)
-    INVOKE_2(S(RR_Z), jbool(*)(), R, R, ostack_pushi)
-    INVOKE_2(S(RR_I), jint(*)(), R, R, ostack_pushi)
-    INVOKE_2(S(RR_J), jlong(*)(), R, R, ostack_pushl)
-    INVOKE_2(S(RJ_B), jbyte(*)(), R, J, ostack_pushi)
-    INVOKE_2(S(RJ_I), jint(*)(), R, J, ostack_pushi)
-    INVOKE_2(S(RJ_R), jref(*)(), R, J, ostack_pushr)
-    INVOKE_2(S(RJ_J), jlong(*)(), R, J, ostack_pushl)
-    INVOKE_2(S(RZ_R), jref(*)(), R, Z, ostack_pushr)
-    INVOKE_2(S(RR_R), jref(*)(), R, R, ostack_pushr)
+    INVOKE_2(S(JJ_V), void, J, J, PUSH_NOTHING)
+    INVOKE_2(S(RZ_V), void, R, Z, PUSH_NOTHING)
+    INVOKE_2(S(RI_V), void, R, I, PUSH_NOTHING)
+    INVOKE_2(S(RR_V), void, R, R, PUSH_NOTHING)
+    INVOKE_2(S(RJ_V), void, R, J, PUSH_NOTHING)
+    INVOKE_2(S(IJ_J), jlong, I, J, ostack_pushl)
+    INVOKE_2(S(IR_I), jint, I, R, ostack_pushi)
+    INVOKE_2(S(RI_C), jchar, R, I, ostack_pushi)
+    INVOKE_2(S(RI_S), jshort, R, I, ostack_pushi)
+    INVOKE_2(S(RI_I), jint, R, I, ostack_pushi)
+    INVOKE_2(S(RI_F), jfloat, R, I, ostack_pushf)
+    INVOKE_2(S(RI_D), jdouble, R, I, ostack_pushd)
+    INVOKE_2(S(RI_R), jref, R, I, ostack_pushr)
+    INVOKE_2(S(RI_J), jlong, R, I, ostack_pushl)    
+    INVOKE_2(S(RZ_Z), jbool, R, Z, ostack_pushi)
+    INVOKE_2(S(RI_Z), jbool, R, I, ostack_pushi)
+    INVOKE_2(S(RR_Z), jbool, R, R, ostack_pushi)
+    INVOKE_2(S(RR_I), jint, R, R, ostack_pushi)
+    INVOKE_2(S(RR_J), jlong, R, R, ostack_pushl)
+    INVOKE_2(S(RI_B), jbyte, R, I, ostack_pushi)
+    INVOKE_2(S(RJ_B), jbyte, R, J, ostack_pushi)
+    INVOKE_2(S(RJ_I), jint, R, J, ostack_pushi)
+    INVOKE_2(S(RJ_R), jref, R, J, ostack_pushr)
+    INVOKE_2(S(RJ_J), jlong, R, J, ostack_pushl)
+    INVOKE_2(S(RZ_R), jref, R, Z, ostack_pushr)
+    INVOKE_2(S(RR_R), jref, R, R, ostack_pushr)
 
-    INVOKE_3(S(RIR_V), void(*)(), R, I, R, PUSH_NOTHING)
-    INVOKE_3(S(RJJ_V), void(*)(), R, J, J, PUSH_NOTHING)
-    INVOKE_3(S(RRZ_V), void(*)(), R, R, Z, PUSH_NOTHING)
-    INVOKE_3(S(RRZ_R), jref(*)(), R, R, Z, ostack_pushr)
-    INVOKE_3(S(RRR_R), jref(*)(), R, R, R, ostack_pushr)
-    INVOKE_3(S(RRR_Z), jbool(*)(), R, R, R, ostack_pushi)
-    INVOKE_3(S(RRR_J), jlong(*)(), R, R, R, ostack_pushl)
-    INVOKE_3(S(RRJ_R), jref(*)(), R, R, J, ostack_pushr)
-    INVOKE_3(S(RRJ_I), jint(*)(), R, R, J, ostack_pushi)
+    INVOKE_3(S(RIB_V), void, R, I, B, PUSH_NOTHING)
+    INVOKE_3(S(RIC_V), void, R, I, C, PUSH_NOTHING)
+    INVOKE_3(S(RIS_V), void, R, I, _S, PUSH_NOTHING)
+    INVOKE_3(S(RII_V), void, R, I, I, PUSH_NOTHING)
+    INVOKE_3(S(RIF_V), void, R, I, F, PUSH_NOTHING)
+    INVOKE_3(S(RIJ_V), void, R, I, J, PUSH_NOTHING)
+    INVOKE_3(S(RIR_V), void, R, I, R, PUSH_NOTHING)
+    INVOKE_3(S(RID_V), void, R, I, D, PUSH_NOTHING)
+    INVOKE_3(S(RJJ_V), void, R, J, J, PUSH_NOTHING)
+    INVOKE_3(S(RRZ_V), void, R, R, Z, PUSH_NOTHING)
+    INVOKE_3(S(RRZ_R), jref, R, R, Z, ostack_pushr)
+    INVOKE_3(S(RRR_R), jref, R, R, R, ostack_pushr)
+    INVOKE_3(S(RRR_Z), jbool, R, R, R, ostack_pushi)
+    INVOKE_3(S(RRR_J), jlong, R, R, R, ostack_pushl)
+    INVOKE_3(S(RRJ_R), jref, R, R, J, ostack_pushr)
+    INVOKE_3(S(RRJ_I), jint, R, R, J, ostack_pushi)
 
-    INVOKE_4(S(RIIZ_V), void(*)(), R, I, I, Z, PUSH_NOTHING)
-    INVOKE_4(S(RRJR_V), void(*)(), R, R, J, R, PUSH_NOTHING)
-    INVOKE_4(S(RJII_Z), jbool(*)(), R, J, I, I, ostack_pushi)
-    INVOKE_4(S(RRII_I), jint(*)(), R, R, I, I, ostack_pushi)
-    INVOKE_4(S(RJJJ_Z), jbool(*)(), R, J, J, J, ostack_pushi)
-    INVOKE_4(S(RZRR_R), jref(*)(), R, Z, R, R, ostack_pushr)
-    INVOKE_4(S(RRIZ_R), jref(*)(), R, R, I, Z, ostack_pushr)
-    INVOKE_4(S(RRRR_R), jref(*)(), R, R, R, R, ostack_pushr)
+    INVOKE_4(S(RIIZ_V), void, R, I, I, Z, PUSH_NOTHING)
+    INVOKE_4(S(RRJR_V), void, R, R, J, R, PUSH_NOTHING)
+    INVOKE_4(S(RJII_Z), jbool, R, J, I, I, ostack_pushi)
+    INVOKE_4(S(RRII_I), jint, R, R, I, I, ostack_pushi)
+    INVOKE_4(S(RJJJ_Z), jbool, R, J, J, J, ostack_pushi)
+    INVOKE_4(S(RZRR_R), jref, R, Z, R, R, ostack_pushr)
+    INVOKE_4(S(RRIZ_R), jref, R, R, I, Z, ostack_pushr)
+    INVOKE_4(S(RRRR_R), jref, R, R, R, R, ostack_pushr)
 
-    INVOKE_5(S(RRIIZ_V), void(*)(), R, R, I, I, Z, PUSH_NOTHING)
-    INVOKE_5(S(RIRII_V), void(*)(), R, I, R, I, I, PUSH_NOTHING)
-    INVOKE_5(S(RRJJJ_Z), jbool(*)(), R, R, J, J, J, ostack_pushi)
-    INVOKE_5(S(RRJRR_Z), jbool(*)(), R, R, J, R, R, ostack_pushi)
-    INVOKE_5(S(RRIIJ_R), jref(*)(), R, R, I, I, J, ostack_pushr)
-    INVOKE_5(S(RRJII_Z), jbool(*)(), R, R, J, I, I, ostack_pushi)
+    INVOKE_5(S(RRIIZ_V), void, R, R, I, I, Z, PUSH_NOTHING)
+    INVOKE_5(S(RIRII_V), void, R, I, R, I, I, PUSH_NOTHING)
+    INVOKE_5(S(RRJJJ_Z), jbool, R, R, J, J, J, ostack_pushi)
+    INVOKE_5(S(RRJRR_Z), jbool, R, R, J, R, R, ostack_pushi)
+    INVOKE_5(S(RRIIJ_R), jref, R, R, I, I, J, ostack_pushr)
+    INVOKE_5(S(RRJII_Z), jbool, R, R, J, I, I, ostack_pushi)
 
-    INVOKE_7(S(RRRIIRR_R), jref(*)(), R, R, R, I, I, R, R, ostack_pushr)
-    INVOKE_7(S(RRRIRIR_I), jint(*)(), R, R, R, I, R, I, R, ostack_pushi)
+    INVOKE_7(S(RRRIIRR_R), jref, R, R, R, I, I, R, R, ostack_pushr)
+    INVOKE_7(S(RRRIRIR_I), jint, R, R, R, I, R, I, R, ostack_pushi)
 
-    INVOKE_8(S(RRIIRIZR_V), void(*)(), R, R, I, I, R, I, Z, R, PUSH_NOTHING)
+    INVOKE_8(S(RRIIRIZR_V), void, R, R, I, I, R, I, Z, R, PUSH_NOTHING)
 
     JVM_PANIC("error.");
     // JVM_PANIC((get_method_info(frame->method) + ", " + frame->method->native_method->type.name()).c_str()); todo

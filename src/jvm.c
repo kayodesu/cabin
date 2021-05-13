@@ -3282,6 +3282,8 @@ JVM_GetThreadInterruptEvent(JNIEnv *env)
 JNIEXPORT jobjectArray JNICALL
 JVM_GetEnclosingMethodInfo(JNIEnv* env, jclass ofClass)
 {
-    TRACE("JVM_GetEnclosingMethodInfo(env=%p, ofClass=%p)", env, ofClass);  
+    TRACE("JVM_GetEnclosingMethodInfo(env=%p, ofClass=%p)", env, ofClass);
+
+    jclsRef c = (jclsRef) ofClass;
     JVM_PANIC("unimplemented"); // todo
 }

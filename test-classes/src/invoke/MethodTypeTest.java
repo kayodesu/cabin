@@ -5,7 +5,7 @@ import java.lang.invoke.MethodType;
 import static java.lang.invoke.MethodType.fromMethodDescriptorString;
 
 /**
- * Status: Pass
+ * Status:
  */
 public class MethodTypeTest {
 

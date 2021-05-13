@@ -21,7 +21,7 @@ public class ClassInitTest {
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         } catch (NoSuchFieldException e) {
-            e.print_stack_trace();
+            e.printStackTrace();
         }
     }
     

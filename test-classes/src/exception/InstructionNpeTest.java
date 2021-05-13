@@ -58,7 +58,7 @@ public class InstructionNpeTest {
             Object x = null;
             x.toString();
         } catch (NullPointerException e) {
-            e.print_stack_trace();
+            e.printStackTrace();
         }
     }
     

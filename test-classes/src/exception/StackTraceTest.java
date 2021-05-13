@@ -16,7 +16,7 @@ public class StackTraceTest {
         try {
             foo();
         } catch (Exception e) {
-            e.print_stack_trace(System.err);
+            e.printStackTrace(System.err);
         }
     }
     

@@ -32,6 +32,7 @@ static Object *convert_desc_element_to_class_object(char **b0, const char *e, jr
     if (*b == '[') { // array reference, 描述符形如 [B 或 [[Ljava/lang/String; 的形式
         char *t = b;
         while (*(++t) == '[');
+
         if (!is_prim_descriptor(*t)) {
             t = strchr(t, ';');
             if (t == NULL || t >= e) {
@@ -43,7 +44,7 @@ static Object *convert_desc_element_to_class_object(char **b0, const char *e, jr
         int len = t - b + 1;
         char class_name[len];
         for (int i = 0; i < len; i++) {
-            class_name[i] = t[i];
+            class_name[i] = b[i];
         }
         class_name[len - 1] = 0;
         Class *c = loadArrayClass(loader, class_name);

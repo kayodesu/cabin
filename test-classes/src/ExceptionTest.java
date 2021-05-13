@@ -37,7 +37,7 @@ public class ExceptionTest {
         try {
             foo();
         } catch (Exception e) {
-            e.print_stack_trace(System.err);
+            e.printStackTrace(System.err);
         }
         Thread.sleep(1000);
     }

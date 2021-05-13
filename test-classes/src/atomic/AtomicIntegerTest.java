@@ -35,7 +35,7 @@ public class AtomicIntegerTest {
         try {
             Thread.sleep(millis);
         } catch (InterruptedException ex) {
-            ex.print_stack_trace(System.err);
+            ex.printStackTrace(System.err);
         }
     }
     

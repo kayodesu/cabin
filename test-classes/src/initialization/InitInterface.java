@@ -3,7 +3,7 @@ package initialization;
 /**
  * Interface Initialization Does Not Initialize Superinterfaces
  *
- * Status: Pass
+ * Status:
  */
 public class InitInterface {
     private static interface I {

@@ -26,7 +26,7 @@ public class Utils {
                 try {
                     m.invoke(null);
                 } catch (IllegalAccessException | InvocationTargetException e) {
-                    e.print_stack_trace();
+                    e.printStackTrace();
                 }
             }
         }

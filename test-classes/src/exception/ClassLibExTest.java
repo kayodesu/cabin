@@ -25,7 +25,7 @@ public class ClassLibExTest {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
             System.out.println(Thread.currentThread().isInterrupted()); // false
-            e.print_stack_trace();
+            e.printStackTrace();
         }
     }
     

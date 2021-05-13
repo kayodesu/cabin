@@ -1,7 +1,4 @@
-
 public class StringTest {
-
-    @Utils.TestMethod(pass = false)
     public static void test() {
         String s1 = new String("abc1");
         System.out.println(s1);
@@ -25,7 +22,6 @@ public class StringTest {
         }
     }
 
-    @Utils.TestMethod(pass = false)
     public static void testIntern() {
         String s = "ABC";
 
@@ -39,7 +35,7 @@ public class StringTest {
     }
 
     public static void main(String[] args) {
-        Utils.invokeAllTestMethods(StringTest.class);
+        StringTest.test();
+        StringTest.testIntern();
     }
-
 }

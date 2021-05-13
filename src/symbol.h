@@ -313,12 +313,19 @@ extern const char *symbol_values[];
     action(RZ_V, "RZ_V"), \
     action(RI_V, "RI_V"), \
     action(RJ_V, "RJ_V"), \
+    action(RI_C, "RI_C"), \
+    action(RI_S, "RI_S"), \
+    action(RI_B, "RI_B"), \
+    action(RI_I, "RI_I"), \
+    action(RI_F, "RI_F"), \
+    action(RI_D, "RI_D"), \
     action(RJ_B, "RJ_B"), \
     action(RJ_I, "RJ_I"), \
     action(RJ_R, "RJ_R"), \
     action(RJ_J, "RJ_J"), \
     action(RR_V, "RR_V"), \
     action(RI_R, "RI_R"), \
+    action(RI_Z, "RI_Z"), \
     action(RR_Z, "RR_Z"), \
     action(RI_J, "RI_J"), \
     action(RZ_Z, "RZ_Z"), \
@@ -327,7 +334,14 @@ extern const char *symbol_values[];
     action(RR_J, "RR_J"), \
     action(RR_R, "RR_R"), \
     \
+    action(RIB_V, "RIB_V"), \
+    action(RIC_V, "RIC_V"), \
+    action(RIS_V, "RIS_V"), \
+    action(RII_V, "RII_V"), \
+    action(RIF_V, "RIF_V"), \
+    action(RIJ_V, "RIJ_V"), \
     action(RIR_V, "RIR_V"), \
+    action(RID_V, "RID_V"), \
     action(RJJ_V, "RJJ_V"), \
     action(RJB_V, "RJB_V"), \
     action(RRZ_V, "RRZ_V"), \
