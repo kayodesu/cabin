@@ -40,11 +40,23 @@ static void inject_fields(Class *c)
     assert(c != NULL);
 
     if (utf8_equals(c->class_name, S(java_lang_invoke_MemberName))) {
-        bool b1 = inject_inst_field(c, "vmindex", S(I));
-        bool b2 = inject_inst_field(c, "vmtarget", S(sig_java_lang_Object));
+        //@Injected intptr_t vmindex; // vtable index or offset of resolved member
+        bool b = inject_inst_field(c, "vmindex", S(I));
+        if (!b) {
+            JVM_PANIC("inject fields error"); // todo
+        }
+        return;
+    }
+
+    if (utf8_equals(c->class_name, "java/lang/invoke/ResolvedMethodName")) {
+        //@Injected JVM_Method* vmtarget;
+        //@Injected Class<?>    vmholder;
+        bool b1 = inject_inst_field(c, "vmtarget", S(sig_java_lang_Object));
+        bool b2 = inject_inst_field(c, "vmholder", S(sig_java_lang_Class));
         if (!b1 || !b2) {
             JVM_PANIC("inject fields error"); // todo
         }
+        return;
     }
 }
 
@@ -85,6 +97,7 @@ Class *load_boot_class(const utf8_t *name)
         inject_fields(c);
         addClassToClassLoader(BOOT_CLASS_LOADER, c);        
     }
+    
     return c;
 }
 
@@ -293,9 +306,9 @@ Object *get_app_class_loader()
     return exec_java_func_r(get, NULL);
 }
 
-Class *g_object_class;
+Class *g_object_class = NULL;
 Class *g_class_class = NULL;
-Class *g_string_class;
+Class *g_string_class = NULL;
 
 void init_class_loader()
 {    

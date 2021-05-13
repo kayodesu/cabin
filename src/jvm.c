@@ -1632,6 +1632,7 @@ JVM_InitClassName(JNIEnv *env, jclass cls)
     TRACE("JVM_InitClassName(env=%p, cls=%p)", env, cls);
 
     jstrRef class_name = alloc_string(slash_to_dot_dup(JVM_MIRROR(cls)->class_name));
+    class_name = intern_string(class_name);
     set_ref_field((jclsRef) cls, "name", "Ljava/lang/String;", class_name);
     return (jstring) class_name;
 }
@@ -2250,7 +2251,7 @@ JNIEXPORT jobject JNICALL
 JVM_GetClassConstantPool(JNIEnv *env, jclass cls)
 {
     TRACE("JVM_GetClassConstantPool(env=%p, cls=%p)", env, cls);
-    Class *c = load_boot_class("sun/reflect/ConstantPool");
+    Class *c = load_boot_class("jdk/internal/reflect/ConstantPool");
     jref cp = alloc_object(c);
     set_ref_field(cp, "constantPoolOop", "Ljava/lang/Object;", (jref) &(((jclsRef) cls)->jvm_mirror->cp));
     return (jobject) cp;

@@ -1,5 +1,6 @@
 #include <math.h>
 #include <setjmp.h>
+#include <ffi.h>
 #include "cabin.h"
 #include "attributes.h"
 #include "util/encoding.h"
@@ -1200,7 +1201,7 @@ opc_invokeinterface: {
     goto _invoke_method;
 }           
 opc_invokedynamic: {
-    printvm("invokedynamic\n"); /////////////////////////////////////////////////////////////////////////////////
+    JVM_PANIC("Don't support invokedynamic.\n"); /////////////////////////////////////////////////////////////////////////////////
 
     u2 i = bcr_readu2(reader); // point to JVM_CONSTANT_InvokeDynamic_info
     bcr_readu1(reader); // this byte must always be zero.
@@ -1722,7 +1723,6 @@ slot_t *exec_java_func3(Method *method, jref arg1, jref arg2, jref arg3)
 
 JNIEnv *get_jni_env();
 void *find_from_java_dll(Method *m);
-JNINativeMethod *find_native_method(const char *class_name, const char *method_name, const char *method_descriptor);
 
 static void call_jni_method(Frame *frame)
 {
@@ -1730,23 +1730,34 @@ static void call_jni_method(Frame *frame)
     Method *m = frame->method;
     assert(IS_NATIVE(m));
 
-    const slot_t *lvars = frame->lvars;
+    if (m->native_method == NULL) {
+        m->native_method = find_from_java_dll(m);
+        if (m->native_method == NULL) {
+            JVM_PANIC("Don't find native method: %s, %s, %s",
+                            m->clazz->class_name, m->name, m->descriptor); // todo
+        }
+    }
 
+    int args_count_max = m->arg_slot_count + 2; // plus 2: env and (clsRef or this)
+
+    ffi_type *arg_types[args_count_max];
+    void *arg_values[args_count_max];
+
+    /* 准备参数 */
     JNIEnv *env = get_jni_env(); 
-    bool is_static = IS_STATIC(m);
-    jclsRef cls = m->clazz->java_mirror;
+    arg_types[0] = &ffi_type_pointer;
+    arg_values[0] = &env; 
 
-     void *func = find_from_java_dll(m);
-     if (func == NULL) {
-         JNINativeMethod *native = find_native_method(m->clazz->class_name, m->name, m->descriptor);
-         if (native == NULL) {
-             JVM_PANIC("Don't find native method: %s, %s, %s, %s",
-                       m->clazz->class_name, m->name, m->descriptor, m->native_simple_descriptor);
-         }
-         func = native->fnPtr;
-     }
+    const slot_t *args = frame->lvars;    
+    arg_types[1] = &ffi_type_pointer;
+    if (IS_STATIC(m)) {
+        arg_values[1] = &(m->clazz->java_mirror);
+    } else {        
+        arg_values[1] = (void *) args; // this
+        args++;
+    }
 
-    assert(func != NULL);
+    int argc = 2;
 
     // 应对 java/lang/invoke/MethodHandle.java 中的 invoke* native methods.
     // 比如：
@@ -1770,198 +1781,133 @@ static void call_jni_method(Frame *frame)
     //     return;
     // }
 
-    const utf8_t *desc = frame->method->native_simple_descriptor;
+    const char *p = m->descriptor;
+    assert(*p == JVM_SIGNATURE_FUNC);
+    p++; // skip start (
 
-#undef B
-#undef Z
-#undef C
-#undef _S
-#undef I
-#undef F
-#undef R
-#undef J
-#undef D
-
-#define B(name) jbyte name   = slot_get_byte(lvars++);
-#define Z(name) jbool name   = slot_get_bool(lvars++);
-#define C(name) jchar name   = slot_get_char(lvars++);
-#define _S(name) jshort name  = slot_get_short(lvars++);
-#define I(name) jint name    = slot_get_int(lvars++);
-#define F(name) jfloat name  = slot_get_float(lvars++);
-#define R(name) jref name    = slot_get_ref(lvars++);
-#define J(name) jlong name   = slot_get_long(lvars); lvars += 2;
-#define D(name) jdouble name = slot_get_double(lvars); lvars += 2;
-
-#define PUSH_NOTHING(a, b) (b)
-
-#define INVOKE_0(_desc, return_type, push_func) \
-    if (desc == (_desc)) {                      \
-        if (is_static)    \
-            push_func(frame, ((return_type (*)()) func)(env, cls)); \
-        else \
-            push_func(frame, ((return_type (*)()) func)(env)); \
-        return; \
-    }    
-
-#define INVOKE_1(_desc, return_type, arg, push_func) \
-    if (desc == (_desc)) { \
-        arg(a) \
-        if (is_static)    \
-            push_func(frame, ((return_type (*)()) func)(env, cls, a)); \
-        else \
-            push_func(frame, ((return_type (*)()) func)(env, a)); \
-        return; \
+    for (; *p != JVM_SIGNATURE_ENDFUNC; args++, p++, argc++) {
+        switch (*p) {
+            case JVM_SIGNATURE_BOOLEAN:
+            case JVM_SIGNATURE_BYTE: {
+                jbyte b = slot_get_byte(args);
+                *(jbyte *) args = b;
+                arg_types[argc] = &ffi_type_sint8;
+                arg_values[argc] = (void *) args;
+                break;
+            }
+            case JVM_SIGNATURE_CHAR: {
+                jchar c = slot_get_char(args);
+                *(jchar *) args = c;
+                arg_types[argc] = &ffi_type_uint16;
+                arg_values[argc] = (void *) args;
+                break;
+            }
+            case JVM_SIGNATURE_SHORT: {
+                jshort s = slot_get_short(args);
+                *(jshort *) args = s;
+                arg_types[argc] = &ffi_type_sint16;
+                arg_values[argc] = (void *) args;
+                break;
+            }
+            case JVM_SIGNATURE_INT:
+                arg_types[argc] = &ffi_type_sint32;
+                arg_values[argc] = (void *) args;
+                break;
+            case JVM_SIGNATURE_FLOAT:
+                arg_types[argc] = &ffi_type_float;
+                arg_values[argc] = (void *) args;
+                break;
+            case JVM_SIGNATURE_LONG:
+                arg_types[argc] = &ffi_type_sint64;
+                arg_values[argc] = (void *) args;
+                args++;
+                break;
+            case JVM_SIGNATURE_DOUBLE:
+                arg_types[argc] = &ffi_type_double;
+                arg_values[argc] = (void *) args;
+                args++;
+                break;
+            case JVM_SIGNATURE_ARRAY:
+                while (*++p == JVM_SIGNATURE_ARRAY);
+                if (*p != JVM_SIGNATURE_CLASS) { // 基本类型的数组
+                    goto __ref;
+                }
+            case JVM_SIGNATURE_CLASS:
+                while(*++p != JVM_SIGNATURE_ENDCLASS);
+            __ref:
+                arg_types[argc] = &ffi_type_pointer;
+                arg_values[argc] = (void *) args;
+                break;
+            default:
+                JVM_PANIC("never go here"); // todo error
+                break;
+        }
     }
 
-#define INVOKE_2(_desc, return_type, arg1, arg2, push_func) \
-    if (desc == (_desc)) { \
-        arg1(a) arg2(b) \
-        if (is_static)    \
-            push_func(frame, ((return_type (*)()) func)(env, cls, a, b)); \
-        else \
-            push_func(frame, ((return_type (*)()) func)(env, a, b)); \
-        return; \
+#define ffi_apply(func, argc, rtype, arg_types, rvalue, arg_values) \
+do { \
+    ffi_cif cif; \
+    ffi_prep_cif(&cif, FFI_DEFAULT_ABI, argc, rtype, arg_types); \
+    ffi_call(&cif, func, rvalue, arg_values); \
+} while(0)
+
+
+    switch (m->ret_type) {
+        case RET_VOID:
+            ffi_apply(m->native_method, argc, &ffi_type_void, arg_types, NULL, arg_values);
+            break;
+        case RET_BYTE:
+        case RET_BOOL: {
+            jbyte ret_value;
+            ffi_apply(m->native_method, argc, &ffi_type_sint8, arg_types, &ret_value, arg_values);
+            ostack_pushi(frame, ret_value);
+            break;
+        }
+        case RET_CHAR: {
+            jchar ret_value;
+            ffi_apply(m->native_method, argc, &ffi_type_uint16, arg_types, &ret_value, arg_values);
+            ostack_pushi(frame, ret_value);
+            break;
+        }
+        case RET_SHORT: {
+            jshort ret_value;
+            ffi_apply(m->native_method, argc, &ffi_type_sint16, arg_types, &ret_value, arg_values);
+            ostack_pushi(frame, ret_value);
+            break;
+        }
+        case RET_INT: {
+            jint ret_value;
+            ffi_apply(m->native_method, argc, &ffi_type_sint32, arg_types, &ret_value, arg_values);
+            ostack_pushi(frame, ret_value);
+            break;
+        }
+        case RET_FLOAT: {
+            jfloat ret_value;
+            ffi_apply(m->native_method, argc, &ffi_type_float, arg_types, &ret_value, arg_values);
+            ostack_pushf(frame, ret_value);
+            break;
+        }
+        case RET_LONG: {
+            jlong ret_value;
+            ffi_apply(m->native_method, argc, &ffi_type_sint64, arg_types, &ret_value, arg_values);
+            ostack_pushl(frame, ret_value);
+            break;
+        }
+        case RET_DOUBLE: {
+            jdouble ret_value;
+            ffi_apply(m->native_method, argc, &ffi_type_double, arg_types, &ret_value, arg_values);
+            ostack_pushd(frame, ret_value);
+            break;
+        }
+        case RET_REFERENCE: {
+            jref ret_value;
+            ffi_apply(m->native_method, argc, &ffi_type_pointer, arg_types, &ret_value, arg_values);
+            // printvm("ret_value: %p\n", ret_value);
+            ostack_pushr(frame, ret_value);
+            break;
+        }
+        default:            
+            JVM_PANIC("never go here"); // todo error
+            break;
     }
-
-#define INVOKE_3(_desc, return_type, arg1, arg2, arg3, push_func) \
-    if (desc == (_desc)) { \
-        arg1(a) arg2(b) arg3(c) \
-        if (is_static)    \
-            push_func(frame, ((return_type (*)()) func)(env, cls, a, b, c)); \
-        else \
-            push_func(frame, ((return_type (*)()) func)(env, a, b, c)); \
-        return; \
-    }
-
-#define INVOKE_4(_desc, return_type, arg1, arg2, arg3, arg4, push_func) \
-    if (desc == (_desc)) { \
-        arg1(a) arg2(b) arg3(c) arg4(d) \
-        if (is_static)    \
-            push_func(frame, ((return_type (*)()) func)(env, cls, a, b, c, d)); \
-        else \
-            push_func(frame, ((return_type (*)()) func)(env, a, b, c, d)); \
-        return; \
-    }
-
-#define INVOKE_5(_desc, return_type, arg1, arg2, arg3, arg4, arg5, push_func) \
-    if (desc == (_desc)) { \
-        arg1(a) arg2(b) arg3(c) arg4(d) arg5(e) \
-        if (is_static)    \
-            push_func(frame, ((return_type (*)()) func)(env, cls, a, b, c, d, e)); \
-        else \
-            push_func(frame, ((return_type (*)()) func)(env, a, b, c, d, e)); \
-        return; \
-    }
-
-#define INVOKE_7(_desc, return_type, arg1, arg2, arg3, arg4, arg5, arg6, arg7, push_func) \
-    if (desc == (_desc)) { \
-        arg1(a) arg2(b) arg3(c) arg4(d) arg5(e) arg6(f) arg7(g) \
-        if (is_static)    \
-            push_func(frame, ((return_type (*)()) func)(env, cls, a, b, c, d, e, f, g)); \
-        else \
-            push_func(frame, ((return_type (*)()) func)(env, a, b, c, d, e, f, g)); \
-        return; \
-    }
-
-#define INVOKE_8(_desc, return_type, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, push_func) \
-    if (desc == (_desc)) { \
-        arg1(a) arg2(b) arg3(c) arg4(d) arg5(e) arg6(f) arg7(g) arg8(h)\
-        if (is_static)    \
-            push_func(frame, ((return_type (*)()) func)(env, cls, a, b, c, d, e, f, g, h)); \
-        else \
-            push_func(frame, ((return_type (*)()) func)(env, a, b, c, d, e, f, g, h)); \
-        return; \
-    }    
-
-    INVOKE_0(S(V_V), void,  PUSH_NOTHING)
-    INVOKE_0(S(V_Z), jbool, ostack_pushi)
-    INVOKE_0(S(V_I), jint,  ostack_pushi)
-    INVOKE_0(S(V_R), jref,  ostack_pushr)
-    INVOKE_0(S(V_J), jlong, ostack_pushl)
-
-    INVOKE_1(S(I_V), void,    I, PUSH_NOTHING)
-    INVOKE_1(S(R_V), void,    R, PUSH_NOTHING)
-    INVOKE_1(S(J_V), void,    J, PUSH_NOTHING)
-    INVOKE_1(S(Z_R), jref,    Z, ostack_pushr)
-    INVOKE_1(S(I_I), jint,    I, ostack_pushi)
-    INVOKE_1(S(I_Z), jbool,   I, ostack_pushi)
-    INVOKE_1(S(I_J), jlong,   I, ostack_pushl)
-    INVOKE_1(S(D_J), jlong,   D, ostack_pushl)
-    INVOKE_1(S(J_D), jdouble, J, ostack_pushd)
-    INVOKE_1(S(J_J), jlong,   J, ostack_pushl)
-    INVOKE_1(S(J_B), jbyte,   J, ostack_pushi)
-    INVOKE_1(S(F_I), jint,    F, ostack_pushi)
-    INVOKE_1(S(R_R), jref,    R, ostack_pushr)
-    INVOKE_1(S(R_Z), jbool,   R, ostack_pushi)
-    INVOKE_1(S(R_I), jint,    R, ostack_pushi)
-    INVOKE_1(S(R_J), jlong,   R, ostack_pushl)
-
-    INVOKE_2(S(JJ_V), void, J, J, PUSH_NOTHING)
-    INVOKE_2(S(RZ_V), void, R, Z, PUSH_NOTHING)
-    INVOKE_2(S(RI_V), void, R, I, PUSH_NOTHING)
-    INVOKE_2(S(RR_V), void, R, R, PUSH_NOTHING)
-    INVOKE_2(S(RJ_V), void, R, J, PUSH_NOTHING)
-    INVOKE_2(S(IJ_J), jlong, I, J, ostack_pushl)
-    INVOKE_2(S(IR_I), jint, I, R, ostack_pushi)
-    INVOKE_2(S(RI_C), jchar, R, I, ostack_pushi)
-    INVOKE_2(S(RI_S), jshort, R, I, ostack_pushi)
-    INVOKE_2(S(RI_I), jint, R, I, ostack_pushi)
-    INVOKE_2(S(RI_F), jfloat, R, I, ostack_pushf)
-    INVOKE_2(S(RI_D), jdouble, R, I, ostack_pushd)
-    INVOKE_2(S(RI_R), jref, R, I, ostack_pushr)
-    INVOKE_2(S(RI_J), jlong, R, I, ostack_pushl)    
-    INVOKE_2(S(RZ_Z), jbool, R, Z, ostack_pushi)
-    INVOKE_2(S(RI_Z), jbool, R, I, ostack_pushi)
-    INVOKE_2(S(RR_Z), jbool, R, R, ostack_pushi)
-    INVOKE_2(S(RR_I), jint, R, R, ostack_pushi)
-    INVOKE_2(S(RR_J), jlong, R, R, ostack_pushl)
-    INVOKE_2(S(RI_B), jbyte, R, I, ostack_pushi)
-    INVOKE_2(S(RJ_B), jbyte, R, J, ostack_pushi)
-    INVOKE_2(S(RJ_I), jint, R, J, ostack_pushi)
-    INVOKE_2(S(RJ_R), jref, R, J, ostack_pushr)
-    INVOKE_2(S(RJ_J), jlong, R, J, ostack_pushl)
-    INVOKE_2(S(RZ_R), jref, R, Z, ostack_pushr)
-    INVOKE_2(S(RR_R), jref, R, R, ostack_pushr)
-
-    INVOKE_3(S(RIB_V), void, R, I, B, PUSH_NOTHING)
-    INVOKE_3(S(RIC_V), void, R, I, C, PUSH_NOTHING)
-    INVOKE_3(S(RIS_V), void, R, I, _S, PUSH_NOTHING)
-    INVOKE_3(S(RII_V), void, R, I, I, PUSH_NOTHING)
-    INVOKE_3(S(RIF_V), void, R, I, F, PUSH_NOTHING)
-    INVOKE_3(S(RIJ_V), void, R, I, J, PUSH_NOTHING)
-    INVOKE_3(S(RIR_V), void, R, I, R, PUSH_NOTHING)
-    INVOKE_3(S(RID_V), void, R, I, D, PUSH_NOTHING)
-    INVOKE_3(S(RJJ_V), void, R, J, J, PUSH_NOTHING)
-    INVOKE_3(S(RRZ_V), void, R, R, Z, PUSH_NOTHING)
-    INVOKE_3(S(RRZ_R), jref, R, R, Z, ostack_pushr)
-    INVOKE_3(S(RRR_R), jref, R, R, R, ostack_pushr)
-    INVOKE_3(S(RRR_Z), jbool, R, R, R, ostack_pushi)
-    INVOKE_3(S(RRR_J), jlong, R, R, R, ostack_pushl)
-    INVOKE_3(S(RRJ_R), jref, R, R, J, ostack_pushr)
-    INVOKE_3(S(RRJ_I), jint, R, R, J, ostack_pushi)
-
-    INVOKE_4(S(RIIZ_V), void, R, I, I, Z, PUSH_NOTHING)
-    INVOKE_4(S(RRJR_V), void, R, R, J, R, PUSH_NOTHING)
-    INVOKE_4(S(RJII_Z), jbool, R, J, I, I, ostack_pushi)
-    INVOKE_4(S(RRII_I), jint, R, R, I, I, ostack_pushi)
-    INVOKE_4(S(RJJJ_Z), jbool, R, J, J, J, ostack_pushi)
-    INVOKE_4(S(RZRR_R), jref, R, Z, R, R, ostack_pushr)
-    INVOKE_4(S(RRIZ_R), jref, R, R, I, Z, ostack_pushr)
-    INVOKE_4(S(RRRR_R), jref, R, R, R, R, ostack_pushr)
-
-    INVOKE_5(S(RRIIZ_V), void, R, R, I, I, Z, PUSH_NOTHING)
-    INVOKE_5(S(RIRII_V), void, R, I, R, I, I, PUSH_NOTHING)
-    INVOKE_5(S(RRJJJ_Z), jbool, R, R, J, J, J, ostack_pushi)
-    INVOKE_5(S(RRJRR_Z), jbool, R, R, J, R, R, ostack_pushi)
-    INVOKE_5(S(RRIIJ_R), jref, R, R, I, I, J, ostack_pushr)
-    INVOKE_5(S(RRJII_Z), jbool, R, R, J, I, I, ostack_pushi)
-
-    INVOKE_7(S(RRRIIRR_R), jref, R, R, R, I, I, R, R, ostack_pushr)
-    INVOKE_7(S(RRRIRIR_I), jint, R, R, R, I, R, I, R, ostack_pushi)
-
-    INVOKE_8(S(RRIIRIZR_V), void, R, R, I, I, R, I, Z, R, PUSH_NOTHING)
-
-    JVM_PANIC("error.");
-    // JVM_PANIC((get_method_info(frame->method) + ", " + frame->method->native_method->type.name()).c_str()); todo
-//    throw java_lang_VirtualMachineError(string("未实现的方法类型: ") + frame->method->toString());
 }

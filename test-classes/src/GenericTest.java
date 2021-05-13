@@ -3,7 +3,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- *
+ * Pass
  */
 public class GenericTest {
     public static void erasedTypeEquivalence() {

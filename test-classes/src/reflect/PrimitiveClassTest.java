@@ -29,7 +29,7 @@ public class PrimitiveClassTest {
         boolean b4 = (0 == c.getDeclaredFields().length);
         boolean b5 = (0 == c.getMethods().length);
         boolean b6 = (0 == c.getDeclaredMethods().length);
-        System.out.println((b1 && b2 && b3 && b4 && b5 && b6) ? "Pass" : "Fail");
+        System.out.print((b1 && b2 && b3 && b4 && b5 && b6) ? "Pass. " : "Fail. ");
     }
     
 }

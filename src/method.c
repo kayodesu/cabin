@@ -167,119 +167,6 @@ static void parse_code_attr(Method *m, BytecodeReader *r)
     }
 }
 
-// JNINativeMethod *find_native_method(const char *class_name, const char *method_name, const char *method_type);
-
-static void init_native_method(Method *m)
-{
-    assert(m != NULL && IS_NATIVE(m));
-
-    // 本地方法帧的操作数栈至少要能容纳返回值，
-    // 4 slots are big enough.
-    m->max_stack = 4;
-    // 因为本地方法帧的局部变量表只用来存放参数值，
-    // 所以把arg_slot_count赋给max_locals字段刚好。
-    m->max_locals = m->arg_slot_count;
-
-    m->code_len = 2;
-    m->code = vm_malloc(sizeof(u1) * m->code_len);
-    m->code[0] = JVM_OPC_invokenative;
-
-    if (m->ret_type == RET_VOID) {
-        m->code[1] = JVM_OPC_return;
-    } else if (m->ret_type == RET_DOUBLE) {
-        m->code[1] = JVM_OPC_dreturn;
-    } else if (m->ret_type == RET_FLOAT) {
-        m->code[1] = JVM_OPC_freturn;
-    } else if (m->ret_type == RET_LONG) {
-        m->code[1] = JVM_OPC_lreturn;
-    } else if (m->ret_type == RET_REFERENCE) {
-        m->code[1] = JVM_OPC_areturn;
-    } else {
-        m->code[1] = JVM_OPC_ireturn;
-    }
-
-    // m->native_method = find_native_method(m->clazz->class_name, m->name, m->descriptor);
-
-    const char *p = m->descriptor;
-    assert(*p == '(');
-    p++; // skip start (
-    int len = strlen(m->descriptor) + 1;
-    utf8_t desc[len];
-    memset(desc, 0, sizeof(*desc) * len);
-    int i = 0;
-    if (!IS_STATIC(m)) {
-        desc[i++] = 'R';  // this
-    }
-
-    for (; *p != ')'; p++, i++) {
-        switch (*p) {
-            case JVM_SIGNATURE_BOOLEAN:
-            case JVM_SIGNATURE_BYTE:
-            case JVM_SIGNATURE_CHAR:
-            case JVM_SIGNATURE_SHORT:
-            case JVM_SIGNATURE_INT:
-            case JVM_SIGNATURE_FLOAT:
-            case JVM_SIGNATURE_LONG:
-            case JVM_SIGNATURE_DOUBLE:
-                desc[i] = *p;
-                break;
-            case JVM_SIGNATURE_ARRAY:
-                while (*++p == JVM_SIGNATURE_ARRAY);
-                if (*p != JVM_SIGNATURE_CLASS) { // 基本类型的数组
-                    goto __ref;
-                }
-            case JVM_SIGNATURE_CLASS:
-                while(*++p != JVM_SIGNATURE_ENDCLASS);
-            __ref:
-                desc[i] = 'R';
-                break;
-            default:
-                // todo error
-                break;
-        }
-    }
-    if (i == 0) { // 没有参数
-        desc[i++] = 'V';
-    }
-
-    desc[i++] = '_'; // 参数类型和返回类型的分隔符
-
-    if (m->ret_type == RET_BOOL) {
-        desc[i] = 'Z';
-    } else if (m->ret_type == RET_BYTE) {
-        desc[i] = 'B';
-    } else if (m->ret_type == RET_CHAR) {
-        desc[i] = 'C';
-    } else if (m->ret_type == RET_SHORT) {
-        desc[i] = 'S';
-    } else if (m->ret_type == RET_INT) {
-        desc[i] = 'I';
-    } else if (m->ret_type == RET_VOID) {
-        desc[i] = 'V';
-    } else if (m->ret_type == RET_DOUBLE) {
-        desc[i] = 'D';
-    } else if (m->ret_type == RET_FLOAT) {
-        desc[i] = 'F';
-    } else if (m->ret_type == RET_LONG) {
-        desc[i] = 'J';
-    } else if (m->ret_type == RET_REFERENCE) {
-        desc[i] = 'R';
-    } else {
-        // todo error
-        JVM_PANIC(m->descriptor);
-    }
-
-    m->native_simple_descriptor = save_utf8(desc);
-    if (m->native_simple_descriptor == desc) {
-        // utf8 pool 中不存在，error。
-        // todo error
-        println("%s, %s, %s, %d, ", m->clazz->class_name, m->name, m->native_simple_descriptor, IS_STATIC(m));
-        JVM_PANIC(m->descriptor);
-    }
-
-    // printf("%s, %s\n", m->descriptor, desc);
-}
-
 void init_method(Method *m, Class *c, BytecodeReader *r)
 {
     assert(m != NULL && c != NULL && r != NULL);
@@ -355,7 +242,6 @@ void init_method(Method *m, Class *c, BytecodeReader *r)
 
     const char *t = strchr(m->descriptor, ')'); // find return
     assert(t != NULL);
-
     t++;
     if (*t == 'V') {
         m->ret_type = RET_VOID;
@@ -383,33 +269,30 @@ void init_method(Method *m, Class *c, BytecodeReader *r)
     }
 
     if (IS_NATIVE(m)) {
-        init_native_method(m);
-        // // 本地方法帧的操作数栈至少要能容纳返回值，
-        // // 4 slots are big enough.
-        // m->max_stack = 4;
-        // // 因为本地方法帧的局部变量表只用来存放参数值，
-        // // 所以把arg_slot_count赋给max_locals字段刚好。
-        // m->max_locals = m->arg_slot_count;
+        // 本地方法帧的操作数栈至少要能容纳返回值，
+        // 4 slots are big enough.
+        m->max_stack = 4;
+        // 因为本地方法帧的局部变量表只用来存放参数值，
+        // 所以把arg_slot_count赋给max_locals字段刚好。
+        m->max_locals = m->arg_slot_count;
 
-        // m->code_len = 2;
-        // m->code = new u1[m->code_len];
-        // m->code[0] = JVM_OPC_invokenative;
+        m->code_len = 2;
+        m->code = vm_malloc(sizeof(u1) * m->code_len);
+        m->code[0] = JVM_OPC_invokenative;
 
-        // if (m->ret_type == RET_VOID) {
-        //     m->code[1] = JVM_OPC_return;
-        // } else if (m->ret_type == RET_DOUBLE) {
-        //     m->code[1] = JVM_OPC_dreturn;
-        // } else if (m->ret_type == RET_FLOAT) {
-        //     m->code[1] = JVM_OPC_freturn;
-        // } else if (m->ret_type == RET_LONG) {
-        //     m->code[1] = JVM_OPC_lreturn;
-        // } else if (m->ret_type == RET_REFERENCE) {
-        //     m->code[1] = JVM_OPC_areturn;
-        // } else {
-        //     m->code[1] = JVM_OPC_ireturn;
-        // }
-
-        // m->native_method = find_native_method(m->clazz->class_name, m->name, m->descriptor);
+        if (m->ret_type == RET_VOID) {
+            m->code[1] = JVM_OPC_return;
+        } else if (m->ret_type == RET_DOUBLE) {
+            m->code[1] = JVM_OPC_dreturn;
+        } else if (m->ret_type == RET_FLOAT) {
+            m->code[1] = JVM_OPC_freturn;
+        } else if (m->ret_type == RET_LONG) {
+            m->code[1] = JVM_OPC_lreturn;
+        } else if (m->ret_type == RET_REFERENCE) {
+            m->code[1] = JVM_OPC_areturn;
+        } else {
+            m->code[1] = JVM_OPC_ireturn;
+        }
     }
 }
 

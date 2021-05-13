@@ -823,29 +823,27 @@ GET_AND_SET_TYPE_ARRAY_REGION(Double, jdouble)
 
 #undef GET_AND_SET_TYPE_ARRAY_REGION
 
-jint JNICALL Cabin_RegisterNatives(JNIEnv *env, jclass clazz, const JNINativeMethod *methods, jint nMethods)
+jint JNICALL Cabin_RegisterNatives(JNIEnv *env, jclass clazz, const JNINativeMethod *methods, jint methods_count)
 {
-    // auto c = to_object_ref<Class>(clazz);
-    // for (int i = 0; i < nMethods; i++) {
-    //     Method *m = c->lookupMethod(methods[i].name, methods[i].signature);
-    //     if (m == NULL or !m->isNative()) {
-    //         // todo java_lang_NoSuchMethodError
-    //         return JNI_ERR;
-    //     }
-
-    //     // todo
-    //     JVM_PANIC("not implement.");
-    // }
-
-    Class *c = ((jclsRef) clazz)->jvm_mirror;
-    register_natives(c->class_name, methods, nMethods);
+    Class *c = JVM_MIRROR(clazz);
+    for (jint i = 0; i < methods_count; i++) {
+        Method *m = get_declared_method_noexcept(c, methods[i].name, methods[i].signature);
+        if (m == NULL || !IS_NATIVE(m)) {
+            JVM_PANIC("never go here"); // todo
+            return JNI_ERR;
+        }
+        m->native_method = methods[i].fnPtr;
+    }
+        // register_natives(c->class_name, methods, methods_count);
     return JNI_OK;
 }
 
 jint JNICALL Cabin_UnregisterNatives(JNIEnv *env, jclass clazz)
 {
-    // todo
-    JVM_PANIC("not implement.");
+    Class *c = JVM_MIRROR(clazz);
+    for (u2 i = 0; i < c->methods_count; i++) {
+        c->methods[i].native_method = NULL;
+    }
 }
 
 jint JNICALL Cabin_MonitorEnter(JNIEnv *env, jobject obj)

@@ -194,8 +194,8 @@ void init_jvm(JavaVMInitArgs *vm_init_args)
     init_prims();
     init_heap();
     init_properties();
-    init_native();
     init_class_loader();
+    init_native();
     init_dll();
     init_main_thread();
     init_method_handle();
@@ -226,11 +226,18 @@ void init_jvm(JavaVMInitArgs *vm_init_args)
     assert(m != NULL);
     exec_java_func(m, NULL);
 
-    //   todo "initPhase2 is not implement
-//    m = sys->lookupStaticMethod("initPhase2", "(ZZ)I");
-//    assert(m != NULL);
-//    jint ret = slot::getInt(execJavaFunc(m, {slot::islot(1), slot::islot(1)}));
-//    assert(ret == 0); // 等于0表示成功
+    // todo
+    // AccessibleObject.java中说AccessibleObject类会在initPhase1阶段初始化，
+    // 但我没有在initPhase1中找到初始化AccessibleObject的代码
+    // 所以`暂时`先在这里初始化一下。待日后研究清楚了再说。
+    Class *acc = load_boot_class("java/lang/reflect/AccessibleObject");
+    init_class(acc);
+
+    //   todo "initPhase2 is not implement    
+    // m = lookup_static_method(sys, "initPhase2", "(ZZ)I");
+    // assert(m != NULL);
+    // jint ret = slot_get_int(exec_java_func(m, (slot_t[]) {islot(1), islot(1)}));
+    // assert(ret == 0); // 等于0表示成功
 
     m = lookup_static_method(sys, "initPhase3", S(___V));
     assert(m != NULL);

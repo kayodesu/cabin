@@ -916,8 +916,7 @@ struct method {
     u1 *code;
     size_t code_len;
 
-    // JNINativeMethod *native_method; // present only if native
-    const utf8_t *native_simple_descriptor; //  present only if native
+    void *native_method; // present only if native
     
     RetType ret_type;
 
@@ -1270,9 +1269,12 @@ jref linkMethodHandleConstant(Class *caller_class, int ref_kind,
 //     bool isStatic(jref memberName);
 // }
 
-void initMemberName(jref member_name, jref target);
-void expandMemberName(jref member_name);
-jref resolveMemberName(jref member_name, Class *caller);
+void init_member_name(jref member_name, jref target);
+void expand_member_name(jref member_name);
+jref resolve_member_name(jref member_name, Class *caller);
+jint get_members(jclsRef defc, jstrRef match_name,
+                jstrRef match_sig, jint match_flags, jclsRef caller, jint skip, jref _results);
+jlong member_name_object_field_offset(jref member_name);
 
 // java/lang/invoke/MethodHandles 类的便利操作函数
 // namespace method_handles {

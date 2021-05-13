@@ -166,8 +166,6 @@ extern const char *symbol_values[];
     action(java_lang_reflect_VMField, "java/lang/reflect/VMField"), \
     action(java_lang_VMClassLoader, "java/lang/VMClassLoader"), \
     action(java_lang_ref_Reference, "java/lang/ref/Reference"), \
-    action(sun_reflect_annotation_AnnotationInvocationHandler, \
-           "sun/reflect/annotation/AnnotationInvocationHandler"), \
     action(java_lang_reflect_Method, "java/lang/reflect/Method"), \
     action(java_lang_reflect_VMMethod, "java/lang/reflect/VMMethod"), \
     action(java_lang_StackTraceElement, "java/lang/StackTraceElement"), \
@@ -279,139 +277,8 @@ extern const char *symbol_values[];
            "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"), \
     action(_java_lang_String_I_java_lang_String_java_lang_String_Z__V, \
            "(Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Z)V"), \
-    action(_java_lang_String__java_lang_Class, "(Ljava/lang/String;)Ljava/lang/Class;"), \
-    \
-    /* Native method simple signatures */\
-    action(V_V, "V_V"), \
-    action(V_Z, "V_Z"), \
-    action(V_I, "V_I"), \
-    action(V_R, "V_R"), \
-    action(V_J, "V_J"), \
-    \
-    action(Z_R, "Z_R"), \
-    action(I_V, "I_V"), \
-    action(I_I, "I_I"), \
-    action(I_Z, "I_Z"), \
-    action(I_J, "I_J"), \
-    action(F_I, "F_I"), \
-    action(D_J, "D_J"), \
-    action(J_V, "J_V"), \
-    action(J_D, "J_D"), \
-    action(J_J, "J_J"), \
-    action(J_B, "J_B"), \
-    action(R_V, "R_V"), \
-    action(R_R, "R_R"), \
-    action(R_Z, "R_Z"), \
-    action(R_I, "R_I"), \
-    action(R_J, "R_J"), \
-    action(I_F, "I_F"), \
-    \
-    action(IJ_V, "IJ_V"), \
-    action(IJ_J, "IJ_J"), \
-    action(JJ_V, "JJ_V"), \
-    action(IR_I, "IR_I"), \
-    action(RZ_V, "RZ_V"), \
-    action(RI_V, "RI_V"), \
-    action(RJ_V, "RJ_V"), \
-    action(RI_C, "RI_C"), \
-    action(RI_S, "RI_S"), \
-    action(RI_B, "RI_B"), \
-    action(RI_I, "RI_I"), \
-    action(RI_F, "RI_F"), \
-    action(RI_D, "RI_D"), \
-    action(RJ_B, "RJ_B"), \
-    action(RJ_I, "RJ_I"), \
-    action(RJ_R, "RJ_R"), \
-    action(RJ_J, "RJ_J"), \
-    action(RR_V, "RR_V"), \
-    action(RI_R, "RI_R"), \
-    action(RI_Z, "RI_Z"), \
-    action(RR_Z, "RR_Z"), \
-    action(RI_J, "RI_J"), \
-    action(RZ_Z, "RZ_Z"), \
-    action(RZ_R, "RZ_R"), \
-    action(RR_I, "RR_I"), \
-    action(RR_J, "RR_J"), \
-    action(RR_R, "RR_R"), \
-    \
-    action(RIB_V, "RIB_V"), \
-    action(RIC_V, "RIC_V"), \
-    action(RIS_V, "RIS_V"), \
-    action(RII_V, "RII_V"), \
-    action(RIF_V, "RIF_V"), \
-    action(RIJ_V, "RIJ_V"), \
-    action(RIR_V, "RIR_V"), \
-    action(RID_V, "RID_V"), \
-    action(RJJ_V, "RJJ_V"), \
-    action(RJB_V, "RJB_V"), \
-    action(RRZ_V, "RRZ_V"), \
-    action(RZJ_V, "RZJ_V"), \
-    action(RRR_V, "RRR_V"), \
-    action(RIZ_V, "RIZ_V"), \
-    action(RRI_I, "RRI_I"), \
-    action(RRZ_R, "RRZ_R"), \
-    action(RRR_R, "RRR_R"), \
-    action(RRR_Z, "RRR_Z"), \
-    action(RRI_J, "RRI_J"), \
-    action(RRR_J, "RRR_J"), \
-    action(RJJ_J, "RJJ_J"), \
-    action(RRJ_I, "RRJ_I"), \
-    action(RRI_Z, "RRI_Z"), \
-    action(RRJ_Z, "RRJ_Z"), \
-    action(RRJ_B, "RRJ_B"), \
-    action(RRJ_S, "RRJ_S"), \
-    action(RRJ_C, "RRJ_C"), \
-    action(RRJ_J, "RRJ_J"), \
-    action(RRJ_F, "RRJ_F"), \
-    action(RRJ_D, "RRJ_D"), \
-    action(RRJ_R, "RRJ_R"), \
-    \
-    action(RIIZ_V, "RIIZ_V"), \
-    action(RRJB_V, "RRJB_V"), \
-    action(RRJR_V, "RRJR_V"), \
-    action(RRJC_V, "RRJC_V"), \
-    action(RRJI_V, "RRJI_V"), \
-    action(RRJZ_V, "RRJZ_V"), \
-    action(RRJS_V, "RRJS_V"), \
-    action(RRJJ_V, "RRJJ_V"), \
-    action(RRJF_V, "RRJF_V"), \
-    action(RRJD_V, "RRJD_V"), \
-    action(RZZJ_V, "RZZJ_V"), \
-    action(RRIZ_R, "RRIZ_R"), \
-    action(RZRR_R, "RZRR_R"), \
-    action(RJRR_R, "RJRR_R"), \
-    action(RRII_I, "RRII_I"), \
-    action(RJII_Z, "RJII_Z"), \
-    action(RJJJ_Z, "RJJJ_Z"), \
-    action(RRZZ_Z, "RRZZ_Z"), \
-    action(RRRR_R, "RRRR_R"), \
-    \
-    action(RIIIZ_V, "RIIIZ_V"), \
-    action(RRJJB_V, "RRJJB_V"), \
-    action(RIRII_V, "RIRII_V"), \
-    action(RZRRR_V, "RZRRR_V"), \
-    action(RRIIZ_V, "RRIIZ_V"), \
-    action(RRJRR_Z, "RRJRR_Z"), \
-    action(RRJRR_R, "RRJRR_R"), \
-    action(RRIIJ_R, "RRIIJ_R"), \
-    action(RRJII_Z, "RRJII_Z"), \
-    action(RRIZZ_Z, "RRIZZ_Z"), \
-    action(RRJII_I, "RRJII_I"), \
-    action(RRJJJ_J, "RRJJJ_J"), \
-    action(RRJJJ_Z, "RRJJJ_Z"), \
-    \
-    action(RRJRJJ_V, "RRJRJJ_V"), \
-    action(RRBIIZ_V, "RRBIIZ_V"), \
-    \
-    action(RRJRJJJ_V, "RRJRJJJ_V"), \
-    action(RRRIIRR_R, "RRRIIRR_R"), \
-    action(RRRIRIR_I, "RRRIRIR_I"), \
-    \
-    action(RRIIRIZR_V, "RRIIRIZR_V"), \
-    \
-    action(RRRRIIRZIR_R, "RRRRIIRZIR_R")
+    action(_java_lang_String__java_lang_Class, "(Ljava/lang/String;)Ljava/lang/Class;")
     
-
 #define SYMBOL_ENUM(name, value) SYMBOL_NAME_ENUM(name)
 
 enum {

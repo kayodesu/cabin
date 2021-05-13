@@ -2,7 +2,7 @@ package interface0;
 
 import java.util.Arrays;
 
-public class InterfaceMethodTest1 {
+public class GetInterfaceMethodTest {
 
     interface Foo {
         default void test() { }

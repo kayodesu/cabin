@@ -112,7 +112,7 @@ bool utf8_equals(const utf8_t *p1, const utf8_t *p2)
 bool utf8_equals(const utf8_t *p1, const utf8_t *p2)
 {
     assert(p1 != NULL && p2 != NULL);
-    return strcmp(p1, p2) == 0;
+    return (p1 == p2) || (strcmp(p1, p2) == 0);
 }
 
 

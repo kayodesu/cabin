@@ -42,7 +42,6 @@ public class InterfaceDefaultMethodTest {
         FirstTestClass firstTestClass = testInterfaceDefaultTest;
         SecondTest secondTest = testInterfaceDefaultTest;
         ThirdTest thirdTest = testInterfaceDefaultTest;
-
         System.out.println(defaultTest.test() == "ThirdTest");
         System.out.println(firstTestClass.test() == "ThirdTest");
         System.out.println(secondTest.test() == "ThirdTest");

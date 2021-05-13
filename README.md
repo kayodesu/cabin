@@ -1,5 +1,5 @@
 # Cabin VM
-An experimental JVM written in C++.
+A toy JVM written in C.
 
 ## Development environment
 * Win10 64 bit
@@ -7,9 +7,10 @@ An experimental JVM written in C++.
 * g++
 
 ## Dependence
-* jre8 lib
+* openjdk16
 * zlib 1.2.11
 * minizip 1.2.0
+* libffi 3.3
 
 ## Features  
 - [x] Java arithmetic, flow control, object-oriented programming(virtual method, inherit, etc.)  
@@ -20,12 +21,12 @@ An experimental JVM written in C++.
 - [ ] Multi-thread  
 - [ ] Garbage collection  
 ## Run
-Ensure your Java version is Java8, and already set `JAVA_HOME` environment variable.
+Ensure you already set `JAVA_HOME` environment variable.
 
 One command-line option:
 * -cp path: set class path.
 ```
-C:\>cabin HelloWorld -cp D:\Code\yovm\test-classes\out\production\test-classes
+C:\>cabin HelloWorld -cp D:\Code\cabin\test-classes\out\production\test-classes
 ```
 or, using CLASS_PATH environment variable.
 ```

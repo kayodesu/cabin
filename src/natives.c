@@ -10,104 +10,12 @@
 #define OBJ   "Ljava/lang/Object;"
 #define _OBJ  "(Ljava/lang/Object;"
 #define OBJ_  "Ljava/lang/Object;)"
-#define _OBJ_ "(Ljava/lang/Object;)"
-#define __OBJ "()Ljava/lang/Object;"
 
 #define CLS   "Ljava/lang/Class;"
 #define _CLS  "(Ljava/lang/Class;"
-#define CLS_  "Ljava/lang/Class;)"
 #define _CLS_ "(Ljava/lang/Class;)"
-#define __CLS "()Ljava/lang/Class;"
 
 #define STR   "Ljava/lang/String;"
-#define _STR  "(Ljava/lang/String;"
-#define STR_  "Ljava/lang/String;)"
-#define _STR_ "(Ljava/lang/String;)"
-#define __STR "()Ljava/lang/String;"
-
-static inline void _registerNatives() { }
-
-#define JNINativeMethod_registerNatives { "registerNatives", "()V", (void *) _registerNatives }
-
-// public final native Class<?> getClass();
-// static jobject getClass(JNIEnv *env, jobject this)
-// {
-//     if (this == NULL) {
-//         // JNU_ThrowNullPointerException(env, NULL); todo
-//         return NULL;
-//     } else {
-//         return (*env)->GetObjectClass(env, this);
-//     }
-// }
-
-JNIEXPORT jint JNICALL JVM_IHashCode(JNIEnv *env, jobject obj);
-JNIEXPORT jobject JNICALL JVM_Clone(JNIEnv *env, jobject _obj);
-JNIEXPORT void JNICALL JVM_MonitorWait(JNIEnv *env, jobject obj, jlong ms);
-JNIEXPORT void JNICALL JVM_MonitorNotify(JNIEnv *env, jobject obj);
-JNIEXPORT void JNICALL JVM_MonitorNotifyAll(JNIEnv *env, jobject obj);
-
-static JNINativeMethod Object_natives[] = {
-        JNINativeMethod_registerNatives,
-        { "hashCode", "()I", JVM_IHashCode },
-        // { "getClass", __CLS, getClass },
-        { "clone", __OBJ, JVM_Clone },
-        { "notifyAll", "()V", JVM_MonitorNotifyAll },
-        { "notify", "()V", JVM_MonitorNotify },
-        { "wait", "(J)V", JVM_MonitorWait },
-};
-
-// /*
-//  * VM support where maxDepth == -1 to request entire stack dump
-//  *
-//  * private static native ThreadInfo[] dumpThreads0(
-//  *                      long[] ids, boolean lockedMonitors, boolean lockedSynchronizers, int maxDepth);
-//  *
-//  */
-// static jref dumpThreads0(JNIEnv *env, jclass cls, jref _ids, jboolean lockedMonitors, jboolean lockedSynchronizers, jint maxDepth)
-// {
-//     Object *thread_infos;
-
-//     Class *ac = loadArrayClass0("[Ljava/lang/management/ThreadInfo;");
-//     if (_ids == NULL) { // dump all threads
-//         thread_infos = alloc_array(ac, g_all_threads_count);
-
-//         for (int i = 0; i < g_all_threads_count; i++) {
-//             Thread *t = g_all_threads[i];
-//             Object *thread_info = to_java_lang_management_ThreadInfo(t, lockedMonitors, lockedSynchronizers, maxDepth);
-//             array_set_ref(thread_infos, i, thread_info);
-//         }
-//     } else {
-//         jarrRef ids = (jarrRef)(_ids);
-//         thread_infos = alloc_array(ac, ids->arr_len);
-
-//         for (int i = 0; i < ids->arr_len; i++) {
-//             jlong id = array_get(jlong, ids, i);
-//             Thread *t = thread_from_id(id);
-//             assert(t != NULL);
-//             Object *thread_info = to_java_lang_management_ThreadInfo(t, lockedMonitors, lockedSynchronizers, maxDepth);
-//             array_set_ref(thread_infos, i, thread_info);
-//         }
-//     }
-
-//     return thread_infos;
-// }
-
-// static JNINativeMethod sun_management_ThreadImpl_NativeMethods[] = {
-//         JNINativeMethod_registerNatives,
-//         { "dumpThreads0", "([JZZ)[Ljava/lang/management/ThreadInfo;", dumpThreads0 },
-// };
-
-// native boolean closeScope0(Scope scope, Scope.ScopedAccessError exception);
-static jbool closeScope0()
-{
-    // todo
-    return true;
-}
-
-static JNINativeMethod ScopedMemoryAccess_natives[] = {
-        JNINativeMethod_registerNatives,
-        { "closeScope0", NULL, closeScope0 },
-};
 
 /* todo
 http://www.docjar.com/docs/api/sun/misc/Unsafe.html#park%28boolean,%20long%29
@@ -123,13 +31,13 @@ elsewhere.
 */
 
 // public native void park(boolean isAbsolute, long time);
-static void park(JNIEnv *env, jref _this, jboolean isAbsolute, jlong time)
+static void park(JNIEnv *env, jref this, jboolean isAbsolute, jlong time)
 {
     JVM_PANIC("park");
 }
 
 // public native void unpark(Object thread);
-static void unpark(JNIEnv *env, jref _this, jref thread)
+static void unpark(JNIEnv *env, jref this, jref thread)
 {
     JVM_PANIC("unpark");
 }
@@ -246,10 +154,13 @@ static jlong objectFieldOffset1(JNIEnv *env, jref _this, jclsRef c, jstrRef name
     return f->id;
 }
 
-
 #define OBJ_SETTER_AND_GETTER(type, t) \
 static j##type _obj_get_##type##_(JNIEnv *env, jref _this, jref o, jlong offset) \
 { \
+    /* o == NULL 时get内存中的值， offset就是地址 */ \
+    if (o == NULL) { \
+        return *(j##type *) (intptr_t) offset; \
+    } \
     if (is_array_object(o)) { /* get value from array */ \
         assert(0 <= offset && offset < o->arr_len); \
         return array_get(j##type, o, offset); \
@@ -264,9 +175,14 @@ static j##type _obj_get_##type##_(JNIEnv *env, jref _this, jref o, jlong offset)
         return slot_get_##type(o->data + offset); \
     } \
 } \
- \
+\
 static void _obj_put_##type##_(JNIEnv *env, jref _this, jref o, jlong offset, j##type x) \
 { \
+    /* o == NULL 时put值到内存中， offset就是地址 */ \
+    if (o == NULL) { \
+        *(j##type *) (intptr_t) offset = x; \
+        return; \
+    } \
     if (is_array_object(o)) { /* set value to array */ \
         assert(0 <= offset && offset < o->arr_len); \
         array_set_##type(o, offset, x); \
@@ -378,28 +294,6 @@ static void freeMemory(JNIEnv *env, jref _this, jlong address)
 {
     free((void *) (intptr_t) address);
 }
-
-#define MEM_SETTER_AND_GETTER(type) \
-static void _mem_put_##type##_(JNIEnv *env, jref this, jlong address, j##type x) \
-{ \
-    *(j##type *) (intptr_t) address = x;  \
-} \
- \
-static j##type _mem_get_##type##_(JNIEnv *env, jref this, jlong address) \
-{ \
-    return *(j##type *) (intptr_t) address; \
-}
-
-MEM_SETTER_AND_GETTER(byte)
-MEM_SETTER_AND_GETTER(char)
-MEM_SETTER_AND_GETTER(short)
-MEM_SETTER_AND_GETTER(int)
-MEM_SETTER_AND_GETTER(long)
-MEM_SETTER_AND_GETTER(float)
-MEM_SETTER_AND_GETTER(double)
-
-#undef MEM_SETTER_AND_GETTER
-
 
 static void *_getPoint(jref o, jlong offset)
 {
@@ -583,9 +477,8 @@ static void fullFence(JNIEnv *env, jref _this)
 #define CLD "Ljava/lang/ClassLoader;"
 
 static JNINativeMethod Unsafe_natives[] = {
-        JNINativeMethod_registerNatives,
         { "park", "(ZJ)V", park },
-        { "unpark", _OBJ_ "V", unpark },
+        { "unpark", _OBJ ")V", unpark },
 
         // compare and swap
         { "compareAndSetInt", _OBJ "JII)Z", compareAndSwapInt },
@@ -594,16 +487,16 @@ static JNINativeMethod Unsafe_natives[] = {
 
         // class
         { "allocateInstance", _CLS_ OBJ, allocateInstance },
-        { "defineClass", _STR "[BII" CLD "Ljava/security/ProtectionDomain;)" CLS, defineClass },
+        { "defineClass0", "(" STR "[BII" CLD "Ljava/security/ProtectionDomain;)" CLS, defineClass },
         { "ensureClassInitialized0", _CLS_ "V", ensureClassInitialized },
-        { "staticFieldOffset", "(Ljava/lang/reflect/Field;)J", staticFieldOffset },
-        { "staticFieldBase", "(Ljava/lang/reflect/Field;)" OBJ, staticFieldBase },
+        { "staticFieldOffset0", "(Ljava/lang/reflect/Field;)J", staticFieldOffset },
+        { "staticFieldBase0", "(Ljava/lang/reflect/Field;)" OBJ, staticFieldBase },
 
         // Object
         { "arrayBaseOffset0", _CLS_"I", arrayBaseOffset },
         { "arrayIndexScale0", _CLS_"I", arrayIndexScale },
         { "objectFieldOffset0", "(Ljava/lang/reflect/Field;)J", objectFieldOffset },
-        { "objectFieldOffset1", _CLS STR_ "J", objectFieldOffset1 },
+        { "objectFieldOffset1", _CLS STR ")J", objectFieldOffset1 },
 
         { "getBoolean", _OBJ "J)Z", _obj_get_boolean_ },
         { "putBoolean", _OBJ "JZ)V", _obj_put_boolean_ },
@@ -621,9 +514,7 @@ static JNINativeMethod Unsafe_natives[] = {
         { "putFloat", _OBJ "JF)V", _obj_put_float_ },
         { "getDouble", _OBJ "J)D", _obj_get_double_ },
         { "putDouble", _OBJ "JD)V", _obj_put_double_ },
-        { "getObject", _OBJ "J)" OBJ, _obj_get_ref_ },
         { "getReference", _OBJ "J)" OBJ, _obj_get_ref_ },
-        { "putObject", _OBJ "J" OBJ_ "V", _obj_put_ref_ },
         { "putReference", _OBJ "J" OBJ_ "V", _obj_put_ref_ },
 
         { "putIntVolatile", _OBJ "JI)V", _obj_put_int_volatile },
@@ -634,7 +525,6 @@ static JNINativeMethod Unsafe_natives[] = {
         { "putLongVolatile", _OBJ "JJ)V", _obj_put_long_volatile },
         { "putFloatVolatile", _OBJ "JF)V", _obj_put_float_volatile },
         { "putDoubleVolatile", _OBJ "JD)V", _obj_put_double_volatile },
-        { "putObjectVolatile", _OBJ "J" OBJ_ "V", putObjectVolatile },
         { "putReferenceVolatile", _OBJ "J" OBJ_ "V", putObjectVolatile },
 
         { "getCharVolatile", _OBJ "J)C", _obj_get_char_volatile },
@@ -645,7 +535,6 @@ static JNINativeMethod Unsafe_natives[] = {
         { "getLongVolatile", _OBJ "J)J", _obj_get_long_volatile },
         { "getFloatVolatile", _OBJ "J)F", _obj_get_float_volatile },
         { "getDoubleVolatile", _OBJ "J)D", _obj_get_double_volatile },
-        { "getObjectVolatile", _OBJ "J)" OBJ,getObjectVolatile },
         { "getReferenceVolatile", _OBJ "J)" OBJ, getObjectVolatile },
 
         // unsafe memory
@@ -655,20 +544,6 @@ static JNINativeMethod Unsafe_natives[] = {
         { "copyMemory0", _OBJ "JLjava/lang/Object;JJ)V", copyMemory },
         { "copySwapMemory0", _OBJ "JLjava/lang/Object;JJJ)V", copySwapMemory },
         { "freeMemory0", "(J)V", freeMemory },
-        { "putByte", "(JB)V", _mem_put_byte_ },
-        { "getByte", "(J)B", _mem_get_byte_ },
-        { "putShort", "(JS)V", _mem_put_short_ },
-        { "getShort", "(J)S", _mem_get_short_ },
-        { "putChar", "(JC)V", _mem_put_char_ },
-        { "getChar", "(J)C", _mem_get_char_ },
-        { "putInt", "(JI)V", _mem_put_int_ },
-        { "getInt", "(J)I", _mem_get_int_ },
-        { "putLong", "(JJ)V", _mem_put_long_ },
-        { "getLong", "(J)J", _mem_get_long_ },
-        { "putFloat", "(JF)V", _mem_put_float_ },
-        { "getFloat", "(J)F", _mem_get_float_ },
-        { "putDouble", "(JD)V", _mem_put_double_ },
-        { "getDouble", "(J)D", _mem_get_double_ },
 
         { "shouldBeInitialized0", _CLS_ "Z", shouldBeInitialized },
         { "getLoadAverage0", "([DI)I", getLoadAverage },
@@ -922,18 +797,6 @@ static jref MH_linkToInterface(jref args)
     JVM_PANIC("linkToInterface");
 }
 
-static JNINativeMethod MethodHandle_natives[] = {
-        JNINativeMethod_registerNatives,
-        { "invokeExact",     "([" OBJ_ OBJ, MH_invokeExact },
-        { "invoke",          "([" OBJ_ OBJ, MH_invoke },
-        { "invokeBasic",     "([" OBJ_ OBJ, MH_invokeBasic },
-        { "linkToVirtual",   "([" OBJ_ OBJ, MH_linkToVirtual },
-        { "linkToStatic",    "([" OBJ_ OBJ, MH_linkToStatic },
-        { "linkToSpecial",   "([" OBJ_ OBJ, MH_linkToSpecial },
-        { "linkToInterface", "([" OBJ_ OBJ, MH_linkToInterface },
-};
-
-
 /*
  * Fetch MH-related JVM parameter.
  * which=0 retrieves MethodHandlePushLimit
@@ -950,44 +813,10 @@ static jint MHN_getConstant(jint which)
         return 0;
 }
 
-/* Method flags */
-
-#define MB_LAMBDA_HIDDEN        1
-#define MB_LAMBDA_COMPILED      2
-#define MB_CALLER_SENSITIVE     4
-#define MB_DEFAULT_CONFLICT     8
-
-
-#define IS_METHOD        0x010000
-#define IS_CONSTRUCTOR   0x020000
-#define IS_FIELD         0x040000
-#define IS_TYPE          0x080000
-#define CALLER_SENSITIVE 0x100000
-
-#define SEARCH_SUPERCLASSES 0x100000
-#define SEARCH_INTERFACES   0x200000
-
-#define ALL_KINDS (IS_METHOD | IS_CONSTRUCTOR | IS_FIELD | IS_TYPE)
-                
-#define REFERENCE_KIND_SHIFT 24
-#define REFERENCE_KIND_MASK  (0xf000000 >> REFERENCE_KIND_SHIFT)
-
-static int __method_flags(Method *m) 
-{
-    assert(m != NULL);
-
-    int flags = m->access_flags;
-
-    if(m->access_flags & MB_CALLER_SENSITIVE)
-        flags |= CALLER_SENSITIVE;
-
-    return flags;
-}
-
 // static native void init(MemberName self, Object ref);
-static void MHN_init(jref self, jref ref)
+static void MHN_init(JNIEnv *env, jclsRef cls, jref self, jref ref)
 {
-    initMemberName(self, ref);
+    init_member_name(self, ref);
 }
 /*
 func getMNFlags(method *heap.Method) int32 {
@@ -1004,124 +833,50 @@ func getMNFlags(method *heap.Method) int32 {
 */
 
 // static native void expand(MemberName self);
-static void MHN_expand(jref self)
+static void MHN_expand(JNIEnv *env, jclsRef cls, jref self)
 {
-    expandMemberName(self);
+    expand_member_name(self);
 }
 
 /*
  * static native MemberName resolve(MemberName self, Class<?> caller, int lookupMode,
             boolean speculativeResolve) throws LinkageError, ClassNotFoundException;
  */
-static jref MHN_resolve(jref self/*MemberName*/, jclsRef caller, int lookupMode, jboolean speculativeResolve)
+static jref MHN_resolve(JNIEnv *env, jclsRef cls, jref self/*MemberName*/, 
+                        jclsRef caller, int lookupMode, jboolean speculativeResolve)
 {
     // todo speculative_resolve
-    return resolveMemberName(self, caller != NULL ? caller->jvm_mirror : NULL);
+    return resolve_member_name(self, caller != NULL ? caller->jvm_mirror : NULL);
 }
 
 // static native int getMembers(Class<?> defc, String matchName, String matchSig,
 //                              int matchFlags, Class<?> caller, int skip, MemberName[] results);
-static jint MHN_getMembers(jclsRef defc, jstrRef match_name, jstrRef match_sig,
-                           jint match_flags, jclsRef caller, jint skip, jref _results)
+static jint MHN_getMembers(JNIEnv *env, jclsRef cls, jclsRef defc, jstrRef match_name, 
+                        jstrRef match_sig, jint match_flags, jclsRef caller, jint skip, jref _results)
 {
-    assert(is_array_object(_results));
-    jarrRef results = (jarrRef)(_results);
-    int search_super = (match_flags & SEARCH_SUPERCLASSES) != 0;
-    int search_intf = (match_flags & SEARCH_INTERFACES) != 0;
-    int local = !(search_super || search_intf);
-//    char *name_sym = NULL;
-//    char *sig_sym = NULL;
-
-    if (match_name != NULL) {
-        // utf8_t *x = string_to_utf8(match_name);
-        JVM_PANIC("unimplemented");
-    }
-
-    if (match_sig != NULL) {
-        // utf8_t *x = string_to_utf8(match_sig);
-        JVM_PANIC("unimplemented");
-    }
-
-    if(match_flags & IS_FIELD)
-        JVM_PANIC("unimplemented");
-
-    if(!local)
-        JVM_PANIC("unimplemented");
-
-    if(match_flags & (IS_METHOD | IS_CONSTRUCTOR)) {
-        int count = 0;
-
-        for (u2 i = 0; i < defc->jvm_mirror->methods_count; i++) {
-            Method *m = defc->jvm_mirror->methods + i;
-            if(m->name == SYMBOL(class_init))
-                continue;
-            if(m->name == SYMBOL(object_init))
-                continue;
-            if(skip-- > 0)
-                continue;
-
-            if(count < results->arr_len) {
-                Object *member_name = array_get(jref, results, count);
-                count++;
-                int flags = __method_flags(m) | IS_METHOD;
-
-                flags |= (IS_STATIC(m) ? JVM_REF_invokeStatic : JVM_REF_invokeVirtual) << REFERENCE_KIND_SHIFT;
-
-                set_int_field(member_name, "flags", flags);
-                set_ref_field(member_name, "clazz", "Ljava/lang/Class;", m->clazz->java_mirror);
-                set_ref_field(member_name, "name", "Ljava/lang/String;", intern_string(alloc_string(m->name)));
-                set_ref_field(member_name, "type", "Ljava/lang/Object;", alloc_string(m->descriptor));
-                // INST_DATA(mname, int, mem_name_flags_offset) = flags;
-                // INST_DATA(mname, Class*, mem_name_clazz_offset) = mb->class;
-                // INST_DATA(mname, Object*, mem_name_name_offset) =
-                //                 findInternedString(createString(mb->name));
-                // INST_DATA(mname, Object*, mem_name_type_offset) =
-                //                 createString(mb->type);
-                // INST_DATA(mname, MethodBlock*, mem_name_vmtarget_offset) = mb;
-            }
-        }
-
-        return count;
-    }
-
-
-    JVM_PANIC("unimplemented");
+    return get_members(defc, match_name, match_sig, match_flags, caller, skip, _results);
 }
 
 // static native long objectFieldOffset(MemberName self);  // e.g., returns vmindex
-static jlong MHN_objectFieldOffset(jref self)
+static jlong MHN_objectFieldOffset(JNIEnv *env, jclsRef cls, jref self)
 {
-    // private Class<?> clazz;       // class in which the method is defined
-    // private String   name;        // may be null if not yet materialized
-    // private Object   type;        // may be null if not yet materialized
-    Class *clazz = get_ref_field(self, "clazz", "Ljava/lang/Class;")->jvm_mirror;
-    jstrRef name = get_ref_field(self, "name", "Ljava/lang/String;");
-    // type maybe a String or an Object[] or a MethodType
-    // Object[]: (Class<?>) Object[0] is return type
-    //           (Class<?>[]) Object[1] is parameter types
-    jref type = get_ref_field(self, "type", "Ljava/lang/Object;");
-
-    Method *m = lookup_inst_method(self->clazz, "getSignature", "()Ljava/lang/String;");
-    jref sig = slot_get_ref(exec_java_func1(m, self));
-
-    Field *f = lookup_field(clazz, string_to_utf8(name), string_to_utf8(sig));
-    return f->id;
+    return member_name_object_field_offset(self);
 }
 
 // static native long staticFieldOffset(MemberName self);  // e.g., returns vmindex
-static jlong MHN_staticFieldOffset(jref self)
+static jlong MHN_staticFieldOffset(JNIEnv *env, jclsRef cls, jref self)
 {
     JVM_PANIC("staticFieldOffset");
 }
 
 // static native Object staticFieldBase(MemberName self);  // e.g., returns clazz
-static jref MHN_staticFieldBase(jref self)
+static jref MHN_staticFieldBase(JNIEnv *env, jclsRef cls, jref self)
 {
     JVM_PANIC("staticFieldBase");
 }
 
 // static native Object getMemberVMInfo(MemberName self);  // returns {vmindex,vmtarget}
-static jref MHN_getMemberVMInfo(jref self)
+static jref MHN_getMemberVMInfo(JNIEnv *env, jclsRef cls, jref self)
 {
     /*
      * return Object[2];
@@ -1136,107 +891,106 @@ static jref MHN_getMemberVMInfo(jref self)
 }
 
 // static native void setCallSiteTargetNormal(CallSite site, MethodHandle target);
-static void MHN_setCallSiteTargetNormal(jref site, jref target)
+static void MHN_setCallSiteTargetNormal(JNIEnv *env, jclsRef cls, jref site, jref target)
 {
     JVM_PANIC("setCallSiteTargetNormal");
 }
 
 // static native void setCallSiteTargetVolatile(CallSite site, MethodHandle target);
-static void MHN_setCallSiteTargetVolatile(jref site, jref target)
+static void MHN_setCallSiteTargetVolatile(JNIEnv *env, jclsRef cls, jref site, jref target)
 {
     JVM_PANIC("setCallSiteTargetVolatile");
 }
 
-#undef MM
-#undef _MM_
-#undef T
-
-#define MM "Ljava/lang/invoke/MemberName;"
-#define _MM_ "(Ljava/lang/invoke/MemberName;)"
-#define T "(Ljava/lang/invoke/CallSite;Ljava/lang/invoke/MethodHandle)V"
+#define MN "Ljava/lang/invoke/MemberName;"
+#define _MN_ "(Ljava/lang/invoke/MemberName;)"
 
 static JNINativeMethod MethodHandleNatives_natives[] = {
-    JNINativeMethod_registerNatives,
-
     // MemberName support
 
-    {"init", "(" MM OBJ_ "V", MHN_init },
-    {"expand", _MM_ "V", MHN_expand },
-    {"resolve", "(" MM CLS "IZ)" MM, MHN_resolve },
-    {"getMembers", _CLS STR STR "I" CLS "I[" MM ")I", MHN_getMembers },
+    {"init", "(" MN OBJ_ "V", MHN_init },
+    {"expand", _MN_ "V", MHN_expand },
+    {"resolve", "(" MN CLS "IZ)" MN, MHN_resolve },
+    {"getMembers", _CLS STR STR "I" CLS "I[" MN ")I", MHN_getMembers },
 
     // Field layout queries parallel to sun.misc.Unsafe:
 
-    {"objectFieldOffset", _MM_ "J", MHN_objectFieldOffset },
-    {"staticFieldOffset", _MM_ "J", MHN_staticFieldOffset },
-    {"staticFieldBase", _MM_ OBJ, MHN_staticFieldBase },
-    {"getMemberVMInfo", _MM_ OBJ, MHN_getMemberVMInfo },
+    {"objectFieldOffset", _MN_ "J", MHN_objectFieldOffset },
+    {"staticFieldOffset", _MN_ "J", MHN_staticFieldOffset },
+    {"staticFieldBase", _MN_ OBJ, MHN_staticFieldBase },
+    {"getMemberVMInfo", _MN_ OBJ, MHN_getMemberVMInfo },
 
     // MethodHandle support
     {"getConstant", "(I)I", MHN_getConstant },
 
     // CallSite support
     /* Tell the JVM that we need to change the target of a CallSite. */
-    {"setCallSiteTargetNormal", T, MHN_setCallSiteTargetNormal },
-    {"setCallSiteTargetVolatile", T, MHN_setCallSiteTargetVolatile },
+    {"setCallSiteTargetNormal", 
+        "(Ljava/lang/invoke/CallSite;Ljava/lang/invoke/MethodHandle)V", MHN_setCallSiteTargetNormal },
+    {"setCallSiteTargetVolatile", 
+        "(Ljava/lang/invoke/CallSite;Ljava/lang/invoke/MethodHandle)V", MHN_setCallSiteTargetVolatile },
 };
 
-#undef MM
-#undef _MM_
-#undef T
+// native boolean closeScope0(Scope scope, Scope.ScopedAccessError exception);
+static jbool closeScope0(JNIEnv *env, jobject this, jobject scope, jobject exception)
+{
+    // todo 
+    return true;
+}
+
+static JNINativeMethod ScopedMemoryAccess_natives[] = {
+        { "closeScope0", "(Ljdk/internal/misc/ScopedMemoryAccess$Scope;"
+                         "Ljdk/internal/misc/ScopedMemoryAccess$Scope$ScopedAccessError;)Z", 
+                         closeScope0 },
+};
+
+JNIEXPORT jint JNICALL JVM_IHashCode(JNIEnv *env, jobject obj);
+JNIEXPORT jobject JNICALL JVM_Clone(JNIEnv *env, jobject obj);
+JNIEXPORT void JNICALL JVM_MonitorWait(JNIEnv *env, jobject obj, jlong ms);
+JNIEXPORT void JNICALL JVM_MonitorNotify(JNIEnv *env, jobject obj);
+JNIEXPORT void JNICALL JVM_MonitorNotifyAll(JNIEnv *env, jobject obj);
+
+static void Unsafe_registerNatives(JNIEnv *env, jclass cls)
+{
+    (*env)->RegisterNatives(env, cls, Unsafe_natives, ARRAY_LENGTH(Unsafe_natives));
+}
+
+static void MethodHandleNatives_registerNatives(JNIEnv *env, jclass cls)
+{
+    (*env)->RegisterNatives(env, cls, 
+                MethodHandleNatives_natives, ARRAY_LENGTH(MethodHandleNatives_natives));
+}
+
+static void ScopedMemoryAccess_registerNatives(JNIEnv *env, jclass cls)
+{
+    (*env)->RegisterNatives(env, cls, 
+                ScopedMemoryAccess_natives, ARRAY_LENGTH(ScopedMemoryAccess_natives));
+}
 
 void init_native() 
 {
-    register_natives("java/lang/Object", Object_natives, ARRAY_LENGTH(Object_natives));
-    register_natives("jdk/internal/misc/ScopedMemoryAccess", 
-                    ScopedMemoryAccess_natives, ARRAY_LENGTH(ScopedMemoryAccess_natives));
-    register_natives("jdk/internal/misc/Unsafe", Unsafe_natives, ARRAY_LENGTH(Unsafe_natives));
-    register_natives("java/lang/invoke/MethodHandle", MethodHandle_natives, ARRAY_LENGTH(MethodHandle_natives));
-    register_natives("java/lang/invoke/MethodHandleNatives", MethodHandleNatives_natives, ARRAY_LENGTH(MethodHandleNatives_natives));
-}
+    Class *c = load_boot_class(S(java_lang_Object));
+    get_declared_method(c, "hashCode", "()I")->native_method = JVM_IHashCode;
+    get_declared_method(c, "clone", "()" OBJ)->native_method = JVM_Clone;
+    get_declared_method(c, "notifyAll", "()V")->native_method = JVM_MonitorNotifyAll;
+    get_declared_method(c, "notify", "()V")->native_method = JVM_MonitorNotify;
+    get_declared_method(c, "wait", "(J)V")->native_method = JVM_MonitorWait;
 
+    c = load_boot_class("jdk/internal/misc/Unsafe");
+    get_declared_method(c, "registerNatives", "()V")->native_method = Unsafe_registerNatives;
 
-#define NATIVE_METHOD_OWNED_CLASS_MAX_COUNT 512 // big enough
+    c = load_boot_class("java/lang/invoke/MethodHandle");
+    get_declared_method(c, "invokeExact",     "([" OBJ_ OBJ)->native_method = MH_invokeExact;
+    get_declared_method(c, "invoke",          "([" OBJ_ OBJ)->native_method = MH_invoke;
+    get_declared_method(c, "invokeBasic",     "([" OBJ_ OBJ)->native_method = MH_invokeBasic;
+    get_declared_method(c, "linkToVirtual",   "([" OBJ_ OBJ)->native_method = MH_linkToVirtual;
+    get_declared_method(c, "linkToStatic",    "([" OBJ_ OBJ)->native_method = MH_linkToStatic;
+    get_declared_method(c, "linkToSpecial",   "([" OBJ_ OBJ)->native_method = MH_linkToSpecial;
+    get_declared_method(c, "linkToInterface", "([" OBJ_ OBJ)->native_method = MH_linkToInterface;
 
-static struct native_owned_class {
-    const utf8_t *class_name;
-    JNINativeMethod *methods;
-    int methods_count;
-} classes[NATIVE_METHOD_OWNED_CLASS_MAX_COUNT];
+    c = load_boot_class("java/lang/invoke/MethodHandleNatives");
+    get_declared_method(c, "registerNatives", "()V")->native_method = MethodHandleNatives_registerNatives;
 
-static int classes_count = 0;
-
-void register_natives(const char *class_name, JNINativeMethod *methods, int methods_count)
-{
-    assert(class_name != NULL && methods != NULL && methods_count > 0);
-
-    if (classes_count >= NATIVE_METHOD_OWNED_CLASS_MAX_COUNT) {
-        ERR("Too many native methods, register natives failed"); // todo
-        return;
-    }
-
-    // classes[classes_count].class_name = class_name;
-    // classes[classes_count].methods = methods;
-    // classes[classes_count].methods_count = methods_count;
-    // classes_count++;
-    classes[classes_count++] = (struct native_owned_class) { class_name, methods, methods_count };
-}
-
-JNINativeMethod *find_native_method(const char *class_name, const char *method_name, const char *method_descriptor)
-{
-    assert(class_name != NULL && method_name != NULL);
-
-    for (int i = 0; i < classes_count; i++) {
-        if (utf8_equals(classes[i].class_name, class_name)) {
-            for (int j = 0; j < classes[i].methods_count; j++) {
-                if (utf8_equals(classes[i].methods[j].name, method_name) 
-                    && utf8_equals(classes[i].methods[j].signature, method_descriptor)) {
-                    return &(classes[i].methods[j]);
-                }
-            }
-            return NULL; // not find
-        }
-    }
-
-    return NULL; // not find
+    c = load_boot_class("jdk/internal/misc/ScopedMemoryAccess");
+    get_declared_method(c, "registerNatives", "()V")->native_method = ScopedMemoryAccess_registerNatives;
 }

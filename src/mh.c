@@ -6,40 +6,55 @@
 static Class *constructor_reflect_class;
 static Class *method_reflect_class;
 static Class *field_reflect_class;
+static Class *RMN_class;
+static Class *MN_class;
 
-static Class *member_name_class;
-static Field *mn_clazz_field;
-static Field *mn_name_field;
-static Field *mn_type_field;
-static Field *mn_flags_field;
-static Field *mn_vmtarget_field;
-static Method *mn_getSignature_method;
+static Field *MN_clazz_field;
+static Field *MN_name_field;
+static Field *MN_type_field;
+static Field *MN_flags_field;
+static Field *MN_method_field;
+static Method *MN_getSignature_method;
+
+// final class ResolvedMethodName {
+//     //@Injected JVM_Method* vmtarget;
+//     //@Injected Class<?>    vmholder;
+// };
+static Field *RMN_vmtarget_field;
+static Field *RMN_vmholder_field;
 
 void init_method_handle()
 {
     constructor_reflect_class = load_boot_class(S(java_lang_reflect_Constructor));
     method_reflect_class = load_boot_class(S(java_lang_reflect_Method));
     field_reflect_class = load_boot_class(S(java_lang_reflect_Field));
+    MN_class = load_boot_class("java/lang/invoke/MemberName");
+    RMN_class = load_boot_class("java/lang/invoke/ResolvedMethodName");
 
-    Class *c = member_name_class = load_boot_class("java/lang/invoke/MemberName");
     // private Class<?> clazz;
-    mn_clazz_field = get_declared_field0(c, S(clazz), S(sig_java_lang_Class));
+    MN_clazz_field = get_declared_field0(MN_class, S(clazz), S(sig_java_lang_Class));
     // private String name;
-    mn_name_field = get_declared_field0(c, S(name), S(sig_java_lang_String));
+    MN_name_field = get_declared_field0(MN_class, S(name), S(sig_java_lang_String));    
+    // type maybe a String or an Object[] or a MethodType
+    // Object[]: (Class<?>) Object[0] is return type
+    //           (Class<?>[]) Object[1] is parameter types
     // private Object type;
-    mn_type_field = get_declared_field0(c, S(type), S(sig_java_lang_Object));
+    MN_type_field = get_declared_field0(MN_class, S(type), S(sig_java_lang_Object));
     // private int flags;
-    mn_flags_field = get_declared_field0(c, S(flags), S(I));
-    // private int flags;
-    mn_vmtarget_field = get_declared_field0(c, "vmtarget", S(sig_java_lang_Object));
+    MN_flags_field = get_declared_field0(MN_class, S(flags), S(I));
+    // private ResolvedMethodName method;    // cached resolved method information
+    MN_method_field = get_declared_field0(MN_class, "method", "Ljava/lang/invoke/ResolvedMethodName;");
     // public String getSignature();
-    mn_getSignature_method = get_declared_inst_method(c, "getSignature", S(___java_lang_String));
+    MN_getSignature_method = get_declared_inst_method(MN_class, "getSignature", S(___java_lang_String));
+
+    RMN_vmtarget_field = get_declared_field0(RMN_class, "vmtarget", S(sig_java_lang_Object));
+    RMN_vmholder_field = get_declared_field0(RMN_class, "vmholder", S(sig_java_lang_Class));
 
     if (constructor_reflect_class == NULL || method_reflect_class == NULL
-        || field_reflect_class == NULL || member_name_class == NULL
-        || mn_clazz_field == NULL || mn_name_field == NULL || mn_type_field == NULL
-        || mn_flags_field == NULL || mn_vmtarget_field == NULL
-        || mn_getSignature_method == NULL) {
+        || field_reflect_class == NULL || MN_class == NULL
+        || MN_clazz_field == NULL || MN_name_field == NULL || MN_type_field == NULL
+        || MN_flags_field == NULL || MN_method_field == NULL
+        || MN_getSignature_method == NULL) {
         JVM_PANIC("initMethodHandle");  // todo
         // throw runtime_error("initMethodHandle"); // todo
     }
@@ -108,10 +123,10 @@ jref member_name::memberName(Method *m, jbyte refKind)
 {
     assert(m != NULL);
 
-    Class *mn = loadBootClass("java/lang/invoke/MemberName");
+    Class *MN = loadBootClass("java/lang/invoke/MemberName");
     // public MemberName(Class<?> defClass, String name, MethodType type, byte refKind);
-    auto cons = get_constructor(mn, "(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/invoke/MethodType;B)V");
-    jref o = alloc_object(mn);
+    auto cons = get_constructor(MN, "(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/invoke/MethodType;B)V");
+    jref o = alloc_object(MN);
     jref mt = findMethodType(m->descriptor, m->clazz->loader);
     execJavaFunc(cons, { rslot(o), rslot(m->clazz->java_mirror), rslot(alloc_string(m->name)),
                          rslot(mt), islot(refKind) });
@@ -122,9 +137,9 @@ jbyte member_name::getRefKind(jref member_name)
 {
     assert(member_name != NULL);
 
-    Class *mn = loadBootClass("java/lang/invoke/MemberName");
+    Class *MN = loadBootClass("java/lang/invoke/MemberName");
     // public byte getReferenceKind();
-    auto m = get_declared_inst_method(mn, "getReferenceKind", "()B");
+    auto m = get_declared_inst_method(MN, "getReferenceKind", "()B");
     return slot_get_byte(exec_java_func1(m, {member_name}));
 }
 
@@ -132,9 +147,9 @@ bool member_name::isMethod(jref member_name)
 {
     assert(member_name != NULL);
 
-    Class *mn = loadBootClass("java/lang/invoke/MemberName");
+    Class *MN = loadBootClass("java/lang/invoke/MemberName");
     // public boolean isMethod();
-    auto m = get_declared_inst_method(mn, "isMethod", "()Z");
+    auto m = get_declared_inst_method(MN, "isMethod", "()Z");
     return slot_get_bool(exec_java_func1(m, {member_name})) != jfalse;
 }
 
@@ -142,9 +157,9 @@ bool member_name::isConstructor(jref member_name)
 {
     assert(member_name != NULL);
 
-    Class *mn = loadBootClass("java/lang/invoke/MemberName");
+    Class *MN = loadBootClass("java/lang/invoke/MemberName");
     // public boolean isConstructor();
-    auto m = get_declared_inst_method(mn, "isConstructor", "()Z");
+    auto m = get_declared_inst_method(MN, "isConstructor", "()Z");
     return slot_get_bool(exec_java_func1(m, {member_name})) != jfalse;
 }
 
@@ -152,9 +167,9 @@ bool member_name::isField(jref member_name)
 {
     assert(member_name != NULL);
 
-    Class *mn = loadBootClass("java/lang/invoke/MemberName");
+    Class *MN = loadBootClass("java/lang/invoke/MemberName");
     // public boolean isField();
-    auto m = get_declared_inst_method(mn, "isField", "()Z");
+    auto m = get_declared_inst_method(MN, "isField", "()Z");
     return slot_get_bool(exec_java_func1(m, {member_name})) != jfalse;
 }
 
@@ -162,9 +177,9 @@ bool member_name::isType(jref member_name)
 {
     assert(member_name != NULL);
 
-    Class *mn = loadBootClass("java/lang/invoke/MemberName");
+    Class *MN = loadBootClass("java/lang/invoke/MemberName");
     // public boolean isType();
-    auto m = get_declared_inst_method(mn, "isType", "()Z");
+    auto m = get_declared_inst_method(MN, "isType", "()Z");
     return slot_get_bool(exec_java_func1(m, {member_name})) != jfalse;
 }
 
@@ -172,9 +187,9 @@ bool member_name::isStatic(jref member_name)
 {
     assert(member_name != NULL);
 
-    Class *mn = loadBootClass("java/lang/invoke/MemberName");
+    Class *MN = loadBootClass("java/lang/invoke/MemberName");
     // public boolean isStatic();
-    auto m = get_declared_inst_method(mn, "isStatic", "()Z");
+    auto m = get_declared_inst_method(MN, "isStatic", "()Z");
     return slot_get_bool(exec_java_func1(m, {member_name})) != jfalse;
 }
 
@@ -204,6 +219,7 @@ bool member_name::isStatic(jref member_name)
 
 static int methodFlags(Method *m)
 {
+    assert(m != NULL);
     int flags = m->access_flags;
 
     if(m->access_flags & MB_CALLER_SENSITIVE)
@@ -212,9 +228,12 @@ static int methodFlags(Method *m)
     return flags;
 }
 
-void initMemberName(jref member_name, jref target)
+void init_member_name(jref member_name, jref target)
 {
     assert(member_name != NULL && target != NULL);
+
+    // todo 要不要判断一下resolved_method_name是否为空
+    // jref resolved_method_name = get_ref_field0(member_name, MN_method_field);
 
     /*
      * in fact, `target` will be one of these three:
@@ -243,9 +262,13 @@ void initMemberName(jref member_name, jref target)
 
         flags |= ref_kind << REFERENCE_KIND_SHIFT;
 
-        set_ref_field0(member_name, mn_clazz_field, decl_class->java_mirror);
-        set_int_field0(member_name, mn_flags_field, flags);
-        set_ref_field0(member_name, mn_vmtarget_field, (jref) (void *) m);
+        set_ref_field0(member_name, MN_clazz_field, decl_class->java_mirror);
+        set_int_field0(member_name, MN_flags_field, flags);
+
+        jref resolved_method_name = alloc_object(RMN_class);
+        set_ref_field0(resolved_method_name, RMN_vmtarget_field, (jref) (void *) m);
+        // set_ref_field0(resolved_method_name, RMN_vmholder_field, ); // todo RMN_vmholder_field怎么设置
+        set_ref_field0(member_name, MN_method_field, resolved_method_name);
         return;
 
 //        int slot = INST_DATA(target, int, mthd_slot_offset);
@@ -332,11 +355,78 @@ void initMemberName(jref member_name, jref target)
     raise_exception(S(java_lang_InternalError), NULL);  // todo msg
 }
 
-void expandMemberName(jref member_name)
+
+void expand_member_name(jref member_name)
 {
     assert(member_name != NULL);
+    
+    jref resolved = get_ref_field0(member_name, MN_method_field);
+    if (resolved == NULL) {
+        // signalException(java_lang_IllegalArgumentException, "resolved");
+        JVM_PANIC("java_lang_IllegalArgumentException");   // todo
+    }
 
-    JVM_PANIC("expandMemberName");
+    Method *vmtarget = (Method *) get_ref_field0(resolved, RMN_vmtarget_field);
+    jclsRef vmholder = get_ref_field0(resolved, RMN_vmholder_field);
+    assert(vmtarget != NULL && vmholder != NULL);
+
+    jstrRef name = get_ref_field0(member_name, MN_name_field);
+    jref type = get_ref_field0(member_name, MN_type_field);
+    jint flags = get_int_field0(member_name, MN_flags_field);
+
+    switch (flags & ALL_KINDS) {
+    case IS_METHOD:
+    case IS_CONSTRUCTOR:
+        if (name == NULL) {
+            set_ref_field0(member_name, MN_name_field, intern_string(alloc_string(vmtarget->name)));
+        }
+        if (type == NULL) {
+            // todo type的类型？
+            set_ref_field0(member_name, MN_type_field, alloc_string(vmtarget->descriptor));
+        }
+        break;
+    case IS_FIELD:
+        JVM_PANIC("not implement");   // todo
+        break;
+    default:
+        //  signalException(java_lang_InternalError, "flags kind"); 
+        JVM_PANIC("java_lang_InternalError");   // todo
+    }
+
+#if 0
+Object *name = INST_DATA(mname, Object*, mem_name_name_offset);
+        Object *type = INST_DATA(mname, Object*, mem_name_type_offset);
+        int flags = INST_DATA(mname, int, mem_name_flags_offset);
+
+        switch(flags & ALL_KINDS) {
+            case IS_METHOD:
+            case IS_CONSTRUCTOR: {
+                MethodBlock *mb = vmtarget;
+
+                if(name == NULL)
+                    INST_DATA(mname, Object*, mem_name_name_offset) =
+                                     findInternedString(createString(mb->name));
+                if(type == NULL)
+                    INST_DATA(mname, Object*, mem_name_type_offset) =
+                                     createString(mb->type);
+                break;
+            }
+
+            case IS_FIELD: {
+                FieldBlock *fb = vmtarget;
+
+                if(name == NULL)
+                    INST_DATA(mname, Object*, mem_name_name_offset) =
+                                     findInternedString(createString(fb->name));
+                if(type == NULL)
+                    INST_DATA(mname, Object*, mem_name_type_offset) =
+                                     getFieldType(fb);
+                break;
+            }
+
+            default:
+                signalException(java_lang_InternalError, "flags kind");
+#endif
 }
 
 //static int polymorphicNameID(Class *clazz, const char *name) {
@@ -359,14 +449,14 @@ void expandMemberName(jref member_name)
 
 // void *find_native_method(const char *class_name, const char *method_name, const char *method_type);
 
-Object *resolveMemberName(jref member_name, Class *caller)
+Object *resolve_member_name(jref member_name, Class *caller)
 {
     assert(member_name != NULL);
 
-    jstrRef name_str = get_ref_field0(member_name, mn_name_field);
-    Class *clazz = get_ref_field0(member_name, mn_clazz_field)->jvm_mirror;
-    jref type = get_ref_field0(member_name, mn_type_field);
-    jint flags = get_int_field0(member_name, mn_flags_field);
+    jstrRef name_str = get_ref_field0(member_name, MN_name_field);
+    Class *clazz = get_ref_field0(member_name, MN_clazz_field)->jvm_mirror;
+    jref type = get_ref_field0(member_name, MN_type_field);
+    jint flags = get_int_field0(member_name, MN_flags_field);
 
     if(clazz == NULL || name_str == NULL || type == NULL) {
         JVM_PANIC("resolveMemberName"); // todo
@@ -379,7 +469,7 @@ Object *resolveMemberName(jref member_name, Class *caller)
         JVM_PANIC("11111111111"); // todo
     }
 
-    jstrRef sig_str = slot_get_ref(exec_java_func1(mn_getSignature_method, member_name));
+    jstrRef sig_str = slot_get_ref(exec_java_func1(MN_getSignature_method, member_name));
     const utf8_t *sig = string_to_utf8(sig_str);
 
 //    auto xx = toMethodDescriptor(type)->toUtf8();
@@ -403,13 +493,13 @@ Object *resolveMemberName(jref member_name, Class *caller)
             }
 
             flags |= methodFlags(m);
-            set_int_field0(member_name, mn_flags_field, flags);
+            set_int_field0(member_name, MN_flags_field, flags);
 
 //            const utf8_t *aa = clazz->class_name;
 //            const utf8_t *bb = name;
 //            const utf8_t *cc = sig;
 
-            set_ref_field0(member_name, mn_vmtarget_field, (jref) (void *) m);
+            // set_ref_field0(member_name, MN_vmtarget_field, (jref) (void *) m);
             return member_name;
         }
         case IS_CONSTRUCTOR: {
@@ -422,8 +512,8 @@ Object *resolveMemberName(jref member_name, Class *caller)
             }
 
             flags |= methodFlags(m);
-            set_int_field0(member_name, mn_flags_field, flags);
-            set_ref_field0(member_name, mn_vmtarget_field, (jref) (void *) m);
+            set_int_field0(member_name, MN_flags_field, flags);
+            // set_ref_field0(member_name, MN_vmtarget_field, (jref) (void *) m);
             return member_name;
         }
         case IS_FIELD: {
@@ -437,8 +527,8 @@ Object *resolveMemberName(jref member_name, Class *caller)
             }
 
             flags |= f->access_flags;
-            set_int_field0(member_name, mn_flags_field, flags);
-            set_ref_field0(member_name, mn_vmtarget_field, (jref) (void *) f);
+            set_int_field0(member_name, MN_flags_field, flags);
+            // set_ref_field0(member_name, MN_vmtarget_field, (jref) (void *) f);
             return member_name;
         }
         default:
@@ -447,6 +537,87 @@ Object *resolveMemberName(jref member_name, Class *caller)
     }
 
     JVM_PANIC("never reach here"); // todo
+}
+
+jint get_members(jclsRef defc, jstrRef match_name, 
+                        jstrRef match_sig, jint match_flags, jclsRef caller, jint skip, jref _results)
+{
+    assert(is_array_object(_results));
+
+    jarrRef results = (jarrRef)(_results);
+    int search_super = (match_flags & SEARCH_SUPERCLASSES) != 0;
+    int search_intf = (match_flags & SEARCH_INTERFACES) != 0;
+    int local = !(search_super || search_intf);
+//    char *name_sym = NULL;
+//    char *sig_sym = NULL;
+
+    if (match_name != NULL) {
+        // utf8_t *x = string_to_utf8(match_name);
+        JVM_PANIC("unimplemented");
+    }
+
+    if (match_sig != NULL) {
+        // utf8_t *x = string_to_utf8(match_sig);
+        JVM_PANIC("unimplemented");
+    }
+
+    if(match_flags & IS_FIELD)
+        JVM_PANIC("unimplemented");
+
+    if(!local)
+        JVM_PANIC("unimplemented");
+
+    if(match_flags & (IS_METHOD | IS_CONSTRUCTOR)) {
+        int count = 0;
+
+        for (u2 i = 0; i < defc->jvm_mirror->methods_count; i++) {
+            Method *m = defc->jvm_mirror->methods + i;
+            if(m->name == SYMBOL(class_init))
+                continue;
+            if(m->name == SYMBOL(object_init))
+                continue;
+            if(skip-- > 0)
+                continue;
+
+            if(count < results->arr_len) {
+                Object *member_name = array_get(jref, results, count);
+                count++;
+                int flags = methodFlags(m) | IS_METHOD;
+
+                flags |= (IS_STATIC(m) ? JVM_REF_invokeStatic : JVM_REF_invokeVirtual) << REFERENCE_KIND_SHIFT;
+
+                set_int_field0(member_name, MN_flags_field, flags);
+                set_int_field0(member_name, MN_clazz_field, m->clazz->java_mirror);
+                set_int_field0(member_name, MN_name_field, intern_string(alloc_string(m->name)));
+                set_int_field0(member_name, MN_type_field, alloc_string(m->descriptor));
+                // INST_DATA(mname, int, mem_name_flags_offset) = flags;
+                // INST_DATA(mname, Class*, mem_name_clazz_offset) = mb->class;
+                // INST_DATA(mname, Object*, mem_name_name_offset) =
+                //                 findInternedString(createString(mb->name));
+                // INST_DATA(mname, Object*, mem_name_type_offset) =
+                //                 createString(mb->type);
+                // INST_DATA(mname, MethodBlock*, mem_name_vmtarget_offset) = mb;
+            }
+        }
+
+        return count;
+    }
+
+
+    JVM_PANIC("unimplemented");   
+}
+
+jlong member_name_object_field_offset(jref member_name)
+{
+    Class *clazz = get_ref_field0(member_name, MN_clazz_field)->jvm_mirror;
+    jstrRef name = get_ref_field0(member_name, MN_name_field);
+    jref type = get_ref_field0(member_name, MN_type_field);
+
+    Method *m = lookup_inst_method(member_name->clazz, "getSignature", "()Ljava/lang/String;");
+    jref sig = slot_get_ref(exec_java_func1(m, member_name));
+
+    Field *f = lookup_field(clazz, string_to_utf8(name), string_to_utf8(sig));
+    return f->id;
 }
 
 /* ----------------------------------------------------------------------------------------- */
