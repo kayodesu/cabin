@@ -445,4 +445,18 @@ jint JNICALL JNI_GetCreatedJavaVMs(JavaVM **, jsize, jsize *);
 
 // void JNICALL JNI_OnUnload(JavaVM *vm, void *reserved);
 
+#define JNI_THROW(_env, _excep_class_name, msg) \
+    (*(_env))->ThrowNew(_env, (jclass) (load_boot_class(_excep_class_name)->java_mirror), msg)
+
+#define JNI_THROW_NPE(_env, msg) JNI_THROW(_env, S(java_lang_NullPointerException), msg)
+
+#define JNI_THROW_IllegalArgumentException(_env, msg) \
+    JNI_THROW(_env, S(java_lang_IllegalArgumentException), msg)
+
+#define JNI_THROW_NegativeArraySizeException(_env, msg) \
+    JNI_THROW(_env, S(java_lang_NegativeArraySizeException), msg)
+
+#define JNI_THROW_ArrayIndexOutOfBoundsException(_env, msg) \
+    JNI_THROW(_env, S(java_lang_ArrayIndexOutOfBoundsException), msg)
+
 #endif //CABIN_JNI_H

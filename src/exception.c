@@ -14,7 +14,7 @@ void raise_exception(const char *exception_class_name, const char *msg)
         exit(1); // todo
     }
     Thread *thread = get_current_thread();
-    if (thread->exception != NULL) {
+    if (thread->exception == NULL) {
         Class *ec = load_class(g_app_class_loader, exception_class_name);
         assert(ec != NULL); // todo
 
@@ -26,9 +26,9 @@ void raise_exception(const char *exception_class_name, const char *msg)
             exec_java(get_constructor(ec, S(_java_lang_String__V)), 
                         (slot_t[]) { rslot(thread->exception), rslot(alloc_string(msg)) });
         }
-
-        longjmp(thread->jmpbuf, LONG_JMP_JAVA_EXCEP_VALUE);
     }
+
+    longjmp(thread->jmpbuf, LONG_JMP_JAVA_EXCEP_VALUE);
 }
 
 void print_stack_trace(Object *e)

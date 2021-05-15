@@ -49,18 +49,20 @@ static slot_t *execJavaV(Method *m, jref this, va_list args)
     for (int i = 0; i < args_count; i++, k++) {
         Class *c = array_get(jclsRef, types, i)->jvm_mirror;
 
+        // 可变长参数列表误区与陷阱——va_arg不可接受的类型：
+        // https://www.cnblogs.com/shiweihappy/p/4246442.html
         if (is_boolean_class(c)) {
-            slot_set_bool(real_args + k, va_arg(args, jboolean));
+            slot_set_bool(real_args + k, va_arg(args, jint));
         } else if (is_byte_class(c)) {
-            slot_set_byte(real_args + k, va_arg(args, jbyte));
+            slot_set_byte(real_args + k, va_arg(args, jint));
         } else if (is_char_class(c)) {
-            slot_set_char(real_args + k, va_arg(args, jchar));
+            slot_set_char(real_args + k, va_arg(args, jint));
         } else if (is_short_class(c)) {
-            slot_set_short(real_args + k, va_arg(args, jshort));
+            slot_set_short(real_args + k, va_arg(args, jint));
         } else if (is_int_class(c)) {
             slot_set_int(real_args + k, va_arg(args, jint));
         } else if (is_float_class(c)) {
-            slot_set_float(real_args + k, va_arg(args, jfloat));
+            slot_set_float(real_args + k, va_arg(args, jdouble));
         } else if (is_long_class(c)) { // category_two 
             slot_set_long(real_args + k++, va_arg(args, jlong));
         } else if (is_double_class(c)) { // category_two
@@ -221,6 +223,8 @@ jint JNICALL Cabin_Throw(JNIEnv *env, jthrowable obj)
 jint JNICALL Cabin_ThrowNew(JNIEnv *env, jclass clazz, const char *msg)
 {
     Class *c = JVM_MIRROR(clazz);
+
+    // raise_exception(S(java_lang_NullPointerException), "xxx");
     // todo
     JVM_PANIC("not implement.");
 
@@ -348,7 +352,7 @@ jobject JNICALL Cabin_NewObjectV(JNIEnv *env, jclass clazz, jmethodID methodID, 
         // todo error
     }
 
-    slot_t *ret = execJavaV((Method *) methodID, o, args); 
+    slot_t *ret = execJavaV((Method *) methodID, (jref) o, args); 
     return (jobject) RSLOT(ret);
 }
 
@@ -359,7 +363,7 @@ jobject JNICALL Cabin_NewObjectA(JNIEnv *env, jclass clazz, jmethodID methodID, 
         // todo error
     }
 
-    slot_t *ret = execJavaA((Method *) methodID, o, args);
+    slot_t *ret = execJavaA((Method *) methodID, (jref) o, args);
     return (jobject) RSLOT(ret);
 }
 
@@ -705,7 +709,7 @@ jsize JNICALL Cabin_GetArrayLength(JNIEnv *env, jarray arr)
 jobjectArray JNICALL Cabin_NewObjectArray(JNIEnv *env, jsize len, jclass elementClass, jobject init)
 {
     if (len < 0) {
-        // todo java_lang_NegativeArraySizeException
+        JNI_THROW_NegativeArraySizeException(env, NULL);
     }
     
     jarrRef arr = alloc_array(array_class(JVM_MIRROR(elementClass)), len);
@@ -731,8 +735,8 @@ jobject JNICALL Cabin_GetObjectArrayElement(JNIEnv *env, jobjectArray array, jsi
 void JNICALL Cabin_SetObjectArrayElement(JNIEnv *env, jobjectArray array, jsize index, jobject val)
 {
     jarrRef ao = (jarrRef) array;
-    if (index <= 0 || index >= ao->arr_len) {
-        // todo error
+    if (index < 0 || index >= ao->arr_len) {
+        JNI_THROW_ArrayIndexOutOfBoundsException(env, NULL); // todo msg
     }
 
     array_set_ref(ao, index, (jref) val);
@@ -742,7 +746,7 @@ void JNICALL Cabin_SetObjectArrayElement(JNIEnv *env, jobjectArray array, jsize 
 jarray JNICALL Cabin_New##Type##Array(JNIEnv *env, jsize len) \
 { \
     if (len < 0) { \
-        /* todo java_lang_NegativeArraySizeException */ \
+        JNI_THROW_NegativeArraySizeException(env, NULL); \
     } \
  \
     jarrRef arr = alloc_array0(BOOT_CLASS_LOADER, class_name, len); \
@@ -874,44 +878,13 @@ jint JNICALL Cabin_GetJavaVM(JNIEnv *env, JavaVM **vm)
 
 void JNICALL Cabin_GetStringRegion(JNIEnv *env, jstring str, jsize start, jsize len, jchar *buf)
 {
-    // jstrRef so = (jstrRef)str;
-    // // private final byte coder;
-    // // 可取一下两值之一：
-    // // @Native static final byte LATIN1 = 0;
-    // // @Native static final byte UTF16  = 1;
-    // jbyte code = get_byte_field(so, S(coder));
-    // if (code == 1) {
-    //     // private final byte[] value;
-    //     jarrRef value = get_ref_field(so, S(value), S(array_B));
-    //     jchar *s = (jchar *) value->data;
-    //     strncpy(buf, s + start, len);
-    // } else {
-    //     unicode_t *u = string_to_unicode(so);
-    //     memcpy(buf, u + start, len * sizeof(unicode_t));
-    // }
-    
     unicode_t *u = string_to_unicode((jstrRef) str);
     memcpy(buf, u + start, len * sizeof(unicode_t));
     buf[len] = 0;
 }
 
 void JNICALL Cabin_GetStringUTFRegion(JNIEnv *env, jstring str, jsize start, jsize len, char *buf)
-{    
-    // // private final byte coder;
-    // // 可取一下两值之一：
-    // // @Native static final byte LATIN1 = 0;
-    // // @Native static final byte UTF16  = 1;
-    // jbyte code = get_byte_field(so, S(coder));
-    // if (code == 1) {
-    //     utf8_t *u = string_to_utf8(so);
-    //     strncpy(buf, u + start, len);
-    // } else {
-    //     // private final byte[] value;
-    //     jarrRef value = get_ref_field(so, S(value), S(array_B));
-    //     char *s = (char *) value->data;
-    //     strncpy(buf, s + start, len);
-    // }
-
+{   
     utf8_t *u = string_to_utf8((jstrRef) str);
     strncpy(buf, u + start, len);
     buf[len] = 0;
