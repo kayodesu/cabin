@@ -2,7 +2,7 @@
 #include <stddef.h>
 #include <string.h>
 #include "dynstr.h"
-#include "../cabin.h"
+#include "cabin.h"
 
 
 #define INIT_LEN 128
@@ -16,7 +16,7 @@ void dynstr_init(DynStr *ds)
     ds->buf[0] = 0; // end string
 }
 
-static DynStr *dynstr_reserve(DynStr *ds, size_t min_len)
+DynStr *dynstr_reserve(DynStr *ds, size_t min_len)
 {
     assert(ds != NULL);
 
@@ -53,11 +53,6 @@ DynStr *dynstr_concat(DynStr *ds, const char *s)
     strcat(ds->buf, s);
 
     return ds;
-}
-
-DynStr *dynstr_printf(DynStr *ds, const char * format, ...)
-{
-    JVM_PANIC("dynstr_printf");
 }
 
 void dynstr_release(DynStr *ds)

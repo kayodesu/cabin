@@ -1,5 +1,5 @@
-#include "util/encoding.h"
-#include "util/dynstr.h"
+#include "cabin.h"
+#include "dynstr.h"
 
 
 // @b0: include
@@ -47,7 +47,7 @@ static Object *convert_desc_element_to_class_object(char **b0, const char *e, jr
             class_name[i] = b[i];
         }
         class_name[len - 1] = 0;
-        Class *c = loadArrayClass(loader, class_name);
+        Class *c = load_array_class(loader, class_name);
         *b0 = t;
         return c->java_mirror;
     }

@@ -1,6 +1,7 @@
+#include "cabin.h"
 #include "symbol.h"
-#include "util/dynstr.h"
-#include "util/encoding.h"
+#include "dynstr.h"
+#include "heap.h"
 
 
 static inline void init(Object *o, Class *c)
@@ -8,47 +9,6 @@ static inline void init(Object *o, Class *c)
     o->clazz = c;
     pthread_mutex_init(&o->mutex, &g_pthread_mutexattr_recursive);
 }
-
-// Object::Object(Class *c) 
-// {
-//     init(this, c);
-
-//     data = (slot_t *) (this + 1);
-// }
-
-// Object::Object(Class *ac, jint arr_len) 
-// {
-//     assert(ac != NULL);
-//     assert(is_array_class(ac));
-//     assert(arr_len >= 0); // 长度为0的array是合法的
-
-//     init(this, ac);
-
-//     this->arr_len = arr_len;
-//     // java 数组创建后要赋默认值，0, 0.0, false,'\0', NULL 之类的
-//     // heap 申请对象时已经清零了。
-//     data = (slot_t *) (this + 1);
-// }
-
-// Object::Object(Class *ac, jint dim, const jint lens[]) 
-// {
-//     assert(ac != NULL);
-//     assert(dim >= 1);
-//     assert(is_array_class(ac));
-
-//     init(this, ac);
-
-//     arr_len = lens[0];
-//     assert(arr_len >= 0); // 长度为0的array是合法的
-
-//     data = (slot_t *) (this + 1);
-
-//     for (int d = 1; d < dim; d++) {
-//         for (int i = 0; i < arr_len; i++) {
-//             array_set_ref(this, i, alloc_multi_array(component_class(ac), dim - 1, lens + 1));
-//         }
-//     }
-// }
 
 static Object *create_non_array_object(Class *c, bool is_in_heap)
 {
@@ -92,13 +52,6 @@ Object *alloc_array(Class *ac, jint arr_len)
 
 Object *alloc_multi_array(Class *ac, jint dim, const jint lens[])
 {
-//     assert(dim >= 1);
-//     assert(is_array_class(c));
-
-// //    size_t size = sizeof(Array) + ac->getEleSize()*lens[0];
-//     return new (heap_malloc(g_heap, array_object_size(c, lens[0]))) Object(c, dim, lens);
-
-
     assert(ac != NULL);
     assert(dim >= 1);
     assert(is_array_class(ac));
@@ -120,12 +73,6 @@ Object *alloc_multi_array(Class *ac, jint dim, const jint lens[])
 
     return o;
 }
-
-// Field *Object::lookupField(const char *name, const char *descriptor)
-// {
-//     assert(name != NULL && descriptor != NULL);
-//     return lookup_inst_field(clazz, name, descriptor);
-// }
 
 Object *clone_object(const Object *o) 
 {
@@ -161,15 +108,13 @@ void set_field_value1(Object *o, int id, jref value)
     assert(o != NULL);
     Field *f = lookup_inst_field(o->clazz, id);
 
-    if (value == NULL) {
-        set_ref_field0(o, f, NULL);
-    } else if (is_prim_field(f)) {
+    if (is_prim_field(f)) {
         const slot_t *unbox = prim_wrapper_obj_unbox(value);
         o->data[id] = *unbox;
         if (f->category_two)
             o->data[id+1] = *++unbox;
     } else {
-        set_ref_field0(o, f, NULL);
+        set_ref_field0(o, f, value);
     }
 }
 
@@ -214,6 +159,7 @@ const char *get_object_info(const Object *o)
     DynStr ds;
     dynstr_init(&ds);
     dynstr_printf(&ds, "Object(%p), %s\n", o, o->clazz->class_name);
+    // todo
     return ds.buf;
 }
 
@@ -358,7 +304,7 @@ utf8_t *string_to_utf8(jstrRef so)
         return u;
     }
 
-    JVM_PANIC("never go here"); // todo
+    SHOULD_NEVER_REACH_HERE("%d", code);
 }
 
 unicode_t *string_to_unicode(jstrRef so)
@@ -382,7 +328,7 @@ unicode_t *string_to_unicode(jstrRef so)
         return u;
     }
 
-    JVM_PANIC("never go here"); // todo
+    SHOULD_NEVER_REACH_HERE("%d", code);
 }
 
 jstrRef alloc_string(const utf8_t *str)
@@ -397,7 +343,7 @@ jstrRef alloc_string(const utf8_t *str)
 
     // set java/lang/String 的 value 变量赋值
     // private final byte[] value;
-    jarrRef value = alloc_array0(S(array_B), len); // [B
+    jarrRef value = alloc_array0(BOOT_CLASS_LOADER, S(array_B), len); // [B
     memcpy(value->data, str, len);
     set_ref_field(so, S(value), S(array_B), value);
 
@@ -421,7 +367,7 @@ bool string_equals(jstrRef x, jstrRef y)
 
     // public boolean equals(Object anObject);
     Method *equals = get_declared_inst_method(g_string_class, "equals", "(Ljava/lang/Object;)Z");
-    return slot_get_bool(exec_java_func2(equals, x, y)) != jfalse;
+    return slot_get_bool(exec_java(equals, (slot_t[]) { rslot(x), rslot(y) })) != jfalse;
 }
 
 size_t string_hash(jstrRef x)
@@ -430,7 +376,7 @@ size_t string_hash(jstrRef x)
 
     // public int hashCode();
     Method *hashCode = get_declared_inst_method(g_string_class, "hashCode", "()I");
-    return (size_t) slot_get_int(exec_java_func1(hashCode, x));
+    return (size_t) slot_get_int(exec_java(hashCode, (slot_t[]) { rslot(x) }));
 }
 
 

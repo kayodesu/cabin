@@ -1,10 +1,7 @@
-#include <time.h>
-#include <windows.h>
 #include "cabin.h"
-#include "util/encoding.h"
 #include "heap.h"
 #include "jni.h"
-#include "util/endianness.h"
+#include "symbol.h"
 
 Heap *g_heap;
 
@@ -167,6 +164,23 @@ static void read_jdk_version()
 
 pthread_mutexattr_t g_pthread_mutexattr_recursive;
 
+#define SYMBOL_VALUE(name, value) value
+
+const char *symbol_values[] = {
+        SYMBOL_PAIRS(SYMBOL_VALUE)
+};
+
+static void init_symbol()
+{
+    for (int i = 0; i < MAX_SYMBOL_ENUM; i++) {
+        const char *s = symbol_values[i];
+        const char *t = save_utf8(symbol_values[i]);
+        if (t != s) {
+            JVM_PANIC("symbol repeat."); // todo
+        }
+    }
+}
+
 void init_jvm(JavaVMInitArgs *vm_init_args)
 {    
     pthread_mutexattr_init(&g_pthread_mutexattr_recursive);
@@ -224,7 +238,7 @@ void init_jvm(JavaVMInitArgs *vm_init_args)
     
     Method *m = lookup_static_method(sys, "initPhase1", S(___V));
     assert(m != NULL);
-    exec_java_func(m, NULL);
+    exec_java(m, NULL);
 
     // todo
     // AccessibleObject.java中说AccessibleObject类会在initPhase1阶段初始化，
@@ -236,12 +250,12 @@ void init_jvm(JavaVMInitArgs *vm_init_args)
     //   todo "initPhase2 is not implement    
     // m = lookup_static_method(sys, "initPhase2", "(ZZ)I");
     // assert(m != NULL);
-    // jint ret = slot_get_int(exec_java_func(m, (slot_t[]) {islot(1), islot(1)}));
+    // jint ret = slot_get_int(exec_java(m, (slot_t[]) {islot(1), islot(1)}));
     // assert(ret == 0); // 等于0表示成功
 
     m = lookup_static_method(sys, "initPhase3", S(___V));
     assert(m != NULL);
-    exec_java_func(m, NULL);
+    exec_java(m, NULL);
 
     // --------------------------------------
 

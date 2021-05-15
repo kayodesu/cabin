@@ -1,4 +1,5 @@
-#include "util/encoding.h"
+#include "cabin.h"
+#include "hash.h"
 
 static PHS boot_packages;
 
@@ -9,23 +10,19 @@ static PHM boot_classes;  // todo 加读写锁
 // const Object *
 static PHS loaders;
 
-static void addClassToClassLoader(Object *class_loader, Class *c)
+static void add_class_to_class_loader(Object *class_loader, Class *c)
 {
     assert(c != NULL);
     if (class_loader == BOOT_CLASS_LOADER) {
-        // boot_classes.insert(make_pair(c->class_name, c));
         phm_insert(&boot_classes, c->class_name, c);
         return;
     }
 
-    // loaders.insert(class_loader);
     phs_add(&loaders, class_loader);
 
     if (class_loader->classes == NULL) {
-        // class_loader->classes = new unordered_map<const utf8_t *, Class *, Utf8Hash, Utf8Comparator>;
         class_loader->classes = phm_create((point_hash_func)utf8_hash, (point_equal_func)utf8_equals);
     }
-    // class_loader->classes->insert(make_pair(c->class_name, c));
     phm_insert(class_loader->classes, c->class_name, c);
 
     // Invoked by the VM to record every loaded class with this loader.
@@ -69,11 +66,6 @@ Class *load_boot_class(const utf8_t *name)
     assert(IS_SLASH_CLASS_NAME(name));
     assert(name[0] != '['); // don't load array class
 
-    // auto iter = boot_classes.find(name);
-    // if (iter != boot_classes.end()) {
-    //     TRACE("find loaded class (%s) from pool.", name);
-    //     return iter->second;
-    // }
     Class *found = (Class *) phm_find(&boot_classes, name);
     if (found != NULL) {
         TRACE("find loaded class (%s) from pool.", name);
@@ -95,13 +87,13 @@ Class *load_boot_class(const utf8_t *name)
         // boot_packages.insert(c->pkg_name);        
         phs_add(&boot_packages, c->pkg_name);   
         inject_fields(c);
-        addClassToClassLoader(BOOT_CLASS_LOADER, c);        
+        add_class_to_class_loader(BOOT_CLASS_LOADER, c);
     }
     
     return c;
 }
 
-Class *loadArrayClass(Object *loader, const utf8_t *arr_class_name)
+Class *load_array_class(Object *loader, const utf8_t *arr_class_name)
 {
     assert(arr_class_name != NULL);
     assert(arr_class_name[0] == '['); // must be array class name
@@ -123,13 +115,13 @@ Class *loadArrayClass(Object *loader, const utf8_t *arr_class_name)
         // boot_packages.insert(arr_class->pkg_name); // todo array class 的pkg_name是啥
         phs_add(&boot_packages, arr_class->pkg_name);    // todo array class 的pkg_name是啥
     }
-    addClassToClassLoader(arr_class->loader, arr_class);
+    add_class_to_class_loader(arr_class->loader, arr_class);
     return arr_class;
 }
 
 Class *load_type_array_class(ArrayType type)
 {
-    const char *arr_class_name;
+    const char *arr_class_name = NULL;
 
     switch (type) {
         case JVM_AT_BOOLEAN: arr_class_name = S(array_Z); break;
@@ -145,13 +137,11 @@ Class *load_type_array_class(ArrayType type)
             // throw java_lang_UnknownError("Invalid array type: " + to_string(type));
     }
 
-    return loadArrayClass0(arr_class_name);
+    return load_array_class(BOOT_CLASS_LOADER, arr_class_name);
 }
 
 const utf8_t *get_boot_package(const utf8_t *name)
 {
-    // auto iter = boot_packages.find(name);
-    // return iter != boot_packages.end() ? *iter : NULL;
     return (const utf8_t *) phs_find(&boot_packages, name);
 }
 
@@ -165,16 +155,12 @@ Class *find_loaded_class(Object *class_loader, const utf8_t *name)
     assert(name != NULL);
     assert(IS_SLASH_CLASS_NAME(name));
 
-    if (class_loader == NULL) {
-        // auto iter = boot_classes.find(name);
-        // return iter != boot_classes.end() ? iter->second : NULL;
+    if (class_loader == BOOT_CLASS_LOADER) {
         return (Class *) phm_find(&boot_classes, name);
     }
 
     // is not boot classLoader
     if (class_loader->classes != NULL) {
-        // auto iter = class_loader->classes->find(name);
-        // return iter != class_loader->classes->end() ? iter->second : NULL;
         return (Class *) phm_find(class_loader->classes, name);
     }
 
@@ -193,7 +179,7 @@ Class *load_class(Object *class_loader, const utf8_t *name)
         return c;
 
     if (slash_name[0] == '[')
-        return loadArrayClass(class_loader, slash_name);
+        return load_array_class(class_loader, slash_name);
 
     // 先尝试用boot class loader load the class
     c = load_boot_class(slash_name);
@@ -208,20 +194,15 @@ Class *load_class(Object *class_loader, const utf8_t *name)
     assert(m != NULL);
 
     utf8_t *dot_name = slash_to_dot_dup(name);
-    slot_t *slot = exec_java_func2(m, class_loader, alloc_string(dot_name));
+    slot_t *slot = exec_java(m, (slot_t[]) { rslot(class_loader), rslot(alloc_string(dot_name)) });
     assert(slot != NULL);
     jclsRef co = slot_get_ref(slot);
     assert(co != NULL && co->jvm_mirror != NULL);
     c = co->jvm_mirror;
-    addClassToClassLoader(class_loader, c);
+    add_class_to_class_loader(class_loader, c);
     // init_class(c); /////////// todo /////////////////////////////////////////
     return c;
 }
-
-// Class *define_class(jref class_loader, u1 *bytecode, size_t len)
-// {
-//     return new Class(class_loader, bytecode, len);
-// }
 
 Class *define_class1(jref class_loader, jref name,
                      jarrRef bytecode, jint off, jint len, jref protection_domain, jref source)
@@ -241,7 +222,6 @@ Class *init_class(Class *c)
         return c;
     }
 
-    // scoped_lock lock(c->clinit_mutex);
     pthread_mutex_lock(&c->clinit_mutex);
     if (c->inited) { // 需要再次判断 inited，有可能被其他线程置为 true
         pthread_mutex_unlock(&c->clinit_mutex);
@@ -258,15 +238,9 @@ Class *init_class(Class *c)
     // 可能调用putstatic等函数也会触发<clinit>的调用造成死循环。
     c->inited = true;
 
-    // try {
-    // // printf("%s\n", c->class_name); /// todo //////////////////////////////////////
-    //     exec_java_func0(get_declared_method(c, S(class_init), S(___V)), NULL);
-    // } catch (java_lang_NoSuchMethodError &e) {
-    //     // 有的类没有<clinit>方法
-    // }
     Method *m = get_declared_method_noexcept(c, S(class_init), S(___V));
     if (m != NULL) { // 有的类没有<clinit>方法
-        exec_java_func(m, NULL);
+        exec_java(m, NULL);
     }
 
     c->inited = true;
@@ -293,7 +267,7 @@ Object *get_platform_class_loader()
 
     // public static ClassLoader getPlatformClassLoader();
     Method *get = get_declared_static_method(c, S(getPlatformClassLoader), S(___java_lang_ClassLoader));
-    return exec_java_func_r(get, NULL);
+    return exec_java_r(get, NULL);
 }
 
 Object *get_app_class_loader()
@@ -303,7 +277,7 @@ Object *get_app_class_loader()
 
     // public static ClassLoader getSystemClassLoader();
     Method *get = get_declared_static_method(c, S(getSystemClassLoader), S(___java_lang_ClassLoader));
-    return exec_java_func_r(get, NULL);
+    return exec_java_r(get, NULL);
 }
 
 Class *g_object_class = NULL;
@@ -322,11 +296,6 @@ void init_class_loader()
     // g_class_class 至此创建完成。
     // 在 g_class_class 创建完成之前创建的 Class 都没有设置 java_mirror 字段，现在设置下。
 
-    // for (auto iter: boot_classes) {
-    //     Class *c = iter.second;
-    //     gen_class_object(c);
-    // }
-
     phm_touch_values(&boot_classes, (void (*)(void *)) gen_class_object);
 
     g_string_class = load_boot_class(S(java_lang_String));
@@ -335,36 +304,15 @@ void init_class_loader()
     // g_string_class->str_pool = new unordered_set<Object *, StringHash, StringEquals>;
     // g_string_class->buildStrPool();
 
-    // loaders.insert(BOOT_CLASS_LOADER);
     phs_add(&loaders, BOOT_CLASS_LOADER);
 }
 
-// unordered_map<const utf8_t *, Class *, Utf8Hash, Utf8Comparator> *getAllBootClasses()
-// {
-//     return &boot_classes;
-// }
+PHM *get_all_boot_classes()
+{
+    return &boot_classes;
+}
 
-// const unordered_set<const Object *> &getAllClassLoaders()
-// {
-//     return loaders;
-// }
-
-// void printBootLoadedClasses()
-// {
-//     cout << "boot class loader." << endl;
-//     for (auto iter : boot_classes) {
-//         cout << iter.first << endl;
-//     }
-// }
-
-// void printClassLoader(Object *class_loader)
-// {
-//    if (class_loader == BOOT_CLASS_LOADER) {
-//        printBootLoadedClasses();
-//        return;
-//    }
-   
-//    for (auto iter : *(class_loader->classes)) {
-//        cout << iter.first << endl;
-//    }
-// }
+PHS *get_all_class_loaders()
+{
+    return &loaders;
+}

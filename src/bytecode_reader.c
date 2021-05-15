@@ -1,7 +1,6 @@
 #include <assert.h>
 #include <string.h>
 #include "cabin.h"
-#include "util/convert.h"
 
 void bcr_init(BytecodeReader *r, u1 *bytecode, size_t len)
 {

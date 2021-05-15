@@ -1,10 +1,6 @@
 #include <assert.h>
 #include "cabin.h"
 #include "jni.h"
-#include "util/hash.h"
-#include "util/encoding.h"
-#include "util/convert.h"
-#include "util/endianness.h"
 
 
 #define OBJ   "Ljava/lang/Object;"
@@ -114,7 +110,7 @@ static jlong staticFieldOffset(JNIEnv *env, jref _this, jref f)
             return i;
     }
 
-    JVM_PANIC("never go here"); // todo
+    SHOULD_NEVER_REACH_HERE("%s", name);
     return -1; 
 }
 
@@ -301,14 +297,12 @@ static void *_getPoint(jref o, jlong offset)
 
     if (o == NULL) {
         p = (void *) (intptr_t) offset;
+    } else if (is_array_object(o)) {
+        // offset 在这里表示数组下标(index)
+        p = array_index(o, offset);
     } else {
-        if (o != NULL) {
-            // offset 在这里表示数组下标(index)
-            p = array_index(o, offset);
-        } else {
-            // offset 在这里表示 slot id.
-            p = o->data;
-        }
+        // offset 在这里表示 slot id.
+        p = o->data;
     }
 
     return p;
@@ -579,13 +573,12 @@ static jref MH_invokeExact(const slot_t *args)
     jref _this = slot_get_ref(args);
     assert(_this != NULL);
     // _this is a object of subclass of java.lang.invoke.MethodHandle
-;
+
     jref form = get_ref_field(_this, S(form), "Ljava/lang/invoke/LambdaForm;");
     jref entry = get_ref_field(form, S(vmentry), "Ljava/lang/invoke/MemberName;");
     Method *target = (Method *) (void *) get_ref_field(entry, S(vmtarget), S(sig_java_lang_Object));
 
-    slot_t *slot = exec_java_func(target, args);
-    return slot_get_ref(slot);
+    return exec_java_r(target, args);
 }
 
 /**
@@ -635,8 +628,7 @@ static jref MH_invoke(const slot_t *args)
     jref entry = get_ref_field(form, S(vmentry), "Ljava/lang/invoke/MemberName;");
     Method *target = (Method *) (void *) get_ref_field(entry, S(vmtarget), S(sig_java_lang_Object));
 
-    slot_t *slot = exec_java_func(target, args);
-    return slot_get_ref(slot);
+    return exec_java_r(target, args);
 
 #if 0
     // MemberName internalMemberName();
@@ -736,8 +728,7 @@ static jref MH_invokeBasic(const slot_t *args)
     jref entry = get_ref_field(form, S(vmentry), "Ljava/lang/invoke/MemberName;");
     Method *target = (Method *) (void *) get_ref_field(entry, S(vmtarget), S(sig_java_lang_Object));
 
-    slot_t *slot = exec_java_func(target, args);
-    return slot_get_ref(slot);
+    return exec_java_r(target, args);
 }
 
 /**
@@ -767,8 +758,7 @@ static jref MH_linkToStatic(u2 args_slots_count, const slot_t *args)
     Method *target = (Method *) (void *) get_ref_field(member_name, S(vmtarget), S(sig_java_lang_Object));
     assert(target != NULL);
 
-    slot_t *slot = exec_java_func(target, args);
-    return slot_get_ref(slot);
+    return exec_java_r(target, args);
 }
 
 /**
@@ -795,22 +785,6 @@ static jref MH_linkToSpecial(u2 args_slots_count, const slot_t *args)
 static jref MH_linkToInterface(jref args)
 {
     JVM_PANIC("linkToInterface");
-}
-
-/*
- * Fetch MH-related JVM parameter.
- * which=0 retrieves MethodHandlePushLimit
- * which=1 retrieves stack slot push size (in address units)
- * 
- * static native int getConstant(int which);
- */
-static jint MHN_getConstant(jint which)
-{
-    // todo 啥意思
-    // if (which == 4)
-    //     return 1;
-    // else
-        return 0;
 }
 
 // static native void init(MemberName self, Object ref);
@@ -902,33 +876,33 @@ static void MHN_setCallSiteTargetVolatile(JNIEnv *env, jclsRef cls, jref site, j
     JVM_PANIC("setCallSiteTargetVolatile");
 }
 
+#undef MN
+#undef _MN_
 #define MN "Ljava/lang/invoke/MemberName;"
 #define _MN_ "(Ljava/lang/invoke/MemberName;)"
 
 static JNINativeMethod MethodHandleNatives_natives[] = {
     // MemberName support
 
-    {"init", "(" MN OBJ_ "V", MHN_init },
-    {"expand", _MN_ "V", MHN_expand },
-    {"resolve", "(" MN CLS "IZ)" MN, MHN_resolve },
-    {"getMembers", _CLS STR STR "I" CLS "I[" MN ")I", MHN_getMembers },
+    {"init", "(" MN OBJ_ "V", MHN_init},
+    {"expand", _MN_ "V", MHN_expand},
+    {"resolve", "(" MN CLS "IZ)" MN, MHN_resolve},
+    {"getMembers", _CLS STR STR "I" CLS "I[" MN ")I", MHN_getMembers},
 
     // Field layout queries parallel to sun.misc.Unsafe:
 
-    {"objectFieldOffset", _MN_ "J", MHN_objectFieldOffset },
-    {"staticFieldOffset", _MN_ "J", MHN_staticFieldOffset },
-    {"staticFieldBase", _MN_ OBJ, MHN_staticFieldBase },
-    {"getMemberVMInfo", _MN_ OBJ, MHN_getMemberVMInfo },
-
-    // MethodHandle support
-    {"getConstant", "(I)I", MHN_getConstant },
+    {"objectFieldOffset", _MN_ "J", MHN_objectFieldOffset},
+    {"staticFieldOffset", _MN_ "J", MHN_staticFieldOffset},
+    {"staticFieldBase", _MN_ OBJ, MHN_staticFieldBase},
+    {"getMemberVMInfo", _MN_ OBJ, MHN_getMemberVMInfo},
 
     // CallSite support
-    /* Tell the JVM that we need to change the target of a CallSite. */
-    {"setCallSiteTargetNormal", 
-        "(Ljava/lang/invoke/CallSite;Ljava/lang/invoke/MethodHandle)V", MHN_setCallSiteTargetNormal },
-    {"setCallSiteTargetVolatile", 
-        "(Ljava/lang/invoke/CallSite;Ljava/lang/invoke/MethodHandle)V", MHN_setCallSiteTargetVolatile },
+    // Tell the JVM that we need to change the target of a CallSite.
+
+    {"setCallSiteTargetNormal",
+     "(Ljava/lang/invoke/CallSite;Ljava/lang/invoke/MethodHandle;)V", MHN_setCallSiteTargetNormal},
+    {"setCallSiteTargetVolatile",
+     "(Ljava/lang/invoke/CallSite;Ljava/lang/invoke/MethodHandle;)V", MHN_setCallSiteTargetVolatile},
 };
 
 // native boolean closeScope0(Scope scope, Scope.ScopedAccessError exception);

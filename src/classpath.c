@@ -1,7 +1,6 @@
 #include <dirent.h>
 #include <minizip/unzip.h>
 #include "cabin.h"
-#include "util/encoding.h"
 
 
 #define JDK_MODULES_MAX_COUNT 512 // big enough

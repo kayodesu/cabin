@@ -1,6 +1,5 @@
 #include <assert.h>
 #include "cabin.h"
-#include "util/encoding.h"
 
 
 static pthread_key_t key;
@@ -47,7 +46,7 @@ Thread *init_main_thread()
     // This method is used to create the system Thread group.
     init_class(thread_group_class);
     Method *constructor = get_constructor(thread_group_class, S(___V));
-    exec_java_func1(constructor, g_sys_thread_group);
+    exec_java(constructor, (slot_t[]) { rslot(g_sys_thread_group) });
 
     set_thread_group_and_name(g_main_thread, g_sys_thread_group, MAIN_THREAD_NAME);
     saveCurrentThread(g_main_thread);
@@ -138,7 +137,7 @@ void set_thread_group_and_name(Thread *thrd, Object *group, const char *name)
 
     // 调用 java/lang/Thread 的构造函数
     Method *constructor = get_constructor(thrd->tobj->clazz, "(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");
-    exec_java_func3(constructor, thrd->tobj, group, alloc_string(name));
+    exec_java(constructor, (slot_t[]) { rslot(thrd->tobj), rslot(group), rslot(alloc_string(name)) });
 }
 
 void set_thread_status(Thread *thrd, jint status)
@@ -235,15 +234,15 @@ jarrRef dump_thread(const Thread *thrd, int max_depth)
     // public StackTraceElement(String declaringClass, String methodName, String fileName, int lineNumber);
     Method *constructor = get_constructor(c, "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V");
 
-    jarrRef arr = alloc_array0(S(array_java_lang_StackTraceElement), count);
+    jarrRef arr = alloc_array0(BOOT_CLASS_LOADER, S(array_java_lang_StackTraceElement), count);
     size_t i = count - 1;
     for (Frame *f = thrd->top_frame; f != NULL && i >= 0; f = f->prev, i--) {
         jref o = alloc_object(c);
-        exec_java_func(constructor, (slot_t []) { rslot(o),
-                                    rslot(alloc_string(f->method->clazz->class_name)),
-                                    rslot(alloc_string(f->method->name)),
-                                    rslot(alloc_string(f->method->clazz->source_file_name)),
-                                    islot(get_line_number(f->method, f->reader.pc)) }
+        exec_java(constructor, (slot_t []) { rslot(o),
+                                rslot(alloc_string(f->method->clazz->class_name)),
+                                rslot(alloc_string(f->method->name)),
+                                rslot(alloc_string(f->method->clazz->source_file_name)),
+                                islot(get_line_number(f->method, f->reader.pc)) }
         );
         array_set_ref(arr, i, o);
     }

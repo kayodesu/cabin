@@ -2,7 +2,6 @@
 #include "cabin.h"
 #include "heap.h"
 #include "cabin.h"
-#include "util/encoding.h"
 
 /*
  * 分析一个可达的对象
@@ -24,9 +23,9 @@ static void analysis_reachable_object(jref obj)
     } else {
         int count = obj->clazz->inst_fields_count;
         for (int i = 0; i < count; i++) {
-            slot_t slot = obj->data[i];
+            slot_t *slot = obj->data + i;
             // todo  这里要先判断 slot 存放的是不是 jref
-            jref o = slot_get_ref(&slot);
+            jref o = slot_get_ref(slot);
             o->accessible = 1;
             analysis_reachable_object(o);
         }

@@ -1,8 +1,6 @@
 #include <assert.h>
 #include "cabin.h"
-#include "util/encoding.h"
-#include "util/convert.h"
-#include "util/dynstr.h"
+#include "dynstr.h"
 #include "constants.h"
 #include "attributes.h"
 
@@ -523,7 +521,7 @@ Class *define_class(jref class_loader, u1 *bytecode, size_t len)
             // 对于unnamed module的处理
             // public final Module getUnnamedModule();
             Method *m = lookup_inst_method(class_loader->clazz, "getUnnamedModule", "()Ljava/lang/Module;");
-            jref mo = slot_get_ref(exec_java_func1(m, class_loader));
+            jref mo = exec_java_r(m, (slot_t[]) { rslot(class_loader) });
 
             // set by VM
             // private transient Module module;
@@ -1110,18 +1108,18 @@ Class *array_class(const Class *c)
     // 数组
     if (c->class_name[0] == '[') {
         sprintf(buf, "[%s", c->class_name);
-        return loadArrayClass0(buf);
+        return load_array_class(c->loader, buf);
     }
 
     // 基本类型
     // todo 判断class是不是void，如果是void不能创建数组
     const char *tmp = get_prim_array_class_name(c->class_name);
     if (tmp != NULL)
-        return loadArrayClass0(tmp);
+        return load_array_class(c->loader, tmp);
 
     // 类引用
     sprintf(buf, "[L%s;", c->class_name);
-    return loadArrayClass0(buf);
+    return load_array_class(c->loader, buf);
 }
 
 char *get_class_info(const Class *c)
@@ -1133,19 +1131,19 @@ char *get_class_info(const Class *c)
 
     dynstr_printf(&ds, "class: %s\n", c->class_name);
 
-    dynstr_concat(&ds, "  declared static fields: \n");
+    dynstr_concat(&ds, "\tdeclared static fields: \n");
     for (u2 i = 0; i < c->fields_count; i++) {
         Field *f = c->fields + i;
         if (IS_STATIC(f)) {
-            dynstr_printf(&ds, "    %s | %s\n", f->name, f->descriptor);
+            dynstr_printf(&ds, "\t\t%s~%s\n", f->name, f->descriptor);
         }
     }
 
-    dynstr_concat(&ds, "  declared instance fields: \n");
+    dynstr_concat(&ds, "\tdeclared instance fields: \n");
     for (u2 i = 0; i < c->fields_count; i++) {
         Field *f = c->fields + i;
         if (!IS_STATIC(f)) {
-            dynstr_printf(&ds, "    %s | %s | %d\n", f->name, f->descriptor, f->id);
+            dynstr_printf(&ds, "\t\t%s~%s | %d\n", f->name, f->descriptor, f->id);
         }
     }
 
@@ -1206,7 +1204,7 @@ Class *component_class(Class *c)
 
     // 判断 component's type
     if (*comp_name == '[') {
-        c->array.comp_class = loadArrayClass0(comp_name);
+        c->array.comp_class = load_array_class(c->loader, comp_name);
         return c->array.comp_class;
     }
 

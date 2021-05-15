@@ -4,8 +4,7 @@
 #include "jni.h"
 #include "heap.h"
 #include "symbol.h"
-#include "util/hash.h"
-#include "util/encoding.h"
+#include "hash.h"
 
 
 #define JVM_MIRROR(_jclass) ((jclsRef) _jclass)->jvm_mirror
@@ -48,7 +47,7 @@ JVM_GetInterfaceVersion(void)
 }
 
 #define JNI_THROW_BY_NAME(_env, _excep_class_name, msg) \
-    (*(_env))->ThrowNew(_env, (jclass) load_boot_class(_excep_class_name), msg)
+    (*(_env))->ThrowNew(_env, (jclass) (load_boot_class(_excep_class_name)->java_mirror), msg)
 
 #define JNI_THROW_NPE(_env, msg) JNI_THROW_BY_NAME(_env, S(java_lang_NullPointerException), msg)
 
@@ -702,7 +701,7 @@ static void *threadRunFunc(void *thread)
 
     jref o = (jref) thread;
     create_thread(o, THREAD_NORM_PRIORITY); // todo
-    return (void *) exec_java_func1(run_method, o);
+    return (void *) exec_java(run_method, (slot_t[]) { rslot(o) });
 }
 
 JNIEXPORT void JNICALL
@@ -865,7 +864,7 @@ JVM_GetAllThreads(JNIEnv *env, jclass dummy)
 {
     TRACE("JVM_GetAllThreads(env=%p, dummy=%p)", env, dummy);
     int size = g_all_threads_count;
-    jarrRef threads = alloc_array0(S(array_java_lang_Thread), size);
+    jarrRef threads = alloc_array0(BOOT_CLASS_LOADER, S(array_java_lang_Thread), size);
 
     for (int i = 0; i < size; i++) {
         array_set_ref(threads, i, g_all_threads[i]->tobj);
@@ -890,7 +889,7 @@ JVM_DumpThreads(JNIEnv *env, jclass threadClass, jobjectArray _threads)
     assert(is_array_object(threads));
 
     size_t len = threads->arr_len;
-    jarrRef result = alloc_array0("[[java/lang/StackTraceElement", len);
+    jarrRef result = alloc_array0(BOOT_CLASS_LOADER, "[[java/lang/StackTraceElement", len);
 
     for (size_t i = 0; i < len; i++) {
         jref jThread = array_get(jref, threads, i);
@@ -1112,21 +1111,21 @@ JVM_GetArrayElement(JNIEnv *env, jobject arr, jint index)
 
     switch (array->clazz->class_name[1]) {
     case 'Z': // boolean[]
-        return (jobject) boolBox(array_get(jboolean, array, index));
+        return (jobject) bool_box(array_get(jboolean, array, index));
     case 'B': // byte[]
-        return (jobject) byteBox(array_get(jbyte, array, index));
+        return (jobject) byte_box(array_get(jbyte, array, index));
     case 'C': // char[]
-        return (jobject) charBox(array_get(jchar, array, index));
+        return (jobject) char_box(array_get(jchar, array, index));
     case 'S': // short[]
-        return (jobject) shortBox(array_get(jshort, array, index));
+        return (jobject) short_box(array_get(jshort, array, index));
     case 'I': // int[]
-        return (jobject) intBox(array_get(jint, array, index));
+        return (jobject) int_box(array_get(jint, array, index));
     case 'J': // long[]
-        return (jobject) longBox(array_get(jlong, array, index));
+        return (jobject) long_box(array_get(jlong, array, index));
     case 'F': // float[]
-        return (jobject) floatBox(array_get(jfloat, array, index));
+        return (jobject) float_box(array_get(jfloat, array, index));
     case 'D': // double[]
-        return (jobject) doubleBox(array_get(jdouble, array, index));
+        return (jobject) double_box(array_get(jdouble, array, index));
     default:  // reference array
         return (jobject) array_get(jref, array, index);
     }
@@ -1391,14 +1390,14 @@ JVM_FindClassFromCaller(JNIEnv *env, const char *name, jboolean init,
     // println("class name: %s", name);
 
     // todo
-    Class *c = load_class(loader, name);
+    Class *c = load_class((jref) loader, name);
     if (c == NULL) {
         // todo ClassNotFoundException
         JVM_PANIC("unimplemented"); // todo
         // (*env)->ThrowNew(env, )
     }
 
-    return c->java_mirror;
+    return (jclass) c->java_mirror;
 
     // JVM_PANIC("unimplemented"); // todo
 }
@@ -1766,11 +1765,17 @@ JVM_IsPrimitiveClass(JNIEnv *env, jclass cls)
  * 
  * @HotSpotIntrinsicCandidate
  * public native boolean isHidden();
+ * 
+ * http://openjdk.java.net/jeps/371
  */
 JNIEXPORT jboolean JNICALL
 JVM_IsHiddenClass(JNIEnv *env, jclass cls)
 {
     TRACE("JVM_IsHiddenClass(env=%p, cls=%p)", env, cls);
+    // todo 什么是HiddenClass？？
+    Class *c = JVM_MIRROR(cls);
+    return false;
+
     JVM_PANIC("unimplemented"); // todo
 }
 
@@ -1992,7 +1997,7 @@ JVM_GetClassDeclaredMethods(JNIEnv *env, jclass _ofClass, jboolean publicOnly)
         // Object *o = alloc_object(method_class);
         // methods.push_back(o);
 
-        exec_java_func(constructor, (slot_t []) {
+        exec_java(constructor, (slot_t []) {
                 rslot(o),        /* this  */
                 rslot(ofClass), /* declaring class */
                 // name must be interned.
@@ -2047,7 +2052,7 @@ JVM_GetClassDeclaredFields(JNIEnv *env, jclass _ofClass, jboolean publicOnly)
         objects[count++] = o;
         // field_array->setRef(i, o);
 
-        exec_java_func(constructor, (slot_t []) {
+        exec_java(constructor, (slot_t []) {
                 rslot(o), // this
                 rslot(ofClass), // declaring class
                 // name must be interned.
@@ -2099,7 +2104,7 @@ JVM_GetClassDeclaredConstructors(JNIEnv *env, jclass _ofClass, jboolean publicOn
        Object *o = alloc_object(constructor_class);
        array_set_ref(constructor_array, i, o);
 
-       exec_java_func(constructor_constructor, (slot_t []) {
+       exec_java(constructor_constructor, (slot_t []) {
             rslot(o),                                // this
             rslot(ofClass),                            // declaring class
             rslot(get_parameter_types(constructor)), // parameter types
@@ -2206,26 +2211,26 @@ JVM_InvokeMethod(JNIEnv *env, jobject _method, jobject obj, jobjectArray args0)
         JVM_PANIC("error"); // todo
     }
 
-    slot_t *result = exec_java_func0(m, o, os);
+    slot_t *result = exec_java0(m, o, os);
     switch (m->ret_type) {
     case RET_VOID:
-        return (jobject) voidBox();
+        return (jobject) void_box();
     case RET_BYTE:
-        return (jobject) byteBox(slot_get_byte(result));
+        return (jobject) byte_box(slot_get_byte(result));
     case RET_BOOL:
-        return (jobject) boolBox(slot_get_bool(result));
+        return (jobject) bool_box(slot_get_bool(result));
     case RET_CHAR:
-        return (jobject) charBox(slot_get_char(result));
+        return (jobject) char_box(slot_get_char(result));
     case RET_SHORT:
-        return (jobject) shortBox(slot_get_short(result));
+        return (jobject) short_box(slot_get_short(result));
     case RET_INT:
-        return (jobject) intBox(slot_get_int(result));
+        return (jobject) int_box(slot_get_int(result));
     case RET_FLOAT:
-        return (jobject) floatBox(slot_get_float(result));
+        return (jobject) float_box(slot_get_float(result));
     case RET_LONG:
-        return (jobject) longBox(slot_get_long(result));
+        return (jobject) long_box(slot_get_long(result));
     case RET_DOUBLE:
-        return (jobject) doubleBox(slot_get_double(result));
+        return (jobject) double_box(slot_get_double(result));
     case RET_REFERENCE:
         return (jobject) slot_get_ref(result);
     default:

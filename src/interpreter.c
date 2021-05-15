@@ -3,7 +3,6 @@
 #include <ffi.h>
 #include "cabin.h"
 #include "attributes.h"
-#include "util/encoding.h"
 #include "jni.h"
 
 
@@ -1201,7 +1200,7 @@ opc_invokeinterface: {
     goto _invoke_method;
 }           
 opc_invokedynamic: {
-    JVM_PANIC("Don't support invokedynamic.\n"); /////////////////////////////////////////////////////////////////////////////////
+    // JVM_PANIC("Don't support invokedynamic.\n"); ///////////////////////////////////////////
 
     u2 i = bcr_readu2(reader); // point to JVM_CONSTANT_InvokeDynamic_info
     bcr_readu1(reader); // this byte must always be zero.
@@ -1236,11 +1235,11 @@ opc_invokedynamic: {
             slot_set_ref(args + 1, alloc_string(invoked_name));
             slot_set_ref(args + 2, invoked_type);
             resolve_bootstrap_method_args(bm, cp, args + 3);
-            jref call_set = exec_java_func_r(bootstrap_method, args);
+            jref call_set = exec_java_r(bootstrap_method, args);
 
             // public abstract MethodHandle dynamicInvoker()
             Method *dyn_invoker = lookup_inst_method(call_set->clazz, "dynamicInvoker", "()Ljava/lang/invoke/MethodHandle;");
-            jref exact_method_handle = slot_get_ref(exec_java_func1(dyn_invoker, call_set));
+            jref exact_method_handle = exec_java_r(dyn_invoker, (slot_t[]) { rslot(call_set) });
 
             // public final Object invokeExact(Object... args) throws Throwable
             Method *invokeExact = lookup_inst_method(exact_method_handle->clazz,
@@ -1253,7 +1252,7 @@ opc_invokedynamic: {
             frame->ostack -= slots_count; // pop all args
             memcpy(_args + 1, frame->ostack, slots_count * sizeof(slot_t));
             // invoke exact method, invokedynamic completely execute over.
-            slot_t *ret = exec_java_func(invokeExact, _args);
+            slot_t *ret = exec_java(invokeExact, _args);
             ostack_pushr(frame, slot_get_ref(ret));
             break;
         }
@@ -1261,7 +1260,7 @@ opc_invokedynamic: {
             JVM_PANIC("JVM_REF_newInvokeSpecial"); // todo
             break;
         default:
-            JVM_PANIC("never goes here"); // todo
+            JVM_PANIC("xxx"); // todo
             break;
     }
     DISPATCH
@@ -1576,7 +1575,7 @@ static bool checkcast(Class *s, Class *t)
     }
 }
 
-slot_t *exec_java_func(Method *method, const slot_t *args)
+slot_t *exec_java(Method *method, const slot_t *args)
 {
     assert(method != NULL);
     assert(method->arg_slot_count > 0 ? args != NULL : true);
@@ -1597,69 +1596,20 @@ slot_t *exec_java_func(Method *method, const slot_t *args)
         JVM_EXIT // todo
     }
     return result;
-
-    // while (true) {
-    //     try {
-    //         slot_t *result = exec(&excep);
-    //         if (result == NULL) { // 发生了Java代码无法处理的异常，交由虚拟机处理
-    //             assert(excep != NULL);
-    //             print_stack_trace(excep);
-    //             JVM_EXIT // todo
-    //         }
-    //         return result;
-    //     } 
-    //     // catch (JavaException &e) {
-    //     //     excep = e.getExcep();
-    //     // } 
-    //     // catch (UncaughtException &e) {
-    //     //     print_stack_trace(e.java_excep);
-    //     //     JVM_EXIT // todo
-    //     // } catch (...) {
-    //     //     JVM_PANIC(""); // todo
-    //     // }
-    // }
 }
 
-// slot_t *execJavaFunc(Method *method, initializer_list<slot_t> args)
-// {
-//     assert(method != NULL);
-//     assert(method->arg_slot_count == args.size());
-
-//     slot_t slots[args.size()];
-//     int i = 0;
-//     for (slot_t arg : args) {
-//         slots[i++] = arg;
-//     }
-
-//     return exec_java_func(method, slots);
-// }
-
-// slot_t *exec_java_func1(Method *method, std::initializer_list<jref> args)
-// {
-//     assert(method != NULL);
-//     assert(method->arg_slot_count == args.size());
-
-//     slot_t slots[args.size()];
-//     int i = 0;
-//     for (jref arg : args) {
-//         slots[i++] = rslot(arg);
-//     }
-
-//     return exec_java_func(method, slots);
-// }
-
-slot_t *exec_java_func0(Method *m, jref _this, jarrRef args)
+slot_t *exec_java0(Method *m, jref this, jarrRef args)
 {
     assert(m != NULL);
 
-    // If m is static, _this is NULL.
+    // If m is static, this is NULL.
     if (args == NULL) {
-        if (_this != NULL) {
+        if (this != NULL) {
             assert(!IS_STATIC(m));
-            return exec_java_func1(m, _this);
+            return exec_java(m, (slot_t[]) { rslot(this) });
         } else {
             assert(IS_STATIC(m));
-            return exec_java_func(m, NULL);
+            return exec_java(m, NULL);
         } 
     }
 
@@ -1671,9 +1621,9 @@ slot_t *exec_java_func0(Method *m, jref _this, jarrRef args)
     // 因为有 category two 的存在，result 的长度最大为 types_len * 2 + this_obj
     slot_t *real_args = vm_malloc(sizeof(slot_t) * (2 * types->arr_len + 1));
     int k = 0;
-    if (_this != NULL) {
+    if (this != NULL) {
         assert(!IS_STATIC(m));
-        slot_set_ref(real_args, _this);
+        slot_set_ref(real_args, this);
         k++;
     }
     for (int i = 0; i < types->arr_len; i++) {
@@ -1692,33 +1642,7 @@ slot_t *exec_java_func0(Method *m, jref _this, jarrRef args)
         }
     }
 
-    return exec_java_func(m, real_args);
-}
-
-slot_t *exec_java_func1(Method *method, jref arg)
-{
-    assert(method != NULL);
-    assert(method->arg_slot_count == 1);
-    slot_t s = rslot(arg);
-    return exec_java_func(method, &s);
-}
-
-slot_t *exec_java_func2(Method *method, jref arg1, jref arg2)
-{
-    assert(method != NULL);
-    assert(method->arg_slot_count == 2);
-
-    slot_t slots[2] = { rslot(arg1), rslot(arg2) };
-    return exec_java_func(method, slots);
-}
-
-slot_t *exec_java_func3(Method *method, jref arg1, jref arg2, jref arg3)
-{
-    assert(method != NULL);
-    assert(method->arg_slot_count == 3);
-
-    slot_t slots[3] = { rslot(arg1), rslot(arg2), rslot(arg3) };
-    return exec_java_func(method, slots);
+    return exec_java(m, real_args);
 }
 
 JNIEnv *get_jni_env();
@@ -1729,6 +1653,17 @@ static void call_jni_method(Frame *frame)
     assert(frame != NULL && frame->method != NULL);
     Method *m = frame->method;
     assert(IS_NATIVE(m));
+    
+    const slot_t *args = frame->lvars;    
+
+    if (utf8_equals(m->clazz->class_name, "java/lang/invoke/MethodHandle")) {
+        assert(IS_VARARGS(m));
+        assert(m->native_method != NULL);
+        jref r = ((jref(*)(const slot_t *)) m->native_method)(args);
+        // todo
+        JVM_PANIC("xxxxx");
+        return;
+    }
 
     if (m->native_method == NULL) {
         m->native_method = find_from_java_dll(m);
@@ -1748,7 +1683,6 @@ static void call_jni_method(Frame *frame)
     arg_types[0] = &ffi_type_pointer;
     arg_values[0] = &env; 
 
-    const slot_t *args = frame->lvars;    
     arg_types[1] = &ffi_type_pointer;
     if (IS_STATIC(m)) {
         arg_values[1] = &(m->clazz->java_mirror);
@@ -1839,7 +1773,7 @@ static void call_jni_method(Frame *frame)
                 arg_values[argc] = (void *) args;
                 break;
             default:
-                JVM_PANIC("never go here"); // todo error
+                SHOULD_NEVER_REACH_HERE("%c", *p);
                 break;
         }
     }
@@ -1902,12 +1836,11 @@ do { \
         case RET_REFERENCE: {
             jref ret_value;
             ffi_apply(m->native_method, argc, &ffi_type_pointer, arg_types, &ret_value, arg_values);
-            // printvm("ret_value: %p\n", ret_value);
             ostack_pushr(frame, ret_value);
             break;
         }
-        default:            
-            JVM_PANIC("never go here"); // todo error
+        default:
+            SHOULD_NEVER_REACH_HERE("%d", m->ret_type);
             break;
     }
 }

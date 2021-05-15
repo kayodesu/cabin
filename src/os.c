@@ -1,23 +1,39 @@
 #ifdef _WIN32
-#include <time.h>
 #include <windows.h>
+
+#ifdef __linux__
+#include <unistd.h>
+#endif
 
 int processor_number()
 {
+#ifdef _WIN32
     SYSTEM_INFO sysInfo;
     GetSystemInfo(&sysInfo);
-    return sysInfo.dwNumberOfProcessors;
+    return (int) sysInfo.dwNumberOfProcessors;
+#endif
+
+#ifdef __linux__
+    return sysconf(_SC_NPROCESSORS_CONF);
+#endif
 }
 
 int page_size()
 {
+#ifdef _WIN32
     SYSTEM_INFO sysInfo;
     GetSystemInfo(&sysInfo);
-    return sysInfo.dwPageSize;
+    return (int) sysInfo.dwPageSize;
+#endif
+
+#ifdef __linux__
+    JVM_PANIC("pageSize");
+#endif
 }
 
 const char *os_name()
 {
+#ifdef _WIN32
 	SYSTEM_INFO info;        //用SYSTEM_INFO结构判断64位AMD处理器 
 	GetSystemInfo(&info);    //调用GetSystemInfo函数填充结构 
 	OSVERSIONINFOEX os;
@@ -101,10 +117,18 @@ const char *os_name()
 	}
 
 	return "unknown OperatingSystem";
+#endif
+
+#ifdef __linux__
+    struct utsname x;
+    uname(&x);
+    return x.sysname;
+#endif
 }
 
 const char *os_arch()
 {
+#ifdef _WIN32
     SYSTEM_INFO si;
 	GetNativeSystemInfo(&si);
 	if (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL) {
@@ -140,21 +164,44 @@ const char *os_arch()
 	} else {
         return "UNKNOWN ARCHITECTURE";
     }
+#endif
+
+#ifdef __linux__
+    JVM_PANIC("osArch");
+#endif
 }
 
 const char *get_file_separator()
 {
+#ifdef _WIN32
     return "\\";
+#endif
+
+#ifdef __linux__
+    return "/";
+#endif
 }
 
 const char *get_path_separator()
 {
+#ifdef _WIN32
     return ";";
+#endif
+
+#ifdef __linux__
+    return ":";
+#endif
 }
 
 const char *get_line_separator()
 {
+#ifdef _WIN32
     return "\r\n";
+#endif
+
+#ifdef __linux__
+    return "\n";
+#endif
 }
 
 // string getTimeZone()

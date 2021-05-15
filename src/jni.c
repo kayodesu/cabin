@@ -1,4 +1,3 @@
-#include "util/encoding.h"
 #include "cabin.h"
 #include "jni.h"
 
@@ -8,13 +7,13 @@
 static jobject addJNILocalRef(Object *ref)
 {
     // todo 
-    return ref;
+    return (jobject) ref;
 }
 
 static jobject addJNIGlobalRef(Object *ref)
 {
     // todo 
-    return ref;
+    return (jobject) ref;
 }
 
 static void deleteJNIGlobalRef(Object *ref)
@@ -32,9 +31,8 @@ static void deleteJNIWeakGlobalRef(Object *ref)
     JVM_PANIC("not implement.");
 }
 
-static slot_t *execJavaV(Method *m, jobject _this, va_list args)
+static slot_t *execJavaV(Method *m, jref this, va_list args)
 {
-    jref this = (jref) _this;
     // Class[]
     jarrRef types = get_parameter_types(m);
     jsize args_count = types->arr_len;
@@ -72,12 +70,11 @@ static slot_t *execJavaV(Method *m, jobject _this, va_list args)
         }
     }
 
-    return exec_java_func(m, real_args);
+    return exec_java(m, real_args);
 }
 
-static slot_t *execJavaA(Method *m, jobject _this, const jvalue *args)
+static slot_t *execJavaA(Method *m, jref this, const jvalue *args)
 {
-    jref this = (jref) _this;
     // Class[]
     jarrRef types = get_parameter_types(m);
     jsize args_count = types->arr_len;
@@ -115,7 +112,7 @@ static slot_t *execJavaA(Method *m, jobject _this, const jvalue *args)
         }
     }
 
-    return exec_java_func(m, real_args);
+    return exec_java(m, real_args);
 }
 
 // GlobalRefTable global_refs;
@@ -136,10 +133,10 @@ jclass JNICALL Cabin_DefineClass(JNIEnv *env,
 
     assert(name != NULL && buf != NULL && len >= 0);
 
-    Class *c = define_class(loader, (u1 *) buf, len);
+    Class *c = define_class((jref) loader, (u1 *) buf, len);
     if (c != NULL)
         link_class(c);
-    return c->java_mirror;
+    return (jclass) c->java_mirror;
     // return (jclass) addJNILocalRef(c); // todo
 }
 
@@ -153,7 +150,7 @@ jclass JNICALL Cabin_FindClass(JNIEnv *env, const char *name)
 
     // todo
     Class *c = load_class(NULL, name); // todo clasloader
-    return c->java_mirror;
+    return (jclass) c->java_mirror;
 
     //    JVM_PANIC("not implement.");  // todo
 }
@@ -223,6 +220,7 @@ jint JNICALL Cabin_Throw(JNIEnv *env, jthrowable obj)
 
 jint JNICALL Cabin_ThrowNew(JNIEnv *env, jclass clazz, const char *msg)
 {
+    Class *c = JVM_MIRROR(clazz);
     // todo
     JVM_PANIC("not implement.");
 
@@ -351,7 +349,7 @@ jobject JNICALL Cabin_NewObjectV(JNIEnv *env, jclass clazz, jmethodID methodID, 
     }
 
     slot_t *ret = execJavaV((Method *) methodID, o, args); 
-    return RSLOT(ret);
+    return (jobject) RSLOT(ret);
 }
 
 jobject JNICALL Cabin_NewObjectA(JNIEnv *env, jclass clazz, jmethodID methodID, const jvalue *args)
@@ -362,7 +360,7 @@ jobject JNICALL Cabin_NewObjectA(JNIEnv *env, jclass clazz, jmethodID methodID, 
     }
 
     slot_t *ret = execJavaA((Method *) methodID, o, args);
-    return RSLOT(ret);
+    return (jobject) RSLOT(ret);
 }
 
 jclass JNICALL Cabin_GetObjectClass(JNIEnv *env, jobject obj)
@@ -370,7 +368,7 @@ jclass JNICALL Cabin_GetObjectClass(JNIEnv *env, jobject obj)
     // assert(env != NULL && obj != NULL);
     // Object *o = to_object_ref(obj);
     // return (jclass) addJNILocalRef(o->clazz);
-    return ((jref)obj)->clazz->java_mirror;
+    return (jclass) ((jref)obj)->clazz->java_mirror;
 }
 
 jboolean JNICALL Cabin_IsInstanceOf(JNIEnv *env, jobject obj, jclass clazz)
@@ -379,14 +377,14 @@ jboolean JNICALL Cabin_IsInstanceOf(JNIEnv *env, jobject obj, jclass clazz)
     // auto o = to_object_ref(obj);
     // auto c = to_object_ref<Class>(clazz);
     // return o->isInstanceOf(c) ? JNI_TRUE : JNI_FALSE;
-    return is_instance_of(obj, JVM_MIRROR(clazz));
+    return is_instance_of((jref) obj, JVM_MIRROR(clazz));
 }
 
 jmethodID JNICALL Cabin_GetMethodID(JNIEnv *env, jclass clazz, const char *name, const char *sig)
 {
     Class *c = JVM_MIRROR(clazz);
     Method *m = lookup_inst_method(c, name, sig);
-    return m;
+    return (jmethodID) m;
 }
 
 /*
@@ -740,14 +738,14 @@ void JNICALL Cabin_SetObjectArrayElement(JNIEnv *env, jobjectArray array, jsize 
     array_set_ref(ao, index, (jref) val);
 }
 
-#define NewTypeArray(Type, className) \
+#define NewTypeArray(Type, class_name) \
 jarray JNICALL Cabin_New##Type##Array(JNIEnv *env, jsize len) \
 { \
     if (len < 0) { \
         /* todo java_lang_NegativeArraySizeException */ \
     } \
  \
-    jarrRef arr = alloc_array0(className, len); \
+    jarrRef arr = alloc_array0(BOOT_CLASS_LOADER, class_name, len); \
     return addJNILocalRef(arr); \
 }
 
@@ -829,12 +827,13 @@ jint JNICALL Cabin_RegisterNatives(JNIEnv *env, jclass clazz, const JNINativeMet
     for (jint i = 0; i < methods_count; i++) {
         Method *m = get_declared_method_noexcept(c, methods[i].name, methods[i].signature);
         if (m == NULL || !IS_NATIVE(m)) {
-            JVM_PANIC("never go here"); // todo
+            SHOULD_NEVER_REACH_HERE("%s, %s, %d",
+                    methods[i].name, methods[i].signature, m != NULL ? IS_NATIVE(m) : -1);
             return JNI_ERR;
         }
         m->native_method = methods[i].fnPtr;
     }
-        // register_natives(c->class_name, methods, methods_count);
+
     return JNI_OK;
 }
 
@@ -844,6 +843,7 @@ jint JNICALL Cabin_UnregisterNatives(JNIEnv *env, jclass clazz)
     for (u2 i = 0; i < c->methods_count; i++) {
         c->methods[i].native_method = NULL;
     }
+    return JNI_OK;
 }
 
 jint JNICALL Cabin_MonitorEnter(JNIEnv *env, jobject obj)

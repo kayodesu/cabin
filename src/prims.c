@@ -1,4 +1,4 @@
-#include "util/encoding.h"
+#include "cabin.h"
 
 /*
  * 基本类型的名称，描述符，等等
@@ -128,76 +128,76 @@ const utf8_t *get_prim_descriptor_by_class_name(const utf8_t *class_name)
 //     return box->data + f->id;
 // }
 
-jref voidBox()
+jref void_box()
 {
     Class *c = load_boot_class(S(java_lang_Void));
     return alloc_object(c);
 }
 
-jref byteBox(jbyte x)
+jref byte_box(jbyte x)
 {
     Class *c = load_boot_class(S(java_lang_Byte));
     // public static Byte valueOf(byte b);
     Method *m = get_declared_static_method(c, S(valueOf), "(B)Ljava/lang/Byte;");
-    return slot_get_ref(exec_java_func(m, (slot_t []) {islot(x)}));
+    return exec_java_r(m, (slot_t []) {islot(x)});
 }
 
-jref boolBox(jbool x)
+jref bool_box(jbool x)
 {
     Class *c = load_boot_class(S(java_lang_Boolean));
     // public static Boolean valueOf(boolean b);
     Method *m = get_declared_static_method(c, S(valueOf), "(Z)Ljava/lang/Boolean;");
-    return slot_get_ref(exec_java_func(m, (slot_t []) {islot(x)}));
+    return exec_java_r(m, (slot_t []) {islot(x)});
 }
 
-jref charBox(jchar x)
+jref char_box(jchar x)
 {
     Class *c = load_boot_class(S(java_lang_Character));
     // public static Character valueOf(char c);
     Method *m = get_declared_static_method(c, S(valueOf), "(C)Ljava/lang/Character;");
-    return slot_get_ref(exec_java_func(m, (slot_t []) {islot(x)}));
+    return exec_java_r(m, (slot_t []) {islot(x)});
 }
 
-jref shortBox(jshort x)
+jref short_box(jshort x)
 {
     Class *c = load_boot_class(S(java_lang_Short));
     // public static Short valueOf(short s);
     Method *m = get_declared_static_method(c, S(valueOf), "(S)Ljava/lang/Short;");
-    return slot_get_ref(exec_java_func(m, (slot_t []) {islot(x)}));
+    return exec_java_r(m, (slot_t []) {islot(x)});
 }
 
-jref intBox(jint x)
+jref int_box(jint x)
 {
     Class *c = load_boot_class(S(java_lang_Integer));
     // public static Integer valueOf(int i);
     Method *m = get_declared_static_method(c, S(valueOf), "(I)Ljava/lang/Integer;");
-    return slot_get_ref(exec_java_func(m, (slot_t []) {islot(x)}));
+    return exec_java_r(m, (slot_t []) {islot(x)});
 }
 
-jref floatBox(jfloat x)
+jref float_box(jfloat x)
 {
     Class *c = load_boot_class(S(java_lang_Float));
     // public static Float valueOf(float f);
     Method *m = get_declared_static_method(c, S(valueOf), "(F)Ljava/lang/Float;");
-    return slot_get_ref(exec_java_func(m, (slot_t []) {fslot(x)}));
+    return exec_java_r(m, (slot_t []) {fslot(x)});
 }
 
-jref longBox(jlong x)
+jref long_box(jlong x)
 {
     Class *c = load_boot_class(S(java_lang_Long));
     // public static Long valueOf(long f);
     Method *m = get_declared_static_method(c, S(valueOf), "(J)Ljava/lang/Long;");
     slot_t args[2];
     slot_set_long(args, x);
-    return exec_java_func_r(m, args);
+    return exec_java_r(m, args);
 }
 
-jref doubleBox(jdouble x)
+jref double_box(jdouble x)
 {
     Class *c = load_boot_class(S(java_lang_Double));
     // public static Double valueOf(double d);
     Method *m = get_declared_static_method(c, S(valueOf), "(D)Ljava/lang/Double;");
     slot_t args[2];
     slot_set_double(args, x);
-    return exec_java_func_r(m, args);
+    return exec_java_r(m, args);
 }

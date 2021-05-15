@@ -1,6 +1,5 @@
 #include <time.h>
 #include "cabin.h"
-#include "util/encoding.h"
 #include "jni.h"
 
 
@@ -100,7 +99,7 @@ int main(int argc, char* argv[])
     }
 
     // Call the main method
-    exec_java_func1(main_method, args);
+    exec_java(main_method, (slot_t[]) { rslot(args) });
 
     // todo 如果有其他的非后台线程在执行，则main线程需要在此wait
 

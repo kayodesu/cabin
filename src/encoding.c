@@ -1,8 +1,7 @@
 #include <assert.h>
 #include <string.h>
 #include <pthread.h>
-#include "encoding.h"
-#include "../cabin.h"
+#include "cabin.h"
 #include "hash.h"
 
 static PHS utf8_set;
@@ -180,18 +179,8 @@ unicode_t *utf8_to_unicode(const utf8_t *utf8, size_t len)
     return buf;
 }
 
-// unicode_t *utf8::toUnicode(const utf8_t *utf8, jsize utf8_len, unicode_t *buf)
-// {
-//     assert(utf8 != NULL);
-//     if (buf == NULL) {
-//         buf = new unicode_t[utf8_len + 1];
-//     }
-
-//     JVM_PANIC("not implement.");  //  todo
-// }
-
 // 将此unicode转化为utf8时，有多少字节
-static size_t utf8ByteCount(const unicode_t *unicode, size_t len)
+static size_t utf8_bytes_count(const unicode_t *unicode, size_t len)
 {
     assert(unicode != NULL);
     size_t count = 0;
@@ -208,7 +197,7 @@ utf8_t *unicode_to_utf8(const unicode_t *unicode, size_t len)
 {
     assert(unicode != NULL);
 
-    utf8_t *utf8 = vm_malloc(sizeof(utf8_t) * (utf8ByteCount(unicode, len) + 1)); 
+    utf8_t *utf8 = vm_malloc(sizeof(utf8_t) * (utf8_bytes_count(unicode, len) + 1));
     utf8_t *p = utf8;
 
     for(; len > 0; len--) {

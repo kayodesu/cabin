@@ -286,6 +286,4 @@ enum {
     MAX_SYMBOL_ENUM
 };
 
-void init_symbol();
-
 #endif //CABIN_SYMBOL_H

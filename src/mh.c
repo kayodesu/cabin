@@ -1,13 +1,13 @@
 #include "symbol.h"
 #include "cabin.h"
-#include "util/encoding.h"
 
 
 static Class *constructor_reflect_class;
 static Class *method_reflect_class;
 static Class *field_reflect_class;
-static Class *RMN_class;
-static Class *MN_class;
+static Class *MN_class;  // java/lang/invoke/MemberName
+static Class *RMN_class; // java/lang/invoke/ResolvedMethodName
+static Class *MH_class;  // java/lang/invoke/MethodHandle
 
 static Field *MN_clazz_field;
 static Field *MN_name_field;
@@ -23,6 +23,8 @@ static Method *MN_getSignature_method;
 static Field *RMN_vmtarget_field;
 static Field *RMN_vmholder_field;
 
+static Field *MH_form_field;
+
 void init_method_handle()
 {
     constructor_reflect_class = load_boot_class(S(java_lang_reflect_Constructor));
@@ -30,6 +32,7 @@ void init_method_handle()
     field_reflect_class = load_boot_class(S(java_lang_reflect_Field));
     MN_class = load_boot_class("java/lang/invoke/MemberName");
     RMN_class = load_boot_class("java/lang/invoke/ResolvedMethodName");
+    MH_class = load_boot_class("java/lang/invoke/MethodHandle");
 
     // private Class<?> clazz;
     MN_clazz_field = get_declared_field0(MN_class, S(clazz), S(sig_java_lang_Class));
@@ -50,11 +53,14 @@ void init_method_handle()
     RMN_vmtarget_field = get_declared_field0(RMN_class, "vmtarget", S(sig_java_lang_Object));
     RMN_vmholder_field = get_declared_field0(RMN_class, "vmholder", S(sig_java_lang_Class));
 
+    // final LambdaForm form;
+    MH_form_field = get_declared_field0(MH_class, S(form), "Ljava/lang/invoke/LambdaForm;");
+
     if (constructor_reflect_class == NULL || method_reflect_class == NULL
         || field_reflect_class == NULL || MN_class == NULL
         || MN_clazz_field == NULL || MN_name_field == NULL || MN_type_field == NULL
         || MN_flags_field == NULL || MN_method_field == NULL
-        || MN_getSignature_method == NULL) {
+        || MN_getSignature_method == NULL || MH_form_field == NULL) {
         JVM_PANIC("initMethodHandle");  // todo
         // throw runtime_error("initMethodHandle"); // todo
     }
@@ -68,7 +74,7 @@ jref findMethodType0(jarrRef ptypes, jclsRef rtype)
     // static MethodType findMethodHandleType(Class<?> rtype, Class<?>[] ptypes)
     Method *m = get_declared_static_method(mhn, "findMethodHandleType",
                 "(Ljava/lang/Class;[Ljava/lang/Class;)Ljava/lang/invoke/MethodType;");
-    return slot_get_ref(exec_java_func2(m, rtype, ptypes));
+    return exec_java_r(m, ((slot_t[]) { rslot(rtype), rslot(ptypes) }));
 }
 
 jref findMethodType(const utf8_t *desc, jref loader)
@@ -91,9 +97,9 @@ jref linkMethodHandleConstant(Class *caller_class, int ref_kind,
     Method *m = get_declared_static_method(mhn, "linkMethodHandleConstant",
         "(Ljava/lang/Class;ILjava/lang/Class;Ljava/lang/String;Ljava/lang/Object;)"
                     "Ljava/lang/invoke/MethodHandle;");
-    return slot_get_ref(exec_java_func(m,
-                               (slot_t []) { rslot(caller_class->java_mirror), islot(ref_kind),
-                                 rslot(defining_class->java_mirror), rslot(name_str), rslot(type) }));
+    return exec_java_r(m,
+                    ((slot_t []) { rslot(caller_class->java_mirror), islot(ref_kind),
+                        rslot(defining_class->java_mirror), rslot(name_str), rslot(type) }));
 }
 
 //Array *method_type::parameterTypes(jref methodType)
@@ -268,6 +274,7 @@ void init_member_name(jref member_name, jref target)
         jref resolved_method_name = alloc_object(RMN_class);
         set_ref_field0(resolved_method_name, RMN_vmtarget_field, (jref) (void *) m);
         // set_ref_field0(resolved_method_name, RMN_vmholder_field, ); // todo RMN_vmholder_field怎么设置
+        
         set_ref_field0(member_name, MN_method_field, resolved_method_name);
         return;
 
@@ -354,7 +361,6 @@ void init_member_name(jref member_name, jref target)
     // throw java_lang_InternalError("initMemberName: unimplemented target");
     raise_exception(S(java_lang_InternalError), NULL);  // todo msg
 }
-
 
 void expand_member_name(jref member_name)
 {
@@ -469,7 +475,7 @@ Object *resolve_member_name(jref member_name, Class *caller)
         JVM_PANIC("11111111111"); // todo
     }
 
-    jstrRef sig_str = slot_get_ref(exec_java_func1(MN_getSignature_method, member_name));
+    jstrRef sig_str = exec_java_r(MN_getSignature_method, (slot_t[]) { rslot(member_name) });
     const utf8_t *sig = string_to_utf8(sig_str);
 
 //    auto xx = toMethodDescriptor(type)->toUtf8();
@@ -532,11 +538,10 @@ Object *resolve_member_name(jref member_name, Class *caller)
             return member_name;
         }
         default:
+            SHOULD_NEVER_REACH_HERE("%d", flags & ALL_KINDS);
             // throw java_lang_LinkageError("resolve member name");; // todo
             raise_exception(S(java_lang_LinkageError), NULL);  // todo msg
     }
-
-    JVM_PANIC("never reach here"); // todo
 }
 
 jint get_members(jclsRef defc, jstrRef match_name, 
@@ -587,9 +592,9 @@ jint get_members(jclsRef defc, jstrRef match_name,
                 flags |= (IS_STATIC(m) ? JVM_REF_invokeStatic : JVM_REF_invokeVirtual) << REFERENCE_KIND_SHIFT;
 
                 set_int_field0(member_name, MN_flags_field, flags);
-                set_int_field0(member_name, MN_clazz_field, m->clazz->java_mirror);
-                set_int_field0(member_name, MN_name_field, intern_string(alloc_string(m->name)));
-                set_int_field0(member_name, MN_type_field, alloc_string(m->descriptor));
+                set_ref_field0(member_name, MN_clazz_field, m->clazz->java_mirror);
+                set_ref_field0(member_name, MN_name_field, intern_string(alloc_string(m->name)));
+                set_ref_field0(member_name, MN_type_field, alloc_string(m->descriptor));
                 // INST_DATA(mname, int, mem_name_flags_offset) = flags;
                 // INST_DATA(mname, Class*, mem_name_clazz_offset) = mb->class;
                 // INST_DATA(mname, Object*, mem_name_name_offset) =
@@ -613,9 +618,8 @@ jlong member_name_object_field_offset(jref member_name)
     jstrRef name = get_ref_field0(member_name, MN_name_field);
     jref type = get_ref_field0(member_name, MN_type_field);
 
-    Method *m = lookup_inst_method(member_name->clazz, "getSignature", "()Ljava/lang/String;");
-    jref sig = slot_get_ref(exec_java_func1(m, member_name));
-
+    jref sig = exec_java_r(MN_getSignature_method, (slot_t[]) { rslot(member_name) });
+    // todo type和sig相同吗？？？？
     Field *f = lookup_field(clazz, string_to_utf8(name), string_to_utf8(sig));
     return f->id;
 }
@@ -628,20 +632,5 @@ jref getCaller()
     // public static Lookup lookup();
     Class *mh = load_boot_class("java/lang/invoke/MethodHandles");
     Method *lookup = get_declared_static_method(mh, "lookup", "()Ljava/lang/invoke/MethodHandles$Lookup;");
-    return slot_get_ref(exec_java_func(lookup, NULL));
+    return exec_java_r(lookup, NULL);
 }
-
-// void java_lang_invoke_MemberName::init()
-// {
-//     Class *c = loadBootClass("java/lang/invoke/MemberName");
-//     // private Class<?> clazz;
-// //    mn_clazz_field = c->getDeclaredField(S(clazz), S(sig_java_lang_Class));
-//     // private String name;
-// //    mn_name_field = c->getDeclaredField(S(name), S(sig_java_lang_String));
-//     // private Object type;
-// //    mn_type_field = c->getDeclaredField(S(type), S(sig_java_lang_Object));
-//     // private int flags;
-// //    mn_flags_field = c->getDeclaredField(S(flags), S(I));
-
-//     // private intptr_t   vmindex;     // member index within class or interface
-// }

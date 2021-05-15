@@ -4,10 +4,8 @@
 
 static char *mangle_class_and_method_name(Method *m) 
 {
-    assert(m != NULL);
-
     const char *class_name = m->clazz->class_name;
-    int len = strlen(class_name) + strlen(m->name) + 16;
+    size_t len = strlen(class_name) + strlen(m->name) + 16;
     char *mangled = vm_malloc(len*sizeof(char));
     strcpy(mangled, "Java_");
 

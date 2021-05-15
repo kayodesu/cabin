@@ -1,7 +1,6 @@
 #include "cabin.h"
 #include "attributes.h"
 #include "jni.h"
-#include "util/encoding.h"
 
 
 typedef struct exception_table ExceptionTable;

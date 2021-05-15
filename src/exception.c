@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "util/encoding.h"
+#include "cabin.h"
 
 extern bool g_vm_initing;
 
@@ -21,9 +21,10 @@ void raise_exception(const char *exception_class_name, const char *msg)
         init_class(ec);
         thread->exception = alloc_object(ec);
         if (msg == NULL) {
-            exec_java_func1(get_constructor(ec, S(___V)), thread->exception);
+            exec_java(get_constructor(ec, S(___V)), (slot_t[]) { rslot(thread->exception) });
         } else {
-            exec_java_func2(get_constructor(ec, S(_java_lang_String__V)), thread->exception, alloc_string(msg));
+            exec_java(get_constructor(ec, S(_java_lang_String__V)), 
+                        (slot_t[]) { rslot(thread->exception), rslot(alloc_string(msg)) });
         }
 
         longjmp(thread->jmpbuf, LONG_JMP_JAVA_EXCEP_VALUE);

@@ -3,7 +3,7 @@
 
 import os
 
-yovm = 'd:/code/cabin/build/cabin.exe -cp "d:/code/cabin/test-classes/out/production/test-classes" '
+VM = 'd:/code/cabin/build/cabin.exe -cp "d:/code/cabin/test-classes/out/production/test-classes" '
 
 if __name__ == '__main__':
     for e in os.walk('./test-classes/src'):
@@ -24,4 +24,4 @@ if __name__ == '__main__':
             if i != -1:
                 class_name = class_name[:i]
                 print("---Test: " + class_name)
-                os.system(yovm + class_name)
+                os.system(VM + class_name)

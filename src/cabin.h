@@ -10,7 +10,6 @@
 #include <setjmp.h>
 #include <pthread.h>
 #include "symbol.h"
-#include "util/hash.h"
 #include "constants.h"
 
 #ifndef PATH_MAX
@@ -103,12 +102,15 @@ extern u2 g_classfile_manor_version;
 extern Object *g_sys_thread_group;
 
 struct vm_thread;
+struct point_hash_map;
+struct point_hash_set;
 
 // todo 所有线程
 extern struct vm_thread *g_all_threads[];
 extern int g_all_threads_count;
 #define add_thread(t) g_all_threads[g_all_threads_count++] = t
 
+#define BOOT_CLASS_LOADER NULL
 extern Object *g_app_class_loader;
 extern Object *g_platform_class_loader;
 
@@ -207,8 +209,67 @@ do { \
     exit(-1); \
 } while(false)
 
+#define SHOULD_NEVER_REACH_HERE(...) \
+do { \
+    printvm("should never reach here. "); \
+    printf(__VA_ARGS__); \
+    exit(-1); \
+} while(false)
+
 // 退出jvm
 #define JVM_EXIT exit(0);
+
+
+/*
+ * 大端(big endian):低地址存放高字节
+ * 小端(little endian):低字节存放低字节
+ */
+
+static const union {
+    char c[4]; unsigned long l;
+} endian_test = { { 'l', '?', '?', 'b' } };
+
+// Endianness(字节顺序)
+#define ENDIANNESS ((char) endian_test.l)
+
+static inline bool is_big_endian()
+{
+    return ENDIANNESS == 'b';
+}
+
+/*---------------------------------------- Convert -------------------------------------------*/
+
+/*
+ * 将字节数组转换为32位整形.
+ * 字节数组bytes按大端存储，长度4.
+ */
+int32_t bytes_to_int32(const uint8_t bytes[4]);
+
+/*
+ * 将字节数组转换为64位整形.
+ * 字节数组bytes按大端存储，长度8.
+ */
+int64_t bytes_to_int64(const uint8_t bytes[8]);
+
+jfloat int_bits_to_float(jint i);
+
+/*
+ * 将字节数组转换为32位浮点数.
+ * 字节数组bytes按大端存储，长度4.
+ */
+jfloat bytes_to_float(const uint8_t bytes[4]);
+
+jdouble long_bits_to_double(jlong l);
+
+/*
+ * 将字节数组转换为64位浮点数.
+ * 字节数组bytes按大端存储，长度8.
+ */
+jdouble bytes_to_double(const uint8_t bytes[8]);
+
+jint float_to_raw_int_bits(jfloat f);
+
+jlong double_to_raw_long_bits(jdouble d);
 
 /*---------------------------------------- System Info -------------------------------------------*/
 
@@ -225,6 +286,45 @@ const char *os_arch();
 const char *get_file_separator();
 const char *get_path_separator();
 const char *get_line_separator();
+
+/*------------------------------------------ Encoding  -----------------------------------------*/
+
+/*
+ * jvm内部使用的utf8是一种改进过的utf8，与标准的utf8有所不同，
+ * // todo 说明null
+ * 具体参考 jvms。
+ *
+ * this vm 操作的utf8字符串，要求以'\0'结尾并且不包含utf8的结束符.
+ *
+ * todo java.lang.String 内部是用utf16表示的，和Unicode有什么区别？？
+ */
+
+void init_utf8_pool();
+
+// save a utf8 string to pool.
+// 如不存在，返回新插入的值
+// 如果已存在，则返回池中的值。
+const utf8_t *save_utf8(const utf8_t *utf8);
+
+// get utf8 from pool, return null if not exist.
+const utf8_t *find_utf8(const utf8_t *utf8);
+
+size_t utf8_hash(const utf8_t *utf8);
+size_t utf8_length(const utf8_t *utf8);
+bool utf8_equals(const utf8_t *p1, const utf8_t *p2);
+utf8_t *utf8_dup(const utf8_t *utf8);
+
+utf8_t *dot_to_slash(utf8_t *utf8);
+utf8_t *dot_to_slash_dup(const utf8_t *utf8);
+
+utf8_t *slash_to_dot(utf8_t *utf8);
+utf8_t *slash_to_dot_dup(const utf8_t *utf8);
+
+// 不会在buf后面添加字符串结束符'\u0000'
+unicode_t *utf8_to_unicode(const utf8_t *utf8, size_t len);
+
+// 由调用者 delete[] utf8 string
+utf8_t *unicode_to_utf8(const unicode_t *unicode, size_t len);
 
 /*------------------------------------------ Class Path  -----------------------------------------*/
 
@@ -403,15 +503,15 @@ const utf8_t *get_prim_descriptor_by_wrapper_class_name(const utf8_t *wrapper_cl
 const utf8_t *get_prim_descriptor_by_class_name(const utf8_t *class_name);
 // const slot_t *primObjUnbox(const Object *box);
 
-jref voidBox();
-jref byteBox(jbyte x);
-jref boolBox(jbool x);
-jref charBox(jchar x);
-jref shortBox(jshort x);
-jref intBox(jint x);
-jref floatBox(jfloat x);
-jref longBox(jlong x);
-jref doubleBox(jdouble x);
+jref void_box();
+jref byte_box(jbyte x);
+jref bool_box(jbool x);
+jref char_box(jchar x);
+jref short_box(jshort x);
+jref int_box(jint x);
+jref float_box(jfloat x);
+jref long_box(jlong x);
+jref double_box(jdouble x);
 
 /*----------------------------------------- Interpreter ------------------------------------------*/
 
@@ -420,17 +520,11 @@ jref doubleBox(jdouble x);
  * 函数调用指令（invokestatic, invokespecial, ...）中不能使用
  */
 
-slot_t *exec_java_func(Method *, const slot_t *args);
-#define exec_java_func_r(_method, _args) slot_get_ref(exec_java_func(_method, _args))
+slot_t *exec_java(Method *, const slot_t *args);
+#define exec_java_r(_method, _args) slot_get_ref(exec_java(_method, _args))
 
 // Object[] args;
-slot_t *exec_java_func0(Method *, jref _this, jarrRef args);
-
-slot_t *exec_java_func1(Method *method, jref arg);
-
-slot_t *exec_java_func2(Method *method, jref arg1, jref arg2);
-
-slot_t *exec_java_func3(Method *method, jref arg1, jref arg2, jref arg3);
+slot_t *exec_java0(Method *, jref _this, jarrRef args);
 
 /*----------------------------------------- Constant Pool ----------------------------------------*/
 
@@ -515,29 +609,20 @@ extern Class *g_string_class;
 
 void init_class_loader();
 
-#define BOOT_CLASS_LOADER ((jref) NULL)
-
 /*
  * 加载 JDK 类库中的类，不包括Array Class.
  * xxx/xxx/xxx
  */
 Class *load_boot_class(const utf8_t *name);
 
-Class *loadArrayClass(Object *loader, const utf8_t *arr_class_name);
-
-static inline Class *loadArrayClass0(const utf8_t *arr_class_name)
-{
-    assert(arr_class_name != NULL);
-    assert(arr_class_name[0] == '['); // must be array class name
-    return loadArrayClass(g_app_class_loader, arr_class_name);
-};
+Class *load_array_class(Object *loader, const utf8_t *arr_class_name);
 
 // Load byte[].class, boolean[].class, char[].class, short[].class, 
 //      int[].class, float[].class, long[].class, double[].class.
 Class *load_type_array_class(ArrayType type);
 
 const utf8_t *get_boot_package(const utf8_t *name);
-PHS *get_boot_packages();
+struct point_hash_set *get_boot_packages();
 
 /*
  * @name: 全限定类名，不带 .class 后缀
@@ -576,7 +661,7 @@ Class *link_class(Class *c);
 
 jref get_platform_class_loader();
 
-/*
+/* todo
  * 返回 System Class Loader(sun/misc/Launcher$AppClassLoader) to loader user classes.
  *
  * 继承体系为：
@@ -593,8 +678,9 @@ jref get_app_class_loader();
 #define IS_SLASH_CLASS_NAME(class_name) (strchr(class_name, '.') == NULL)
 #define IS_DOT_CLASS_NAME(class_name) (strchr(class_name, '/') == NULL)
 
-// std::unordered_map<const utf8_t *, Class *, Utf8Hash, Utf8Comparator> *getAllBootClasses();
-// const std::unordered_set<const Object *> &getAllClassLoaders();
+struct point_hash_map *get_all_boot_classes();
+
+struct point_hash_set *get_all_class_loaders();
 
 // void printBootLoadedClasses();
 // void printClassLoader(Object *class_loader);
@@ -743,7 +829,7 @@ struct class {
          // for java.lang.String class
          struct {
              // A pool of strings, initially empty, is maintained privately by the String class.
-             PHS *str_pool;
+             struct point_hash_set *str_pool;
              pthread_mutex_t str_pool_mutex;
          } string;
 
@@ -911,7 +997,7 @@ struct method {
 
     u2 max_stack;
     u2 max_locals;
-    u2 arg_slot_count;
+    u2 arg_slot_count; // include 'this' if is not static.
 
     u1 *code;
     size_t code_len;
@@ -1103,7 +1189,7 @@ struct object {
 
         // present only if object of java/lang/ClassLoader
         // save the all loaded classes by this ClassLoader
-        PHM *classes;
+        struct point_hash_map *classes;
         // std::unordered_map<const utf8_t *, Class *, Utf8Hash, Utf8Comparator> *classes = NULL;
  //   }
 
@@ -1124,10 +1210,10 @@ Object *create_local_object(Class *);
 
 // 一维数组
 Object *alloc_array(Class *, jint arr_len);
-#define alloc_array0(arr_class_name, arr_len) alloc_array(loadArrayClass0(arr_class_name), arr_len)
-#define alloc_string_array(arr_len) alloc_array0(S(array_java_lang_String), arr_len)
-#define alloc_class_array(arr_len)  alloc_array0(S(array_java_lang_Class), arr_len)
-#define alloc_object_array(arr_len) alloc_array0(S(array_java_lang_Object), arr_len)
+#define alloc_array0(class_loader, arr_class_name, arr_len) alloc_array(load_array_class(class_loader, arr_class_name), arr_len)
+#define alloc_string_array(arr_len) alloc_array0(BOOT_CLASS_LOADER, S(array_java_lang_String), arr_len)
+#define alloc_class_array(arr_len)  alloc_array0(BOOT_CLASS_LOADER, S(array_java_lang_Class), arr_len)
+#define alloc_object_array(arr_len) alloc_array0(BOOT_CLASS_LOADER, S(array_java_lang_Object), arr_len)
 
 // 多维数组
 Object *alloc_multi_array(Class *, jint dim, const jint lens[]);

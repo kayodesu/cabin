@@ -1,6 +1,5 @@
 #include "cabin.h"
 #include "attributes.h"
-#include "util/encoding.h"
 
 void init_field(Field *f, Class *c, BytecodeReader *r)
 {
@@ -101,7 +100,7 @@ void init_field0(Field *f, Class *c, const utf8_t *name, const utf8_t *descripto
 jclsRef get_field_type(Field *f)
 {
     if (*f->descriptor == '[') { // array
-        return loadArrayClass0(f->descriptor)->java_mirror;
+        return load_array_class(f->clazz->loader, f->descriptor)->java_mirror;
     } 
     
     if (*f->descriptor == 'L') { // non array Object

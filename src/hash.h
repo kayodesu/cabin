@@ -50,7 +50,6 @@ void *phm_find(const PHM *, const void *key);
 
 void phm_touch_values(const PHM *, void (* touch)(void *));
 
-#if 0
 #define PHM_TRAVERSAL(_phm, _value_type, _value_name, _do_value) \
     for (int _i = 0; _i < _phm->capacity; _i++) { \
         for (struct point_hash_map_node *_node = _phm->table[_i]; _node != NULL; _node = _node->next) { \
@@ -58,7 +57,6 @@ void phm_touch_values(const PHM *, void (* touch)(void *));
             _do_value \
         } \
     }
-#endif
 
 // -------------------------------------------------------------------------------------------------
 
