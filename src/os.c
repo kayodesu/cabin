@@ -1,5 +1,6 @@
 #ifdef _WIN32
 #include <windows.h>
+#endif
 
 #ifdef __linux__
 #include <unistd.h>
@@ -203,36 +204,3 @@ const char *get_line_separator()
     return "\n";
 #endif
 }
-
-// string getTimeZone()
-// {
-//     time_t raw_time;
-//     time (&raw_time);
-
-//     struct tm *time_info = localtime(&raw_time);
-
-//     char timezone_[64];
-//     strftime(timezone_, sizeof(timezone_), "%Z", time_info);
-//     return timezone_;
-
-// //    TIME_ZONE_INFORMATION   tzi;
-// //
-// //     GetSystemTime(&tzi.StandardDate);
-// //
-// //     GetTimeZoneInformation(&tzi);
-// //
-// ////	size_t len = wcslen(tzi.StandardName) + 1;
-// ////	size_t converted = 0;
-// ////	char *standard_name =(char *) malloc(2 * len * sizeof(char));
-// ////
-// ////	auto cc = wcstombs_s(&converted, standard_name, len, tzi.StandardName, _TRUNCATE);
-// ////
-// ////    auto   strDaylightName   =   tzi.DaylightName;
-// ////
-// ////     auto zone = tzi.Bias/ -60; //时区，如果是中国标准时间则得到8
-// //
-// //    wcout << "time zone: " << tzi.DaylightName << endl;
-// //     return tzi.StandardName;
-// }
-
-#endif

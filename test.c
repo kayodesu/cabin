@@ -182,7 +182,6 @@ static void test_new_multi_array()
     print_int_array(arr, dim, lens);
 }
 
-
 int main()
 {
     JNI_CreateJavaVM(&g_vm, (void **) &g_jni_env, NULL);
