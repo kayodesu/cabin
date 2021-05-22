@@ -120,6 +120,7 @@ static int filename_compare_func(unzFile file, const char *filename1, const char
 /*
  * @param class_name: xxx/xxx/xxx
  */
+THROW_JAVA_EXCEPTION
 static u1 *read_class(const char *path, const char *class_name, ClassLocation location, size_t *bytecode_len)
 {
     assert(path != NULL && class_name != NULL && bytecode_len != NULL);

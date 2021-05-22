@@ -87,6 +87,7 @@ JVM_Clone(JNIEnv *env, jobject _obj)
     jref obj = (jref) _obj;
     if (!is_subclass_of(obj->clazz, load_boot_class(S(java_lang_Cloneable)))) {
         JNI_THROW(env, S(java_lang_CloneNotSupportedException), NULL); // todo msg
+        return NULL;
     }
     return (jobject) clone_object(obj);
 }
@@ -785,6 +786,7 @@ JVM_Sleep(JNIEnv *env, jclass threadClass, jlong millis)
     TRACE("JVM_Sleep(env=%p, thread=%p, millis=%ld)", env, threadClass, millis);
     if (millis <= 0) {
         JNI_THROW_IllegalArgumentException(env, NULL); // todo msg
+        return;
     }
     if (millis == 0)
         return;
@@ -1077,9 +1079,11 @@ JVM_GetArrayLength(JNIEnv *env, jobject arr)
     jref array = (jref) arr;
     if (array == NULL) {
         JNI_THROW_NPE(env, NULL);
+        return -1;
     }
     if (!is_array_object(array)) {
         JNI_THROW_IllegalArgumentException(env, "Argument is not an array");
+        return -1;
     }
     return array->arr_len;
 }
@@ -1092,13 +1096,16 @@ JVM_GetArrayElement(JNIEnv *env, jobject arr, jint index)
     jarrRef array = (jarrRef) arr;
     if (array == NULL) {
         JNI_THROW_NPE(env, NULL);
+        return NULL;
     }
     if (!is_array_object(array)) {
         JNI_THROW_IllegalArgumentException(env, "Argument is not an array");
+        return NULL;
     }
 
     if (index < 0 || index >= array->arr_len) {
         JNI_THROW_ArrayIndexOutOfBoundsException(env, NULL); // todo msg
+        return NULL;
     }
 
     switch (array->clazz->class_name[1]) {
@@ -1142,24 +1149,29 @@ JVM_SetArrayElement(JNIEnv *env, jobject arr, jint index, jobject val)
 
     if (array == NULL) {
         JNI_THROW_NPE(env, NULL);
+        return;
     }
     if (!is_array_object(array)) {
         JNI_THROW_IllegalArgumentException(env, "Argument is not an array");
+        return;
     }
 
     if (index < 0 || index >= array->arr_len) {
         JNI_THROW_NegativeArraySizeException(env, NULL); // todo msg
+        return;
     }
 
     if (is_prim_array(array) && value == NULL) {
         // 基本类型的数组无法设空值
         JNI_THROW_IllegalArgumentException(env, NULL); // todo msg
+        return;
     }
 
     switch (array->clazz->class_name[1]) {
     case 'Z': // boolean[]
         if (!utf8_equals(value->clazz->class_name, S(java_lang_Boolean))) {
             JNI_THROW_IllegalArgumentException(env, "argument type mismatch");
+            return;
         } else {
             array_set_boolean(array, index, slot_get_bool(prim_wrapper_obj_unbox(value)));
         }
@@ -1167,6 +1179,7 @@ JVM_SetArrayElement(JNIEnv *env, jobject arr, jint index, jobject val)
     case 'B': // byte[]
         if (!utf8_equals(value->clazz->class_name, S(java_lang_Byte))) {
             JNI_THROW_IllegalArgumentException(env, "argument type mismatch");
+            return;
         } else {
             array_set_byte(array, index, slot_get_byte(prim_wrapper_obj_unbox(value)));
         }
@@ -1174,6 +1187,7 @@ JVM_SetArrayElement(JNIEnv *env, jobject arr, jint index, jobject val)
     case 'C': // char[]
         if (!utf8_equals(value->clazz->class_name, S(java_lang_Character))) {
             JNI_THROW_IllegalArgumentException(env, "argument type mismatch");
+            return;
         } else {
             array_set_char(array, index, slot_get_char(prim_wrapper_obj_unbox(value)));
         } 
@@ -1181,6 +1195,7 @@ JVM_SetArrayElement(JNIEnv *env, jobject arr, jint index, jobject val)
     case 'S': // short[]
         if (!utf8_equals(value->clazz->class_name, S(java_lang_Short))) {
             JNI_THROW_IllegalArgumentException(env, "argument type mismatch");
+            return;
         } else {
             array_set_short(array, index, slot_get_short(prim_wrapper_obj_unbox(value)));
         } 
@@ -1188,6 +1203,7 @@ JVM_SetArrayElement(JNIEnv *env, jobject arr, jint index, jobject val)
     case 'I': // int[]
         if (!utf8_equals(value->clazz->class_name, S(java_lang_Integer))) {
             JNI_THROW_IllegalArgumentException(env, "argument type mismatch");
+            return;
         } else {
             array_set_int(array, index, slot_get_int(prim_wrapper_obj_unbox(value)));
         } 
@@ -1195,6 +1211,7 @@ JVM_SetArrayElement(JNIEnv *env, jobject arr, jint index, jobject val)
     case 'J': // long[]
         if (!utf8_equals(value->clazz->class_name, S(java_lang_Long))) {
             JNI_THROW_IllegalArgumentException(env, "argument type mismatch");
+            return;
         } else {
             array_set_long(array, index, slot_get_long(prim_wrapper_obj_unbox(value)));
         } 
@@ -1202,6 +1219,7 @@ JVM_SetArrayElement(JNIEnv *env, jobject arr, jint index, jobject val)
     case 'F': // float[]
         if (!utf8_equals(value->clazz->class_name, S(java_lang_Float))) {
             JNI_THROW_IllegalArgumentException(env, "argument type mismatch");
+            return;
         } else {
             array_set_float(array, index, slot_get_float(prim_wrapper_obj_unbox(value)));
         } 
@@ -1209,6 +1227,7 @@ JVM_SetArrayElement(JNIEnv *env, jobject arr, jint index, jobject val)
     case 'D': // double[]
         if (!utf8_equals(value->clazz->class_name, S(java_lang_Double))) {
             JNI_THROW_IllegalArgumentException(env, "argument type mismatch");
+            return;
         } else {
             array_set_double(array, index, slot_get_double(prim_wrapper_obj_unbox(value)));
         } 

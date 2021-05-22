@@ -279,6 +279,8 @@ Field *resolve_field(ConstantPool *cp, u2 i)
     } else {
         Class *c = resolve_class(cp, cp_field_class_index(cp, i));
         f = lookup_field(c, cp_field_name(cp, i), cp_field_type(cp, i));
+        if (exception_occurred())
+            return NULL;
 
         cp_set_type(cp, i, JVM_CONSTANT_ResolvedField);
         cp_set(cp, i, (slot_t) f);

@@ -720,7 +720,7 @@ Field *lookup_static_field(Class *c, const utf8_t *name, const utf8_t *descripto
 
 Field *lookup_inst_field0(Class *c, const utf8_t *name, const utf8_t *descriptor)
 {
-    Field* field = lookup_field(c, name, descriptor);
+    Field *field = lookup_field(c, name, descriptor);
     if (field != NULL && IS_STATIC(field)) {
         // throw java_lang_IncompatibleClassChangeError();
         raise_exception(S(java_lang_IncompatibleClassChangeError), NULL); // todo msg  

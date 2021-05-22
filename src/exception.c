@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdlib.h>
 #include "cabin.h"
 
@@ -28,7 +29,24 @@ void raise_exception(const char *exception_class_name, const char *msg)
         }
     }
 
-    longjmp(thread->jmpbuf, LONG_JMP_JAVA_EXCEP_VALUE);
+    assert(thread->exception != NULL);
+}
+
+void set_exception(jref e)
+{
+    get_current_thread()->exception = e;
+}
+
+Object *exception_occurred()
+{
+    Thread *thread = get_current_thread();
+    jref e = thread->exception;
+    return e;
+}
+
+void clear_exception()
+{
+    get_current_thread()->exception = NULL;
 }
 
 void print_stack_trace(Object *e)

@@ -213,32 +213,20 @@ jobject JNICALL Cabin_ToReflectedField(JNIEnv *env, jclass cls, jfieldID fieldID
 
 jint JNICALL Cabin_Throw(JNIEnv *env, jthrowable obj)
 {
-    // todo
-    JVM_PANIC("not implement.");
-
-//    throw Throwable(to_object_ref(obj));
+    set_exception(obj);
     return JNI_TRUE;
 }
 
 jint JNICALL Cabin_ThrowNew(JNIEnv *env, jclass clazz, const char *msg)
 {
     Class *c = JVM_MIRROR(clazz);
-
-    // raise_exception(S(java_lang_NullPointerException), "xxx");
-    // todo
-    JVM_PANIC("Cabin_ThrowNew not implement. %s, %s.", c->class_name, msg);
-
-//    throw Throwable(to_object_ref<Class>(clazz), msg);
+    raise_exception(c->class_name, msg);
     return JNI_TRUE;
 }
 
 jthrowable JNICALL Cabin_ExceptionOccurred(JNIEnv *env)
 {
-    // todo
-
-    return NULL;
-
-    // JVM_PANIC("not implement.");
+    return exception_occurred();
 }
 
 void JNICALL Cabin_ExceptionDescribe(JNIEnv *env)
@@ -249,8 +237,7 @@ void JNICALL Cabin_ExceptionDescribe(JNIEnv *env)
 
 void JNICALL Cabin_ExceptionClear(JNIEnv *env)
 {
-    // todo
-    JVM_PANIC("not implement.");
+    clear_exception();
 }
 
 void JNICALL Cabin_FatalError(JNIEnv *env, const char *msg)
@@ -710,6 +697,7 @@ jobjectArray JNICALL Cabin_NewObjectArray(JNIEnv *env, jsize len, jclass element
 {
     if (len < 0) {
         JNI_THROW_NegativeArraySizeException(env, NULL);
+        return NULL;
     }
     
     jarrRef arr = alloc_array(array_class(JVM_MIRROR(elementClass)), len);
@@ -737,6 +725,7 @@ void JNICALL Cabin_SetObjectArrayElement(JNIEnv *env, jobjectArray array, jsize 
     jarrRef ao = (jarrRef) array;
     if (index < 0 || index >= ao->arr_len) {
         JNI_THROW_ArrayIndexOutOfBoundsException(env, NULL); // todo msg
+        return;
     }
 
     array_set_ref(ao, index, (jref) val);
@@ -747,6 +736,7 @@ jarray JNICALL Cabin_New##Type##Array(JNIEnv *env, jsize len) \
 { \
     if (len < 0) { \
         JNI_THROW_NegativeArraySizeException(env, NULL); \
+        return NULL; \
     } \
  \
     jarrRef arr = alloc_array0(BOOT_CLASS_LOADER, class_name, len); \

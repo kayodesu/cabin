@@ -11,7 +11,8 @@ void annotation_init(Annotation *anno, BytecodeReader *r)
     BUILD_ARRAY(anno->element_value_pairs, anno->element_value_pairs_count, element_value_pair_init, r);
 }    
 
-void element_value_init(ElementValue *ev, BytecodeReader *r)
+THROW_JAVA_EXCEPTION
+void element_value_init(ElementValue *ev, BytecodeReader *r) 
 {
     ev->tag = bcr_readu1(r);
     switch (ev->tag) {

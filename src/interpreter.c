@@ -1,5 +1,4 @@
 #include <math.h>
-#include <setjmp.h>
 #include <ffi.h>
 #include "cabin.h"
 #include "attributes.h"
@@ -128,28 +127,36 @@ static slot_t *exec(jref *excep)
     slot_t *lvars = frame->lvars;
 
     jref _this = IS_STATIC(frame->method) ? (jref) clazz : slot_get_ref(lvars);
-    
-    int result = setjmp(thread->jmpbuf);
-    if (result != 0) {
-        jref _excep = thread->exception;
-        assert(_excep != NULL);
-        ostack_pushr(frame, _excep);
-        
-        thread->exception = NULL;
-        goto opc_athrow;
-    }
 
-    // if (excep != NULL) {
-    //     ostack_pushr(frame, excep);
-    //     excep = NULL;
-    //     goto opc_athrow;
-    // }
+#define HANDLE_EXCEPTION0(_excep) \
+do { \
+    assert(_excep != NULL); \
+    ostack_pushr(frame, _excep); \
+    goto opc_athrow; \
+} while(false)  
+
+#define CHECK_EXCEPTION_OCCURRED \
+{ \
+    jref _excep = exception_occurred(); \
+    if (_excep != NULL) { \
+        clear_exception(); \
+        HANDLE_EXCEPTION0(_excep); \
+    } \
+}
+
+#define HANDLE_EXCEPTION(_excep_name, _msg) \
+do { \
+    raise_exception(_excep_name, _msg); \
+    jref _excep = exception_occurred(); \
+    clear_exception(); \
+    HANDLE_EXCEPTION0(_excep); \
+} while(false)
 
 #define NULL_POINTER_CHECK(ref) \
 do { \
     if ((ref) == NULL) \
-        raise_exception(S(java_lang_NullPointerException), NULL); \
-} while(false) // throw java_lang_NullPointerException();
+        HANDLE_EXCEPTION(S(java_lang_NullPointerException), NULL); \
+} while(false) 
 
 #define CHANGE_FRAME(new_frame) \
 do { \
@@ -249,7 +256,7 @@ _ldc: {
             ostack_pushr(frame, resolve_class(cp, index)->java_mirror);
             break;
         default:
-            raise_exception(S(java_lang_UnknownError), NULL); // todo msg
+            HANDLE_EXCEPTION(S(java_lang_UnknownError), NULL); // todo msg
             // throw java_lang_UnknownError("unknown type: " + to_string(type));
             break;
     }
@@ -267,7 +274,7 @@ opc_ldc2_w: {
             ostack_pushd(frame, cp_get_double(cp, index));
             break;
         default:
-            raise_exception(S(java_lang_UnknownError), NULL); // todo msg
+            HANDLE_EXCEPTION(S(java_lang_UnknownError), NULL); // todo msg
             // throw java_lang_UnknownError("unknown type: " + to_string(type));
             break;
     }
@@ -336,7 +343,7 @@ opc_dload_3:
     jarrRef arr = ostack_popr(frame); \
     NULL_POINTER_CHECK(arr); \
     if (!array_check_bounds(arr, index)) \
-        raise_exception(S(java_lang_ArrayIndexOutOfBoundsException), NULL); /* todo msg */       
+        HANDLE_EXCEPTION(S(java_lang_ArrayIndexOutOfBoundsException), NULL); /* todo msg */       
        // throw java_lang_ArrayIndexOutOfBoundsException("index is " + to_string(index));
 
 opc_iaload: {
@@ -470,41 +477,35 @@ opc_bastore: {
     jint value = ostack_popi(frame);
     GET_AND_CHECK_ARRAY
     if (is_byte_array_class(arr->clazz)) {
-        // arr->setByte(index, (jbyte) value);
         array_set_byte(arr, index, JINT_TO_JBYTE(value));
     } else if (is_boolean_array_class(arr->clazz)) {  
-        // arr->setBoolean(index, value != 0 ? jtrue : jfalse);
         array_set_boolean(arr, index, JINT_TO_JBOOL(value));
     } else {
-        JVM_PANIC("never go here"); // todo
+        SHOULD_NEVER_REACH_HERE(arr->clazz->class_name);
     }
     DISPATCH
 }
 opc_castore: {
     jint value = ostack_popi(frame);
     GET_AND_CHECK_ARRAY
-    // arr->setChar(index, (jchar) value);
     array_set_char(arr, index, JINT_TO_JCHAR(value));
     DISPATCH
 }
 opc_sastore: {
     jint value = ostack_popi(frame);
     GET_AND_CHECK_ARRAY
-    // arr->setShort(index, (jshort) value);
     array_set_short(arr, index, JINT_TO_JSHORT(value));
     DISPATCH
 }
 opc_lastore: {
     jlong value = ostack_popl(frame);
     GET_AND_CHECK_ARRAY
-    // arr->setLong(index, value);
     array_set_long(arr, index, value);
     DISPATCH
 }
 opc_dastore: {
     jdouble value = ostack_popd(frame);
     GET_AND_CHECK_ARRAY
-    // arr->setDouble(index, value);
     array_set_double(arr, index, value);
     DISPATCH
 }
@@ -602,8 +603,8 @@ opc_dmul:
 #define ZERO_DIVISOR_CHECK(value) \
 do { \
     if (value == 0) \
-        raise_exception(S(java_lang_ArithmeticException), "division by zero"); \
-} while(false) //  throw java_lang_ArithmeticException("division by zero"); 
+        HANDLE_EXCEPTION(S(java_lang_ArithmeticException), "division by zero"); \
+} while(false)
 
 opc_idiv:
     ZERO_DIVISOR_CHECK(slot_get_int(frame->ostack - 1));
@@ -858,11 +859,9 @@ opc_goto: {
 // 在Java 6之前，Oracle的Java编译器使用 jsr, jsr_w 和 ret 指令来实现 finally 子句。
 // 从Java 6开始，已经不再使用这些指令
 opc_jsr:
-    // throw java_lang_InternalError("jsr doesn't support after jdk 6.");
-    raise_exception(S(java_lang_InternalError), "jsr doesn't support after jdk 6.");  
+    HANDLE_EXCEPTION(S(java_lang_InternalError), "jsr doesn't support after jdk 6.");  
 opc_ret:
-    // throw java_lang_InternalError("ret doesn't support after jdk 6.");
-    raise_exception(S(java_lang_InternalError), "ret doesn't support after jdk 6."); 
+    HANDLE_EXCEPTION(S(java_lang_InternalError), "ret doesn't support after jdk 6."); 
 
 opc_tableswitch: {
     // 实现当各个case值跨度比较小时的 switch 语句
@@ -970,8 +969,7 @@ opc_getstatic: {
     index = bcr_readu2(reader);
     Field *field = resolve_field(cp, index);
     if (!IS_STATIC(field)) {
-        // throw java_lang_IncompatibleClassChangeError(get_field_info(field));
-        raise_exception(S(java_lang_IncompatibleClassChangeError), get_field_info(field));  
+        HANDLE_EXCEPTION(S(java_lang_IncompatibleClassChangeError), get_field_info(field));  
     }
 
     init_class(field->clazz);
@@ -986,10 +984,9 @@ opc_putstatic: {
     index = bcr_readu2(reader);
     Field *field = resolve_field(cp, index);
     if (!IS_STATIC(field)) {
-        // throw java_lang_IncompatibleClassChangeError(get_field_info(field));
-        raise_exception(S(java_lang_IncompatibleClassChangeError), get_field_info(field));  
+        HANDLE_EXCEPTION(S(java_lang_IncompatibleClassChangeError), get_field_info(field));  
     }
-    // printf("%s\n", field->name); // todo ////////////////////////////////////////////////////////////////////////////////////
+
     init_class(field->clazz);
 
     if (field->category_two) {
@@ -1000,18 +997,14 @@ opc_putstatic: {
         field->static_value.data[0] = *--frame->ostack;
     }
 
-    // if (strcmp(field->name, "soleInstance") == 0) {
-    //     printf("%p\n", field->static_value.r); // todo ////////////////////////////////////////////////////////////////
-    // }
-
     DISPATCH
 }                
 opc_getfield: {
     index = bcr_readu2(reader);
     Field *field = resolve_field(cp, index);
+    CHECK_EXCEPTION_OCCURRED
     if (IS_STATIC(field)) {
-        // throw java_lang_IncompatibleClassChangeError(get_field_info(field));
-        raise_exception(S(java_lang_IncompatibleClassChangeError), get_field_info(field));  
+        HANDLE_EXCEPTION(S(java_lang_IncompatibleClassChangeError), get_field_info(field));  
     }
 
     jref obj = ostack_popr(frame);
@@ -1026,16 +1019,15 @@ opc_getfield: {
 opc_putfield: {
     index = bcr_readu2(reader);
     Field *field = resolve_field(cp, index);
+    CHECK_EXCEPTION_OCCURRED
     if (IS_STATIC(field)) {
-        // throw java_lang_IncompatibleClassChangeError(get_field_info(field));
-        raise_exception(S(java_lang_IncompatibleClassChangeError), get_field_info(field));  
+        HANDLE_EXCEPTION(S(java_lang_IncompatibleClassChangeError), get_field_info(field));  
     }
 
     // 如果是final字段，则只能在构造函数中初始化，否则抛出java.lang.IllegalAccessError。
     if (IS_FINAL(field)) {
         if (!class_equals(clazz, field->clazz) || !utf8_equals(frame->method->name, S(object_init))) {
-            // throw java_lang_IllegalAccessError(get_field_info(field));
-            raise_exception(S(java_lang_IllegalAccessError), get_field_info(field));   
+            HANDLE_EXCEPTION(S(java_lang_IllegalAccessError), get_field_info(field));   
         }
     }
 
@@ -1056,10 +1048,7 @@ opc_invokevirtual: {
     // invokevirtual指令用于调用对象的实例方法，根据对象的实际类型进行分派（虚方法分派）。
     index = bcr_readu2(reader);
     Method *m = resolve_method(cp, index);
-    if (m == NULL) {
-        // todo
-        JVM_PANIC("m == NULL");
-    }
+    CHECK_EXCEPTION_OCCURRED
 
     if (is_signature_polymorphic(m)) {
         assert(IS_NATIVE(m));
@@ -1072,8 +1061,7 @@ opc_invokevirtual: {
     }
 
     if (IS_STATIC(m)) {
-        // throw java_lang_IncompatibleClassChangeError(get_method_info(m));
-        raise_exception(S(java_lang_IncompatibleClassChangeError), get_method_info(m));  
+        HANDLE_EXCEPTION(S(java_lang_IncompatibleClassChangeError), get_method_info(m));  
     }
 
     frame->ostack -= m->arg_slot_count;
@@ -1101,6 +1089,7 @@ opc_invokespecial: {
     // 3. 通过super关键字调用的超类方法，或者超接口中的默认方法。
     index = bcr_readu2(reader);
     Method *m = resolve_method_or_interface_method(cp, index);
+    CHECK_EXCEPTION_OCCURRED
 
     /*
      * 如果调用的中超类中的函数，但不是构造函数，不是private 函数，且当前类的ACC_SUPER标志被设置，
@@ -1115,12 +1104,10 @@ opc_invokespecial: {
     }
 
     if (IS_ABSTRACT(m)) {
-        // throw java_lang_AbstractMethodError(get_method_info(m));
-        raise_exception(S(java_lang_AbstractMethodError), get_method_info(m));  
+        HANDLE_EXCEPTION(S(java_lang_AbstractMethodError), get_method_info(m));  
     }
     if (IS_STATIC(m)) {
-        // throw java_lang_IncompatibleClassChangeError(get_method_info(m));
-        raise_exception(S(java_lang_IncompatibleClassChangeError), get_method_info(m));  
+        HANDLE_EXCEPTION(S(java_lang_IncompatibleClassChangeError), get_method_info(m));  
     }
 
     frame->ostack -= m->arg_slot_count;
@@ -1136,13 +1123,12 @@ opc_invokestatic: {
     // 如果类还没有被初始化，会触发类的初始化。
     index = bcr_readu2(reader);
     Method *m = resolve_method_or_interface_method(cp, index);
+    CHECK_EXCEPTION_OCCURRED
     if (IS_ABSTRACT(m)) {
-        // throw java_lang_AbstractMethodError(get_method_info(m));
-        raise_exception(S(java_lang_AbstractMethodError), get_method_info(m));  
+        HANDLE_EXCEPTION(S(java_lang_AbstractMethodError), get_method_info(m));  
     }
     if (!IS_STATIC(m)) {
-        // throw java_lang_IncompatibleClassChangeError(get_method_info(m));
-        raise_exception(S(java_lang_IncompatibleClassChangeError), get_method_info(m));  
+        HANDLE_EXCEPTION(S(java_lang_IncompatibleClassChangeError), get_method_info(m));  
     }
 
     // printf("%s\n", m->name);
@@ -1173,6 +1159,7 @@ opc_invokeinterface: {
     bcr_readu1(reader);
 
     Method *m = resolve_interface_method(cp, index);
+    CHECK_EXCEPTION_OCCURRED
     assert(IS_INTERFACE(m->clazz));
 
     /* todo 本地方法 */
@@ -1187,13 +1174,11 @@ opc_invokeinterface: {
     // assert(resolved_method == obj->clazz->lookupMethod(m->name, m->descriptor));
     resolved_method = lookup_method(obj->clazz, m->name, m->descriptor);
     if (IS_ABSTRACT(resolved_method)) {
-        // throw java_lang_AbstractMethodError(get_method_info(resolved_method));
-        raise_exception(S(java_lang_AbstractMethodError), get_method_info(resolved_method));  
+        HANDLE_EXCEPTION(S(java_lang_AbstractMethodError), get_method_info(resolved_method));  
     }
 
     if (!IS_PUBLIC(resolved_method)) {
-        // throw java_lang_IllegalAccessError(get_method_info(resolved_method));
-        raise_exception(S(java_lang_IllegalAccessError), get_method_info(resolved_method));   
+        HANDLE_EXCEPTION(S(java_lang_IllegalAccessError), get_method_info(resolved_method));   
     }
 
     assert(resolved_method);
@@ -1267,28 +1252,16 @@ opc_invokedynamic: {
 }
 opc_invokenative: {
     TRACE("%s", get_frame_info(frame));
-    // if (frame->method->native_method == NULL) { // todo
-    //     JVM_PANIC("not find native method: %s\n", get_method_info(frame->method));
-    // }
 
     // todo 不需要在这里做任何同步的操作
 
-    // assert(frame->method->native_method != NULL);
-
-
     call_jni_method(frame);
+    
+    CHECK_EXCEPTION_OCCURRED
 
-//    if (Thread::checkExceptionOccurred()) {
-//        TRACE("native method throw a exception");
-//        jref eo = Thread::getException();
-//        Thread::clearException();
-//        ostack_pushr(frame, eo);
-//        goto opc_athrow;
-//    }
-
-//    if (frame->method->isSynchronized()) {
-//        _this->unlock();
-//    }
+    //    if (frame->method->isSynchronized()) {
+    //        _this->unlock();
+    //    }
     DISPATCH
 }
 //opc_invokehandle: {
@@ -1322,8 +1295,7 @@ opc_new: {
     init_class(c);
 
     if (IS_INTERFACE(c) || IS_ABSTRACT(c)) {
-        // throw java_lang_InstantiationException(c->class_name);
-        raise_exception(S(java_lang_InstantiationException), c->class_name);  
+        HANDLE_EXCEPTION(S(java_lang_InstantiationException), c->class_name);  
     }
 
     // jref o = newObject(c);
@@ -1339,7 +1311,7 @@ opc_newarray: {
     jint arr_len = ostack_popi(frame);
     if (arr_len < 0) {
         // throw java_lang_NegativeArraySizeException("len is " + to_string(arr_len));
-        raise_exception(S(java_lang_NegativeArraySizeException), NULL);  // todo msg
+        HANDLE_EXCEPTION(S(java_lang_NegativeArraySizeException), NULL);  // todo msg
     }
 
     u1 arr_type = bcr_readu1(reader);
@@ -1352,7 +1324,7 @@ opc_anewarray: {
     jint arr_len = ostack_popi(frame);
     if (arr_len < 0) {
         // throw java_lang_NegativeArraySizeException("len is " + to_string(arr_len));
-        raise_exception(S(java_lang_NegativeArraySizeException), NULL);  // todo msg
+        HANDLE_EXCEPTION(S(java_lang_NegativeArraySizeException), NULL);  // todo msg
     }
 
     index = bcr_readu2(reader);
@@ -1367,8 +1339,7 @@ opc_multianewarray: {
 
     u1 dim = bcr_readu1(reader); // 多维数组的维度
     if (dim < 1) { // 必须大于或等于1
-        raise_exception(S(java_lang_UnknownError), NULL); // todo msg
-        // throw java_lang_UnknownError("The dimensions must be greater than or equal to 1.");
+        HANDLE_EXCEPTION(S(java_lang_UnknownError), "The dimensions must be greater than or equal to 1.");
     }
 
     jint lens[dim];
@@ -1376,7 +1347,7 @@ opc_multianewarray: {
         lens[i] = ostack_popi(frame);
         if (lens[i] < 0) {
             // throw java_lang_NegativeArraySizeException("len is %d" + to_string(lens[i]));
-            raise_exception(S(java_lang_NegativeArraySizeException), NULL);  // todo msg
+            HANDLE_EXCEPTION(S(java_lang_NegativeArraySizeException), NULL);  // todo msg
         }
     }
     ostack_pushr(frame, alloc_multi_array(ac, dim, lens));
@@ -1386,8 +1357,7 @@ opc_arraylength: {
     Object *o = ostack_popr(frame);
     NULL_POINTER_CHECK(o);
     if (!is_array_object(o)) {
-        raise_exception(S(java_lang_UnknownError), NULL); // todo msg
-        // throw java_lang_UnknownError("not a array");
+        HANDLE_EXCEPTION(S(java_lang_UnknownError), "not a array");
     }
     
     ostack_pushi(frame, o->arr_len);
@@ -1405,8 +1375,7 @@ opc_athrow: {
         //     e.print_stack_trace();
         // }
 
-        // throw java_lang_NullPointerException();
-        raise_exception(S(java_lang_NullPointerException), NULL);
+        HANDLE_EXCEPTION(S(java_lang_NullPointerException), NULL);
     }
 
     // 遍历虚拟机栈找到可以处理此异常的方法
@@ -1461,7 +1430,7 @@ opc_checkcast: {
         if (!checkcast(obj->clazz, c)) {
             // throw java_lang_ClassCastException(
             //         string(obj->clazz->class_name) + " cannot be cast to " + c->class_name);
-            raise_exception(S(java_lang_ClassCastException), NULL);  // todo msg
+            HANDLE_EXCEPTION(S(java_lang_ClassCastException), NULL);  // todo msg
         }
     }
     DISPATCH
@@ -1509,7 +1478,7 @@ opc_wide:
         case JVM_OPC_ret:    goto opc_ret;
         case JVM_OPC_iinc:   goto _wide_iinc;
         default:
-            raise_exception(S(java_lang_UnknownError), NULL); // todo msg
+            HANDLE_EXCEPTION(S(java_lang_UnknownError), NULL); // todo msg
             // throw java_lang_UnknownError("never goes here.");
     }  
 opc_ifnull: {
@@ -1527,24 +1496,20 @@ opc_ifnonnull: {
     DISPATCH
 }
 opc_goto_w:
-    raise_exception(S(java_lang_InternalError), "goto_w doesn't support");  
-    // throw java_lang_InternalError("goto_w doesn't support");
+    HANDLE_EXCEPTION(S(java_lang_InternalError), "goto_w doesn't support");  
     DISPATCH
 opc_jsr_w:
-    raise_exception(S(java_lang_InternalError), "jsr_w doesn't support after jdk 6.");  
-    // throw java_lang_InternalError("jsr_w doesn't support after jdk 6.");
+    HANDLE_EXCEPTION(S(java_lang_InternalError), "jsr_w doesn't support after jdk 6.");  
     DISPATCH
 opc_breakpoint:
-    raise_exception(S(java_lang_InternalError), "breakpoint doesn't support in this jvm.");  
-    // throw java_lang_InternalError("breakpoint doesn't support in this jvm.");
+    HANDLE_EXCEPTION(S(java_lang_InternalError), "breakpoint doesn't support in this jvm.");  
     DISPATCH
 opc_impdep2:
-    raise_exception(S(java_lang_InternalError), "opc_impdep2 isn't used.");  
-    // throw java_lang_InternalError("opc_impdep2 isn't used.");
+    HANDLE_EXCEPTION(S(java_lang_InternalError), "opc_impdep2 isn't used.");  
     DISPATCH            
 opc_unused:
     JVM_PANIC("xxxxxxxxxxxxxxxx"); // todo
-    raise_exception(S(java_lang_InternalError), NULL);  // todo msg
+    HANDLE_EXCEPTION(S(java_lang_InternalError), NULL);  // todo msg
     // throw java_lang_InternalError("This instruction isn't used. " + to_string(opcode));
     DISPATCH    
 }
