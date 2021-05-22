@@ -621,6 +621,12 @@ void gen_class_object(Class *c)
 
         // private final ClassLoader classLoader;
         set_ref_field(c->java_mirror, "classLoader", S(sig_java_lang_ClassLoader), c->loader);
+        if (is_array_class(c)) {
+            Class *component = component_class(c);
+            assert(component != NULL);            
+            // private final Class<?> componentType;
+            set_ref_field(c->java_mirror, "componentType", S(sig_java_lang_Class), component->java_mirror);
+        }
     }
     assert(c->java_mirror != NULL);
 }

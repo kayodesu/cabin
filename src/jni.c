@@ -226,7 +226,7 @@ jint JNICALL Cabin_ThrowNew(JNIEnv *env, jclass clazz, const char *msg)
 
     // raise_exception(S(java_lang_NullPointerException), "xxx");
     // todo
-    JVM_PANIC("not implement.");
+    JVM_PANIC("Cabin_ThrowNew not implement. %s, %s.", c->class_name, msg);
 
 //    throw Throwable(to_object_ref<Class>(clazz), msg);
     return JNI_TRUE;
