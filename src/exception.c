@@ -60,6 +60,7 @@ void print_stack_trace(Object *e)
 
     // [Ljava/lang/Object;
     jref backtrace = get_ref_field(e, "backtrace", "Ljava/lang/Object;");
+    assert(backtrace != NULL);
     for (int i = 0; i < backtrace->arr_len; i++) {
         jref element = array_get(jref, backtrace, i); // java.lang.StackTraceElement
 

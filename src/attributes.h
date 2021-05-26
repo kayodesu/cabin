@@ -62,8 +62,7 @@ typedef struct element_value {
     };
 } ElementValue;
 
-THROW_JAVA_EXCEPTION
-void element_value_init(ElementValue *ev, struct bytecode_reader *r); 
+TJE void element_value_init(ElementValue *ev, struct bytecode_reader *r); 
 
 typedef struct element_value_pair {
     // The value of the element_name_index item must be a valid index into the constant_pool table.

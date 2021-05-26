@@ -1784,8 +1784,8 @@ JVM_IsHiddenClass(JNIEnv *env, jclass cls)
 {
     TRACE("JVM_IsHiddenClass(env=%p, cls=%p)", env, cls);
     // // todo 什么是HiddenClass？？
-    // Class *c = JVM_MIRROR(cls);
-    // return false;
+    Class *c = JVM_MIRROR(cls);
+    return false;
 
     JVM_PANIC("unimplemented"); // todo
 }

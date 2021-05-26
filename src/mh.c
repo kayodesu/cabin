@@ -368,7 +368,6 @@ void expand_member_name(jref member_name)
     
     jref resolved = get_ref_field0(member_name, MN_method_field);
     if (resolved == NULL) {
-        // signalException(java_lang_IllegalArgumentException, "resolved");
         JVM_PANIC("java_lang_IllegalArgumentException");   // todo
     }
 
@@ -492,10 +491,7 @@ Object *resolve_member_name(jref member_name, Class *caller)
                 // JVM_PANIC("not implement"); // todo
             }
             if (m == NULL) {
-                // todo
-                // throw java_lang_NoSuchMethodError("resolve member name, METHOD");
                 raise_exception(S(java_lang_NoSuchMethodError), NULL);  // todo msg
-//                JVM_PANIC("error");
             }
 
             flags |= methodFlags(m);

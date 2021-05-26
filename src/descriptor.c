@@ -5,8 +5,7 @@
 // @b0: include
 // @e：exclude
 // eg. Ljava/lang/String;
-THROW_JAVA_EXCEPTION
-static Object *convert_desc_element_to_class_object(char **b0, const char *e, jref loader)
+TJE static Object *convert_desc_element_to_class_object(char **b0, const char *e, jref loader)
 {
     assert(b0 != NULL && *b0 != NULL && e != NULL && *b0 <= e);
     char *b = *b0;

@@ -141,8 +141,9 @@ typedef struct {
 #define vm_calloc(len) calloc(1, len)
 #define vm_realloc realloc
 
-// Make a method may throw java exception
-#define THROW_JAVA_EXCEPTION
+// Mark a method may throw java exception.
+// The caller of this method must check the may throw java exception.
+#define TJE // Throw Java Exception
 
 #define ARRAY_LENGTH(_arr_) (sizeof(_arr_)/sizeof(*(_arr_))) 
 
@@ -622,7 +623,7 @@ Class *load_array_class(Object *loader, const utf8_t *arr_class_name);
 
 // Load byte[].class, boolean[].class, char[].class, short[].class, 
 //      int[].class, float[].class, long[].class, double[].class.
-Class *load_type_array_class(ArrayType type); THROW_JAVA_EXCEPTION
+TJE Class *load_type_array_class(ArrayType type);
 
 const utf8_t *get_boot_package(const utf8_t *name);
 struct point_hash_set *get_boot_packages();
@@ -640,8 +641,7 @@ Class *load_class(Object *class_loader, const utf8_t *name);
 
 Class *find_loaded_class(Object *class_loader, const utf8_t *name);
 
-THROW_JAVA_EXCEPTION
-Class *define_class(jref class_loader, u1 *bytecode, size_t len);
+TJE Class *define_class(jref class_loader, u1 *bytecode, size_t len);
 
 Class *define_class1(jref class_loader, jref name,
                      jarrRef bytecode, jint off, jint len, jref protection_domain, jref source);
@@ -863,30 +863,30 @@ bool class_equals(const Class *, const Class *);
 // This Object 只能由虚拟机创建
 void gen_class_object(Class *);
 
-Field *lookup_field(Class *, const utf8_t *name, const utf8_t *descriptor); THROW_JAVA_EXCEPTION
-Field *lookup_static_field(Class *, const char *name, const char *descriptor); THROW_JAVA_EXCEPTION
-Field *lookup_inst_field(Class *, int id); THROW_JAVA_EXCEPTION
-Field *lookup_inst_field0(Class *, const char *name, const char *descriptor); THROW_JAVA_EXCEPTION
+TJE Field *lookup_field(Class *, const utf8_t *name, const utf8_t *descriptor); 
+TJE Field *lookup_static_field(Class *, const char *name, const char *descriptor); 
+TJE Field *lookup_inst_field(Class *, int id); 
+TJE Field *lookup_inst_field0(Class *, const char *name, const char *descriptor); 
 
 bool inject_inst_field(Class *, const utf8_t *name, const utf8_t *descriptor);
 
-Field *get_declared_field(const Class *, const char *name); THROW_JAVA_EXCEPTION
-Field *get_declared_field0(const Class *, const char *name, const char *descriptor); THROW_JAVA_EXCEPTION
-Field *get_declared_inst_field(const Class *, int id); THROW_JAVA_EXCEPTION
+TJE Field *get_declared_field(const Class *, const char *name); 
+TJE Field *get_declared_field0(const Class *, const char *name, const char *descriptor); 
+TJE Field *get_declared_inst_field(const Class *, int id); 
 
-Method *lookup_method(Class *, const char *name, const char *descriptor); THROW_JAVA_EXCEPTION
-Method *lookup_static_method(Class *, const char *name, const char *descriptor); THROW_JAVA_EXCEPTION
-Method *lookup_inst_method(Class *, const char *name, const char *descriptor); THROW_JAVA_EXCEPTION
+TJE Method *lookup_method(Class *, const char *name, const char *descriptor); 
+TJE Method *lookup_static_method(Class *, const char *name, const char *descriptor); 
+TJE Method *lookup_inst_method(Class *, const char *name, const char *descriptor); 
 
 /*
  * get在本类中定义的类，不包括继承的。
  */
-Method *get_declared_method(Class *, const utf8_t *name, const utf8_t *descriptor); THROW_JAVA_EXCEPTION
+TJE Method *get_declared_method(Class *, const utf8_t *name, const utf8_t *descriptor); 
 Method *get_declared_method_noexcept(Class *c, const utf8_t *name, const utf8_t *descriptor); 
-Method *get_declared_static_method(Class *, const utf8_t *name, const utf8_t *descriptor); THROW_JAVA_EXCEPTION
-Method *get_declared_inst_method(Class *, const utf8_t *name, const utf8_t *descriptor); THROW_JAVA_EXCEPTION
+TJE Method *get_declared_static_method(Class *, const utf8_t *name, const utf8_t *descriptor); 
+TJE Method *get_declared_inst_method(Class *, const utf8_t *name, const utf8_t *descriptor); 
 // polymorphic signature
-Method *get_declared_poly_method(Class *, const utf8_t *name); THROW_JAVA_EXCEPTION
+TJE Method *get_declared_poly_method(Class *, const utf8_t *name); 
 
 // std::vector<Method *> get_declared_methods(Class *, const utf8_t *name, bool public_only);
 Method **get_declared_methods(Class *c, const utf8_t *name, bool public_only, int *count);
@@ -965,7 +965,7 @@ size_t get_ele_size(Class *);
  * like，依次调用 componentClass():
  * [[I -> [I -> int -> null
  */
-Class *component_class(Class *); THROW_JAVA_EXCEPTION
+TJE Class *component_class(Class *); 
 
 /*
  * Returns the representing the element class of an array class.
@@ -1162,8 +1162,7 @@ char *get_field_info(const Field *);
 
 int num_elements_in_method_descriptor(const char *method_descriptor);
 
-THROW_JAVA_EXCEPTION
-bool parse_method_descriptor(const char *desc, jref loader, jarrRef *ptypes, jref *rtype);
+TJE bool parse_method_descriptor(const char *desc, jref loader, jarrRef *ptypes, jref *rtype);
 
 // 返回结果需要调用者释放(free())
 char *unparse_method_descriptor(jarrRef ptypes /*Class *[]*/, jclsRef rtype);
@@ -1311,8 +1310,7 @@ void array_set_ref(jarrRef a, int i, jref value);
 
 #define array_get(__jtype, __array, __index) (*(__jtype *) array_index(__array, __index))
 
-THROW_JAVA_EXCEPTION
-void array_copy(jarrRef dst, jint dst_pos, const jarrRef src, jint src_pos, jint len);
+TJE void array_copy(jarrRef dst, jint dst_pos, const jarrRef src, jint src_pos, jint len);
 
 
 /* String */
@@ -1361,12 +1359,12 @@ jref linkMethodHandleConstant(Class *caller_class, int ref_kind,
 //     bool isStatic(jref memberName);
 // }
 
-void init_member_name(jref member_name, jref target); THROW_JAVA_EXCEPTION
-void expand_member_name(jref member_name); THROW_JAVA_EXCEPTION
-jref resolve_member_name(jref member_name, Class *caller); THROW_JAVA_EXCEPTION
+TJE void init_member_name(jref member_name, jref target); 
+TJE void expand_member_name(jref member_name); 
+TJE jref resolve_member_name(jref member_name, Class *caller); 
 jint get_members(jclsRef defc, jstrRef match_name,
                 jstrRef match_sig, jint match_flags, jclsRef caller, jint skip, jref _results);
-jlong member_name_object_field_offset(jref member_name); THROW_JAVA_EXCEPTION
+TJE jlong member_name_object_field_offset(jref member_name); 
 
 // java/lang/invoke/MethodHandles 类的便利操作函数
 // namespace method_handles {
