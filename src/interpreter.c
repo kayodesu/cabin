@@ -1264,7 +1264,13 @@ opc_invokenative: {
     // todo 不需要在这里做任何同步的操作
 
     call_jni_method(frame);
-    
+
+    // JNI 函数执行完毕，清空其局部引用表。
+    for (int i = 0; i < frame->jni_local_ref_count; i++) {
+        frame->jni_local_ref_table[i] = NULL;
+    }
+    frame->jni_local_ref_count = 0;
+
     CHECK_EXCEPTION_OCCURRED
 
     //    if (frame->method->isSynchronized()) {
