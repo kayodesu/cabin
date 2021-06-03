@@ -1,10 +1,16 @@
 #include <assert.h>
 #include <time.h>
+#ifdef __linux__
+#include <sys/time.h>
+#endif
 #include "cabin.h"
 #include "jni.h"
 #include "heap.h"
 #include "symbol.h"
 #include "hash.h"
+#include "thread.h"
+#include "meta.h"
+#include "object.h"
 
 
 #define JVM_MIRROR(_jclass) ((jclsRef) _jclass)->jvm_mirror
@@ -110,6 +116,13 @@ JNIEXPORT jlong JNICALL
 JVM_CurrentTimeMillis(JNIEnv *env, jclass ignored)
 {
     TRACE("JVM_CurrentTimeMillis(env=%p, ignored=%p)", env, ignored);
+
+#ifdef __linux__
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (jlong) tv.tv_sec * 1000 + tv.tv_usec / 1000;
+#endif
+
     JVM_PANIC("unimplemented"); // todo
 }
 
@@ -126,9 +139,9 @@ JVM_NanoTime(JNIEnv *env, jclass ignored)
     TRACE("JVM_NanoTime(env=%p)", env);
     // todo
 
-    struct timespec _time;
-    clock_gettime(CLOCK_REALTIME, &_time);  //获取相对于1970到现在的秒数
-    return _time.tv_nsec;
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);  //获取相对于1970到现在的秒数
+    return (jlong) ts.tv_sec * 1000000000 + ts.tv_nsec;
 }
 
 JNIEXPORT jlong JNICALL
@@ -687,7 +700,8 @@ JVM_MoreStackWalk(JNIEnv *env, jobject stackStream, jlong mode, jlong anchor,
 /*
  * java.lang.Thread
  */
-static void *threadRunFunc(void *thread)
+
+static void *thread_run_func(void *thread)
 {
     Method *run_method 
             = lookup_inst_method(load_boot_class(S(java_lang_Thread)), S(run), S(___V));
@@ -704,7 +718,7 @@ JVM_StartThread(JNIEnv *env, jobject thread)
     // createCustomerThread(_this);
 
     pthread_t th; 
-    if (pthread_create(&th, NULL, threadRunFunc, thread) != 0) {
+    if (pthread_create(&th, NULL, thread_run_func, thread) != 0) {
         // todo error
         JVM_PANIC("pthread_create");
     }
@@ -1498,9 +1512,26 @@ JVM_DefineClassWithSource(JNIEnv *env, const char *name, jobject loader,
 JNIEXPORT jclass JNICALL
 JVM_LookupDefineClass(JNIEnv *env, jclass lookup, const char *name, const jbyte *buf,
                       jsize len, jobject pd, jboolean init, int flags, jobject classData)
-{
+{    
+    // From java/lang/invoke/MethodHandleNatives.java
+    // Flags for Lookup.ClassOptions：
+    static const int
+        NESTMATE_CLASS            = 0x00000001,
+        HIDDEN_CLASS              = 0x00000002,
+        STRONG_LOADER_LINK        = 0x00000004,
+        ACCESS_VM_ANNOTATIONS     = 0x00000008;
+
+        
     TRACE("JVM_LookupDefineClass(env=%p)", env); // todo
     JVM_PANIC("unimplemented"); // todo
+
+    Class *c; // todo define class
+
+    if (flags & HIDDEN_CLASS != 0) {
+        c->hidden = true;
+    }
+
+    return (jclass) c->java_mirror;
 }
 
 /*
@@ -1783,11 +1814,8 @@ JNIEXPORT jboolean JNICALL
 JVM_IsHiddenClass(JNIEnv *env, jclass cls)
 {
     TRACE("JVM_IsHiddenClass(env=%p, cls=%p)", env, cls);
-    // // todo 什么是HiddenClass？？
     Class *c = JVM_MIRROR(cls);
-    return false;
-
-    JVM_PANIC("unimplemented"); // todo
+    return c->hidden ? JNI_TRUE : JNI_FALSE;
 }
 
 // /*

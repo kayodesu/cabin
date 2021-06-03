@@ -1,6 +1,9 @@
 #include <assert.h>
 #include <stdlib.h>
 #include "cabin.h"
+#include "thread.h"
+#include "object.h"
+#include "exception.h"
 
 extern bool g_vm_initing;
 

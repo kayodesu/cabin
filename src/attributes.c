@@ -1,6 +1,9 @@
 #include "cabin.h"
 #include "attributes.h"
 #include "constants.h"
+#include "exception.h"
+#include "meta.h"
+#include "symbol.h"
 
 void annotation_init(Annotation *anno, BytecodeReader *r)
 {

@@ -1,5 +1,8 @@
 #include "cabin.h"
 #include "dynstr.h"
+#include "object.h"
+#include "symbol.h"
+#include "class_loader.h"
 
 
 // @b0: include

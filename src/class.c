@@ -1,8 +1,12 @@
 #include <assert.h>
 #include "cabin.h"
+#include "meta.h"
 #include "dynstr.h"
 #include "constants.h"
 #include "attributes.h"
+#include "object.h"
+#include "interpreter.h"
+#include "convert.h"
 
 
 // 计算字段的个数，同时给它们编号
@@ -123,52 +127,87 @@ static void parse_attribute(Class *c, BytecodeReader *r)
     }
 }
 
-void create_vtable()
+static void create_vtable(Class *c)
 {
+    assert(c != NULL && c->vtable == NULL);
 
-}
+    size_t super_vtable_len = c->vtable_len = c->super_class != NULL ? c->super_class->vtable_len : 0;
+    c->vtable = vm_malloc(sizeof(Method *) * (super_vtable_len + c->methods_count));
 
-void create_itable()
-{
+    if (c->super_class != NULL) {
+        // 将父类的vtable复制过来
+        memcpy(c->vtable, c->super_class->vtable, c->super_class->vtable_len * sizeof(Method *));
+    } 
 
-}
+    for (u2 i = 0; i < c->methods_count; i++) {
+        Method *m = c->methods + i;
+        if (!is_virtual_method(m))
+            continue;
 
-#if 0
-void Class::createVtable()
-{
-    assert(vtable.empty());
-
-    if (super_class == NULL) {
-        int i = 0;
-        for (auto &m : methods) {
-            if (m->isVirtual()) {
-                vtable.push_back(m);
-                m->vtable_index = i++;
-            }
-        }
-        return;
-    }
-
-    // 将父类的vtable复制过来
-    vtable.assign(super_class->vtable.begin(), super_class->vtable.end());
-
-    for (auto m : methods) {
-        if (m->isVirtual()) {
-            auto iter = find_if(vtable.begin(), vtable.end(), [=](Method *m0){
-                return utf8::equals(m->name, m0->name) && utf8::equals(m->descriptor, m0->descriptor); });
-            if (iter != vtable.end()) {
+        // 判断有没有重写父类的方法
+        size_t j = 0;
+        for (; j < super_vtable_len; j++) {
+            if (utf8_equals(c->vtable[j]->name, m->name) 
+                && utf8_equals(c->vtable[j]->descriptor, m->descriptor)) {
                 // 重写了父类的方法，更新
-                m->vtable_index = (*iter)->vtable_index;
-                *iter = m;
-            } else {
-                // 子类定义了要给新方法，加到 vtable 后面
-                vtable.push_back(m);
-                m->vtable_index = vtable.size() - 1;
+                assert(c->vtable[j]->vtable_index == j);
+                m->vtable_index = j;
+                c->vtable[j] = m;
+                break;
             }
+        }
+
+        if (j == super_vtable_len) {
+            // 子类定义了要给新方法，加到 vtable 后面
+            c->vtable[c->vtable_len] = m;
+            m->vtable_index = c->vtable_len;
+            c->vtable_len++;
         }
     }
 }
 
+static void create_itable(Class *c)
+{
+
+}
+
+/*
+// void Class::createVtable()
+// {
+//     assert(vtable.empty());
+
+//     if (super_class == NULL) {
+//         int i = 0;
+//         for (auto &m : methods) {
+//             if (m->isVirtual()) {
+//                 vtable.push_back(m);
+//                 m->vtable_index = i++;
+//             }
+//         }
+//         return;
+//     }
+
+//     // 将父类的vtable复制过来
+//     vtable.assign(super_class->vtable.begin(), super_class->vtable.end());
+
+//     for (auto m : methods) {
+//         if (m->isVirtual()) {
+//             auto iter = find_if(vtable.begin(), vtable.end(), [=](Method *m0){
+//                 return utf8::equals(m->name, m0->name) && utf8::equals(m->descriptor, m0->descriptor); });
+//             if (iter != vtable.end()) {
+//                 // 重写了父类的方法，更新
+//                 m->vtable_index = (*iter)->vtable_index;
+//                 *iter = m;
+//             } else {
+//                 // 子类定义了要给新方法，加到 vtable 后面
+//                 vtable.push_back(m);
+//                 m->vtable_index = vtable.size() - 1;
+//             }
+//         }
+//     }
+// }
+*/
+#if 0
 Class::ITable::ITable(const Class::ITable &itable)
 {
     interfaces.assign(itable.interfaces.begin(), itable.interfaces.end());
@@ -206,13 +245,6 @@ Method *Class::findFromITable(Class *interface_class, int itable_index)
     return NULL;
 }
 
-/*
- * 为什么需要itable,而不是用vtable解决所有问题？
- * 一个类可以实现多个接口，而每个接口的函数编号是个自己相关的，
- * vtable 无法解决多个对应接口的函数编号问题。
- * 而对继承一个类只能继承一个父亲，子类只要包含父类vtable，
- * 并且和父类的函数包含部分编号是一致的，就可以直接使用父类的函数编号找到对应的子类实现函数。
- */
 void Class::createItable()
 {
     if (isInterface()) {
@@ -478,17 +510,8 @@ Class *define_class(jref class_loader, u1 *bytecode, size_t len)
     c->fields_count = bcr_readu2(&r);
     if (c->fields_count > 0) {
         c->fields = vm_malloc(c->fields_count * sizeof(Field));
-        // fields.resize(fields_count);
-        // auto last_field = fields_count - 1;
         for (u2 i = 0; i < c->fields_count; i++) {
             init_field(c->fields + i, c, &r);
-            // new (fields + i) Field(this, &r);
-            // auto f = new Field(this, &r);
-            // // 保证所有的 public fields 放在前面             
-            // if (f->isPublic())
-            //     fields[public_fields_count++] = f;
-            // else
-            //     fields[last_field--] = f;
         }
     }
 

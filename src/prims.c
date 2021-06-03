@@ -1,4 +1,10 @@
 #include "cabin.h"
+#include "class_loader.h"
+#include "interpreter.h"
+#include "meta.h"
+#include "object.h"
+#include "encoding.h"
+#include "symbol.h"
 
 /*
  * 基本类型的名称，描述符，等等

@@ -1,14 +1,11 @@
 #include "cabin.h"
 #include "jni.h"
+#include "object.h"
+#include "thread.h"
+#include "exception.h"
 
 
 #define JVM_MIRROR(_jclass) ((jclsRef) _jclass)->jvm_mirror
-
-static jobject addJNILocalRef(Object *ref)
-{
-    // todo 
-    return (jobject) ref;
-}
 
 static jobject addJNIGlobalRef(Object *ref)
 {
@@ -19,16 +16,6 @@ static jobject addJNIGlobalRef(Object *ref)
 static void deleteJNIGlobalRef(Object *ref)
 {
     // todo
-}
-
-static jweak addJNIWeakGlobalRef(Object *ref)
-{
-    JVM_PANIC("not implement.");
-}
-
-static void deleteJNIWeakGlobalRef(Object *ref)
-{
-    JVM_PANIC("not implement.");
 }
 
 static slot_t *execJavaV(Method *m, jref this, va_list args)
@@ -138,8 +125,8 @@ jclass JNICALL Cabin_DefineClass(JNIEnv *env,
     Class *c = define_class((jref) loader, (u1 *) buf, len);
     if (c != NULL)
         link_class(c);
-    return (jclass) c->java_mirror;
-    // return (jclass) addJNILocalRef(c); // todo
+
+    return (*env)->NewLocalRef(env, c->java_mirror);
 }
 
 jclass JNICALL Cabin_FindClass(JNIEnv *env, const char *name)
@@ -194,8 +181,6 @@ jclass JNICALL Cabin_GetSuperclass(JNIEnv *env, jclass sub)
     if (c->super_class == NULL)
         return NULL;
     return (jclass) c->super_class->java_mirror;
-
-    // return (jclass) addJNILocalRef(c->jvm_mirror->super_class);
 }
 
 // 查看 static jboolean Class::isAssignableFrom(JNIEnv *env, jclsRef this, jclsRef cls);
@@ -258,6 +243,11 @@ jobject JNICALL Cabin_PopLocalFrame(JNIEnv *env, jobject result)
     JVM_PANIC("not implement.");
 }
 
+/*
+ * JNI局部引用、全局引用和弱全局引用：   
+ * https://blog.csdn.net/xyang81/article/details/44657385
+ */
+
 jobject JNICALL Cabin_NewGlobalRef(JNIEnv *env, jobject gref)
 {
     // todo
@@ -278,37 +268,55 @@ void JNICALL Cabin_DeleteGlobalRef(JNIEnv *env, jobject gref)
 
 void JNICALL Cabin_DeleteLocalRef(JNIEnv *env, jobject obj)
 {
-    // assert(env != NULL && obj != NULL);
-    // deleteJNILocalRef(to_object_ref(obj));
+    assert(env != NULL);
+    if (obj == NULL)
+        return;
 
-    // todo
+    Frame *f = get_current_thread()->top_frame;
+    for (int i = 0; i < f->jni_local_ref_count; i++) {
+        jref *t = f->jni_local_ref_table + i;
+        if ((*env)->IsSameObject(env, (jobject) *t, obj)) {
+            memmove(t, t + 1, (f->jni_local_ref_count - i)*sizeof(jref));
+            f->jni_local_ref_count--;
+            return;
+        }
+    }
 
-    // JVM_PANIC("not implement.");
+    // WARN("Delete a absent local ref(%p)", obj); todo
 }
 
 jboolean JNICALL Cabin_IsSameObject(JNIEnv *env, jobject obj1, jobject obj2)
 {
-    // todo
-    assert(env != NULL && obj1 != NULL && obj2 != NULL);
-    JVM_PANIC("not implement.");
+    assert(env != NULL);
+    return obj1 == obj2;
 }
 
 jobject JNICALL Cabin_NewLocalRef(JNIEnv *env, jobject obj)
 {
-    assert(env != NULL && obj != NULL);
-    JVM_PANIC("not implement.");
-    // return addJNILocalRef(to_object_ref(obj));
+    assert(env != NULL);
+    if (obj == NULL)
+        return NULL;
+
+    Frame *f = get_current_thread()->top_frame;
+    if (f->jni_local_ref_count < JNI_LOCAL_REFERENCE_TABLE_MAX_CAPACITY) {
+        f->jni_local_ref_table[f->jni_local_ref_count++] = (jref) obj;
+        return obj;
+    }
+
+    // todo
+    // JNI_THROW(env, S(java_lang_OutOfMemoryError), );
+    JVM_PANIC("local reference table overflow (max=%d)", JNI_LOCAL_REFERENCE_TABLE_MAX_CAPACITY); 
 }
 
 jint JNICALL Cabin_EnsureLocalCapacity(JNIEnv *env, jint capacity)
 {
-    // todo
     assert(env != NULL);
 
-    // todo 此函数干啥的？？？
-    return capacity; 
-    // JVM_PANIC("not implement.");
-
+    if (capacity > JNI_LOCAL_REFERENCE_TABLE_MAX_CAPACITY) {
+        // 本jvm比支持局部引用表的扩展
+        return JNI_ERR;
+    }
+    return JNI_OK;
 }
 
 jobject JNICALL Cabin_AllocObject(JNIEnv *env, jclass clazz)
@@ -356,9 +364,7 @@ jobject JNICALL Cabin_NewObjectA(JNIEnv *env, jclass clazz, jmethodID methodID, 
 
 jclass JNICALL Cabin_GetObjectClass(JNIEnv *env, jobject obj)
 {
-    // assert(env != NULL && obj != NULL);
-    // Object *o = to_object_ref(obj);
-    // return (jclass) addJNILocalRef(o->clazz);
+    assert(env != NULL && obj != NULL);
     return (jclass) ((jref)obj)->clazz->java_mirror;
 }
 
@@ -428,7 +434,7 @@ ret_type JNICALL Cabin_Call##T##MethodA(JNIEnv *env, \
     DEFINE_CALL_T_METHOD_A(T, ret_type, ret_value)
 
 
-DEFINE_3_CALL_T_METHODS(Object, jobject, addJNILocalRef(RSLOT(ret)))
+DEFINE_3_CALL_T_METHODS(Object, jobject, (*env)->NewLocalRef(env, RSLOT(ret)))
 DEFINE_3_CALL_T_METHODS(Boolean, jboolean, JINT_TO_JBOOL(ISLOT(ret)))
 DEFINE_3_CALL_T_METHODS(Byte, jbyte, JINT_TO_JBYTE(ISLOT(ret)))
 DEFINE_3_CALL_T_METHODS(Char, jchar, JINT_TO_JCHAR(ISLOT(ret)))
@@ -479,7 +485,7 @@ ret_type JNICALL Cabin_CallNonvirtual##T##MethodA(JNIEnv *env, jobject obj, \
     DEFINE_CALL_NONVIRTUAL_T_METHOD(T, ret_type, ret_value)
 
 
-DEFINE_3_CALL_NONVIRTUAL_T_METHODS(Object, jobject, addJNILocalRef(RSLOT(ret)))
+DEFINE_3_CALL_NONVIRTUAL_T_METHODS(Object, jobject, (*env)->NewLocalRef(env, RSLOT(ret)))
 DEFINE_3_CALL_NONVIRTUAL_T_METHODS(Boolean, jboolean, JINT_TO_JBOOL(ISLOT(ret)))
 DEFINE_3_CALL_NONVIRTUAL_T_METHODS(Byte, jbyte, JINT_TO_JBYTE(ISLOT(ret)))
 DEFINE_3_CALL_NONVIRTUAL_T_METHODS(Char, jchar, JINT_TO_JCHAR(ISLOT(ret)))
@@ -529,7 +535,7 @@ ret_type JNICALL Cabin_CallStatic##T##MethodA(JNIEnv *env, \
     DEFINE_CALL_STATIC_T_METHOD_V(T, ret_type, ret_value) \
     DEFINE_CALL_STATIC_T_METHOD_A(T, ret_type, ret_value)
 
-DEFINE_3_CALL_STATIC_T_METHODS(Object, jobject, addJNILocalRef(RSLOT(ret)))
+DEFINE_3_CALL_STATIC_T_METHODS(Object, jobject, (*env)->NewLocalRef(env, RSLOT(ret)))
 DEFINE_3_CALL_STATIC_T_METHODS(Boolean, jboolean, JINT_TO_JBOOL(ISLOT(ret)))
 DEFINE_3_CALL_STATIC_T_METHODS(Byte, jbyte, JINT_TO_JBYTE(ISLOT(ret)))
 DEFINE_3_CALL_STATIC_T_METHODS(Char, jchar, JINT_TO_JCHAR(ISLOT(ret)))
@@ -554,8 +560,6 @@ jfieldID JNICALL Cabin_GetFieldID(JNIEnv *env, jclass clazz, const char *name, c
 
 jobject JNICALL Cabin_GetObjectField(JNIEnv *env, jobject obj, jfieldID fieldID)
 {
-    // return addJNILocalRef(o->getRefField(f));
-
     return (jobject) get_ref_field0((jref) obj, (Field *) fieldID);
 }
 
@@ -608,9 +612,7 @@ jfieldID JNICALL Cabin_GetStaticFieldID(JNIEnv *env, jclass clazz, const char *n
 
 jobject JNICALL Cabin_GetStaticObjectField(JNIEnv *env, jclass clazz, jfieldID fieldID)
 {
-    // assert(env != NULL && clazz != NULL && fieldID != NULL);
-    // return addJNILocalRef(to_field(fieldID)->staticValue.r);
-
+    assert(env != NULL && clazz != NULL && fieldID != NULL);
     return (jobject) (((Field *) fieldID)->static_value.r);
 }
 
@@ -622,7 +624,7 @@ void JNICALL Cabin_SetStaticObjectField(JNIEnv *env, jclass clazz, jfieldID fiel
 jstring JNICALL Cabin_NewString(JNIEnv *env, const jchar *unicode, jsize len)
 {
     jstrRef str = alloc_string0(unicode, len);
-    return addJNILocalRef(str);
+    return (*env)->NewLocalRef(env, str);
 }
 
 jsize JNICALL Cabin_GetStringLength(JNIEnv *env, jstring str)
@@ -656,7 +658,7 @@ void JNICALL Cabin_ReleaseStringChars(JNIEnv *env, jstring str, const jchar *cha
 jstring JNICALL Cabin_NewStringUTF(JNIEnv *env, const char *utf)
 {
     jstrRef str = alloc_string(utf);
-    return addJNILocalRef(str);
+    return (*env)->NewLocalRef(env, str);
 }
 
 jsize JNICALL Cabin_GetStringUTFLength(JNIEnv *env, jstring str)
@@ -707,7 +709,7 @@ jobjectArray JNICALL Cabin_NewObjectArray(JNIEnv *env, jsize len, jclass element
         }
     }
 
-    return (jobjectArray) addJNILocalRef(arr);
+    return (jobjectArray) (*env)->NewLocalRef(env, arr);
 }
 
 jobject JNICALL Cabin_GetObjectArrayElement(JNIEnv *env, jobjectArray array, jsize index)
@@ -740,7 +742,7 @@ jarray JNICALL Cabin_New##Type##Array(JNIEnv *env, jsize len) \
     } \
  \
     jarrRef arr = alloc_array0(BOOT_CLASS_LOADER, class_name, len); \
-    return addJNILocalRef(arr); \
+    return (*env)->NewLocalRef(env, arr); \
 }
 
 NewTypeArray(Byte, "[B")
@@ -910,12 +912,12 @@ void JNICALL Cabin_ReleaseStringCritical(JNIEnv *env, jstring string, const jcha
 
 jweak JNICALL Cabin_NewWeakGlobalRef(JNIEnv *env, jobject obj)
 {
-    return addJNIWeakGlobalRef(obj);
+    JVM_PANIC("not implement.");
 }
 
 void JNICALL Cabin_DeleteWeakGlobalRef(JNIEnv *env, jweak ref)
 {
-    deleteJNIWeakGlobalRef(ref);
+    JVM_PANIC("not implement.");
 }
 
 jboolean JNICALL Cabin_ExceptionCheck(JNIEnv *env)

@@ -1,6 +1,8 @@
 #include "cabin.h"
 #include "attributes.h"
 #include "jni.h"
+#include "meta.h"
+#include "object.h"
 
 
 typedef struct exception_table ExceptionTable;
@@ -335,8 +337,15 @@ int find_exception_handler(const Method *m, Class *exceptionType, size_t pc)
     return -1;
 }
 
+bool is_virtual_method(const Method *m) 
+{
+    assert(m != NULL);
+    return !IS_PRIVATE(m) && !IS_STATIC(m) && !utf8_equals(m->name, S(object_init));
+}
+
 bool is_signature_polymorphic(const Method *m)
 {
+    assert(m != NULL);
     bool b = utf8_equals(m->clazz->class_name, S(java_lang_invoke_MethodHandle))
                  || utf8_equals(m->clazz->class_name, S(java_lang_invoke_VarHandle));
     if (!b)

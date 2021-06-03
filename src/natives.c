@@ -1,6 +1,10 @@
 #include <assert.h>
 #include "cabin.h"
 #include "jni.h"
+#include "mh.h"
+#include "object.h"
+#include "symbol.h"
+#include "interpreter.h"
 
 
 #define OBJ   "Ljava/lang/Object;"

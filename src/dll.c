@@ -1,6 +1,10 @@
 #include <assert.h>
 #include <windows.h>
 #include "cabin.h"
+#include "meta.h"
+#include "class_loader.h"
+#include "constants.h"
+#include "symbol.h"
 
 static char *mangle_class_and_method_name(Method *m) 
 {

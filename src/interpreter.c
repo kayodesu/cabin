@@ -1,8 +1,16 @@
 #include <math.h>
 #include <ffi.h>
 #include "cabin.h"
+#include "constants.h"
+#include "interpreter.h"
 #include "attributes.h"
 #include "jni.h"
+#include "thread.h"
+#include "mh.h"
+#include "meta.h"
+#include "object.h"
+#include "exception.h"
+#include "bytecode_reader.h"
 
 
 // the mapping of instructions' code and name

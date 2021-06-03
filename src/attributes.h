@@ -2,6 +2,7 @@
 #define CABIN_ATTRIBUTE_H
 
 #include "cabin.h"
+#include "slot.h"
 
 struct constant_pool;
 struct element_value_pair;

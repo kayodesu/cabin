@@ -2,6 +2,8 @@
 #include "symbol.h"
 #include "dynstr.h"
 #include "heap.h"
+#include "object.h"
+#include "encoding.h"
 
 
 static inline void init(Object *o, Class *c)

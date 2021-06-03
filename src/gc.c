@@ -2,6 +2,7 @@
 #include "cabin.h"
 #include "heap.h"
 #include "cabin.h"
+#include "object.h"
 
 /*
  * 分析一个可达的对象

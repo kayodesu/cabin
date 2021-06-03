@@ -1,8 +1,19 @@
+#ifndef CABIN_BYTECODE_READER_H
+#define CABIN_BYTECODE_READER_H
+
 #include <assert.h>
 #include <string.h>
 #include "cabin.h"
+#include "convert.h"
 
-void bcr_init(BytecodeReader *r, u1 *bytecode, size_t len)
+typedef struct bytecode_reader {
+    u1 *bytecode;
+    size_t len; // bytecode len
+
+    size_t pc; // program count
+} BytecodeReader;
+
+static inline void bcr_init(BytecodeReader *r, u1 *bytecode, size_t len)
 {
     assert(r != NULL && bytecode != NULL);
 
@@ -11,14 +22,14 @@ void bcr_init(BytecodeReader *r, u1 *bytecode, size_t len)
     r->pc = 0;
 }
 
-u1 *bcr_curr_pos(BytecodeReader *r)
+static inline u1 *bcr_curr_pos(BytecodeReader *r)
 {
     assert(r != NULL && r->pc < r->len);
     return r->bytecode + r->pc;
 }
 
 // @offset: 相对于当前位置的偏移
-void bcr_setu1(BytecodeReader *r, int offset, u1 value)
+static inline void bcr_setu1(BytecodeReader *r, int offset, u1 value)
 {
     assert(r != NULL);
     size_t pc0 = r->pc + offset;
@@ -28,7 +39,7 @@ void bcr_setu1(BytecodeReader *r, int offset, u1 value)
 
 // @offset: 相对于当前位置的偏移
 // 注意，setu2方法要和readu2方法相配套。
-void bcr_setu2(BytecodeReader *r, int offset, u2 value)
+static inline void bcr_setu2(BytecodeReader *r, int offset, u2 value)
 {
     assert(r != NULL);
     size_t pc0 = r->pc + offset;
@@ -37,13 +48,13 @@ void bcr_setu2(BytecodeReader *r, int offset, u2 value)
     r->bytecode[pc0 + 1] = (u1) value;
 }
 
-bool bcr_has_more(BytecodeReader *r)
+static inline bool bcr_has_more(BytecodeReader *r)
 {
     assert(r != NULL);
     return r->pc < r->len;
 }
 
-void bcr_skip(BytecodeReader *r, int offset)
+static inline void bcr_skip(BytecodeReader *r, int offset)
 {
     assert(r != NULL);
     r->pc += offset;
@@ -53,7 +64,7 @@ void bcr_skip(BytecodeReader *r, int offset)
 /*
  * todo 函数干什么用的
  */
-void bcr_align4(BytecodeReader *r)
+static inline void bcr_align4(BytecodeReader *r)
 {
     assert(r != NULL);
     while (r->pc % 4 != 0) {
@@ -62,7 +73,7 @@ void bcr_align4(BytecodeReader *r)
     assert(r->pc < r->len);
 }
 
-void bcr_read_bytes(BytecodeReader *r, u1 *buf, size_t len)
+static inline void bcr_read_bytes(BytecodeReader *r, u1 *buf, size_t len)
 {
     assert(r != NULL && buf != NULL);
 
@@ -70,19 +81,19 @@ void bcr_read_bytes(BytecodeReader *r, u1 *buf, size_t len)
     r->pc += len;
 }
 
-s1 bcr_reads1(BytecodeReader *r)
+static inline s1 bcr_reads1(BytecodeReader *r)
 {
     assert(r != NULL && r->pc < r->len);
     return r->bytecode[r->pc++];
 }
 
-u1 bcr_readu1(BytecodeReader *r)
+static inline u1 bcr_readu1(BytecodeReader *r)
 {
     assert(r != NULL && r->pc < r->len);
     return (u1) r->bytecode[r->pc++];
 }
 
-u2 bcr_readu2(BytecodeReader *r)
+static inline u2 bcr_readu2(BytecodeReader *r)
 {
     assert(r != NULL && r->pc < r->len);
     u2 x = bcr_readu1(r);
@@ -91,7 +102,7 @@ u2 bcr_readu2(BytecodeReader *r)
     return x << 8 | y;
 }
 
-u2 bcr_peeku2(BytecodeReader *r)
+static inline u2 bcr_peeku2(BytecodeReader *r)
 {
     assert(r != NULL && r->pc < r->len);
     u2 data = bcr_readu2(r);
@@ -99,13 +110,13 @@ u2 bcr_peeku2(BytecodeReader *r)
     return data;
 }
 
-s2 bcr_reads2(BytecodeReader *r)
+static inline s2 bcr_reads2(BytecodeReader *r)
 {
     assert(r != NULL && r->pc < r->len);
     return bcr_readu2(r);
 }
 
-u4 bcr_readu4(BytecodeReader *r)
+static inline u4 bcr_readu4(BytecodeReader *r)
 {
     assert(r != NULL && r->pc < r->len);
     u1 buf[4];
@@ -114,7 +125,7 @@ u4 bcr_readu4(BytecodeReader *r)
     return (u4) bytes_to_int32(buf);  // should be bytesToUint32  todo
 }
 
-u8 bcr_readu8(BytecodeReader *r)
+static inline u8 bcr_readu8(BytecodeReader *r)
 {
     assert(r != NULL && r->pc < r->len);
     const u1 *p = r->bytecode;
@@ -130,7 +141,7 @@ u8 bcr_readu8(BytecodeReader *r)
     return v;
 }
 
-s4 bcr_reads4(BytecodeReader *r)
+static inline s4 bcr_reads4(BytecodeReader *r)
 {
     assert(r != NULL && r->pc < r->len);
     u1 buf[4];
@@ -142,7 +153,7 @@ s4 bcr_reads4(BytecodeReader *r)
 /*
  * 读 @n 个s4数据到 @s4s 数组中
  */
-void bcr_reads4s(BytecodeReader *r, int n, s4 *s4s)
+static inline void bcr_reads4s(BytecodeReader *r, int n, s4 *s4s)
 {
     assert(r != NULL && r->pc < r->len);
     for (int i = 0; i < n; i++) {
@@ -152,3 +163,5 @@ void bcr_reads4s(BytecodeReader *r, int n, s4 *s4s)
         s4s[i] = (s4) bytes_to_int32(buf);
     }
 }
+
+#endif // CABIN_BYTECODE_READER_H

@@ -2,16 +2,20 @@
 #include "heap.h"
 #include "jni.h"
 #include "symbol.h"
+#include "thread.h"
+#include "mh.h"
+#include "meta.h"
+#include "object.h"
+#include "sysinfo.h"
+#include "encoding.h"
 
 Heap *g_heap;
 
-// vector<pair<const utf8_t *, const utf8_t *>> g_properties;
 struct property g_properties[PROPERTIES_MAX_COUNT];
 int g_properties_count = 0;
 
 Object *g_sys_thread_group;
 
-//vector<Thread *> g_all_threads;
 Thread *g_all_threads[VM_THREADS_MAX_COUNT];
 int g_all_threads_count = 0;
 
@@ -25,7 +29,6 @@ Object *g_platform_class_loader;
 
 bool g_vm_initing = true;
 
-void init_classpath();
 void init_dll();
 void init_native();
 
@@ -203,7 +206,6 @@ void init_jvm(JavaVMInitArgs *vm_init_args)
 
     /* order is important */
     init_utf8_pool();
-    init_classpath();
     init_symbol();
     init_prims();
     init_heap();

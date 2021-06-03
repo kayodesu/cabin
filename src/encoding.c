@@ -3,6 +3,7 @@
 #include <pthread.h>
 #include "cabin.h"
 #include "hash.h"
+#include "encoding.h"
 
 static PHS utf8_set;
 

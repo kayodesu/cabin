@@ -1,5 +1,11 @@
+#include <stdbool.h>
+
 #include "cabin.h"
 #include "attributes.h"
+#include "bytecode_reader.h"
+#include "meta.h"
+#include "class_loader.h"
+#include "symbol.h"
 
 void init_field(Field *f, Class *c, BytecodeReader *r)
 {

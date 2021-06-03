@@ -1,5 +1,7 @@
 #include "symbol.h"
 #include "cabin.h"
+#include "object.h"
+#include "interpreter.h"
 
 
 static Class *constructor_reflect_class;

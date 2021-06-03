@@ -1,7 +1,7 @@
 #include <time.h>
 #include "cabin.h"
 #include "jni.h"
-
+#include "object.h"
 
 void show_usage(const char *name);
 void show_version_and_copyright();

@@ -21,6 +21,7 @@ DynStr *dynstr_concat(DynStr *, const char *);
 
 DynStr *dynstr_reserve(DynStr *ds, size_t min_len);
 
+// concat to @_ds
 #define dynstr_printf(_ds, _format, ...) \
 do { \
     int len = strlen((_ds)->buf); \

@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include "cabin.h"
+#include "meta.h"
+#include "symbol.h"
+#include "class_loader.h"
 
 #define JNI_VERSION_1_1 0x00010001
 #define JNI_VERSION_1_2 0x00010002
